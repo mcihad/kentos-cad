@@ -111,6 +111,10 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "cad.forms.submit",
         "cad.forms.fill",
         "cad.relations.edit",
+        "cad.rasters.gpkgread",
+        "cad.rasters.gpkgwrite",
+        "cad.profiles.import",
+        "cad.profiles.migrate",
     ] {
         let tool = tools
             .iter()

@@ -1,0 +1,79 @@
+{
+  "format": "kentos.data-profile",
+  "version": 1,
+  "name": "Peyzaj Profili",
+  "title": "Peyzaj profili",
+  "description": "Ağaçlar ve yeşil alanlar.",
+  "basis": "Deneme profili.",
+  "domains": [
+    {
+      "id": "agac-tur",
+      "name": "Ağaç türü",
+      "kind": "text",
+      "values": [
+        {
+          "code": "cinar",
+          "label": "Çınar"
+        },
+        {
+          "code": "mese",
+          "label": "Meşe"
+        }
+      ]
+    }
+  ],
+  "classes": [
+    {
+      "id": "agac",
+      "title": "Ağaç",
+      "theme": "Peyzaj",
+      "layer": [
+        "Peyzaj",
+        "Ağaç"
+      ],
+      "color": "#30A46C",
+      "geometry": "point",
+      "key": "AgacNo",
+      "fields": [
+        {
+          "name": "AgacNo",
+          "kind": "text",
+          "required": true
+        },
+        {
+          "name": "Tur",
+          "alias": "Tür",
+          "kind": "text",
+          "domain": "agac-tur"
+        }
+      ]
+    },
+    {
+      "id": "yesil",
+      "title": "Yeşil alan",
+      "theme": "Peyzaj",
+      "layer": [
+        "Peyzaj",
+        "Yeşil alan"
+      ],
+      "color": "#46A758",
+      "geometry": "area",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text"
+        },
+        {
+          "name": "KayitliAlan",
+          "alias": "Kayıtlı alan",
+          "kind": "decimal",
+          "scale": 2
+        }
+      ],
+      "registeredArea": {
+        "field": "KayitliAlan",
+        "tolerance": 0.5
+      }
+    }
+  ]
+}

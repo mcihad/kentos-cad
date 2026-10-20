@@ -1,0 +1,7343 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.rasters.gpkgread",
+ "commandVersion": 1,
+ "title": "GeoPackage karolar\u0131n\u0131 oku",
+ "note": "Written by scripts/fixtures/gpkg_tiles_cases.py from docs/adr/0556 with GDAL; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Karolar",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 487200.0,
+   "y": 4420600.0
+  },
+  "layers": [
+   {
+    "id": "altlik",
+    "name": "Altl\u0131k",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "altlik",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Dosyadaki karo tablolar\u0131n\u0131 s\u00f6yler: yazmadan, en ince d\u00fczey",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4419760.0,
+          488400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 2,
+       "area": [
+        487200.0,
+        4419760.0,
+        488400.0,
+        4420600.0
+       ],
+       "width": 600,
+       "height": 420,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        2.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "tilesRead": 6,
+       "tilesMissing": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan ayn\u0131 cevab\u0131 verir, yazmadan",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "$tmp:plan.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4419760.0,
+          488400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 2,
+       "area": [
+        487200.0,
+        4419760.0,
+        488400.0,
+        4420600.0
+       ],
+       "width": 600,
+       "height": 420,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        2.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "tilesRead": 6,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:plan.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "En ince d\u00fczey GeoTIFF olur (600 \u00d7 420 piksel, 2 m)",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "$tmp:orto.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4419760.0,
+          488400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 2,
+       "area": [
+        487200.0,
+        4419760.0,
+        488400.0,
+        4420600.0
+       ],
+       "width": 600,
+       "height": 420,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        2.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "tilesRead": 6,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:orto.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "1. d\u00fczey 4 m pikselle",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "zoom": 1,
+      "output": "$tmp:orto1.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4419760.0,
+          488400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 1,
+       "area": [
+        487200.0,
+        4419760.0,
+        488400.0,
+        4420600.0
+       ],
+       "width": 300,
+       "height": 210,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        4.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -4.0
+       ],
+       "srid": 5256,
+       "tilesRead": 2,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:orto1.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "0. d\u00fczey 8 m pikselle",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "zoom": 0,
+      "output": "$tmp:orto0.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4419760.0,
+          488400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 0,
+       "area": [
+        487200.0,
+        4419760.0,
+        488400.0,
+        4420600.0
+       ],
+       "width": 150,
+       "height": 105,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        8.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -8.0
+       ],
+       "srid": 5256,
+       "tilesRead": 1,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:orto0.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan pikselin tam\u0131na yuvarlan\u0131r (kesirli s\u0131n\u0131rlar)",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "area": [
+       487201.3,
+       4420020.6,
+       487700.9,
+       4420300.2
+      ],
+      "output": "$tmp:kesir.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4419760.0,
+          488400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 2,
+       "area": [
+        487202.0,
+        4420020.0,
+        487702.0,
+        4420300.0
+       ],
+       "width": 250,
+       "height": 140,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487202.0,
+        2.0,
+        0.0,
+        4420300.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "tilesRead": 2,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:kesir.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan \u0131zgaradan ta\u015far: \u0131zgaraya kesilir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "area": [
+       487000.0,
+       4419000.0,
+       489900.0,
+       4420800.0
+      ],
+      "output": "$tmp:tasan.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4419760.0,
+          488400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 2,
+       "area": [
+        487200.0,
+        4419000.0,
+        489248.0,
+        4420600.0
+       ],
+       "width": 1024,
+       "height": 800,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        2.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "tilesRead": 6,
+       "tilesMissing": 10,
+       "revision": "$current",
+       "path": "$tmp:tasan.tif",
+       "bytes": "$any"
+      },
+      "warnings": [
+       {
+        "code": "tiles_missing",
+        "message": "Okunan pencerenin 10 karosu tabloda yok; o yerler saydam (alfa 0) kald\u0131.",
+        "path": "table"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan \u0131zgaran\u0131n d\u0131\u015f\u0131nda: tile_table_empty",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "area": [
+       500000.0,
+       4420000.0,
+       500100.0,
+       4420100.0
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "tile_table_empty",
+       "message": "Okunacak alan \u201corto\u201d tablosunun 2. d\u00fczeyinin \u0131zgaras\u0131n\u0131n d\u0131\u015f\u0131nda; alan\u0131 \u0131zgaraya \u00e7ekin.",
+       "path": "area"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan ge\u00e7ersiz: en k\u00fc\u00e7\u00fck en b\u00fcy\u00fc\u011fe e\u015fit",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "area": [
+       487200.0,
+       4420000.0,
+       487200.0,
+       4420100.0
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_area",
+       "message": "Alan [en k\u00fc\u00e7\u00fck x, en k\u00fc\u00e7\u00fck y, en b\u00fcy\u00fck x, en b\u00fcy\u00fck y] olmal\u0131: sonlu say\u0131lar, en k\u00fc\u00e7\u00fckler en b\u00fcy\u00fcklerden k\u00fc\u00e7\u00fck.",
+       "path": "area"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan zoom d\u00fczeyi",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "zoom": 9
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "zoom_not_found",
+       "message": "\u201corto\u201d tablosunun 9. zoom d\u00fczeyi yok; d\u00fczeyler: 0, 1, 2.",
+       "path": "zoom"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Veri kutusu pikselin tam\u0131nda de\u011fil: GDAL'\u0131n yuvarlamas\u0131",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/kaymis.gpkg",
+      "output": "$tmp:kaymis.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487203.7,
+          4419800.9,
+          488197.1,
+          4420511.3
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 2,
+       "area": [
+        487204.0,
+        4419802.0,
+        488198.0,
+        4420512.0
+       ],
+       "width": 497,
+       "height": 355,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487204.0,
+        2.0,
+        0.0,
+        4420512.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "tilesRead": 4,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:kaymis.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kaym\u0131\u015f kutuda kaba d\u00fczey",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/kaymis.gpkg",
+      "zoom": 0,
+      "output": "$tmp:kaymis0.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487203.7,
+          4419800.9,
+          488197.1,
+          4420511.3
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 0,
+       "area": [
+        487200.0,
+        4419800.0,
+        488192.0,
+        4420512.0
+       ],
+       "width": 124,
+       "height": 89,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        8.0,
+        0.0,
+        4420512.0,
+        0.0,
+        -8.0
+       ],
+       "srid": 5256,
+       "tilesRead": 1,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:kaymis0.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Gri PNG karolar d\u00f6rt banda a\u00e7\u0131l\u0131r",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/gri.gpkg",
+      "output": "$tmp:gri.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "gri",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4420088.0,
+          487712.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            1.0,
+            1.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "gri",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4420400.0,
+          487500.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "gri",
+       "zoom": 2,
+       "area": [
+        487200.0,
+        4420400.0,
+        487500.0,
+        4420600.0
+       ],
+       "width": 300,
+       "height": 200,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        1.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -1.0
+       ],
+       "srid": 5256,
+       "tilesRead": 2,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:gri.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Saf gri (tek bantl\u0131) PNG karolar",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/gri-saf.gpkg",
+      "output": "$tmp:gri-saf.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "gri",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4420088.0,
+          487712.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            1.0,
+            1.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "gri",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4420400.0,
+          487500.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "gri",
+       "zoom": 2,
+       "area": [
+        487200.0,
+        4420400.0,
+        487500.0,
+        4420600.0
+       ],
+       "width": 300,
+       "height": 200,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        1.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -1.0
+       ],
+       "srid": 5256,
+       "tilesRead": 2,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:gri-saf.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "JPEG karolar okunmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/jpeg.gpkg",
+      "output": "$tmp:jpeg.tif"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "tile_format_unsupported",
+       "message": "1/0/0 karosu JPEG; bu okuyucu yaln\u0131z 8 bitlik PNG karolar\u0131 a\u00e7ar (JPEG ve WebP karolar okunmaz).",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "JPEG karolar yazmadan sorulursa tabloyu s\u00f6yler",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/jpeg.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "foto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4420088.0,
+          487712.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 0
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            1.0,
+            1.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "jpeg"
+           ]
+          }
+         ],
+         "identifier": "foto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4420400.0,
+          487500.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "foto",
+       "zoom": 1,
+       "area": [
+        487200.0,
+        4420400.0,
+        487500.0,
+        4420600.0
+       ],
+       "width": 300,
+       "height": 200,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        1.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -1.0
+       ],
+       "srid": 5256,
+       "tilesRead": 2,
+       "tilesMissing": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "WebP karolar okunmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/webp.gpkg",
+      "output": "$tmp:webp.tif"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "tile_format_unsupported",
+       "message": "0/0/0 karosu WEBP; bu okuyucu yaln\u0131z 8 bitlik PNG karolar\u0131 a\u00e7ar (JPEG ve WebP karolar okunmaz).",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "PNG olmayan karo",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/bozuk-karo.gpkg",
+      "output": "$tmp:bozuk.tif"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "tile_unreadable",
+       "message": "0/0/0 karosu PNG de\u011fil; GeoPackage karolar\u0131 PNG olmal\u0131.",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Matrisin karo boyunda olmayan karo",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/boy-uyumsuz.gpkg",
+      "output": "$tmp:boy.tif"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "tile_unreadable",
+       "message": "0/0/0 karosu 100 \u00d7 100 piksel, matrisin karo boyu 256 \u00d7 256.",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "16 bitlik PNG karo okunmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/png16.gpkg",
+      "output": "$tmp:png16.tif"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "tile_format_unsupported",
+       "message": "0/0/0 karosu 8 bitten fazla; bu okuyucu yaln\u0131z 8 bitlik PNG karolar\u0131 a\u00e7ar.",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Vekt\u00f6r GeoPackage'\u0131nda karo tablosu yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/qgis.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_tile_table",
+       "message": "qgis.gpkg dosyas\u0131nda karo (raster) tablosu yok; GeoPackage'\u0131n yaln\u0131z vekt\u00f6r ve \u00f6znitelik tablolar\u0131 var.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "\u0130ki karo tablosu: table gerekir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/iki-tablo.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "table_not_found",
+       "message": "Dosyada 2 karo tablosu var; table ile birini se\u00e7in: a, b.",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "\u0130ki karo tablosundan b se\u00e7ilir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/iki-tablo.gpkg",
+      "table": "b",
+      "output": "$tmp:b.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "a",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4420088.0,
+          487712.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            1.0,
+            1.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "a",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4420400.0,
+          487500.0,
+          4420600.0
+         ]
+        },
+        {
+         "table": "b",
+         "srsId": 5256,
+         "bounds": [
+          487600.0,
+          4420088.0,
+          488112.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            1.0,
+            1.0
+           ],
+           "tiles": 4,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "b",
+         "srid": 5256,
+         "dataBounds": [
+          487600.0,
+          4420340.0,
+          487860.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "b",
+       "zoom": 1,
+       "area": [
+        487600.0,
+        4420340.0,
+        487860.0,
+        4420600.0
+       ],
+       "width": 260,
+       "height": 260,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487600.0,
+        1.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -1.0
+       ],
+       "srid": 5256,
+       "tilesRead": 4,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:b.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Karo tablosu olmayan ad",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/iki-tablo.gpkg",
+      "table": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "table_not_found",
+       "message": "\u201cyok\u201d dosyada bir karo tablosu de\u011fil; karo tablolar\u0131: a, b.",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tablo ad\u0131 karo tablosu de\u011fil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/qgis.gpkg",
+      "table": "parsel"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_tile_table",
+       "message": "qgis.gpkg dosyas\u0131nda karo (raster) tablosu yok; GeoPackage'\u0131n yaln\u0131z vekt\u00f6r ve \u00f6znitelik tablolar\u0131 var.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksik karo saydam kal\u0131r",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/eksik.gpkg",
+      "output": "$tmp:eksik.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 5,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4419760.0,
+          488400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 2,
+       "area": [
+        487200.0,
+        4419760.0,
+        488400.0,
+        4420600.0
+       ],
+       "width": 600,
+       "height": 420,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        2.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "tilesRead": 5,
+       "tilesMissing": 1,
+       "revision": "$current",
+       "path": "$tmp:eksik.tif",
+       "bytes": "$any"
+      },
+      "warnings": [
+       {
+        "code": "tiles_missing",
+        "message": "Okunan pencerenin 1 karosu tabloda yok; o yerler saydam (alfa 0) kald\u0131.",
+        "path": "table"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sistem bildirmeyen tablo: srid 0",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/sistemsiz.gpkg",
+      "output": "$tmp:yerel.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "yerel",
+         "srsId": -1,
+         "bounds": [
+          0.0,
+          -312.0,
+          512.0,
+          200.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 0
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            1.0,
+            1.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "yerel",
+         "dataBounds": [
+          0.0,
+          0.0,
+          300.0,
+          200.0
+         ]
+        }
+       ],
+       "table": "yerel",
+       "zoom": 1,
+       "area": [
+        0.0,
+        0.0,
+        300.0,
+        200.0
+       ],
+       "width": 300,
+       "height": 200,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        0.0,
+        1.0,
+        0.0,
+        200.0,
+        0.0,
+        -1.0
+       ],
+       "srid": 0,
+       "tilesRead": 2,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:yerel.tif",
+       "bytes": "$any"
+      },
+      "warnings": [
+       {
+        "code": "crs_undeclared",
+        "message": "Karo tablosu EPSG koordinat sistemi bildirmiyor; raster sistemsiz al\u0131nd\u0131.",
+        "path": "table"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Pencerede hi\u00e7 karo yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/bos.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "tile_table_empty",
+       "message": "\u201ckaro\u201d tablosunun 0. d\u00fczeyinde okunan pencerede hi\u00e7 karo yok.",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Okunamayacak kadar b\u00fcy\u00fck matris",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/genis.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "gpkg_tiles_too_large",
+       "message": "Raster 102400 \u00d7 102400 piksel olurdu; en \u00e7ok 25 milyon piksel okunur. Daha kaba bir zoom d\u00fczeyi ya da dar bir alan verin.",
+       "path": "zoom"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "B\u00fcy\u00fck matriste dar alan okunur",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/genis.gpkg",
+      "area": [
+       487200.0,
+       4420472.0,
+       487328.0,
+       4420600.0
+      ],
+      "output": "$tmp:dar.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "genis",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4369400.0,
+          538400.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 400,
+           "matrixHeight": 400,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            0.5,
+            0.5
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "genis",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4369400.0,
+          538400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "genis",
+       "zoom": 0,
+       "area": [
+        487200.0,
+        4420472.0,
+        487328.0,
+        4420600.0
+       ],
+       "width": 256,
+       "height": 256,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        0.5,
+        0.0,
+        4420600.0,
+        0.0,
+        -0.5
+       ],
+       "srid": 5256,
+       "tilesRead": 1,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:dar.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yol g\u00f6reli ama \u00e7izimin dosyas\u0131 yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "orto.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "\u201corto.gpkg\u201d g\u00f6reli bir yol, ama \u00e7izimin dosyas\u0131 yok; mutlak yolu verin ya da \u00e7izimi \u00f6nce kaydedin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bo\u015f yol",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "  "
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "Dosya yolu bo\u015f; bir dosyan\u0131n yolunu verin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosya yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/yok.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$fixture:gpkg-tiles/v1/yok.gpkg bulunamad\u0131; GeoPackage'\u0131n yolunu denetleyin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "SQLite de\u011fil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/metin.txt"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "metin.txt GeoPackage olarak okunamad\u0131: \u201c$fixture:gpkg-tiles/v1/metin.txt\u201d bir SQLite dosyas\u0131 de\u011fil",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "SQLite ama GeoPackage de\u011fil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/sqlite.db"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "sqlite.db GeoPackage olarak okunamad\u0131: \u201c$fixture:gpkg-tiles/v1/sqlite.db\u201d bir GeoPackage de\u011fil: gpkg_contents tablosu ve GPKG kimli\u011fi yok",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "\u00c7\u0131kt\u0131 .tif de\u011fil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "$tmp:orto.png"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "\u201corto.png\u201d bir .tif dosyas\u0131 de\u011fil; raster GeoTIFF olarak yaz\u0131l\u0131r.",
+       "path": "output"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "\u00c7\u0131kt\u0131n\u0131n klas\u00f6r\u00fc yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "$tmp:yok/orto.tif"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "\u201c$tmp:yok\u201d klas\u00f6r\u00fc yok; raster var olan bir klas\u00f6re yaz\u0131l\u0131r.",
+       "path": "output"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "\u00c7\u0131kt\u0131 olmadan layer",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "layer": "altlik"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "layer verildi ama output yok; rasteri eklemek i\u00e7in yaz\u0131lacak GeoTIFF'in yolunu (output) da verin.",
+       "path": "output"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "G\u00f6reli \u00e7\u0131kt\u0131 \u00e7izimin klas\u00f6r\u00fcne yaz\u0131l\u0131r",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "goreli.tif",
+      "drawing": "$tmp:proje.kcad"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4419760.0,
+          488400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 2,
+       "area": [
+        487200.0,
+        4419760.0,
+        488400.0,
+        4420600.0
+       ],
+       "width": 600,
+       "height": 420,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        2.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "tilesRead": 6,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:goreli.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Var olan \u00e7\u0131kt\u0131 overwrite olmadan reddedilir, overwrite ile yaz\u0131l\u0131r",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "$tmp:var.tif"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4419760.0,
+          488400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 2,
+       "area": [
+        487200.0,
+        4419760.0,
+        488400.0,
+        4420600.0
+       ],
+       "width": 600,
+       "height": 420,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        2.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "tilesRead": 6,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:var.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "$tmp:var.tif"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_exists",
+       "message": "$tmp:var.tif var; \u00fczerine yazmak i\u00e7in overwrite verin.",
+       "path": "output"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "$tmp:var.tif",
+      "overwrite": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4419760.0,
+          488400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 2,
+       "area": [
+        487200.0,
+        4419760.0,
+        488400.0,
+        4420600.0
+       ],
+       "width": 600,
+       "height": 420,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        2.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "tilesRead": 6,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:var.tif",
+       "bytes": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katmana eklenir ve geri al\u0131n\u0131r",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "$tmp:katman.tif",
+      "layer": "altlik"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4419760.0,
+          488400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 2,
+       "area": [
+        487200.0,
+        4419760.0,
+        488400.0,
+        4420600.0
+       ],
+       "width": 600,
+       "height": 420,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        2.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "tilesRead": 6,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:katman.tif",
+       "bytes": "$any",
+       "uid": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "GeoPackage karolar\u0131",
+     "expect": {
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Gizli katman uyar\u0131r",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "$tmp:gizli.tif",
+      "layer": "gizli"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "orto",
+         "srsId": 5256,
+         "bounds": [
+          487200.0,
+          4418552.0,
+          489248.0,
+          4420600.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            8.0,
+            8.0
+           ],
+           "tiles": 1,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            4.0,
+            4.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          },
+          {
+           "zoom": 2,
+           "matrixWidth": 4,
+           "matrixHeight": 4,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 6,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "orto",
+         "srid": 5256,
+         "dataBounds": [
+          487200.0,
+          4419760.0,
+          488400.0,
+          4420600.0
+         ]
+        }
+       ],
+       "table": "orto",
+       "zoom": 2,
+       "area": [
+        487200.0,
+        4419760.0,
+        488400.0,
+        4420600.0
+       ],
+       "width": 600,
+       "height": 420,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        2.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "tilesRead": 6,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:gizli.tif",
+       "bytes": "$any",
+       "uid": "$any"
+      },
+      "warnings": [
+       {
+        "code": "layer_hidden",
+        "message": "\u201cGizli\u201d katman\u0131 gizli; \u00e7izilen nesne g\u00f6r\u00fcnmeyecek.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katman",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "$tmp:kilitli.tif",
+      "layer": "kilitli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "\u201cKilitli\u201d katman\u0131 kilitli. Kilidi Katmanlar panelinden a\u00e7\u0131n ya da ba\u015fka bir katman\u0131 etkinle\u015ftirin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Grup katman de\u011fil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "$tmp:grup.tif",
+      "layer": "grup"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "\u201cGrup\u201d bir katman grubu; nesne yaln\u0131z katmana eklenir. Grubun i\u00e7inden bir katman se\u00e7in.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan katman",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "$tmp:yok.tif",
+      "layer": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "\u201cyok\u201d kimlikli katman \u00e7izimde yok. Var olan bir katman\u0131n kimli\u011fini verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sistem projeninkinden ba\u015fka",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "output": "$tmp:sistem.tif",
+      "layer": "altlik"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "Karo tablosunun sistemi EPSG:5256, projeninki EPSG:5255; raster \u00e7evrilmeden eklenmez. Dosyay\u0131 yazmak i\u00e7in layer'\u0131 vermeyin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sistemsiz tablo her projeye eklenir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/sistemsiz.gpkg",
+      "output": "$tmp:sistemsiz.tif",
+      "layer": "altlik"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "table": "yerel",
+         "srsId": -1,
+         "bounds": [
+          0.0,
+          -312.0,
+          512.0,
+          200.0
+         ],
+         "zooms": [
+          {
+           "zoom": 0,
+           "matrixWidth": 1,
+           "matrixHeight": 1,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            2.0,
+            2.0
+           ],
+           "tiles": 0
+          },
+          {
+           "zoom": 1,
+           "matrixWidth": 2,
+           "matrixHeight": 2,
+           "tileWidth": 256,
+           "tileHeight": 256,
+           "pixel": [
+            1.0,
+            1.0
+           ],
+           "tiles": 2,
+           "formats": [
+            "png"
+           ]
+          }
+         ],
+         "identifier": "yerel",
+         "dataBounds": [
+          0.0,
+          0.0,
+          300.0,
+          200.0
+         ]
+        }
+       ],
+       "table": "yerel",
+       "zoom": 1,
+       "area": [
+        0.0,
+        0.0,
+        300.0,
+        200.0
+       ],
+       "width": 300,
+       "height": 200,
+       "bands": 4,
+       "sample": "u8",
+       "affine": [
+        0.0,
+        1.0,
+        0.0,
+        200.0,
+        0.0,
+        -1.0
+       ],
+       "srid": 0,
+       "tilesRead": 2,
+       "tilesMissing": 0,
+       "revision": "$current",
+       "path": "$tmp:sistemsiz.tif",
+       "bytes": "$any",
+       "uid": "$any"
+      },
+      "warnings": [
+       {
+        "code": "crs_undeclared",
+        "message": "Karo tablosu EPSG koordinat sistemi bildirmiyor; raster sistemsiz al\u0131nd\u0131.",
+        "path": "table"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ge\u00e7ersiz beklenen s\u00fcr\u00fcm",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "expectedRevision": "x1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen s\u00fcr\u00fcm \u201cx1\u201d ge\u00e7erli bir s\u00fcr\u00fcm de\u011fil; s\u00fcr\u00fcm \u201c12\u201d gibi bir tamsay\u0131 yaz\u0131s\u0131d\u0131r. S\u00fcr\u00fcm\u00fc belgeden ya da komutun plan\u0131ndan al\u0131n.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eski beklenen s\u00fcr\u00fcm",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Karolar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altl\u0131k",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gpkg-tiles/v1/orto.gpkg",
+      "expectedRevision": "7"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "\u00c7izim bu komut haz\u0131rland\u0131ktan sonra de\u011fi\u015fti; hi\u00e7bir \u015fey yaz\u0131lmad\u0131. Komutu \u00e7izimin \u015fimdiki h\u00e2line g\u00f6re yeniden haz\u0131rlay\u0131n.",
+       "path": "expectedRevision",
+       "revision": "0"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

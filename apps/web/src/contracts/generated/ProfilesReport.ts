@@ -9,7 +9,11 @@ export type ProfilesReport = { profile: string, title: string, version: number,
 /**
  * The profile's basis, said with the answer.
  */
-basis: string, classes: Array<ProfileClassSummary>, 
+basis: string, 
+/**
+ * The mapping the profile was read through, when one was given.
+ */
+mapping?: string, classes: Array<ProfileClassSummary>, 
 /**
  * The findings: the value lists, then class by class in the profile's order (the layer, its fields, its objects'
  * geometry, required, values, identifiers, areas), then the relations and the address data.

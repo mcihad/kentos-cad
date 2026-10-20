@@ -1,0 +1,181 @@
+{
+  "format": "kentos.data-profile",
+  "version": 1,
+  "name": "park-bahce",
+  "title": "Park ve bahçeler profili",
+  "description": "Ağaçlar ve yeşil alanlar; üç sürüm.",
+  "basis": "Kurumun kendi çalışma profili; resmî bir şema değildir.",
+  "release": 2,
+  "migrations": [
+    {
+      "from": 1,
+      "to": 2,
+      "title": "Ağaç katmanı yeni adlarıyla",
+      "steps": [
+        {
+          "kind": "renameLayer",
+          "layer": [
+            "Peyzaj",
+            "Ağaçlar"
+          ],
+          "to": "Ağaç"
+        },
+        {
+          "kind": "renameField",
+          "layer": [
+            "Peyzaj",
+            "Ağaç"
+          ],
+          "from": "No",
+          "to": "AgacNo"
+        },
+        {
+          "kind": "renameField",
+          "layer": [
+            "Peyzaj",
+            "Ağaç"
+          ],
+          "from": "Alan",
+          "to": "YesilAlan"
+        },
+        {
+          "kind": "changeFieldType",
+          "layer": [
+            "Peyzaj",
+            "Ağaç"
+          ],
+          "field": {
+            "name": "Yas",
+            "alias": "Yaş",
+            "kind": "integer",
+            "min": "0",
+            "max": "500"
+          },
+          "onFail": "keep"
+        }
+      ]
+    }
+  ],
+  "domains": [
+    {
+      "id": "agac-tur",
+      "name": "Ağaç türü",
+      "kind": "text",
+      "values": [
+        {
+          "code": "cinar",
+          "label": "Çınar"
+        },
+        {
+          "code": "mese",
+          "label": "Meşe"
+        },
+        {
+          "code": "palmiye",
+          "label": "Palmiye"
+        },
+        {
+          "code": "diger",
+          "label": "Diğer"
+        }
+      ]
+    },
+    {
+      "id": "sulama",
+      "name": "Sulama",
+      "kind": "text",
+      "values": [
+        {
+          "code": "damla",
+          "label": "Damla"
+        },
+        {
+          "code": "yagmur",
+          "label": "Yağmurlama"
+        },
+        {
+          "code": "yok",
+          "label": "Yok"
+        }
+      ]
+    }
+  ],
+  "classes": [
+    {
+      "id": "agac",
+      "title": "Ağaç",
+      "theme": "Peyzaj",
+      "layer": [
+        "Peyzaj",
+        "Ağaç"
+      ],
+      "color": "#30A46C",
+      "geometry": "point",
+      "key": "AgacNo",
+      "fields": [
+        {
+          "name": "AgacNo",
+          "kind": "text",
+          "required": true
+        },
+        {
+          "name": "Tur",
+          "alias": "Tür",
+          "kind": "text",
+          "domain": "agac-tur"
+        },
+        {
+          "name": "Yas",
+          "alias": "Yaş",
+          "kind": "integer",
+          "min": "0",
+          "max": "500"
+        },
+        {
+          "name": "Sulama",
+          "kind": "text",
+          "domain": "sulama"
+        },
+        {
+          "name": "YesilAlan",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "id": "yesil",
+      "title": "Yeşil alan",
+      "theme": "Peyzaj",
+      "layer": [
+        "Peyzaj",
+        "Yeşil alan"
+      ],
+      "color": "#46A758",
+      "geometry": "area",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text"
+        },
+        {
+          "name": "Bolge",
+          "alias": "Bölge",
+          "kind": "text"
+        },
+        {
+          "name": "Tip",
+          "kind": "text"
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "agac-yesil",
+      "name": "Ağacın alanı",
+      "parent": "yesil",
+      "child": "agac",
+      "field": "YesilAlan"
+    }
+  ]
+}

@@ -7846,7 +7846,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 893,
+   "cases": 954,
    "files": [
     "fixtures/commands/v1/cad.entities.delete.relations.json",
     "fixtures/commands/v1/cad.entities.set.contingents.json",
@@ -7863,6 +7863,7 @@
     "fixtures/commands/v1/cad.joins.query.json",
     "fixtures/commands/v1/cad.profiles.apply.json",
     "fixtures/commands/v1/cad.profiles.check.json",
+    "fixtures/commands/v1/cad.profiles.migrate.json",
     "fixtures/commands/v1/cad.records.duplicate.json",
     "fixtures/commands/v1/cad.records.page.json",
     "fixtures/commands/v1/cad.relations.edit.json",
@@ -13258,7 +13259,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 32,
+   "cases": 72,
    "files": [
     "fixtures/commands/v1/cad.profiles.apply.json",
     "fixtures/commands/v1/cad.profiles.check.json"
@@ -13291,6 +13292,11 @@
     },
     {
      "key": "kind",
+     "value": "changeFieldType",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "date",
      "covered": false
     },
@@ -13307,6 +13313,26 @@
     {
      "key": "kind",
      "value": "integer",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mapValues",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "renameField",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "renameLayer",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "retireCode",
      "covered": false
     },
     {
@@ -13373,6 +13399,16 @@
      "key": "multiple",
      "value": true,
      "covered": false
+    },
+    {
+     "key": "onFail",
+     "value": "clear",
+     "covered": false
+    },
+    {
+     "key": "onFail",
+     "value": "keep",
+     "covered": true
     },
     {
      "key": "required",
@@ -13423,9 +13459,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 23,
+   "cases": 43,
    "files": [
-    "fixtures/commands/v1/cad.profiles.check.json"
+    "fixtures/commands/v1/cad.profiles.check.json",
+    "fixtures/commands/v1/cad.profiles.import.json"
    ],
    "options": [
     {
@@ -13455,6 +13492,11 @@
     },
     {
      "key": "kind",
+     "value": "changeFieldType",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "date",
      "covered": false
     },
@@ -13471,6 +13513,26 @@
     {
      "key": "kind",
      "value": "integer",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mapValues",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "renameField",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "renameLayer",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "retireCode",
      "covered": false
     },
     {
@@ -13537,6 +13599,438 @@
      "key": "multiple",
      "value": true,
      "covered": false
+    },
+    {
+     "key": "onFail",
+     "value": "clear",
+     "covered": false
+    },
+    {
+     "key": "onFail",
+     "value": "keep",
+     "covered": true
+    },
+    {
+     "key": "required",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "retired",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "clear",
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "copy",
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "default",
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "ratio",
+     "covered": false
+    },
+    {
+     "key": "unique",
+     "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.profiles.import",
+   "title": "Veri profili içe aktar",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 51,
+   "files": [
+    "fixtures/commands/v1/cad.profiles.import.json"
+   ],
+   "options": [
+    {
+     "key": "geometry",
+     "value": "area",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": "line",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "point",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": "record",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "boolean",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "changeFieldType",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "date",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "datetime",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "decimal",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "integer",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mapValues",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "renameField",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "renameLayer",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "retireCode",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "text",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "time",
+     "covered": false
+    },
+    {
+     "key": "level",
+     "value": "district",
+     "covered": false
+    },
+    {
+     "key": "level",
+     "value": "neighbourhood",
+     "covered": false
+    },
+    {
+     "key": "level",
+     "value": "province",
+     "covered": false
+    },
+    {
+     "key": "maxExclusive",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "clear",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "first",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "max",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "min",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "sum",
+     "covered": false
+    },
+    {
+     "key": "minExclusive",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "multiple",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "onFail",
+     "value": "clear",
+     "covered": false
+    },
+    {
+     "key": "onFail",
+     "value": "keep",
+     "covered": true
+    },
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "required",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "retired",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "clear",
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "copy",
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "default",
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "ratio",
+     "covered": false
+    },
+    {
+     "key": "unique",
+     "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.profiles.list",
+   "title": "Veri profillerini listele",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 34,
+   "files": [
+    "fixtures/commands/v1/cad.profiles.import.json",
+    "fixtures/commands/v1/cad.profiles.list.json"
+   ],
+   "options": [],
+   "kinds": []
+  },
+  {
+   "id": "cad.profiles.migrate",
+   "title": "Veri profili göçü",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 60,
+   "files": [
+    "fixtures/commands/v1/cad.profiles.migrate.json"
+   ],
+   "options": [
+    {
+     "key": "geometry",
+     "value": "area",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": "line",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "point",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": "record",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "boolean",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "changeFieldType",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "date",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "datetime",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "decimal",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "integer",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "mapValues",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "renameField",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "renameLayer",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "retireCode",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "text",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "time",
+     "covered": false
+    },
+    {
+     "key": "level",
+     "value": "district",
+     "covered": false
+    },
+    {
+     "key": "level",
+     "value": "neighbourhood",
+     "covered": false
+    },
+    {
+     "key": "level",
+     "value": "province",
+     "covered": false
+    },
+    {
+     "key": "maxExclusive",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "clear",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "first",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "max",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "min",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "sum",
+     "covered": false
+    },
+    {
+     "key": "minExclusive",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "multiple",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "onFail",
+     "value": "clear",
+     "covered": true
+    },
+    {
+     "key": "onFail",
+     "value": "keep",
+     "covered": true
     },
     {
      "key": "required",
@@ -13744,6 +14238,64 @@
      "covered": true
     }
    ]
+  },
+  {
+   "id": "cad.rasters.gpkgread",
+   "title": "GeoPackage karolarını oku",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 51,
+   "files": [
+    "fixtures/commands/v1/cad.rasters.gpkgread.json"
+   ],
+   "options": [
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.rasters.gpkgwrite",
+   "title": "Rasteri GeoPackage karosu olarak yaz",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 35,
+   "files": [
+    "fixtures/commands/v1/cad.rasters.gpkgwrite.json"
+   ],
+   "options": [
+    {
+     "key": "mode",
+     "value": "add",
+     "covered": true
+    },
+    {
+     "key": "mode",
+     "value": "new",
+     "covered": true
+    },
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
   },
   {
    "id": "cad.rasters.mosaic",

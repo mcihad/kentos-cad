@@ -1184,6 +1184,30 @@ codes! {
     PROFILE_DOMAIN_DIFFERS = "profile_domain_differs", Warning, false, "Projenin değer listesi profilinkinden farklı; projeninki korundu.";
     /// A class left out: its path names something not a layer, or its layer is locked (docs/adr/0541).
     PROFILE_LAYER_SKIPPED = "profile_layer_skipped", Warning, false, "Profilin bir sınıfı ya da parçası atlandı; iletisi nedenini söyler.";
+    /// Nothing to import: no source file, no profile and no mapping given (docs/adr/0558).
+    PROFILE_SOURCE_MISSING = "profile_source_missing", Failed, false, "İçe aktarılacak tek bir kaynak verilmedi: bir JSON dosyası (source), profil (profile) ya da eşleme (mapping) verin; yalnız biri.";
+    /// A JSON file that is neither a data profile nor a mapping by its `format` (docs/adr/0558).
+    UNKNOWN_PROFILE_FORMAT = "unknown_profile_format", Failed, false, "Dosyanın biçimi tanınmıyor: veri profili (kentos.data-profile) ya da eşleme (kentos.profile-mapping) olmalı.";
+    /// A profile or a mapping of a format version this KentOS does not read (docs/adr/0558).
+    UNSUPPORTED_PROFILE_VERSION = "unsupported_profile_version", Failed, false, "Profilin ya da eşlemenin biçim sürümü bu KentOS'un okuduğu değil; bu KentOS 1. sürümü okur.";
+    /// A profile named as a built-in one: it would shadow it (docs/adr/0558).
+    PROFILE_NAME_TAKEN = "profile_name_taken", Failed, false, "Bu ad KentOS'un kendi profilinin adı; projenin profiline başka bir ad verin.";
+    /// A profile of an earlier release than the project's file of the name (docs/adr/0558).
+    PROFILE_DOWNGRADE = "profile_downgrade", Failed, false, "Projedeki aynı adlı profil içe aktarılandan daha yeni sürümde; üzerine yazmak için overwrite verin.";
+    /// A mapping named that the project has not (docs/adr/0558).
+    UNKNOWN_MAPPING = "unknown_mapping", Failed, false, "Bu adda eşleme yok; projenin profiller klasöründeki bir eşlemenin adını ya da eşlemenin kendisini (mapping) verin.";
+    /// A mapping whose shape does not hold for its profile (docs/adr/0558).
+    INVALID_PROFILE_MAPPING = "invalid_profile_mapping", Failed, false, "Eşleme geçersiz; iletisi neyin tutmadığını söyler.";
+    /// A migration whose releases do not go forward within the profile's release (docs/adr/0558).
+    INVALID_MIGRATION = "invalid_migration", Failed, false, "Göçün sürümleri geçersiz: hedef sürüm kaynaktan büyük ve profilin sürümünü aşmayan bir sayı olmalı.";
+    /// No unbroken chain of the profile's migrations between two releases (docs/adr/0558).
+    MIGRATION_GAP = "migration_gap", Failed, false, "Profilin göçlerinde bu iki sürüm arasında kesintisiz bir yol yok.";
+    /// A step of a migration left out: its layer, field or list is not in the drawing (docs/adr/0558).
+    MIGRATION_STEP_SKIPPED = "migration_step_skipped", Warning, false, "Bir göç adımı atlandı: katmanı, alanı ya da değer listesi çizimde yok.";
+    /// A mapping brought for a profile this project cannot find: its names were not checked (docs/adr/0558).
+    MAPPING_UNCHECKED = "mapping_unchecked", Warning, false, "Eşlemenin profili bulunamadı; adları profille denetlenmedi.";
+    /// A profile file replaced by a later or an equal release (docs/adr/0558).
+    PROFILE_REPLACED = "profile_replaced", Warning, false, "Projedeki aynı adlı profil ya da eşleme değiştirildi; iletisi eski sürümünü söyler.";
     /// A valid time's period that does not hold: an instant and a period together, an end alone, an end not after the start (docs/adr/0537).
     INVALID_PERIOD = "invalid_period", Failed, false, "Geçerlilik zamanı bir an ya da başlangıcı bitişinden önce bir aralık olmalı.";
     /// A database address that cannot be kept: a password in it, no host or no database (docs/adr/0505).
@@ -1614,6 +1638,32 @@ codes! {
     NO_CHECK_POINTS = "no_check_points", Warning, false, "Denetim noktası yok: m0 yalnız kontrol noktalarının uyumunu söyler; dönüşüme girmeyen, rastere yayılmış denetim noktaları ekleyin.";
     /// A placed raster's source was not found: its record has no digest.
     SOURCE_NOT_READ = "source_not_read", Warning, false, "Rasterin kaynağı okunamadı; kayıt kaynağın özetini taşımıyor.";
+
+    // ── GeoPackage tile pyramids (docs/adr/0556) ────────────────────────
+    /// A GeoPackage without a tile table.
+    NO_TILE_TABLE = "no_tile_table", Failed, false, "Dosyada karo (raster) tablosu yok; GeoPackage'ın yalnız vektör ve öznitelik tabloları var.";
+    /// A zoom level the tile table has no matrix for.
+    ZOOM_NOT_FOUND = "zoom_not_found", Failed, false, "Karo tablosunda bu zoom düzeyi yok; tablonun düzeylerinden birini verin.";
+    /// An area that is not four finite numbers, west before east and south before north.
+    INVALID_AREA = "invalid_area", Failed, false, "Alan [en küçük x, en küçük y, en büyük x, en büyük y] olmalı: sonlu sayılar, en küçükler en büyüklerden küçük.";
+    /// No tile at the zoom in the window.
+    TILE_TABLE_EMPTY = "tile_table_empty", Failed, false, "Karo tablosunda bu zoom düzeyinin okunan penceresinde hiç karo yok.";
+    /// A raster read from tiles, or written as tiles, of more pixels than it may have.
+    GPKG_TILES_TOO_LARGE = "gpkg_tiles_too_large", Failed, false, "Raster 25 milyon pikselden büyük olurdu; daha kaba bir zoom düzeyi ya da dar bir alan verin (yazarken daha küçük bir raster).";
+    /// A tile that is not a PNG of its matrix's size.
+    TILE_UNREADABLE = "tile_unreadable", Failed, false, "Bir karo okunamadı: PNG değil, bozuk ya da matrisin karo boyunda değil.";
+    /// Tiles in a format the reader does not decode.
+    TILE_FORMAT_UNSUPPORTED = "tile_format_unsupported", Failed, false, "Karolar JPEG, WebP ya da 8 bitten fazla PNG; bu okuyucu yalnız 8 bitlik PNG karoları açar.";
+    /// A table name that is not a plain SQLite identifier.
+    INVALID_TABLE_NAME = "invalid_table_name", Failed, false, "Tablo adı harf ya da alt çizgiyle başlamalı, harf, rakam ve alt çizgi içermeli ve gpkg_ ile başlamamalı.";
+    /// A raster the tile writer does not take.
+    RASTER_UNSUPPORTED = "raster_unsupported", Failed, false, "Raster karo olarak yazılamaz: paletli, 8 bitten fazla, veri seti ya da dosyası okunamayan bir kaynak.";
+    /// A raster turned or not north up.
+    RASTER_NOT_NORTH_UP = "raster_not_north_up", Failed, false, "Raster dönük ya da kuzeyi yukarıda değil; karo ızgarası yatay ve düşey olduğu için önce Raster oturt ile yeniden örnekleyin.";
+    /// Tiles of the window the table does not hold.
+    TILES_MISSING = "tiles_missing", Warning, false, "Okunan pencerenin bazı karoları tabloda yok; o yerler saydam (alfa 0) kaldı.";
+    /// A raster's nodata that a tile cannot carry.
+    NODATA_LOST = "nodata_lost", Warning, false, "Rasterin nodata değeri karolara yazılamaz (GeoPackage karoları alfa taşır); değer olduğu gibi piksel sayıldı.";
 
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.

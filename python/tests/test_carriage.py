@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import math
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -50,6 +51,52 @@ class CarriageTests(unittest.TestCase):
         self.assertGreaterEqual(files, 50)
         self.assertGreaterEqual(objects, 200)
         self.assertGreaterEqual(len(kinds), 20)
+
+    def test_every_sample_is_saved_and_opened_again_as_it_was(self) -> None:
+        """A project opened from any sample and saved again comes back with the same settings, layers and objects: the
+        writer picks the schema that holds what it has, and a key it writes must be one that schema's reader reads
+        (docs/adr/0558's ek to 0265: a project with value lists and no form was saved in a schema that could not read them)."""
+        expected = json.loads((DIR / "expected.json").read_text(encoding="utf-8"))
+        saved = 0
+        with tempfile.TemporaryDirectory() as tmp:
+            for case in expected["files"]:
+                if not case.get("content"):
+                    continue
+                doc = cad.Document.open(DIR / case["file"])
+                path = Path(tmp) / "kopya.kcad"
+                doc.save(path)
+                again = cad.Document.open(path)
+                with self.subTest(file=case["file"]):
+                    self.assertTrue(same(self.held(again), self.held(doc)))
+                saved += 1
+        self.assertGreaterEqual(saved, 100)
+
+    def test_the_profile_projects_are_saved_and_opened_again(self) -> None:
+        """fixtures/profiles/v1: a municipality's project (value lists, linked fields, relations), another institution's
+        names for it and the park project: saved to a file and opened, as the desktop's Save does."""
+        folder = DIR.parents[1] / "profiles" / "v1"
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in ("belediye", "sivas", "park-r1"):
+                doc = cad.Document.from_bytes((folder / f"{name}.json").read_bytes())
+                path = Path(tmp) / f"{name}.kcad"
+                doc.save(path)
+                again = cad.Document.open(path)
+                with self.subTest(project=name):
+                    self.assertTrue(same(self.held(again), self.held(doc)))
+                    self.assertFalse(again.info().dirty)
+
+    @staticmethod
+    def held(doc: cad.Document) -> dict[str, object]:
+        """What a project holds, as JSON: its settings, its layers and its objects."""
+        settings = json.loads(dumps(doc.settings.to_json()))
+        # Save writes where a bound file is from the drawing's folder (`relative`, docs/adr/0506): not carried, made.
+        for source in settings.get("sources", []):
+            source.pop("relative", None)
+        return {
+            "settings": settings,
+            "layers": [json.loads(dumps(n.to_json())) for n in doc.layers()],
+            "entities": [json.loads(dumps(r.entity.to_json())) for r in doc.entities(page_size=10_000)],
+        }
 
 
 if __name__ == "__main__":

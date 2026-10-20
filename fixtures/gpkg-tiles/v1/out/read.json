@@ -1,0 +1,152 @@
+[
+  {
+    "defaultWindow": true,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "orto-2.tif",
+    "pixel": [
+      2.0,
+      2.0
+    ],
+    "source": "orto.gpkg",
+    "srid": 5256,
+    "zoom": 2
+  },
+  {
+    "defaultWindow": true,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "orto-1.tif",
+    "pixel": [
+      4.0,
+      4.0
+    ],
+    "source": "orto.gpkg",
+    "srid": 5256,
+    "zoom": 1
+  },
+  {
+    "defaultWindow": true,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "orto-0.tif",
+    "pixel": [
+      8.0,
+      8.0
+    ],
+    "source": "orto.gpkg",
+    "srid": 5256,
+    "zoom": 0
+  },
+  {
+    "defaultWindow": false,
+    "origin": [
+      487202.0,
+      4420300.0
+    ],
+    "output": "orto-kesir.tif",
+    "pixel": [
+      2.0,
+      2.0
+    ],
+    "source": "orto.gpkg",
+    "srid": 5256,
+    "zoom": 2
+  },
+  {
+    "defaultWindow": false,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "orto-tasan.tif",
+    "pixel": [
+      2.0,
+      2.0
+    ],
+    "source": "orto.gpkg",
+    "srid": 5256,
+    "zoom": 2
+  },
+  {
+    "defaultWindow": true,
+    "origin": [
+      487204.0,
+      4420512.0
+    ],
+    "output": "kaymis-2.tif",
+    "pixel": [
+      2.0,
+      2.0
+    ],
+    "source": "kaymis.gpkg",
+    "srid": 5256,
+    "zoom": 2
+  },
+  {
+    "defaultWindow": true,
+    "origin": [
+      487200.0,
+      4420512.0
+    ],
+    "output": "kaymis-0.tif",
+    "pixel": [
+      8.0,
+      8.0
+    ],
+    "source": "kaymis.gpkg",
+    "srid": 5256,
+    "zoom": 0
+  },
+  {
+    "defaultWindow": true,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "gri.tif",
+    "pixel": [
+      1.0,
+      1.0
+    ],
+    "source": "gri.gpkg",
+    "srid": 5256,
+    "zoom": 2
+  },
+  {
+    "defaultWindow": true,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "gri-saf.tif",
+    "pixel": [
+      1.0,
+      1.0
+    ],
+    "source": "gri-saf.gpkg",
+    "srid": 5256,
+    "zoom": 2
+  },
+  {
+    "defaultWindow": true,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "eksik.tif",
+    "pixel": [
+      2.0,
+      2.0
+    ],
+    "source": "eksik.gpkg",
+    "srid": 5256,
+    "zoom": 2
+  }
+]

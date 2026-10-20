@@ -1,0 +1,15 @@
+{
+  "format": "kentos.profile-mapping",
+  "version": 1,
+  "name": "park-bahce-bozuk",
+  "title": "Bozuk eşleme",
+  "profile": "park-bahce",
+  "classes": [
+    {
+      "class": "orman",
+      "layer": [
+        "Orman"
+      ]
+    }
+  ]
+}

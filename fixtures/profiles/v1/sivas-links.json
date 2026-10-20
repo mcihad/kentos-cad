@@ -1,0 +1,37 @@
+{
+  "format": "kentos.profile-links",
+  "version": 1,
+  "note": "The institution project's relation links (docs/adr/0558): the child object's field holds the parent object's persistent id; written by cad.entities.set after opening.",
+  "links": [
+    {
+      "child": 10,
+      "field": "PARSEL_REF",
+      "parent": 4
+    },
+    {
+      "child": 11,
+      "field": "PARSEL_REF",
+      "parent": 5
+    },
+    {
+      "child": 13,
+      "field": "PARSEL_REF",
+      "parent": 6
+    },
+    {
+      "child": 17,
+      "field": "YAPI_REF",
+      "parent": 10
+    },
+    {
+      "child": 18,
+      "field": "YAPI_REF",
+      "parent": 11
+    },
+    {
+      "child": 19,
+      "field": "YAPI_REF",
+      "parent": 12
+    }
+  ]
+}

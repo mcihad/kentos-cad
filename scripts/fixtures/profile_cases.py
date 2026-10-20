@@ -4,6 +4,8 @@
 - fixtures/commands/v1/cad.profiles.check.json (`cad.profiles.check` v1: where the data departs from the profile)
 - fixtures/profiles/v1/belediye.json (the reference municipality project: districts, blocks, parcels, buildings, roads,
   addresses; no personal data) and fixtures/profiles/v1/links.json (its relations' links, written by `cad.entities.set`)
+- fixtures/profiles/v1/files/ (the profile and the mappings the cases read from the project's `profiller` folder, docs/adr/0558),
+  fixtures/profiles/v1/sivas.json and sivas-links.json (an institution's project with its own names, for the desktop's pictures)
 
 The rules are written here again from the ADR and the contract (crates/shared/commands/src/cad_profiles.rs), the tree,
 the objects and the settings as plain JSON, without KentOS code: the layer path found by Turkish-folded names, the
@@ -286,7 +288,7 @@ def uid(e):
     return f"$uidOf:{e['id']}"
 
 
-def report(doc, profile):
+def report(doc, profile, mapping=None):
     findings = []
     settings = doc["settings"]
     for d in profile.get("domains", []):
@@ -324,6 +326,7 @@ def report(doc, profile):
         parent, child = layer_of[r["parent"]], layer_of[r["child"]]
         h = layer_field(get(doc["layers"], child).get("fields", []), r["field"])
         key = key_of(h) if h else r["field"]
+        attr = h["name"] if h else r["field"]
         if not any(x["id"] == r["id"] or (x["parent"] == parent and x["child"] == child and x["field"] == key)
                    for x in settings.get("relations", [])):
             findings.append(finding("missingRelation", None, None, r["id"], [], True,
@@ -334,12 +337,12 @@ def report(doc, profile):
         for e in doc["entities"]:
             if e["layerId"] != child:
                 continue
-            v = links.get((e["id"], key))
+            v = links.get((e["id"], attr))
             if v is not None:
                 if v not in parents:
                     broken.append(uid(e))
                 continue
-            v = value_of(e, key)
+            v = value_of(e, attr)
             if v is not None:
                 broken.append(uid(e))
         if broken:
@@ -351,8 +354,11 @@ def report(doc, profile):
         if not any(x["id"] == id_ or x["name"] == profile["title"] for x in settings.get("addressLocators", [])):
             findings.append(finding("missingAddress", None, None, id_, [], True,
                                     "Profilin adres verisi projede yok; Veri profilini uygula onu ekler."))
-    return {"profile": profile["name"], "title": profile["title"], "version": profile["version"],
-            "basis": profile["basis"], "classes": summaries, "findings": findings, "clean": not findings}
+    out = {"profile": profile["name"], "title": profile["title"], "version": profile["version"],
+           "basis": profile["basis"], "classes": summaries, "findings": findings, "clean": not findings}
+    if mapping is not None:
+        out["mapping"] = mapping
+    return out
 
 
 def class_findings(doc, profile, c, layer, square, findings):
@@ -369,7 +375,8 @@ def class_findings(doc, profile, c, layer, square, findings):
         if h["kind"] != f["kind"]:
             findings.append(finding("fieldKind", c["id"], layer, f["name"], [], False,
                                     f"“{name}” katmanının “{h['name']}” alanı {kind_word(h)}, profilde {kind_word(f)}."))
-        keys.append((f, key_of(h)))
+        # The objects' values are under the field's name; its key (id) is what forms and relations bind to.
+        keys.append((f, h["name"]))
     objects = [e for e in doc["entities"] if e["layerId"] == layer]
     word, kinds = GEOMETRY[c["geometry"]]
     wrong = [uid(e) for e in objects if e["kind"] not in kinds]
@@ -576,6 +583,237 @@ def tree_after(doc):
     return {"layers": doc["layers"]}
 
 
+# ── An institution's mapping (docs/adr/0558) ────────────────────────────────
+
+MAPPING_FORMAT = "kentos.profile-mapping"
+
+
+def plain_name(name):
+    return 1 <= len(name) <= 64 and all(c.islower() and c.isascii() or c.isdigit() and c.isascii() or c == "-" for c in name)
+
+
+def mapping_problem(m, p):
+    """What is wrong with mapping `m` for profile `p`; None when it holds (crates/shared/commands/src/cad_profile_files.rs)."""
+    if m["format"] != MAPPING_FORMAT or m["version"] != 1:
+        return f"Eşlemenin biçimi “{MAPPING_FORMAT}”, sürümü 1 olmalı."
+    if not plain_name(m["name"]):
+        return f"“{m['name']}” eşleme adı olamaz: küçük harf, rakam ve tire, en çok 64."
+    if not m["title"].strip():
+        return "Eşlemenin başlığı boş olamaz."
+    if m["profile"] != p["name"]:
+        return f"Eşleme “{m['profile']}” profili için yazılmış, verilen profil “{p['name']}”."
+    if not m["classes"] or len(m["classes"]) > 256:
+        return "Eşlemede 1 ile 256 arası sınıf olur."
+    for i, mc in enumerate(m["classes"]):
+        c = next((c for c in p["classes"] if c["id"] == mc["class"]), None)
+        if c is None:
+            return f"“{mc['class']}” sınıfı profilde yok."
+        if any(o["class"] == mc["class"] for o in m["classes"][:i]):
+            return f"“{c['title']}” sınıfı eşlemede iki kez var."
+        layer = mc.get("layer", [])
+        if layer and any(not n.strip() for n in layer):
+            return f"“{c['title']}” sınıfının katman yolunda boş ad var."
+        fields, codes = mc.get("fields", []), mc.get("codes", [])
+        finals = [f["name"] for f in c["fields"] if not any(x["profile"] == f["name"] for x in fields)]
+        for j, f in enumerate(fields):
+            if not any(x["name"] == f["profile"] for x in c["fields"]):
+                return f"“{f['profile']}” alanı “{c['title']}” sınıfında yok."
+            if any(o["profile"] == f["profile"] for o in fields[:j]):
+                return f"“{f['profile']}” alanı iki kez eşlenmiş."
+            if not f["name"].strip() or f["name"].strip() != f["name"]:
+                return f"“{f['profile']}” alanının kurumdaki adı boş ya da baş ve sonunda boşluklu."
+            if f["name"] in finals:
+                return f"“{f['name']}” adı “{c['title']}” sınıfında başka bir alanın adı olurdu."
+            finals.append(f["name"])
+        for j, mcs in enumerate(codes):
+            f = next((applied(x, p.get("domains", [])) for x in c["fields"] if x["name"] == mcs["field"]), None)
+            if f is None:
+                return f"“{mcs['field']}” alanı “{c['title']}” sınıfında yok."
+            if any(o["field"] == mcs["field"] for o in codes[:j]):
+                return f"“{mcs['field']}” alanının kodları iki kez eşlenmiş."
+            values = f.get("values")
+            if not values:
+                return f"“{mcs['field']}” alanının değer listesi yok; kodları eşlenemez."
+            named = [v["code"] for v in values if not any(x["profile"] == v["code"] for x in mcs["codes"])]
+            for k, code in enumerate(mcs["codes"]):
+                if not any(v["code"] == code["profile"] for v in values):
+                    return f"“{code['profile']}” kodu “{mcs['field']}” alanının değer listesinde yok."
+                if any(o["profile"] == code["profile"] for o in mcs["codes"][:k]):
+                    return f"“{code['profile']}” kodu iki kez eşlenmiş."
+                if not code["name"].strip() or code["name"].strip() != code["name"] or ";" in code["name"]:
+                    return f"“{code['profile']}” kodunun kurumdaki adı boş, boşluklu ya da “;” içeriyor."
+                if code["name"] in named:
+                    return f"“{code['name']}” kodu “{mcs['field']}” alanında başka bir kodun adı olurdu."
+                named.append(code["name"])
+    return None
+
+
+def through(p, m):
+    """The profile read through the mapping: the institution's layer paths, field names (the profile's name is the stable id)
+    and codes; what the mapping does not name stays."""
+    out = copy.deepcopy(p)
+
+    def field_name(cls_id, name):
+        mc = next((c for c in m["classes"] if c["class"] == cls_id), None)
+        hit = next((f for f in (mc or {}).get("fields", []) if f["profile"] == name), None)
+        return hit["name"] if hit else name
+
+    for c in out["classes"]:
+        mc = next((x for x in m["classes"] if x["class"] == c["id"]), None)
+        if mc is None:
+            continue
+        if mc.get("layer"):
+            c["layer"] = list(mc["layer"])
+        own_fields = c["fields"]
+        fields = []
+        for f, own in zip(follow(own_fields, p.get("domains", [])), own_fields):
+            codes = next((x for x in mc.get("codes", []) if x["field"] == own["name"]), None)
+            if codes is not None:
+                f = copy.deepcopy(f)
+                f.pop("domain", None)
+                for v in f.get("values", []):
+                    hit = next((x for x in codes["codes"] if x["profile"] == v["code"]), None)
+                    if hit:
+                        v["code"] = hit["name"]
+                if f.get("default") is not None:
+                    hit = next((x for x in codes["codes"] if x["profile"] == f["default"]), None)
+                    if hit:
+                        f["default"] = hit["name"]
+            else:
+                f = copy.deepcopy(own)
+            x = next((x for x in mc.get("fields", []) if x["profile"] == own["name"]), None)
+            if x:
+                f["id"] = own["name"]
+                f["name"] = x["name"]
+            fields.append(f)
+        c["fields"] = fields
+        if c.get("key"):
+            c["key"] = field_name(c["id"], c["key"])
+        if c.get("registeredArea"):
+            c["registeredArea"]["field"] = field_name(c["id"], c["registeredArea"]["field"])
+    for r in out.get("relations", []):
+        r["field"] = field_name(r["child"], r["field"])
+    a = out.get("address")
+    if a:
+        if "doors" in a:
+            d = a["doors"]
+            for k in ("street", "door", "neighbourhood", "district", "province", "postcode", "building", "code"):
+                if k in d:
+                    d[k] = field_name(d["layer"], d[k])
+        if "streets" in a:
+            d = a["streets"]
+            for k in ("name", "neighbourhood", "district"):
+                if k in d:
+                    d[k] = field_name(d["layer"], d[k])
+        for d in a.get("areas", []):
+            for k in ("name", "district"):
+                if k in d:
+                    d[k] = field_name(d["layer"], d[k])
+    return out
+
+
+def mapping(name, title, profile, classes, **extra):
+    return {"format": MAPPING_FORMAT, "version": 1, "name": name, "title": title, "profile": profile, **extra, "classes": classes}
+
+
+def code_map(field, pairs):
+    return {"field": field, "codes": [{"profile": a, "name": b} for a, b in pairs]}
+
+
+def renames(pairs):
+    return [{"profile": a, "name": b} for a, b in pairs]
+
+
+PARSEL_FIELDS = [("ParselKimlik", "PARSEL_ID"), ("AdaNo", "ADA_NO"), ("ParselNo", "PARSEL_NO"), ("TapuAlani", "TAPU_ALANI"),
+                 ("Nitelik", "NITELIK")]
+PARSEL_CODES = [("arsa", "A"), ("tarla", "T"), ("bahce", "B"), ("bina", "KB"), ("diger", "D")]
+BINA_FIELDS = [("BinaKimlik", "YAPI_ID"), ("KatSayisi", "KAT"), ("Kullanim", "KULLANIM"), ("Parsel", "PARSEL_REF")]
+BINA_CODES = [("konut", "K"), ("ticaret", "T"), ("karma", "KT"), ("kamu", "KM"), ("sanayi", "S")]
+ADRES_FIELDS = [("Yol", "CADDE"), ("KapiNo", "KAPI"), ("Bina", "YAPI_REF")]
+
+# Sivas Belediyesi's names for the municipality profile: layers, fields and codes of its own.
+SIVAS = mapping("sivas-bel", "Sivas Belediyesi eşlemesi", "tucbs-temel", [
+    {"class": "parsel", "layer": ["Kadastro", "Parseller"], "fields": renames(PARSEL_FIELDS), "codes": [code_map("Nitelik", PARSEL_CODES)]},
+    {"class": "bina", "layer": ["Binalar", "Yapılar"], "fields": renames(BINA_FIELDS), "codes": [code_map("Kullanim", BINA_CODES)]},
+    {"class": "adres", "fields": renames(ADRES_FIELDS)},
+], description="Belediyenin kendi katman, alan ve kod adları.")
+# Only the layers' paths.
+PATHS_ONLY = mapping("yalniz-yollar", "Yalnız katman yolları", "tucbs-temel", [
+    {"class": "parsel", "layer": ["Kadastro", "Parseller"]},
+    {"class": "bina", "layer": ["Binalar", "Yapılar"]},
+])
+MAP_SMALL = mapping("peyzaj-kurum", "Peyzaj eşlemesi", "peyzaj", [
+    {"class": "agac", "layer": ["Peyzaj", "Ağaçlar"], "fields": renames([("AgacNo", "NO"), ("Tur", "TUR")]),
+     "codes": [code_map("Tur", [("cinar", "C"), ("mese", "M")])]},
+    {"class": "yesil", "fields": renames([("KayitliAlan", "KAYIT")])},
+])
+INST_LINKS = [(10, "PARSEL_REF", 4), (11, "PARSEL_REF", 5), (13, "PARSEL_REF", 6), (17, "YAPI_REF", 10), (18, "YAPI_REF", 11),
+              (19, "YAPI_REF", 12)]
+
+
+def _renamed_fields(fields, pairs, codes=None):
+    out = []
+    for f in fields:
+        f = copy.deepcopy(f)
+        hit = next((b for a, b in pairs if a == f["name"]), None)
+        if hit:
+            f["name"] = hit
+        if codes and f["name"] == codes[0]:
+            f.pop("domain", None)
+            for v in f.get("values", []):
+                v["code"] = dict(codes[1]).get(v["code"], v["code"])
+        out.append(f)
+    return out
+
+
+def institution_doc(relations=True):
+    """The reference project as the institution keeps it: its own layer paths, field names and codes; no value lists of its
+    own and no profile fields it lacks."""
+    d = reference(domains=None, relations=None)
+    if relations:
+        d["settings"]["relations"] = [{"id": "parsel-bina", "name": "Parselin binaları", "parent": "parsel", "child": "bina",
+                                       "field": "PARSEL_REF"}]
+    parsel, bina, kapi = get(d["layers"], "parsel"), get(d["layers"], "bina"), get(d["layers"], "kapi")
+    parsel["name"], bina["name"] = "Parseller", "Yapılar"
+    parsel["fields"] = _renamed_fields(parsel["fields"], PARSEL_FIELDS, ("NITELIK", PARSEL_CODES))
+    bina["fields"] = _renamed_fields(bina["fields"], BINA_FIELDS, ("KULLANIM", BINA_CODES))
+    kapi["fields"] = _renamed_fields(kapi["fields"], ADRES_FIELDS)
+    maps = {"parsel": (PARSEL_FIELDS, "NITELIK", PARSEL_CODES), "bina": (BINA_FIELDS, "KULLANIM", BINA_CODES),
+            "kapi": (ADRES_FIELDS, None, [])}
+    for e in d["entities"]:
+        pairs, code_field, codes = maps.get(e["layerId"], ([], None, []))
+        attrs = {}
+        for k, v in e["attrs"].items():
+            k2 = dict(pairs).get(k, k)
+            attrs[k2] = dict(codes).get(v, v) if k2 == code_field else v
+        e["attrs"] = attrs
+    return d
+
+
+MAPPING_STEP = "Veri profili"
+
+
+def mapped(profile, m):
+    return through(profile, m)
+
+
+def file_steps(folder, **files):
+    """Steps that put a fixture file into the project's `profiller` folder of case folder `folder`."""
+    return [step("copyFile", **{"from": src, "to": f"$tmp:{folder}/profiller/{name}"}) for name, src in files.items()]
+
+
+FIX = "$fixture:profiles/v1/files/"
+SIVAS_FILE = "sivas-bel.eslem.json"
+SMALL_FILE = "peyzaj.profil.json"
+MAP_SMALL_FILE = "peyzaj-kurum.eslem.json"
+_FOLDER = [0]
+
+
+def next_folder():
+    _FOLDER[0] += 1
+    return f"pc{_FOLDER[0]:02d}"
+
+
 # ── Cases ────────────────────────────────────────────────────────────────────
 
 APPLY, CHECK = "cad.profiles.apply", "cad.profiles.check"
@@ -717,7 +955,7 @@ def apply_cases():
              {"revision": "same", "layers": tree}),
     ]})
     del tree
-    return cases
+    return cases + mapping_apply_cases()
 
 
 def check_case(name, doc, input_=NAME, links=LINKS, plan=False, profile=PROFILE, before=()):
@@ -800,7 +1038,13 @@ def check_cases():
         if f["name"] == "TapuAlani":
             f["id"] = "TapuAlani"
             f["name"] = "Tapu alanı"
-    cases.append(check_case("Alan adıyla değil anahtarıyla bulunur (Tapu alanı, anahtarı TapuAlani)", reference(layers=lay)))
+    # A renamed field's values moved with it: the objects hold them under the new name, the key stays.
+    ents = reference_entities()
+    for e in ents:
+        if "TapuAlani" in e["attrs"]:
+            e["attrs"]["Tapu alanı"] = e["attrs"].pop("TapuAlani")
+    cases.append(check_case("Alan adıyla değil anahtarıyla bulunur (Tapu alanı, anahtarı TapuAlani); değerler alanın adının altında",
+                            reference(layers=lay, entities=ents)))
     # The field of another kind.
     lay = reference_layers()
     for f in get(lay, "bina")["fields"]:
@@ -866,6 +1110,200 @@ def check_cases():
     for title, p, why in INVALID[:4]:
         cases.append({"name": f"geçersiz profil: {title}", "setup": ref,
                       "steps": [step("execute", {"profile": p}, failed("invalid_profile", f"Veri profili geçersiz: {why}", "profile"))]})
+    return cases + mapping_check_cases()
+
+
+# ── Cases with a mapping or a project's own file ─────────────────────────────
+
+NO_MAPPING = "“yok” adlı eşleme bulunamaz: çizimin dosyası yok; eşlemeyi kendisiyle (mapping) verin."
+
+
+def no_mapping_in_folder(name="yok"):
+    return f"“{name}” adlı eşleme yok: çizimin “profiller” klasöründe “{name}.eslem.json” yok."
+
+
+def no_profile_in_folder(name="yok"):
+    return f"“{name}” adlı veri profili yok; KentOS'un profili: tucbs-temel; çizimin “profiller” klasöründe de “{name}.profil.json” yok."
+
+
+def bad_mapping(**change):
+    m = copy.deepcopy(SIVAS)
+    m.update(change)
+    return m
+
+
+def with_class(i, **change):
+    m = copy.deepcopy(SIVAS)
+    m["classes"][i].update(change)
+    return m
+
+
+def bad_code_field(pairs):
+    return with_class(0, codes=[code_map("Nitelik", pairs)])
+
+
+BAD_MAPPINGS = [
+    ("biçim yanlış", bad_mapping(format="kentos.mapping")),
+    ("ad büyük harfli ve boşluklu", bad_mapping(name="Sivas Bel")),
+    ("başlık boş", bad_mapping(title="  ")),
+    ("başka profil için", bad_mapping(profile="peyzaj")),
+    ("sınıf yok", bad_mapping(classes=[])),
+    ("sınıf profilde yok", bad_mapping(classes=[{"class": "orman", "layer": ["Orman"]}])),
+    ("sınıf iki kez", bad_mapping(classes=[SIVAS["classes"][0], SIVAS["classes"][0]])),
+    ("katman yolunda boş ad", with_class(0, layer=["Kadastro", " "])),
+    ("alan sınıfta yok", with_class(0, fields=renames([("Yok", "X")]))),
+    ("alan iki kez", with_class(0, fields=renames([("AdaNo", "ADA_NO"), ("AdaNo", "ADA")]))),
+    ("kurumdaki ad boş", with_class(0, fields=renames([("AdaNo", " ")]))),
+    ("ad başka alanın adı olurdu", with_class(0, fields=renames([("AdaNo", "ParselNo")]), codes=[])),
+    ("iki alan aynı ada", with_class(0, fields=renames([("AdaNo", "ADA_NO"), ("ParselNo", "ADA_NO")]), codes=[])),
+    ("kodlar için alan yok", with_class(0, codes=[code_map("Yok", [("arsa", "A")])])),
+    ("değer listesi olmayan alanın kodları", with_class(1, codes=[code_map("BinaKimlik", [("a", "b")])])),
+    ("kod listede yok", bad_code_field([("orman", "O")])),
+    ("kod iki kez", bad_code_field([("arsa", "A"), ("arsa", "AA")])),
+    ("kodun adı noktalı virgüllü", bad_code_field([("arsa", "A;B")])),
+    ("kod başka kodun adı olurdu", bad_code_field([("arsa", "tarla")])),
+]
+
+
+def mapping_apply_cases():
+    cases = []
+    inst = institution_doc()
+    prof = through(PROFILE, SIVAS)
+    inp = {"name": "tucbs-temel", "mapping": SIVAS}
+    c, after, out = apply_case(
+        "Kurum eşlemesiyle: kurumun katman ve alan adları bulunur, yalnız eksik olan eklenir (KULLANIM kodlarıyla); hiçbir ad değişmez; tek adım geri alınır",
+        inst, inp, INST_LINKS, profile=prof)
+    cases.append(c)
+    cases.append(apply_case(
+        "Boş çizime eşleme: katmanlar kurumun yollarıyla, alanlar kurumun adlarıyla, ilişki alanın kimliğiyle (profilin adı)",
+        empty_doc(), inp, profile=prof)[0])
+    # Only the layers' paths are the institution's.
+    paths = reference()
+    get(paths["layers"], "parsel")["name"] = "Parseller"
+    get(paths["layers"], "bina")["name"] = "Yapılar"
+    cases.append(apply_case("Eşleme yalnız katman yollarını söylüyor: alanlar profilin adlarıyla bulunur",
+                            paths, {"name": "tucbs-temel", "mapping": PATHS_ONLY}, LINKS, profile=through(PROFILE, PATHS_ONLY))[0])
+    # The mapping a second time: nothing is left to add except what the first left.
+    again = copy.deepcopy(after)
+    out2, w2 = apply(again, prof)
+    c2 = copy.deepcopy(c)
+    c2["name"] = "Eşlemeyle ikinci kez uygulanınca eklenecek bir şey kalmaz"
+    c2["steps"] = [s for s in c2["steps"] if s["op"] != "undo"]
+    c2["steps"].append(step("execute", inp, completed(out2, w2), {"layers": after["layers"]}))
+    cases.append(c2)
+    # The mapping by name, from the project's folder.
+    f = next_folder()
+    d = f"$tmp:{f}/cizim.kcad"
+    cases.append(apply_case("Eşleme adıyla (projenin klasöründen): sivas-bel", inst,
+                            {"name": "tucbs-temel", "mappingName": "sivas-bel", "drawing": d}, INST_LINKS,
+                            extra_steps=file_steps(f, **{SIVAS_FILE: FIX + SIVAS_FILE}), profile=prof)[0])
+    # A profile of the project's own, by name.
+    f = next_folder()
+    cases.append(apply_case("Projenin kendi profili adıyla (profiller klasöründen): peyzaj", empty_doc(),
+                            {"name": "peyzaj", "drawing": f"$tmp:{f}/cizim.kcad"},
+                            extra_steps=file_steps(f, **{SMALL_FILE: FIX + SMALL_FILE}), profile=SMALL)[0])
+    # The project's profile and the project's mapping together.
+    f = next_folder()
+    cases.append(apply_case("Projenin profili ve projenin eşlemesi birlikte: peyzaj + peyzaj-kurum", empty_doc(),
+                            {"name": "peyzaj", "mappingName": "peyzaj-kurum", "drawing": f"$tmp:{f}/cizim.kcad"},
+                            extra_steps=file_steps(f, **{SMALL_FILE: FIX + SMALL_FILE, MAP_SMALL_FILE: FIX + MAP_SMALL_FILE}),
+                            profile=through(SMALL, MAP_SMALL))[0])
+    # The built-in name wins over a project's file of the same name; a mapping inline wins over mappingName.
+    f = next_folder()
+    cases.append(apply_case("Eşleme verilmişse eşleme adı yok sayılır (mapping önce gelir)", inst,
+                            {"name": "tucbs-temel", "mapping": SIVAS, "mappingName": "yok", "drawing": f"$tmp:{f}/cizim.kcad"},
+                            INST_LINKS, profile=prof, plan=False, undo=False)[0])
+    cases.append({"name": "Doğrulama: eşlemeyle", "setup": inst, "steps": [step("validate", inp, VALID)]})
+
+    def refusal(name, input_, code, message, path, doc=inst):
+        return {"name": name, "setup": doc, "steps": [
+            step("execute", input_, failed(code, message, path),
+                 {"canUndo": False, "dirty": False, "revision": "same", "layers": doc["layers"]})]}
+    f = next_folder()
+    cases.append(refusal("eşleme dosyası yok, çizimin dosyası da yok", {"name": "tucbs-temel", "mappingName": "yok"},
+                         "unknown_mapping", NO_MAPPING, "mappingName"))
+    cases.append(refusal("eşleme klasörde yok", {"name": "tucbs-temel", "mappingName": "yok", "drawing": f"$tmp:{f}/cizim.kcad"},
+                         "unknown_mapping", no_mapping_in_folder(), "mappingName"))
+    cases.append(refusal("projenin profili klasörde yok", {"name": "yok", "drawing": f"$tmp:{f}/cizim.kcad"},
+                         "unknown_profile", no_profile_in_folder(), "name"))
+    for title, m in BAD_MAPPINGS:
+        # A mapping for another profile is read against the given profile: its own message first.
+        cases.append(refusal(f"geçersiz eşleme: {title}", {"name": "tucbs-temel", "mapping": m}, "invalid_profile_mapping",
+                             f"Eşleme geçersiz: {mapping_problem(m, PROFILE)}", "mapping"))
+    return cases
+
+
+def mapping_check_cases():
+    cases = []
+    inst = institution_doc()
+    prof = through(PROFILE, SIVAS)
+    inp = {"name": "tucbs-temel", "mapping": SIVAS}
+
+    def check_with(name, doc, input_, links, profile, mapping_name, plan=False, before=()):
+        rep = report(linked(doc, list(links)), profile, mapping_name)
+        steps = list(before) + link_steps(list(links))
+        if plan:
+            steps.append(step("plan", input_, completed(rep), {"revision": "same"}))
+        steps.append(step("execute", input_, completed(rep), {"revision": "same", "layers": doc["layers"]}))
+        return {"name": name, "setup": doc, "steps": steps}
+    cases.append(check_with("Kurum eşlemesiyle: bulgular kurumun alan adlarıyla gelir; rapor eşlemenin adını söyler; plan aynı cevabı verir",
+                            inst, inp, INST_LINKS, prof, "sivas-bel", plan=True))
+    # Values: a profile's code is not the institution's, and a listed code of the institution is fine.
+    ents = copy.deepcopy(institution_doc()["entities"])
+    next(e for e in ents if e["id"] == 4)["attrs"]["NITELIK"] = "arsa"
+    next(e for e in ents if e["id"] == 5)["attrs"]["NITELIK"] = "T"
+    inst2 = institution_doc()
+    inst2["entities"] = ents
+    cases.append(check_with("Eşlemeyle kodlar kurumunkidir: profilin kodu (arsa) listede yok, kurumun kodu (T) geçer",
+                            inst2, inp, INST_LINKS, prof, "sivas-bel"))
+    # By name, from the project's folder.
+    f = next_folder()
+    cases.append(check_with("Eşleme adıyla (projenin klasöründen): sivas-bel", inst,
+                            {"name": "tucbs-temel", "mappingName": "sivas-bel", "drawing": f"$tmp:{f}/cizim.kcad"},
+                            INST_LINKS, prof, "sivas-bel", before=file_steps(f, **{SIVAS_FILE: FIX + SIVAS_FILE})))
+    # Apply through the mapping, then check through it: what Uygula fixes is gone.
+    applied_doc = linked(inst, INST_LINKS)
+    out, w = apply(applied_doc, prof)
+    after_apply = report(applied_doc, prof, "sivas-bel")
+    cases.append({"name": "Eşlemeyle uygulandıktan sonra eşlemeyle denetlenince yalnız verinin kendi bulguları kalır", "setup": inst,
+                  "steps": link_steps(INST_LINKS) + [step("execute", inp, completed(out, w), command=APPLY),
+                                                    step("execute", inp, completed(after_apply), {"revision": "same"})]})
+    # Without the mapping the institution's names are not the profile's: nothing is renamed by itself.
+    cases.append(check_case("Eşleme verilmeyince kurumun adları profilin adları değildir: katmanlar eksik görünür, hiçbir şey kendiliğinden eşlenmez",
+                            inst, links=INST_LINKS))
+    # A project's own profile with its mapping.
+    f = next_folder()
+    small = reference(layers=[node("peyzaj", "Peyzaj", "group", [
+        node("agac", "Ağaçlar", style={**NEW_STYLE, "color": "#30A46C"},
+             fields=_renamed_fields(follow(SMALL["classes"][0]["fields"], SMALL["domains"]), [("AgacNo", "NO"), ("Tur", "TUR")],
+                                    ("TUR", [("cinar", "C"), ("mese", "M")]))),
+        node("yesil", "Yeşil alan", style={**NEW_STYLE, "color": "#46A758"},
+             fields=_renamed_fields(SMALL["classes"][1]["fields"], [("KayitliAlan", "KAYIT")]))])],
+        entities=[point(1, "agac", 5, 5, {"NO": "A-1", "TUR": "C"}),
+                  point(2, "agac", 9, 5, {"NO": "A-1", "TUR": "palmiye"}),
+                  polygon(4, "yesil", rect(0, 20, 30, 10), {"Ad": "Park", "KAYIT": "300.4"}),
+                  polygon(5, "yesil", rect(40, 20, 10, 10), {"Ad": "Bahçe", "KAYIT": "101"})],
+        domains=None, relations=None)
+    small_through = through(SMALL, MAP_SMALL)
+    cases.append(check_with("Projenin profili ve eşlemesi adlarıyla: kimlik alanı, kayıtlı alan ve kodlar kurumun adlarıyla denetlenir", small,
+                            {"name": "peyzaj", "mappingName": "peyzaj-kurum", "drawing": f"$tmp:{f}/cizim.kcad"}, [],
+                            small_through, "peyzaj-kurum",
+                            before=file_steps(f, **{SMALL_FILE: FIX + SMALL_FILE, MAP_SMALL_FILE: FIX + MAP_SMALL_FILE})))
+    cases.append({"name": "Doğrulama: eşlemeyle", "setup": inst, "steps": [step("validate", inp, VALID)]})
+    f = next_folder()
+    cases.append({"name": "eşleme dosyası yok, çizimin dosyası da yok", "setup": inst,
+                  "steps": [step("execute", {"name": "tucbs-temel", "mappingName": "yok"},
+                                 failed("unknown_mapping", NO_MAPPING, "mappingName"))]})
+    cases.append({"name": "eşleme klasörde yok", "setup": inst,
+                  "steps": [step("execute", {"name": "tucbs-temel", "mappingName": "yok", "drawing": f"$tmp:{f}/cizim.kcad"},
+                                 failed("unknown_mapping", no_mapping_in_folder(), "mappingName"))]})
+    cases.append({"name": "projenin profili klasörde yok", "setup": inst,
+                  "steps": [step("execute", {"name": "yok", "drawing": f"$tmp:{f}/cizim.kcad"},
+                                 failed("unknown_profile", no_profile_in_folder(), "name"))]})
+    for title, m in BAD_MAPPINGS[:5] + BAD_MAPPINGS[8:9] + BAD_MAPPINGS[15:16]:
+        cases.append({"name": f"geçersiz eşleme: {title}", "setup": inst,
+                      "steps": [step("execute", {"name": "tucbs-temel", "mapping": m},
+                                     failed("invalid_profile_mapping", f"Eşleme geçersiz: {mapping_problem(m, PROFILE)}", "mapping"))]})
     return cases
 
 
@@ -878,6 +1316,13 @@ def files():
         OUT / f"{APPLY}.json": wrap(APPLY, "Veri profilini uygula", apply_cases()),
         OUT / f"{CHECK}.json": wrap(CHECK, "Veri profilini denetle", check_cases()),
         REF / "belediye.json": reference(),
+        REF / "sivas.json": institution_doc(),
+        REF / "sivas-links.json": {"format": "kentos.profile-links", "version": 1,
+                                   "note": "The institution project's relation links (docs/adr/0558): the child object's field holds the parent object's persistent id; written by cad.entities.set after opening.",
+                                   "links": [{"child": c, "field": f, "parent": p} for c, f, p in INST_LINKS]},
+        REF / "files" / SIVAS_FILE: SIVAS,
+        REF / "files" / SMALL_FILE: SMALL,
+        REF / "files" / MAP_SMALL_FILE: MAP_SMALL,
         REF / "links.json": {"format": "kentos.profile-links", "version": 1,
                              "note": "The reference project's relation links: the child object's field holds the parent object's persistent id; written by cad.entities.set after opening.",
                              "links": [{"child": c, "field": f, "parent": p} for c, f, p in LINKS]},

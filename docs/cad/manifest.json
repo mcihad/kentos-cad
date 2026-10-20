@@ -6415,12 +6415,15 @@
    "level": "semantic",
    "via": [
     "cad.profiles.check",
-    "cad.profiles.apply"
+    "cad.profiles.apply",
+    "cad.profiles.import",
+    "cad.profiles.list",
+    "cad.profiles.migrate"
    ],
    "operation": null,
-   "python": "kentos.cad.profiles.check, kentos.cad.profiles.apply",
-   "mcp": "cad.profiles.check, cad.profiles.apply",
-   "note": "Bulgular cad.profiles.check'in cevabı, Uygula'nın önizlemesi cad.profiles.apply'ın planı (ADR 0541).",
+   "python": "kentos.cad.profiles.check, kentos.cad.profiles.apply, kentos.cad.profiles.import, kentos.cad.profiles.list, kentos.cad.profiles.migrate",
+   "mcp": "cad.profiles.check, cad.profiles.apply, cad.profiles.import, cad.profiles.list, cad.profiles.migrate",
+   "note": "Bulgular cad.profiles.check'in cevabı, Uygula'nın önizlemesi cad.profiles.apply'ın planı (ADR 0541); profil ve eşleme listesi cad.profiles.list'in, İçe aktar cad.profiles.import'un, Göç'ün önizlemesi ve yazması cad.profiles.migrate'in (ADR 0558).",
    "scope": "gis",
    "desktop": "implemented",
    "tests": 0
@@ -6453,6 +6456,38 @@
    "python": "kentos.cad.rasters.georef",
    "mcp": "cad.rasters.georef",
    "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "raster.gpkgRead",
+   "kind": "command",
+   "title": "GeoPackage karoları…",
+   "level": "semantic",
+   "via": [
+    "cad.rasters.gpkgread"
+   ],
+   "operation": null,
+   "python": "kentos.cad.rasters.gpkgread",
+   "mcp": "cad.rasters.gpkgread",
+   "note": "Pencere tabloları ve düzeyleri gösterir, GeoTIFF'i ve isteğe bağlı rasteri komut yazar (ADR 0556 §5).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "raster.gpkgWrite",
+   "kind": "command",
+   "title": "Rasteri GeoPackage karosu yaz…",
+   "level": "semantic",
+   "via": [
+    "cad.rasters.gpkgwrite"
+   ],
+   "operation": null,
+   "python": "kentos.cad.rasters.gpkgwrite",
+   "mcp": "cad.rasters.gpkgwrite",
+   "note": "Pencere karo piramidinin planını gösterir, GeoPackage'ı komut yazar (ADR 0556 §5).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

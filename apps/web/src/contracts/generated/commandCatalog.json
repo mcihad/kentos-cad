@@ -545693,7 +545693,7 @@
       "id": "cad.profiles.apply",
       "version": 1,
       "title": "Veri profilini uygula",
-      "summary": "Bir veri profilinin (yerleşik tucbs-temel ya da profile ile verilen) çizimde olmayan parçalarını ekler; var olanı korur. Profil veridir: sınıfları katman yollarıyla (grupları ve katmanı adlarıyla, Türkçe büyük küçük harf ayrımsız bulunur), geometrileri, alanları, kimlik alanları ve kayıtlı alanlarıyla; projenin değer listeleri, sınıflar arası ilişkiler ve adres verisi. Eksik gruplar ve katmanlar alanlarıyla açılır, var olan katmana eksik alanları eklenir; türü farklı alan (profile_field_differs), farklı değer listesi (profile_domain_differs) korunur, kilitli katman ve yolunda katman olmayan sınıf atlanır (profile_layer_skipped). Katmanlar ve alanları tek geri alma adımıdır (“Veri profili”); değer listeleri, ilişkiler ve adres verisi proje ayarıdır. Profil resmî bir uygulama şeması değildir; temeli profilin basis'inde yazılıdır. Plan yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Bir veri profilinin (yerleşik tucbs-temel ya da profile ile verilen) çizimde olmayan parçalarını ekler; var olanı korur. Profil veridir: sınıfları katman yollarıyla (grupları ve katmanı adlarıyla, Türkçe büyük küçük harf ayrımsız bulunur), geometrileri, alanları, kimlik alanları ve kayıtlı alanlarıyla; projenin değer listeleri, sınıflar arası ilişkiler ve adres verisi. Eksik gruplar ve katmanlar alanlarıyla açılır, var olan katmana eksik alanları eklenir; türü farklı alan (profile_field_differs), farklı değer listesi (profile_domain_differs) korunur, kilitli katman ve yolunda katman olmayan sınıf atlanır (profile_layer_skipped). Katmanlar ve alanları tek geri alma adımıdır (“Veri profili”); değer listeleri, ilişkiler ve adres verisi proje ayarıdır. Profil resmî bir uygulama şeması değildir; temeli profilin basis'inde yazılıdır. Plan yazmadan aynısını söyler. Profil kurumun kendi adlarıyla da uygulanır (docs/adr/0558): name yerleşik olmayan bir ad verilirse profil çizimin “profiller” klasöründeki dosyasından (drawing çizimin dosyası) okunur; mapping (ya da projenin eşlemesinin adı, mappingName) verilirse profil o eşlemeden okunur: kurumun katman yolları, alan adları ve kodlarıyla bulunur ve eklenir, hiçbir şey kendiliğinden yeniden adlandırılmaz (unknown_mapping, invalid_profile_mapping). expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [
         "veriprofili"
       ],
@@ -545757,6 +545757,21 @@
             ],
             "type": "object"
           },
+          "ConvertFail": {
+            "description": "What becomes of a value that does not go through a field's new rule.",
+            "oneOf": [
+              {
+                "const": "keep",
+                "description": "The value stays as written (`kept` in the losses); `cad.profiles.check` says it does not fit.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The value is emptied (`cleared` in the losses).",
+                "type": "string"
+              }
+            ]
+          },
           "DataProfile": {
             "additionalProperties": false,
             "description": "A data profile as `catalog/v1/profiles/*.json` keeps it, or as a command gives it.",
@@ -545794,6 +545809,12 @@
                 "description": "`kentos.data-profile`.",
                 "type": "string"
               },
+              "migrations": {
+                "items": {
+                  "$ref": "#/$defs/ProfileMigration"
+                },
+                "type": "array"
+              },
               "name": {
                 "type": "string"
               },
@@ -545802,6 +545823,13 @@
                   "$ref": "#/$defs/ProfileRelation"
                 },
                 "type": "array"
+              },
+              "release": {
+                "description": "The profile's own release (docs/adr/0558): 1 when it has not said, `version` being the format's. A release's\n`migrations` move the data of the release before it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
               },
               "title": {
                 "type": "string"
@@ -546155,6 +546183,94 @@
               }
             ]
           },
+          "MappingClass": {
+            "additionalProperties": false,
+            "description": "A profile class as the institution keeps it: its layer's path, its fields' names, its codes.",
+            "properties": {
+              "class": {
+                "description": "The profile's class id.",
+                "type": "string"
+              },
+              "codes": {
+                "items": {
+                  "$ref": "#/$defs/MappingCodes"
+                },
+                "type": "array"
+              },
+              "fields": {
+                "items": {
+                  "$ref": "#/$defs/MappingField"
+                },
+                "type": "array"
+              },
+              "layer": {
+                "description": "The institution's layer path; none: the profile's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "class"
+            ],
+            "type": "object"
+          },
+          "MappingCode": {
+            "additionalProperties": false,
+            "description": "A profile's code and what the institution calls it.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "profile",
+              "name"
+            ],
+            "type": "object"
+          },
+          "MappingCodes": {
+            "additionalProperties": false,
+            "description": "A profile field's coded values and the institution's codes for them.",
+            "properties": {
+              "codes": {
+                "items": {
+                  "$ref": "#/$defs/MappingCode"
+                },
+                "type": "array"
+              },
+              "field": {
+                "description": "The profile's field name.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "codes"
+            ],
+            "type": "object"
+          },
+          "MappingField": {
+            "additionalProperties": false,
+            "description": "A profile's field and what the institution calls it.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "profile",
+              "name"
+            ],
+            "type": "object"
+          },
           "MergePolicy": {
             "description": "A field's value in the object merged from several (docs/adr/0419).",
             "oneOf": [
@@ -546182,6 +546298,149 @@
                 "const": "max",
                 "description": "The greatest value (numbers).",
                 "type": "string"
+              }
+            ]
+          },
+          "MigrationStep": {
+            "description": "A step of a migration.",
+            "oneOf": [
+              {
+                "description": "The layer at the path is renamed (its place in the tree stays).",
+                "properties": {
+                  "kind": {
+                    "const": "renameLayer",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "to"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The layer's field is renamed and its objects' values move with it.",
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "renameField",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "from",
+                  "to"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The field takes a new definition (its name the same): each value goes through the new rule and is\nwritten in its canonical text; one that does not fit is kept or emptied (`on_fail`) and reported.",
+                "properties": {
+                  "field": {
+                    "$ref": "#/$defs/LayerField"
+                  },
+                  "kind": {
+                    "const": "changeFieldType",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "onFail": {
+                    "$ref": "#/$defs/ConvertFail",
+                    "default": "keep"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Values recoded: several old values may become one (a merge), one old value two (a split by `whenField`).",
+                "properties": {
+                  "field": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "mapValues",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "map": {
+                    "items": {
+                      "$ref": "#/$defs/ValueMap"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "field",
+                  "map"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A code of a project value list is retired; with `replaceWith` every value of a field linked to the list that\nholds it (each of a multiple field's) becomes the other.",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "domain": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "retireCode",
+                    "type": "string"
+                  },
+                  "replaceWith": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "domain",
+                  "code"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -546322,6 +546581,85 @@
               }
             ]
           },
+          "ProfileMapping": {
+            "additionalProperties": false,
+            "description": "An institution's mapping file: its own layer, field and code names for a profile's.",
+            "properties": {
+              "classes": {
+                "items": {
+                  "$ref": "#/$defs/MappingClass"
+                },
+                "type": "array"
+              },
+              "description": {
+                "type": "string"
+              },
+              "format": {
+                "description": "`kentos.profile-mapping`.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Small letters, digits and `-`; the file's name.",
+                "type": "string"
+              },
+              "profile": {
+                "description": "The name of the profile it is for.",
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "name",
+              "title",
+              "profile",
+              "classes"
+            ],
+            "type": "object"
+          },
+          "ProfileMigration": {
+            "additionalProperties": false,
+            "description": "The steps that move the data of release `from` to release `to` (`from + 1`).",
+            "properties": {
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "steps": {
+                "items": {
+                  "$ref": "#/$defs/MigrationStep"
+                },
+                "type": "array"
+              },
+              "title": {
+                "type": "string"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "title",
+              "steps"
+            ],
+            "type": "object"
+          },
           "ProfileRelation": {
             "additionalProperties": false,
             "description": "A relation between two classes: the child class's field holds a parent object's persistent id.",
@@ -546428,14 +546766,68 @@
               "name"
             ],
             "type": "object"
+          },
+          "ValueMap": {
+            "additionalProperties": false,
+            "description": "One value recoded by a `mapValues` step: `from` becomes `to`, only where `whenField` holds `whenEquals` when given.",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "whenEquals": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "whenField": {
+                "description": "Another field of the layer whose value decides (a split: one old code becomes two by it).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
         "description": "Input of `cad.profiles.apply` v1 (“Veri profilini uygula”): the profile's layers (with their groups), fields, value\nlists, relations and address data the drawing lacks; what it has is kept and said. The layers and their fields are\none undo step “Veri profili”; the value lists, relations and address data are project settings, no undo step.\n\nThe profile is `profile` when given, else the built-in `name`. Refusals, in this order: `unknown_profile` (neither, or\na name KentOS has not), `invalid_profile`, `invalid_revision`, `revision_conflict`. Warnings: `profile_field_differs`,\n`profile_domain_differs`, `profile_layer_skipped`.",
         "properties": {
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path: the project's `profiller` folder is beside it, where a `name` that\nis not a built-in's and a `mappingName` are found.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mapping": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProfileMapping"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "An institution's mapping the profile is read through (docs/adr/0558); `mappingName` names one of the project's."
+          },
+          "mappingName": {
             "type": [
               "string",
               "null"
@@ -546581,6 +546973,8 @@
         "refusals": [
           "unknown_profile",
           "invalid_profile",
+          "unknown_mapping",
+          "invalid_profile_mapping",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -546603,7 +546997,7 @@
       "id": "cad.profiles.check",
       "version": 1,
       "title": "Veri profilini denetle",
-      "summary": "Çizimin verisinin bir veri profilinden nerede ayrıldığını söyler; hiçbir şeyi değiştirmez, plan aynı cevabı verir. Bulgular sırasıyla: projede olmayan değer listeleri; sınıf sınıf eksik katman, eksik alan, türü farklı alan, başka geometrideki nesneler, boş zorunlu alanlar, alanın kuralına uymayan değerler (değer başına), birden çok nesnedeki kimlikler, kayıtlı alanı geometrik alanından profilin toleransından çok ayrılan nesneler (iki alan da söylenir; hiçbiri öbürünün yerine yazılmaz); sonra projede olmayan ilişkiler ve üst sınıfta olmayan nesneyi anan bağlar, en sonda adres verisi. Her bulgu türü, sınıfı, katmanı, konusu, değeri, nesnelerin kalıcı kimlikleri (en çok 1000) ve sayısı, Veri profilini uygula'nın düzeltip düzeltmediği ve Türkçe iletisiyle gelir; sınıfların nesne ve bulgu sayıları da. clean bulgu olmadığını söyler, mevzuata uygunluğu değil.",
+      "summary": "Çizimin verisinin bir veri profilinden nerede ayrıldığını söyler; hiçbir şeyi değiştirmez, plan aynı cevabı verir. Bulgular sırasıyla: projede olmayan değer listeleri; sınıf sınıf eksik katman, eksik alan, türü farklı alan, başka geometrideki nesneler, boş zorunlu alanlar, alanın kuralına uymayan değerler (değer başına), birden çok nesnedeki kimlikler, kayıtlı alanı geometrik alanından profilin toleransından çok ayrılan nesneler (iki alan da söylenir; hiçbiri öbürünün yerine yazılmaz); sonra projede olmayan ilişkiler ve üst sınıfta olmayan nesneyi anan bağlar, en sonda adres verisi. Her bulgu türü, sınıfı, katmanı, konusu, değeri, nesnelerin kalıcı kimlikleri (en çok 1000) ve sayısı, Veri profilini uygula'nın düzeltip düzeltmediği ve Türkçe iletisiyle gelir; sınıfların nesne ve bulgu sayıları da. clean bulgu olmadığını söyler, mevzuata uygunluğu değil. Profil, Veri profilini uygula gibi, çizimin klasöründeki bir dosyadan (name, drawing) ve bir eşlemeden (mapping, mappingName) okunabilir: bulgular kurumun adlarıyla gelir, raporda mapping eşlemenin adını söyler (docs/adr/0558).",
       "aliases": [
         "profildenetle"
       ],
@@ -546667,6 +547061,21 @@
             ],
             "type": "object"
           },
+          "ConvertFail": {
+            "description": "What becomes of a value that does not go through a field's new rule.",
+            "oneOf": [
+              {
+                "const": "keep",
+                "description": "The value stays as written (`kept` in the losses); `cad.profiles.check` says it does not fit.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The value is emptied (`cleared` in the losses).",
+                "type": "string"
+              }
+            ]
+          },
           "DataProfile": {
             "additionalProperties": false,
             "description": "A data profile as `catalog/v1/profiles/*.json` keeps it, or as a command gives it.",
@@ -546704,6 +547113,12 @@
                 "description": "`kentos.data-profile`.",
                 "type": "string"
               },
+              "migrations": {
+                "items": {
+                  "$ref": "#/$defs/ProfileMigration"
+                },
+                "type": "array"
+              },
               "name": {
                 "type": "string"
               },
@@ -546712,6 +547127,13 @@
                   "$ref": "#/$defs/ProfileRelation"
                 },
                 "type": "array"
+              },
+              "release": {
+                "description": "The profile's own release (docs/adr/0558): 1 when it has not said, `version` being the format's. A release's\n`migrations` move the data of the release before it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
               },
               "title": {
                 "type": "string"
@@ -547065,6 +547487,94 @@
               }
             ]
           },
+          "MappingClass": {
+            "additionalProperties": false,
+            "description": "A profile class as the institution keeps it: its layer's path, its fields' names, its codes.",
+            "properties": {
+              "class": {
+                "description": "The profile's class id.",
+                "type": "string"
+              },
+              "codes": {
+                "items": {
+                  "$ref": "#/$defs/MappingCodes"
+                },
+                "type": "array"
+              },
+              "fields": {
+                "items": {
+                  "$ref": "#/$defs/MappingField"
+                },
+                "type": "array"
+              },
+              "layer": {
+                "description": "The institution's layer path; none: the profile's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "class"
+            ],
+            "type": "object"
+          },
+          "MappingCode": {
+            "additionalProperties": false,
+            "description": "A profile's code and what the institution calls it.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "profile",
+              "name"
+            ],
+            "type": "object"
+          },
+          "MappingCodes": {
+            "additionalProperties": false,
+            "description": "A profile field's coded values and the institution's codes for them.",
+            "properties": {
+              "codes": {
+                "items": {
+                  "$ref": "#/$defs/MappingCode"
+                },
+                "type": "array"
+              },
+              "field": {
+                "description": "The profile's field name.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "codes"
+            ],
+            "type": "object"
+          },
+          "MappingField": {
+            "additionalProperties": false,
+            "description": "A profile's field and what the institution calls it.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "profile",
+              "name"
+            ],
+            "type": "object"
+          },
           "MergePolicy": {
             "description": "A field's value in the object merged from several (docs/adr/0419).",
             "oneOf": [
@@ -547092,6 +547602,149 @@
                 "const": "max",
                 "description": "The greatest value (numbers).",
                 "type": "string"
+              }
+            ]
+          },
+          "MigrationStep": {
+            "description": "A step of a migration.",
+            "oneOf": [
+              {
+                "description": "The layer at the path is renamed (its place in the tree stays).",
+                "properties": {
+                  "kind": {
+                    "const": "renameLayer",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "to"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The layer's field is renamed and its objects' values move with it.",
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "renameField",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "from",
+                  "to"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The field takes a new definition (its name the same): each value goes through the new rule and is\nwritten in its canonical text; one that does not fit is kept or emptied (`on_fail`) and reported.",
+                "properties": {
+                  "field": {
+                    "$ref": "#/$defs/LayerField"
+                  },
+                  "kind": {
+                    "const": "changeFieldType",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "onFail": {
+                    "$ref": "#/$defs/ConvertFail",
+                    "default": "keep"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Values recoded: several old values may become one (a merge), one old value two (a split by `whenField`).",
+                "properties": {
+                  "field": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "mapValues",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "map": {
+                    "items": {
+                      "$ref": "#/$defs/ValueMap"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "field",
+                  "map"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A code of a project value list is retired; with `replaceWith` every value of a field linked to the list that\nholds it (each of a multiple field's) becomes the other.",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "domain": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "retireCode",
+                    "type": "string"
+                  },
+                  "replaceWith": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "domain",
+                  "code"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -547232,6 +547885,85 @@
               }
             ]
           },
+          "ProfileMapping": {
+            "additionalProperties": false,
+            "description": "An institution's mapping file: its own layer, field and code names for a profile's.",
+            "properties": {
+              "classes": {
+                "items": {
+                  "$ref": "#/$defs/MappingClass"
+                },
+                "type": "array"
+              },
+              "description": {
+                "type": "string"
+              },
+              "format": {
+                "description": "`kentos.profile-mapping`.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Small letters, digits and `-`; the file's name.",
+                "type": "string"
+              },
+              "profile": {
+                "description": "The name of the profile it is for.",
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "name",
+              "title",
+              "profile",
+              "classes"
+            ],
+            "type": "object"
+          },
+          "ProfileMigration": {
+            "additionalProperties": false,
+            "description": "The steps that move the data of release `from` to release `to` (`from + 1`).",
+            "properties": {
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "steps": {
+                "items": {
+                  "$ref": "#/$defs/MigrationStep"
+                },
+                "type": "array"
+              },
+              "title": {
+                "type": "string"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "title",
+              "steps"
+            ],
+            "type": "object"
+          },
           "ProfileRelation": {
             "additionalProperties": false,
             "description": "A relation between two classes: the child class's field holds a parent object's persistent id.",
@@ -547338,12 +548070,66 @@
               "name"
             ],
             "type": "object"
+          },
+          "ValueMap": {
+            "additionalProperties": false,
+            "description": "One value recoded by a `mapValues` step: `from` becomes `to`, only where `whenField` holds `whenEquals` when given.",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "whenEquals": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "whenField": {
+                "description": "Another field of the layer whose value decides (a split: one old code becomes two by it).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
         "description": "Input of `cad.profiles.check` v1 (“Veri profilini denetle”): where the drawing's data departs from a profile. It\nchanges nothing; its plan gives the same answer.\n\nRefusals: `unknown_profile`, `invalid_profile`.",
         "properties": {
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path: the project's `profiller` folder is beside it, where a `name` that\nis not a built-in's and a `mappingName` are found.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mapping": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProfileMapping"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "An institution's mapping the profile is read through (docs/adr/0558); `mappingName` names one of the project's."
+          },
+          "mappingName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "name": {
             "type": [
               "string",
@@ -547575,6 +548361,13 @@
             },
             "type": "array"
           },
+          "mapping": {
+            "description": "The mapping the profile was read through, when one was given.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "profile": {
             "type": "string"
           },
@@ -547811,6 +548604,13 @@
             },
             "type": "array"
           },
+          "mapping": {
+            "description": "The mapping the profile was read through, when one was given.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "profile": {
             "type": "string"
           },
@@ -547839,7 +548639,9 @@
       "capabilities": {
         "refusals": [
           "unknown_profile",
-          "invalid_profile"
+          "invalid_profile",
+          "unknown_mapping",
+          "invalid_profile_mapping"
         ]
       },
       "examples": [
@@ -547847,6 +548649,3073 @@
           "title": "Çizimi TUCBS temel belediye profiliyle denetle",
           "input": {
             "name": "tucbs-temel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.profiles.import",
+      "version": 1,
+      "title": "Veri profili içe aktar",
+      "summary": "Kurumun kendi veri profilini ya da eşlemesini projeye alır: bir JSON dosyası (source: mutlak yol ya da çizimin klasöründen), profilin kendisi (profile) ya da eşlemenin kendisi (mapping), yalnız biri. Dosya biçimiyle tanınır: kentos.data-profile bir veri profili, kentos.profile-mapping bir eşlemedir; başka biçim unknown_profile_format, 1'den başka biçim sürümü unsupported_profile_version, okunmayan JSON ya da tutmayan profil invalid_profile, tutmayan eşleme invalid_profile_mapping ile reddedilir (eşleme profiliyle denetlenir: sınıflar, alanlar, kodlar profilde olmalı, kurumdaki adlar çakışmamalı). Profil çizimin dosyasının yanındaki “profiller” klasörüne <ad>.profil.json, eşleme <ad>.eslem.json olarak yazılır (ad küçük harf, rakam ve tire; klasör yoksa açılır): çizimin dosyası yoksa invalid_file_path. KentOS'un kendi profilinin adı alınamaz (profile_name_taken). Aynı adlı profil var ve daha yeni sürümdeyse profile_downgrade, aynı sürümdeyse file_exists; daha eski sürümdeyse değiştirilir ve söylenir (profile_replaced); overwrite her birinin üzerine yazar. Dosya geçici adla yazılıp geri okunur, sonra yerine konur: bütün ya da hiç. Çizim değişmez, geri alma adımı yoktur; plan yazmadan aynısını söyler. Profilin sürümü kendi release sayısıdır (biçim sürümü version değil) ve migrations'ı bir sürümden sonrakine veriyi taşıyan adımlardır; Veri profili göçü onları çalıştırır.",
+      "aliases": [
+        "profilal",
+        "profiliceaktar"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "AreaLevel": {
+            "description": "What an area layer's areas are.",
+            "oneOf": [
+              {
+                "const": "neighbourhood",
+                "description": "Mahalle (or köy).",
+                "type": "string"
+              },
+              {
+                "const": "district",
+                "description": "İlçe.",
+                "type": "string"
+              },
+              {
+                "const": "province",
+                "description": "İl.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaSource": {
+            "description": "An area layer: its level and which attribute names its areas.",
+            "properties": {
+              "district": {
+                "description": "A neighbourhood's district; only at that level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "level": {
+                "$ref": "#/$defs/AreaLevel"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "level",
+              "name"
+            ],
+            "type": "object"
+          },
+          "ConvertFail": {
+            "description": "What becomes of a value that does not go through a field's new rule.",
+            "oneOf": [
+              {
+                "const": "keep",
+                "description": "The value stays as written (`kept` in the losses); `cad.profiles.check` says it does not fit.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The value is emptied (`cleared` in the losses).",
+                "type": "string"
+              }
+            ]
+          },
+          "DataProfile": {
+            "additionalProperties": false,
+            "description": "A data profile as `catalog/v1/profiles/*.json` keeps it, or as a command gives it.",
+            "properties": {
+              "address": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ProfileAddress"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "basis": {
+                "description": "What it rests on and what it is not (a working profile, not an official application schema).",
+                "type": "string"
+              },
+              "classes": {
+                "items": {
+                  "$ref": "#/$defs/ProfileClass"
+                },
+                "type": "array"
+              },
+              "description": {
+                "type": "string"
+              },
+              "domains": {
+                "items": {
+                  "$ref": "#/$defs/FieldDomain"
+                },
+                "type": "array"
+              },
+              "format": {
+                "description": "`kentos.data-profile`.",
+                "type": "string"
+              },
+              "migrations": {
+                "items": {
+                  "$ref": "#/$defs/ProfileMigration"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "relations": {
+                "items": {
+                  "$ref": "#/$defs/ProfileRelation"
+                },
+                "type": "array"
+              },
+              "release": {
+                "description": "The profile's own release (docs/adr/0558): 1 when it has not said, `version` being the format's. A release's\n`migrations` move the data of the release before it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "title": {
+                "type": "string"
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "name",
+              "title",
+              "description",
+              "basis",
+              "classes"
+            ],
+            "type": "object"
+          },
+          "DoorSource": {
+            "description": "The doors' layer and which of its attributes say what.",
+            "properties": {
+              "building": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "code": {
+                "description": "Adres kodu (UAVT): a query that is one finds its door.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "door": {
+                "description": "Kapı no: the outer door number (“12”, “12/A”).",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the locator is built.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "postcode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "province": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "street": {
+                "description": "Yol: the street's name, with its kind as written (“Atatürk Bulvarı”).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "street",
+              "door"
+            ],
+            "type": "object"
+          },
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "description": {
+                "description": "What the value means, said beside it in a list (docs/adr/0438 §5): 1–500 characters.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "from": {
+                "description": "The first day the value holds (`YYYY-AA-GG`, docs/adr/0438 §5); before it a new choice does not\noffer it, as a retired one.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
+              },
+              "until": {
+                "description": "The last day the value holds (`YYYY-AA-GG`); after it a new choice does not offer it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
+          "FieldDomain": {
+            "additionalProperties": false,
+            "description": "A value list of the project: a coded list (`values`) or a range (`min`, `max`), never both.",
+            "properties": {
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Its stable id: what a field links to.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind",
+                "description": "The kind of field it fits: a field linking it is of this kind."
+              },
+              "max": {
+                "description": "A range's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxExclusive": {
+                "description": "`max` itself left out of the range; written only as `true`.",
+                "type": "boolean"
+              },
+              "min": {
+                "description": "A range's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "minExclusive": {
+                "description": "`min` itself left out of the range (docs/adr/0438 §4); written only as `true`.",
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "unit": {
+                "description": "The unit a number list's values are in (`m²`; docs/adr/0438 §4), copied to the fields linking it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "A coded list's values, in their order (labels, retired codes as a field's list has them).",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerField": {
+            "description": "A field of a layer (docs/adr/0199 §1): its name is the attribute's key.",
+            "properties": {
+              "alias": {
+                "description": "The name the table and the form show.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "default": {
+                "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind"
+              },
+              "length": {
+                "description": "A text's most characters (1–10 000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "max": {
+                "description": "A number's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxExclusive": {
+                "description": "`max` is not itself in the range; only with `max`; written only as `true`.",
+                "type": "boolean"
+              },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
+              "min": {
+                "description": "A number's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "minExclusive": {
+                "description": "`min` is not itself in the range (docs/adr/0438 §4); only with `min`; written only as `true`.",
+                "type": "boolean"
+              },
+              "multiple": {
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "description": "An object may not leave it empty; written only as `true`.",
+                "type": "boolean"
+              },
+              "scale": {
+                "description": "A decimal's most fraction digits (0–15).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
+              },
+              "unique": {
+                "description": "No two objects of the layer hold the same value (empty ones aside; docs/adr/0438 §3): every\nwrite is refused `not_unique` that would; written only as `true`.",
+                "type": "boolean"
+              },
+              "unit": {
+                "description": "The unit a number is in, shown after it (`m²`, `kg`; 1–16 characters; docs/adr/0438 §4); the value\nstays the number.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "The values a text or a number takes, when only some.",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
+          },
+          "MappingClass": {
+            "additionalProperties": false,
+            "description": "A profile class as the institution keeps it: its layer's path, its fields' names, its codes.",
+            "properties": {
+              "class": {
+                "description": "The profile's class id.",
+                "type": "string"
+              },
+              "codes": {
+                "items": {
+                  "$ref": "#/$defs/MappingCodes"
+                },
+                "type": "array"
+              },
+              "fields": {
+                "items": {
+                  "$ref": "#/$defs/MappingField"
+                },
+                "type": "array"
+              },
+              "layer": {
+                "description": "The institution's layer path; none: the profile's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "class"
+            ],
+            "type": "object"
+          },
+          "MappingCode": {
+            "additionalProperties": false,
+            "description": "A profile's code and what the institution calls it.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "profile",
+              "name"
+            ],
+            "type": "object"
+          },
+          "MappingCodes": {
+            "additionalProperties": false,
+            "description": "A profile field's coded values and the institution's codes for them.",
+            "properties": {
+              "codes": {
+                "items": {
+                  "$ref": "#/$defs/MappingCode"
+                },
+                "type": "array"
+              },
+              "field": {
+                "description": "The profile's field name.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "codes"
+            ],
+            "type": "object"
+          },
+          "MappingField": {
+            "additionalProperties": false,
+            "description": "A profile's field and what the institution calls it.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "profile",
+              "name"
+            ],
+            "type": "object"
+          },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
+          },
+          "MigrationStep": {
+            "description": "A step of a migration.",
+            "oneOf": [
+              {
+                "description": "The layer at the path is renamed (its place in the tree stays).",
+                "properties": {
+                  "kind": {
+                    "const": "renameLayer",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "to"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The layer's field is renamed and its objects' values move with it.",
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "renameField",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "from",
+                  "to"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The field takes a new definition (its name the same): each value goes through the new rule and is\nwritten in its canonical text; one that does not fit is kept or emptied (`on_fail`) and reported.",
+                "properties": {
+                  "field": {
+                    "$ref": "#/$defs/LayerField"
+                  },
+                  "kind": {
+                    "const": "changeFieldType",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "onFail": {
+                    "$ref": "#/$defs/ConvertFail",
+                    "default": "keep"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Values recoded: several old values may become one (a merge), one old value two (a split by `whenField`).",
+                "properties": {
+                  "field": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "mapValues",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "map": {
+                    "items": {
+                      "$ref": "#/$defs/ValueMap"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "field",
+                  "map"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A code of a project value list is retired; with `replaceWith` every value of a field linked to the list that\nholds it (each of a multiple field's) becomes the other.",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "domain": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "retireCode",
+                    "type": "string"
+                  },
+                  "replaceWith": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "domain",
+                  "code"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "ProfileAddress": {
+            "additionalProperties": false,
+            "description": "How the profile's address data is read (docs/adr/0229): the sources' `layer` names a class.",
+            "properties": {
+              "areas": {
+                "items": {
+                  "$ref": "#/$defs/AreaSource"
+                },
+                "type": "array"
+              },
+              "doors": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DoorSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "minScore": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "percent"
+              },
+              "reach": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "streets": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StreetSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "minScore",
+              "reach"
+            ],
+            "type": "object"
+          },
+          "ProfileClass": {
+            "additionalProperties": false,
+            "description": "A class of the profile: a layer by its path, its objects' geometry, its fields.",
+            "properties": {
+              "color": {
+                "description": "The layer's colour when the profile adds it (a palette name or `#RRGGBB`).",
+                "type": "string"
+              },
+              "fields": {
+                "items": {
+                  "$ref": "#/$defs/LayerField"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "$ref": "#/$defs/ProfileGeometry"
+              },
+              "id": {
+                "description": "Letters, digits, `-`; unique in the profile.",
+                "type": "string"
+              },
+              "key": {
+                "description": "The identifier field: unique among the class's objects.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer's path: its groups' names, then its own; found by the names folded (Turkish case aside).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "registeredArea": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RegisteredArea"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "theme": {
+                "description": "The theme it belongs to, as the profile names it (“Kadastro”).",
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "theme",
+              "layer",
+              "color",
+              "geometry",
+              "fields"
+            ],
+            "type": "object"
+          },
+          "ProfileGeometry": {
+            "description": "A class's objects' kind of geometry.",
+            "oneOf": [
+              {
+                "const": "area",
+                "description": "Alan: a polygon (holes and parts allowed).",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "Çizgi: a line or a polyline.",
+                "type": "string"
+              },
+              {
+                "const": "point",
+                "description": "Nokta.",
+                "type": "string"
+              },
+              {
+                "const": "record",
+                "description": "Geometrisiz kayıt (docs/adr/0410).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProfileMapping": {
+            "additionalProperties": false,
+            "description": "An institution's mapping file: its own layer, field and code names for a profile's.",
+            "properties": {
+              "classes": {
+                "items": {
+                  "$ref": "#/$defs/MappingClass"
+                },
+                "type": "array"
+              },
+              "description": {
+                "type": "string"
+              },
+              "format": {
+                "description": "`kentos.profile-mapping`.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Small letters, digits and `-`; the file's name.",
+                "type": "string"
+              },
+              "profile": {
+                "description": "The name of the profile it is for.",
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "name",
+              "title",
+              "profile",
+              "classes"
+            ],
+            "type": "object"
+          },
+          "ProfileMigration": {
+            "additionalProperties": false,
+            "description": "The steps that move the data of release `from` to release `to` (`from + 1`).",
+            "properties": {
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "steps": {
+                "items": {
+                  "$ref": "#/$defs/MigrationStep"
+                },
+                "type": "array"
+              },
+              "title": {
+                "type": "string"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "title",
+              "steps"
+            ],
+            "type": "object"
+          },
+          "ProfileRelation": {
+            "additionalProperties": false,
+            "description": "A relation between two classes: the child class's field holds a parent object's persistent id.",
+            "properties": {
+              "child": {
+                "description": "The child class's id.",
+                "type": "string"
+              },
+              "field": {
+                "description": "The child class's field.",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "parent": {
+                "description": "The parent class's id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "parent",
+              "child",
+              "field"
+            ],
+            "type": "object"
+          },
+          "RegisteredArea": {
+            "additionalProperties": false,
+            "description": "A class's registered area (tapu ya da kayıt alanı): a field kept apart from the geometric area. Neither overwrites the\nother; `cad.profiles.check` says where they differ by more than `tolerance`.",
+            "properties": {
+              "field": {
+                "description": "The field that holds it, in square metres.",
+                "type": "string"
+              },
+              "tolerance": {
+                "description": "The difference the profile lets pass, in square metres. It is the profile's, not the law's error limit.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              }
+            },
+            "required": [
+              "field",
+              "tolerance"
+            ],
+            "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
+          },
+          "StreetSource": {
+            "description": "The streets' layer and which of its attributes say what.",
+            "properties": {
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Yol adı.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "name"
+            ],
+            "type": "object"
+          },
+          "ValueMap": {
+            "additionalProperties": false,
+            "description": "One value recoded by a `mapValues` step: `from` becomes `to`, only where `whenField` holds `whenEquals` when given.",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "whenEquals": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "whenField": {
+                "description": "Another field of the layer whose value decides (a split: one old code becomes two by it).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.profiles.import` v1 (“Veri profili içe aktar”): a profile or a mapping the user brings, checked and\nkept as a file of the project's `profiller` folder (`<name>.profil.json`, `<name>.eslem.json`), written whole or not\nat all. The source is a JSON file (`source`) or the profile (`profile`) or mapping (`mapping`) itself; one only.\n\nRefusals, in this order: `profile_source_missing`, `invalid_file_path` (the source, the drawing), `file_not_found`,\n`invalid_profile` (JSON that does not read, or a profile that does not hold), `unknown_profile_format`,\n`unsupported_profile_version`, `invalid_profile_mapping`, `profile_name_taken` (a built-in's name), `profile_downgrade` (a\nprofile of an earlier release than the file's, without `overwrite`), `file_exists`, `file_unwritable`. Warnings:\n`mapping_unchecked` (the profile it is for was not found), `profile_replaced`.",
+        "properties": {
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path: the folder is beside it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mapping": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProfileMapping"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "overwrite": {
+            "description": "A file of the same name is written over (a profile of the same or an earlier release too).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DataProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "description": "A JSON file, an absolute path or from the drawing's folder.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "ProfilesImport",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ProfileFileKind": {
+            "description": "What a file of the project's folder is.",
+            "enum": [
+              "profile",
+              "mapping"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.import` v1.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "classes": {
+            "description": "A profile's classes, a mapping's classes it names.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "kind": {
+            "$ref": "#/$defs/ProfileFileKind"
+          },
+          "migrations": {
+            "description": "A profile's migrations; the releases they go from, in order.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "description": "The file written.",
+            "type": "string"
+          },
+          "previousRelease": {
+            "description": "The release of the file it replaced, when it replaced a profile's.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "release": {
+            "description": "A profile's release; a mapping's: 0.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "replaced": {
+            "description": "Whether a file was replaced.",
+            "type": "boolean"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "title",
+          "release",
+          "classes",
+          "migrations",
+          "path",
+          "replaced",
+          "bytes"
+        ],
+        "title": "ProfileImported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ProfileFileKind": {
+            "description": "What a file of the project's folder is.",
+            "enum": [
+              "profile",
+              "mapping"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.import` v1.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "classes": {
+            "description": "A profile's classes, a mapping's classes it names.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "kind": {
+            "$ref": "#/$defs/ProfileFileKind"
+          },
+          "migrations": {
+            "description": "A profile's migrations; the releases they go from, in order.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "description": "The file written.",
+            "type": "string"
+          },
+          "previousRelease": {
+            "description": "The release of the file it replaced, when it replaced a profile's.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "release": {
+            "description": "A profile's release; a mapping's: 0.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "replaced": {
+            "description": "Whether a file was replaced.",
+            "type": "boolean"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "title",
+          "release",
+          "classes",
+          "migrations",
+          "path",
+          "replaced",
+          "bytes"
+        ],
+        "title": "ProfileImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "profile_source_missing",
+          "invalid_file_path",
+          "file_not_found",
+          "invalid_profile",
+          "unknown_profile_format",
+          "unsupported_profile_version",
+          "invalid_profile_mapping",
+          "profile_name_taken",
+          "profile_downgrade",
+          "file_exists",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "mapping_unchecked",
+          "profile_replaced"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kurumun profilini çizimin klasöründen projeye al",
+          "input": {
+            "drawing": "/projeler/belediye/imar.kcad",
+            "source": "kurum-profili.json"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.profiles.list",
+      "version": 1,
+      "title": "Veri profillerini listele",
+      "summary": "KentOS'un yerleşik veri profillerini ve çizimin “profiller” klasöründeki profil ve eşleme dosyalarını listeler; hiçbir şeyi değiştirmez. Önce yerleşik profiller kendi sırasıyla, sonra projenin dosyaları adıyla (aynı adda önce profil). Her satır: türü (profil ya da eşleme), kaynağı (builtin ya da project), komutlara verilen adı (dosyanın adı), başlığı, profilin sürümü (release) ve sınıf ve göç sayısı; eşlemede hangi profil için olduğu ve anan sınıf sayısı; proje dosyasında yolu. Okunmayan ya da tutmayan dosya listeden düşmez, problem alanında nedeniyle gelir (profilin adı dosyanın adıyla aynı olmalı; eşleme profiliyle denetlenir, profili bulunamayan eşleme denetlenmeden listelenir). Çizimin dosyası yoksa (drawing) yalnız yerleşik profiller gelir; folder çizimin klasörünü söyler.",
+      "aliases": [
+        "profiller",
+        "profillistesi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.profiles.list` v1 (“Veri profilleri”): the built-in profiles and the files of the project's `profiller`\nfolder, profiles and mappings. It changes nothing. The folder is the drawing's own (`drawing`): without it only the\nbuilt-in profiles are listed. Refusals: none; a file that does not read is listed with its problem.",
+        "properties": {
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path, when it has one.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "ProfilesList",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ProfileFileKind": {
+            "description": "What a file of the project's folder is.",
+            "enum": [
+              "profile",
+              "mapping"
+            ],
+            "type": "string"
+          },
+          "ProfileListed": {
+            "description": "A profile or a mapping of the list.",
+            "properties": {
+              "classes": {
+                "description": "A profile's classes, a mapping's classes it names.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "kind": {
+                "$ref": "#/$defs/ProfileFileKind"
+              },
+              "migrations": {
+                "description": "A profile's migrations.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "name": {
+                "description": "The name it is given to the commands by: a built-in's, or the file's up to its suffix.",
+                "type": "string"
+              },
+              "path": {
+                "description": "A project file's path.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "problem": {
+                "description": "Why a file is not usable: it does not read, or does not hold.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "profile": {
+                "description": "The profile a mapping is for.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "release": {
+                "description": "A profile's release; a mapping's: 0.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "source": {
+                "$ref": "#/$defs/ProfileSource"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "source",
+              "name",
+              "release",
+              "classes",
+              "migrations"
+            ],
+            "type": "object"
+          },
+          "ProfileSource": {
+            "description": "Where a profile or a mapping is from.",
+            "oneOf": [
+              {
+                "const": "builtin",
+                "description": "KentOS's own (`catalog/v1/profiles/`).",
+                "type": "string"
+              },
+              {
+                "const": "project",
+                "description": "A file in the project's `profiller` folder.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the project's profiles and\nmappings by name.",
+        "properties": {
+          "folder": {
+            "description": "The project's folder, when the drawing has a file.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ProfileListed"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ProfilesListed",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ProfileFileKind": {
+            "description": "What a file of the project's folder is.",
+            "enum": [
+              "profile",
+              "mapping"
+            ],
+            "type": "string"
+          },
+          "ProfileListed": {
+            "description": "A profile or a mapping of the list.",
+            "properties": {
+              "classes": {
+                "description": "A profile's classes, a mapping's classes it names.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "kind": {
+                "$ref": "#/$defs/ProfileFileKind"
+              },
+              "migrations": {
+                "description": "A profile's migrations.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "name": {
+                "description": "The name it is given to the commands by: a built-in's, or the file's up to its suffix.",
+                "type": "string"
+              },
+              "path": {
+                "description": "A project file's path.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "problem": {
+                "description": "Why a file is not usable: it does not read, or does not hold.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "profile": {
+                "description": "The profile a mapping is for.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "release": {
+                "description": "A profile's release; a mapping's: 0.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "source": {
+                "$ref": "#/$defs/ProfileSource"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "source",
+              "name",
+              "release",
+              "classes",
+              "migrations"
+            ],
+            "type": "object"
+          },
+          "ProfileSource": {
+            "description": "Where a profile or a mapping is from.",
+            "oneOf": [
+              {
+                "const": "builtin",
+                "description": "KentOS's own (`catalog/v1/profiles/`).",
+                "type": "string"
+              },
+              {
+                "const": "project",
+                "description": "A file in the project's `profiller` folder.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the project's profiles and\nmappings by name.",
+        "properties": {
+          "folder": {
+            "description": "The project's folder, when the drawing has a file.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ProfileListed"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ProfilesListed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": []
+      },
+      "examples": [
+        {
+          "title": "Yerleşik ve projenin profillerini listele",
+          "input": {
+            "drawing": "/projeler/belediye/imar.kcad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.profiles.migrate",
+      "version": 1,
+      "title": "Veri profili göçü",
+      "summary": "Projenin verisini bir profilin from sürümünden to sürümüne (verilmezse profilin kendi sürümüne) profilin kendi göç adımlarıyla taşır. Profil profile ile ya da adıyla (yerleşik ya da projenin dosyası) verilir. Göç bir sürümden sonrakine gider ve profilin migrations listesinde yazılıdır; from'dan to'ya kesintisiz bir yol yoksa migration_gap, to from'dan büyük değilse ya da profilin sürümünü aşıyorsa invalid_migration. Adımlar sırasıyla, her biri çizimin o anki hâline göre: renameLayer (katman yolundaki son ad değişir; aynı yerde o ad varsa layer_refused), renameField (alan adı ve nesnelerin değerleri taşınır; formların, ilişkilerin ve ifadelerin anması izler), changeFieldType (alanın yeni tanımı; her değer yeni kuraldan geçip kanonik metniyle yazılır; uymayan onFail'e göre olduğu gibi kalır ya da boşaltılır ve değer değer raporlanır), mapValues (eski değerler yenisi olur; birkaçı birleşebilir, bir eski değer başka alanın değerine göre ikiye ayrılabilir; çok değerli alanda her kod), retireCode (projenin değer listesinde kod kullanımdan kalkar; replaceWith ile ona bağlı alanların o kodlu değerleri başka kod olur). Katmanı, alanı ya da değer listesi çizimde olmayan adım atlanır ve söylenir (migration_step_skipped); zaten uygulanmış adım sessiz atlanır, kilitli katman atlanır (profile_layer_skipped). Hepsi tek geri alma adımıdır (“Profil göçü”, değer listeleri dahil); yalnız katman adları adımın dışındadır: katmanın adı çizimin bayrağıdır, hiçbir katman yeniden adlandırması geri alınmaz (docs/adr/0020), geri alma alanları, değerleri ve listeleri geri verir. layer_refused'ta hiçbir şey yazılmaz. Göç yeni sürümün getirdiklerini eklemez: Veri profilini uygula ekler, Veri profilini denetle verinin hâlâ ayrıldığı yeri söyler; önce göç, sonra uygula. Cevapta adım adım ne yapıldığı, kaç nesneye yazıldığı ve uymayan değerler (katman, alan, değer, nesnelerin kalıcı kimlikleri en çok 1000, sayı) vardır. Plan yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "profilgoc",
+        "profilgocu"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "AreaLevel": {
+            "description": "What an area layer's areas are.",
+            "oneOf": [
+              {
+                "const": "neighbourhood",
+                "description": "Mahalle (or köy).",
+                "type": "string"
+              },
+              {
+                "const": "district",
+                "description": "İlçe.",
+                "type": "string"
+              },
+              {
+                "const": "province",
+                "description": "İl.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaSource": {
+            "description": "An area layer: its level and which attribute names its areas.",
+            "properties": {
+              "district": {
+                "description": "A neighbourhood's district; only at that level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "level": {
+                "$ref": "#/$defs/AreaLevel"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "level",
+              "name"
+            ],
+            "type": "object"
+          },
+          "ConvertFail": {
+            "description": "What becomes of a value that does not go through a field's new rule.",
+            "oneOf": [
+              {
+                "const": "keep",
+                "description": "The value stays as written (`kept` in the losses); `cad.profiles.check` says it does not fit.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The value is emptied (`cleared` in the losses).",
+                "type": "string"
+              }
+            ]
+          },
+          "DataProfile": {
+            "additionalProperties": false,
+            "description": "A data profile as `catalog/v1/profiles/*.json` keeps it, or as a command gives it.",
+            "properties": {
+              "address": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ProfileAddress"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "basis": {
+                "description": "What it rests on and what it is not (a working profile, not an official application schema).",
+                "type": "string"
+              },
+              "classes": {
+                "items": {
+                  "$ref": "#/$defs/ProfileClass"
+                },
+                "type": "array"
+              },
+              "description": {
+                "type": "string"
+              },
+              "domains": {
+                "items": {
+                  "$ref": "#/$defs/FieldDomain"
+                },
+                "type": "array"
+              },
+              "format": {
+                "description": "`kentos.data-profile`.",
+                "type": "string"
+              },
+              "migrations": {
+                "items": {
+                  "$ref": "#/$defs/ProfileMigration"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "relations": {
+                "items": {
+                  "$ref": "#/$defs/ProfileRelation"
+                },
+                "type": "array"
+              },
+              "release": {
+                "description": "The profile's own release (docs/adr/0558): 1 when it has not said, `version` being the format's. A release's\n`migrations` move the data of the release before it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "title": {
+                "type": "string"
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "name",
+              "title",
+              "description",
+              "basis",
+              "classes"
+            ],
+            "type": "object"
+          },
+          "DoorSource": {
+            "description": "The doors' layer and which of its attributes say what.",
+            "properties": {
+              "building": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "code": {
+                "description": "Adres kodu (UAVT): a query that is one finds its door.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "door": {
+                "description": "Kapı no: the outer door number (“12”, “12/A”).",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the locator is built.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "postcode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "province": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "street": {
+                "description": "Yol: the street's name, with its kind as written (“Atatürk Bulvarı”).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "street",
+              "door"
+            ],
+            "type": "object"
+          },
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "description": {
+                "description": "What the value means, said beside it in a list (docs/adr/0438 §5): 1–500 characters.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "from": {
+                "description": "The first day the value holds (`YYYY-AA-GG`, docs/adr/0438 §5); before it a new choice does not\noffer it, as a retired one.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
+              },
+              "until": {
+                "description": "The last day the value holds (`YYYY-AA-GG`); after it a new choice does not offer it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
+          "FieldDomain": {
+            "additionalProperties": false,
+            "description": "A value list of the project: a coded list (`values`) or a range (`min`, `max`), never both.",
+            "properties": {
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Its stable id: what a field links to.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind",
+                "description": "The kind of field it fits: a field linking it is of this kind."
+              },
+              "max": {
+                "description": "A range's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxExclusive": {
+                "description": "`max` itself left out of the range; written only as `true`.",
+                "type": "boolean"
+              },
+              "min": {
+                "description": "A range's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "minExclusive": {
+                "description": "`min` itself left out of the range (docs/adr/0438 §4); written only as `true`.",
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "unit": {
+                "description": "The unit a number list's values are in (`m²`; docs/adr/0438 §4), copied to the fields linking it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "A coded list's values, in their order (labels, retired codes as a field's list has them).",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerField": {
+            "description": "A field of a layer (docs/adr/0199 §1): its name is the attribute's key.",
+            "properties": {
+              "alias": {
+                "description": "The name the table and the form show.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "default": {
+                "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind"
+              },
+              "length": {
+                "description": "A text's most characters (1–10 000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "max": {
+                "description": "A number's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxExclusive": {
+                "description": "`max` is not itself in the range; only with `max`; written only as `true`.",
+                "type": "boolean"
+              },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
+              "min": {
+                "description": "A number's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "minExclusive": {
+                "description": "`min` is not itself in the range (docs/adr/0438 §4); only with `min`; written only as `true`.",
+                "type": "boolean"
+              },
+              "multiple": {
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "description": "An object may not leave it empty; written only as `true`.",
+                "type": "boolean"
+              },
+              "scale": {
+                "description": "A decimal's most fraction digits (0–15).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
+              },
+              "unique": {
+                "description": "No two objects of the layer hold the same value (empty ones aside; docs/adr/0438 §3): every\nwrite is refused `not_unique` that would; written only as `true`.",
+                "type": "boolean"
+              },
+              "unit": {
+                "description": "The unit a number is in, shown after it (`m²`, `kg`; 1–16 characters; docs/adr/0438 §4); the value\nstays the number.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "The values a text or a number takes, when only some.",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
+          },
+          "MigrationStep": {
+            "description": "A step of a migration.",
+            "oneOf": [
+              {
+                "description": "The layer at the path is renamed (its place in the tree stays).",
+                "properties": {
+                  "kind": {
+                    "const": "renameLayer",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "to"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The layer's field is renamed and its objects' values move with it.",
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "renameField",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "from",
+                  "to"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The field takes a new definition (its name the same): each value goes through the new rule and is\nwritten in its canonical text; one that does not fit is kept or emptied (`on_fail`) and reported.",
+                "properties": {
+                  "field": {
+                    "$ref": "#/$defs/LayerField"
+                  },
+                  "kind": {
+                    "const": "changeFieldType",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "onFail": {
+                    "$ref": "#/$defs/ConvertFail",
+                    "default": "keep"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Values recoded: several old values may become one (a merge), one old value two (a split by `whenField`).",
+                "properties": {
+                  "field": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "mapValues",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "map": {
+                    "items": {
+                      "$ref": "#/$defs/ValueMap"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "field",
+                  "map"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A code of a project value list is retired; with `replaceWith` every value of a field linked to the list that\nholds it (each of a multiple field's) becomes the other.",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "domain": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "retireCode",
+                    "type": "string"
+                  },
+                  "replaceWith": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "domain",
+                  "code"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "ProfileAddress": {
+            "additionalProperties": false,
+            "description": "How the profile's address data is read (docs/adr/0229): the sources' `layer` names a class.",
+            "properties": {
+              "areas": {
+                "items": {
+                  "$ref": "#/$defs/AreaSource"
+                },
+                "type": "array"
+              },
+              "doors": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DoorSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "minScore": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "percent"
+              },
+              "reach": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "streets": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StreetSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "minScore",
+              "reach"
+            ],
+            "type": "object"
+          },
+          "ProfileClass": {
+            "additionalProperties": false,
+            "description": "A class of the profile: a layer by its path, its objects' geometry, its fields.",
+            "properties": {
+              "color": {
+                "description": "The layer's colour when the profile adds it (a palette name or `#RRGGBB`).",
+                "type": "string"
+              },
+              "fields": {
+                "items": {
+                  "$ref": "#/$defs/LayerField"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "$ref": "#/$defs/ProfileGeometry"
+              },
+              "id": {
+                "description": "Letters, digits, `-`; unique in the profile.",
+                "type": "string"
+              },
+              "key": {
+                "description": "The identifier field: unique among the class's objects.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer's path: its groups' names, then its own; found by the names folded (Turkish case aside).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "registeredArea": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RegisteredArea"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "theme": {
+                "description": "The theme it belongs to, as the profile names it (“Kadastro”).",
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "theme",
+              "layer",
+              "color",
+              "geometry",
+              "fields"
+            ],
+            "type": "object"
+          },
+          "ProfileGeometry": {
+            "description": "A class's objects' kind of geometry.",
+            "oneOf": [
+              {
+                "const": "area",
+                "description": "Alan: a polygon (holes and parts allowed).",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "Çizgi: a line or a polyline.",
+                "type": "string"
+              },
+              {
+                "const": "point",
+                "description": "Nokta.",
+                "type": "string"
+              },
+              {
+                "const": "record",
+                "description": "Geometrisiz kayıt (docs/adr/0410).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProfileMigration": {
+            "additionalProperties": false,
+            "description": "The steps that move the data of release `from` to release `to` (`from + 1`).",
+            "properties": {
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "steps": {
+                "items": {
+                  "$ref": "#/$defs/MigrationStep"
+                },
+                "type": "array"
+              },
+              "title": {
+                "type": "string"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "title",
+              "steps"
+            ],
+            "type": "object"
+          },
+          "ProfileRelation": {
+            "additionalProperties": false,
+            "description": "A relation between two classes: the child class's field holds a parent object's persistent id.",
+            "properties": {
+              "child": {
+                "description": "The child class's id.",
+                "type": "string"
+              },
+              "field": {
+                "description": "The child class's field.",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "parent": {
+                "description": "The parent class's id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "parent",
+              "child",
+              "field"
+            ],
+            "type": "object"
+          },
+          "RegisteredArea": {
+            "additionalProperties": false,
+            "description": "A class's registered area (tapu ya da kayıt alanı): a field kept apart from the geometric area. Neither overwrites the\nother; `cad.profiles.check` says where they differ by more than `tolerance`.",
+            "properties": {
+              "field": {
+                "description": "The field that holds it, in square metres.",
+                "type": "string"
+              },
+              "tolerance": {
+                "description": "The difference the profile lets pass, in square metres. It is the profile's, not the law's error limit.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              }
+            },
+            "required": [
+              "field",
+              "tolerance"
+            ],
+            "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
+          },
+          "StreetSource": {
+            "description": "The streets' layer and which of its attributes say what.",
+            "properties": {
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Yol adı.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "name"
+            ],
+            "type": "object"
+          },
+          "ValueMap": {
+            "additionalProperties": false,
+            "description": "One value recoded by a `mapValues` step: `from` becomes `to`, only where `whenField` holds `whenEquals` when given.",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "whenEquals": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "whenField": {
+                "description": "Another field of the layer whose value decides (a split: one old code becomes two by it).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.profiles.migrate` v1 (“Veri profili göçü”): the project's data moved from release `from` of a profile to\nits release `to` (the profile's own by default) by the steps the profile's migrations list: a layer or a field renamed,\na field's kind changed with its values carried through the new rule, values recoded, a code retired. All of it is one\nundo step “Profil göçü” (the value lists too). A step whose layer or field the drawing has not is left out and said;\na value that does not fit is kept or emptied as the step says and reported by object. The profile is `profile`, else\nthe built-in or project `name`. It does not add what the new release brings: `cad.profiles.apply` does, and\n`cad.profiles.check` says where the data still departs.\n\nRefusals, in this order: `unknown_profile`, `invalid_profile`, `invalid_migration` (`to` not above `from`, or above\nthe profile's release), `migration_gap` (no unbroken chain of the profile's migrations from `from` to `to`),\n`invalid_revision`, `revision_conflict`, `layer_refused` (a step the drawing refuses; nothing is written). Warnings:\n`migration_step_skipped`, `profile_layer_skipped` (a locked layer), `values_unfit`.",
+        "properties": {
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "description": "The release the data is at.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DataProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "to": {
+            "description": "The release it goes to; none: the profile's.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "from"
+        ],
+        "title": "ProfilesMigrate",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "LossKind": {
+            "description": "Why a value was not carried through.",
+            "oneOf": [
+              {
+                "const": "kept",
+                "description": "The value did not fit the new rule and stays as written.",
+                "type": "string"
+              },
+              {
+                "const": "cleared",
+                "description": "The value did not fit the new rule and was emptied.",
+                "type": "string"
+              }
+            ]
+          },
+          "MigratedStep": {
+            "description": "One step as it was run.",
+            "properties": {
+              "applied": {
+                "description": "Whether it changed the drawing; a step left out is `false`.",
+                "type": "boolean"
+              },
+              "index": {
+                "description": "Its place in the migration, from 0.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer's id, when the step has a layer and the drawing has it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "migration": {
+                "description": "The release its migration goes from.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "note": {
+                "type": "string"
+              },
+              "objects": {
+                "description": "The objects it wrote.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "migration",
+              "index",
+              "kind",
+              "applied",
+              "objects",
+              "note"
+            ],
+            "type": "object"
+          },
+          "MigrationLoss": {
+            "description": "Objects whose value did not go through a changed field's new rule.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "field": {
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/LossKind"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "migration": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "step": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "uids": {
+                "description": "The objects, in the drawing's order, at most 1000.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "value": {
+                "description": "The value as it was.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "migration",
+              "step",
+              "layer",
+              "field",
+              "kind",
+              "value",
+              "uids",
+              "count",
+              "message"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.migrate` v1.",
+        "properties": {
+          "changed": {
+            "description": "Whether anything was written.",
+            "type": "boolean"
+          },
+          "from": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "losses": {
+            "description": "The values that did not fit, by value and layer.",
+            "items": {
+              "$ref": "#/$defs/MigrationLoss"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "Objects written, once each.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/$defs/MigratedStep"
+            },
+            "type": "array"
+          },
+          "to": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "changed",
+          "from",
+          "to",
+          "steps",
+          "losses",
+          "objects",
+          "revision"
+        ],
+        "title": "ProfilesMigrated",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "LossKind": {
+            "description": "Why a value was not carried through.",
+            "oneOf": [
+              {
+                "const": "kept",
+                "description": "The value did not fit the new rule and stays as written.",
+                "type": "string"
+              },
+              {
+                "const": "cleared",
+                "description": "The value did not fit the new rule and was emptied.",
+                "type": "string"
+              }
+            ]
+          },
+          "MigratedStep": {
+            "description": "One step as it was run.",
+            "properties": {
+              "applied": {
+                "description": "Whether it changed the drawing; a step left out is `false`.",
+                "type": "boolean"
+              },
+              "index": {
+                "description": "Its place in the migration, from 0.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer's id, when the step has a layer and the drawing has it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "migration": {
+                "description": "The release its migration goes from.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "note": {
+                "type": "string"
+              },
+              "objects": {
+                "description": "The objects it wrote.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "migration",
+              "index",
+              "kind",
+              "applied",
+              "objects",
+              "note"
+            ],
+            "type": "object"
+          },
+          "MigrationLoss": {
+            "description": "Objects whose value did not go through a changed field's new rule.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "field": {
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/LossKind"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "migration": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "step": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "uids": {
+                "description": "The objects, in the drawing's order, at most 1000.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "value": {
+                "description": "The value as it was.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "migration",
+              "step",
+              "layer",
+              "field",
+              "kind",
+              "value",
+              "uids",
+              "count",
+              "message"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.migrate` v1.",
+        "properties": {
+          "changed": {
+            "description": "Whether anything was written.",
+            "type": "boolean"
+          },
+          "from": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "losses": {
+            "description": "The values that did not fit, by value and layer.",
+            "items": {
+              "$ref": "#/$defs/MigrationLoss"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "Objects written, once each.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/$defs/MigratedStep"
+            },
+            "type": "array"
+          },
+          "to": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "changed",
+          "from",
+          "to",
+          "steps",
+          "losses",
+          "objects",
+          "revision"
+        ],
+        "title": "ProfilesMigrated",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "unknown_profile",
+          "invalid_profile",
+          "invalid_migration",
+          "migration_gap",
+          "layer_refused",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "migration_step_skipped",
+          "profile_layer_skipped",
+          "values_unfit"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kurumun profilini 1. sürümden 2. sürüme taşı",
+          "input": {
+            "from": 1,
+            "name": "kurum-profili",
+            "to": 2
           }
         }
       ]
@@ -551788,6 +555657,1228 @@
               "/veri/dem/a.tif",
               "/veri/dem/b.tif"
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.rasters.gpkgread",
+      "version": 1,
+      "title": "GeoPackage karolarını oku",
+      "summary": "Bir GeoPackage'ın karo (raster) tablosunu okur: tables dosyadaki her karo tablosunu (karo matrisi kümesinin kutusu, veri kutusu, EPSG kodu, her zoom düzeyinin matrisi, karo boyu, pikseli, karo sayısı ve karolarının biçimi) söyler. output verilirse seçilen zoom düzeyi (zoom; yoksa en yükseği) ve alan (area, tablonun sisteminde [en küçük x, en küçük y, en büyük x, en büyük y]; yoksa tablonun veri kutusu, o da yoksa karo matrisi kümesinin kutusu, düzeyin ızgarasına kesilir) tek raster olarak output'a kuzeyi yukarıda, tablonun sisteminde, dört bantlı (kırmızı, yeşil, mavi, alfa) 8 bitlik GeoTIFF yazılır; dosyada karosu olmayan yer saydamdır (alfa 0, tiles_missing). Pencerenin sınırı GDAL'ın GeoPackage sürücüsünün kuralıyla pikselin tamına yuvarlanır (başlangıç (min − küme başlangıcı) / piksel'in yuvarlağı, boy (en büyük − en küçük) / piksel + 0,5'in tamı) ve ızgaradan taşan yer kesilir. Karolar PNG olmalı ve matrisin karo boyunda olmalı (8 bit gri, gri+alfa, RGB, RGBA ve paletli); JPEG, WebP ve 8 bitten fazla PNG okunmaz (tile_format_unsupported); raster en çok 25 milyon piksel olur (gpkg_tiles_too_large). Tablo EPSG sistemini bildirmiyorsa srid 0 olur (crs_undeclared). layer verilirse raster output'a bağlı olarak o katmana eklenir (tek geri alma adımı “GeoPackage karoları”; sistemi projeninkinden başkaysa crs_mismatch); verilmezse çizim değişmez. Dosya yarım kalmaz: geçici adla yazılır, geri okunup denetlenir, sonra yerine konur; var olan output overwrite verilmezse reddedilir (file_exists). plan yazmadan söyler.",
+      "aliases": [
+        "gpkgkaro",
+        "gpkgraster",
+        "karooku"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.rasters.gpkgread` v1. Refusals, in this order: `invalid_file_path` (the file, or `layer` without\n`output`), `file_not_found`, `import_unreadable` (not a GeoPackage), `no_tile_table`, `table_not_found` (`table`\nis not a tile table; a file with several needs it), `zoom_not_found`, `invalid_area`, `tile_table_empty` (no tile\nat the zoom in the window), `gpkg_tiles_too_large`, `tile_unreadable` (a tile that is not a PNG of the matrix's\nsize), `tile_format_unsupported` (JPEG, WebP or a PNG of more than 8 bits), then with `output`: `invalid_file_path`\n(not a `.tif`), `file_exists`, with `layer`: `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, and\n`invalid_revision`, `revision_conflict`. Warnings: `crs_undeclared`, `tiles_missing`, `layer_hidden`.",
+        "properties": {
+          "area": {
+            "description": "The part to read, `[min x, min y, max x, max y]` in the table's system; none: the table's data extent (its\ntile matrix set's, when `gpkg_contents` gives none) cut to the level's grid.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "system"
+          },
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The layer the raster is added to (linked to `output`); none: only the file is written.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "output": {
+            "description": "The GeoTIFF written (`.tif`), absolute or from the drawing's folder; none: nothing is written.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "overwrite": {
+            "description": "An existing `output` is written over.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "The GeoPackage, absolute or from the drawing's folder.",
+            "type": "string"
+          },
+          "table": {
+            "description": "The tile table; none: the file's only tile table.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "zoom": {
+            "description": "The zoom level; none: the highest (the finest).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "index"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "RastersGpkgRead",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GpkgTileSet": {
+            "description": "A tile table of the file.",
+            "properties": {
+              "bounds": {
+                "description": "The tile matrix set's box: its top-left corner is the grid's origin.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "dataBounds": {
+                "description": "`gpkg_contents`'s box, the data's extent.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "extensions": {
+                "description": "The file's extensions that name this table (`gpkg_webp`, …).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "identifier": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "Its EPSG code; none for an undefined system or another authority's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "srsId": {
+                "description": "The file's own id of the system (`gpkg_spatial_ref_sys`).",
+                "format": "int32",
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "table": {
+                "type": "string"
+              },
+              "zooms": {
+                "description": "The zoom levels, coarsest first.",
+                "items": {
+                  "$ref": "#/$defs/GpkgTileZoom"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "table",
+              "srsId",
+              "bounds",
+              "zooms"
+            ],
+            "type": "object"
+          },
+          "GpkgTileZoom": {
+            "description": "A zoom level of a tile table.",
+            "properties": {
+              "formats": {
+                "description": "The formats of its tiles (`png`, `jpeg`, `webp`, `other`), looked at in up to 64 of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "matrixHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "matrixWidth": {
+                "description": "Tiles across and down the matrix.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "pixel": {
+                "description": "A pixel's width and height, in the system's units.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "tileHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "px"
+              },
+              "tileWidth": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "px"
+              },
+              "tiles": {
+                "description": "Tiles the table holds at this zoom.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "zoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              }
+            },
+            "required": [
+              "zoom",
+              "matrixWidth",
+              "matrixHeight",
+              "tileWidth",
+              "tileHeight",
+              "pixel",
+              "tiles"
+            ],
+            "type": "object"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.rasters.gpkgread` v1 (its plan's too: what it would read and write, nothing written).",
+        "properties": {
+          "affine": {
+            "description": "`[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 6,
+            "minItems": 6,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "area": {
+            "description": "The window read, `[min x, min y, max x, max y]`, whole pixels of the level.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "bands": {
+            "description": "Always 4: red, green, blue and alpha.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "bytes"
+          },
+          "height": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "path": {
+            "description": "The GeoTIFF, as written.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sample": {
+            "$ref": "#/$defs/RasterSample"
+          },
+          "srid": {
+            "description": "The table's EPSG code; 0: undefined or not EPSG.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "table": {
+            "description": "The table and zoom level read.",
+            "type": "string"
+          },
+          "tables": {
+            "description": "Every tile table of the file.",
+            "items": {
+              "$ref": "#/$defs/GpkgTileSet"
+            },
+            "type": "array"
+          },
+          "tilesMissing": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "tilesRead": {
+            "description": "Tiles taken, and tiles of the window the table does not hold (transparent).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "uid": {
+            "description": "The raster added, when `layer` was given.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "width": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "zoom": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          }
+        },
+        "required": [
+          "tables",
+          "table",
+          "zoom",
+          "area",
+          "width",
+          "height",
+          "bands",
+          "sample",
+          "affine",
+          "srid",
+          "tilesRead",
+          "tilesMissing",
+          "revision"
+        ],
+        "title": "RastersGpkgReadDone",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "GpkgTileSet": {
+            "description": "A tile table of the file.",
+            "properties": {
+              "bounds": {
+                "description": "The tile matrix set's box: its top-left corner is the grid's origin.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "dataBounds": {
+                "description": "`gpkg_contents`'s box, the data's extent.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "extensions": {
+                "description": "The file's extensions that name this table (`gpkg_webp`, …).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "identifier": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "Its EPSG code; none for an undefined system or another authority's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "srsId": {
+                "description": "The file's own id of the system (`gpkg_spatial_ref_sys`).",
+                "format": "int32",
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "table": {
+                "type": "string"
+              },
+              "zooms": {
+                "description": "The zoom levels, coarsest first.",
+                "items": {
+                  "$ref": "#/$defs/GpkgTileZoom"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "table",
+              "srsId",
+              "bounds",
+              "zooms"
+            ],
+            "type": "object"
+          },
+          "GpkgTileZoom": {
+            "description": "A zoom level of a tile table.",
+            "properties": {
+              "formats": {
+                "description": "The formats of its tiles (`png`, `jpeg`, `webp`, `other`), looked at in up to 64 of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "matrixHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "matrixWidth": {
+                "description": "Tiles across and down the matrix.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "pixel": {
+                "description": "A pixel's width and height, in the system's units.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "tileHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "px"
+              },
+              "tileWidth": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "px"
+              },
+              "tiles": {
+                "description": "Tiles the table holds at this zoom.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "zoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              }
+            },
+            "required": [
+              "zoom",
+              "matrixWidth",
+              "matrixHeight",
+              "tileWidth",
+              "tileHeight",
+              "pixel",
+              "tiles"
+            ],
+            "type": "object"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.rasters.gpkgread` v1 (its plan's too: what it would read and write, nothing written).",
+        "properties": {
+          "affine": {
+            "description": "`[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 6,
+            "minItems": 6,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "area": {
+            "description": "The window read, `[min x, min y, max x, max y]`, whole pixels of the level.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "bands": {
+            "description": "Always 4: red, green, blue and alpha.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "bytes"
+          },
+          "height": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "path": {
+            "description": "The GeoTIFF, as written.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sample": {
+            "$ref": "#/$defs/RasterSample"
+          },
+          "srid": {
+            "description": "The table's EPSG code; 0: undefined or not EPSG.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "table": {
+            "description": "The table and zoom level read.",
+            "type": "string"
+          },
+          "tables": {
+            "description": "Every tile table of the file.",
+            "items": {
+              "$ref": "#/$defs/GpkgTileSet"
+            },
+            "type": "array"
+          },
+          "tilesMissing": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "tilesRead": {
+            "description": "Tiles taken, and tiles of the window the table does not hold (transparent).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "uid": {
+            "description": "The raster added, when `layer` was given.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "width": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "zoom": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          }
+        },
+        "required": [
+          "tables",
+          "table",
+          "zoom",
+          "area",
+          "width",
+          "height",
+          "bands",
+          "sample",
+          "affine",
+          "srid",
+          "tilesRead",
+          "tilesMissing",
+          "revision"
+        ],
+        "title": "RastersGpkgReadDone",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "no_tile_table",
+          "table_not_found",
+          "zoom_not_found",
+          "invalid_area",
+          "tile_table_empty",
+          "gpkg_tiles_too_large",
+          "tile_unreadable",
+          "tile_format_unsupported",
+          "file_exists",
+          "crs_mismatch",
+          "file_unwritable",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "crs_undeclared",
+          "tiles_missing",
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Dosyadaki karo tablolarını ve zoom düzeylerini listele",
+          "input": {
+            "path": "/veri/ortofoto.gpkg"
+          }
+        },
+        {
+          "title": "En ince düzeyin bir alanını GeoTIFF yap ve altlık katmanına ekle",
+          "input": {
+            "area": [
+              487000.0,
+              4420000.0,
+              487500.0,
+              4420400.0
+            ],
+            "layer": "altlik",
+            "output": "/veri/orto-parca.tif",
+            "path": "/veri/ortofoto.gpkg",
+            "table": "orto"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.rasters.gpkgwrite",
+      "version": 1,
+      "title": "Rasteri GeoPackage karosu olarak yaz",
+      "summary": "Çizimdeki bir rasteri (uid; 8 bitlik, kuzeyi yukarıda, paletsiz, dosyası ya da kitaplık kaynağı okunabilen) path'e GeoPackage karo tablosu (table; yoksa tiles) olarak yazar: 256 × 256 PNG karolar, en ince zoom düzeyi rasterin kendi pikseli, her kaba düzey yarı piksel çözünürlüklü (2 × 2 ortalaması; ızgaranın dışı saydam); karo ızgarasının başlangıcı rasterin sol üst köşesidir ve karo matrisi kümesinin kutusu en kaba düzeyin tek karosunu kaplar, veri kutusu rasterin kendi kutusudur. Karolar rasterin bantlarındandır: 1 bant gri, 2 bant gri ve alfa, 3 ve 4 bant RGBA (alfa rasterde yoksa içeride 255, ızgara dışında 0). Rasterin sistemi (EPSG kodu ve WKT'si; sistemsizse tanımsız kartezyen) dosyaya yazılır. nodata değeri karoda taşınamaz (nodata_lost). Raster 25 milyon pikseli aşarsa gpkg_tiles_too_large. mode new: yeni GeoPackage (1.3; var olan dosyanın üzerine yalnız overwrite ile yazılır, geçici adla yazılır, geri okunup yerine konur); add: var olan GeoPackage'a tek işlemde tablo eklenir (aynı adlı tablo table_exists, hata olursa dosya olduğu gibi kalır). plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "gpkgkarouret",
+        "karoyaz",
+        "rastergpkg"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "GpkgTilesMode": {
+            "description": "Where `cad.rasters.gpkgwrite` puts the table.",
+            "oneOf": [
+              {
+                "const": "new",
+                "description": "A new GeoPackage; a file that is there is written over only with `overwrite`.",
+                "type": "string"
+              },
+              {
+                "const": "add",
+                "description": "The table is added to the GeoPackage that is there, in one transaction; a table of the name is refused.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.rasters.gpkgwrite` v1. Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_a_raster`,\n`invalid_file_path` (not a `.gpkg`, a relative path without the drawing, no folder), `invalid_table_name`,\n`raster_unsupported` (a palette, more than 8 bits, a dataset, an address without a file),\n`raster_not_north_up`, `gpkg_tiles_too_large`, `file_not_found` (the raster's source), `import_unreadable`,\nthen in mode `new` `file_exists`, in mode `add` `file_not_found` and `import_unreadable` (no GeoPackage there)\nand `table_exists`. Warnings: `nodata_lost`.",
+        "properties": {
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "identifier": {
+            "description": "The table's identifier (`gpkg_contents`); none: its name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mode": {
+            "$ref": "#/$defs/GpkgTilesMode",
+            "default": "new"
+          },
+          "overwrite": {
+            "description": "An existing `path` (mode `new`) is written over.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "The GeoPackage written (`.gpkg`), absolute or from the drawing's folder.",
+            "type": "string"
+          },
+          "table": {
+            "description": "The tile table's name; none: `tiles`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "uid": {
+            "description": "The raster, by persistent id.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "path"
+        ],
+        "title": "RastersGpkgWrite",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GpkgTileZoom": {
+            "description": "A zoom level of a tile table.",
+            "properties": {
+              "formats": {
+                "description": "The formats of its tiles (`png`, `jpeg`, `webp`, `other`), looked at in up to 64 of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "matrixHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "matrixWidth": {
+                "description": "Tiles across and down the matrix.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "pixel": {
+                "description": "A pixel's width and height, in the system's units.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "tileHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "px"
+              },
+              "tileWidth": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "px"
+              },
+              "tiles": {
+                "description": "Tiles the table holds at this zoom.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "zoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              }
+            },
+            "required": [
+              "zoom",
+              "matrixWidth",
+              "matrixHeight",
+              "tileWidth",
+              "tileHeight",
+              "pixel",
+              "tiles"
+            ],
+            "type": "object"
+          },
+          "GpkgTilesMode": {
+            "description": "Where `cad.rasters.gpkgwrite` puts the table.",
+            "oneOf": [
+              {
+                "const": "new",
+                "description": "A new GeoPackage; a file that is there is written over only with `overwrite`.",
+                "type": "string"
+              },
+              {
+                "const": "add",
+                "description": "The table is added to the GeoPackage that is there, in one transaction; a table of the name is refused.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.rasters.gpkgwrite` v1 (its plan's too: what it would write, nothing written).",
+        "properties": {
+          "bands": {
+            "description": "The tiles' bands: 1 grey, 2 grey with alpha, 4 colour (RGBA).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bounds": {
+            "description": "The tile matrix set's box and the data's extent, `[min x, min y, max x, max y]`.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "bytes": {
+            "description": "The file's size after the write (a plan: the tiles' bytes).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "dataBounds": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "mode": {
+            "$ref": "#/$defs/GpkgTilesMode"
+          },
+          "path": {
+            "type": "string"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "srid": {
+            "description": "The raster's EPSG code; 0: it names none (the file's undefined cartesian system, id −1).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "table": {
+            "type": "string"
+          },
+          "tiles": {
+            "description": "Tiles written.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "zooms": {
+            "description": "The zoom levels written, coarsest first.",
+            "items": {
+              "$ref": "#/$defs/GpkgTileZoom"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "table",
+          "mode",
+          "srid",
+          "bands",
+          "bounds",
+          "dataBounds",
+          "zooms",
+          "tiles",
+          "bytes",
+          "revision"
+        ],
+        "title": "RastersGpkgWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "GpkgTileZoom": {
+            "description": "A zoom level of a tile table.",
+            "properties": {
+              "formats": {
+                "description": "The formats of its tiles (`png`, `jpeg`, `webp`, `other`), looked at in up to 64 of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "matrixHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "matrixWidth": {
+                "description": "Tiles across and down the matrix.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "pixel": {
+                "description": "A pixel's width and height, in the system's units.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "tileHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "px"
+              },
+              "tileWidth": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "px"
+              },
+              "tiles": {
+                "description": "Tiles the table holds at this zoom.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "zoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              }
+            },
+            "required": [
+              "zoom",
+              "matrixWidth",
+              "matrixHeight",
+              "tileWidth",
+              "tileHeight",
+              "pixel",
+              "tiles"
+            ],
+            "type": "object"
+          },
+          "GpkgTilesMode": {
+            "description": "Where `cad.rasters.gpkgwrite` puts the table.",
+            "oneOf": [
+              {
+                "const": "new",
+                "description": "A new GeoPackage; a file that is there is written over only with `overwrite`.",
+                "type": "string"
+              },
+              {
+                "const": "add",
+                "description": "The table is added to the GeoPackage that is there, in one transaction; a table of the name is refused.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.rasters.gpkgwrite` v1 (its plan's too: what it would write, nothing written).",
+        "properties": {
+          "bands": {
+            "description": "The tiles' bands: 1 grey, 2 grey with alpha, 4 colour (RGBA).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bounds": {
+            "description": "The tile matrix set's box and the data's extent, `[min x, min y, max x, max y]`.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "bytes": {
+            "description": "The file's size after the write (a plan: the tiles' bytes).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "dataBounds": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "mode": {
+            "$ref": "#/$defs/GpkgTilesMode"
+          },
+          "path": {
+            "type": "string"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "srid": {
+            "description": "The raster's EPSG code; 0: it names none (the file's undefined cartesian system, id −1).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "table": {
+            "type": "string"
+          },
+          "tiles": {
+            "description": "Tiles written.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "zooms": {
+            "description": "The zoom levels written, coarsest first.",
+            "items": {
+              "$ref": "#/$defs/GpkgTileZoom"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "table",
+          "mode",
+          "srid",
+          "bands",
+          "bounds",
+          "dataBounds",
+          "zooms",
+          "tiles",
+          "bytes",
+          "revision"
+        ],
+        "title": "RastersGpkgWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_raster",
+          "invalid_file_path",
+          "invalid_table_name",
+          "raster_unsupported",
+          "raster_not_north_up",
+          "gpkg_tiles_too_large",
+          "unknown_asset",
+          "file_not_found",
+          "import_unreadable",
+          "file_exists",
+          "table_exists",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "nodata_lost"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ortofotoyu karo tablosu olarak yeni bir GeoPackage'a yaz",
+          "input": {
+            "path": "/veri/ortofoto.gpkg",
+            "table": "orto",
+            "uid": "6f1c0a52-3b7e-4d0a-9a55-0d4f6b1f2c11"
           }
         }
       ]
@@ -1056337,6 +1061428,78 @@
       "meaning": "Profilin bir sınıfı ya da parçası atlandı; iletisi nedenini söyler."
     },
     {
+      "code": "profile_source_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İçe aktarılacak tek bir kaynak verilmedi: bir JSON dosyası (source), profil (profile) ya da eşleme (mapping) verin; yalnız biri."
+    },
+    {
+      "code": "unknown_profile_format",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosyanın biçimi tanınmıyor: veri profili (kentos.data-profile) ya da eşleme (kentos.profile-mapping) olmalı."
+    },
+    {
+      "code": "unsupported_profile_version",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Profilin ya da eşlemenin biçim sürümü bu KentOS'un okuduğu değil; bu KentOS 1. sürümü okur."
+    },
+    {
+      "code": "profile_name_taken",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu ad KentOS'un kendi profilinin adı; projenin profiline başka bir ad verin."
+    },
+    {
+      "code": "profile_downgrade",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projedeki aynı adlı profil içe aktarılandan daha yeni sürümde; üzerine yazmak için overwrite verin."
+    },
+    {
+      "code": "unknown_mapping",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu adda eşleme yok; projenin profiller klasöründeki bir eşlemenin adını ya da eşlemenin kendisini (mapping) verin."
+    },
+    {
+      "code": "invalid_profile_mapping",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Eşleme geçersiz; iletisi neyin tutmadığını söyler."
+    },
+    {
+      "code": "invalid_migration",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Göçün sürümleri geçersiz: hedef sürüm kaynaktan büyük ve profilin sürümünü aşmayan bir sayı olmalı."
+    },
+    {
+      "code": "migration_gap",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Profilin göçlerinde bu iki sürüm arasında kesintisiz bir yol yok."
+    },
+    {
+      "code": "migration_step_skipped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir göç adımı atlandı: katmanı, alanı ya da değer listesi çizimde yok."
+    },
+    {
+      "code": "mapping_unchecked",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Eşlemenin profili bulunamadı; adları profille denetlenmedi."
+    },
+    {
+      "code": "profile_replaced",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Projedeki aynı adlı profil ya da eşleme değiştirildi; iletisi eski sürümünü söyler."
+    },
+    {
       "code": "invalid_period",
       "kind": "failed",
       "retryable": false,
@@ -1057559,6 +1062722,78 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Rasterin kaynağı okunamadı; kayıt kaynağın özetini taşımıyor."
+    },
+    {
+      "code": "no_tile_table",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosyada karo (raster) tablosu yok; GeoPackage'ın yalnız vektör ve öznitelik tabloları var."
+    },
+    {
+      "code": "zoom_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Karo tablosunda bu zoom düzeyi yok; tablonun düzeylerinden birini verin."
+    },
+    {
+      "code": "invalid_area",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Alan [en küçük x, en küçük y, en büyük x, en büyük y] olmalı: sonlu sayılar, en küçükler en büyüklerden küçük."
+    },
+    {
+      "code": "tile_table_empty",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Karo tablosunda bu zoom düzeyinin okunan penceresinde hiç karo yok."
+    },
+    {
+      "code": "gpkg_tiles_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Raster 25 milyon pikselden büyük olurdu; daha kaba bir zoom düzeyi ya da dar bir alan verin (yazarken daha küçük bir raster)."
+    },
+    {
+      "code": "tile_unreadable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bir karo okunamadı: PNG değil, bozuk ya da matrisin karo boyunda değil."
+    },
+    {
+      "code": "tile_format_unsupported",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Karolar JPEG, WebP ya da 8 bitten fazla PNG; bu okuyucu yalnız 8 bitlik PNG karoları açar."
+    },
+    {
+      "code": "invalid_table_name",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tablo adı harf ya da alt çizgiyle başlamalı, harf, rakam ve alt çizgi içermeli ve gpkg_ ile başlamamalı."
+    },
+    {
+      "code": "raster_unsupported",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Raster karo olarak yazılamaz: paletli, 8 bitten fazla, veri seti ya da dosyası okunamayan bir kaynak."
+    },
+    {
+      "code": "raster_not_north_up",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Raster dönük ya da kuzeyi yukarıda değil; karo ızgarası yatay ve düşey olduğu için önce Raster oturt ile yeniden örnekleyin."
+    },
+    {
+      "code": "tiles_missing",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Okunan pencerenin bazı karoları tabloda yok; o yerler saydam (alfa 0) kaldı."
+    },
+    {
+      "code": "nodata_lost",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Rasterin nodata değeri karolara yazılamaz (GeoPackage karoları alfa taşır); değer olduğu gibi piksel sayıldı."
     },
     {
       "code": "already_committed",

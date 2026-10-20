@@ -1,0 +1,50 @@
+{
+  "format": "kentos.profile-mapping",
+  "version": 1,
+  "name": "peyzaj-kurum",
+  "title": "Peyzaj eşlemesi",
+  "profile": "peyzaj",
+  "classes": [
+    {
+      "class": "agac",
+      "layer": [
+        "Peyzaj",
+        "Ağaçlar"
+      ],
+      "fields": [
+        {
+          "profile": "AgacNo",
+          "name": "NO"
+        },
+        {
+          "profile": "Tur",
+          "name": "TUR"
+        }
+      ],
+      "codes": [
+        {
+          "field": "Tur",
+          "codes": [
+            {
+              "profile": "cinar",
+              "name": "C"
+            },
+            {
+              "profile": "mese",
+              "name": "M"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class": "yesil",
+      "fields": [
+        {
+          "profile": "KayitliAlan",
+          "name": "KAYIT"
+        }
+      ]
+    }
+  ]
+}

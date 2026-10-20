@@ -32,6 +32,9 @@ mod fgb_exchange;
 #[cfg(test)]
 mod fgb_tests;
 mod gml_exchange;
+mod gpkg_tiles;
+#[cfg(test)]
+mod gpkg_tiles_tests;
 #[cfg(test)]
 mod gml_tests;
 mod xyz_exchange;
@@ -155,6 +158,9 @@ pub enum Window {
     CloudRegion(area_queries::RegionState),
     CloudProfile(area_queries::ProfileState),
     MeshQuery(area_queries::MeshState),
+    /// GeoPackage karolarını oku and Rasteri GeoPackage karosu olarak yaz (docs/adr/0556); boxed: the tables and the plan.
+    GpkgTilesRead(Box<gpkg_tiles::ReadState>),
+    GpkgTilesWrite(Box<gpkg_tiles::WriteState>),
     /// PDF içe aktar (docs/adr/0352); boxed: the plan it holds.
     PdfImport(Box<pdf_import::State>),
     /// GIS türevi dışa aktar and GIS türevini denetle (docs/adr/0530).
@@ -180,6 +186,7 @@ pub enum Event {
     Wgs84Export(wgs84_export::Event),
     PhotoImport(photo_import::Event),
     Gpkg(gpkg::Event),
+    GpkgTiles(gpkg_tiles::Event),
     Postgis(postgis::Event),
     PdfImport(pdf_import::Event),
     Package(package::Event),
@@ -199,7 +206,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 35] = [
+pub const COMMANDS: [&str; 37] = [
     "file.export.atlas",
     "file.import.dxf",
     "file.import.ncz",
@@ -217,6 +224,8 @@ pub const COMMANDS: [&str; 35] = [
     "file.export.gpx",
     "file.import.photos",
     "file.import.gpkg",
+    "raster.gpkgRead",
+    "raster.gpkgWrite",
     "file.import.pdf",
     "file.export.gpkg",
     "file.export.shp",
@@ -268,6 +277,8 @@ impl App {
             "file.import.kml" => self.pick(Kind::Kml),
             "file.import.photos" => self.pick_photos(),
             "file.import.gpkg" => self.gpkg_pick(false),
+            "raster.gpkgRead" => self.gpkg_tiles_read_pick(),
+            "raster.gpkgWrite" => self.gpkg_tiles_write_open(),
             "file.import.pdf" => self.pdf_pick(),
             "source.link" => self.gpkg_pick(true),
             "source.postgis" => self.postgis_open(),
@@ -467,6 +478,7 @@ impl App {
             Event::Wgs84Export(e) => self.wgs84_export_event(e),
             Event::PhotoImport(e) => self.photo_import_event(e),
             Event::Gpkg(e) => self.gpkg_event(e),
+            Event::GpkgTiles(e) => self.gpkg_tiles_event(e),
             Event::PdfImport(e) => self.pdf_event(e),
             Event::Postgis(e) => self.postgis_event(e),
             Event::Package(e) => self.package_event(e),
@@ -516,6 +528,8 @@ impl App {
             Some(Window::Wgs84Export(s)) => self.wgs84_export_view(s),
             Some(Window::PhotoImport(s)) => self.photo_import_view(s),
             Some(Window::Gpkg(s)) => self.gpkg_view(s),
+            Some(Window::GpkgTilesRead(s)) => self.gpkg_tiles_read_view(s),
+            Some(Window::GpkgTilesWrite(s)) => self.gpkg_tiles_write_view(s),
             Some(Window::Postgis(s)) => self.postgis_view(s),
             Some(Window::ShpExport(s)) => self.shp_export_view(s),
             Some(Window::CsvExport(s)) => self.csv_export_view(s),

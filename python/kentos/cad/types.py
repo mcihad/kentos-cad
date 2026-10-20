@@ -863,6 +863,20 @@ ConventionName = Literal["positionVector", "coordinateFrame"]
 """The names of :class:`Convention`, for a plain string."""
 
 
+class ConvertFail(_StrEnum):
+    """What becomes of a value that does not go through a field's new rule.
+
+    - ``keep``: The value stays as written (`kept` in the losses); `cad.profiles.check` says it does not fit.
+    - ``clear``: The value is emptied (`cleared` in the losses).
+    """
+    KEEP = "keep"
+    CLEAR = "clear"
+
+
+ConvertFailName = Literal["keep", "clear"]
+"""The names of :class:`ConvertFail`, for a plain string."""
+
+
 class CreateOperation(_StrEnum):
     """The drawing tool or Hesap window whose step has its own name; without
     one the step is “Ekle”, as for every object a drawing tool adds.
@@ -1608,6 +1622,20 @@ class GisTableRole(_StrEnum):
 
 GisTableRoleName = Literal["layer", "blocks", "annotations"]
 """The names of :class:`GisTableRole`, for a plain string."""
+
+
+class GpkgTilesMode(_StrEnum):
+    """Where `cad.rasters.gpkgwrite` puts the table.
+
+    - ``new``: A new GeoPackage; a file that is there is written over only with `overwrite`.
+    - ``add``: The table is added to the GeoPackage that is there, in one transaction; a table of the name is refused.
+    """
+    NEW = "new"
+    ADD = "add"
+
+
+GpkgTilesModeName = Literal["new", "add"]
+"""The names of :class:`GpkgTilesMode`, for a plain string."""
 
 
 class GradientShape(_StrEnum):
@@ -2358,6 +2386,20 @@ LookupRelationName = Literal["contains", "within", "intersects", "nearest"]
 """The names of :class:`LookupRelation`, for a plain string."""
 
 
+class LossKind(_StrEnum):
+    """Why a value was not carried through.
+
+    - ``kept``: The value did not fit the new rule and stays as written.
+    - ``cleared``: The value did not fit the new rule and was emptied.
+    """
+    KEPT = "kept"
+    CLEARED = "cleared"
+
+
+LossKindName = Literal["kept", "cleared"]
+"""The names of :class:`LossKind`, for a plain string."""
+
+
 class MatchProperty(_StrEnum):
     """A property Özellik kopyala gives (AutoCAD's MATCHPROP settings).
 
@@ -2906,6 +2948,16 @@ PolygonSelectModeName = Literal["inside", "crossing", "outside"]
 """The names of :class:`PolygonSelectMode`, for a plain string."""
 
 
+class ProfileFileKind(_StrEnum):
+    """What a file of the project's folder is."""
+    PROFILE = "profile"
+    MAPPING = "mapping"
+
+
+ProfileFileKindName = Literal["profile", "mapping"]
+"""The names of :class:`ProfileFileKind`, for a plain string."""
+
+
 class ProfileFindingKind(_StrEnum):
     """What a finding is about.
 
@@ -2956,6 +3008,20 @@ class ProfileGeometry(_StrEnum):
 
 ProfileGeometryName = Literal["area", "line", "point", "record"]
 """The names of :class:`ProfileGeometry`, for a plain string."""
+
+
+class ProfileSource(_StrEnum):
+    """Where a profile or a mapping is from.
+
+    - ``builtin``: KentOS's own (`catalog/v1/profiles/`).
+    - ``project``: A file in the project's `profiller` folder.
+    """
+    BUILTIN = "builtin"
+    PROJECT = "project"
+
+
+ProfileSourceName = Literal["builtin", "project"]
+"""The names of :class:`ProfileSource`, for a plain string."""
 
 
 class ProjectPermission(_StrEnum):
@@ -5560,6 +5626,30 @@ class MeasuredPoint(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> MeasuredPoint:
         return _variant(_MEASURED_POINT, "MeasuredPoint", "kind", data).from_json(data)
+
+
+class MigrationStep(_Union):
+    """A step of a migration.
+
+    One of:
+
+    - :class:`RenameLayerMigrationStep` (``kind: renameLayer``)
+    - :class:`RenameFieldMigrationStep` (``kind: renameField``)
+    - :class:`ChangeFieldTypeMigrationStep` (``kind: changeFieldType``)
+    - :class:`MapValuesMigrationStep` (``kind: mapValues``)
+    - :class:`RetireCodeMigrationStep` (``kind: retireCode``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MigrationStep:
+        return _variant(_MIGRATION_STEP, "MigrationStep", "kind", data).from_json(data)
 
 
 class NetworkDirection(_Union):
@@ -12093,6 +12183,8 @@ class DataProfile(_Model):
         format: `kentos.data-profile`.
         version: Unit: count.
         basis: What it rests on and what it is not (a working profile, not an official application schema).
+        release: The profile's own release (docs/adr/0558): 1 when it has not said, `version` being the format's. A release's
+            `migrations` move the data of the release before it. Unit: count.
     """
     format: str
     version: int
@@ -12103,7 +12195,9 @@ class DataProfile(_Model):
     classes: list[ProfileClass]
     address: ProfileAddress | None | Unset = UNSET
     domains: list[FieldDomain] | Unset = UNSET
+    migrations: list[ProfileMigration] | Unset = UNSET
     relations: list[ProfileRelation] | Unset = UNSET
+    release: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -12118,8 +12212,12 @@ class DataProfile(_Model):
             out["address"] = None if self.address is None else self.address.to_json()
         if self.domains is not UNSET:
             out["domains"] = [e0.to_json() for e0 in self.domains]
+        if self.migrations is not UNSET:
+            out["migrations"] = [e0.to_json() for e0 in self.migrations]
         if self.relations is not UNSET:
             out["relations"] = [e0.to_json() for e0 in self.relations]
+        if self.release is not UNSET:
+            out["release"] = self.release
         return out
 
     @classmethod
@@ -12134,7 +12232,9 @@ class DataProfile(_Model):
             classes=[ProfileClass.from_json(e0) for e0 in data["classes"]],
             address=UNSET if "address" not in data else None if data["address"] is None else ProfileAddress.from_json(data["address"]),
             domains=[FieldDomain.from_json(e0) for e0 in data["domains"]] if "domains" in data else UNSET,
+            migrations=[ProfileMigration.from_json(e0) for e0 in data["migrations"]] if "migrations" in data else UNSET,
             relations=[ProfileRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
+            release=data.get("release", UNSET),
         )
 
 
@@ -20729,6 +20829,105 @@ class GpkgTableImported(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GpkgTileSet(_Model):
+    """A tile table of the file.
+    Attributes:
+        srs_id: The file's own id of the system (`gpkg_spatial_ref_sys`). Unit: index.
+        bounds: The tile matrix set's box: its top-left corner is the grid's origin. Unit: system.
+        zooms: The zoom levels, coarsest first.
+        data_bounds: `gpkg_contents`'s box, the data's extent. Unit: system.
+        extensions: The file's extensions that name this table (`gpkg_webp`, …).
+        srid: Its EPSG code; none for an undefined system or another authority's. Unit: epsg.
+    """
+    table: str
+    srs_id: int
+    bounds: list[float]
+    zooms: list[GpkgTileZoom]
+    data_bounds: list[float] | None | Unset = UNSET
+    extensions: list[str] | Unset = UNSET
+    identifier: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["srsId"] = self.srs_id
+        out["bounds"] = [float(e0) for e0 in self.bounds]
+        out["zooms"] = [e0.to_json() for e0 in self.zooms]
+        if self.data_bounds is not UNSET:
+            out["dataBounds"] = None if self.data_bounds is None else [float(e0) for e0 in self.data_bounds]
+        if self.extensions is not UNSET:
+            out["extensions"] = list(self.extensions)
+        if self.identifier is not UNSET:
+            out["identifier"] = self.identifier
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GpkgTileSet:
+        return cls(
+            table=data["table"],
+            srs_id=data["srsId"],
+            bounds=[float(e0) for e0 in data["bounds"]],
+            zooms=[GpkgTileZoom.from_json(e0) for e0 in data["zooms"]],
+            data_bounds=UNSET if "dataBounds" not in data else None if data["dataBounds"] is None else [float(e0) for e0 in data["dataBounds"]],
+            extensions=list(data["extensions"]) if "extensions" in data else UNSET,
+            identifier=data.get("identifier", UNSET),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GpkgTileZoom(_Model):
+    """A zoom level of a tile table.
+    Attributes:
+        zoom: Unit: index.
+        matrix_width: Tiles across and down the matrix. Unit: count.
+        matrix_height: Unit: count.
+        tile_width: Unit: px.
+        tile_height: Unit: px.
+        pixel: A pixel's width and height, in the system's units. Unit: system.
+        tiles: Tiles the table holds at this zoom. Unit: count.
+        formats: The formats of its tiles (`png`, `jpeg`, `webp`, `other`), looked at in up to 64 of them.
+    """
+    zoom: int
+    matrix_width: int
+    matrix_height: int
+    tile_width: int
+    tile_height: int
+    pixel: list[float]
+    tiles: int
+    formats: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["zoom"] = self.zoom
+        out["matrixWidth"] = self.matrix_width
+        out["matrixHeight"] = self.matrix_height
+        out["tileWidth"] = self.tile_width
+        out["tileHeight"] = self.tile_height
+        out["pixel"] = [float(e0) for e0 in self.pixel]
+        out["tiles"] = self.tiles
+        if self.formats is not UNSET:
+            out["formats"] = list(self.formats)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GpkgTileZoom:
+        return cls(
+            zoom=data["zoom"],
+            matrix_width=data["matrixWidth"],
+            matrix_height=data["matrixHeight"],
+            tile_width=data["tileWidth"],
+            tile_height=data["tileHeight"],
+            pixel=[float(e0) for e0 in data["pixel"]],
+            tiles=data["tiles"],
+            formats=list(data["formats"]) if "formats" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GridChoice(_Model):
     """An NTv2 grid the project's datum choice names: its SHA-256 (the
     device's grid library keeps it by that), the file's name and size, the
@@ -27541,6 +27740,102 @@ class LostPin(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class MappingClass(_Model):
+    """A profile class as the institution keeps it: its layer's path, its fields' names, its codes.
+    Attributes:
+        class_: The profile's class id.
+        layer: The institution's layer path; none: the profile's.
+    """
+    class_: str
+    codes: list[MappingCodes] | Unset = UNSET
+    fields: list[MappingField] | Unset = UNSET
+    layer: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["class"] = self.class_
+        if self.codes is not UNSET:
+            out["codes"] = [e0.to_json() for e0 in self.codes]
+        if self.fields is not UNSET:
+            out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.layer is not UNSET:
+            out["layer"] = list(self.layer)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MappingClass:
+        return cls(
+            class_=data["class"],
+            codes=[MappingCodes.from_json(e0) for e0 in data["codes"]] if "codes" in data else UNSET,
+            fields=[MappingField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
+            layer=list(data["layer"]) if "layer" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MappingCode(_Model):
+    """A profile's code and what the institution calls it."""
+    profile: str
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MappingCode:
+        return cls(
+            profile=data["profile"],
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MappingCodes(_Model):
+    """A profile field's coded values and the institution's codes for them.
+    Attributes:
+        field: The profile's field name.
+    """
+    field: str
+    codes: list[MappingCode]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["codes"] = [e0.to_json() for e0 in self.codes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MappingCodes:
+        return cls(
+            field=data["field"],
+            codes=[MappingCode.from_json(e0) for e0 in data["codes"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MappingField(_Model):
+    """A profile's field and what the institution calls it."""
+    profile: str
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MappingField:
+        return cls(
+            profile=data["profile"],
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MarkReference(_Model):
     """A mark as `cad.viewmarks.references` lists it.
     Attributes:
@@ -28073,6 +28368,97 @@ class MeshesQuery(_Model):
             time=UNSET if "time" not in data else None if data["time"] is None else float(data["time"]),
             uids=list(data["uids"]) if "uids" in data else UNSET,
             variables=list(data["variables"]) if "variables" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MigratedStep(_Model):
+    """One step as it was run.
+    Attributes:
+        migration: The release its migration goes from. Unit: count.
+        index: Its place in the migration, from 0. Unit: index.
+        applied: Whether it changed the drawing; a step left out is `false`.
+        objects: The objects it wrote. Unit: count.
+        layer: The layer's id, when the step has a layer and the drawing has it.
+    """
+    migration: int
+    index: int
+    kind: str
+    applied: bool
+    objects: int
+    note: str
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["migration"] = self.migration
+        out["index"] = self.index
+        out["kind"] = self.kind
+        out["applied"] = self.applied
+        out["objects"] = self.objects
+        out["note"] = self.note
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MigratedStep:
+        return cls(
+            migration=data["migration"],
+            index=data["index"],
+            kind=data["kind"],
+            applied=data["applied"],
+            objects=data["objects"],
+            note=data["note"],
+            layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MigrationLoss(_Model):
+    """Objects whose value did not go through a changed field's new rule.
+    Attributes:
+        migration: Unit: count.
+        step: Unit: index.
+        value: The value as it was.
+        uids: The objects, in the drawing's order, at most 1000.
+        count: Unit: count.
+    """
+    migration: int
+    step: int
+    layer: str
+    field: str
+    kind: LossKind | LossKindName
+    value: str
+    uids: list[str]
+    count: int
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["migration"] = self.migration
+        out["step"] = self.step
+        out["layer"] = self.layer
+        out["field"] = self.field
+        out["kind"] = _enum_out(self.kind)
+        out["value"] = self.value
+        out["uids"] = list(self.uids)
+        out["count"] = self.count
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MigrationLoss:
+        return cls(
+            migration=data["migration"],
+            step=data["step"],
+            layer=data["layer"],
+            field=data["field"],
+            kind=_enum_in(LossKind, data["kind"]),
+            value=data["value"],
+            uids=list(data["uids"]),
+            count=data["count"],
+            message=data["message"],
         )
 
 
@@ -32868,6 +33254,189 @@ class ProfileFinding(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfileImported(_Model):
+    """Output (and plan) of `cad.profiles.import` v1.
+    Attributes:
+        release: A profile's release; a mapping's: 0. Unit: count.
+        classes: A profile's classes, a mapping's classes it names. Unit: count.
+        migrations: A profile's migrations; the releases they go from, in order. Unit: count.
+        path: The file written.
+        replaced: Whether a file was replaced.
+        bytes: Unit: bytes.
+        previous_release: The release of the file it replaced, when it replaced a profile's. Unit: count.
+    """
+    kind: ProfileFileKind | ProfileFileKindName
+    name: str
+    title: str
+    release: int
+    classes: int
+    migrations: int
+    path: str
+    replaced: bool
+    bytes: int
+    previous_release: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["title"] = self.title
+        out["release"] = self.release
+        out["classes"] = self.classes
+        out["migrations"] = self.migrations
+        out["path"] = self.path
+        out["replaced"] = self.replaced
+        out["bytes"] = self.bytes
+        if self.previous_release is not UNSET:
+            out["previousRelease"] = self.previous_release
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileImported:
+        return cls(
+            kind=_enum_in(ProfileFileKind, data["kind"]),
+            name=data["name"],
+            title=data["title"],
+            release=data["release"],
+            classes=data["classes"],
+            migrations=data["migrations"],
+            path=data["path"],
+            replaced=data["replaced"],
+            bytes=data["bytes"],
+            previous_release=data.get("previousRelease", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileListed(_Model):
+    """A profile or a mapping of the list.
+    Attributes:
+        name: The name it is given to the commands by: a built-in's, or the file's up to its suffix.
+        release: A profile's release; a mapping's: 0. Unit: count.
+        classes: A profile's classes, a mapping's classes it names. Unit: count.
+        migrations: A profile's migrations. Unit: count.
+        path: A project file's path.
+        problem: Why a file is not usable: it does not read, or does not hold.
+        profile: The profile a mapping is for.
+    """
+    kind: ProfileFileKind | ProfileFileKindName
+    source: ProfileSource | ProfileSourceName
+    name: str
+    release: int
+    classes: int
+    migrations: int
+    path: str | None | Unset = UNSET
+    problem: str | None | Unset = UNSET
+    profile: str | None | Unset = UNSET
+    title: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["source"] = _enum_out(self.source)
+        out["name"] = self.name
+        out["release"] = self.release
+        out["classes"] = self.classes
+        out["migrations"] = self.migrations
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.problem is not UNSET:
+            out["problem"] = self.problem
+        if self.profile is not UNSET:
+            out["profile"] = self.profile
+        if self.title is not UNSET:
+            out["title"] = self.title
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileListed:
+        return cls(
+            kind=_enum_in(ProfileFileKind, data["kind"]),
+            source=_enum_in(ProfileSource, data["source"]),
+            name=data["name"],
+            release=data["release"],
+            classes=data["classes"],
+            migrations=data["migrations"],
+            path=data.get("path", UNSET),
+            problem=data.get("problem", UNSET),
+            profile=data.get("profile", UNSET),
+            title=data.get("title", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileMapping(_Model):
+    """An institution's mapping file: its own layer, field and code names for a profile's.
+    Attributes:
+        format: `kentos.profile-mapping`.
+        version: Unit: count.
+        name: Small letters, digits and `-`; the file's name.
+        profile: The name of the profile it is for.
+    """
+    format: str
+    version: int
+    name: str
+    title: str
+    profile: str
+    classes: list[MappingClass]
+    description: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = self.format
+        out["version"] = self.version
+        out["name"] = self.name
+        out["title"] = self.title
+        out["profile"] = self.profile
+        out["classes"] = [e0.to_json() for e0 in self.classes]
+        if self.description is not UNSET:
+            out["description"] = self.description
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileMapping:
+        return cls(
+            format=data["format"],
+            version=data["version"],
+            name=data["name"],
+            title=data["title"],
+            profile=data["profile"],
+            classes=[MappingClass.from_json(e0) for e0 in data["classes"]],
+            description=data.get("description", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileMigration(_Model):
+    """The steps that move the data of release `from` to release `to` (`from + 1`).
+    Attributes:
+        from_: Unit: count.
+        to: Unit: count.
+    """
+    from_: int
+    to: int
+    title: str
+    steps: list[MigrationStep]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["title"] = self.title
+        out["steps"] = [e0.to_json() for e0 in self.steps]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileMigration:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            title=data["title"],
+            steps=[MigrationStep.from_json(e0) for e0 in data["steps"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfilePoint(_Model):
     """A point of the corridor: its lasting id, its place along the path and its facts.
     Attributes:
@@ -33005,17 +33574,29 @@ class ProfilesApply(_Model):
     a name KentOS has not), `invalid_profile`, `invalid_revision`, `revision_conflict`. Warnings: `profile_field_differs`,
     `profile_domain_differs`, `profile_layer_skipped`.
     Attributes:
+        drawing: The open drawing's own file, an absolute path: the project's `profiller` folder is beside it, where a `name` that
+            is not a built-in's and a `mappingName` are found.
+        mapping: An institution's mapping the profile is read through (docs/adr/0558); `mappingName` names one of the project's.
         name: A built-in profile's name: `tucbs-temel`. `profile`, when given, goes first.
         profile: Or the profile itself.
     """
+    drawing: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    mapping: ProfileMapping | None | Unset = UNSET
+    mapping_name: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     profile: DataProfile | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.mapping is not UNSET:
+            out["mapping"] = None if self.mapping is None else self.mapping.to_json()
+        if self.mapping_name is not UNSET:
+            out["mappingName"] = self.mapping_name
         if self.name is not UNSET:
             out["name"] = self.name
         if self.profile is not UNSET:
@@ -33025,7 +33606,10 @@ class ProfilesApply(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ProfilesApply:
         return cls(
+            drawing=data.get("drawing", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            mapping=UNSET if "mapping" not in data else None if data["mapping"] is None else ProfileMapping.from_json(data["mapping"]),
+            mapping_name=data.get("mappingName", UNSET),
             name=data.get("name", UNSET),
             profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
         )
@@ -33037,12 +33621,25 @@ class ProfilesCheck(_Model):
     changes nothing; its plan gives the same answer.
 
     Refusals: `unknown_profile`, `invalid_profile`.
+    Attributes:
+        drawing: The open drawing's own file, an absolute path: the project's `profiller` folder is beside it, where a `name` that
+            is not a built-in's and a `mappingName` are found.
+        mapping: An institution's mapping the profile is read through (docs/adr/0558); `mappingName` names one of the project's.
     """
+    drawing: str | None | Unset = UNSET
+    mapping: ProfileMapping | None | Unset = UNSET
+    mapping_name: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     profile: DataProfile | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.mapping is not UNSET:
+            out["mapping"] = None if self.mapping is None else self.mapping.to_json()
+        if self.mapping_name is not UNSET:
+            out["mappingName"] = self.mapping_name
         if self.name is not UNSET:
             out["name"] = self.name
         if self.profile is not UNSET:
@@ -33052,8 +33649,200 @@ class ProfilesCheck(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ProfilesCheck:
         return cls(
+            drawing=data.get("drawing", UNSET),
+            mapping=UNSET if "mapping" not in data else None if data["mapping"] is None else ProfileMapping.from_json(data["mapping"]),
+            mapping_name=data.get("mappingName", UNSET),
             name=data.get("name", UNSET),
             profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesImport(_Model):
+    """Input of `cad.profiles.import` v1 (“Veri profili içe aktar”): a profile or a mapping the user brings, checked and
+    kept as a file of the project's `profiller` folder (`<name>.profil.json`, `<name>.eslem.json`), written whole or not
+    at all. The source is a JSON file (`source`) or the profile (`profile`) or mapping (`mapping`) itself; one only.
+
+    Refusals, in this order: `profile_source_missing`, `invalid_file_path` (the source, the drawing), `file_not_found`,
+    `invalid_profile` (JSON that does not read, or a profile that does not hold), `unknown_profile_format`,
+    `unsupported_profile_version`, `invalid_profile_mapping`, `profile_name_taken` (a built-in's name), `profile_downgrade` (a
+    profile of an earlier release than the file's, without `overwrite`), `file_exists`, `file_unwritable`. Warnings:
+    `mapping_unchecked` (the profile it is for was not found), `profile_replaced`.
+    Attributes:
+        drawing: The open drawing's own file, an absolute path: the folder is beside it.
+        overwrite: A file of the same name is written over (a profile of the same or an earlier release too).
+        source: A JSON file, an absolute path or from the drawing's folder.
+    """
+    drawing: str | None | Unset = UNSET
+    mapping: ProfileMapping | None | Unset = UNSET
+    overwrite: bool | None | Unset = UNSET
+    profile: DataProfile | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.mapping is not UNSET:
+            out["mapping"] = None if self.mapping is None else self.mapping.to_json()
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesImport:
+        return cls(
+            drawing=data.get("drawing", UNSET),
+            mapping=UNSET if "mapping" not in data else None if data["mapping"] is None else ProfileMapping.from_json(data["mapping"]),
+            overwrite=data.get("overwrite", UNSET),
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
+            source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesList(_Model):
+    """Input of `cad.profiles.list` v1 (“Veri profilleri”): the built-in profiles and the files of the project's `profiller`
+    folder, profiles and mappings. It changes nothing. The folder is the drawing's own (`drawing`): without it only the
+    built-in profiles are listed. Refusals: none; a file that does not read is listed with its problem.
+    Attributes:
+        drawing: The open drawing's own file, an absolute path, when it has one.
+    """
+    drawing: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesList:
+        return cls(
+            drawing=data.get("drawing", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesListed(_Model):
+    """Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the project's profiles and
+    mappings by name.
+    Attributes:
+        folder: The project's folder, when the drawing has a file.
+    """
+    items: list[ProfileListed]
+    folder: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["items"] = [e0.to_json() for e0 in self.items]
+        if self.folder is not UNSET:
+            out["folder"] = self.folder
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesListed:
+        return cls(
+            items=[ProfileListed.from_json(e0) for e0 in data["items"]],
+            folder=data.get("folder", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesMigrate(_Model):
+    """Input of `cad.profiles.migrate` v1 (“Veri profili göçü”): the project's data moved from release `from` of a profile to
+    its release `to` (the profile's own by default) by the steps the profile's migrations list: a layer or a field renamed,
+    a field's kind changed with its values carried through the new rule, values recoded, a code retired. All of it is one
+    undo step “Profil göçü” (the value lists too). A step whose layer or field the drawing has not is left out and said;
+    a value that does not fit is kept or emptied as the step says and reported by object. The profile is `profile`, else
+    the built-in or project `name`. It does not add what the new release brings: `cad.profiles.apply` does, and
+    `cad.profiles.check` says where the data still departs.
+
+    Refusals, in this order: `unknown_profile`, `invalid_profile`, `invalid_migration` (`to` not above `from`, or above
+    the profile's release), `migration_gap` (no unbroken chain of the profile's migrations from `from` to `to`),
+    `invalid_revision`, `revision_conflict`, `layer_refused` (a step the drawing refuses; nothing is written). Warnings:
+    `migration_step_skipped`, `profile_layer_skipped` (a locked layer), `values_unfit`.
+    Attributes:
+        from_: The release the data is at. Unit: count.
+        to: The release it goes to; none: the profile's. Unit: count.
+    """
+    from_: int
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    profile: DataProfile | None | Unset = UNSET
+    to: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
+        if self.to is not UNSET:
+            out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesMigrate:
+        return cls(
+            from_=data["from"],
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            name=data.get("name", UNSET),
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
+            to=data.get("to", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesMigrated(_Model):
+    """Output (and plan) of `cad.profiles.migrate` v1.
+    Attributes:
+        changed: Whether anything was written.
+        from_: Unit: count.
+        to: Unit: count.
+        losses: The values that did not fit, by value and layer.
+        objects: Objects written, once each. Unit: count.
+    """
+    changed: bool
+    from_: int
+    to: int
+    steps: list[MigratedStep]
+    losses: list[MigrationLoss]
+    objects: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["steps"] = [e0.to_json() for e0 in self.steps]
+        out["losses"] = [e0.to_json() for e0 in self.losses]
+        out["objects"] = self.objects
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesMigrated:
+        return cls(
+            changed=data["changed"],
+            from_=data["from"],
+            to=data["to"],
+            steps=[MigratedStep.from_json(e0) for e0 in data["steps"]],
+            losses=[MigrationLoss.from_json(e0) for e0 in data["losses"]],
+            objects=data["objects"],
+            revision=data["revision"],
         )
 
 
@@ -33066,6 +33855,7 @@ class ProfilesReport(_Model):
         findings: The findings: the value lists, then class by class in the profile's order (the layer, its fields, its objects'
             geometry, required, values, identifiers, areas), then the relations and the address data.
         clean: No finding. It says the data holds to this profile, not that it conforms to any regulation.
+        mapping: The mapping the profile was read through, when one was given.
     """
     profile: str
     title: str
@@ -33074,6 +33864,7 @@ class ProfilesReport(_Model):
     classes: list[ProfileClassSummary]
     findings: list[ProfileFinding]
     clean: bool
+    mapping: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -33084,6 +33875,8 @@ class ProfilesReport(_Model):
         out["classes"] = [e0.to_json() for e0 in self.classes]
         out["findings"] = [e0.to_json() for e0 in self.findings]
         out["clean"] = self.clean
+        if self.mapping is not UNSET:
+            out["mapping"] = self.mapping
         return out
 
     @classmethod
@@ -33096,6 +33889,7 @@ class ProfilesReport(_Model):
             classes=[ProfileClassSummary.from_json(e0) for e0 in data["classes"]],
             findings=[ProfileFinding.from_json(e0) for e0 in data["findings"]],
             clean=data["clean"],
+            mapping=data.get("mapping", UNSET),
         )
 
 
@@ -35308,6 +36102,261 @@ class RastersGeoreffed(_Model):
             raster=RasterFields.from_json(data["raster"]),
             revision=data["revision"],
             written=data.get("written", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RastersGpkgRead(_Model):
+    """Input of `cad.rasters.gpkgread` v1. Refusals, in this order: `invalid_file_path` (the file, or `layer` without
+    `output`), `file_not_found`, `import_unreadable` (not a GeoPackage), `no_tile_table`, `table_not_found` (`table`
+    is not a tile table; a file with several needs it), `zoom_not_found`, `invalid_area`, `tile_table_empty` (no tile
+    at the zoom in the window), `gpkg_tiles_too_large`, `tile_unreadable` (a tile that is not a PNG of the matrix's
+    size), `tile_format_unsupported` (JPEG, WebP or a PNG of more than 8 bits), then with `output`: `invalid_file_path`
+    (not a `.tif`), `file_exists`, with `layer`: `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, and
+    `invalid_revision`, `revision_conflict`. Warnings: `crs_undeclared`, `tiles_missing`, `layer_hidden`.
+    Attributes:
+        path: The GeoPackage, absolute or from the drawing's folder.
+        area: The part to read, `[min x, min y, max x, max y]` in the table's system; none: the table's data extent (its
+            tile matrix set's, when `gpkg_contents` gives none) cut to the level's grid. Unit: system.
+        drawing: The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
+        layer: The layer the raster is added to (linked to `output`); none: only the file is written.
+        output: The GeoTIFF written (`.tif`), absolute or from the drawing's folder; none: nothing is written.
+        overwrite: An existing `output` is written over.
+        table: The tile table; none: the file's only tile table.
+        zoom: The zoom level; none: the highest (the finest). Unit: index.
+    """
+    path: str
+    area: list[float] | None | Unset = UNSET
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    output: str | None | Unset = UNSET
+    overwrite: bool | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+    zoom: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else [float(e0) for e0 in self.area]
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.output is not UNSET:
+            out["output"] = self.output
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        if self.table is not UNSET:
+            out["table"] = self.table
+        if self.zoom is not UNSET:
+            out["zoom"] = self.zoom
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RastersGpkgRead:
+        return cls(
+            path=data["path"],
+            area=UNSET if "area" not in data else None if data["area"] is None else [float(e0) for e0 in data["area"]],
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            layer=data.get("layer", UNSET),
+            output=data.get("output", UNSET),
+            overwrite=data.get("overwrite", UNSET),
+            table=data.get("table", UNSET),
+            zoom=data.get("zoom", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RastersGpkgReadDone(_Model):
+    """Output of `cad.rasters.gpkgread` v1 (its plan's too: what it would read and write, nothing written).
+    Attributes:
+        tables: Every tile table of the file.
+        table: The table and zoom level read.
+        zoom: Unit: index.
+        area: The window read, `[min x, min y, max x, max y]`, whole pixels of the level. Unit: system.
+        width: Unit: count.
+        height: Unit: count.
+        bands: Always 4: red, green, blue and alpha. Unit: count.
+        affine: `[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform. Unit: system.
+        srid: The table's EPSG code; 0: undefined or not EPSG. Unit: epsg.
+        tiles_read: Tiles taken, and tiles of the window the table does not hold (transparent). Unit: count.
+        tiles_missing: Unit: count.
+        bytes: Unit: bytes.
+        path: The GeoTIFF, as written.
+        uid: The raster added, when `layer` was given.
+    """
+    tables: list[GpkgTileSet]
+    table: str
+    zoom: int
+    area: list[float]
+    width: int
+    height: int
+    bands: int
+    sample: RasterSample | RasterSampleName
+    affine: list[float]
+    srid: int
+    tiles_read: int
+    tiles_missing: int
+    revision: str
+    bytes: int | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tables"] = [e0.to_json() for e0 in self.tables]
+        out["table"] = self.table
+        out["zoom"] = self.zoom
+        out["area"] = [float(e0) for e0 in self.area]
+        out["width"] = self.width
+        out["height"] = self.height
+        out["bands"] = self.bands
+        out["sample"] = _enum_out(self.sample)
+        out["affine"] = [float(e0) for e0 in self.affine]
+        out["srid"] = self.srid
+        out["tilesRead"] = self.tiles_read
+        out["tilesMissing"] = self.tiles_missing
+        out["revision"] = self.revision
+        if self.bytes is not UNSET:
+            out["bytes"] = self.bytes
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RastersGpkgReadDone:
+        return cls(
+            tables=[GpkgTileSet.from_json(e0) for e0 in data["tables"]],
+            table=data["table"],
+            zoom=data["zoom"],
+            area=[float(e0) for e0 in data["area"]],
+            width=data["width"],
+            height=data["height"],
+            bands=data["bands"],
+            sample=_enum_in(RasterSample, data["sample"]),
+            affine=[float(e0) for e0 in data["affine"]],
+            srid=data["srid"],
+            tiles_read=data["tilesRead"],
+            tiles_missing=data["tilesMissing"],
+            revision=data["revision"],
+            bytes=data.get("bytes", UNSET),
+            path=data.get("path", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RastersGpkgWrite(_Model):
+    """Input of `cad.rasters.gpkgwrite` v1. Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_a_raster`,
+    `invalid_file_path` (not a `.gpkg`, a relative path without the drawing, no folder), `invalid_table_name`,
+    `raster_unsupported` (a palette, more than 8 bits, a dataset, an address without a file),
+    `raster_not_north_up`, `gpkg_tiles_too_large`, `file_not_found` (the raster's source), `import_unreadable`,
+    then in mode `new` `file_exists`, in mode `add` `file_not_found` and `import_unreadable` (no GeoPackage there)
+    and `table_exists`. Warnings: `nodata_lost`.
+    Attributes:
+        uid: The raster, by persistent id.
+        path: The GeoPackage written (`.gpkg`), absolute or from the drawing's folder.
+        drawing: The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
+        identifier: The table's identifier (`gpkg_contents`); none: its name.
+        overwrite: An existing `path` (mode `new`) is written over.
+        table: The tile table's name; none: `tiles`.
+    """
+    uid: str
+    path: str
+    drawing: str | None | Unset = UNSET
+    identifier: str | None | Unset = UNSET
+    mode: GpkgTilesMode | GpkgTilesModeName = GpkgTilesMode.NEW
+    overwrite: bool | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["path"] = self.path
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.identifier is not UNSET:
+            out["identifier"] = self.identifier
+        out["mode"] = _enum_out(self.mode)
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        if self.table is not UNSET:
+            out["table"] = self.table
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RastersGpkgWrite:
+        return cls(
+            uid=data["uid"],
+            path=data["path"],
+            drawing=data.get("drawing", UNSET),
+            identifier=data.get("identifier", UNSET),
+            mode=_enum_in(GpkgTilesMode, data["mode"]) if "mode" in data else GpkgTilesMode.NEW,
+            overwrite=data.get("overwrite", UNSET),
+            table=data.get("table", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RastersGpkgWritten(_Model):
+    """Output of `cad.rasters.gpkgwrite` v1 (its plan's too: what it would write, nothing written).
+    Attributes:
+        srid: The raster's EPSG code; 0: it names none (the file's undefined cartesian system, id −1). Unit: epsg.
+        bands: The tiles' bands: 1 grey, 2 grey with alpha, 4 colour (RGBA). Unit: count.
+        bounds: The tile matrix set's box and the data's extent, `[min x, min y, max x, max y]`. Unit: system.
+        data_bounds: Unit: system.
+        zooms: The zoom levels written, coarsest first.
+        tiles: Tiles written. Unit: count.
+        bytes: The file's size after the write (a plan: the tiles' bytes). Unit: bytes.
+    """
+    path: str
+    table: str
+    mode: GpkgTilesMode | GpkgTilesModeName
+    srid: int
+    bands: int
+    bounds: list[float]
+    data_bounds: list[float]
+    zooms: list[GpkgTileZoom]
+    tiles: int
+    bytes: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["table"] = self.table
+        out["mode"] = _enum_out(self.mode)
+        out["srid"] = self.srid
+        out["bands"] = self.bands
+        out["bounds"] = [float(e0) for e0 in self.bounds]
+        out["dataBounds"] = [float(e0) for e0 in self.data_bounds]
+        out["zooms"] = [e0.to_json() for e0 in self.zooms]
+        out["tiles"] = self.tiles
+        out["bytes"] = self.bytes
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RastersGpkgWritten:
+        return cls(
+            path=data["path"],
+            table=data["table"],
+            mode=_enum_in(GpkgTilesMode, data["mode"]),
+            srid=data["srid"],
+            bands=data["bands"],
+            bounds=[float(e0) for e0 in data["bounds"]],
+            data_bounds=[float(e0) for e0 in data["dataBounds"]],
+            zooms=[GpkgTileZoom.from_json(e0) for e0 in data["zooms"]],
+            tiles=data["tiles"],
+            bytes=data["bytes"],
+            revision=data["revision"],
         )
 
 
@@ -44311,6 +45360,37 @@ class UnusedResource(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ValueMap(_Model):
+    """One value recoded by a `mapValues` step: `from` becomes `to`, only where `whenField` holds `whenEquals` when given.
+    Attributes:
+        when_field: Another field of the layer whose value decides (a split: one old code becomes two by it).
+    """
+    from_: str
+    to: str
+    when_equals: str | None | Unset = UNSET
+    when_field: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        if self.when_equals is not UNSET:
+            out["whenEquals"] = self.when_equals
+        if self.when_field is not UNSET:
+            out["whenField"] = self.when_field
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ValueMap:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            when_equals=data.get("whenEquals", UNSET),
+            when_field=data.get("whenField", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ValueProblem(_Model):
     """A value that does not fit.
     Attributes:
@@ -52683,6 +53763,128 @@ class PlaceMeasuredPoint(MeasuredPoint):
 
 
 @dataclass(kw_only=True, slots=True)
+class RenameLayerMigrationStep(MigrationStep):
+    """The layer at the path is renamed (its place in the tree stays)."""
+    TAG_VALUE: ClassVar[str] = "renameLayer"
+    layer: list[str]
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "renameLayer"}
+        out["layer"] = list(self.layer)
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RenameLayerMigrationStep:
+        return cls(
+            layer=list(data["layer"]),
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RenameFieldMigrationStep(MigrationStep):
+    """The layer's field is renamed and its objects' values move with it."""
+    TAG_VALUE: ClassVar[str] = "renameField"
+    layer: list[str]
+    from_: str
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "renameField"}
+        out["layer"] = list(self.layer)
+        out["from"] = self.from_
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RenameFieldMigrationStep:
+        return cls(
+            layer=list(data["layer"]),
+            from_=data["from"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ChangeFieldTypeMigrationStep(MigrationStep):
+    """The field takes a new definition (its name the same): each value goes through the new rule and is
+    written in its canonical text; one that does not fit is kept or emptied (`on_fail`) and reported.
+    """
+    TAG_VALUE: ClassVar[str] = "changeFieldType"
+    layer: list[str]
+    field: LayerField
+    on_fail: ConvertFail | ConvertFailName = ConvertFail.KEEP
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "changeFieldType"}
+        out["layer"] = list(self.layer)
+        out["field"] = self.field.to_json()
+        out["onFail"] = _enum_out(self.on_fail)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChangeFieldTypeMigrationStep:
+        return cls(
+            layer=list(data["layer"]),
+            field=LayerField.from_json(data["field"]),
+            on_fail=_enum_in(ConvertFail, data["onFail"]) if "onFail" in data else ConvertFail.KEEP,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapValuesMigrationStep(MigrationStep):
+    """Values recoded: several old values may become one (a merge), one old value two (a split by `whenField`)."""
+    TAG_VALUE: ClassVar[str] = "mapValues"
+    layer: list[str]
+    field: str
+    map: list[ValueMap]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "mapValues"}
+        out["layer"] = list(self.layer)
+        out["field"] = self.field
+        out["map"] = [e0.to_json() for e0 in self.map]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapValuesMigrationStep:
+        return cls(
+            layer=list(data["layer"]),
+            field=data["field"],
+            map=[ValueMap.from_json(e0) for e0 in data["map"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RetireCodeMigrationStep(MigrationStep):
+    """A code of a project value list is retired; with `replaceWith` every value of a field linked to the list that
+    holds it (each of a multiple field's) becomes the other.
+    """
+    TAG_VALUE: ClassVar[str] = "retireCode"
+    domain: str
+    code: str
+    replace_with: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "retireCode"}
+        out["domain"] = self.domain
+        out["code"] = self.code
+        if self.replace_with is not UNSET:
+            out["replaceWith"] = self.replace_with
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RetireCodeMigrationStep:
+        return cls(
+            domain=data["domain"],
+            code=data["code"],
+            replace_with=data.get("replaceWith", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BothNetworkDirection(NetworkDirection):
     """Every edge both ways."""
     TAG_VALUE: ClassVar[str] = "both"
@@ -56575,6 +57777,9 @@ _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChang
 _MEASURED_POINT: dict[str, type[MeasuredPoint]] = {"at": AtMeasuredPoint, "place": PlaceMeasuredPoint}
 
 
+_MIGRATION_STEP: dict[str, type[MigrationStep]] = {"renameLayer": RenameLayerMigrationStep, "renameField": RenameFieldMigrationStep, "changeFieldType": ChangeFieldTypeMigrationStep, "mapValues": MapValuesMigrationStep, "retireCode": RetireCodeMigrationStep}
+
+
 _NETWORK_DIRECTION: dict[str, type[NetworkDirection]] = {"both": BothNetworkDirection, "digitized": DigitizedNetworkDirection, "field": FieldNetworkDirection}
 
 
@@ -56878,6 +58083,7 @@ __all__ = [
     "CenterMarkDimensionMeasure",
     "CenterSubPlace",
     "ChamferRectangleCorners",
+    "ChangeFieldTypeMigrationStep",
     "ChangesetApplied",
     "ChangesetApply",
     "ChangesetStep",
@@ -56976,6 +58182,8 @@ __all__ = [
     "ControlNurbsBy",
     "Convention",
     "ConventionName",
+    "ConvertFail",
+    "ConvertFailName",
     "CoordinatesTableSource",
     "CopyOpeningsOperation",
     "CornerHatchOrigin",
@@ -57343,6 +58551,10 @@ __all__ = [
     "GpkgImported",
     "GpkgTableExported",
     "GpkgTableImported",
+    "GpkgTileSet",
+    "GpkgTileZoom",
+    "GpkgTilesMode",
+    "GpkgTilesModeName",
     "GradientShape",
     "GradientShapeName",
     "GrantRole",
@@ -57625,7 +58837,14 @@ __all__ = [
     "LookupRow",
     "LookupSort",
     "LookupSpatial",
+    "LossKind",
+    "LossKindName",
     "LostPin",
+    "MapValuesMigrationStep",
+    "MappingClass",
+    "MappingCode",
+    "MappingCodes",
+    "MappingField",
     "MarkReference",
     "MatchProperty",
     "MatchPropertyName",
@@ -57648,6 +58867,9 @@ __all__ = [
     "MeshesQuery",
     "MidPointConstruction",
     "MidSubPlace",
+    "MigratedStep",
+    "MigrationLoss",
+    "MigrationStep",
     "MirrorText",
     "MirrorTextName",
     "MirrorTransform",
@@ -57874,16 +59096,29 @@ __all__ = [
     "ProfileBin",
     "ProfileClass",
     "ProfileClassSummary",
+    "ProfileFileKind",
+    "ProfileFileKindName",
     "ProfileFinding",
     "ProfileFindingKind",
     "ProfileFindingKindName",
     "ProfileGeometry",
     "ProfileGeometryName",
+    "ProfileImported",
+    "ProfileListed",
+    "ProfileMapping",
+    "ProfileMigration",
     "ProfilePoint",
     "ProfileRelation",
+    "ProfileSource",
+    "ProfileSourceName",
     "ProfilesApplied",
     "ProfilesApply",
     "ProfilesCheck",
+    "ProfilesImport",
+    "ProfilesList",
+    "ProfilesListed",
+    "ProfilesMigrate",
+    "ProfilesMigrated",
     "ProfilesReport",
     "ProjectAccessChange",
     "ProjectAccessRevoke",
@@ -57957,6 +59192,10 @@ __all__ = [
     "RasterStyle",
     "RastersGeoref",
     "RastersGeoreffed",
+    "RastersGpkgRead",
+    "RastersGpkgReadDone",
+    "RastersGpkgWrite",
+    "RastersGpkgWritten",
     "RastersMosaic",
     "RastersMosaicked",
     "RayEntity",
@@ -58033,7 +59272,9 @@ __all__ = [
     "RemoveJoinsOp",
     "RemoveParameterEdit",
     "RemoveRelationsOp",
+    "RenameFieldMigrationStep",
     "RenameFormsOp",
+    "RenameLayerMigrationStep",
     "RenameParameterEdit",
     "RenameViewsOp",
     "RenamedBlock",
@@ -58053,6 +59294,7 @@ __all__ = [
     "ResourceKind",
     "ResourceKindName",
     "RetargetViewMarksOperation",
+    "RetireCodeMigrationStep",
     "RingGeometry",
     "RotateBlockAction",
     "RotateTransform",
@@ -58405,6 +59647,7 @@ __all__ = [
     "UpdateFormsOp",
     "UpdateJoinsOp",
     "UpdateRelationsOp",
+    "ValueMap",
     "ValueProblem",
     "ValuesFieldsWriteOp",
     "ValuesStacMask",

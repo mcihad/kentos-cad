@@ -1,0 +1,26 @@
+{
+  "format": "kentos.data-profile",
+  "version": 1,
+  "name": "sinifsiz",
+  "title": "Peyzaj profili",
+  "description": "Ağaçlar ve yeşil alanlar.",
+  "basis": "Deneme profili.",
+  "domains": [
+    {
+      "id": "agac-tur",
+      "name": "Ağaç türü",
+      "kind": "text",
+      "values": [
+        {
+          "code": "cinar",
+          "label": "Çınar"
+        },
+        {
+          "code": "mese",
+          "label": "Meşe"
+        }
+      ]
+    }
+  ],
+  "classes": []
+}

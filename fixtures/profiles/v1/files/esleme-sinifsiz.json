@@ -1,0 +1,9 @@
+{
+  "format": "kentos.profile-mapping",
+  "version": 1,
+  "name": "sivas-bel",
+  "title": "Sivas Belediyesi eşlemesi",
+  "profile": "tucbs-temel",
+  "description": "Belediyenin kendi katman, alan ve kod adları.",
+  "classes": []
+}

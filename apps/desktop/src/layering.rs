@@ -1607,6 +1607,8 @@ fn screens() {
                             Some("single".into())
                         );
                         app.selection.set(Vec::new());
+                        // Katman stili shows the look taken: the fill, its outline and the star.
+                        app.open_layer_style(Some("parsel".into()));
                     }
                     "komutlar" => {
                         let _ = app.update(Message::Layer(Event::AddBeside("bina".into())));

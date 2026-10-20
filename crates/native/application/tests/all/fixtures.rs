@@ -34,6 +34,7 @@ use kentos_commands::{
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::profiles::{apply as profiles_apply, check as profiles_check};
+use kentos_native_application::profile_files::{import as profiles_import, list as profiles_list, migrate as profiles_migrate};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::fields_write;
 use kentos_native_application::{stac_host, stac_prepare, stac_search};
@@ -44,6 +45,7 @@ use kentos_native_application::time_query;
 use kentos_native_application::{processing_batch, processing_run, processing_tools};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
+use kentos_native_application::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
 use kentos_native_application::{assets_check, images_edit, rasters_mosaic, rasters_georef, inserts_clip, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
 use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile, relate as sources_relate, sync as sources_sync};
 use kentos_native_application::records_page;
@@ -906,6 +908,18 @@ impl Input for kentos_commands::ImagesEdit {
 }
 
 impl Input for kentos_commands::RastersMosaic {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::RastersGpkgRead {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::RastersGpkgWrite {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2304,6 +2318,24 @@ impl Input for kentos_commands::ProfilesCheck {
     }
 }
 
+impl Input for kentos_commands::ProfilesImport {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ProfilesList {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ProfilesMigrate {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::SourcesReconcile {
     /// No number: a layer and the sides taken.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -3176,6 +3208,12 @@ fn run_op(
         kentos_commands::CAD_RASTERS_MOSAIC => {
             run!(rasters_mosaic, kentos_commands::RastersMosaic)
         }
+        kentos_commands::CAD_RASTERS_GPKGREAD => {
+            run!(gpkg_tiles_read, kentos_commands::RastersGpkgRead)
+        }
+        kentos_commands::CAD_RASTERS_GPKGWRITE => {
+            run!(gpkg_tiles_write, kentos_commands::RastersGpkgWrite)
+        }
         kentos_commands::CAD_STAC_SEARCH => {
             run!(stac_search, kentos_commands::StacSearch)
         }
@@ -3272,6 +3310,9 @@ fn run_op(
         kentos_commands::CAD_STANDARDS_APPLY => run!(standards_apply, StandardsApply),
         kentos_commands::CAD_PROFILES_APPLY => run!(profiles_apply, kentos_commands::ProfilesApply),
         kentos_commands::CAD_PROFILES_CHECK => run!(profiles_check, kentos_commands::ProfilesCheck),
+        kentos_commands::CAD_PROFILES_IMPORT => run!(profiles_import, kentos_commands::ProfilesImport),
+        kentos_commands::CAD_PROFILES_LIST => run!(profiles_list, kentos_commands::ProfilesList),
+        kentos_commands::CAD_PROFILES_MIGRATE => run!(profiles_migrate, kentos_commands::ProfilesMigrate),
         kentos_commands::CAD_LINE_TYPES_EDIT => run!(line_types_edit, LineTypesEdit),
         kentos_commands::CAD_HATCH_PATTERNS_EDIT => run!(hatch_patterns_edit, HatchPatternsEdit),
         kentos_commands::CAD_LIBRARY_EDIT => run!(library_edit, LibraryEdit),
@@ -3593,7 +3634,12 @@ fn run_step(
             if !to.starts_with("$tmp:") {
                 return Err(format!("{at}: “to” bir $tmp: dosyası olmalı"));
             }
-            std::fs::copy(&from, with_fixtures(to)).map_err(|e| format!("{at}: {from}: {e}"))?;
+            let to = with_fixtures(to);
+            // A file in a folder the case names (the project's `profiller`, docs/adr/0558): the folder is made.
+            if let Some(folder) = std::path::Path::new(&to).parent() {
+                std::fs::create_dir_all(folder).map_err(|e| format!("{at}: {}: {e}", folder.display()))?;
+            }
+            std::fs::copy(&from, &to).map_err(|e| format!("{at}: {from}: {e}"))?;
         }
         other => return Err(format!("{at}: bilinmeyen işlem “{other}”")),
     }

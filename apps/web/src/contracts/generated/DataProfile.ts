@@ -2,6 +2,7 @@
 import type { FieldDomain } from "./FieldDomain";
 import type { ProfileAddress } from "./ProfileAddress";
 import type { ProfileClass } from "./ProfileClass";
+import type { ProfileMigration } from "./ProfileMigration";
 import type { ProfileRelation } from "./ProfileRelation";
 
 /**
@@ -15,4 +16,9 @@ format: string, version: number, name: string, title: string, description: strin
 /**
  * What it rests on and what it is not (a working profile, not an official application schema).
  */
-basis: string, domains?: Array<FieldDomain>, classes: Array<ProfileClass>, relations?: Array<ProfileRelation>, address?: ProfileAddress, };
+basis: string, 
+/**
+ * The profile's own release (docs/adr/0558): 1 when it has not said, `version` being the format's. A release's
+ * `migrations` move the data of the release before it.
+ */
+release?: number, migrations?: Array<ProfileMigration>, domains?: Array<FieldDomain>, classes: Array<ProfileClass>, relations?: Array<ProfileRelation>, address?: ProfileAddress, };

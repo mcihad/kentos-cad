@@ -36,6 +36,8 @@ use crate::fields_write;
 use crate::{processing_batch, processing_run, processing_tools};
 use crate::{stac_prepare, stac_search};
 use crate::meshes::{describe as meshes_describe, query as meshes_query};
+use crate::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
+use kentos_commands::{RastersGpkgRead, RastersGpkgWrite};
 use crate::pointcloud_areas::{profile as pointclouds_profile, region as pointclouds_region};
 use crate::pointclouds::{describe as pointclouds_describe, query as pointclouds_query};
 use kentos_commands::{
@@ -47,6 +49,7 @@ use kentos_commands::{StacPrepare, StacSearch};
 use crate::sources::{describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile, relate as sources_relate, sync as sources_sync};
 use crate::records_page;
 use crate::profiles::{apply as profiles_apply, check as profiles_check};
+use crate::profile_files::{import as profiles_import, list as profiles_list, migrate as profiles_migrate};
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, arrays_edit, constraints_edit, constraints_query, parameters_edit, blocks_define,
@@ -172,6 +175,8 @@ macro_rules! by_command {
             kentos_commands::CAD_ASSETS_CHECK => $then!(assets_check, AssetsCheck),
             kentos_commands::CAD_IMAGES_EDIT => $then!(images_edit, ImagesEdit),
             kentos_commands::CAD_RASTERS_MOSAIC => $then!(rasters_mosaic, RastersMosaic),
+            kentos_commands::CAD_RASTERS_GPKGREAD => $then!(gpkg_tiles_read, RastersGpkgRead),
+            kentos_commands::CAD_RASTERS_GPKGWRITE => $then!(gpkg_tiles_write, RastersGpkgWrite),
             kentos_commands::CAD_STAC_SEARCH => $then!(stac_search, StacSearch),
             kentos_commands::CAD_STAC_PREPARE => $then!(stac_prepare, StacPrepare),
             kentos_commands::CAD_POINTCLOUDS_DESCRIBE => $then!(pointclouds_describe, PointCloudsDescribe),
@@ -274,6 +279,9 @@ macro_rules! by_command {
             kentos_commands::CAD_STANDARDS_APPLY => $then!(standards_apply, StandardsApply),
             kentos_commands::CAD_PROFILES_APPLY => $then!(profiles_apply, kentos_commands::ProfilesApply),
             kentos_commands::CAD_PROFILES_CHECK => $then!(profiles_check, kentos_commands::ProfilesCheck),
+            kentos_commands::CAD_PROFILES_IMPORT => $then!(profiles_import, kentos_commands::ProfilesImport),
+            kentos_commands::CAD_PROFILES_LIST => $then!(profiles_list, kentos_commands::ProfilesList),
+            kentos_commands::CAD_PROFILES_MIGRATE => $then!(profiles_migrate, kentos_commands::ProfilesMigrate),
             kentos_commands::CAD_LINE_TYPES_EDIT => $then!(line_types_edit, LineTypesEdit),
             kentos_commands::CAD_HATCH_PATTERNS_EDIT => $then!(hatch_patterns_edit, HatchPatternsEdit),
             kentos_commands::CAD_LIBRARY_EDIT => $then!(library_edit, LibraryEdit),
