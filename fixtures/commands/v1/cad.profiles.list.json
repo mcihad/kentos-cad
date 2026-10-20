@@ -1,0 +1,2417 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.profiles.list",
+  "commandVersion": 1,
+  "title": "Veri profillerini listele",
+  "note": "Written by scripts/fixtures/profile_files_cases.py from the contract's rules and docs/adr/0558; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Belediye örnek projesi",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis"
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Çizimin dosyası verilmeyince yalnız KentOS'un profili listelenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Klasör yoksa yalnız yerleşik profil gelir; klasör yolu söylenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf20/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                }
+              ],
+              "folder": "$tmp:pf20/profiller"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projenin profili ve eşlemesi: önce profil, sonra eşleme; sürüm, sınıf ve göç sayıları",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/park-bahce.profil.json",
+          "to": "$tmp:pf21/profiller/park-bahce.profil.json"
+        },
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/park-bahce-kurum.eslem.json",
+          "to": "$tmp:pf21/profiller/park-bahce-kurum.eslem.json"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "drawing": "$tmp:pf21/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "park-bahce",
+                  "title": "Park ve bahçeler profili",
+                  "release": 3,
+                  "classes": 2,
+                  "migrations": 2,
+                  "path": "$tmp:pf21/profiller/park-bahce.profil.json"
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "park-bahce-kurum",
+                  "title": "Park ve bahçeler eşlemesi",
+                  "release": 0,
+                  "classes": 1,
+                  "migrations": 0,
+                  "path": "$tmp:pf21/profiller/park-bahce-kurum.eslem.json",
+                  "profile": "park-bahce"
+                }
+              ],
+              "folder": "$tmp:pf21/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf21/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "park-bahce",
+                  "title": "Park ve bahçeler profili",
+                  "release": 3,
+                  "classes": 2,
+                  "migrations": 2,
+                  "path": "$tmp:pf21/profiller/park-bahce.profil.json"
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "park-bahce-kurum",
+                  "title": "Park ve bahçeler eşlemesi",
+                  "release": 0,
+                  "classes": 1,
+                  "migrations": 0,
+                  "path": "$tmp:pf21/profiller/park-bahce-kurum.eslem.json",
+                  "profile": "park-bahce"
+                }
+              ],
+              "folder": "$tmp:pf21/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Adlar sırasıyla: peyzaj, park-bahce, sivas-bel",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/sivas-bel.eslem.json",
+          "to": "$tmp:pf22/profiller/sivas-bel.eslem.json"
+        },
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
+          "to": "$tmp:pf22/profiller/peyzaj.profil.json"
+        },
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/park-bahce.profil.json",
+          "to": "$tmp:pf22/profiller/park-bahce.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf22/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "park-bahce",
+                  "title": "Park ve bahçeler profili",
+                  "release": 3,
+                  "classes": 2,
+                  "migrations": 2,
+                  "path": "$tmp:pf22/profiller/park-bahce.profil.json"
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "peyzaj",
+                  "title": "Peyzaj profili",
+                  "release": 1,
+                  "classes": 2,
+                  "migrations": 0,
+                  "path": "$tmp:pf22/profiller/peyzaj.profil.json"
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "sivas-bel",
+                  "title": "Sivas Belediyesi eşlemesi",
+                  "release": 0,
+                  "classes": 3,
+                  "migrations": 0,
+                  "path": "$tmp:pf22/profiller/sivas-bel.eslem.json",
+                  "profile": "tucbs-temel"
+                }
+              ],
+              "folder": "$tmp:pf22/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı adlı profil ve eşleme: profil önce",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/peyzaj-kurum.eslem.json",
+          "to": "$tmp:pf23/profiller/peyzaj.eslem.json"
+        },
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
+          "to": "$tmp:pf23/profiller/peyzaj.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf23/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "peyzaj",
+                  "title": "Peyzaj profili",
+                  "release": 1,
+                  "classes": 2,
+                  "migrations": 0,
+                  "path": "$tmp:pf23/profiller/peyzaj.profil.json"
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "peyzaj",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf23/profiller/peyzaj.eslem.json",
+                  "problem": "$tmp:pf23/profiller/peyzaj.eslem.json dosyasının içindeki eşlemenin adı “peyzaj-kurum”; dosya adıyla aynı olmalı."
+                }
+              ],
+              "folder": "$tmp:pf23/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sürümü 2 ve 1 olan profiller göç sayılarıyla",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/park-bahce-r2.profil.json",
+          "to": "$tmp:pf24/profiller/a-r2.profil.json"
+        },
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/park-bahce-r1.profil.json",
+          "to": "$tmp:pf24/profiller/b-r1.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf24/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "a-r2",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf24/profiller/a-r2.profil.json",
+                  "problem": "$tmp:pf24/profiller/a-r2.profil.json dosyasının içindeki profilin adı “park-bahce”; dosya adıyla aynı olmalı."
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "b-r1",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf24/profiller/b-r1.profil.json",
+                  "problem": "$tmp:pf24/profiller/b-r1.profil.json dosyasının içindeki profilin adı “park-bahce”; dosya adıyla aynı olmalı."
+                }
+              ],
+              "folder": "$tmp:pf24/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Okunmayan dosya düşmez, nedeniyle gelir (bozuk JSON)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/bozuk.json",
+          "to": "$tmp:pf25/profiller/bozuk.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf25/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "bozuk",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf25/profiller/bozuk.profil.json",
+                  "problem": "$any"
+                }
+              ],
+              "folder": "$tmp:pf25/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Biçimi tanınmayan dosya",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/taninmayan.json",
+          "to": "$tmp:pf26/profiller/x.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf26/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "x",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf26/profiller/x.profil.json",
+                  "problem": "Dosyanın biçimi tanınmıyor: veri profili için “kentos.data-profile”, eşleme için “kentos.profile-mapping” yazılı olmalı."
+                }
+              ],
+              "folder": "$tmp:pf26/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Biçim sürümü 2 olan profil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/profil-surum2.json",
+          "to": "$tmp:pf27/profiller/x.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf27/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "x",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf27/profiller/x.profil.json",
+                  "problem": "Profilin biçim sürümü 2; bu KentOS 1. sürümü okur."
+                }
+              ],
+              "folder": "$tmp:pf27/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Biçim sürümü olmayan profil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/profil-surumsuz.json",
+          "to": "$tmp:pf28/profiller/x.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf28/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "x",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf28/profiller/x.profil.json",
+                  "problem": "Profilin biçim sürümü yok; bu KentOS 1. sürümü okur."
+                }
+              ],
+              "folder": "$tmp:pf28/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Biçim sürümü 2 olan eşleme",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/esleme-surum2.json",
+          "to": "$tmp:pf29/profiller/x.eslem.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf29/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "x",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf29/profiller/x.eslem.json",
+                  "problem": "Eşlemenin biçim sürümü 2; bu KentOS 1. sürümü okur."
+                }
+              ],
+              "folder": "$tmp:pf29/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sınıfsız profil: geçersiz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/profil-sinifsiz.json",
+          "to": "$tmp:pf30/profiller/sinifsiz.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf30/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "sinifsiz",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf30/profiller/sinifsiz.profil.json",
+                  "problem": "Veri profili geçersiz: Profilde 1 ile 64 arası sınıf olur."
+                }
+              ],
+              "folder": "$tmp:pf30/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başlığı olmayan profil: okunmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/profil-basliksiz.json",
+          "to": "$tmp:pf31/profiller/x.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf31/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "x",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf31/profiller/x.profil.json",
+                  "problem": "$any"
+                }
+              ],
+              "folder": "$tmp:pf31/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başlığı boş eşleme",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/esleme-basliksiz.json",
+          "to": "$tmp:pf32/profiller/x.eslem.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf32/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "x",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf32/profiller/x.eslem.json",
+                  "problem": "Eşleme geçersiz: Eşlemenin başlığı boş olamaz."
+                }
+              ],
+              "folder": "$tmp:pf32/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sınıfsız eşleme",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/esleme-sinifsiz.json",
+          "to": "$tmp:pf33/profiller/x.eslem.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf33/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "x",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf33/profiller/x.eslem.json",
+                  "problem": "Eşleme geçersiz: Eşlemede 1 ile 256 arası sınıf olur."
+                }
+              ],
+              "folder": "$tmp:pf33/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İçindeki ad dosyanın adından farklı profil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
+          "to": "$tmp:pf34/profiller/baska.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf34/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "baska",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf34/profiller/baska.profil.json",
+                  "problem": "$tmp:pf34/profiller/baska.profil.json dosyasının içindeki profilin adı “peyzaj”; dosya adıyla aynı olmalı."
+                }
+              ],
+              "folder": "$tmp:pf34/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İçindeki ad dosyanın adından farklı eşleme",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/sivas-bel.eslem.json",
+          "to": "$tmp:pf35/profiller/baska.eslem.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf35/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "baska",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf35/profiller/baska.eslem.json",
+                  "problem": "$tmp:pf35/profiller/baska.eslem.json dosyasının içindeki eşlemenin adı “sivas-bel”; dosya adıyla aynı olmalı."
+                }
+              ],
+              "folder": "$tmp:pf35/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eşleme dosyası profil olarak adlandırılmış",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/sivas-bel.eslem.json",
+          "to": "$tmp:pf36/profiller/x.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf36/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "x",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf36/profiller/x.profil.json",
+                  "problem": "$tmp:pf36/profiller/x.profil.json bir veri profili değil, eşleme."
+                }
+              ],
+              "folder": "$tmp:pf36/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profil dosyası eşleme olarak adlandırılmış",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
+          "to": "$tmp:pf37/profiller/x.eslem.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf37/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "x",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf37/profiller/x.eslem.json",
+                  "problem": "$tmp:pf37/profiller/x.eslem.json bir eşleme değil, veri profili."
+                }
+              ],
+              "folder": "$tmp:pf37/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eşleme KentOS'un profili için: profille denetlenir, tutuyorsa sorun yok",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/sivas-bel.eslem.json",
+          "to": "$tmp:pf38/profiller/sivas-bel.eslem.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf38/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "sivas-bel",
+                  "title": "Sivas Belediyesi eşlemesi",
+                  "release": 0,
+                  "classes": 3,
+                  "migrations": 0,
+                  "path": "$tmp:pf38/profiller/sivas-bel.eslem.json",
+                  "profile": "tucbs-temel"
+                }
+              ],
+              "folder": "$tmp:pf38/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eşleme profiline uymuyor: sorun nedeniyle söylenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/park-bahce-bozuk.eslem.json",
+          "to": "$tmp:pf39/profiller/park-bahce-bozuk.eslem.json"
+        },
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/park-bahce.profil.json",
+          "to": "$tmp:pf39/profiller/park-bahce.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf39/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "park-bahce",
+                  "title": "Park ve bahçeler profili",
+                  "release": 3,
+                  "classes": 2,
+                  "migrations": 2,
+                  "path": "$tmp:pf39/profiller/park-bahce.profil.json"
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "park-bahce-bozuk",
+                  "title": "Bozuk eşleme",
+                  "release": 0,
+                  "classes": 1,
+                  "migrations": 0,
+                  "path": "$tmp:pf39/profiller/park-bahce-bozuk.eslem.json",
+                  "profile": "park-bahce",
+                  "problem": "“orman” sınıfı profilde yok."
+                }
+              ],
+              "folder": "$tmp:pf39/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eşlemenin profili bulunamıyor: denetlenmeden listelenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/hayalet-esleme.eslem.json",
+          "to": "$tmp:pf40/profiller/hayalet-esleme.eslem.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf40/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "hayalet-esleme",
+                  "title": "Profili olmayan eşleme",
+                  "release": 0,
+                  "classes": 1,
+                  "migrations": 0,
+                  "path": "$tmp:pf40/profiller/hayalet-esleme.eslem.json",
+                  "profile": "hayalet"
+                }
+              ],
+              "folder": "$tmp:pf40/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eşlemenin profili projede: profille denetlenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/park-bahce-kurum.eslem.json",
+          "to": "$tmp:pf41/profiller/park-bahce-kurum.eslem.json"
+        },
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/park-bahce.profil.json",
+          "to": "$tmp:pf41/profiller/park-bahce.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf41/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "park-bahce",
+                  "title": "Park ve bahçeler profili",
+                  "release": 3,
+                  "classes": 2,
+                  "migrations": 2,
+                  "path": "$tmp:pf41/profiller/park-bahce.profil.json"
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "park-bahce-kurum",
+                  "title": "Park ve bahçeler eşlemesi",
+                  "release": 0,
+                  "classes": 1,
+                  "migrations": 0,
+                  "path": "$tmp:pf41/profiller/park-bahce-kurum.eslem.json",
+                  "profile": "park-bahce"
+                }
+              ],
+              "folder": "$tmp:pf41/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başka dosyalar listelenmez (yalnız .profil.json ve .eslem.json)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/bozuk.json",
+          "to": "$tmp:pf42/profiller/notlar.txt"
+        },
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
+          "to": "$tmp:pf42/profiller/peyzaj.profil.json.bak"
+        },
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
+          "to": "$tmp:pf42/profiller/peyzaj.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf42/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "peyzaj",
+                  "title": "Peyzaj profili",
+                  "release": 1,
+                  "classes": 2,
+                  "migrations": 0,
+                  "path": "$tmp:pf42/profiller/peyzaj.profil.json"
+                }
+              ],
+              "folder": "$tmp:pf42/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Göreli ya da boş çizim yolunun klasörü yok: yalnız yerleşik profil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                }
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "  "
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrulama",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          }
+        }
+      ]
+    }
+  ]
+}

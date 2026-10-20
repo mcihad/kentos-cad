@@ -1220,9 +1220,12 @@
       "level": "semantic",
       "via": [
         "cad.profiles.check",
-        "cad.profiles.apply"
+        "cad.profiles.apply",
+        "cad.profiles.import",
+        "cad.profiles.list",
+        "cad.profiles.migrate"
       ],
-      "note": "Bulgular cad.profiles.check'in cevabı, Uygula'nın önizlemesi cad.profiles.apply'ın planı (ADR 0541)."
+      "note": "Bulgular cad.profiles.check'in cevabı, Uygula'nın önizlemesi cad.profiles.apply'ın planı (ADR 0541); profil ve eşleme listesi cad.profiles.list'in, İçe aktar cad.profiles.import'un, Göç'ün önizlemesi ve yazması cad.profiles.migrate'in (ADR 0558)."
     },
     "standards.check": {
       "level": "query",
@@ -2030,6 +2033,20 @@
         "file.export.atlas"
       ],
       "note": "Pencerede sayfalar adları, ölçekleri ve nesneleriyle ile sabitlenen durum önizlenir, Dışa aktar… komutla PDF'i bütün yazar; çizim ya da kaynak değişmişse pin_mismatch ya da source_changed ile yenilenmesi istenir (ADR 0534)."
+    },
+    "raster.gpkgRead": {
+      "level": "semantic",
+      "via": [
+        "cad.rasters.gpkgread"
+      ],
+      "note": "Pencere tabloları ve düzeyleri gösterir, GeoTIFF'i ve isteğe bağlı rasteri komut yazar (ADR 0556 §5)."
+    },
+    "raster.gpkgWrite": {
+      "level": "semantic",
+      "via": [
+        "cad.rasters.gpkgwrite"
+      ],
+      "note": "Pencere karo piramidinin planını gösterir, GeoPackage'ı komut yazar (ADR 0556 §5)."
     }
   },
   "tools": {

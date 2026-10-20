@@ -8,7 +8,7 @@
 - **Web:** ertelendi (ADR 0228).
 - **Sonraya kalan:**
   - PostGIS'e yazma ve okuma, yetki ve geri yükleme kabulü (CBS-38, CBS-39'un tatbikatı);
-  - aynı senaryonun MCP'de ve masaüstünün ajan bağlantısında oynatılması (bugün Python ve başsız oturum);
+  - aynı senaryonun masaüstünün ajan bağlantısında oynatılması (Python ve MCP'de oynatılır, §2);
   - kesilen işlem ve yeniden açma senaryoları;
   - QGIS 4.2'nin kendi arayüzüyle açılış ve büyük veriyle performans kabulü.
 
@@ -41,6 +41,8 @@ Proje: CBS, TUREF / TM36 (EPSG:5256). Adımlar:
 
 - `python/tests/test_acceptance_gis.py` senaryoyu `kentos.cad` ile adım adım oynatır; başsız oturum, MCP sunucusunun da kullandığı
   yoldur.
+- `crates/native/mcp/tests/acceptance.rs` aynı senaryoyu MCP'nin araçlarıyla (`drawing.new`, kataloğun komutları, `drawing.layers`,
+  `drawing.entities`) oynatır: aynı nesneler, alanlar ve satırlar; her yazma kayıtta komutun kendi adıyla.
 - `KENTOS_WRITE_ACCEPTANCE=1` ile yazılan beş dosya `fixtures/acceptance/v1/out`'a gider.
 - `acceptance_parcels.py --files` onları GDAL'ın OGR'ıyla okur (macOS'ta QGIS 4.2'nin Python'u):
   - katmanlar ve nesne sayıları, sistem EPSG:5256;
@@ -60,3 +62,4 @@ köşelerinden.
 - `python3 scripts/fixtures/acceptance_parcels.py --check`.
 - `KENTOS_WRITE_ACCEPTANCE=1 .run/py/bin/python -m unittest discover -s python/tests -p "test_acceptance_gis.py"`.
 - `python3 scripts/fixtures/acceptance_parcels.py --files`.
+- `cargo test -p kentos-mcp --test acceptance`.

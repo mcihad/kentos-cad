@@ -1171,6 +1171,29 @@ fn a_project_is_packed_with_its_files_and_opens_where_the_folder_goes() {
         work.join("foto/logo.png"),
     )
     .expect("copied");
+    // The project's own profile and mapping beside the project file (docs/adr/0558): copied byte for byte under
+    // `profiller/`; another file, a folder inside it and a file that cannot be read are not.
+    let profiles = fixtures.join("profiles/v1/files");
+    std::fs::create_dir_all(work.join("profiller/eski")).expect("folders");
+    for (from, to) in [
+        ("park-bahce.profil.json", "park-bahce.profil.json"),
+        ("sivas-bel.eslem.json", "sivas-bel.eslem.json"),
+        ("peyzaj.profil.json", "eski/peyzaj.profil.json"),
+        ("bozuk.json", "notlar.txt"),
+    ] {
+        std::fs::copy(profiles.join(from), work.join("profiller").join(to)).expect("copied");
+    }
+    #[cfg(unix)]
+    let unreadable = {
+        use std::os::unix::fs::PermissionsExt;
+        let path = work.join("profiller/kilitli.profil.json");
+        std::fs::copy(profiles.join("peyzaj.profil.json"), &path).expect("copied");
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o000)).expect("locked");
+        // A process that may read it anyway (root) leaves nothing out: the test then expects the copy.
+        std::fs::File::open(&path).is_err()
+    };
+    #[cfg(not(unix))]
+    let unreadable = false;
     let mut s = new_drawing();
     let linked = s
         .call(json!({ "command": "cad.sources.edit", "input": { "edit": {
@@ -1244,16 +1267,18 @@ fn a_project_is_packed_with_its_files_and_opens_where_the_folder_goes() {
             )
         })
         .collect();
-    assert_eq!(
-        files,
-        vec![
-            ("veri/logo.png".into(), "picture".into(), 2),
-            ("veri/rgb.png".into(), "picture".into(), 1),
-            ("veri/rgb.pgw".into(), "sidecar".into(), 1),
-            ("veri/kadastro.gpkg".into(), "source".into(), 1),
-        ],
-        "{done}"
-    );
+    let mut want: Vec<(String, String, u64)> = vec![
+        ("veri/logo.png".into(), "picture".into(), 2),
+        ("veri/rgb.png".into(), "picture".into(), 1),
+        ("veri/rgb.pgw".into(), "sidecar".into(), 1),
+        ("veri/kadastro.gpkg".into(), "source".into(), 1),
+    ];
+    if !unreadable {
+        want.push(("profiller/kilitli.profil.json".into(), "profile".into(), 0));
+    }
+    want.push(("profiller/park-bahce.profil.json".into(), "profile".into(), 0));
+    want.push(("profiller/sivas-bel.eslem.json".into(), "mapping".into(), 0));
+    assert_eq!(files, want, "{done}");
     let left: Vec<String> = done["output"]["left"]
         .as_array()
         .expect("left")
@@ -1266,17 +1291,31 @@ fn a_project_is_packed_with_its_files_and_opens_where_the_folder_goes() {
             )
         })
         .collect();
-    assert_eq!(
-        left,
-        [
-            "missing:/yok/kayip.jpg",
-            "database:postgresql://cbs@veri.belediye.local/kent"
-        ]
-    );
+    let mut want_left = vec![
+        "missing:/yok/kayip.jpg".to_owned(),
+        "database:postgresql://cbs@veri.belediye.local/kent".to_owned(),
+    ];
+    if unreadable {
+        want_left.push(format!(
+            "unreadable:{}",
+            work.join("profiller/kilitli.profil.json").display()
+        ));
+    }
+    assert_eq!(left, want_left);
     assert_eq!(done["warnings"][0]["code"], "package_left", "{done}");
     for f in &files {
         assert!(out.join(&f.0).is_file(), "{}", f.0);
     }
+    // The profiles are the sources' bytes, the folder's other files are not in the package.
+    for name in ["park-bahce.profil.json", "sivas-bel.eslem.json"] {
+        assert_eq!(
+            std::fs::read(out.join("profiller").join(name)).expect("copy"),
+            std::fs::read(profiles.join(name)).expect("source"),
+            "{name} byte for byte"
+        );
+    }
+    assert!(!out.join("profiller/notlar.txt").exists());
+    assert!(!out.join("profiller/eski").exists());
     let again = s
         .call(json!({ "command": "file.package", "input": input }))
         .expect("answers");
@@ -1285,6 +1324,14 @@ fn a_project_is_packed_with_its_files_and_opens_where_the_folder_goes() {
     let moved = dir.join("baska-bilgisayar");
     std::fs::rename(&out, &moved).expect("moved");
     std::fs::remove_file(&gpkg).expect("old data gone");
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(
+            work.join("profiller/kilitli.profil.json"),
+            std::fs::Permissions::from_mode(0o644),
+        );
+    }
     let mut opened = Session::open(&moved.join("kadastro.kcad")).expect("opens");
     assert_eq!(opened.located().moved.len(), 1, "{:?}", opened.located());
     let state = opened
@@ -1326,6 +1373,32 @@ fn a_project_is_packed_with_its_files_and_opens_where_the_folder_goes() {
             "veri/rgb.png"
         ]
     );
+    // Where the folder went the project's profiles and mapping are beside the project file again (docs/adr/0558).
+    let listed = opened
+        .call(json!({ "command": "cad.profiles.list", "input": {
+            "drawing": moved.join("kadastro.kcad").display().to_string() } }))
+        .expect("answers");
+    let kept: Vec<(String, String, bool)> = listed["output"]["items"]
+        .as_array()
+        .expect("items")
+        .iter()
+        .filter(|i| i["source"] == "project")
+        .map(|i| {
+            (
+                i["name"].as_str().unwrap_or_default().to_owned(),
+                i["kind"].as_str().unwrap_or_default().to_owned(),
+                i.get("problem").is_none(),
+            )
+        })
+        .collect();
+    let mut want_kept: Vec<(String, String, bool)> = Vec::new();
+    if !unreadable {
+        // The locked file holds the `peyzaj` profile under another name: listed, with its problem.
+        want_kept.push(("kilitli".into(), "profile".into(), false));
+    }
+    want_kept.push(("park-bahce".into(), "profile".into(), true));
+    want_kept.push(("sivas-bel".into(), "mapping".into(), true));
+    assert_eq!(kept, want_kept, "{listed}");
     let refused = s
         .call(json!({ "command": "file.package", "input": { "path": "goreli/klasor" } }))
         .expect("answers");

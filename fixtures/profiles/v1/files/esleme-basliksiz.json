@@ -1,0 +1,135 @@
+{
+  "format": "kentos.profile-mapping",
+  "version": 1,
+  "name": "sivas-bel",
+  "title": " ",
+  "profile": "tucbs-temel",
+  "description": "Belediyenin kendi katman, alan ve kod adları.",
+  "classes": [
+    {
+      "class": "parsel",
+      "layer": [
+        "Kadastro",
+        "Parseller"
+      ],
+      "fields": [
+        {
+          "profile": "ParselKimlik",
+          "name": "PARSEL_ID"
+        },
+        {
+          "profile": "AdaNo",
+          "name": "ADA_NO"
+        },
+        {
+          "profile": "ParselNo",
+          "name": "PARSEL_NO"
+        },
+        {
+          "profile": "TapuAlani",
+          "name": "TAPU_ALANI"
+        },
+        {
+          "profile": "Nitelik",
+          "name": "NITELIK"
+        }
+      ],
+      "codes": [
+        {
+          "field": "Nitelik",
+          "codes": [
+            {
+              "profile": "arsa",
+              "name": "A"
+            },
+            {
+              "profile": "tarla",
+              "name": "T"
+            },
+            {
+              "profile": "bahce",
+              "name": "B"
+            },
+            {
+              "profile": "bina",
+              "name": "KB"
+            },
+            {
+              "profile": "diger",
+              "name": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class": "bina",
+      "layer": [
+        "Binalar",
+        "Yapılar"
+      ],
+      "fields": [
+        {
+          "profile": "BinaKimlik",
+          "name": "YAPI_ID"
+        },
+        {
+          "profile": "KatSayisi",
+          "name": "KAT"
+        },
+        {
+          "profile": "Kullanim",
+          "name": "KULLANIM"
+        },
+        {
+          "profile": "Parsel",
+          "name": "PARSEL_REF"
+        }
+      ],
+      "codes": [
+        {
+          "field": "Kullanim",
+          "codes": [
+            {
+              "profile": "konut",
+              "name": "K"
+            },
+            {
+              "profile": "ticaret",
+              "name": "T"
+            },
+            {
+              "profile": "karma",
+              "name": "KT"
+            },
+            {
+              "profile": "kamu",
+              "name": "KM"
+            },
+            {
+              "profile": "sanayi",
+              "name": "S"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class": "adres",
+      "fields": [
+        {
+          "profile": "Yol",
+          "name": "CADDE"
+        },
+        {
+          "profile": "KapiNo",
+          "name": "KAPI"
+        },
+        {
+          "profile": "Bina",
+          "name": "YAPI_REF"
+        }
+      ]
+    }
+  ]
+}

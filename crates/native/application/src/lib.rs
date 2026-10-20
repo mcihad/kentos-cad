@@ -221,6 +221,7 @@ mod xrefs_bind;
 pub mod links;
 pub mod assets_check;
 pub mod images_edit;
+pub mod gpkg_tiles;
 pub mod rasters_mosaic;
 pub mod stac_host;
 pub mod stac_prepare;
@@ -255,6 +256,7 @@ pub mod set;
 pub mod settings_set;
 pub mod sheets_edit;
 pub mod snap_find;
+pub mod profile_files;
 pub mod profiles;
 pub mod standards;
 pub mod stretch;
@@ -638,6 +640,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_RASTERS_MOSAIC,
         kentos_commands::CAD_RASTERS_MOSAIC_VERSION,
     ),
+    // GeoPackage karoları ([`gpkg_tiles`], docs/adr/0556).
+    (
+        kentos_commands::CAD_RASTERS_GPKGREAD,
+        kentos_commands::CAD_RASTERS_GPKGREAD_VERSION,
+    ),
+    (
+        kentos_commands::CAD_RASTERS_GPKGWRITE,
+        kentos_commands::CAD_RASTERS_GPKGWRITE_VERSION,
+    ),
     // Raster oturt'un kaydı ([`rasters_georef`], docs/adr/0518).
     (
         kentos_commands::CAD_RASTERS_GEOREF,
@@ -981,6 +992,19 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_PROFILES_CHECK,
         kentos_commands::CAD_PROFILES_CHECK_VERSION,
+    ),
+    // An institution's own profile imported, listed and migrated ([`profile_files`], docs/adr/0558).
+    (
+        kentos_commands::CAD_PROFILES_IMPORT,
+        kentos_commands::CAD_PROFILES_IMPORT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PROFILES_LIST,
+        kentos_commands::CAD_PROFILES_LIST_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PROFILES_MIGRATE,
+        kentos_commands::CAD_PROFILES_MIGRATE_VERSION,
     ),
     // The project's line types with patterns ([`line_types_edit`], docs/adr/0313).
     (

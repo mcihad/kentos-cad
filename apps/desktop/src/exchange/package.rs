@@ -86,6 +86,21 @@ impl App {
                             0 => String::new(),
                             n => format!(", {n} dış başvuru kaynağı"),
                         }
+                        + &match out
+                            .files
+                            .iter()
+                            .filter(|f| {
+                                matches!(
+                                    f.kind,
+                                    kentos_commands::PackagedKind::Profile
+                                        | kentos_commands::PackagedKind::Mapping
+                                )
+                            })
+                            .count()
+                        {
+                            0 => String::new(),
+                            n => format!(", {n} profil ve eşleme dosyası"),
+                        }
                     ),
                 );
                 for w in warnings {

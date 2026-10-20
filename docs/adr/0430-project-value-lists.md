@@ -72,3 +72,7 @@ yazıcı `kcad_v2_reference.py`, örnek `domains.kcad` ve beş bozuk dosya.
 - Bir liste bir kez yazılır, birçok katman izler; kodun göçü kayıtlarla aynı adımdadır.
 - Açık: kurumun ve kişinin listeleri (kapsam, sahip, yayın durumu; FORM-DATA-10'un bulut kısmı), etiketlerin dilleri ve geçerlilik
   aralığı (FORM-DATA-11), büyük listelerin sayfalanması (FORM-DATA-16).
+
+## Ek (21 Ekim 2026)
+
+Projenin `domains`'i ve alanın `domain`'i `.kcad` şema 72'nin listesindedir; Rust yazıcısı bunları listeye almamıştı, yalnız birini taşıyan proje yazılamıyordu. Düzeltme ve nedeni: [ADR 0265](0265-model-carriage-and-schema-changes.md) eki.

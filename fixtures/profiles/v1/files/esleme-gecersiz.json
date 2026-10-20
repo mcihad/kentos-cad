@@ -1,0 +1,16 @@
+{
+  "format": "kentos.profile-mapping",
+  "version": 1,
+  "name": "gecersiz",
+  "title": "Sivas Belediyesi eşlemesi",
+  "profile": "tucbs-temel",
+  "description": "Belediyenin kendi katman, alan ve kod adları.",
+  "classes": [
+    {
+      "class": "orman",
+      "layer": [
+        "Orman"
+      ]
+    }
+  ]
+}

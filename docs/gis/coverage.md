@@ -5,8 +5,8 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 
 ## Ürün komutları
 
-- 224 komut; masaüstü 203, başsız 224, Python 224, MCP 203, sunucu 21.
-- Seçenekler: 3563 hücre, 1190 tanesi bir durumda deneniyor (2373 açık).
+- 229 komut; masaüstü 208, başsız 229, Python 229, MCP 208, sunucu 21.
+- Seçenekler: 3654 hücre, 1215 tanesi bir durumda deneniyor (2439 açık).
 - Veri türleri (hedef türler): 182 hücre, 124 tanesi bir durumda deneniyor (58 açık).
 - Ortak komut durumu olmayan: 35; 21 sunucu komutu (sunucunun veritabanı testlerinde), 14 dosya komutu (başsız testlerde ve biçim başvurularında: file.export.atlas, file.export.block, file.export.csv, file.export.dxf, file.export.fgb, file.export.gis, file.export.gml, file.export.gpkg, file.export.pdf, file.export.qml, file.export.shp, file.export.sld, file.export.xyz, file.package).
 
@@ -81,8 +81,10 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | `cad.polygon.regular` | lineType="continuous", lineType="dashdot", lineType="dashed", lineType="dotted" | — |
 | `cad.polyline.create` | lineType="continuous", lineType="dashdot", lineType="dashed", lineType="dotted" | — |
 | `cad.processing.run` | mode="new" | — |
-| `cad.profiles.apply` | geometry="line", geometry="record", kind="boolean", kind="date", kind="datetime", kind="integer", kind="time", level="district", level="neighbourhood", level="province", maxExclusive=true, merge="clear", merge="first", merge="max", merge="min", merge="sum", minExclusive=true, multiple=true, retired=true, split="clear", split="copy", split="default", split="ratio", unique=true | — |
-| `cad.profiles.check` | geometry="line", geometry="record", kind="boolean", kind="date", kind="datetime", kind="integer", kind="time", level="district", level="neighbourhood", level="province", maxExclusive=true, merge="clear", merge="first", merge="max", merge="min", merge="sum", minExclusive=true, multiple=true, retired=true, split="clear", split="copy", split="default", split="ratio", unique=true | — |
+| `cad.profiles.apply` | geometry="line", geometry="record", kind="boolean", kind="changeFieldType", kind="date", kind="datetime", kind="integer", kind="mapValues", kind="renameField", kind="renameLayer", kind="retireCode", kind="time", level="district", level="neighbourhood", level="province", maxExclusive=true, merge="clear", merge="first", merge="max", merge="min", merge="sum", minExclusive=true, multiple=true, onFail="clear", retired=true, split="clear", split="copy", split="default", split="ratio", unique=true | — |
+| `cad.profiles.check` | geometry="line", geometry="record", kind="boolean", kind="changeFieldType", kind="date", kind="datetime", kind="integer", kind="mapValues", kind="renameField", kind="renameLayer", kind="retireCode", kind="time", level="district", level="neighbourhood", level="province", maxExclusive=true, merge="clear", merge="first", merge="max", merge="min", merge="sum", minExclusive=true, multiple=true, onFail="clear", retired=true, split="clear", split="copy", split="default", split="ratio", unique=true | — |
+| `cad.profiles.import` | geometry="line", geometry="record", kind="boolean", kind="changeFieldType", kind="date", kind="datetime", kind="integer", kind="mapValues", kind="renameField", kind="renameLayer", kind="retireCode", kind="time", level="district", level="neighbourhood", level="province", maxExclusive=true, merge="clear", merge="first", merge="max", merge="min", merge="sum", minExclusive=true, multiple=true, onFail="clear", retired=true, split="clear", split="copy", split="default", split="ratio", unique=true | — |
+| `cad.profiles.migrate` | geometry="line", geometry="record", kind="boolean", kind="date", kind="datetime", kind="decimal", kind="time", level="district", level="neighbourhood", level="province", maxExclusive=true, merge="clear", merge="first", merge="max", merge="min", merge="sum", minExclusive=true, multiple=true, retired=true, split="clear", split="copy", split="default", split="ratio", unique=true | — |
 | `cad.ramps.create` | discipline="architecture", discipline="electrical", discipline="interior", discipline="landscape", discipline="mechanical", discipline="plumbing", discipline="structure", phase="demolish", phase="new", phase="temporary", status="approved", status="built", status="proposed", status="underConstruction" | — |
 | `cad.rasters.georef` | resampling="bilinear" | — |
 | `cad.records.duplicate` | children=true | — |

@@ -12,6 +12,9 @@ with the independent KCAD reader (tools/kcad/kcad.py) and hashlib:
   beside its copy under its name;
 - the bound layer's source keeps relative veri/kadastro.gpkg, its file's SHA-256 is the link's revision;
 - the missing file's link and the database's address are left as they were, the database without a relative path;
+- the project's own data profile and mapping (profiller/ beside the project file, docs/adr/0558) are copied under the
+  same names, byte for byte, read here as JSON (a profile's name is its file's name); the folder's other file and the
+  folder inside it are not in the package; a file the disk does not give is left out, said (`unreadable`);
 - paket.json (docs/adr/0350 §4) names the project file and every copy with their sizes and SHA-256s as read here.
 
 Then the transmittal test (an external reference, an image found by a search path, a style naming an SHX font): the
@@ -39,6 +42,11 @@ SOURCES = {
     "veri/rgb.pgw": FIX / "raster/v1/files/rgb.pgw",
     "veri/kadastro.gpkg": FIX / "geopackage/v1/qgis.gpkg",
 }
+# The project's profile and mapping (docs/adr/0558): `profiller/` beside the project file, as the commands look for them.
+PROFILES = {
+    "profiller/park-bahce.profil.json": FIX / "profiles/v1/files/park-bahce.profil.json",
+    "profiller/sivas-bel.eslem.json": FIX / "profiles/v1/files/sivas-bel.eslem.json",
+}
 
 
 def sha(p):
@@ -60,8 +68,9 @@ def manifest_problems(package, project):
         if f["bytes"] != len(b) or f["sha256"] != hashlib.sha256(b).hexdigest():
             problems.append(f"manifestteki {f['path']} dosyasıyla aynı değil")
     listed = sorted(f["path"] for f in m.get("files", []))
-    there = sorted(str(q.relative_to(package)) for q in (package / "veri").rglob("*") if q.is_file()) \
-        if (package / "veri").is_dir() else []
+    there = sorted(str(q.relative_to(package)) for folder in ("veri", "profiller")
+                   for q in (package / folder).rglob("*") if q.is_file()
+                   ) if any((package / f).is_dir() for f in ("veri", "profiller")) else []
     if listed != there:
         problems.append(f"manifestin dosyaları {listed} ≠ {there}")
     return problems, m
@@ -104,13 +113,27 @@ def main():
     package = Path(json.loads(out.read_text("utf-8"))["package"])
     problems = []
     found = sorted(str(p.relative_to(package)) for p in package.rglob("*") if p.is_file())
-    want = sorted(["kadastro.kcad", "paket.json", *SOURCES])
+    # A file the disk does not give (the test locks one, unless it may read it anyway) is left out, said.
+    locked = "profiller/kilitli.profil.json" not in found
+    if not locked:
+        PROFILES["profiller/kilitli.profil.json"] = FIX / "profiles/v1/files/peyzaj.profil.json"
+    want = sorted(["kadastro.kcad", "paket.json", *SOURCES, *PROFILES])
     if found != want:
         problems.append(f"paketin dosyaları {found} ≠ {want}")
-    for rel, src in SOURCES.items():
+    for rel, src in {**SOURCES, **PROFILES}.items():
         p = package / rel
         if p.is_file() and sha(p) != sha(src):
             problems.append(f"{rel} kaynağıyla aynı değil")
+    for rel, fmt in (("profiller/park-bahce.profil.json", "kentos.data-profile"),
+                     ("profiller/sivas-bel.eslem.json", "kentos.profile-mapping")):
+        try:
+            held = json.loads((package / rel).read_text("utf-8"))
+        except (OSError, ValueError) as e:
+            problems.append(f"{rel} okunamadı: {e}")
+            continue
+        stem = Path(rel).name.split(".")[0]
+        if held.get("format") != fmt or held.get("name") != stem:
+            problems.append(f"{rel} paketin içinde bir profil ya da eşleme gibi okunmuyor")
     _, doc = kcad.read((package / "kadastro.kcad").read_bytes())
     files = [e.get("file") for e in doc["entities"] if "file" in e]
     if files != ["veri/logo.png", "veri/logo.png", "/yok/kayip.jpg", "veri/rgb.png"]:
@@ -127,13 +150,21 @@ def main():
         problems.append("kopyanın SHA-256'sı bağın sürümü değil")
     if db is None or db["path"] != "postgresql://cbs@veri.belediye.local/kent" or "relative" in db:
         problems.append(f"veritabanının bağı değişti: {db}")
-    problems += manifest_problems(package, "kadastro.kcad")[0]
+    manifest_problems_, manifest = manifest_problems(package, "kadastro.kcad")
+    problems += manifest_problems_
+    kinds = {f["path"]: (f["kind"], f["links"]) for f in manifest.get("files", [])}
+    for rel, kind in (("profiller/park-bahce.profil.json", "profile"), ("profiller/sivas-bel.eslem.json", "mapping")):
+        if kinds.get(rel) != (kind, 0):
+            problems.append(f"manifestte {rel} {kinds.get(rel)}; {(kind, 0)} olmalı")
+    left = [(x["kind"], x["why"]) for x in manifest.get("left", [])]
+    if locked and ("profile", "unreadable") not in left:
+        problems.append(f"okunamayan profil manifestin kalanlarında yok: {left}")
     problems += transmittal()
     if problems:
         print("; ".join(problems), file=sys.stderr)
         return 1
-    print(f"Paket tutarlı, manifestiyle; dış başvurulu paket de: {len(SOURCES)} kopya kaynaklarıyla bayt bayt aynı, bağlar paketin içinde, bağlı katmanın "
-          "göreli yolu ve sürümü doğru, kalanlar olduğu gibi")
+    print(f"Paket tutarlı, manifestiyle; dış başvurulu paket de: {len(SOURCES)} kopya ve {len(PROFILES)} profil ve eşleme dosyası kaynaklarıyla bayt bayt aynı, "
+          "bağlar paketin içinde, bağlı katmanın göreli yolu ve sürümü doğru, kalanlar olduğu gibi")
     return 0
 
 

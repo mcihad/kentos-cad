@@ -1,0 +1,15 @@
+{
+  "format": "kentos.profile-mapping",
+  "version": 1,
+  "name": "hayalet-esleme",
+  "title": "Profili olmayan eşleme",
+  "profile": "hayalet",
+  "classes": [
+    {
+      "class": "x",
+      "layer": [
+        "X"
+      ]
+    }
+  ]
+}

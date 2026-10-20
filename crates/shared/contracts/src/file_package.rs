@@ -12,6 +12,11 @@
 //! hold, and `paket.json` (`kentos.package/1`): the project file, every copy and every link left out, the typefaces
 //! drawn; a text style drawn in a substitute face is said as left out (KentOS draws only its own faces, which come with
 //! it).
+//!
+//! The project's own data profiles and mappings (`profiller/<ad>.profil.json`, `<ad>.eslem.json` beside the project
+//! file, docs/adr/0558) go too: byte for byte under `profiller/` of the package, which sits beside the project file
+//! there as it did here, so the commands find them again (`from` is the project file's folder); a file that cannot be
+//! read is left out, said.
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -66,6 +71,10 @@ pub enum PackagedKind {
     Xref,
     /// A text style's typeface (left out only: KentOS's own faces come with it).
     Font,
+    /// A data profile of the project, `profiller/<ad>.profil.json` (docs/adr/0558).
+    Profile,
+    /// An institution's mapping of the project, `profiller/<ad>.eslem.json` (docs/adr/0558).
+    Mapping,
 }
 
 /// A file copied into the package.
@@ -83,7 +92,7 @@ pub struct PackagedFile {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,
     pub sha256: String,
-    /// How many links point to it.
+    /// How many links point to it (a profile or a mapping is found by its place, not linked: 0).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub links: u32,
 }
@@ -103,6 +112,8 @@ pub enum LeftWhy {
     Address,
     /// A typeface KentOS does not have (an SHX line font, another family): its texts are drawn in a substitute face.
     Substituted,
+    /// The file is there and cannot be read (a profile or a mapping the disk does not give): not copied.
+    Unreadable,
 }
 
 /// A link left as it was.
@@ -116,8 +127,8 @@ pub struct PackageLeft {
     /// The path or address as the project keeps it.
     pub path: String,
     pub why: LeftWhy,
-    /// The object (its lasting id), bound layer (its id), external reference (`xref:` and its name) or text style
-    /// (`stil:` and its name) that keeps it.
+    /// The object (its lasting id), bound layer (its id), external reference (`xref:` and its name), text style
+    /// (`stil:` and its name) or profile file (`profiller:` and its file name) that keeps it.
     pub at: String,
 }
 

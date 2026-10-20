@@ -37,6 +37,7 @@ mod polyline_extras;
 mod rasters;
 mod requests;
 mod robustness;
+mod carriage;
 mod schemas;
 mod services;
 mod sheets;

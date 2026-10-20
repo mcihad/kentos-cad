@@ -644,7 +644,7 @@
       "title": "Veri profili",
       "short": "Veri profili",
       "icon": "dataProfile",
-      "description": "Çizimin verisini bir veri profiliyle (TUCBS temel belediye profili: mahalle, ada, parsel, bina, yol, adres, imar) denetler ve profilin eksik katmanlarını, alanlarını, değer listelerini, ilişkilerini ve adres verisini ekler. Bulgular sınıf sınıf; satır nesneleri seçer. Kayıtlı alan geometrik alanın yerine yazılmaz. cad.profiles.check ve cad.profiles.apply ile; profil resmî bir uygulama şeması değildir.",
+      "description": "Çizimin verisini bir veri profiliyle (TUCBS temel belediye profili: mahalle, ada, parsel, bina, yol, adres, imar) denetler ve profilin eksik katmanlarını, alanlarını, değer listelerini, ilişkilerini ve adres verisini ekler. Bulgular sınıf sınıf; satır nesneleri seçer. Kayıtlı alan geometrik alanın yerine yazılmaz. Kurumun kendi profili (JSON) ve eşlemesi içe alınır, çizimin yanındaki profiller klasöründe durur; profilin sürümleri arasında veri kendi göç adımlarıyla taşınır (tek geri alma adımı; uymayan değerler raporlanır); eşlemeyle profil kurumun katman, alan ve kod adlarıyla okunur, hiçbir ad kendiliğinden değişmez. cad.profiles.check, apply, import, list ve migrate ile; profil resmî bir uygulama şeması değildir.",
       "aliases": [
         "VERIPROFILI",
         "VERİPROFİLİ",
@@ -2435,6 +2435,34 @@
       "status": "implemented"
     },
     {
+      "id": "raster.gpkgRead",
+      "title": "GeoPackage karoları…",
+      "icon": "rasterGpkg",
+      "description": "Bir GeoPackage'ın karo (raster) tablosunu okur: tabloları, zoom düzeylerini, piksellerini ve karo sayılarını listeler; seçilen düzeyin (ve istenirse görünen alanın) karoları yan yana konarak GeoTIFF yazılır ve raster olarak yeni bir katmana eklenir, tek adımda geri alınır. PNG karolar (8 bit) okunur; JPEG ve WebP karolar söylenir. Karosu olmayan yer saydam kalır.",
+      "aliases": [
+        "GPKGKARO",
+        "KAROAL",
+        "GPKGRASTER"
+      ],
+      "shortcuts": [],
+      "category": "Raster",
+      "status": "implemented"
+    },
+    {
+      "id": "raster.gpkgWrite",
+      "title": "Rasteri GeoPackage karosu yaz…",
+      "icon": "rasterGpkgOut",
+      "description": "Çizimdeki bir rasteri (8 bitlik, kuzeyi yukarıda) GeoPackage karo tablosu olarak yazar: 256 × 256 PNG karolar, en ince zoom düzeyi rasterin kendi pikseli, kaba düzeyler 2 × 2 ortalamasıyla; yeni bir GeoPackage'a ya da var olanın içine tek işlemde. QGIS ve GDAL açar.",
+      "aliases": [
+        "GPKGKAROYAZ",
+        "KAROYAZ",
+        "RASTERGPKG"
+      ],
+      "shortcuts": [],
+      "category": "Raster",
+      "status": "implemented"
+    },
+    {
       "id": "raster.stac",
       "title": "STAC'ta ara",
       "icon": "rasterStac",
@@ -2861,7 +2889,9 @@
     "exportXyz": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M12 8.6v6M12 14.6l-1.9 1.3M12 14.6h3.6\" stroke-width=\"0.95\"/><path d=\"M12 8.6l-.6.8M12 8.6l.6.8\" stroke-width=\"0.7\"/>",
     "pointCloudRegion": "<path d=\"M3.5 7.5 8.5 3l8 3.5-1.5 8L7 16.5z\" stroke-width=\"1.2\"/><circle cx=\"8\" cy=\"8\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"11.6\" cy=\"7\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9.4\" cy=\"11\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13\" cy=\"10.6\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"6.6\" cy=\"12\" r=\".8\" fill=\"currentColor\" stroke=\"none\"/>",
     "pointCloudProfile": "<path d=\"M2.5 13.5h15\" stroke-width=\"1.2\"/><path d=\"M2.5 10.5h15M2.5 16.5h15\" stroke-width=\".8\" stroke-dasharray=\"1.4 1.1\"/><path d=\"M5 8.5v-3M8.5 8.5v-5M12 8.5v-2M15.5 8.5v-4\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><circle cx=\"5\" cy=\"12\" r=\".8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10\" cy=\"15\" r=\".8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"14\" cy=\"12.2\" r=\".8\" fill=\"currentColor\" stroke=\"none\"/>",
-    "meshQuery": "<path d=\"M3 15.5 8 4l9 4-3 8z\" stroke-width=\"1.1\"/><path d=\"M8 4l-1 7 7 5M3 15.5l4-4.5 7-3\" stroke-width=\".8\"/><circle cx=\"12\" cy=\"11\" r=\"1.7\" stroke-width=\"1.2\"/><path d=\"M12 7.6v1.2M12 13.2v1.2M8.6 11h1.2M14.2 11h1.2\" stroke-width=\"1\"/>"
+    "meshQuery": "<path d=\"M3 15.5 8 4l9 4-3 8z\" stroke-width=\"1.1\"/><path d=\"M8 4l-1 7 7 5M3 15.5l4-4.5 7-3\" stroke-width=\".8\"/><circle cx=\"12\" cy=\"11\" r=\"1.7\" stroke-width=\"1.2\"/><path d=\"M12 7.6v1.2M12 13.2v1.2M8.6 11h1.2M14.2 11h1.2\" stroke-width=\"1\"/>",
+    "rasterGpkg": "<rect x=\"2\" y=\"2\" width=\"9\" height=\"9\" rx=\"1\" stroke-width=\"1.1\"/><path d=\"M6.5 2v9M2 6.5h9\" stroke-width=\".9\"/><rect x=\"2.6\" y=\"2.6\" width=\"3.3\" height=\"3.3\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><rect x=\"7.1\" y=\"7.1\" width=\"3.3\" height=\"3.3\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><ellipse cx=\"13.7\" cy=\"11\" rx=\"3.6\" ry=\"1.3\" stroke-width=\"1\"/><path d=\"M10.1 11v5.2c0 .7 1.6 1.3 3.6 1.3s3.6-.6 3.6-1.3V11M10.1 13.6c0 .7 1.6 1.3 3.6 1.3s3.6-.6 3.6-1.3\" stroke-width=\"1\"/><path d=\"M14 7.8 12 5.8M12 7.9V5.8h2.1\" stroke-width=\"1\"/>",
+    "rasterGpkgOut": "<rect x=\"2\" y=\"2\" width=\"9\" height=\"9\" rx=\"1\" stroke-width=\"1.1\"/><path d=\"M6.5 2v9M2 6.5h9\" stroke-width=\".9\"/><rect x=\"2.6\" y=\"2.6\" width=\"3.3\" height=\"3.3\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><rect x=\"7.1\" y=\"7.1\" width=\"3.3\" height=\"3.3\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><ellipse cx=\"13.7\" cy=\"11\" rx=\"3.6\" ry=\"1.3\" stroke-width=\"1\"/><path d=\"M10.1 11v5.2c0 .7 1.6 1.3 3.6 1.3s3.6-.6 3.6-1.3V11M10.1 13.6c0 .7 1.6 1.3 3.6 1.3s3.6-.6 3.6-1.3\" stroke-width=\"1\"/><path d=\"M12 5.8 14 7.8M14.1 5.7v2.1H12\" stroke-width=\"1\"/>"
   },
   "tabs": [
     {
@@ -3798,7 +3828,9 @@
       "overflow": [
         "source.reconcile",
         "file.export.gis",
-        "gis.derivation"
+        "gis.derivation",
+        "raster.gpkgRead",
+        "raster.gpkgWrite"
       ]
     },
     {
@@ -4143,6 +4175,14 @@
           "size": "small"
         },
         {
+          "command": "raster.gpkgRead",
+          "size": "small"
+        },
+        {
+          "command": "raster.gpkgWrite",
+          "size": "small"
+        },
+        {
           "command": "raster.stac",
           "size": "small"
         }
@@ -4174,6 +4214,14 @@
       "items": [
         {
           "command": "raster.mosaic",
+          "size": "small"
+        },
+        {
+          "command": "raster.gpkgRead",
+          "size": "small"
+        },
+        {
+          "command": "raster.gpkgWrite",
           "size": "small"
         },
         {

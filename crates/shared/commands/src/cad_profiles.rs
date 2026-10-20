@@ -11,7 +11,9 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::{AreaSource, DoorSource, FieldDomain, LayerField, StreetSource};
+use crate::{
+    AreaSource, DoorSource, FieldDomain, LayerField, ProfileMapping, ProfileMigration, StreetSource,
+};
 
 pub const CAD_PROFILES_APPLY: &str = "cad.profiles.apply";
 pub const CAD_PROFILES_APPLY_VERSION: u32 = 1;
@@ -146,6 +148,14 @@ pub struct ProfileAddress {
     pub reach: f64,
 }
 
+fn first_release() -> u32 {
+    1
+}
+
+fn is_first_release(r: &u32) -> bool {
+    *r == 1
+}
+
 /// A data profile as `catalog/v1/profiles/*.json` keeps it, or as a command gives it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -162,6 +172,15 @@ pub struct DataProfile {
     pub description: String,
     /// What it rests on and what it is not (a working profile, not an official application schema).
     pub basis: String,
+    /// The profile's own release (docs/adr/0558): 1 when it has not said, `version` being the format's. A release's
+    /// `migrations` move the data of the release before it.
+    #[serde(default = "first_release", skip_serializing_if = "is_first_release")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub release: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileMigration>>", optional))]
+    pub migrations: Vec<ProfileMigration>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FieldDomain>>", optional))]
     pub domains: Vec<FieldDomain>,
@@ -209,6 +228,9 @@ pub fn profile_problem(p: &DataProfile) -> Option<String> {
     if p.name.trim().is_empty() || p.title.trim().is_empty() {
         return Some("Profilin adı ve başlığı boş olamaz.".into());
     }
+    if let Some(why) = crate::migrations_problem(p) {
+        return Some(why);
+    }
     if p.classes.is_empty() || p.classes.len() > MAX_PROFILE_CLASSES {
         return Some(format!(
             "Profilde 1 ile {MAX_PROFILE_CLASSES} arası sınıf olur."
@@ -230,7 +252,10 @@ pub fn profile_problem(p: &DataProfile) -> Option<String> {
         }
         ids.push(&c.id);
         if c.layer.is_empty() || c.layer.iter().any(|n| n.trim().is_empty()) {
-            return Some(format!("“{}” sınıfının katman yolu boş ya da boş adlı.", c.title));
+            return Some(format!(
+                "“{}” sınıfının katman yolu boş ya da boş adlı.",
+                c.title
+            ));
         }
         if let Some(why) = crate::fields_problem(&c.fields) {
             return Some(format!("“{}” sınıfının alanları: {why}", c.title));
@@ -239,7 +264,10 @@ pub fn profile_problem(p: &DataProfile) -> Option<String> {
         if let Some(k) = &c.key
             && field(k).is_none()
         {
-            return Some(format!("“{}” sınıfının kimlik alanı “{k}” alanlarında yok.", c.title));
+            return Some(format!(
+                "“{}” sınıfının kimlik alanı “{k}” alanlarında yok.",
+                c.title
+            ));
         }
         if let Some(r) = &c.registered_area {
             match field(&r.field) {
@@ -249,7 +277,12 @@ pub fn profile_problem(p: &DataProfile) -> Option<String> {
                         c.title, r.field
                     ));
                 }
-                Some(f) if !matches!(f.kind, crate::LayerFieldKind::Decimal | crate::LayerFieldKind::Integer) => {
+                Some(f)
+                    if !matches!(
+                        f.kind,
+                        crate::LayerFieldKind::Decimal | crate::LayerFieldKind::Integer
+                    ) =>
+                {
                     return Some(format!(
                         "“{}” sınıfının kayıtlı alanı “{}” sayı alanı olmalı.",
                         c.title, r.field
@@ -264,7 +297,10 @@ pub fn profile_problem(p: &DataProfile) -> Option<String> {
                 ));
             }
             if c.geometry != ProfileGeometry::Area {
-                return Some(format!("“{}” sınıfı alan değil; kayıtlı alanı olamaz.", c.title));
+                return Some(format!(
+                    "“{}” sınıfı alan değil; kayıtlı alanı olamaz.",
+                    c.title
+                ));
             }
         }
         for f in &c.fields {
@@ -279,17 +315,25 @@ pub fn profile_problem(p: &DataProfile) -> Option<String> {
         }
     }
     if p.relations.len() > MAX_PROFILE_RELATIONS {
-        return Some(format!("Profilde en çok {MAX_PROFILE_RELATIONS} ilişki olur."));
+        return Some(format!(
+            "Profilde en çok {MAX_PROFILE_RELATIONS} ilişki olur."
+        ));
     }
     let class = |id: &str| p.classes.iter().find(|c| c.id == id);
     let mut rel_ids: Vec<&str> = Vec::new();
     for r in &p.relations {
         if !plain_id(&r.id) || rel_ids.contains(&r.id.as_str()) {
-            return Some(format!("“{}” ilişki kimliği olamaz ya da iki kez var.", r.id));
+            return Some(format!(
+                "“{}” ilişki kimliği olamaz ya da iki kez var.",
+                r.id
+            ));
         }
         rel_ids.push(&r.id);
         let (Some(_), Some(child)) = (class(&r.parent), class(&r.child)) else {
-            return Some(format!("“{}” ilişkisi profilde olmayan bir sınıfı anıyor.", r.name));
+            return Some(format!(
+                "“{}” ilişkisi profilde olmayan bir sınıfı anıyor.",
+                r.name
+            ));
         };
         match child.fields.iter().find(|f| f.name == r.field) {
             Some(f) if f.kind == crate::LayerFieldKind::Text => {}
@@ -310,7 +354,9 @@ pub fn profile_problem(p: &DataProfile) -> Option<String> {
             .chain(a.areas.iter().map(|s| s.layer.as_str()));
         for l in named {
             if class(l).is_none() {
-                return Some(format!("Adres verisi profilde olmayan “{l}” sınıfını anıyor."));
+                return Some(format!(
+                    "Adres verisi profilde olmayan “{l}” sınıfını anıyor."
+                ));
             }
         }
     }
@@ -338,6 +384,18 @@ pub struct ProfilesApply {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<DataProfile>,
+    /// An institution's mapping the profile is read through (docs/adr/0558); `mappingName` names one of the project's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mapping: Option<ProfileMapping>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mapping_name: Option<String>,
+    /// The open drawing's own file, an absolute path: the project's `profiller` folder is beside it, where a `name` that
+    /// is not a built-in's and a `mappingName` are found.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -383,6 +441,18 @@ pub struct ProfilesCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<DataProfile>,
+    /// An institution's mapping the profile is read through (docs/adr/0558); `mappingName` names one of the project's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mapping: Option<ProfileMapping>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mapping_name: Option<String>,
+    /// The open drawing's own file, an absolute path: the project's `profiller` folder is beside it, where a `name` that
+    /// is not a built-in's and a `mappingName` are found.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing: Option<String>,
 }
 
 /// What a finding is about.
@@ -494,6 +564,10 @@ pub struct ProfilesReport {
     pub version: u32,
     /// The profile's basis, said with the answer.
     pub basis: String,
+    /// The mapping the profile was read through, when one was given.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mapping: Option<String>,
     pub classes: Vec<ProfileClassSummary>,
     /// The findings: the value lists, then class by class in the profile's order (the layer, its fields, its objects'
     /// geometry, required, values, identifiers, areas), then the relations and the address data.

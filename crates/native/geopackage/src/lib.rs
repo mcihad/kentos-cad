@@ -11,6 +11,7 @@
 pub mod fgb;
 pub mod geom;
 pub mod relations;
+pub mod tiles;
 pub mod wkt;
 
 use std::collections::HashMap;

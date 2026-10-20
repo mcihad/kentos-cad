@@ -7,7 +7,9 @@
 //!
 //! External references' sources go too (docs/adr/0350 §4), byte for byte so their digests hold; linked images and
 //! rasters, and the sources, are looked for with the project's search paths (`links::find_in`). A text style drawn in a
-//! substitute face is said as left out; KentOS's own faces come with it. `paket.json` lists all of it.
+//! substitute face is said as left out; KentOS's own faces come with it. The project's data profiles and mappings
+//! (`profiller/` beside the project file) are copied byte for byte under the same name (docs/adr/0558). `paket.json`
+//! lists all of it.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -15,11 +17,12 @@ use std::path::{Path, PathBuf};
 
 use kentos_commands::encoding::{sha256_hex, sha256_reader_hex};
 use kentos_commands::{
-    CommandWarning, DocumentSnapshotV2, FontMatch, FontsReport, LeftWhy, MAX_PACKAGE_NAME, PackageLeft,
-    PackageProject, PackagedFile, PackagedKind, ProjectPackaged, SourceKind, codes,
+    CommandWarning, DocumentSnapshotV2, FontMatch, FontsReport, LeftWhy, MAPPING_SUFFIX,
+    MAX_PACKAGE_NAME, PROFILE_FOLDER, PROFILE_SUFFIX, PackageLeft, PackageProject, PackagedFile,
+    PackagedKind, ProjectPackaged, SourceKind, codes,
 };
-use kentos_native_application::links::find_in;
 use kentos_domain::Document;
+use kentos_native_application::links::find_in;
 use serde_json::Value;
 
 use crate::file_commands::Refused;
@@ -269,7 +272,11 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
         for b in blocks.iter_mut() {
             // An external reference: its source copied, its link the copy; its content is the source's.
             if b.get("xref").is_some_and(Value::is_object) {
-                let name = b.get("name").and_then(Value::as_str).unwrap_or_default().to_owned();
+                let name = b
+                    .get("name")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+                    .to_owned();
                 if let Some(x) = b.get_mut("xref") {
                     xref(x, &name, from_ref, &search, &target, &mut copies, &mut left);
                 }
@@ -329,6 +336,7 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
             s["relative"] = Value::String(rel);
         }
     }
+    profile_files(from_ref, &mut copies, &mut left);
     // The typefaces: KentOS's own faces come with it; a style naming another is drawn in a substitute.
     let (fonts, _) = kentos_native_application::fonts_report::report(doc, &FontsReport::default());
     for f in &fonts.styles {
@@ -388,6 +396,7 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
                     LeftWhy::Database => "veritabanı",
                     LeftWhy::Address => "adres",
                     LeftWhy::Substituted => "yerine başka yüzle çizilir",
+                    LeftWhy::Unreadable => "okunamadı",
                 };
                 format!("{} ({why})", l.path)
             })
@@ -404,7 +413,14 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
     }
     let project_path = target.join(&name);
     let project_sha256 = sha256_hex(&project);
-    let manifest = manifest_of(&name, project.len() as u64, &project_sha256, &files_out, &left, &fonts.faces);
+    let manifest = manifest_of(
+        &name,
+        project.len() as u64,
+        &project_sha256,
+        &files_out,
+        &left,
+        &fonts.faces,
+    );
     bytes += manifest.len() as u64;
     Ok(Planned {
         output: ProjectPackaged {
@@ -426,6 +442,49 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
         manifest,
         copies: planned,
     })
+}
+
+/// The project's profiles and mappings (`profiller/<ad>.profil.json`, `<ad>.eslem.json` beside the project file,
+/// docs/adr/0558): each copied byte for byte as `profiller/<same name>`, where the commands look beside the project file
+/// of the package; in the folder's order of names. A file that cannot be opened is left out, said. Nothing is looked for
+/// when the project file's folder is not known.
+fn profile_files(from: Option<&Path>, copies: &mut Copies, left: &mut Vec<PackageLeft>) {
+    let Some(dir) = from.map(|f| f.join(PROFILE_FOLDER)) else {
+        return;
+    };
+    let Ok(read) = fs::read_dir(&dir) else {
+        return;
+    };
+    let mut found: Vec<(String, PathBuf, PackagedKind)> = read
+        .flatten()
+        .filter_map(|e| {
+            let name = e.file_name().to_string_lossy().into_owned();
+            let kind = if name.len() > PROFILE_SUFFIX.len() && name.ends_with(PROFILE_SUFFIX) {
+                PackagedKind::Profile
+            } else if name.len() > MAPPING_SUFFIX.len() && name.ends_with(MAPPING_SUFFIX) {
+                PackagedKind::Mapping
+            } else {
+                return None;
+            };
+            let path = e.path();
+            path.is_file().then_some((name, path, kind))
+        })
+        .collect();
+    found.sort_by(|a, b| a.0.cmp(&b.0));
+    for (name, path, kind) in found {
+        if fs::File::open(&path).is_err() {
+            left.push(PackageLeft {
+                kind,
+                path: path.display().to_string(),
+                why: LeftWhy::Unreadable,
+                at: format!("{PROFILE_FOLDER}:{name}"),
+            });
+            continue;
+        }
+        copies
+            .list
+            .push((path, format!("{PROFILE_FOLDER}/{name}"), kind, 0));
+    }
 }
 
 /// `paket.json` (docs/adr/0350 §4): the project file, every copy and every link left out, the faces drawn; keys in a
@@ -461,12 +520,18 @@ fn xref(
     copies: &mut Copies,
     left: &mut Vec<PackageLeft>,
 ) {
-    let path = x.get("path").and_then(Value::as_str).unwrap_or_default().to_owned();
+    let path = x
+        .get("path")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_owned();
     let relative = x.get("relative").and_then(Value::as_str).map(str::to_owned);
     match find_in(&path, relative.as_deref(), from, search).at {
         Some(at) => {
             let rel = copies.take(&at, PackagedKind::Xref);
-            let abs = rel.split('/').fold(target.to_path_buf(), |p, part| p.join(part));
+            let abs = rel
+                .split('/')
+                .fold(target.to_path_buf(), |p, part| p.join(part));
             x["path"] = Value::String(abs.display().to_string());
             x["relative"] = Value::String(rel);
         }
@@ -491,7 +556,10 @@ fn walk_entity(
 ) {
     let at = at.to_owned();
     let raster = e.get("kind").and_then(Value::as_str) == Some("raster");
-    let picture = matches!(e.get("kind").and_then(Value::as_str), Some("image" | "raster"));
+    let picture = matches!(
+        e.get("kind").and_then(Value::as_str),
+        Some("image" | "raster")
+    );
     let link = |slot: &mut Value,
                 kind: PackagedKind,
                 sidecars: bool,
@@ -501,7 +569,11 @@ fn walk_entity(
         let Some(kept) = slot.as_str().map(str::to_owned) else {
             return;
         };
-        let found = if looks.is_empty() { place(&kept, from) } else { find_in(&kept, None, from, looks).at };
+        let found = if looks.is_empty() {
+            place(&kept, from)
+        } else {
+            find_in(&kept, None, from, looks).at
+        };
         match found {
             Some(p) if p.is_file() => {
                 let rel = copies.take(&p, kind);
@@ -571,12 +643,13 @@ pub fn write(planned: &Planned) -> Result<(), Refused> {
     let result = (|| {
         fs::create_dir_all(&temp)
             .map_err(|e| fail(format!("{} açılamadı: {e}", temp.display())))?;
-        if !planned.copies.is_empty() {
-            fs::create_dir_all(temp.join(DATA))
-                .map_err(|e| fail(format!("{} açılamadı: {e}", temp.display())))?;
-        }
         for ((from, rel), meant) in planned.copies.iter().zip(&planned.output.files) {
             let to = rel.split('/').fold(temp.clone(), |p, part| p.join(part));
+            // `veri/` and `profiller/`: each folder is made by its first copy.
+            if let Some(folder) = to.parent() {
+                fs::create_dir_all(folder)
+                    .map_err(|e| fail(format!("{} açılamadı: {e}", folder.display())))?;
+            }
             fs::copy(from, &to)
                 .map_err(|e| fail(format!("{} kopyalanamadı: {e}", from.display())))?;
             let (size, sha) = fs::File::open(&to)
@@ -594,9 +667,13 @@ pub fn write(planned: &Planned) -> Result<(), Refused> {
         let manifest = temp.join(MANIFEST);
         fs::write(&manifest, &planned.manifest)
             .map_err(|e| fail(format!("{} yazılamadı: {e}", manifest.display())))?;
-        let back = fs::read(&manifest).map_err(|e| fail(format!("{} geri okunamadı: {e}", manifest.display())))?;
+        let back = fs::read(&manifest)
+            .map_err(|e| fail(format!("{} geri okunamadı: {e}", manifest.display())))?;
         if sha256_hex(&back) != planned.output.manifest_sha256 {
-            return Err(fail(format!("{} yazılırken değişti; paket yapılmadı.", manifest.display())));
+            return Err(fail(format!(
+                "{} yazılırken değişti; paket yapılmadı.",
+                manifest.display()
+            )));
         }
         if target.is_dir() {
             fs::remove_dir(target)

@@ -196,6 +196,10 @@ Liste:
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
 - [ ] `CBS-03` GeoPackage (ADR 0502, 17 Ekim): web'de gerekenler: `file.import.gpkg` ve `file.export.gpkg` (web'de SQLite
   yok: sqlite-wasm ya da sunucu yolu kararı), içe aktarma penceresi; TS türleri üretildi.
+- [ ] `CBS-03` GeoPackage karo profili (ADR 0556, 20 Ekim): web'de gerekenler: `cad.rasters.gpkgread` ve `cad.rasters.gpkgwrite`
+  (web'de SQLite yok: sqlite-wasm ya da sunucu yolu kararı; `fixtures/commands/v1/cad.rasters.gpkgread.json` ve `.gpkgwrite.json`),
+  PNG yazıcısı (`png::encode`'un WASM bağlayıcısı), GeoPackage karolarını oku ve Rasteri GeoPackage karosu yaz pencereleri; TS
+  türleri üretildi.
 - [ ] `CBS-01/02/11/36` bağlı katman (ADR 0503, 17 Ekim): web'de gerekenler: `cad.sources.describe`, `.edit`, `.sync`
   işleyicileri (web'de SQLite ve dosya yazma yok: sunucu yolu ya da File System Access kararı), `.kcad` şema 74'ün
   `sources`'ı (`io/kcad.ts`), Katmanlar'da rozet ve Kaynak ▸; TS türleri üretildi. ADR 0504: `link`'in `reproject`'i ve
@@ -232,6 +236,10 @@ Liste:
   `copyFile` adımı web'in oynatıcısında, Kaynakla uzlaştır penceresi.
 - [ ] `CBS-34` veri profilleri (ADR 0541, 20 Ekim): web'de gerekenler: `cad.profiles.apply` ve `.check`'in işleyicileri (ya da
   WASM), Veri profili penceresi, `catalog/v1/profiles/`'ın web'in paketine girmesi; profil verisi ve kurallar ortaktır.
+- [ ] `CBS-34` kurumun profili (ADR 0558, 20 Ekim): web'de gerekenler: `cad.profiles.import`, `.list` ve `.migrate`'in işleyicileri
+  (profil dosyası tarayıcıda proje klasörü yok: projenin profilleri projeye gömülü ya da IndexedDB'de olmalı), `apply` ve `check`'in
+  `mapping` girdisi, Veri profili penceresinin profil ve eşleme seçicisi, İçe aktar…, Verinin sürümü ve Veriyi taşı; profil, eşleme ve
+  göç kuralları ortaktır (`kentos_commands::cad_profile_files`), ortak durumların `copyFile`'ı klasör açar.
 - [ ] `CBS-38` tek çözücü (ADR 0550, 20 Ekim): web'de gerekenler: Veri girişi için olay süzmesinin (kapsam dışı kayıt silme olarak
   gelir) ve çakışmada 404'ün istemci tarafı, saklı kopya reddinin iletisi, `reach_changed` iş kodu ve Projeyi paylaş'ın Kişiler notu
   (`people::COPIES`); `redact` işaretinin son yayın kuralı web'in form tasarımcısında; sunucu ve çözücü ortaktır.
@@ -2010,6 +2018,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   dışa aktarma; QGIS 4.2.3'ün dosyası GDAL'ın okuduğu gibi okunur, KentOS'unki QGIS'te açılır ve GDAL'ın
   doğrulayıcısından geçer; 23 ortak durum. Dosyada yerinde düzenleme ADR 0503'le geldi. Kalan: raster ve ilişki
   profilleri. — **17 Ekim, [ADR 0502](docs/adr/0502-geopackage.md).**
+- [x] `CBS-03` GeoPackage karo (raster) profili: `kentos-geopackage`'ın `tiles` modülü (karo matrisi kümeleri, karolar, tek işlemde
+  piramit yazma), `png::encode`, `cad.rasters.gpkgread` (bir düzeyin penceresi GDAL'ın yuvarlamasıyla tek GeoTIFF, isteğe bağlı
+  rasterin katmanı; PNG karolar, eksik karo saydam) ve `cad.rasters.gpkgwrite` (rasterin 256 × 256 PNG piramidi, 2 × 2 ortalamasıyla
+  kaba düzeyler, yeni dosya ya da var olana tablo) (Python, MCP; 82 ortak durum GDAL'ın GeoPackage sürücüsüyle), masaüstünde
+  iki pencere; yazılan GeoPackage GDAL'ın doğrulayıcısından geçer, GDAL ve QGIS 4.2 aynı pikselleri okur. Kalan: canlı karo kaynağı,
+  JPEG ve WebP karolar, yükseklik karoları, şerit şerit okuma. — **20 Ekim, [ADR 0556](docs/adr/0556-geopackage-tiles.md).**
 - [ ] `CBS-01`, `CBS-02`, `CBS-11`, `CBS-36` bağlı katman (GeoPackage dilimi): projenin `sources`'ı (`.kcad` şema 74; dosyanın
   SHA-256'sı ve katmanın özeti), `cad.sources.describe`, `.edit` (bağla, çöz, yeniden bağla) ve `.sync` (yaz: tek SQLite
   işleminde ekle, güncelle, sil, sütun ekle; oku: tek geri alma adımı), `source_changed` ve `pending_changes` çakışmaları;
@@ -2096,6 +2110,15 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   penceresi. Kalan: kurumun profilinin içe alınması ve sürüm göçü, kurum eşlemeleri, adres normalizasyonu ve yinelenen adres kodunun
   Adres sekmesinde gösterilmesi, ifraz, tevhit, hisse ve PlanGML, gerçek kullanıcılarla günlük kullanım kabulü (CBS-40).
   — **20 Ekim, [ADR 0541](docs/adr/0541-data-profiles.md).**
+- [ ] `CBS-34` veri profilleri (2. dilim): kurumun kendi profili. Profil ve eşleme çizimin yanındaki `profiller` klasöründe dosya
+  (`<ad>.profil.json`, `<ad>.eslem.json`); `DataProfile.release` ve `migrations` (sürümden sonrakine adımlar: katman ve alan
+  adı, alan türü, değer yeniden kodlama ve bölme, kodu kullanımdan kaldırma); `cad.profiles.import` (dosya ya da kendisi, biçim ve
+  sürüm denetimi, sürüm ve ad kuralları, geçici adla yazıp geri okuma), `cad.profiles.list`, `cad.profiles.migrate` (planı, tek geri
+  alma adımı “Profil göçü”, uymayan değerler değer değer ve nesne kimlikleriyle; katman adları geri alınmaz) ve `apply` ile `check`'in
+  `mapping`ı (kurumun katman yolu, alan adı ve kodlarıyla; hiçbir ad kendiliğinden değişmez); nesnelerin değerleri alanın adının
+  altında okunur. Masaüstünde Veri profili penceresinde profil ve eşleme seçici, İçe aktar…, göç. 100 000 ağaçta göçün planı 0,59 s,
+  yazması 0,52 s. Paketle `profiller/` dosyalarını bayt bayt taşır (21 Ekim). Kalan: profil dosyalarının `.kcad`'de taşınması, göçün
+  eşlemeyle çalışması, değer listesi kimliği değiştirme, adres normalizasyonu. — **20 Ekim, [ADR 0558](docs/adr/0558-institution-profile-import-migration-mapping.md).**
 - [ ] `CBS-38` yetki kapsamı (dilim 2): tek çözücü `kentos_forms::reach` (çağıran sınıfı, alan düzeyi gizli/işaretli/açık, kayıt
   sorgusu, kopya kuralı, damga; 16 ortak durum bağımsız Python başvurusundan). Sunucuda Veri girişinin sayısı ve sınırı, olayları
   (kapsam dışı kayıt sürümsüz silme), çakışması (404), formun liste değerleri ve geçmiş sayıları; bütün formları kaldırılmış katman

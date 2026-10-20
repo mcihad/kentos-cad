@@ -1,0 +1,87 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "İlişkiler tek başına",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis",
+    "relations": [
+      {
+        "id": "bina-ust",
+        "name": "Ana bina",
+        "parent": "bina",
+        "child": "bina",
+        "field": "Not",
+        "onDelete": "cascade"
+      }
+    ]
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+        {
+          "name": "Not",
+          "kind": "text",
+          "length": 500
+        }
+      ]
+    }
+  ],
+  "activeLayer": "bina",
+  "uids": [
+    "0192f5a1-25a0-7000-8000-000000000213"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+        "Not": "Çatı arası ayrıca bakılmalı."
+      },
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 12.0,
+          "y": 0.0
+        },
+        {
+          "x": 12.0,
+          "y": 9.0
+        },
+        {
+          "x": 0.0,
+          "y": 9.0
+        }
+      ]
+    }
+  ]
+}

@@ -340,3 +340,103 @@ pub fn decode(bytes: &[u8]) -> Result<Png, RasterError> {
 pub fn sample_of(p: &Png) -> RasterSample {
     p.samples.kind()
 }
+
+/// The CRC-32 of a PNG chunk (the type and the data).
+fn crc32(parts: &[&[u8]]) -> u32 {
+    let mut table = [0u32; 256];
+    for (n, slot) in table.iter_mut().enumerate() {
+        let mut c = n as u32;
+        for _ in 0..8 {
+            c = if c & 1 == 1 { 0xEDB8_8320 ^ (c >> 1) } else { c >> 1 };
+        }
+        *slot = c;
+    }
+    let mut crc = 0xFFFF_FFFFu32;
+    for part in parts {
+        for &b in *part {
+            crc = table[((crc ^ u32::from(b)) & 0xFF) as usize] ^ (crc >> 8);
+        }
+    }
+    crc ^ 0xFFFF_FFFF
+}
+
+fn chunk(out: &mut Vec<u8>, kind: &[u8; 4], data: &[u8]) {
+    out.extend_from_slice(&(data.len() as u32).to_be_bytes());
+    out.extend_from_slice(kind);
+    out.extend_from_slice(data);
+    out.extend_from_slice(&crc32(&[kind, data]).to_be_bytes());
+}
+
+/// A PNG of 8-bit samples (docs/adr/0556): `bands` 1 is grey, 2 grey with alpha, 3 RGB, 4 RGBA; `samples` are the
+/// pixels row by row, bands interleaved. Rows are written without a filter and Deflate-coded by `level` (1 fast … 9
+/// small); the file is the same for the same samples.
+pub fn encode(
+    width: u32,
+    height: u32,
+    bands: u32,
+    samples: &[u8],
+    level: u8,
+) -> Result<Vec<u8>, RasterError> {
+    let color_type = match bands {
+        1 => 0u8,
+        2 => 4,
+        3 => 2,
+        4 => 6,
+        _ => return Err(RasterError::new("PNG 1, 2, 3 ya da 4 bantlı yazılır.")),
+    };
+    let stride = width as usize * bands as usize;
+    if width == 0 || height == 0 || samples.len() != stride * height as usize {
+        return Err(RasterError::new("PNG'nin örnekleri boyutuna uymuyor."));
+    }
+    let mut raw = Vec::with_capacity((stride + 1) * height as usize);
+    for row in samples.chunks_exact(stride) {
+        raw.push(0);
+        raw.extend_from_slice(row);
+    }
+    let mut out = vec![0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A];
+    let mut ihdr = Vec::with_capacity(13);
+    ihdr.extend_from_slice(&width.to_be_bytes());
+    ihdr.extend_from_slice(&height.to_be_bytes());
+    ihdr.extend_from_slice(&[8, color_type, 0, 0, 0]);
+    chunk(&mut out, b"IHDR", &ihdr);
+    chunk(&mut out, b"IDAT", &super::write::code(&raw, level));
+    chunk(&mut out, b"IEND", &[]);
+    Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn encoded_pngs_decode_to_the_same_pixels() {
+        let rgba: Vec<u8> = (0..4 * 3 * 4).map(|i| (i * 7 % 256) as u8).collect();
+        let p = decode(&encode(4, 3, 4, &rgba, 6).unwrap()).unwrap();
+        assert_eq!((p.width, p.height, p.bands), (4, 3, 4));
+        assert_eq!(p.samples, Samples::U8(rgba));
+        let rgb: Vec<u8> = (0..5 * 2 * 3).map(|i| (i * 11 % 256) as u8).collect();
+        let p = decode(&encode(5, 2, 3, &rgb, 1).unwrap()).unwrap();
+        assert_eq!((p.bands, p.samples), (3, Samples::U8(rgb)));
+        let grey: Vec<u8> = (0..6).map(|i| i * 40).collect();
+        let p = decode(&encode(3, 2, 1, &grey, 9).unwrap()).unwrap();
+        assert_eq!((p.bands, p.samples), (1, Samples::U8(grey)));
+        // Grey with alpha reads back as RGBA (the decoder's rule).
+        let la = vec![10, 255, 20, 0];
+        let p = decode(&encode(2, 1, 2, &la, 6).unwrap()).unwrap();
+        assert_eq!(p.samples, Samples::U8(vec![10, 10, 10, 255, 20, 20, 20, 0]));
+    }
+
+    #[test]
+    fn the_same_pixels_make_the_same_file_and_bad_input_is_refused() {
+        let px = vec![1u8, 2, 3, 4];
+        assert_eq!(encode(2, 2, 1, &px, 6).unwrap(), encode(2, 2, 1, &px, 6).unwrap());
+        assert!(encode(2, 2, 1, &px[..3], 6).is_err());
+        assert!(encode(2, 2, 5, &px, 6).is_err());
+        assert!(encode(0, 2, 1, &[], 6).is_err());
+    }
+
+    #[test]
+    fn the_crc_of_an_empty_iend_is_the_known_one() {
+        assert_eq!(crc32(&[b"IEND"]), 0xAE42_6082);
+    }
+}

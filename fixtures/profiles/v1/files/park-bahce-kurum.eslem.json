@@ -1,0 +1,18 @@
+{
+  "format": "kentos.profile-mapping",
+  "version": 1,
+  "name": "park-bahce-kurum",
+  "title": "Park ve bahçeler eşlemesi",
+  "profile": "park-bahce",
+  "classes": [
+    {
+      "class": "agac",
+      "fields": [
+        {
+          "profile": "AgacNo",
+          "name": "NO"
+        }
+      ]
+    }
+  ]
+}

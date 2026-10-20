@@ -71,3 +71,26 @@ Bugün 2'den 51'e her şema bu kuralı karşılıyor.
 - `cargo test -p kentos-application --test carriage` (bütün geçerli örneklerin nesneleri ve blokları; bir çöp örnek reddedilir).
 - `.run/py/bin/python -m unittest discover -s python/tests -p "test_carriage.py"`.
 - `cargo test -p kentos-kcad --test all schemas`.
+
+## Ek (21 Ekim 2026): bir proje özelliği tek başına taşınmıyordu
+
+**Kusur.** Yazıcı (`schema_of`) çizimin tuttuğu en eski şemayı yazar; şema 72'nin listesi ayarların `domains`'ini, `relations`'ını ve
+alanın `domain`'ini içermiyordu. Yalnız bunlardan birini taşıyan proje (değer listesine bağlı alanlı ya da ilişkili ama formsuz, alan
+kimliksiz) şema 26 ya da daha eskisiyle yazılıyor, geri okuma denetimi “bilinmeyen alan” diye düşüyor, Kaydet yazamıyordu (örnek:
+`fixtures/profiles/v1/belediye.json`). Biçim değişmedi: okuyucu, spesifikasyon ve bağımsız Python yazıcısı (`kcad_v2_reference.py`)
+bu anahtarları hep şema 72'ye bağlıyordu; yalnız Rust yazıcısı unutmuştu. Bu yüzden şema numarası artmadı, `FORMATS_VERSION` değişmedi.
+
+**Matris neden kaçırdı.** Bekçiler örnek dosyaları bütün olarak okuyor ve yazıcının baytlarını örneğin baytlarıyla karşılaştırıyordu;
+ama hiçbir geçerli örnek bu üç anahtarı başka bir şema 72 özelliğinden (alan kimliği, form) ayrı taşımıyordu: `domains.json` alan
+kimlikleri de taşıyordu, `forms.json` formları. `broken/domains-in-schema-71.kcad` yalnız okuyucunun reddini sınıyordu, yazıcının
+72'yi seçtiğini değil.
+
+**Düzeltme.** Yazıcı bunları 72'nin listesine alır; spesifikasyon (§6, şema 72) listeyi söyler; her biri için tek başına örnek
+(`domains-alone`, `field-domain-alone`, `relations-alone`, `field-max-exclusive`, bağımsız yazıcıyla, şema 71'deki reddiyle) eklendi.
+
+**Matris genişledi** (`kentos-kcad` `tests/all/carriage.rs`): ayarların her alanı, belgenin her parçası, katmanın her anahtarı ve
+alanın her anahtarı, örneklerdeki ilk değeriyle **tek başına** en küçük çizime konur, yazılır, geri okunur ve aynı gelmesi beklenir;
+sözleşmenin türleri alan alan adlandırıldığı için (`ProjectSettings`, `DocumentSnapshotV2`, `LayerField` açık ayrıştırılır) yeni bir
+alan adlandırılmadan derlenmez, örneği olmayan düşer. Ayrıca bir proje değer listeleri, ilişkiler ve formlarla birlikte ve profil
+projeleri Kaydet'in yoluyla (`encode_verified`) kaydedilip açılır; Python'da her geçerli örnek açılıp kaydedilip yeniden açılır
+(`test_carriage.py`).
