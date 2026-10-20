@@ -498,6 +498,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-39 — Yerel arka plan işleminin yanına dayanıklı server job ve restore kabulü ekle — P1**
 
+  *Kısmen (20 Ekim 2026; [ADR 0542](../docs/adr/0542-durable-server-jobs.md), [ADR 0547](../docs/adr/0547-server-jobs-limits-and-desktop.md)): kalıcı sunucu işi (kimlik, değişmez girdi, kira ve çit, deneme ve süre sınırı, staged sonuç, iptal) ve sınırları: kurum başına sırada ve çalışan iş sınırı (`quota_exceeded`, eşzamanlı isteklerde de), sonuç boy sınırı (`too_large`), yazılamayan depo (`storage`), biten işin saklama süpürmesi, `kentosd jobs` ölçümleri; iki iş türü (`project.export`, `project.checkpoint`); masaüstünde Sunucu işleri sekmesi (iste, yokla, Durdur, İndir, pencere kapanınca iş kalır). Geçici PostGIS'te ve gerçek kentosd ile sınandı. Kalan: başka iş türleri, CPU/bellek kotası, işçinin ilerleme yazması, önbellek anahtarı, yedek ve geri yükleme tatbikatı.*
+
   **Mevcut:** Native background thread, iptal, raster/service cache ve sunucu outbox var; kalıcı server worker ayrı teslim [K09/K11/K12].
 
   **Yapılacak kalan iş:** Job kimliği, immutable girdi/parametre kaydı, durum/ilerleme, artifact ve yeniden bağlanma sun. Sunucu işinde lease/heartbeat/fencing, retry/idempotency, CPU/RAM/disk kota, timeout ve staged sonuç uygula; pencere/socket kapanması işi belirsiz bırakmasın. Kaynak revision ve izin commit anında tekrar doğrulansın. Cache anahtarı source revision+query+CRS/style/time+yetki kapsamını içersin; cache temizleme kaynak veriyi silmesin. Backup; PostgreSQL, nesne deposu ve bağlı asset sürümlerini tutarlı restore edebilsin. Sağlayıcı/iş/indeks durumları ölçülebilir olsun; log'a veri/parola dökülmesin.
