@@ -11,7 +11,7 @@ export type PackageLeft = { kind: PackagedKind,
  */
 path: string, why: LeftWhy, 
 /**
- * The object (its lasting id), bound layer (its id), external reference (`xref:` and its name) or text style
- * (`stil:` and its name) that keeps it.
+ * The object (its lasting id), bound layer (its id), external reference (`xref:` and its name), text style
+ * (`stil:` and its name) or profile file (`profiller:` and its file name) that keeps it.
  */
 at: string, };

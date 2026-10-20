@@ -1052076,7 +1052076,7 @@
       "id": "file.package",
       "version": 1,
       "title": "Paketle",
-      "summary": "Projeyi kullandığı dosyalarla path klasörüne toplar, başka bilgisayarda açılsın diye: klasörde proje dosyası (name, yoksa çizimin adı) ve veri/ altında bağlı katmanların GeoPackage'larının, bağlı resim ve rasterlerin (dünya dosyalarıyla), nokta bulutu dosyalarının, bağlı tabloların ve eklerin kopyaları; her dosya bir kez, aynı adlılar numaralanarak. Projedeki bağlar kopyalara yazılır: bağlı dosyalar klasöre göre göreli (veri/…), bağlı katmanın kaynağı kopyası (göreli yolu veri/…, klasör nereye giderse açılışta bulunur). Göreli bağlar from klasöründen okunur. Veritabanı tablosu, adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur; path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "summary": "Projeyi kullandığı dosyalarla path klasörüne toplar, başka bilgisayarda açılsın diye: klasörde proje dosyası (name, yoksa çizimin adı) ve veri/ altında bağlı katmanların GeoPackage'larının, bağlı resim ve rasterlerin (dünya dosyalarıyla), nokta bulutu dosyalarının, bağlı tabloların ve eklerin kopyaları; her dosya bir kez, aynı adlılar numaralanarak. Projedeki bağlar kopyalara yazılır: bağlı dosyalar klasöre göre göreli (veri/…), bağlı katmanın kaynağı kopyası (göreli yolu veri/…, klasör nereye giderse açılışta bulunur). Göreli bağlar from klasöründen okunur. Projenin kendi veri profilleri ve eşlemeleri de (from klasöründeki profiller/<ad>.profil.json ve <ad>.eslem.json) paketteki profiller/ altına bayt bayt kopyalanır, proje dosyasının yanında durduğundan komutlar onları orada bulur; okunamayan dosya kopyalanmaz ve package_left söyler (docs/adr/0558). Veritabanı tablosu, adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur; path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
       "aliases": [
         "paketle",
         "package"
@@ -1052158,6 +1052158,11 @@
                 "const": "substituted",
                 "description": "A typeface KentOS does not have (an SHX line font, another family): its texts are drawn in a substitute face.",
                 "type": "string"
+              },
+              {
+                "const": "unreadable",
+                "description": "The file is there and cannot be read (a profile or a mapping the disk does not give): not copied.",
+                "type": "string"
               }
             ]
           },
@@ -1052165,7 +1052170,7 @@
             "description": "A link left as it was.",
             "properties": {
               "at": {
-                "description": "The object (its lasting id), bound layer (its id), external reference (`xref:` and its name) or text style\n(`stil:` and its name) that keeps it.",
+                "description": "The object (its lasting id), bound layer (its id), external reference (`xref:` and its name), text style\n(`stil:` and its name) or profile file (`profiller:` and its file name) that keeps it.",
                 "type": "string"
               },
               "kind": {
@@ -1052204,7 +1052209,7 @@
                 "$ref": "#/$defs/PackagedKind"
               },
               "links": {
-                "description": "How many links point to it.",
+                "description": "How many links point to it (a profile or a mapping is found by its place, not linked: 0).",
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer",
@@ -1052264,6 +1052269,16 @@
               {
                 "const": "font",
                 "description": "A text style's typeface (left out only: KentOS's own faces come with it).",
+                "type": "string"
+              },
+              {
+                "const": "profile",
+                "description": "A data profile of the project, `profiller/<ad>.profil.json` (docs/adr/0558).",
+                "type": "string"
+              },
+              {
+                "const": "mapping",
+                "description": "An institution's mapping of the project, `profiller/<ad>.eslem.json` (docs/adr/0558).",
                 "type": "string"
               }
             ]
@@ -1052373,6 +1052388,11 @@
                 "const": "substituted",
                 "description": "A typeface KentOS does not have (an SHX line font, another family): its texts are drawn in a substitute face.",
                 "type": "string"
+              },
+              {
+                "const": "unreadable",
+                "description": "The file is there and cannot be read (a profile or a mapping the disk does not give): not copied.",
+                "type": "string"
               }
             ]
           },
@@ -1052380,7 +1052400,7 @@
             "description": "A link left as it was.",
             "properties": {
               "at": {
-                "description": "The object (its lasting id), bound layer (its id), external reference (`xref:` and its name) or text style\n(`stil:` and its name) that keeps it.",
+                "description": "The object (its lasting id), bound layer (its id), external reference (`xref:` and its name), text style\n(`stil:` and its name) or profile file (`profiller:` and its file name) that keeps it.",
                 "type": "string"
               },
               "kind": {
@@ -1052419,7 +1052439,7 @@
                 "$ref": "#/$defs/PackagedKind"
               },
               "links": {
-                "description": "How many links point to it.",
+                "description": "How many links point to it (a profile or a mapping is found by its place, not linked: 0).",
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer",
@@ -1052479,6 +1052499,16 @@
               {
                 "const": "font",
                 "description": "A text style's typeface (left out only: KentOS's own faces come with it).",
+                "type": "string"
+              },
+              {
+                "const": "profile",
+                "description": "A data profile of the project, `profiller/<ad>.profil.json` (docs/adr/0558).",
+                "type": "string"
+              },
+              {
+                "const": "mapping",
+                "description": "An institution's mapping of the project, `profiller/<ad>.eslem.json` (docs/adr/0558).",
                 "type": "string"
               }
             ]
