@@ -13056,11 +13056,22 @@
     "mcp": true,
     "server": false
    },
-   "cases": 21,
+   "cases": 31,
    "files": [
     "fixtures/commands/v1/cad.processing.batch.json"
    ],
-   "options": [],
+   "options": [
+    {
+     "key": "onError",
+     "value": "continue",
+     "covered": true
+    },
+    {
+     "key": "onError",
+     "value": "stop",
+     "covered": true
+    }
+   ],
    "kinds": []
   },
   {
@@ -13074,7 +13085,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 85,
+   "cases": 99,
    "files": [
     "fixtures/commands/v1/cad.processing.run.json"
    ],
@@ -13096,6 +13107,11 @@
     },
     {
      "key": "overwrite",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "tables",
      "value": true,
      "covered": true
     }
@@ -14690,7 +14706,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 47,
+   "cases": 56,
    "files": [
     "fixtures/commands/v1/cad.processing.run.json",
     "fixtures/commands/v1/cad.sources.describe.json"
@@ -17708,6 +17724,33 @@
    "kinds": []
   },
   {
+   "id": "file.export.gml",
+   "title": "GML dışa aktar",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 0,
+   "files": [],
+   "options": [
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "schema",
+     "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "file.export.gpkg",
    "title": "GeoPackage dışa aktar",
    "effect": "query",
@@ -17800,6 +17843,73 @@
     {
      "key": "overwrite",
      "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "file.export.xyz",
+   "title": "XYZ dışa aktar",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 0,
+   "files": [],
+   "options": [
+    {
+     "key": "header",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "separator",
+     "value": "comma",
+     "covered": false
+    },
+    {
+     "key": "separator",
+     "value": "semicolon",
+     "covered": false
+    },
+    {
+     "key": "separator",
+     "value": "space",
+     "covered": false
+    },
+    {
+     "key": "separator",
+     "value": "tab",
+     "covered": false
+    },
+    {
+     "key": "vertices",
+     "value": "all",
+     "covered": false
+    },
+    {
+     "key": "vertices",
+     "value": "points",
+     "covered": false
+    },
+    {
+     "key": "withoutZ",
+     "value": "skip",
+     "covered": false
+    },
+    {
+     "key": "withoutZ",
+     "value": "zero",
      "covered": false
     }
    ],
@@ -17981,6 +18091,30 @@
    "cases": 23,
    "files": [
     "fixtures/commands/v1/file.import.fgb.json"
+   ],
+   "options": [
+    {
+     "key": "reproject",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "file.import.gml",
+   "title": "GML içe aktar",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 36,
+   "files": [
+    "fixtures/commands/v1/file.import.gml.json"
    ],
    "options": [
     {
@@ -22707,7 +22841,7 @@
    "id": "attributes.calculate",
    "title": "Öznitelik hesapla",
    "cases": 15,
-   "command": 49,
+   "command": 58,
    "options": [
     {
      "key": "empty",
@@ -24028,7 +24162,7 @@
    "id": "geometry.simplify",
    "title": "Sadeleştir",
    "cases": 1,
-   "command": 1,
+   "command": 2,
    "options": []
   },
   {
@@ -25431,7 +25565,7 @@
    "id": "proximity.matrix",
    "title": "Uzaklık matrisi",
    "cases": 4,
-   "command": 4,
+   "command": 6,
    "options": [
     {
      "key": "measure",
@@ -25492,7 +25626,7 @@
    "id": "proximity.neighbors",
    "title": "Komşu alanlar",
    "cases": 1,
-   "command": 1,
+   "command": 2,
    "options": [
     {
      "key": "corners",
@@ -26581,7 +26715,7 @@
    "id": "selection.byExpression",
    "title": "İfadeyle seç",
    "cases": 6,
-   "command": 14,
+   "command": 15,
    "options": [
     {
      "key": "mode",
@@ -26667,7 +26801,7 @@
    "id": "statistics.summary",
    "title": "Özet istatistik",
    "cases": 2,
-   "command": 2,
+   "command": 11,
    "options": []
   },
   {

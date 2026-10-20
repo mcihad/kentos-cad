@@ -2882,10 +2882,12 @@ const ENTRIES: &[Entry] = &[
             "file_exists",
             "file_unwritable",
             "nothing_to_export",
-            // docs/adr/0549: a sink into a GeoPackage that is there.
+            // docs/adr/0549: a file that is there takes tables.
             "file_not_found",
             "import_unreadable",
+            "crs_mismatch",
             "table_exists",
+            "invalid_input",
         ]],
         warnings: &["export_losses"],
         targets: none,
@@ -2897,7 +2899,7 @@ const ENTRIES: &[Entry] = &[
             &["unknown_tool", "invalid_uid", "entity_not_found", "invalid_parameters"],
             &["batch_row_failed"],
         ],
-        warnings: &[],
+        warnings: &["batch_rows_failed"],
         targets: none,
     },
     Entry {

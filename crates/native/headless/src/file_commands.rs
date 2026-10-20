@@ -473,7 +473,7 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
             .into_iter()
             .map(|t| GpkgTableExported {
                 table: t.table,
-                layer: t.layer,
+                layer: t.layer.or(t.output).unwrap_or_default(),
                 rows: t.rows,
                 geometry: t.geometry,
             })

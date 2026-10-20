@@ -130,7 +130,8 @@ pub struct ProcessingRun {
     /// Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    pub sink: Option<RunSink>,    /// The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
+    pub sink: Option<RunSink>,
+    /// The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
     /// folder (then in the project's search paths), a result written beside it. The host gives it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -175,6 +176,11 @@ pub struct RunSink {
     #[serde(default, skip_serializing_if = "is_new")]
     #[cfg_attr(feature = "ts", ts(as = "Option<SinkMode>", optional))]
     pub mode: SinkMode,
+    /// Also write the tool's table outputs (a summary, a report) as attribute tables, each named by its output's
+    /// label, beside the layers' tables (docs/adr/0551 §3). A tool whose result is only a table writes only that.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub tables: bool,
 }
 
 fn is_new(mode: &SinkMode) -> bool {
@@ -217,8 +223,14 @@ pub struct SinkColumn {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SinkTable {
     pub table: String,
-    /// The layer of the copy the rows are the objects of.
-    pub layer: String,
+    /// The layer of the copy the rows are the objects of; none for a table output.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layer: Option<String>,
+    /// The tool's output a table holds (`sink.tables`); none for a layer's table.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub output: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: u32,
     /// The geometry column's type; none for a table of records.
@@ -426,6 +438,25 @@ pub struct ProcessingRecord {
     pub steps: Vec<RecordStep>,
     /// What flowed through the whole, counted when it ended.
     pub total: RecordTotal,
+    /// A batch run with `onError: continue`: the rows that stopped and were taken back, in order (docs/adr/0551 §1).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RecordFailure>>", optional))]
+    pub failed: Vec<RecordFailure>,
+}
+
+/// A row of a batch that stopped and was taken back (docs/adr/0551 §1): which row, why.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordFailure {
+    /// `rows[i]`.
+    pub id: String,
+    pub label: String,
+    /// The refusal's code (`tool_failed`, `invalid_parameters`, …) and its message.
+    pub code: String,
+    pub message: String,
 }
 
 /// A raster a run read or wrote and its grid (docs/adr/0535): where its cells lie, their size and how many, the
@@ -574,6 +605,29 @@ pub struct ProcessingBatch {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
+    /// What happens when a row stops at run time: `stop` (the default) takes the whole batch back, `continue` takes
+    /// back only that row, writes the others and reports it in `failed` (docs/adr/0551 §1).
+    #[serde(default, skip_serializing_if = "is_stop")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<BatchOnError>", optional))]
+    pub on_error: BatchOnError,
+}
+
+fn is_stop(on_error: &BatchOnError) -> bool {
+    *on_error == BatchOnError::Stop
+}
+
+/// What a batch does when a row stops at run time (docs/adr/0551 §1).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum BatchOnError {
+    /// The whole batch is taken back and nothing is written (`batch_row_failed`).
+    #[default]
+    Stop,
+    /// The row that stopped is taken back alone, reported in `failed`; the other rows are written, in one undo step.
+    Continue,
 }
 
 /// A row of a batch as it ran.
@@ -591,6 +645,22 @@ pub struct BatchRowRan {
     pub ran: ProcessingRan,
 }
 
+/// A row of a batch that stopped at run time and was taken back (`onError: continue`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BatchRowFailed {
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub index: u32,
+    pub label: String,
+    /// The refusal's code and message, as the row run alone would have given them.
+    pub code: String,
+    pub message: String,
+}
+
 /// What `cad.processing.batch` did, or with `plan` would do (on a copy of the drawing).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -600,8 +670,12 @@ pub struct BatchRowRan {
 pub struct ProcessingBatched {
     pub tool: String,
     pub summary: String,
-    /// Every row, in order, as it ran.
+    /// Every row that ran, in order, as it ran (with `onError: continue`, the rows that stopped are in `failed`).
     pub rows: Vec<BatchRowRan>,
+    /// With `onError: continue`, the rows that stopped and were taken back: which, why (docs/adr/0551 §1).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BatchRowFailed>>", optional))]
+    pub failed: Vec<BatchRowFailed>,
     /// The undo step's name; none when the drawing did not change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

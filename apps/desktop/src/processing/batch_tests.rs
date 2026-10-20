@@ -170,6 +170,58 @@ fn a_row_that_stops_is_shown_and_the_rows_before_it_are_taken_back() {
     assert!(!app.document.as_ref().expect("open").model.can_undo());
 }
 
+/// Hata olursa: Devam et: the row that stops is shown with its reason, taken back alone; the others are written.
+#[test]
+fn with_continue_the_stopped_row_is_shown_with_its_reason_and_the_others_are_written() {
+    let mut app = app_with(QUERIES);
+    let _ = app.update(Message::Run("processing.run.attributes.calculate"));
+    event(
+        &mut app,
+        Event::Value(
+            "input".into(),
+            json!({ "scope": "layer", "layerId": "parsel" }),
+        ),
+    );
+    event(&mut app, Event::Value("field".into(), json!("Ağaç sayısı")));
+    batch_event(&mut app, batch::Event::Open);
+    assert_eq!(state(&app).table.on_error, kentos_commands::BatchOnError::Stop);
+    batch_event(&mut app, batch::Event::RemoveColumn(0));
+    batch_event(&mut app, batch::Event::AddColumn("value".into()));
+    batch_event(&mut app, batch::Event::AddRow);
+    type_cell(&mut app, 0, 0, "5");
+    type_cell(&mut app, 1, 0, "'çok'");
+    type_cell(&mut app, 2, 0, "7");
+    batch_event(&mut app, batch::Event::OnError(batch::OnError::Continue));
+    batch_event(&mut app, batch::Event::Run);
+    finish(&mut app);
+    let b = state(&app);
+    assert!(
+        matches!(&b.line, Line::Partial(s) if s.contains("1 satır çalışmadı")),
+        "{:?}",
+        b.line
+    );
+    assert!(matches!(b.rows[0], RowState::Ran { .. }), "{:?}", b.rows);
+    assert!(
+        matches!(&b.rows[1], RowState::Failed(m) if m.contains("tam sayı ister")),
+        "{:?}",
+        b.rows
+    );
+    assert!(matches!(b.rows[2], RowState::Ran { .. }));
+    assert_eq!(b.failed.len(), 1);
+    assert_eq!(b.failed[0].0, "Satır 2");
+    assert_eq!(b.record.as_ref().map(|r| r.failed.len()), Some(1));
+    // The two rows that ran stand as one step; the last value is the one left.
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let value = |doc: &kentos_domain::Document| {
+        doc.get(Slot(1))
+            .and_then(|e| e.base().attrs.get("Ağaç sayısı").cloned())
+    };
+    assert_eq!(value(doc).as_deref(), Some("7"));
+    assert_eq!(doc.undo().as_deref(), Some("Toplu: Öznitelik hesapla"));
+    assert!(!doc.can_undo());
+    assert_eq!(value(doc), None);
+}
+
 /// A model run in the window puts its steps, their counts and times in the history.
 #[test]
 fn the_history_keeps_a_models_steps_with_their_counts() {
@@ -205,7 +257,7 @@ fn screens() {
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let only = std::env::var("KENTOS_SHOTS_ONLY").ok();
-    let views = ["form", "tablo", "sonuc", "hata", "gecmis"];
+    let views = ["form", "tablo", "sonuc", "hata", "devam", "gecmis"];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
             for name in views {
@@ -215,7 +267,11 @@ fn screens() {
                 {
                     continue;
                 }
-                let mut app = app_with(if name == "hata" { QUERIES } else { PARCELS });
+                let mut app = app_with(if matches!(name, "hata" | "devam") {
+                    QUERIES
+                } else {
+                    PARCELS
+                });
                 let _ = app
                     .settings
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
@@ -251,7 +307,7 @@ fn screens() {
                         batch_event(&mut app, batch::Event::Run);
                         finish(&mut app);
                     }
-                    "hata" => {
+                    "hata" | "devam" => {
                         let _ = app.update(Message::Run("processing.run.attributes.calculate"));
                         event(
                             &mut app,
@@ -268,6 +324,14 @@ fn screens() {
                         type_cell(&mut app, 0, 0, "5");
                         type_cell(&mut app, 1, 0, "12");
                         type_cell(&mut app, 2, 0, "'çok'");
+                        if name == "devam" {
+                            batch_event(&mut app, batch::Event::AddRow);
+                            type_cell(&mut app, 3, 0, "9");
+                            batch_event(
+                                &mut app,
+                                batch::Event::OnError(batch::OnError::Continue),
+                            );
+                        }
                         batch_event(&mut app, batch::Event::Run);
                         finish(&mut app);
                     }

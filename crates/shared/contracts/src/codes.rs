@@ -1220,6 +1220,8 @@ codes! {
     TOO_MANY_ROWS = "too_many_rows", Failed, false, "Toplu çalıştırma en çok 500 satır alır; satırları bölüp ayrı çağırın.";
     /// A row of a batch ran and stopped: nothing of the batch is written (docs/adr/0529).
     BATCH_ROW_FAILED = "batch_row_failed", Failed, false, "Toplu çalıştırmanın bir satırı çalışıp durdu ya da değerleri önceki satırların yazdıklarına artık uymuyor; önceki satırların sonuçları geri alındı, hiçbir şey yazılmadı. İleti satırı ve nedenini söyler.";
+    /// Rows of a batch with `onError: continue` that stopped and were taken back, the others written (docs/adr/0551 §1).
+    BATCH_ROWS_FAILED = "batch_rows_failed", Warning, false, "Toplu çalıştırmanın bazı satırları çalışıp durdu ve tek tek geri alındı; öteki satırlar yazıldı. Hangi satır ve neden: yanıtın failed listesi.";
     /// Links Paketle did not copy: a missing file, a database's table, an address (docs/adr/0506).
     PACKAGE_LEFT = "package_left", Warning, false, "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı, adres ya da yerine başka yüzle çizilen yazı tipi); bağlar olduğu gibi kaldı.";
     /// A `.shp` path for an export of more than one Shapefile (docs/adr/0514).

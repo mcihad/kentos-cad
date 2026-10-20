@@ -16,4 +16,9 @@ path: string, overwrite?: boolean,
 /**
  * New file (the default), tables added to a file that is there, or tables added and same-named ones replaced.
  */
-mode?: SinkMode, };
+mode?: SinkMode, 
+/**
+ * Also write the tool's table outputs (a summary, a report) as attribute tables, each named by its output's
+ * label, beside the layers' tables (docs/adr/0551 §3). A tool whose result is only a table writes only that.
+ */
+tables?: boolean, };

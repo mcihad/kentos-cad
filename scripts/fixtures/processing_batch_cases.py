@@ -112,6 +112,169 @@ def refusal(name: str, input: dict, code: str, message: str, path: str, setup: d
     return case
 
 
+TREES = "Ağaç sayısı"
+
+
+def tree_message(value: str) -> str:
+    """What the parcel layer's whole-number field says to a value that is no number (the same refusal as the case of
+    a stop between rows)."""
+    return f"Öznitelik yazılamadı (#1): “{TREES}” alanı tam sayı ister; “{value}” verildi. Rakamlarla, ondalıksız yazın."
+
+
+def continue_cases(tool: str, calc_label: str, step_name: str, parcels_doc: dict) -> list[dict]:
+    """`onError: continue` (docs/adr/0551 §1): a row that stops at run time is taken back alone, the others are written
+    in one undo step, and the stopped rows are told in `failed`, in the record and as a warning. Over queries.kcad, whose
+    parcel layer has four objects and a whole-number field “Ağaç sayısı”: a row whose value is no number stops."""
+    q = pcc.document("queries.kcad")
+    parcels = [e for e in q["entities"] if e["layerId"] == "parsel"]
+    uids = [uid(e["id"]) for e in parcels]
+    n = len(parcels)
+
+    def ran(label: str) -> dict:
+        return {"tool": tool, "summary": f"{n} nesnede “{TREES}” yazıldı.", "changed": list(uids),
+                "outputs": {"count": n, "changed": list(uids)}, "inputs": PARCEL, "step": calc_label,
+                "record": "$any", "revision": "$any"}
+
+    def row(value: str, label: str | None = None) -> dict:
+        r: dict = {"parameters": {"value": value}}
+        if label:
+            r["label"] = label
+        return r
+
+    base_params = {"input": {"scope": "layer", "layerId": "parsel"}, "field": TREES}
+
+    def value_of(expr: str) -> str:
+        """The text a row's expression gives: a number as written, a quoted word as itself."""
+        return expr.strip("'")
+
+    def case(name: str, values: list[str], *, op: str = "execute", stop: bool = False) -> dict:
+        labels = [f"Satır {i + 1}" for i in range(len(values))]
+        good = [i for i, v in enumerate(values) if not v.startswith("'")]
+        bad = [i for i in range(len(values)) if i not in good]
+        answers = [ran(labels[i]) for i in good]
+        last = next((value_of(values[i]) for i in reversed(good)), None)
+        # The record: the rows that ran as steps, those that stopped as failures; the objects read by each and the
+        # distinct ones written.
+        steps = [pcc.step_of(f"rows[{i}]", tool, labels[i], n, n, ran(labels[i])["summary"]) for i in good]
+        failures = [{"id": f"rows[{i}]", "label": labels[i], "code": "tool_failed",
+                     "message": tree_message(value_of(values[i]))} for i in bad]
+        rec = pcc.record("batch", tool, calc_label, steps=steps, total=(n * len(good), n if good else 0),
+                         inputs=PARCEL if good else (), parameters=base_params)
+        if failures:
+            rec["failed"] = failures
+        out_: dict = {"tool": tool, "summary": f"{len(good)} satır çalıştı: 0 nesne eklendi, {n * len(good)} nesne değişti."}
+        out_["summary"] += (f" {len(bad)} satır çalışmadı ve geri alındı ({', '.join(labels[i] for i in bad)}).")
+        out_["rows"] = [{"index": i, "label": labels[i], "ran": ran(labels[i])} for i in good]
+        out_["failed"] = [{"index": i, "label": labels[i], "code": "tool_failed", "message": tree_message(value_of(values[i]))}
+                          for i in bad]
+        if good:
+            out_["step"] = step_name
+        out_["record"] = rec
+        out_["revision"] = "$current"
+        names = ", ".join(labels[i] for i in bad)
+        rest = "öteki satırlar yazıldı" if good else "hiçbir satır yazılmadı"
+        warnings = [{"code": "batch_rows_failed", "path": "rows",
+                     "message": f"{len(bad)} satır çalışıp durdu ve tek tek geri alındı ({names}); {rest}."}]
+        before = {str(e["id"]): {"attrs": e["attrs"]} for e in parcels}
+        after = {str(e["id"]): {"attrs": {**e["attrs"], TREES: last}} for e in parcels} if good else before
+        step = {
+            "op": op,
+            "input": {"tool": tool, "parameters": base_params, "onError": "stop" if stop else "continue",
+                      "rows": [row(v) for v in values]},
+            "result": {"status": "completed", "output": out_, "warnings": warnings},
+            "expect": ({"canUndo": bool(good) and op == "execute", "revision": "changed" if good and op == "execute" else "same",
+                        "fields": after if op == "execute" else before}),
+        }
+        steps = [step]
+        if good and op == "execute":
+            steps.append({"op": "undo", "returns": step_name,
+                          "expect": {"canUndo": False, "canRedo": True, "revision": "changed", "fields": before}})
+        return {"name": name, "setup": q, "steps": steps}
+
+    out: list[dict] = []
+    out.append(case("onError continue: ortadaki satır (“çok”) durur, tek başına geri alınır; öteki iki satır yazılır, tek geri alma adımı, failed ve uyarı",
+                    ["5", "'çok'", "7"]))
+    out.append(case("onError continue, plan: aynı cevap bir kopyada, çizim değişmez", ["5", "'çok'", "7"], op="plan"))
+    out.append(case("onError continue: ilk satır durur, sonrakiler çalışır (son değer kalır)", ["'çok'", "5", "6"]))
+    out.append(case("onError continue: son satır durur, öncekiler yazılır", ["5", "6", "'çok'"]))
+    out.append(case("onError continue: iki satır durur (her birinin kendi nedeni), biri yazılır",
+                    ["'bir'", "9", "'iki'"]))
+    out.append(case("onError continue: bütün satırlar durur: hiçbir şey yazılmaz, adım yok, çizim değişmez",
+                    ["'a'", "'b'", "'c'"]))
+    # Nothing stops: continue is the same batch as stop (no failed list, no warning).
+    all_good = {
+        "tool": tool, "summary": f"3 satır çalıştı: 0 nesne eklendi, {3 * n} nesne değişti.",
+        "rows": [{"index": i, "label": f"Satır {i + 1}", "ran": ran("")} for i in range(3)],
+        "step": step_name,
+        "record": batch_record(tool, calc_label, [(f"Satır {i + 1}", n, n, ran("")["summary"]) for i in range(3)],
+                               total=(3 * n, n), inputs=PARCEL, parameters=base_params),
+        "revision": "$current",
+    }
+    out.append({
+        "name": "onError continue, hiçbir satır durmazsa: stop ile aynı cevap (failed yok, uyarı yok)",
+        "setup": q,
+        "steps": [{"op": "execute", "input": {"tool": tool, "parameters": base_params, "onError": "continue",
+                                                 "rows": [row("5"), row("6"), row("7")]},
+                   "result": {"status": "completed", "output": all_good, "warnings": []},
+                   "expect": {"canUndo": True, "revision": "changed",
+                              "fields": {str(e["id"]): {"attrs": {**e["attrs"], TREES: "7"}} for e in parcels}}}],
+    })
+    # Explicit stop is the default: the same refusal as the case of a stop at run time.
+    out.append({
+        "name": "onError stop açıkça verilince varsayılanla aynı: batch_row_failed, hiçbir şey yazılmaz",
+        "setup": q,
+        "steps": [{"op": "execute",
+                   "input": {"tool": tool, "parameters": base_params, "onError": "stop",
+                             "rows": [row("5"), row("'çok'"), row("7")]},
+                   "result": failed("batch_row_failed",
+                                    f"Satır 2 çalışmadı: {tree_message('çok')} Toplu işin hiçbir sonucu yazılmadı.", "rows[1]"),
+                   "expect": {"canUndo": False, "dirty": False, "revision": "same",
+                              "fields": {str(e["id"]): {"attrs": e["attrs"]} for e in parcels}}}],
+    })
+    # A model row that stops in the middle: its first step's objects and layer go back with it, here for both rows.
+    doc = pcc.document("parcels.kcad")
+    doc["layers"].append({
+        "id": "islem-kenar-olculeri", "name": "Kenar ölçüleri", "type": "layer", "visible": True, "locked": False,
+        "expanded": True, "style": {"color": "fg-dim", "lineType": "continuous", "lineWeight": 0.18}, "children": [],
+        "fields": [{"name": "Uzunluk (m)", "kind": "integer"}],
+    })
+    mid = ("2. adım (Kenar uzunluklarını yaz) çalışmadı: Öznitelik yazılamadı (yeni nesne): “Uzunluk (m)” alanı tam sayı "
+           "ister; “20.000” verildi. Rakamlarla, ondalıksız yazın. Önceki adımların sonuçları geri alındı.")
+    model_rec = batch_record(pcc.PARCEL_MODEL, "Parsel ölçü yazıları", [], total=(0, 0),
+                             selection=[uid(1), uid(2)], inputs=[], definition=True, parameters={})
+    model_rec["failed"] = [{"id": f"rows[{i}]", "label": f"Satır {i + 1}", "code": "tool_failed", "message": mid}
+                           for i in range(2)]
+    out.append({
+        "name": "onError continue, model satırları: ortadaki adımda duran her satırın ilk adımı katmanıyla geri alınır, hiçbir şey yazılmaz",
+        "setup": doc,
+        "steps": [{
+            "op": "execute",
+            "input": {"tool": pcc.PARCEL_MODEL, "selection": [uid(1), uid(2)], "onError": "continue",
+                      "rows": [{"parameters": {"prefix": "A"}}, {"parameters": {"prefix": "B"}}]},
+            "result": {"status": "completed", "output": {
+                "tool": pcc.PARCEL_MODEL,
+                "summary": "0 satır çalıştı: 0 nesne eklendi, 0 nesne değişti. 2 satır çalışmadı ve geri alındı (Satır 1, Satır 2).",
+                "rows": [],
+                "failed": [{"index": i, "label": f"Satır {i + 1}", "code": "tool_failed", "message": mid} for i in range(2)],
+                "record": model_rec, "revision": "$current"},
+                "warnings": [{"code": "batch_rows_failed", "path": "rows",
+                              "message": "2 satır çalışıp durdu ve tek tek geri alındı (Satır 1, Satır 2); hiçbir satır yazılmadı."}]},
+            "expect": {"canUndo": False, "dirty": False, "revision": "same", "ids": [e["id"] for e in doc["entities"]]},
+        }],
+    })
+    # Refusals before anything runs stay refusals with continue.
+    expr = pcc.run_case(CASES["refuse-expression"], "parcels.kcad")["steps"][0]["result"]["error"]
+    out.append({
+        "name": "onError continue: çalışmadan önceki ret yine ret (ikinci satırın yarım ifadesi), hiçbir şey yazılmaz",
+        "steps": [{"op": "execute",
+                   "input": {"tool": tool, "selection": [uid(1)], "onError": "continue",
+                             "rows": [{}, {"parameters": {"value": "metin($alan,"}}]},
+                   "result": failed("invalid_parameters", expr["message"], "rows[1].parameters.value"),
+                   "expect": UNCHANGED}],
+    })
+    return out
+
+
 def build() -> list[dict]:
     out: list[dict] = []
     area, geom, label = "calculate-area", "calculate-geometry-values", "calculate-label"
@@ -273,6 +436,8 @@ def build() -> list[dict]:
             "expect": {"canUndo": False, "dirty": False, "revision": "same", "ids": [e["id"] for e in doc["entities"]]},
         }],
     })
+
+    out += continue_cases(tool, calc_label, step_name, doc)
 
     # 11. Refusals before anything runs, in order; a row's path is taken into the row.
     base = {"tool": tool, "selection": [uid(1)]}

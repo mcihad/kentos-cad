@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    BatchOnError,
+    BatchOnErrorName,
     BatchRow,
     ProcessingBatch,
     ProcessingBatched,
@@ -33,17 +35,23 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
     rows[i].parameters satırın kendi değerleri onların üstüne gelir (örnek: aynı araç
     birkaç girdi katmanına ya da birkaç tampon uzaklığına); selection ve view her satıra
     aynen verilir. Satırlar sırayla çalışır, her biri kendinden öncekilerin yazdığını
-    görür. Bütün toplu iş tek geri alma adımıdır (adı “Toplu: <araç>”) ve ya hep ya hiç
-    yazılır: bir satır çalışıp dururlarsa ya da satırlar arasında durdurulursa (iş
-    olarak çalışırken) önceki satırların sonuçları geri alınır, hiçbir şey yazılmaz. En
-    çok 500 satır. Retler sırayla: tools_unavailable, empty_batch, too_many_rows, sonra
-    her satır için cad.processing.run'ın retleri (unknown_tool, invalid_uid,
-    entity_not_found, invalid_parameters), yolu rows[i]. ile başlar; çalışırken
-    batch_row_failed (satır çalıştı ve durdu ya da değerleri önceki satırların
-    yazdıklarına artık uymuyor; ileti satırı söyler). Cevap her satırın
-    cad.processing.run cevabı (kendi kaydıyla), toplu işin özeti ve kaydı (kind batch,
-    adımları satırlar) ve adımın adıdır. plan aynısını çizimin okuma kopyasında
-    çalıştırır, çizim değişmez; sink bu komutta yoktur.
+    görür. Bütün toplu iş tek geri alma adımıdır (adı “Toplu: <araç>”) ve varsayılan
+    onError: stop ile ya hep ya hiç yazılır: bir satır çalışıp dururlarsa ya da
+    durdurulursa (iş olarak çalışırken: satırlar arasında ve çalışan aracın içinde)
+    önceki satırların sonuçları geri alınır, hiçbir şey yazılmaz. onError: continue ile
+    çalışırken duran satır tek başına geri alınır (modelin önceki adımlarını da), öteki
+    satırlar yazılır, yine tek adımda; duran satırlar cevabın failed listesinde (index,
+    label, code, message) ve kaydın failed'ında, batch_rows_failed uyarısıyla söylenir;
+    bütün satırlar durursa hiçbir şey yazılmaz, adım yoktur. Durdurma (iptal) hiçbir
+    kipte satır hatası değildir: bütün toplu iş geri alınır. En çok 500 satır. Retler
+    sırayla: tools_unavailable, empty_batch, too_many_rows, sonra her satır için
+    cad.processing.run'ın retleri (unknown_tool, invalid_uid, entity_not_found,
+    invalid_parameters), yolu rows[i]. ile başlar; çalışırken batch_row_failed (onError:
+    stop: satır çalıştı ve durdu ya da değerleri önceki satırların yazdıklarına artık
+    uymuyor; ileti satırı söyler); çalıştırmadan önceki retler onError: continue ile de
+    ret kalır. Cevap her satırın cad.processing.run cevabı (kendi kaydıyla), toplu işin
+    özeti ve kaydı (kind batch, adımları satırlar) ve adımın adıdır. plan aynısını
+    çizimin okuma kopyasında çalıştırır, çizim değişmez; sink bu komutta yoktur.
     """
     __slots__ = ()
     id = "cad.processing.batch"
@@ -62,6 +70,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         tool: str,
         rows: Sequence[BatchRow],
         drawing: str | None | Unset = UNSET,
+        on_error: BatchOnError | BatchOnErrorName | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
@@ -75,16 +84,23 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         değerleri onların üstüne gelir (örnek: aynı araç birkaç girdi katmanına ya da birkaç
         tampon uzaklığına); selection ve view her satıra aynen verilir. Satırlar sırayla
         çalışır, her biri kendinden öncekilerin yazdığını görür. Bütün toplu iş tek geri
-        alma adımıdır (adı “Toplu: <araç>”) ve ya hep ya hiç yazılır: bir satır çalışıp
-        dururlarsa ya da satırlar arasında durdurulursa (iş olarak çalışırken) önceki
-        satırların sonuçları geri alınır, hiçbir şey yazılmaz. En çok 500 satır. Retler
-        sırayla: tools_unavailable, empty_batch, too_many_rows, sonra her satır için
-        cad.processing.run'ın retleri (unknown_tool, invalid_uid, entity_not_found,
-        invalid_parameters), yolu rows[i]. ile başlar; çalışırken batch_row_failed (satır
-        çalıştı ve durdu ya da değerleri önceki satırların yazdıklarına artık uymuyor; ileti
-        satırı söyler). Cevap her satırın cad.processing.run cevabı (kendi kaydıyla), toplu
-        işin özeti ve kaydı (kind batch, adımları satırlar) ve adımın adıdır. plan aynısını
-        çizimin okuma kopyasında çalıştırır, çizim değişmez; sink bu komutta yoktur.
+        alma adımıdır (adı “Toplu: <araç>”) ve varsayılan onError: stop ile ya hep ya hiç
+        yazılır: bir satır çalışıp dururlarsa ya da durdurulursa (iş olarak çalışırken:
+        satırlar arasında ve çalışan aracın içinde) önceki satırların sonuçları geri alınır,
+        hiçbir şey yazılmaz. onError: continue ile çalışırken duran satır tek başına geri
+        alınır (modelin önceki adımlarını da), öteki satırlar yazılır, yine tek adımda;
+        duran satırlar cevabın failed listesinde (index, label, code, message) ve kaydın
+        failed'ında, batch_rows_failed uyarısıyla söylenir; bütün satırlar durursa hiçbir
+        şey yazılmaz, adım yoktur. Durdurma (iptal) hiçbir kipte satır hatası değildir:
+        bütün toplu iş geri alınır. En çok 500 satır. Retler sırayla: tools_unavailable,
+        empty_batch, too_many_rows, sonra her satır için cad.processing.run'ın retleri
+        (unknown_tool, invalid_uid, entity_not_found, invalid_parameters), yolu rows[i]. ile
+        başlar; çalışırken batch_row_failed (onError: stop: satır çalıştı ve durdu ya da
+        değerleri önceki satırların yazdıklarına artık uymuyor; ileti satırı söyler);
+        çalıştırmadan önceki retler onError: continue ile de ret kalır. Cevap her satırın
+        cad.processing.run cevabı (kendi kaydıyla), toplu işin özeti ve kaydı (kind batch,
+        adımları satırlar) ve adımın adıdır. plan aynısını çizimin okuma kopyasında
+        çalıştırır, çizim değişmez; sink bu komutta yoktur.
 
         Args:
             doc: The drawing it works on.
@@ -92,6 +108,8 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             rows:
             drawing: As `cad.processing.run`'s: the open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
                 folder (then in the project's search paths), a result written beside it. The host gives it.
+            on_error: What happens when a row stops at run time: `stop` (the default) takes the whole batch back, `continue` takes
+                back only that row, writes the others and reports it in `failed` (docs/adr/0551 §1).
             parameters: The values every row takes unless it gives its own.
             selection: As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.
             view: Unit: length.
@@ -111,6 +129,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             tool=tool,
             rows=list(rows),
             drawing=drawing,
+            on_error=on_error,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             view=_opt(view, lambda x: list(x)),
@@ -124,6 +143,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         tool: str,
         rows: Sequence[BatchRow],
         drawing: str | None | Unset = UNSET,
+        on_error: BatchOnError | BatchOnErrorName | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
@@ -135,6 +155,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             tool=tool,
             rows=list(rows),
             drawing=drawing,
+            on_error=on_error,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             view=_opt(view, lambda x: list(x)),
@@ -148,6 +169,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         tool: str,
         rows: Sequence[BatchRow],
         drawing: str | None | Unset = UNSET,
+        on_error: BatchOnError | BatchOnErrorName | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
@@ -159,6 +181,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             tool=tool,
             rows=list(rows),
             drawing=drawing,
+            on_error=on_error,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             view=_opt(view, lambda x: list(x)),
@@ -172,6 +195,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         tool: str,
         rows: Sequence[BatchRow],
         drawing: str | None | Unset = UNSET,
+        on_error: BatchOnError | BatchOnErrorName | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
@@ -188,6 +212,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             tool=tool,
             rows=list(rows),
             drawing=drawing,
+            on_error=on_error,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             view=_opt(view, lambda x: list(x)),
@@ -234,19 +259,28 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
     (file_not_found), GeoPackage olarak okunmalı (import_unreadable), çizimin koordinat
     sistemini taşımalı (crs_mismatch), overwrite verilmez (invalid_input). Tablolar tek
     SQLite işleminde, beş bin satırlık parçalarla yazılır; hata ya da durdurma (iş
-    olarak çalışırken) dosyayı olduğu gibi bırakır. Cevabın sinkReport'u kipi, her
-    tablonun satırlarını, geometri türünü, Z ve M'ini, sütunlarının öznitelikleriyle
-    eşlemesini, dosyanın dokunulmayan tablolarını ve parça sayısını söyler; satırların
-    kalıcı kimlikleri kentos_uids tablosundadır. tool “model:” ve modelin kimliği de
-    olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler):
-    modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma
-    adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri
-    alınır, hiçbir şey yazılmaz. Cevabın record'u koşunun kaydıdır (kentos.run-record
-    1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler
-    kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları
-    ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor
-    ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve
-    süresi, kesin toplam. Kayıt proje dosyasına yazılmaz.
+    olarak çalışırken) dosyayı olduğu gibi bırakır. sink.tables aracın tablo çıktılarını
+    (özet, rapor) da birer öznitelik tablosu olarak yazar: adı çıktının etiketi,
+    sütunları başlıkları (metin; hücreler aracın gösterdiği yazı), sinkReport'ta output
+    adıyla görünür; yalnız tablo üreten araç yalnız onu yazar. Cevabın sinkReport'u
+    kipi, her tablonun satırlarını, geometri türünü, Z ve M'ini, sütunlarının
+    öznitelikleriyle eşlemesini, dosyanın dokunulmayan tablolarını ve parça sayısını
+    söyler; satırların kalıcı kimlikleri kentos_uids tablosundadır. tool “model:” ve
+    modelin kimliği de olabilir (model:builtin.parcelSheet; cad.processing.tools'un
+    models'i listeler): modelin girdileri parametreleridir, adımları sırayla çalışır,
+    hepsi tek geri alma adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların
+    sonuçları geri alınır, hiçbir şey yazılmaz. Cevabın record'u koşunun kaydıdır
+    (kentos.run-record 1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar
+    doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince aynı işi yeniden
+    çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü, projenin koordinat
+    sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve süresi, her adımın
+    girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje dosyasına yazılmaz
+    (yazılsa kendisi bir düzenleme olurdu, çizimin sürümünü oynatırdı); requestId
+    verilen çağrının cevabı, kaydıyla, proje dosyasının istek defterinde kalır (256
+    istek, her cevap 64 KB'a kadar) ve sink'e yazılan her tablo kaydı soyunun run
+    alanında taşır. İş olarak çalışırken durdurma aracın kendi soru noktalarında da
+    duyulur (iptal: çizim ve dosya olduğu gibi); aracın kendisi sormuyorsa araç bitince
+    duyulur.
     """
     __slots__ = ()
     id = "cad.processing.run"
@@ -306,19 +340,28 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         (file_not_found), GeoPackage olarak okunmalı (import_unreadable), çizimin koordinat
         sistemini taşımalı (crs_mismatch), overwrite verilmez (invalid_input). Tablolar tek
         SQLite işleminde, beş bin satırlık parçalarla yazılır; hata ya da durdurma (iş
-        olarak çalışırken) dosyayı olduğu gibi bırakır. Cevabın sinkReport'u kipi, her
-        tablonun satırlarını, geometri türünü, Z ve M'ini, sütunlarının öznitelikleriyle
-        eşlemesini, dosyanın dokunulmayan tablolarını ve parça sayısını söyler; satırların
-        kalıcı kimlikleri kentos_uids tablosundadır. tool “model:” ve modelin kimliği de
-        olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler):
-        modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma
-        adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri
-        alınır, hiçbir şey yazılmaz. Cevabın record'u koşunun kaydıdır (kentos.run-record
-        1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler
-        kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları
-        ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor
-        ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve
-        süresi, kesin toplam. Kayıt proje dosyasına yazılmaz.
+        olarak çalışırken) dosyayı olduğu gibi bırakır. sink.tables aracın tablo çıktılarını
+        (özet, rapor) da birer öznitelik tablosu olarak yazar: adı çıktının etiketi,
+        sütunları başlıkları (metin; hücreler aracın gösterdiği yazı), sinkReport'ta output
+        adıyla görünür; yalnız tablo üreten araç yalnız onu yazar. Cevabın sinkReport'u
+        kipi, her tablonun satırlarını, geometri türünü, Z ve M'ini, sütunlarının
+        öznitelikleriyle eşlemesini, dosyanın dokunulmayan tablolarını ve parça sayısını
+        söyler; satırların kalıcı kimlikleri kentos_uids tablosundadır. tool “model:” ve
+        modelin kimliği de olabilir (model:builtin.parcelSheet; cad.processing.tools'un
+        models'i listeler): modelin girdileri parametreleridir, adımları sırayla çalışır,
+        hepsi tek geri alma adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların
+        sonuçları geri alınır, hiçbir şey yazılmaz. Cevabın record'u koşunun kaydıdır
+        (kentos.run-record 1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar
+        doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince aynı işi yeniden
+        çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü, projenin koordinat
+        sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve süresi, her adımın
+        girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje dosyasına yazılmaz
+        (yazılsa kendisi bir düzenleme olurdu, çizimin sürümünü oynatırdı); requestId
+        verilen çağrının cevabı, kaydıyla, proje dosyasının istek defterinde kalır (256
+        istek, her cevap 64 KB'a kadar) ve sink'e yazılan her tablo kaydı soyunun run
+        alanında taşır. İş olarak çalışırken durdurma aracın kendi soru noktalarında da
+        duyulur (iptal: çizim ve dosya olduğu gibi); aracın kendisi sormuyorsa araç bitince
+        duyulur.
 
         Args:
             doc: The drawing it works on.

@@ -25,12 +25,17 @@ use kentos_domain::Document;
 /// A job's progress and its stop, shared with the thread that computes it.
 #[derive(Debug, Default)]
 pub struct Progress {
-    stop: AtomicBool,
+    stop: Arc<AtomicBool>,
     done: AtomicU64,
     total: AtomicU64,
 }
 
 impl Progress {
+    /// The stop as a flag a running tool can read as it goes (docs/adr/0551 §4).
+    pub fn stop_flag(&self) -> Arc<AtomicBool> {
+        Arc::clone(&self.stop)
+    }
+
     /// Whether the job was asked to stop.
     pub fn stopped(&self) -> bool {
         self.stop.load(Ordering::Relaxed)

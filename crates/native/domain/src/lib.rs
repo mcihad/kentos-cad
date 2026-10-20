@@ -82,7 +82,7 @@ pub use document::{Document, ObjectPolicy};
 pub use edit::{Refusal, SlotsExhausted, labels};
 pub use external::{External, ExternalMeta};
 pub use hash::{SlotHasher, SlotMap};
-pub use history::{Group, LayerInfo, ServedBy, Temporal, UNDO_LIMIT};
+pub use history::{Group, LayerInfo, Savepoint, ServedBy, Temporal, UNDO_LIMIT};
 pub use identity::{Slot, Uuid, v1_entity_uids};
 pub use integrity::Fault;
 pub use kentos_contracts as contracts;

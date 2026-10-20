@@ -1,9 +1,10 @@
 //! Toplu çalıştır in İşlemler's window (docs/adr/0529 §4, plan/gis.md CBS-24): the open tool or model over a table of
 //! rows of parameter values. A column is a parameter, a row a run; an empty cell takes the window's value. The
 //! window does not run the rows itself: it makes the `cad.processing.batch` input of its table and starts the
-//! command as a job (docs/adr/0253 §9), so the rows are the runs `cad.processing.run` makes, one undo step, all or
-//! nothing, computed on another thread; Durdur is heard between the rows. What the command answers fills the rows'
-//! states and the record panel (steps, counts, durations, what running it again would meet).
+//! command as a job (docs/adr/0253 §9), so the rows are the runs `cad.processing.run` makes, one undo step, computed
+//! on another thread; Durdur is heard between the rows and inside the running tool. A row that stops takes the whole
+//! batch back (Hata olursa: Dur) or only itself (Devam et, docs/adr/0551 §1). What the command answers fills the rows'
+//! states, the stopped rows' reasons and the record panel (steps, counts, durations, what running it again would meet).
 
 use std::time::Duration;
 
@@ -12,7 +13,7 @@ use iced::futures::{SinkExt, Stream};
 use iced::widget::{Row as UiRow, button, column, container, row, scrollable, text_input};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
-    CAD_PROCESSING_BATCH, CallAnswer, CallEnvelope, CallOp, CommandResult, JobPhase,
+    BatchOnError, CAD_PROCESSING_BATCH, CallAnswer, CallEnvelope, CallOp, CommandResult, JobPhase,
     ProcessingBatched, ProcessingRecord,
 };
 use kentos_native_application::jobs::Job;
@@ -25,7 +26,7 @@ use kentos_ui::style;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::progress::{self, Tint};
 use kentos_ui::widget::table::{self as ui_table, Table as UiTable};
-use kentos_ui::widget::{Dialog, Menu, MenuButton, horizontal_divider, overlay};
+use kentos_ui::widget::{Dialog, Menu, MenuButton, Segmented, horizontal_divider, overlay};
 
 use super::{Event as ProcessingEvent, Processing};
 use crate::app::{App, Message};
@@ -40,6 +41,46 @@ const CELL: f32 = 150.0;
 const NAME: f32 = 130.0;
 /// The progress bar of a running batch (as the form's).
 const PROGRESS: f32 = 140.0;
+
+/// What a batch does when a row stops (the table's Hata olursa choice).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OnError {
+    /// The whole batch is taken back.
+    Stop,
+    /// Only the row is taken back; the others are written.
+    Continue,
+}
+
+impl OnError {
+    const ALL: [OnError; 2] = [OnError::Stop, OnError::Continue];
+}
+
+impl std::fmt::Display for OnError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            OnError::Stop => "Dur",
+            OnError::Continue => "Devam et",
+        })
+    }
+}
+
+impl From<BatchOnError> for OnError {
+    fn from(m: BatchOnError) -> Self {
+        match m {
+            BatchOnError::Stop => OnError::Stop,
+            BatchOnError::Continue => OnError::Continue,
+        }
+    }
+}
+
+impl From<OnError> for BatchOnError {
+    fn from(m: OnError) -> Self {
+        match m {
+            OnError::Stop => BatchOnError::Stop,
+            OnError::Continue => BatchOnError::Continue,
+        }
+    }
+}
 
 /// What the batch window asks for.
 #[derive(Clone, Debug)]
@@ -57,6 +98,8 @@ pub enum Event {
     Label(usize, String),
     /// A cell's text as typed: row, column, text.
     Cell(usize, usize, String),
+    /// Hata olursa: what a row that stops does.
+    OnError(OnError),
     Run,
     /// Durdur: the job is asked to stop between rows.
     Stop,
@@ -91,6 +134,8 @@ pub enum Line {
     Idle,
     Running { share: Option<f64>, stopping: bool },
     Done(String),
+    /// Finished with rows that stopped and were taken back (Devam et): the summary says which.
+    Partial(String),
     Failed(String),
     Cancelled,
 }
@@ -106,6 +151,8 @@ pub struct BatchState {
     /// The last finished batch's record, and what running it again would meet (said once, when it finished).
     pub record: Option<ProcessingRecord>,
     pub rerun: Option<String>,
+    /// The rows that stopped and were taken back in the last run, with their reasons (Devam et).
+    pub failed: Vec<(String, String)>,
     started: u64,
 }
 
@@ -130,6 +177,7 @@ impl BatchState {
             session: 0,
             record: None,
             rerun: None,
+            failed: Vec::new(),
             started: 0,
         }
     }
@@ -141,6 +189,7 @@ impl BatchState {
     /// An edit: what the last run said no longer fits the table.
     fn edited(&mut self) {
         self.rows = vec![RowState::Idle; self.table.rows.len()];
+        self.failed.clear();
         if !self.running() {
             self.line = Line::Idle;
         }
@@ -151,6 +200,7 @@ impl BatchState {
         self.rows = vec![RowState::Idle; self.table.rows.len()];
         self.record = None;
         self.rerun = None;
+        self.failed.clear();
         match answer.result {
             CommandResult::Completed { output, .. } => {
                 match serde_json::from_value::<ProcessingBatched>(output) {
@@ -164,9 +214,23 @@ impl BatchState {
                                 };
                             }
                         }
+                        for f in &done.failed {
+                            if let Some(slot) = self.rows.get_mut(f.index as usize) {
+                                *slot = RowState::Failed(f.message.clone());
+                            }
+                        }
+                        self.failed = done
+                            .failed
+                            .iter()
+                            .map(|f| (f.label.clone(), f.message.clone()))
+                            .collect();
                         self.rerun = Some(rerun(&done.record));
                         self.record = Some(done.record);
-                        self.line = Line::Done(done.summary);
+                        self.line = if done.failed.is_empty() {
+                            Line::Done(done.summary)
+                        } else {
+                            Line::Partial(done.summary)
+                        };
                     }
                     Err(e) => self.line = Line::Failed(format!("Cevap okunamadı: {e}")),
                 }
@@ -288,6 +352,7 @@ impl App {
                         }
                     }
                     Event::Cell(r, c, text) => b.table.set_cell(r, c, text),
+                    Event::OnError(m) => b.table.on_error = m.into(),
                     _ => {}
                 }
                 b.edited();
@@ -347,6 +412,7 @@ impl App {
         b.rows = vec![RowState::Idle; b.table.rows.len()];
         b.record = None;
         b.rerun = None;
+        b.failed.clear();
         b.line = Line::Running {
             share: Some(0.0),
             stopping: false,
@@ -400,9 +466,16 @@ impl App {
             return iced::widget::space().into();
         };
         let tool = &window.tool;
-        let body = column![intro(), toolbar(b, tool), grid(b, tool), record_panel(b)]
-            .spacing(12)
-            .padding([4, 8]);
+        let body = column![
+            intro(),
+            toolbar(b, tool),
+            on_error(b),
+            grid(b, tool),
+            failed_panel(b),
+            record_panel(b)
+        ]
+        .spacing(12)
+        .padding([4, 8]);
         overlay::modal(
             Dialog::new(format!("Toplu çalıştır: {}", tool.label))
                 .push(
@@ -422,10 +495,61 @@ impl App {
 
 fn intro<'a>() -> Element<'a, Message> {
     label::body(
-        "Her satır aracı bir kez çalıştırır. Sütunlar satıra göre değişen parametrelerdir; boş hücre penceredeki değeri alır. Satırlar sırayla çalışır, hepsi tek geri alma adımıdır; biri çalışmazsa hiçbir şey yazılmaz.",
+        "Her satır aracı bir kez çalıştırır. Sütunlar satıra göre değişen parametrelerdir; boş hücre penceredeki değeri alır. Satırlar sırayla çalışır, hepsi tek geri alma adımıdır. Hata olursa: Dur seçiliyken biri çalışmazsa hiçbir şey yazılmaz; Devam et seçiliyken yalnız o satır geri alınır, öteki satırlar yazılır.",
     )
     .style(style::text::muted)
     .into()
+}
+
+/// Hata olursa: Dur ya da Devam et.
+fn on_error<'a>(b: &'a BatchState) -> Element<'a, Message> {
+    let idle = !b.running();
+    row![
+        label::body("Hata olursa"),
+        Segmented::new_with(
+            OnError::ALL,
+            OnError::from(b.table.on_error),
+            |m| ev(Event::OnError(m)),
+            move |_| idle,
+        )
+        .compact()
+        .hints([
+            "Bir satır çalışıp dururlarsa bütün toplu iş geri alınır, hiçbir şey yazılmaz.",
+            "Duran satır tek başına geri alınır; öteki satırlar yazılır, hepsi yine tek adımdır.",
+        ]),
+    ]
+    .spacing(10)
+    .align_y(Center)
+    .into()
+}
+
+/// The rows that stopped and were taken back, with their reasons: the table's cell says which, this says why.
+fn failed_panel<'a>(b: &'a BatchState) -> Element<'a, Message> {
+    if b.failed.is_empty() {
+        return iced::widget::space().into();
+    }
+    let mut lines = column![
+        label::caption("Duran satırlar (geri alındı)")
+            .font(typography::ui_strong())
+            .style(style::text::muted)
+    ]
+    .spacing(3);
+    for (name, why) in &b.failed {
+        lines = lines.push(
+            row![
+                icon(Icon::Error).size(14.0).tone(Tone::Danger),
+                label::caption(name.clone()).width(Length::Fixed(typography::scaled(110.0))),
+                label::caption(why.clone()).width(Fill),
+            ]
+            .spacing(8)
+            .align_y(Center),
+        );
+    }
+    container(lines)
+        .padding(12)
+        .width(Fill)
+        .style(style::container::bordered)
+        .into()
 }
 
 /// Sütun ekle ▾, the columns as chips, and Satır ekle.
@@ -626,7 +750,7 @@ fn state_cell<'a>(state: Option<&'a RowState>) -> Element<'a, Message> {
         // The reason is long: it is in the footer's line; the cell says which row it is about.
         Some(RowState::Failed(_)) => row![
             icon(Icon::Error).size(14.0).tone(Tone::Danger),
-            label::caption("Durdu; nedeni altta"),
+            label::caption("Durdu; nedeni aşağıda"),
         ]
         .spacing(6)
         .align_y(Center)
@@ -734,6 +858,11 @@ fn footer<'a>(b: &'a BatchState) -> Element<'a, Message> {
         Line::Done(text) => {
             status = status
                 .push(icon(Icon::Success).size(16.0).tone(Tone::Success))
+                .push(label::body(text.clone()).width(Fill));
+        }
+        Line::Partial(text) => {
+            status = status
+                .push(icon(Icon::Warning).size(16.0).tone(Tone::Warning))
                 .push(label::body(text.clone()).width(Fill));
         }
         Line::Failed(text) => {

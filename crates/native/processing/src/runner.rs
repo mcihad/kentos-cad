@@ -232,6 +232,8 @@ fn distinct(ids: impl IntoIterator<Item = Slot>) -> Vec<Slot> {
 struct Collect<'a> {
     log: &'a mut Vec<LogLine>,
     canceled: bool,
+    /// The host's stop, asked while the tool runs (docs/adr/0551 §4).
+    stop: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
     files: Option<std::sync::Arc<dyn crate::files::Files>>,
 }
 
@@ -251,6 +253,10 @@ impl Feedback for Collect<'_> {
 
     fn canceled(&self) -> bool {
         self.canceled
+            || self
+                .stop
+                .as_ref()
+                .is_some_and(|s| s.load(std::sync::atomic::Ordering::Relaxed))
     }
 
     fn files(&self) -> Option<std::sync::Arc<dyn crate::files::Files>> {
@@ -363,6 +369,8 @@ pub struct Runner {
     history: Vec<RunRecord>,
     seq: u64,
     canceled: bool,
+    /// The host's stop (a job's Durdur), read by the running tool as it goes (docs/adr/0551 §4).
+    stop: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
     /// The host's files for the runs that read and write them (the headless server's, docs/adr/0515).
     files: Option<std::sync::Arc<dyn crate::files::Files>>,
 }
@@ -373,6 +381,7 @@ impl std::fmt::Debug for Runner {
             .field("history", &self.history)
             .field("seq", &self.seq)
             .field("canceled", &self.canceled)
+            .field("stop", &self.stop.is_some())
             .field("files", &self.files.is_some())
             .finish()
     }
@@ -389,6 +398,20 @@ impl Runner {
             files: Some(files),
             ..Self::default()
         }
+    }
+
+    /// The runs of this runner end when `stop` is set: a tool that polls its feedback stops at its next question,
+    /// the drawing is as it was and the run is recorded as canceled (a model stops between steps and inside one).
+    pub fn with_stop(mut self, stop: std::sync::Arc<std::sync::atomic::AtomicBool>) -> Self {
+        self.stop = Some(stop);
+        self
+    }
+
+    /// Whether the host's stop was set.
+    pub fn stop_asked(&self) -> bool {
+        self.stop
+            .as_ref()
+            .is_some_and(|s| s.load(std::sync::atomic::Ordering::Relaxed))
     }
 
     /// Runs so far, newest first.
@@ -596,10 +619,16 @@ impl Runner {
             let mut feedback = Collect {
                 log: &mut *log,
                 canceled: self.canceled,
+                stop: self.stop.clone(),
                 files: self.files.clone(),
             };
-            let result = Self::compute(&job, host.doc(), &mut feedback);
-            (result, feedback.canceled || self.canceled)
+            // A stop asked before the tool starts ends the run without it.
+            let result = if feedback.canceled() {
+                RunResult::default()
+            } else {
+                Self::compute(&job, host.doc(), &mut feedback)
+            };
+            (result, feedback.canceled())
         };
         self.finish(host, job, result, canceled, log)
     }

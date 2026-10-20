@@ -16,6 +16,12 @@ use kentos_domain::Document;
 pub trait BatchFlow {
     fn stopped(&self) -> bool;
     fn progress(&self, done: u64, total: u64);
+    /// The stop as a flag the running tool reads as it goes, for a flow that can be stopped from another thread:
+    /// the tool then stops inside a row, not only between rows (docs/adr/0551 §4). None: the stop is asked between
+    /// rows only.
+    fn stop_flag(&self) -> Option<std::sync::Arc<std::sync::atomic::AtomicBool>> {
+        None
+    }
 }
 
 /// The job's stop and progress, when a command runs as one; none otherwise (it is never stopped).
@@ -30,6 +36,10 @@ impl BatchFlow for JobFlow<'_> {
         if let Some(job) = self.0 {
             job.set(done, total);
         }
+    }
+
+    fn stop_flag(&self) -> Option<std::sync::Arc<std::sync::atomic::AtomicBool>> {
+        self.0.map(crate::jobs::Progress::stop_flag)
     }
 }
 
@@ -46,8 +56,8 @@ pub enum RunEnd {
 /// How a batch ended without being refused.
 #[allow(clippy::large_enum_variant)]
 pub enum BatchEnd {
-    /// Every row ran.
-    Ran(ProcessingBatched),
+    /// Every row ran (with `onError: continue`, the rows that stopped are in the answer's `failed` and the warnings).
+    Ran(ProcessingBatched, Vec<CommandWarning>),
     /// It was stopped between rows: what the earlier rows did is taken back, nothing is written.
     Cancelled,
 }

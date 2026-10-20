@@ -20,10 +20,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ProcessingBatch) -> CommandRe
 
 fn ended(end: BatchEnd) -> CommandResult<ProcessingBatched> {
     match end {
-        BatchEnd::Ran(output) => CommandResult::Completed {
-            output,
-            warnings: Vec::new(),
-        },
+        BatchEnd::Ran(output, warnings) => CommandResult::Completed { output, warnings },
         BatchEnd::Cancelled => CommandResult::Cancelled,
     }
 }
@@ -39,36 +36,35 @@ pub fn plan(
         h.batch(&mut copy, input, &flow)
     });
     match ran {
-        Ok(BatchEnd::Ran(mut output)) => {
+        Ok(BatchEnd::Ran(mut output, warnings)) => {
             output.revision = cx.doc.revision().to_string();
-            ended(BatchEnd::Ran(output))
+            ended(BatchEnd::Ran(output, warnings))
         }
         Ok(end) => ended(end),
         Err(error) => CommandResult::Failed { error: *error },
     }
 }
 
+/// The batch as one recorded step of the document (docs/adr/0253 §1, docs/adr/0551 §6): in the journal, answered as
+/// before for the same `requestId`, its answer (record included) in the project's request ledger.
 pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: ProcessingBatch,
 ) -> CommandResult<ProcessingBatched> {
-    // One step of the drawing and its own row in the journal (docs/adr/0253 §3, 0548 §4).
     crate::call::recorded(
         cx,
         kentos_commands::CAD_PROCESSING_BATCH,
         kentos_commands::CAD_PROCESSING_BATCH_VERSION,
         input,
-        written_execute,
+        write_execute,
     )
 }
 
-/// [`execute`]'s write; `call::recorded` runs it as one step and journals it.
-fn written_execute(
+fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: ProcessingBatch,
 ) -> CommandResult<ProcessingBatched> {
-    let job = cx.job;
-    let flow = JobFlow(job);
+    let flow = JobFlow(cx.job);
     let ran = host().and_then(|h| {
         h.check_batch(cx.doc, &input)?;
         h.batch(cx.doc, &input, &flow)
@@ -104,6 +100,7 @@ mod tests {
             selection: Vec::new(),
             view: None,
             drawing: None,
+            on_error: Default::default(),
         };
         let CommandResult::Failed { error } = super::validate(&cx, &batch) else {
             panic!("refused");

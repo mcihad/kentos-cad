@@ -8,18 +8,19 @@
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 
-use std::sync::OnceLock;
+use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, OnceLock};
 use std::time::Instant;
 
 use kentos_commands::{
-    BatchRowRan, CommandError, CommandWarning, GpkgExported, GpkgTableExported, ProcessingBatch,
+    BatchOnError, BatchRowFailed, BatchRowRan, CommandError, CommandWarning, GpkgExported, GpkgTableExported, ProcessingBatch,
     ProcessingBatched, ProcessingRan, ProcessingRecord, ProcessingRun, ProcessingTool,
-    ProcessingTools, ProcessingToolsListed, RecordStep, RecordTotal, RunInput, RunSink,
-    SinkColumn, SinkDimension, SinkMode, SinkReport, SinkTable, ToolNote, ToolParameter, codes,
+    ProcessingTools, ProcessingToolsListed, RecordFailure, RecordStep, RecordTotal, RunInput,
+    RunSink, SinkColumn, SinkDimension, SinkMode, SinkReport, SinkTable, ToolNote, ToolParameter, codes,
 };
-use kentos_domain::{Document, Slot, Uuid};
+use kentos_domain::{ChangeMark, Document, Slot, Uuid};
 use kentos_geometry_core::geometry::Bounds;
-use kentos_native_application::geopackage::BATCH_ROWS;
+use kentos_native_application::geopackage::{BATCH_ROWS, TextTable};
 use kentos_native_application::processing_host::{
     BatchEnd, BatchFlow, RunEnd, ToolHost, register_tools,
 };
@@ -30,7 +31,7 @@ use crate::model::Model;
 use crate::model_runner::{MODEL_PREFIX, model_as_tool, run_model};
 use crate::parameters::{default_values, stored_values};
 use crate::registry::Registry;
-use crate::runner::{Level, Outcome, RunRecord, Runner};
+use crate::runner::{Level, Outcome, RunRecord, Runner, Status};
 use crate::text::fold_turkish;
 use crate::types::{Defaults, OutputKind, ParamKind, Tool, Values};
 
@@ -474,26 +475,47 @@ impl ToolHost for Tools {
     ) -> Result<RunEnd, Box<CommandError>> {
         let registry = Registry::builtin();
         let ready = ready(&registry, doc, input)?;
+        let stop = flow.stop_flag();
         let Some(sink) = &input.sink else {
-            let (ran, _) = run_on(doc, ready, &registry, &mut Digests::new())?;
-            return Ok(RunEnd::Ran(ran, Vec::new()));
+            return match run_on(doc, ready, &registry, &mut Digests::new(), stop) {
+                Ok((ran, _)) => Ok(RunEnd::Ran(ran, Vec::new())),
+                Err(Halt::Cancelled) => Ok(RunEnd::Cancelled),
+                Err(Halt::Refused(e)) => Err(e),
+            };
         };
         let target = sink_target(sink)?;
         let (tool_id, tool_label) = (ready.tool.id.clone(), ready.tool.label.clone());
+        let output_labels: BTreeMap<String, String> = ready
+            .tool
+            .outputs
+            .iter()
+            .map(|o| (o.name.clone(), o.label.clone()))
+            .collect();
         // The run is made on a copy: the drawing does not change, the file takes the result.
         let mut copy = doc.reading_copy();
-        let (mut ran, added) = run_on(&mut copy, ready, &registry, &mut Digests::new())?;
-        // The tool is not asked to stop; a stop that came while it computed ends the run before the file is touched.
+        let (mut ran, added) =
+            match run_on(&mut copy, ready, &registry, &mut Digests::new(), stop) {
+                Ok(made) => made,
+                Err(Halt::Cancelled) => return Ok(RunEnd::Cancelled),
+                Err(Halt::Refused(e)) => return Err(e),
+            };
+        // A stop that came while the tool computed and was not heard by it ends the run before the file is touched.
         if flow.stopped() {
             return Ok(RunEnd::Cancelled);
         }
+        let texts = if sink.tables {
+            text_tables(&ran.outputs, &output_labels)
+        } else {
+            Vec::new()
+        };
         let lineage = Lineage {
             tool: (&tool_id, &tool_label),
             request: input,
             inputs: &ran.inputs,
             drawing: doc.revision().to_string(),
+            run: &ran.record,
         };
-        match write_sink(&mut copy, &added, &target, write, &lineage, flow)? {
+        match write_sink(&mut copy, &added, &texts, &target, write, &lineage, flow)? {
             Sunk::Cancelled => Ok(RunEnd::Cancelled),
             Sunk::Done(done) => {
                 let (exported, report, warnings) = *done;
@@ -540,10 +562,13 @@ impl ToolHost for Tools {
             ));
         };
         let total = input.rows.len() as u64;
-        // One undo step for all the rows, taken back whole when one stops (docs/adr/0529 §1).
+        let stop = flow.stop_flag();
+        // One undo step for all the rows, taken back whole when one stops (docs/adr/0529 §1); with `onError: continue`
+        // a row that stops is taken back alone, to the place the doc was at when the row began (docs/adr/0551 §1).
         let group = doc.begin_group(&format!("Toplu: {}", tool.label));
         let mut ran_rows: Vec<BatchRowRan> = Vec::with_capacity(input.rows.len());
-        // A layer's digest is taken once for each state of the drawing: rows that leave it alone share it.
+        let mut failed: Vec<BatchRowFailed> = Vec::new();
+        // A layer's digest is taken once for each state of the objects: rows that leave them alone share it.
         let mut digests = Digests::new();
         for (i, row) in input.rows.iter().enumerate() {
             if flow.stopped() {
@@ -552,8 +577,10 @@ impl ToolHost for Tools {
             }
             flow.progress(i as u64, total);
             let label = row_label(i, row);
+            let at = doc.group_savepoint();
             let made = ready(&registry, doc, &row_run(input, row))
-                .and_then(|r| run_on(doc, r, &registry, &mut digests))
+                .map_err(Halt::Refused)
+                .and_then(|r| run_on(doc, r, &registry, &mut digests, stop.clone()))
                 .map(|(ran, _)| ran);
             match made {
                 Ok(ran) => ran_rows.push(BatchRowRan {
@@ -561,7 +588,23 @@ impl ToolHost for Tools {
                     label,
                     ran,
                 }),
-                Err(e) => {
+                // The host's stop heard inside the row: the whole batch is taken back, not a row's failure.
+                Err(Halt::Cancelled) => {
+                    doc.cancel_group(group);
+                    return Ok(BatchEnd::Cancelled);
+                }
+                Err(Halt::Refused(e)) if input.on_error == BatchOnError::Continue => {
+                    if let Some(at) = at {
+                        doc.rollback_to(at);
+                    }
+                    failed.push(BatchRowFailed {
+                        index: i as u32,
+                        label,
+                        code: e.code.clone(),
+                        message: e.message.clone(),
+                    });
+                }
+                Err(Halt::Refused(e)) => {
                     doc.cancel_group(group);
                     return Err(Box::new(CommandError {
                         code: codes::BATCH_ROW_FAILED.into(),
@@ -583,23 +626,52 @@ impl ToolHost for Tools {
             input,
             &tool,
             &ran_rows,
+            &failed,
             revision,
             doc.settings().srid,
             clock,
         );
         let added: usize = ran_rows.iter().map(|r| r.ran.added.len()).sum();
         let changed: usize = ran_rows.iter().map(|r| r.ran.changed.len()).sum();
-        Ok(BatchEnd::Ran(ProcessingBatched {
-            tool: input.tool.clone(),
-            summary: format!(
-                "{} satır çalıştı: {added} nesne eklendi, {changed} nesne değişti.",
-                ran_rows.len()
-            ),
-            rows: ran_rows,
-            step: edited.then(|| format!("Toplu: {}", tool.label)),
-            record,
-            revision: doc.revision().to_string(),
-        }))
+        let mut summary = format!(
+            "{} satır çalıştı: {added} nesne eklendi, {changed} nesne değişti.",
+            ran_rows.len()
+        );
+        let mut warnings = Vec::new();
+        if !failed.is_empty() {
+            let names: Vec<&str> = failed.iter().map(|f| f.label.as_str()).collect();
+            summary.push_str(&format!(
+                " {} satır çalışmadı ve geri alındı ({}).",
+                failed.len(),
+                names.join(", ")
+            ));
+            let rest = if ran_rows.is_empty() {
+                "hiçbir satır yazılmadı"
+            } else {
+                "öteki satırlar yazıldı"
+            };
+            warnings.push(CommandWarning {
+                code: codes::BATCH_ROWS_FAILED.into(),
+                message: format!(
+                    "{} satır çalışıp durdu ve tek tek geri alındı ({}); {rest}.",
+                    failed.len(),
+                    names.join(", ")
+                ),
+                path: Some("rows".into()),
+            });
+        }
+        Ok(BatchEnd::Ran(
+            ProcessingBatched {
+                tool: input.tool.clone(),
+                summary,
+                rows: ran_rows,
+                failed,
+                step: edited.then(|| format!("Toplu: {}", tool.label)),
+                record,
+                revision: doc.revision().to_string(),
+            },
+            warnings,
+        ))
     }
 }
 
@@ -649,7 +721,7 @@ fn row_run(input: &ProcessingBatch, row: &kentos_commands::BatchRow) -> Processi
         selection: input.selection.clone(),
         view: input.view,
         sink: None,
-        drawing: None,
+        drawing: input.drawing.clone(),
     }
 }
 
@@ -833,6 +905,7 @@ fn record_of(
             records_in: ran.records_in,
             records_out: ran.records_out,
         },
+        failed: Vec::new(),
     }
 }
 
@@ -842,6 +915,7 @@ fn batch_record(
     input: &ProcessingBatch,
     tool: &Tool,
     rows: &[BatchRowRan],
+    failed: &[BatchRowFailed],
     revision: String,
     srid: u32,
     clock: (u64, Instant),
@@ -907,17 +981,40 @@ fn batch_record(
             records_in,
             records_out: touched.len() as u64,
         },
+        failed: failed
+            .iter()
+            .map(|f| RecordFailure {
+                id: format!("rows[{}]", f.index),
+                label: f.label.clone(),
+                code: f.code.clone(),
+                message: f.message.clone(),
+            })
+            .collect(),
+    }
+}
+
+/// Why a run did not end: refused (or stopped by the tool itself), or stopped by the host while it ran (docs/adr/0551 §4).
+enum Halt {
+    Refused(Box<CommandError>),
+    Cancelled,
+}
+
+impl From<Box<CommandError>> for Halt {
+    fn from(e: Box<CommandError>) -> Self {
+        Halt::Refused(e)
     }
 }
 
 /// Runs a made-ready tool or model on `doc` (the drawing or a copy): what it did, with its record, and the objects it
-/// made.
+/// made. `stop` is the host's stop, read by the tool as it goes: a tool that polls its feedback stops inside the run,
+/// the drawing as it was.
 fn run_on(
     doc: &mut Document,
     ready: Ready,
     registry: &Registry,
     digests: &mut Digests,
-) -> Result<(ProcessingRan, Vec<Slot>), Box<CommandError>> {
+    stop: Option<Arc<AtomicBool>>,
+) -> Result<(ProcessingRan, Vec<Slot>), Halt> {
     let begun = Begun::of(doc, &ready, digests);
     let Ready {
         tool,
@@ -938,6 +1035,9 @@ fn run_on(
     // The raster tools read and write files where there is no window too (docs/adr/0515).
     let files = crate::local_files::LocalFiles::of(host.doc, folder);
     let mut runner = Runner::with_files(std::sync::Arc::new(files));
+    if let Some(stop) = stop {
+        runner = runner.with_stop(stop);
+    }
     let outcome = match &model {
         // A model's steps one after another, one undo step, taken back whole when one stops.
         Some(m) => {
@@ -1029,17 +1129,24 @@ fn run_on(
                 first
                     .and_then(|i| i.param)
                     .map(|p| format!("parameters.{p}")),
-            ))
+            )
+            .into())
         }
+        // The host's stop, heard by the tool or between a model's steps: the drawing is as it was.
+        Outcome::Stopped {
+            status: Status::Canceled,
+            ..
+        } => Err(Halt::Cancelled),
         Outcome::Stopped { message, .. } => {
-            Err(refused(codes::TOOL_FAILED, message, Some("tool".into())))
+            Err(refused(codes::TOOL_FAILED, message, Some("tool".into())).into())
         }
     }
 }
 
-/// The content digests taken so far, by the drawing's generation and the layer (docs/adr/0529 §6): hashing a big layer
-/// costs more than the run that reads it, and a generation is one state of the drawing.
-type Digests = BTreeMap<(u64, String), String>;
+/// The content digests taken so far, by the drawing's change mark and the layer (docs/adr/0529 §6, 0551 §5): hashing a
+/// big layer costs more than the run that reads it, and a change mark is one state of the objects (it moves with every
+/// object an edit, an undo or a taken-back row touches; the generation does not move inside a command's open step).
+type Digests = BTreeMap<(ChangeMark, String), String>;
 
 /// The layers the features inputs read, in the inputs' order: a layer named, or the layers of the objects named or
 /// chosen; a bound layer with its source and the revision it read. The visible layers (`all`) and the view are not
@@ -1092,7 +1199,7 @@ fn inputs_of(doc: &Document, ready: &Ready, digests: &mut Digests) -> Vec<RunInp
                 source: link.map(|s| s.id.clone()),
                 revision: link.map(|s| s.revision.clone()),
                 digest: digests
-                    .entry((doc.generation(), layer.clone()))
+                    .entry((doc.change_mark(), layer.clone()))
                     .or_insert_with(|| {
                         kentos_native_application::sources::layer_digest(doc, &layer)
                     })
@@ -1177,12 +1284,54 @@ fn sink_target(sink: &RunSink) -> Result<Target, Box<CommandError>> {
     })
 }
 
+/// The tool's outputs that are tables (`{ columns, rows }`, every cell the text the tool shows), as text tables to write
+/// (docs/adr/0551 §3), each named by its output's label (the name of the output when it has none).
+fn text_tables(
+    outputs: &BTreeMap<String, Value>,
+    labels: &BTreeMap<String, String>,
+) -> Vec<TextTable> {
+    let text = |v: &Value| match v {
+        Value::String(s) => s.clone(),
+        Value::Null => String::new(),
+        other => other.to_string(),
+    };
+    outputs
+        .iter()
+        .filter_map(|(name, v)| {
+            let columns: Vec<String> = v
+                .get("columns")?
+                .as_array()?
+                .iter()
+                .map(text)
+                .collect();
+            let rows: Vec<Vec<String>> = v
+                .get("rows")?
+                .as_array()?
+                .iter()
+                .map(|r| r.as_array().map(|r| r.iter().map(text).collect()))
+                .collect::<Option<_>>()?;
+            Some(TextTable {
+                output: name.clone(),
+                label: labels
+                    .get(name)
+                    .filter(|l| !l.trim().is_empty())
+                    .cloned()
+                    .unwrap_or_else(|| name.clone()),
+                columns,
+                rows,
+            })
+        })
+        .collect()
+}
+
 /// What a result came from (docs/adr/0511): the tool, the request as given, the layers it read, the drawing's revision.
 struct Lineage<'a> {
     tool: (&'a str, &'a str),
     request: &'a ProcessingRun,
     inputs: &'a [RunInput],
     drawing: String,
+    /// The run's own record (docs/adr/0551 §6): what it was made of and how it went, kept with each table it made.
+    run: &'a ProcessingRecord,
 }
 
 /// The URI of KentOS's lineage document in `gpkg_metadata` (docs/adr/0511).
@@ -1190,7 +1339,7 @@ pub const LINEAGE_STANDARD: &str = "https://kentos.app/lineage/1";
 
 impl Lineage<'_> {
     /// The table's lineage document: `kentos.lineage` 1, as JSON.
-    fn document(&self, table: &str, layer: &str, made: &str) -> String {
+    fn document(&self, table: &str, layer: Option<&str>, output: Option<&str>, made: &str) -> String {
         let mut request = serde_json::to_value(self.request).unwrap_or(Value::Null);
         if let Some(o) = request.as_object_mut() {
             o.remove("sink");
@@ -1200,10 +1349,12 @@ impl Lineage<'_> {
             "version": 1,
             "table": table,
             "layer": layer,
+            "output": output,
             "tool": { "id": self.tool.0, "label": self.tool.1 },
             "request": request,
             "inputs": self.inputs,
             "drawing": { "revision": self.drawing },
+            "run": self.run,
             "engine": format!("KentOS {}", env!("CARGO_PKG_VERSION")),
             "made": made,
         })
@@ -1278,6 +1429,7 @@ fn passing_file(path: &Path) -> PathBuf {
 fn write_sink(
     copy: &mut Document,
     added: &[Slot],
+    texts: &[TextTable],
     target: &Target,
     write: bool,
     lineage: &Lineage<'_>,
@@ -1299,10 +1451,11 @@ fn write_sink(
             layers.push(e.base().layer_id.clone());
         }
     }
-    if layers.is_empty() {
+    if layers.is_empty() && texts.is_empty() {
         return Err(refused(
             codes::NOTHING_TO_EXPORT,
-            "Araç yeni nesne yapmadı; dosyaya yazılacak sonuç yok (değiştiren ya da seçen araçların sonucu çizimdedir)."
+            "Araç yeni nesne yapmadı; dosyaya yazılacak sonuç yok (değiştiren ya da seçen araçların sonucu çizimdedir; \
+             aracın tablo çıktısını yazmak için sink.tables verin)."
                 .into(),
             at,
         ));
@@ -1321,7 +1474,7 @@ fn write_sink(
     if !fresh && !write {
         std::fs::copy(path, &work).map_err(|e| unwritable(e.to_string()))?;
     }
-    let outcome = write_tables(copy, &layers, &work, target.mode, lineage, flow);
+    let outcome = write_tables(copy, &layers, texts, &work, target.mode, lineage, flow);
     let finished = match outcome {
         Ok(f) => f,
         Err(e) => {
@@ -1410,6 +1563,7 @@ fn write_sink(
             .map(|t| SinkTable {
                 table: t.table.clone(),
                 layer: t.layer.clone(),
+                output: t.output.clone(),
                 rows: t.rows,
                 geometry: t.geometry.clone(),
                 z: dimension(t.z),
@@ -1439,7 +1593,7 @@ fn write_sink(
             .into_iter()
             .map(|t| GpkgTableExported {
                 table: t.table,
-                layer: t.layer,
+                layer: t.layer.or(t.output).unwrap_or_default(),
                 rows: t.rows,
                 geometry: t.geometry,
             })
@@ -1468,12 +1622,13 @@ struct Finished {
 fn write_tables(
     copy: &Document,
     layers: &[String],
+    texts: &[TextTable],
     work: &Path,
     mode: SinkMode,
     lineage: &Lineage<'_>,
     flow: &dyn BatchFlow,
 ) -> Result<Finished, Stop> {
-    use kentos_native_application::geopackage::{Clash, Flow, WriteStop, write_in};
+    use kentos_native_application::geopackage::{Clash, Flow, WriteStop, write_with_tables};
     let path_text = work.display().to_string();
     let fresh = mode == SinkMode::New;
     let mut gp = if fresh {
@@ -1506,9 +1661,10 @@ fn write_tables(
         SinkMode::AddTables => Some(Clash::Refuse),
         SinkMode::ReplaceTables => Some(Clash::Replace),
     };
-    let written = write_in(
+    let written = write_with_tables(
         copy,
         layers,
+        texts,
         &session,
         clash,
         BATCH_ROWS,
@@ -1523,7 +1679,7 @@ fn write_tables(
             codes::TABLE_EXISTS,
             if replaceable {
                 format!(
-                    "“{table}” tablosu {path_text} dosyasında var (tablonun adı katmanın adıdır); üzerine yazmak için sink.mode: replaceTables verin ya da katmanı başka adla yapın. Dosyaya dokunulmadı."
+                    "“{table}” tablosu {path_text} dosyasında var (tablonun adı katmanın ya da aracın tablo çıktısının adıdır); üzerine yazmak için sink.mode: replaceTables verin ya da başka bir dosyaya yazın. Dosyaya dokunulmadı."
                 )
             } else {
                 format!(
@@ -1551,7 +1707,7 @@ fn write_tables(
                 &t.table,
                 LINEAGE_STANDARD,
                 "application/json",
-                &lineage.document(&t.table, &t.layer, &made),
+                &lineage.document(&t.table, t.layer.as_deref(), t.output.as_deref(), &made),
                 &made,
             )
             .map_err(|e| Stop::Refused(unwritable(e.0)))?;

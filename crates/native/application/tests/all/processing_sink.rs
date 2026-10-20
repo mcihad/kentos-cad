@@ -358,3 +358,175 @@ fn rows_go_in_batches_and_the_batches_are_counted() {
     gp.close().expect("closed");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+// ── A tool's table output as a table of the file (docs/adr/0551 §3) ─────────
+
+fn summary_to(path: &std::path::Path, mode: &str, tables: bool) -> Value {
+    json!({ "tool": "statistics.summary", "parameters": {
+        "input": { "scope": "layer", "layerId": "parsel" }, "field": "Değer", "group": "Ada" },
+        "sink": { "path": path.display().to_string(), "mode": mode, "tables": tables } })
+}
+
+#[test]
+fn a_table_output_is_written_as_an_attribute_table_when_the_sink_asks_for_it() {
+    let dir = std::env::temp_dir().join(format!("kentos-sink-tables-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let path = dir.join("ozet.gpkg");
+    let mut doc = drawing();
+    let revision = doc.revision();
+    // Without `tables` the tool made no objects: nothing to write, and the answer says how to ask.
+    let refused = run(&mut doc, summary_to(&path, "new", false));
+    assert_eq!(refused["error"]["code"], "nothing_to_export", "{refused}");
+    assert!(
+        refused["error"]["message"].as_str().unwrap_or("").contains("sink.tables"),
+        "{refused}"
+    );
+    assert!(!path.exists());
+    let got = run(&mut doc, summary_to(&path, "new", true));
+    assert_eq!(got["status"], "completed", "{got}");
+    assert_eq!(doc.revision(), revision, "the drawing does not change");
+    let report = &got["output"]["sinkReport"];
+    let table = &report["tables"][0];
+    assert_eq!(table["output"], "table");
+    assert!(table["layer"].is_null(), "no layer: {table}");
+    assert!(table["geometry"].is_null());
+    assert_eq!((table["z"].as_str(), table["m"].as_str()), (Some("none"), Some("none")));
+    let shown = &got["output"]["outputs"]["table"];
+    let columns: Vec<&str> = shown["columns"]
+        .as_array()
+        .expect("columns")
+        .iter()
+        .filter_map(Value::as_str)
+        .collect();
+    let rows = shown["rows"].as_array().expect("rows");
+    assert_eq!(table["rows"], json!(rows.len()));
+    assert_eq!(
+        table["columns"]
+            .as_array()
+            .expect("columns")
+            .iter()
+            .map(|c| c["attribute"].as_str().unwrap_or(""))
+            .collect::<Vec<_>>(),
+        columns
+    );
+    // The file holds it as text, as the tool shows it, under the output's label.
+    let gp = kentos_geopackage::GeoPackage::open(&path, false).expect("opens");
+    let layers = gp.layers().expect("layers");
+    assert_eq!(layers.len(), 1);
+    assert_eq!(layers[0].name, "Özet tablosu");
+    assert_eq!(table["table"], "Özet tablosu");
+    assert!(layers[0].geometry.is_none(), "an attribute table");
+    let stored = gp
+        .rows(&layers[0], &kentos_geopackage::Query::default())
+        .expect("rows");
+    assert_eq!(stored.len(), rows.len());
+    for (s, r) in stored.iter().zip(rows) {
+        let want: Vec<kentos_geopackage::Value> = r
+            .as_array()
+            .expect("a row")
+            .iter()
+            .map(|c| kentos_geopackage::Value::Text(c.as_str().unwrap_or("").to_owned()))
+            .collect();
+        assert_eq!(s.values, want);
+    }
+    // The table's lineage carries the run's record beside the request.
+    let meta = gp.metadata("Özet tablosu").expect("metadata");
+    assert_eq!(meta.len(), 1);
+    let doc_json: Value = serde_json::from_str(&meta[0].1).expect("JSON");
+    assert_eq!(doc_json["output"], "table");
+    assert!(doc_json["layer"].is_null());
+    assert_eq!(doc_json["run"]["format"], "kentos.run-record");
+    assert_eq!(doc_json["run"]["tool"], "statistics.summary");
+    drop(gp);
+    no_stray(&dir);
+    if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
+        std::fs::copy(&path, fixtures().join("geopackage/v1/kentos-run-ozet.gpkg")).expect("kept");
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_table_output_is_added_to_a_file_that_is_there_and_replaced_by_name() {
+    let (dir, path) = qgis_copy("table");
+    let before = contents(&path);
+    let mut doc = drawing();
+    let got = run(&mut doc, summary_to(&path, "addTables", true));
+    assert_eq!(got["status"], "completed", "{got}");
+    assert_eq!(
+        names_of(&got["output"]["sinkReport"]["untouched"]).len(),
+        before.len()
+    );
+    let after = contents(&path);
+    assert_eq!(after.len(), before.len() + 1);
+    for (name, rows) in &before {
+        assert_eq!(&after.iter().find(|(n, _)| n == name).expect("kept").1, rows);
+    }
+    // The same name again: refused, replaced when asked, the others untouched either way.
+    let bytes = std::fs::read(&path).expect("reads");
+    let again = run(&mut doc, summary_to(&path, "addTables", true));
+    assert_eq!(again["error"]["code"], "table_exists", "{again}");
+    assert_eq!(std::fs::read(&path).expect("reads"), bytes);
+    let replaced = run(&mut doc, summary_to(&path, "replaceTables", true));
+    assert_eq!(replaced["status"], "completed", "{replaced}");
+    assert_eq!(replaced["output"]["sinkReport"]["tables"][0]["replaced"], true);
+    let now = contents(&path);
+    assert_eq!(now.len(), after.len());
+    for (name, rows) in &before {
+        assert_eq!(&now.iter().find(|(n, _)| n == name).expect("kept").1, rows);
+    }
+    // A stop at any question leaves the file as it was.
+    use kentos_native_application::processing_host::{RunEnd, tools};
+    kentos_processing::command::register();
+    let host = tools().expect("the tools are registered");
+    for n in 1..=8 {
+        let (d2, p2) = qgis_copy("table-stop");
+        let was = std::fs::read(&p2).expect("reads");
+        let mut doc = drawing();
+        let input: kentos_commands::ProcessingRun =
+            serde_json::from_value(summary_to(&p2, "addTables", true)).expect("an input");
+        let flow = StopAt {
+            n,
+            asked: Default::default(),
+            last: Default::default(),
+        };
+        let end = host.run(&mut doc, &input, true, &flow).map_err(|e| e.code).expect("runs");
+        if matches!(end, RunEnd::Cancelled) {
+            assert_eq!(std::fs::read(&p2).expect("reads"), was, "stopped at {n}");
+        }
+        no_stray(&d2);
+        let _ = std::fs::remove_dir_all(&d2);
+    }
+    no_stray(&dir);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_file_whose_system_of_that_id_is_another_one_takes_no_table() {
+    let dir = std::env::temp_dir().join(format!("kentos-sink-crs-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let path = dir.join("baska-sistem.gpkg");
+    // The drawing is in EPSG:5254 (id 5254); this file's 5254 is a made-up system.
+    let mut gp = kentos_geopackage::GeoPackage::create(&path).expect("created");
+    let session = gp.session().expect("a session");
+    session
+        .add_srs(&kentos_geopackage::Srs {
+            name: "baska".into(),
+            id: 5254,
+            organization: "EPSG".into(),
+            organization_id: 9999,
+            definition: "undefined".into(),
+            description: None,
+        })
+        .expect("added");
+    session.commit().expect("committed");
+    gp.close().expect("closed");
+    let before = std::fs::read(&path).expect("reads");
+    let mut doc = drawing();
+    let got = run(&mut doc, buffer_to(&path, "addTables"));
+    assert_eq!(got["error"]["code"], "crs_mismatch", "{got}");
+    assert_eq!(std::fs::read(&path).expect("reads"), before, "the file is as it was");
+    no_stray(&dir);
+    let _ = std::fs::remove_dir_all(&dir);
+}

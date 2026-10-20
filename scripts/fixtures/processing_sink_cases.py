@@ -213,7 +213,67 @@ try:
 except ImportError:
     pass
 
+# A table output as an attribute table (docs/adr/0551 §3): Özet istatistik of Değer by Ada, written as text columns
+# under the output's label; worked out here from the source drawing (a number reads with a point or a comma, what is
+# no number is skipped, a single value has no standard deviation).
+import math
+
+ozet = ogr.Open(str(GPKG / "kentos-run-ozet.gpkg"))
+lyr = ozet.GetLayerByName("Özet tablosu")
+expect(lyr is not None, "ozet: no table “Özet tablosu”")
+if lyr is not None:
+    expect(lyr.GetGeomType() == ogr.wkbNone, f"ozet: an attribute table, geometry type {lyr.GetGeomType()}")
+    heads = [lyr.GetLayerDefn().GetFieldDefn(i).GetName() for i in range(lyr.GetLayerDefn().GetFieldCount())]
+    expect(heads == ["Grup", "Nesne", "Değer", "Toplam", "Ortalama", "En az", "En çok", "Std. sapma"], f"ozet: columns {heads}")
+    got_rows = [[f.GetField(i) for i in range(len(heads))] for f in lyr]
+    groups: dict[str, list[float | None]] = {}
+    for e in parcels:
+        v = e["attrs"]["Değer"].strip().replace(",", ".")
+        try:
+            n: float | None = float(v)
+        except ValueError:
+            n = None
+        groups.setdefault(e["attrs"]["Ada"], []).append(n)
+    want_rows = []
+    for name in sorted(groups):
+        want_rows.append((name, groups[name]))
+    allv = [n for _, g in want_rows for n in g]
+    want_rows.append(("Toplam", allv))
+    expect(len(got_rows) == len(want_rows), f"ozet: {len(got_rows)} rows, {len(want_rows)} wanted")
+    for r, (name, vals) in zip(got_rows, want_rows):
+        nums = [n for n in vals if n is not None]
+        expect(r[0] == name, f"ozet: group {r[0]} != {name}")
+        expect(r[1] == str(len(vals)) and r[2] == str(len(nums)), f"ozet {name}: counts {r[1:3]}")
+        expect(all(isinstance(c, str) for c in r), f"ozet {name}: every cell is text: {r}")
+        expect(math.isclose(float(r[3]), sum(nums), rel_tol=1e-12), f"ozet {name}: sum {r[3]} != {sum(nums)}")
+        expect(math.isclose(float(r[4]), sum(nums) / len(nums), abs_tol=5e-5), f"ozet {name}: mean {r[4]}")
+        expect(float(r[5]) == min(nums) and float(r[6]) == max(nums), f"ozet {name}: min and max {r[5:7]}")
+        if len(nums) > 1:
+            m = sum(nums) / len(nums)
+            sd = math.sqrt(sum((n - m) ** 2 for n in nums) / (len(nums) - 1))
+            expect(math.isclose(float(r[7]), sd, abs_tol=5e-5), f"ozet {name}: std {r[7]} != {sd}")
+        else:
+            expect(r[7] == "", f"ozet {name}: a single value has no deviation: {r[7]!r}")
+c = sqlite3.connect(GPKG / "kentos-run-ozet.gpkg")
+expect(c.execute("SELECT data_type FROM gpkg_contents WHERE table_name = 'Özet tablosu'").fetchone() == ("attributes",),
+       "ozet: gpkg_contents data_type")
+expect(c.execute("SELECT COUNT(*) FROM gpkg_geometry_columns").fetchone() == (0,), "ozet: no geometry column")
+meta = c.execute("SELECT m.metadata FROM gpkg_metadata m JOIN gpkg_metadata_reference r ON r.md_file_id = m.id "
+                 "WHERE r.table_name = 'Özet tablosu'").fetchall()
+expect(len(meta) == 1, f"ozet: {len(meta)} lineage documents")
+if len(meta) == 1:
+    d = json.loads(meta[0][0])
+    expect(d["output"] == "table" and d["layer"] is None, f"ozet: lineage output {d['output']} layer {d['layer']}")
+    expect(d["run"]["format"] == "kentos.run-record" and d["run"]["tool"] == "statistics.summary", "ozet: lineage run")
+    expect([i["layer"] for i in d["run"]["inputs"]] == ["parsel"], "ozet: the run's inputs")
+try:
+    from osgeo_utils.samples import validate_gpkg
+    found = validate_gpkg.check(str(GPKG / "kentos-run-ozet.gpkg"), abort_at_first_error=False) or []
+    expect(not found, f"ozet: validate_gpkg {found}")
+except ImportError:
+    pass
+
 if problems:
     print("\n".join(problems))
     sys.exit(1)
-print("İşlem sonuçlarının GeoPackage'ları tutarlı: 3 yeni dosya, 1 var olan dosyaya eklenen")
+print("İşlem sonuçlarının GeoPackage'ları tutarlı: 3 yeni dosya, 1 var olan dosyaya eklenen, 1 tablo çıktısı")

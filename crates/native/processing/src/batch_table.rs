@@ -5,7 +5,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_commands::{BatchRow, ProcessingBatch};
+use kentos_commands::{BatchOnError, BatchRow, ProcessingBatch};
 use kentos_domain::Document;
 use serde_json::{Value, json};
 
@@ -52,6 +52,8 @@ pub struct Row {
 pub struct Table {
     pub columns: Vec<String>,
     pub rows: Vec<Row>,
+    /// What the batch does when a row stops (docs/adr/0551 §1).
+    pub on_error: BatchOnError,
 }
 
 impl Table {
@@ -243,6 +245,7 @@ pub fn input(
         selection,
         view,
         drawing: None,
+        on_error: table.on_error,
     })
 }
 

@@ -25,6 +25,7 @@ where the shared cases say what flowed.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -413,9 +414,9 @@ def into_cases(geometry: dict) -> list[dict]:
                 copy_qgis(file),
                 sink_step(base, "execute", add, sink_answer(base, file, "addTables", untouched=old_names)),
                 failed_step(base, add, "table_exists",
-                            f"“{base['layer']['name']}” tablosu {file} dosyasında var (tablonun adı katmanın adıdır); "
-                            "üzerine yazmak için sink.mode: replaceTables verin ya da katmanı başka adla yapın. "
-                            "Dosyaya dokunulmadı."),
+                            f"“{base['layer']['name']}” tablosu {file} dosyasında var (tablonun adı katmanın ya da aracın tablo "
+                            "çıktısının adıdır); üzerine yazmak için sink.mode: replaceTables verin ya da başka bir "
+                            "dosyaya yazın. Dosyaya dokunulmadı."),
                 described(file, old + [mine]),
             ],
         })
@@ -518,6 +519,215 @@ def into_cases(geometry: dict) -> list[dict]:
     return out
 
 
+# ── A tool's table output as a table of the file (docs/adr/0551 §3) ───────────────────────────────────────────────
+
+def web_label(tool: str, output: str) -> str:
+    """An output's label in the web's frozen definition of the tool (the table is named by it)."""
+    for f in sorted(WEB_TOOLS.rglob("*.ts")):
+        text = f.read_text(encoding="utf-8")
+        at = text.find(f"id: '{tool}'")
+        if at < 0:
+            continue
+        m = re.compile(r"name: '%s',\s*label: '([^']*)'" % re.escape(output)).search(text, at)
+        if m:
+            return m.group(1)
+    raise KeyError(f"{tool}.{output}")
+
+
+def unique_columns(headers: list[str]) -> list[str]:
+    """The columns of a text table: a header as it is, an empty one `sutun_N`, a repeated one (or `fid`) `_2`, `_3` …
+    (SQLite's column names are one whatever their case)."""
+    taken = {"fid"}
+    out = []
+    for i, h in enumerate(headers):
+        base = h.strip() or f"sutun_{i + 1}"
+        col, n = base, 2
+        while col.lower() in taken:
+            col = f"{base}_{n}"
+            n += 1
+        taken.add(col.lower())
+        out.append(col)
+    return out
+
+
+def table_outputs(c: dict) -> list[dict]:
+    """The table outputs of a case in the order the command writes them (by the output's name), each with the table's
+    name, its headers and rows."""
+    tool = c["run"]["tool"]
+    found = []
+    for name, v in sorted((c["expect"].get("outputs") or {}).items()):
+        if isinstance(v, dict) and "columns" in v and "rows" in v:
+            found.append({"output": name, "label": web_label(tool, name), "columns": v["columns"], "rows": v["rows"]})
+    return found
+
+
+def named(tables: list[dict], taken: list[str]) -> list[dict]:
+    """The tables' names: the label, made one the write has not given yet (`_2`, `_3` …)."""
+    names = {n.lower() for n in taken} | {"kentos_uids"}
+    out = []
+    for t in tables:
+        base = t["label"].strip()
+        name, n = base, 2
+        while name.lower() in names:
+            name = f"{base}_{n}"
+            n += 1
+        names.add(name.lower())
+        out.append({**t, "table": name})
+    return out
+
+
+def text_entry(t: dict, replaced: bool = False) -> dict:
+    return {
+        "table": t["table"], "output": t["output"], "rows": len(t["rows"]), "z": "none", "m": "none",
+        **({"replaced": True} if replaced else {}),
+        "columns": [{"attribute": a, "column": c} for a, c in zip(t["columns"], unique_columns(t["columns"]))],
+    }
+
+
+def text_answer(out: dict, path: str, mode: str, tables: list[dict], *, untouched=(), replaced=False,
+                before=None) -> dict:
+    """The answer of a run that wrote `tables` (and, when `before` is the answer of a sink with objects, its layers'
+    tables) to the file at `path`."""
+    answer = json.loads(json.dumps(out if before is None else before))
+    answer.pop("step", None)
+    sink = answer.setdefault("sink", {"path": path, "bytes": "$any", "sha256": "$any", "tables": [], "approximated": 0})
+    report = answer.setdefault("sinkReport", {"mode": mode, "tables": [], "batches": 0, "batchRows": BATCH_ROWS,
+                                              "ids": "kentos_uids"})
+    for t in tables:
+        sink["tables"].append({"table": t["table"], "layer": t["output"], "rows": len(t["rows"])})
+        report["tables"].append(text_entry(t, replaced))
+        report["batches"] += -(-len(t["rows"]) // BATCH_ROWS)
+    if untouched:
+        report["untouched"] = list(untouched)
+    return answer
+
+
+def text_step(base_step: dict, op: str, sink: dict, answer: dict, warnings: list | None = None) -> dict:
+    step = json.loads(json.dumps(base_step))
+    step["op"] = op
+    step["input"]["sink"] = sink
+    step["result"] = {"status": "completed", "output": answer, "warnings": warnings or []}
+    step["expect"] = dict(UNDISTURBED)
+    return step
+
+
+def listed_text(t: dict) -> dict:
+    """A text table as `cad.sources.describe` lists it: an attribute table, its columns text."""
+    return {"name": t["table"], "data": "attributes", "rows": len(t["rows"]), "columns": "$any", "capabilities": "$any"}
+
+
+def tables_into_cases(queries: dict, others: dict) -> list[dict]:
+    """A tool's table outputs written with `sink.tables` (docs/adr/0551 §3): a new file, a file that is there (added,
+    refused for a clash, replaced), a plan, a table beside the layers of a tool that makes objects, and the refusals."""
+    old = qgis_tables()
+    old_names = [t["name"] for t in old]
+    out: list[dict] = []
+
+    def base_of(c: dict) -> tuple[dict, dict, list[dict]]:
+        run = run_case(c, "parcels.kcad")
+        step = run["steps"][0]
+        answer = step["result"]["output"]
+        answer.pop("step", None)
+        return step, answer, named(table_outputs(c), [])
+
+    # 1. The summary by Ada: one attribute table, its cells the text the tool shows.
+    c = queries["summary-grouped"]
+    step, answer, tables = base_of(c)
+    setup = document(c["document"])
+    file = "$tmp:ozet.gpkg"
+    new = {"path": file, "tables": True}
+    out.append({
+        "name": f"Tablo çıktısı dosyaya (yeni dosya): {c['title']}; öznitelik tablosu, metin sütunları",
+        "setup": setup,
+        "steps": [text_step(step, "execute", new, text_answer(answer, file, "new", tables)),
+                  described(file, [listed_text(t) for t in tables])],
+    })
+    out.append({
+        "name": f"Tablo çıktısı, plan: {c['title']}; dosya yazılmaz",
+        "setup": setup,
+        "steps": [text_step(step, "plan", {"path": "$tmp:ozet-plan.gpkg", "tables": True},
+                            text_answer(answer, "$tmp:ozet-plan.gpkg", "new", tables))],
+    })
+    # 2. Into QGIS's file: added beside its tables, which no write touches; a clash refused; replaced by name.
+    add = {"path": file, "mode": "addTables", "tables": True}
+    replace = {"path": file, "mode": "replaceTables", "tables": True}
+    name = tables[0]["table"]
+    out.append({
+        "name": f"Tablo çıktısı var olan GeoPackage'a eklenir; dosyanın tabloları olduğu gibi: {c['title']}",
+        "setup": setup,
+        "steps": [copy_qgis(file),
+                  text_step(step, "execute", add, text_answer(answer, file, "addTables", tables, untouched=old_names)),
+                  described(file, old + [listed_text(t) for t in tables])],
+    })
+    out.append({
+        "name": f"Tablo çıktısının adı dosyada var: addTables reddeder (table_exists), dosya değişmez: {c['title']}",
+        "setup": setup,
+        "steps": [copy_qgis(file),
+                  text_step(step, "execute", add, text_answer(answer, file, "addTables", tables, untouched=old_names)),
+                  failed_step({"step": step}, add, "table_exists",
+                              f"“{name}” tablosu {file} dosyasında var (tablonun adı katmanın ya da aracın tablo "
+                              "çıktısının adıdır); üzerine yazmak için sink.mode: replaceTables verin ya da başka bir "
+                              "dosyaya yazın. Dosyaya dokunulmadı."),
+                  described(file, old + [listed_text(t) for t in tables])],
+    })
+    out.append({
+        "name": f"replaceTables tablo çıktısının eski tablosunu yenisiyle değiştirir, dosyanın öbür tablolarına dokunmaz: {c['title']}",
+        "setup": setup,
+        "steps": [copy_qgis(file),
+                  text_step(step, "execute", add, text_answer(answer, file, "addTables", tables, untouched=old_names)),
+                  text_step(step, "execute", replace,
+                            text_answer(answer, file, "replaceTables", tables, untouched=old_names, replaced=True)),
+                  described(file, old + [listed_text(t) for t in tables])],
+    })
+    # 3. Other tools' tables: ungrouped summary, a distance list and its summary, parcel neighbours.
+    for case_id, source, slug in (("summary-plain", queries, "ozet-duz"),
+                                  ("matrix-list", others["proximity.json"], "uzaklik-listesi"),
+                                  ("matrix-summary", others["proximity.json"], "uzaklik-ozeti"),
+                                  ("neighbours-parcels", others["proximity.json"], "komsular")):
+        c2 = source[case_id]
+        step2, answer2, tables2 = base_of(c2)
+        f2 = f"$tmp:{slug}.gpkg"
+        out.append({
+            "name": f"Tablo çıktısı dosyaya: {c2['title']} ({case_id}); tablo sayısı, adı ve sütunları",
+            "setup": document(c2["document"]),
+            "steps": [text_step(step2, "execute", {"path": f2, "tables": True},
+                                text_answer(answer2, f2, "new", tables2)),
+                      described(f2, [listed_text(t) for t in tables2])],
+        })
+    # 4. A tool that makes objects and a table: the layers' tables first, the output's beside them.
+    c3 = others["geometry.json"]["simplify"]
+    base = sink_base(c3, ["parcel"] if False else [i["layer"] for i in run_case(c3, "parcels.kcad")["steps"][0]["result"]["output"].get("inputs", [])])
+    tables3 = named(table_outputs(c3), [base["layer"]["name"]])
+    f3 = "$tmp:sadelestir.gpkg"
+    layered = sink_answer(base, f3, "new")
+    answer3 = text_answer(None, f3, "new", tables3, before=layered)
+    out.append({
+        "name": f"Nesne ve tablo çıktısı birlikte: katmanın tablosu önce, çıktının tablosu yanında: {c3['title']}",
+        "setup": base["setup"],
+        "steps": [text_step(base["step"], "execute", {"path": f3, "tables": True}, answer3,
+                            sink_warnings(base)),
+                  described(f3, [listed(base)] + [listed_text(t) for t in tables3])],
+    })
+    # 5. Without `tables` a tool whose result is only a table has nothing to write; neither has one without a table.
+    hint = ("Araç yeni nesne yapmadı; dosyaya yazılacak sonuç yok (değiştiren ya da seçen araçların sonucu çizimdedir; "
+            "aracın tablo çıktısını yazmak için sink.tables verin).")
+    out.append({
+        "name": "Tablo çıktısı sink.tables olmadan yazılmaz: nothing_to_export, nasıl isteneceğini söyler",
+        "setup": setup,
+        "steps": [failed_step({"step": step}, {"path": "$tmp:yok.gpkg"}, "nothing_to_export", hint)],
+    })
+    out.append({
+        "name": "sink.tables açıkken tablo çıktısı olmayan araç: nothing_to_export, dosya yazılmaz",
+        "steps": [{
+            "op": "execute",
+            "input": {"tool": "selection.byExpression", "sink": {"path": "$tmp:secen.gpkg", "tables": True}},
+            "result": failed("nothing_to_export", hint, "sink.path"),
+            "expect": UNCHANGED,
+        }],
+    })
+    return out
+
+
 SINK_REFUSALS = [
     ("göreli yol", "sonuc.gpkg", "invalid_file_path",
      "“sonuc.gpkg” mutlak bir dosya yolu değil; dosyanın tam yolunu verin (/klasör/sonuç.gpkg)."),
@@ -549,7 +759,8 @@ def sink_refusals() -> list[dict]:
             "input": {"tool": "selection.byExpression", "sink": {"path": "$fixture:processing/v1/sonuc.gpkg"}},
             "result": failed(
                 "nothing_to_export",
-                "Araç yeni nesne yapmadı; dosyaya yazılacak sonuç yok (değiştiren ya da seçen araçların sonucu çizimdedir).",
+                "Araç yeni nesne yapmadı; dosyaya yazılacak sonuç yok (değiştiren ya da seçen araçların sonucu çizimdedir; "
+                "aracın tablo çıktısını yazmak için sink.tables verin).",
                 "sink.path",
             ),
             "expect": UNCHANGED,
@@ -676,7 +887,8 @@ OWN_RUN = [
 
 
 def record(kind: str, tool: str, label: str, *, steps: list[dict], total: tuple[int, int], selection=(),
-           inputs=(), srid: int | None = 5256, definition: bool = False, parameters="$any", view=None) -> dict:
+           inputs=(), srid: int | None = 5256, definition: bool = False, parameters="$any", view=None,
+           failed=()) -> dict:
     """A run's record as the command gives it (docs/adr/0529 §2), its volatile parts `$any`: the revision, the engine,
     the times, a model's definition digest. The counts are written out by the caller from the shared cases."""
     r: dict = {"format": "kentos.run-record", "version": 1, "kind": kind, "tool": tool, "label": label, "toolVersion": 1}
@@ -694,6 +906,8 @@ def record(kind: str, tool: str, label: str, *, steps: list[dict], total: tuple[
         r["srid"] = srid
     r["steps"] = steps
     r["total"] = {"recordsIn": total[0], "recordsOut": total[1]}
+    if failed:
+        r["failed"] = list(failed)
     return r
 
 
@@ -1078,6 +1292,11 @@ def main() -> int:
     ]
     run_cases += sink_refusals()
     run_cases += into_cases(geometry)
+    others = {
+        f: {c["id"]: c for c in json.loads((PROCESSING / f).read_text(encoding="utf-8"))["cases"]}
+        for f in ("proximity.json", "geometry.json")
+    }
+    run_cases += tables_into_cases({c["id"]: c for c in queries}, others)
     run_cases += own_run_from(cases)
     run_cases += model_cases(cases)
     run_cases += OWN_RUN

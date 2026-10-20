@@ -7,9 +7,13 @@ import type { SinkDimension } from "./SinkDimension";
  */
 export type SinkTable = { table: string, 
 /**
- * The layer of the copy the rows are the objects of.
+ * The layer of the copy the rows are the objects of; none for a table output.
  */
-layer: string, rows: number, 
+layer?: string, 
+/**
+ * The tool's output a table holds (`sink.tables`); none for a layer's table.
+ */
+output?: string, rows: number, 
 /**
  * The geometry column's type; none for a table of records.
  */
