@@ -218,6 +218,9 @@ Liste:
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
   işçisinin cevabında `junctions` ve `unverified` (çekirdekten gelir), `tools/networkTraceTool.ts`'te ilişkili kayıtlar (belgenin
   ilişkileriyle, TS'te ya da WASM'la) ve doğrulanmamış bağlantıların işareti ve uyarısı.
+- [ ] `CBS-37` alan alan birleştirme (ADR 0553, 20 Ekim): web'de gerekenler: `kentos_contracts::merge_entities`'in TS karşılığı
+  (nesnenin JSON'unun üst düzey alanları, öznitelikler tek tek) ve web bulut istemcisinin iki çatışma yolunda (dışarıdan gelen değişiklik,
+  409) kullanması; Kaynakla uzlaştır web'de yok.
 - [ ] `CBS-37` kaynakla uzlaştırma (ADR 0538, 20 Ekim): web'de gerekenler: `.kcad` şema 91'in `sourceBases`'i web'in kodeğinde
   (`io/kcad.ts`) ve `model/snapshot.ts`'te, `cad.sources.reconcile`'ın işleyicisi (web bağlı katmana geri döndüğünde), ortak durumların
   `copyFile` adımı web'in oynatıcısında, Kaynakla uzlaştır penceresi.
@@ -240,6 +243,8 @@ Liste:
 - [ ] `CBS-33` iki zamanlı katmanlar (ADR 0537, 20 Ekim): web'de gerekenler: `.kcad` şema 90'ın `recordedStart` ve `recordedEnd`'i web'in
   kodeğinde (`io/kcad.ts`) ve `model/snapshot.ts`'te, `cad.time.query`'nin işleyicisi, Zaman ayarları'nın kayıt alanları, Zaman
   sürgüsünün Bilinen günü (WASM deposunun `set_recorded`, `set_known_at`'i), `cad.layers.time`'ın yeni durumları web'in oynatıcısında.
+- [ ] `CBS-32` alan ve profil sorgusu, mesh sorgusu (ADR 0552, 20 Ekim): web'de gerekenler: `cad.pointclouds.region`, `.profile`,
+  `cad.meshes.describe` ve `.query`'nin web karşılıkları ve pencereleri (WASM bağlayıcısı yok); sanal bulutun özeti.
 - [ ] `CBS-32` nokta bulutunun kaynak bilgisi ve kalıcı nokta kimliği (ADR 0536, 20 Ekim): web'de gerekenler: nokta bulutu web'e
   gelince (ADR 0207) `cad.pointclouds.describe` ve `cad.pointclouds.query`'nin işleyicileri (nokta bulutu çekirdeğinin WASM
   bağlayıcısıyla), Öznitelikler'in başlık satırları; ortak durumlar `fixtures/commands/v1/cad.pointclouds.*.json` web'in oynatıcısında
@@ -259,6 +264,9 @@ Liste:
 - [ ] `CBS-18` etiket iğneleri ve yerleşimin kararlılığı (ADR 0533, 19 Ekim): web'de gerekenler: etiket motorunun `Prior`'u web'in
   görünümünde (WASM'da önceki yerleşim), `cad.labels.report`'un işleyicisi ve Etiketler penceresinde Denetle; bağlı katman web'e gelince
   `SourceLink.key`, `Key` ve `Extent` işlemleri.
+- [ ] `CBS-24` hata kipi, tablo çıktısı ve kayıtlı adım (ADR 0551, 20 Ekim): web'de `cad.processing.batch`'in `onError`'ı, `failed`,
+  `sink.tables`, `sinkReport`'un `output`'u ve komutların kayıtlı adım olması yok (web'in işlem çalıştırıcısı toplu çalıştırmayı
+  bilmiyor; üretilen TS türleri güncel).
 - [ ] `CBS-24` toplu çalıştırma ve çalışma kaydı (ADR 0529, 19 Ekim): web'de gerekenler: `cad.processing.batch` işleyicisi
   (product/, ortak durumlar `fixtures/commands/v1/cad.processing.batch.json`), `cad.processing.run`'ın `model:` kimliği ve `record`'u,
   `cad.processing.tools`'un `models` alanı, İşlemler penceresinde Toplu çalıştır tablosu ve kayıt paneli, Geçmiş kartlarında kayıt
@@ -2098,6 +2106,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   (kaynak ve salt okunurluk, durum, yüklü ve toplam satır, sistem, satırın düğmesi Kaynak ▸'nın komutlarıyla). Kalan: aynı bilgi Öznitelik
   tablosunda ve bilgi kartında, süzgecin geçen sayısı ve bulut taslağı, sağlayıcı hatalarının önerisi, iki referans kullanıcı grubuyla
   kullanılabilirlik kabulü (geliştiricinin yapamayacağı iş). — **20 Ekim, [ADR 0543](docs/adr/0543-source-status-and-way-out.md).**
+- [ ] `CBS-37` uzlaştırma (dilim 2): tabanın alan kaydı (`.kcad` şema 92); alan alan üç yönlü birleşim (`merged`, çatışan alanlar iki
+  değerle, `take`/`rest` çatışan yeri seçer, `field_base_missing`); birlikte değişenlerin grubu (paylaşılan köşe, ilişki; `related`,
+  `groups`, `group_split`); `with` ile çok katman tek işlemde (`layers`, `transaction_split`); bulut istemcisinde alan alan birleştirme
+  (dışarıdan gelen değişiklik ve 409; `Taken.merged`, `failed_in`, `merge_entities`); masaüstünde birleşenler, gruplar ve katmanlar.
+  55 ortak durum bağımsız Python başvurusundan. Kalan: sunucuda `project.changes`'in `base` ile birleştirmesi, 128'den çok köşeli nesnenin
+  köşe bağı, alan sınırlı kopyanın dışındaki komşular, PostGIS'te alan birleşimi, adlı çalışma sürümü. — **20 Ekim,
+  [ADR 0553](docs/adr/0553-field-merge-groups-and-layers.md).**
 - [ ] `CBS-37` kaynakla uzlaştırma (dilim): bağın tabanı (projenin `sourceBases`'i, `.kcad` şema 91: son eşleşmede her nesnenin
   katmandaki ve tablodaki özeti; bağlama, okuma ve yazma yeniden alır), `cad.sources.reconcile` (tabana göre iki yanın ekleme, değiştirme
   ve silmeleri; yalnız bir yanın değiştirdiği o yandan, aynı biçimde değişen uyuşur; öbürleri çatışma: farklı öznitelikler iki yanın
@@ -2113,6 +2128,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   alanları ve Zaman sürgüsünde Bilinen gün (çizim, seçim, kenet o günün sürümleriyle). Kalan: süzgecin sağlayıcıya taşınması (CBS-02),
   kayıt zamanının projenin değişmez revizyonlarına bağlanması, sensör ve gözlem akışı (alım zamanı, kalite, geç ve yinelenen kayıt,
   kopan akış), aynı süzgecin İşlemler'e, tabloya ve dışa aktarmaya, projenin saat dilimi. — **20 Ekim, [ADR 0537](docs/adr/0537-bitemporal-layers.md).**
+- [ ] `CBS-32` alan, profil ve mesh sorgusu (dilim): `cad.pointclouds.region` (çokgen içi istatistik, kaynağın çözünürlüğünde, okunan
+  noktalar), `.profile` (koridor, istasyonlar, kalıcı kimlikli noktalar), `cad.meshes.describe` ve `.query` (yüzün kalıcı kimliği, değerler,
+  an, seri), çok dosyalı bulutun özeti; masaüstünde üç pencere ve Öznitelikler'in satırları; 42 + 25 + 40 + 40 + 24 + 40 ortak durum laspy,
+  pyproj, kesirler ve mpmath'le. Kalan: NetCDF-4, HDF5, GRIB, Zarr (sahibin onayı), adresli bulutun ve NetCDF'in başsız okunması, metin
+  bulutunda alan ve profil, mesh'te alan ve hat sorgusu. — **20 Ekim, [ADR 0552](docs/adr/0552-point-cloud-areas-meshes-and-virtual-clouds.md).**
 - [ ] `CBS-32` nokta bulutunun kaynak bilgisi ve kalıcı nokta kimliği (dilim): `cad.pointclouds.describe` (her kaynağın başlığı: tür,
   sürüm, biçim, sayı, kutu, ölçek, yatay ve düşey sistem, oluşturulma günü, GPS zamanının türü, yazan, GUID, boyutlar ve ek baytlar,
   dönüşe göre sayılar, COPC düğümleri; `classes` ile bütün okunarak sınıf sayıları; okunamayan kaynak nedeniyle) ve
@@ -2148,6 +2168,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   sayar, ekran ve PDF aynı `label_layout`, salt okunur `cad.labels.report` ve Etiketler'de Denetle; yüklü parçanın sınırı söylenir. Kalan:
   bağ ayarının geri alınması, alanın dışındaki iğnenin parkı, anahtarsız yeniden yazım, anahtar alanının arayüzü, Denetle'nin pafta ölçeği
   arayüzü. — **19 Ekim, [ADR 0533](docs/adr/0533-label-pins-bound-layers-and-stability.md).**
+- [ ] `CBS-24` hata kipi, tablo çıktısı ve kayıtlı adım (dilim): `onError` `stop` / `continue` (duran satır kendi kayıt noktasına geri
+  alınır), satır içinde durdurma (`BatchFlow::stop_flag`, `Runner::with_stop`), `sink.tables`, iş parçacıklı katman özeti, `cad.processing.run`
+  ve `.batch` kayıtlı adım; kayıt `.kcad`'e yazılmaz; Toplu çalıştır'da Hata olursa. Kalan: sağlayıcıdan akan girdi, artımlı katman özeti,
+  sink'in dosya etkisinin kayıtta yazılması, tek araç penceresinde sink seçeneği. — **20 Ekim,
+  [ADR 0551](docs/adr/0551-model-runner-batch-and-sink.md).**
 - [ ] `CBS-24` toplu çalıştırma ve çalışma kaydı (dilim): `cad.processing.batch` (araç ya da model, parametre tablosunun satırları,
   `cad.processing.run`'ın aynı çalıştırıcısı, tek geri alma adımı, ya hep ya hiç; satır retleri satır yoluyla; iş olarak, satırlar
   arasında durdurma), modeller `cad.processing.run` ve `.batch`'te `model:` kimliğiyle (orta adım durunca ilk adım geri alınır;
