@@ -585,6 +585,13 @@ pub struct TableWritten {
     pub layer: String,
     pub rows: u32,
     pub geometry: Option<String>,
+    /// Whether the geometry column holds Z and M: 0 none, 1 every row, 2 some rows.
+    pub z: u8,
+    pub m: u8,
+    /// Each column's attribute and the column it was written to (they differ when the name had to change).
+    pub columns: Vec<(String, String)>,
+    /// A table of the file's the write took out and wrote again (docs/adr/0549).
+    pub replaced: bool,
 }
 
 /// What [`write`] wrote.
@@ -597,6 +604,8 @@ pub struct Written {
     pub approximated: u32,
     /// Attributes written under another column name (a name the table had in another case): table, from, to.
     pub renamed: Vec<(String, String, String)>,
+    /// The batches the rows went in (docs/adr/0549).
+    pub batches: u32,
 }
 
 fn c2(p: &kentos_commands::Vec2, z: Option<f64>, m: Option<f64>) -> Coord {
@@ -839,41 +848,16 @@ fn family(g: &Geometry) -> (u8, bool, bool) {
 
 /// The column's type and the geometries fitted to it (singles made multi where the column is).
 pub(crate) fn fit(geoms: &mut [Option<Geometry>]) -> Option<String> {
-    let fams: Vec<(u8, bool, bool)> = geoms.iter().flatten().map(family).collect();
-    let first = fams.first()?;
-    if fams.iter().any(|f| f.0 != first.0) {
-        return Some("GEOMETRY".into());
+    let mut fams = Families::default();
+    for g in geoms.iter().flatten() {
+        fams.add(family(g));
     }
-    let multi = fams.iter().any(|f| f.1);
-    let curved = fams.iter().any(|f| f.2);
-    let name = match (first.0, multi, curved) {
-        (0, false, _) => "POINT",
-        (0, true, _) => "MULTIPOINT",
-        (1, false, false) => "LINESTRING",
-        (1, false, true) => "COMPOUNDCURVE",
-        (1, true, false) => "MULTILINESTRING",
-        (1, true, true) => "MULTICURVE",
-        (2, false, false) => "POLYGON",
-        (2, false, true) => "CURVEPOLYGON",
-        (2, true, false) => "MULTIPOLYGON",
-        (2, true, true) => "MULTISURFACE",
-        _ => "GEOMETRY",
-    };
+    let name = fams.type_name()?;
     for g in geoms.iter_mut().flatten() {
-        let next = match (name, std::mem::replace(g, Geometry::Point(None))) {
-            ("MULTIPOINT", Geometry::Point(Some(p))) => Geometry::MultiPoint(vec![p]),
-            ("MULTILINESTRING" | "MULTICURVE", Geometry::Curve(c)) => Geometry::MultiCurve(vec![c]),
-            ("MULTIPOLYGON" | "MULTISURFACE", Geometry::Polygon(r)) => {
-                Geometry::MultiPolygon(vec![r])
-            }
-            ("COMPOUNDCURVE", Geometry::Curve(c @ (Curve::Line(_) | Curve::Arc(_)))) => {
-                Geometry::Curve(Curve::Compound(vec![c]))
-            }
-            (_, other) => other,
-        };
-        *g = next;
+        let old = std::mem::replace(g, Geometry::Point(None));
+        *g = conform(old, &name);
     }
-    Some(name.into())
+    Some(name)
 }
 
 pub(crate) fn column_of(f: &LayerField) -> gpkg::Column {
@@ -942,58 +926,323 @@ pub(crate) fn srs_of(doc: &Document) -> gpkg::Srs {
     })
 }
 
+/// How many rows a write holds at once (docs/adr/0549 §2): the objects become rows, the rows go into the file and
+/// are let go, a batch at a time.
+pub const BATCH_ROWS: usize = 5_000;
+
+/// What a write does with a table the file already has (docs/adr/0549 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Clash {
+    /// Refuse: nothing is written.
+    Refuse,
+    /// The feature or attribute table of that name is taken out of the file and written again; no other table is
+    /// touched.
+    Replace,
+}
+
+/// What a write asks of its host between batches: whether to stop, and where it has come to (rows done of rows).
+pub struct Flow<'a> {
+    pub stopped: &'a dyn Fn() -> bool,
+    pub progress: &'a dyn Fn(u64, u64),
+}
+
+fn never() -> bool {
+    false
+}
+
+fn ignore(_: u64, _: u64) {}
+
+impl Flow<'static> {
+    /// A write nothing stops and nothing watches.
+    pub fn none() -> Flow<'static> {
+        Flow {
+            stopped: &never,
+            progress: &ignore,
+        }
+    }
+}
+
+/// Why a write stopped without finishing: nothing of it is in the file.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum WriteStop {
+    /// The host asked to stop between two batches.
+    Cancelled,
+    /// A name the file has already: with `replaceable` a feature or attribute table (`Clash::Replace` takes it out),
+    /// otherwise a table of another kind (a tile table, an extension's, an unregistered one) no write replaces.
+    Taken { table: String, replaceable: bool },
+    /// The file's spatial reference system of the id is another one than the drawing's.
+    Srs(String),
+    /// SQLite, or the file, said no.
+    Failed(String),
+}
+
+impl From<gpkg::Error> for WriteStop {
+    fn from(e: gpkg::Error) -> WriteStop {
+        WriteStop::Failed(e.0)
+    }
+}
+
+/// The geometry families a table's rows hold, enough to say its column's type.
+#[derive(Default)]
+struct Families {
+    first: Option<u8>,
+    mixed: bool,
+    multi: bool,
+    curved: bool,
+}
+
+impl Families {
+    fn add(&mut self, f: (u8, bool, bool)) {
+        match self.first {
+            None => self.first = Some(f.0),
+            Some(first) if first != f.0 => self.mixed = true,
+            _ => {}
+        }
+        self.multi |= f.1;
+        self.curved |= f.2;
+    }
+
+    /// The column's type: none for a table without geometries.
+    fn type_name(&self) -> Option<String> {
+        let first = self.first?;
+        if self.mixed {
+            return Some("GEOMETRY".into());
+        }
+        Some(
+            match (first, self.multi, self.curved) {
+                (0, false, _) => "POINT",
+                (0, true, _) => "MULTIPOINT",
+                (1, false, false) => "LINESTRING",
+                (1, false, true) => "COMPOUNDCURVE",
+                (1, true, false) => "MULTILINESTRING",
+                (1, true, true) => "MULTICURVE",
+                (2, false, false) => "POLYGON",
+                (2, false, true) => "CURVEPOLYGON",
+                (2, true, false) => "MULTIPOLYGON",
+                (2, true, true) => "MULTISURFACE",
+                _ => "GEOMETRY",
+            }
+            .into(),
+        )
+    }
+}
+
+/// A geometry made to fit a column of type `name` (a single made multi where the column is, an arc's line a compound
+/// curve): what [`fit`] does to each.
+fn conform(g: Geometry, name: &str) -> Geometry {
+    match (name, g) {
+        ("MULTIPOINT", Geometry::Point(Some(p))) => Geometry::MultiPoint(vec![p]),
+        ("MULTILINESTRING" | "MULTICURVE", Geometry::Curve(c)) => Geometry::MultiCurve(vec![c]),
+        ("MULTIPOLYGON" | "MULTISURFACE", Geometry::Polygon(r)) => Geometry::MultiPolygon(vec![r]),
+        ("COMPOUNDCURVE", Geometry::Curve(c @ (Curve::Line(_) | Curve::Arc(_)))) => {
+            Geometry::Curve(Curve::Compound(vec![c]))
+        }
+        (_, other) => other,
+    }
+}
+
+/// One layer's table, worked out before any of it is written.
+struct Plan {
+    layer: String,
+    table: String,
+    type_name: Option<String>,
+    z: u8,
+    m: u8,
+    columns: Vec<gpkg::Column>,
+    /// The attribute each column reads.
+    keys: Vec<String>,
+    rows: u32,
+    replaces: bool,
+}
+
 /// Writes the layers (by id; every layer with objects when empty) to a new GeoPackage at `path`.
 pub fn write(doc: &Document, layers: &[String], path: &Path) -> Result<Written, String> {
     let mut gp = GeoPackage::create(path).map_err(|e| e.0)?;
+    let session = gp.session().map_err(|e| e.0)?;
+    let out = write_in(
+        doc,
+        layers,
+        &session,
+        None,
+        BATCH_ROWS,
+        &Flow::none(),
+    )
+    .map_err(|stop| match stop {
+        WriteStop::Failed(why) | WriteStop::Srs(why) => why,
+        WriteStop::Cancelled => "yazma durduruldu".to_owned(),
+        WriteStop::Taken { table, .. } => format!("“{table}” tablosu var"),
+    })?;
+    session.commit().map_err(|e| e.0)?;
+    gp.close().map_err(|e| e.0)?;
+    Ok(out)
+}
+
+/// The layers' tables written in `session`, a batch of rows at a time (docs/adr/0549): its tables, rows, spatial
+/// indexes and lasting ids, not yet committed. `clash` is how a table the file already has is met (none: the file is
+/// new, and names that meet inside the write get `_2`, `_3` …); `batch` the rows held at once; `flow` is asked before
+/// each batch and told how far it has come. Stopped or failed, the session is left for its owner to roll back.
+pub fn write_in(
+    doc: &Document,
+    layers: &[String],
+    session: &gpkg::Session<'_>,
+    clash: Option<Clash>,
+    batch: usize,
+    flow: &Flow<'_>,
+) -> Result<Written, WriteStop> {
     let srs = srs_of(doc);
-    gp.add_srs(&srs).map_err(|e| e.0)?;
+    if let Some(have) = session.srs(srs.id)?
+        && (have.organization != srs.organization || have.organization_id != srs.organization_id)
+    {
+        return Err(WriteStop::Srs(format!(
+            "Dosyada {} kimlikli koordinat sistemi {}:{}, çizimin sistemi {}:{}; farklı sistemin tablosu bu dosyaya eklenmez.",
+            srs.id, have.organization, have.organization_id, srs.organization, srs.organization_id
+        )));
+    }
+    session.add_srs(&srs)?;
+    let mut out = Written::default();
+    let plans = plan(doc, layers, session, clash, &mut out)?;
+    let total: u64 = plans.iter().map(|p| u64::from(p.rows)).sum();
+    let mut done = 0u64;
+    for p in &plans {
+        if (flow.stopped)() {
+            return Err(WriteStop::Cancelled);
+        }
+        if p.replaces {
+            session.drop_table(&p.table)?;
+        }
+        let def = gpkg::TableDef {
+            name: p.table.clone(),
+            data_type: if p.type_name.is_some() {
+                DataType::Features
+            } else {
+                DataType::Attributes
+            },
+            identifier: Some(p.table.clone()),
+            description: None,
+            srs_id: p.type_name.as_ref().map(|_| srs.id),
+            geometry: p.type_name.clone().map(|t| gpkg::GeometryColumn {
+                name: "geom".into(),
+                type_name: t,
+                z: p.z,
+                m: p.m,
+            }),
+            columns: p.columns.clone(),
+        };
+        let mut w = session.start_table(&def)?;
+        let mut rows: Vec<gpkg::NewRow> = Vec::with_capacity(batch.min(p.rows as usize));
+        let mut uids: Vec<String> = Vec::with_capacity(rows.capacity());
+        let mut objects = doc.by_layer_with_uids(&p.layer);
+        loop {
+            rows.clear();
+            uids.clear();
+            for (uid, e) in objects.by_ref() {
+                let geometry = match row_of(e) {
+                    Row::Geometry(g, _) => Some(match &p.type_name {
+                        Some(name) => conform(g, name),
+                        None => g,
+                    }),
+                    Row::Record => None,
+                    Row::Left(_) => continue,
+                };
+                rows.push(gpkg::NewRow {
+                    fid: None,
+                    geometry,
+                    values: p
+                        .columns
+                        .iter()
+                        .zip(&p.keys)
+                        .map(|(c, k)| cell(e.base().attrs.get(k), &c.kind))
+                        .collect(),
+                });
+                uids.push(uid.to_string());
+                if rows.len() >= batch.max(1) {
+                    break;
+                }
+            }
+            if rows.is_empty() {
+                break;
+            }
+            if (flow.stopped)() {
+                return Err(WriteStop::Cancelled);
+            }
+            session.append(&mut w, &rows, Some(&uids))?;
+            out.batches += 1;
+            done += rows.len() as u64;
+            (flow.progress)(done, total);
+        }
+        session.finish_table(w)?;
+        out.tables.push(TableWritten {
+            table: p.table.clone(),
+            layer: p.layer.clone(),
+            rows: p.rows,
+            geometry: p.type_name.clone(),
+            z: p.z,
+            m: p.m,
+            columns: p
+                .keys
+                .iter()
+                .zip(&p.columns)
+                .map(|(k, c)| (k.clone(), c.name.clone()))
+                .collect(),
+            replaced: p.replaces,
+        });
+    }
+    Ok(out)
+}
+
+/// The tables the layers make, worked out from one look at their objects: what is left out or written as chords,
+/// each table's name, type, Z and M, its columns and the attribute each reads, how many rows; and what the file
+/// already has under those names. Nothing is written.
+fn plan(
+    doc: &Document,
+    layers: &[String],
+    session: &gpkg::Session<'_>,
+    clash: Option<Clash>,
+    out: &mut Written,
+) -> Result<Vec<Plan>, WriteStop> {
     let ids: Vec<String> = if layers.is_empty() {
         doc.layers().leaves().iter().map(|n| n.id.clone()).collect()
     } else {
         layers.to_vec()
     };
-    let mut out = Written::default();
-    let mut names: BTreeSet<String> = BTreeSet::new();
+    // The table KentOS keeps lasting ids in is no table of a layer.
+    let mut names: BTreeSet<String> = [gpkg::UIDS_EXTENSION.to_owned()].into();
+    let mut plans = Vec::new();
     for id in ids {
         let Some(node) = doc.layers().get(&id) else {
             continue;
         };
-        let objects: Vec<(Uuid, &Entity)> = doc.by_layer_with_uids(&id).collect();
-        if objects.is_empty() {
-            continue;
-        }
-        let mut geoms: Vec<Option<Geometry>> = Vec::with_capacity(objects.len());
-        let mut kept: Vec<(Uuid, &Entity)> = Vec::with_capacity(objects.len());
-        for (uid, e) in objects {
+        let mut fams = Families::default();
+        let (mut z, mut m) = (false, false);
+        let (mut all_z, mut all_m) = (true, true);
+        let mut rows = 0u32;
+        let mut extra: BTreeSet<String> = BTreeSet::new();
+        for (_, e) in doc.by_layer_with_uids(&id) {
             match row_of(e) {
                 Row::Geometry(g, chords) => {
                     if chords {
                         out.approximated += 1;
                     }
-                    geoms.push(Some(g));
-                    kept.push((uid, e));
+                    fams.add(family(&g));
+                    let (gz, gm) = g.dims();
+                    z |= gz;
+                    m |= gm;
+                    all_z &= gz;
+                    all_m &= gm;
                 }
-                Row::Record => {
-                    geoms.push(None);
-                    kept.push((uid, e));
+                Row::Record => {}
+                Row::Left(kind) => {
+                    *out.left.entry(kind.into()).or_default() += 1;
+                    continue;
                 }
-                Row::Left(kind) => *out.left.entry(kind.into()).or_default() += 1,
             }
+            rows += 1;
+            extra.extend(e.base().attrs.keys().cloned());
         }
-        if kept.is_empty() {
+        if rows == 0 {
             continue;
         }
-        let type_name = fit(&mut geoms);
-        let (mut z, mut m) = (false, false);
-        let (mut all_z, mut all_m) = (true, true);
-        for g in geoms.iter().flatten() {
-            let (gz, gm) = g.dims();
-            z |= gz;
-            m |= gm;
-            all_z &= gz;
-            all_m &= gm;
-        }
-        let flag = |any: bool, all: bool| {
+        let flag = |any: bool, all: bool| -> u8 {
             if !any {
                 0
             } else if all {
@@ -1033,10 +1282,6 @@ pub fn write(doc: &Document, layers: &[String], path: &Path) -> Result<Written, 
         for f in &node.fields {
             add(&f.name, column_of(f).kind, &mut columns, &mut keys);
         }
-        let mut extra: BTreeSet<String> = BTreeSet::new();
-        for (_, e) in &kept {
-            extra.extend(e.base().attrs.keys().cloned());
-        }
         for k in extra {
             add(&k, ColumnKind::Text(None), &mut columns, &mut keys);
         }
@@ -1059,48 +1304,38 @@ pub fn write(doc: &Document, layers: &[String], path: &Path) -> Result<Written, 
             table = format!("{base}_{k}");
             k += 1;
         }
-        let rows: Vec<gpkg::NewRow> = kept
-            .iter()
-            .zip(geoms)
-            .map(|((_, e), g)| gpkg::NewRow {
-                fid: None,
-                geometry: g,
-                values: columns
-                    .iter()
-                    .zip(&keys)
-                    .map(|(c, k)| cell(e.base().attrs.get(k), &c.kind))
-                    .collect(),
-            })
-            .collect();
-        let uids: Vec<String> = kept.iter().map(|(u, _)| u.to_string()).collect();
-        let def = gpkg::TableDef {
-            name: table.clone(),
-            data_type: if type_name.is_some() {
-                DataType::Features
-            } else {
-                DataType::Attributes
-            },
-            identifier: Some(table.clone()),
-            description: None,
-            srs_id: type_name.as_ref().map(|_| srs.id),
-            geometry: type_name.clone().map(|t| gpkg::GeometryColumn {
-                name: "geom".into(),
-                type_name: t,
-                z: flag(z, all_z),
-                m: flag(m, all_m),
-            }),
-            columns,
-        };
-        gp.write_table(&def, &rows, Some(&uids)).map_err(|e| e.0)?;
-        out.tables.push(TableWritten {
-            table,
+        let mut replaces = false;
+        if let Some(clash) = clash {
+            match session.taken(&table)? {
+                gpkg::Taken::Free => {}
+                gpkg::Taken::Data(_) if clash == Clash::Replace => replaces = true,
+                gpkg::Taken::Data(_) => {
+                    return Err(WriteStop::Taken {
+                        table,
+                        replaceable: true,
+                    });
+                }
+                gpkg::Taken::Other => {
+                    return Err(WriteStop::Taken {
+                        table,
+                        replaceable: false,
+                    });
+                }
+            }
+        }
+        plans.push(Plan {
             layer: id.clone(),
-            rows: rows.len() as u32,
-            geometry: type_name,
+            table,
+            type_name: fams.type_name(),
+            z: flag(z, all_z),
+            m: flag(m, all_m),
+            columns,
+            keys,
+            rows,
+            replaces,
         });
     }
-    gp.close().map_err(|e| e.0)?;
-    Ok(out)
+    Ok(plans)
 }
 
 // ── One object against a table (docs/adr/0503) ─────────────────────────────

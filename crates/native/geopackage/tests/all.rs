@@ -432,3 +432,124 @@ fn a_table_is_edited_in_place_and_its_index_follows() {
     }
     let _ = std::fs::remove_file(&tmp);
 }
+
+/// A GeoPackage's tables as `layers()` names them.
+fn names(path: &Path) -> Vec<String> {
+    GeoPackage::open(path, false)
+        .expect("opens")
+        .layers()
+        .expect("layers")
+        .into_iter()
+        .map(|l| l.name)
+        .collect()
+}
+
+fn one_square(x: f64) -> NewRow {
+    NewRow {
+        fid: None,
+        geometry: Some(Geometry::Polygon(vec![Curve::Line(vec![
+            Coord::xy(x, 4420000.0),
+            Coord::xy(x + 5.0, 4420000.0),
+            Coord::xy(x + 5.0, 4420005.0),
+            Coord::xy(x, 4420000.0),
+        ])])),
+        values: vec![Value::Text("a".into())],
+    }
+}
+
+fn square_table(name: &str, srs: Option<i32>) -> TableDef {
+    TableDef {
+        name: name.into(),
+        data_type: kentos_geopackage::DataType::Features,
+        identifier: Some(name.into()),
+        description: None,
+        srs_id: srs,
+        geometry: Some(kentos_geopackage::GeometryColumn {
+            name: "geom".into(),
+            type_name: "POLYGON".into(),
+            z: 0,
+            m: 0,
+        }),
+        columns: vec![kentos_geopackage::Column {
+            name: "ad".into(),
+            decl: String::new(),
+            kind: ColumnKind::Text(None),
+            not_null: false,
+            default: None,
+        }],
+    }
+}
+
+#[test]
+fn a_session_adds_and_replaces_tables_in_one_transaction_and_a_dropped_one_leaves_nothing() {
+    use kentos_geopackage::Taken;
+    let tmp = std::env::temp_dir().join(format!("kentos-gpkg-session-{}.gpkg", std::process::id()));
+    std::fs::copy(dir().join("qgis.gpkg"), &tmp).expect("copied");
+    let before = names(&tmp);
+    assert!(before.contains(&"parsel".to_owned()));
+    let mut gp = GeoPackage::open(&tmp, true).expect("opens");
+    let srs = gp
+        .layers()
+        .expect("layers")
+        .into_iter()
+        .find(|l| l.name == "parsel")
+        .and_then(|l| l.srs_id);
+    // Rolled back: nothing of it is in the file.
+    {
+        let s = gp.session().expect("a session");
+        assert_eq!(s.taken("PARSEL").expect("taken"), Taken::Data(kentos_geopackage::DataType::Features));
+        assert_eq!(s.taken("yeni").expect("taken"), Taken::Free);
+        assert_eq!(s.taken("gpkg_contents").expect("taken"), Taken::Other);
+        s.drop_table("parsel").expect("dropped");
+        let mut w = s.start_table(&square_table("yeni", srs)).expect("started");
+        s.append(&mut w, &[one_square(1.0)], None).expect("appended");
+        s.finish_table(w).expect("finished");
+        s.rollback().expect("rolled back");
+    }
+    assert_eq!(names(&tmp), before);
+    // Committed: the parcel table replaced by a new one of the same name in two batches, another added beside it.
+    let s = gp.session().expect("a session");
+    s.drop_table("parsel").expect("dropped");
+    let mut w = s.start_table(&square_table("parsel", srs)).expect("started");
+    let a = s
+        .append(&mut w, &[one_square(1.0), one_square(10.0)], Some(&["u1".into(), "u2".into()]))
+        .expect("batch one");
+    let b = s
+        .append(&mut w, &[one_square(20.0)], Some(&["u3".into()]))
+        .expect("batch two");
+    assert_eq!((a, b), (vec![1, 2], vec![3]));
+    assert_eq!(w.rows(), 3);
+    s.finish_table(w).expect("finished");
+    s.add_metadata("parsel", "https://example.org/x", "text/plain", "x", "2026-10-20T00:00:00.000Z")
+        .expect("metadata");
+    s.commit().expect("committed");
+    drop(gp);
+    let gp = GeoPackage::open(&tmp, false).expect("opens");
+    let layers = gp.layers().expect("layers");
+    let parsel = layers.iter().find(|l| l.name == "parsel").expect("parsel");
+    assert_eq!(gp.count(parsel).expect("count"), 3);
+    assert_eq!(parsel.columns.len(), 1);
+    assert_eq!(
+        gp.uids("parsel").expect("uids").values().cloned().collect::<std::collections::BTreeSet<_>>(),
+        ["u1", "u2", "u3"].map(String::from).into()
+    );
+    // The index is the new one's, its three boxes; the other tables are as they were.
+    let found = gp
+        .rows(parsel, &Query { bbox: Some([0.0, 4419999.0, 30.0, 4420010.0]), ..Query::default() })
+        .expect("rows");
+    assert_eq!(found.len(), 3);
+    let mut again = before.clone();
+    again.sort();
+    let mut now = names(&tmp);
+    now.sort();
+    assert_eq!(now, again);
+    // The old table's extension rows went with it: exactly one rtree row for the new one.
+    let rtree = gp
+        .extensions()
+        .expect("extensions")
+        .into_iter()
+        .filter(|e| e.table.as_deref() == Some("parsel") && e.name == "gpkg_rtree_index")
+        .count();
+    assert_eq!(rtree, 1);
+    let _ = std::fs::remove_file(&tmp);
+}

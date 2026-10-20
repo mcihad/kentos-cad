@@ -133,10 +133,29 @@ pub struct ProcessingRun {
     pub sink: Option<RunSink>,
 }
 
-/// A run's result written to a new GeoPackage instead of the drawing (docs/adr/0508 §4): the tool runs on a copy,
+/// What a sink does with the file at its path (docs/adr/0508 §4, 0549 §1).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SinkMode {
+    /// A new file: one that is there is replaced only with `overwrite`.
+    #[default]
+    New,
+    /// The tables are added to a GeoPackage that is there; a table of the same name is refused (`table_exists`), no
+    /// table of the file is touched.
+    AddTables,
+    /// As `addTables`, but a feature or attribute table of the same name is replaced by the new one; no other table
+    /// of the file is touched.
+    ReplaceTables,
+}
+
+/// A run's result written to a GeoPackage instead of the drawing (docs/adr/0508 §4, 0549): the tool runs on a copy,
 /// the objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the
-/// drawing does not change. The file is written whole or not at all; one that is there is replaced only with
-/// `overwrite`, and the old file stays until the new one is complete.
+/// drawing does not change. A new file is written whole or not at all (one that is there is replaced only with
+/// `overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one
+/// transaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -148,6 +167,91 @@ pub struct RunSink {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub overwrite: bool,
+    /// New file (the default), tables added to a file that is there, or tables added and same-named ones replaced.
+    #[serde(default, skip_serializing_if = "is_new")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<SinkMode>", optional))]
+    pub mode: SinkMode,
+}
+
+fn is_new(mode: &SinkMode) -> bool {
+    *mode == SinkMode::New
+}
+
+/// Whether a geometry column holds Z (or M) in the rows of a sink's table.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SinkDimension {
+    /// No row has it.
+    None,
+    /// Every row has it.
+    All,
+    /// Some rows have it, others do not (the column allows it).
+    Some,
+}
+
+/// A column of a sink's table and the attribute it holds.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SinkColumn {
+    pub attribute: String,
+    /// The column's name; it differs from the attribute's when the name had to change (a column of the same name in
+    /// another case, `fid`, `geom`).
+    pub column: String,
+}
+
+/// One table of a sink: what it holds and how it was made.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SinkTable {
+    pub table: String,
+    /// The layer of the copy the rows are the objects of.
+    pub layer: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub rows: u32,
+    /// The geometry column's type; none for a table of records.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub geometry: Option<String>,
+    pub z: SinkDimension,
+    pub m: SinkDimension,
+    /// A table of the file taken out and written again (`replaceTables`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub replaced: bool,
+    /// The columns in order, each with its attribute.
+    pub columns: Vec<SinkColumn>,
+}
+
+/// What a sink did and how, in the answer (docs/adr/0549 §4): the policy of the write made visible. What was left out
+/// or written as chords is in the answer's `sink` and its `export_losses` warning.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SinkReport {
+    pub mode: SinkMode,
+    pub tables: Vec<SinkTable>,
+    /// The tables the file already had that the write did not touch (a new file has none).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub untouched: Vec<String>,
+    /// The batches the rows went in, and how many rows a batch holds at most.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub batches: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub batch_rows: u32,
+    /// The table of the file that keeps each row's lasting id (`kentos_uids`: the table, the row's fid, the id).
+    pub ids: String,
 }
 
 /// A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503).
@@ -226,6 +330,10 @@ pub struct ProcessingRan {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub sink: Option<crate::GpkgExported>,
+    /// How the sink wrote it: mode, tables with their columns, Z and M, what the file kept (docs/adr/0549 §4).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sink_report: Option<SinkReport>,
     /// The undo step's name; none when the drawing did not change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

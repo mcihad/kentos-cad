@@ -6,23 +6,7 @@
 use kentos_commands::{CommandResult, ProcessingBatch, ProcessingBatched};
 
 use crate::ExecutionContext;
-use crate::jobs::Progress;
-use crate::processing_host::{BatchEnd, BatchFlow, host};
-
-/// The job's stop and progress, when the batch runs as one; none otherwise (it is never stopped).
-struct Flow<'a>(Option<&'a Progress>);
-
-impl BatchFlow for Flow<'_> {
-    fn stopped(&self) -> bool {
-        self.0.is_some_and(Progress::stopped)
-    }
-
-    fn progress(&self, done: u64, total: u64) {
-        if let Some(job) = self.0 {
-            job.set(done, total);
-        }
-    }
-}
+use crate::processing_host::{BatchEnd, JobFlow, host};
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ProcessingBatch) -> CommandResult<()> {
     match host().and_then(|h| h.check_batch(cx.doc, input)) {
@@ -48,7 +32,7 @@ pub fn plan(
     cx: &ExecutionContext<'_>,
     input: &ProcessingBatch,
 ) -> CommandResult<ProcessingBatched> {
-    let flow = Flow(cx.job);
+    let flow = JobFlow(cx.job);
     let ran = host().and_then(|h| {
         h.check_batch(cx.doc, input)?;
         let mut copy = cx.doc.reading_copy();
@@ -69,7 +53,7 @@ pub fn execute(
     input: ProcessingBatch,
 ) -> CommandResult<ProcessingBatched> {
     let job = cx.job;
-    let flow = Flow(job);
+    let flow = JobFlow(job);
     let ran = host().and_then(|h| {
         h.check_batch(cx.doc, &input)?;
         h.batch(cx.doc, &input, &flow)

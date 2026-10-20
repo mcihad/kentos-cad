@@ -2,6 +2,7 @@
 import type { GpkgExported } from "./GpkgExported";
 import type { ProcessingRecord } from "./ProcessingRecord";
 import type { RunInput } from "./RunInput";
+import type { SinkReport } from "./SinkReport";
 import type { ToolNote } from "./ToolNote";
 
 /**
@@ -40,6 +41,10 @@ inputs?: Array<RunInput>,
  * The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink.
  */
 sink?: GpkgExported, 
+/**
+ * How the sink wrote it: mode, tables with their columns, Z and M, what the file kept (docs/adr/0549 §4).
+ */
+sinkReport?: SinkReport, 
 /**
  * The undo step's name; none when the drawing did not change.
  */

@@ -3530,6 +3530,38 @@ ShpEncodingName = Literal["utf-8", "windows-1254"]
 """The names of :class:`ShpEncoding`, for a plain string."""
 
 
+class SinkDimension(_StrEnum):
+    """Whether a geometry column holds Z (or M) in the rows of a sink's table.
+
+    - ``none``: No row has it.
+    - ``all``: Every row has it.
+    - ``some``: Some rows have it, others do not (the column allows it).
+    """
+    NONE = "none"
+    ALL = "all"
+    SOME = "some"
+
+
+SinkDimensionName = Literal["none", "all", "some"]
+"""The names of :class:`SinkDimension`, for a plain string."""
+
+
+class SinkMode(_StrEnum):
+    """What a sink does with the file at its path (docs/adr/0508 §4, 0549 §1).
+
+    - ``new``: A new file: one that is there is replaced only with `overwrite`.
+    - ``addTables``: The tables are added to a GeoPackage that is there; a table of the same name is refused (`table_exists`), no
+    - ``replaceTables``: As `addTables`, but a feature or attribute table of the same name is replaced by the new one; no other table
+    """
+    NEW = "new"
+    ADD_TABLES = "addTables"
+    REPLACE_TABLES = "replaceTables"
+
+
+SinkModeName = Literal["new", "addTables", "replaceTables"]
+"""The names of :class:`SinkMode`, for a plain string."""
+
+
 class SnapKindName(_StrEnum):
     """A snap kind a command can ask for: the drawing's own points (Uzantı, Paralel and Karelaj belong to a running
     command's session and are not asked here).
@@ -31042,6 +31074,7 @@ class ProcessingRan(_Model):
         outputs: Its outputs by name (a features output as persistent ids, a number, a text, a table as its rows).
         selected: The objects it chose (a selecting tool's result; persistent ids).
         sink: The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink.
+        sink_report: How the sink wrote it: mode, tables with their columns, Z and M, what the file kept (docs/adr/0549 §4).
         step: The undo step's name; none when the drawing did not change.
     """
     tool: str
@@ -31056,6 +31089,7 @@ class ProcessingRan(_Model):
     outputs: dict[str, Any] | None | Unset = UNSET
     selected: list[str] | Unset = UNSET
     sink: GpkgExported | None | Unset = UNSET
+    sink_report: SinkReport | None | Unset = UNSET
     step: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -31080,6 +31114,8 @@ class ProcessingRan(_Model):
             out["selected"] = list(self.selected)
         if self.sink is not UNSET:
             out["sink"] = None if self.sink is None else self.sink.to_json()
+        if self.sink_report is not UNSET:
+            out["sinkReport"] = None if self.sink_report is None else self.sink_report.to_json()
         if self.step is not UNSET:
             out["step"] = self.step
         return out
@@ -31099,6 +31135,7 @@ class ProcessingRan(_Model):
             outputs=UNSET if "outputs" not in data else None if data["outputs"] is None else dict(data["outputs"]),
             selected=list(data["selected"]) if "selected" in data else UNSET,
             sink=UNSET if "sink" not in data else None if data["sink"] is None else GpkgExported.from_json(data["sink"]),
+            sink_report=UNSET if "sinkReport" not in data else None if data["sinkReport"] is None else SinkReport.from_json(data["sinkReport"]),
             step=data.get("step", UNSET),
         )
 
@@ -35063,19 +35100,24 @@ class RunInput(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class RunSink(_Model):
-    """A run's result written to a new GeoPackage instead of the drawing (docs/adr/0508 §4): the tool runs on a copy,
+    """A run's result written to a GeoPackage instead of the drawing (docs/adr/0508 §4, 0549): the tool runs on a copy,
     the objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the
-    drawing does not change. The file is written whole or not at all; one that is there is replaced only with
-    `overwrite`, and the old file stays until the new one is complete.
+    drawing does not change. A new file is written whole or not at all (one that is there is replaced only with
+    `overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one
+    transaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.
     Attributes:
         path: The GeoPackage's path (`.gpkg`).
+        mode: New file (the default), tables added to a file that is there, or tables added and same-named ones replaced.
     """
     path: str
+    mode: SinkMode | SinkModeName | Unset = UNSET
     overwrite: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
+        if self.mode is not UNSET:
+            out["mode"] = _enum_out(self.mode)
         if self.overwrite is not UNSET:
             out["overwrite"] = self.overwrite
         return out
@@ -35084,6 +35126,7 @@ class RunSink(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> RunSink:
         return cls(
             path=data["path"],
+            mode=_enum_in(SinkMode, data["mode"]) if "mode" in data else UNSET,
             overwrite=data.get("overwrite", UNSET),
         )
 
@@ -36590,6 +36633,117 @@ class SimilarCriteria(_Model):
             layer=data["layer"],
             color=data["color"],
             symbol=data["symbol"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SinkColumn(_Model):
+    """A column of a sink's table and the attribute it holds.
+    Attributes:
+        column: The column's name; it differs from the attribute's when the name had to change (a column of the same name in
+            another case, `fid`, `geom`).
+    """
+    attribute: str
+    column: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["attribute"] = self.attribute
+        out["column"] = self.column
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SinkColumn:
+        return cls(
+            attribute=data["attribute"],
+            column=data["column"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SinkReport(_Model):
+    """What a sink did and how, in the answer (docs/adr/0549 §4): the policy of the write made visible. What was left out
+    or written as chords is in the answer's `sink` and its `export_losses` warning.
+    Attributes:
+        batches: The batches the rows went in, and how many rows a batch holds at most. Unit: count.
+        batch_rows: Unit: count.
+        ids: The table of the file that keeps each row's lasting id (`kentos_uids`: the table, the row's fid, the id).
+        untouched: The tables the file already had that the write did not touch (a new file has none).
+    """
+    mode: SinkMode | SinkModeName
+    tables: list[SinkTable]
+    batches: int
+    batch_rows: int
+    ids: str
+    untouched: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mode"] = _enum_out(self.mode)
+        out["tables"] = [e0.to_json() for e0 in self.tables]
+        out["batches"] = self.batches
+        out["batchRows"] = self.batch_rows
+        out["ids"] = self.ids
+        if self.untouched is not UNSET:
+            out["untouched"] = list(self.untouched)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SinkReport:
+        return cls(
+            mode=_enum_in(SinkMode, data["mode"]),
+            tables=[SinkTable.from_json(e0) for e0 in data["tables"]],
+            batches=data["batches"],
+            batch_rows=data["batchRows"],
+            ids=data["ids"],
+            untouched=list(data["untouched"]) if "untouched" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SinkTable(_Model):
+    """One table of a sink: what it holds and how it was made.
+    Attributes:
+        layer: The layer of the copy the rows are the objects of.
+        rows: Unit: count.
+        columns: The columns in order, each with its attribute.
+        geometry: The geometry column's type; none for a table of records.
+        replaced: A table of the file taken out and written again (`replaceTables`).
+    """
+    table: str
+    layer: str
+    rows: int
+    z: SinkDimension | SinkDimensionName
+    m: SinkDimension | SinkDimensionName
+    columns: list[SinkColumn]
+    geometry: str | None | Unset = UNSET
+    replaced: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["layer"] = self.layer
+        out["rows"] = self.rows
+        out["z"] = _enum_out(self.z)
+        out["m"] = _enum_out(self.m)
+        out["columns"] = [e0.to_json() for e0 in self.columns]
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.replaced is not UNSET:
+            out["replaced"] = self.replaced
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SinkTable:
+        return cls(
+            table=data["table"],
+            layer=data["layer"],
+            rows=data["rows"],
+            z=_enum_in(SinkDimension, data["z"]),
+            m=_enum_in(SinkDimension, data["m"]),
+            columns=[SinkColumn.from_json(e0) for e0 in data["columns"]],
+            geometry=data.get("geometry", UNSET),
+            replaced=data.get("replaced", UNSET),
         )
 
 
@@ -56279,6 +56433,13 @@ __all__ = [
     "SimilarSelectRegion",
     "SimilarityCrsPlane",
     "SimilarityTransform",
+    "SinkColumn",
+    "SinkDimension",
+    "SinkDimensionName",
+    "SinkMode",
+    "SinkModeName",
+    "SinkReport",
+    "SinkTable",
     "SizeRectangleFrame",
     "SldExported",
     "SldImported",

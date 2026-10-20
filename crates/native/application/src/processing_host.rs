@@ -18,6 +18,31 @@ pub trait BatchFlow {
     fn progress(&self, done: u64, total: u64);
 }
 
+/// The job's stop and progress, when a command runs as one; none otherwise (it is never stopped).
+pub(crate) struct JobFlow<'a>(pub Option<&'a crate::jobs::Progress>);
+
+impl BatchFlow for JobFlow<'_> {
+    fn stopped(&self) -> bool {
+        self.0.is_some_and(crate::jobs::Progress::stopped)
+    }
+
+    fn progress(&self, done: u64, total: u64) {
+        if let Some(job) = self.0 {
+            job.set(done, total);
+        }
+    }
+}
+
+/// How a run ended without being refused (docs/adr/0549 §3).
+#[allow(clippy::large_enum_variant)]
+#[derive(Debug)]
+pub enum RunEnd {
+    /// It ran: its answer and warnings.
+    Ran(ProcessingRan, Vec<CommandWarning>),
+    /// It was stopped while its result went to a sink: nothing is written, the file is as it was.
+    Cancelled,
+}
+
 /// How a batch ended without being refused.
 #[allow(clippy::large_enum_variant)]
 pub enum BatchEnd {
@@ -38,13 +63,15 @@ pub trait ToolHost: Send + Sync {
     /// The refusals a run would meet before it runs: an unknown tool, an id, a value.
     fn check(&self, doc: &Document, input: &ProcessingRun) -> Result<(), Box<CommandError>>;
     /// The run on `doc`, written as one undo step named by the tool; with a sink the run is made on a copy and its
-    /// result written to the file (only when `write`: a plan writes nothing). Its warnings beside it.
+    /// result written to the file (only when `write`: a plan writes nothing). Its warnings beside it. `flow` is asked
+    /// between the sink's batches of rows and told how far they have come.
     fn run(
         &self,
         doc: &mut Document,
         input: &ProcessingRun,
         write: bool,
-    ) -> Result<(ProcessingRan, Vec<CommandWarning>), Box<CommandError>>;
+        flow: &dyn BatchFlow,
+    ) -> Result<RunEnd, Box<CommandError>>;
     /// The refusals a batch would meet before it runs: its size, then each row's, as `check` gives them.
     fn check_batch(&self, doc: &Document, input: &ProcessingBatch)
     -> Result<(), Box<CommandError>>;

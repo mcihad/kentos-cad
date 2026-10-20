@@ -170,7 +170,50 @@ for name, (table, tool, parameters, layers) in REQUESTS.items():
         pass
 expect(len(digests["parsel"]) == 1, f"the parcels read unchanged give one digest: {digests['parsel']}")
 
+# Into a file that is there (docs/adr/0549): QGIS's six tables as they were, one table beside them.
+def table_rows(ds: "ogr.DataSource", name: str) -> list[tuple]:
+    lyr = ds.GetLayerByName(name)
+    return [(f.GetFID(), f.GetGeometryRef().ExportToWkb().hex() if f.GetGeometryRef() else None,
+             tuple(f.GetField(i) for i in range(f.GetFieldCount()))) for f in lyr]
+
+
+mine = ogr.Open(str(GPKG / "kentos-run-ekle.gpkg"))
+theirs = ogr.Open(str(GPKG / "qgis.gpkg"))
+theirs_names = [theirs.GetLayer(i).GetName() for i in range(theirs.GetLayerCount())]
+mine_names = [mine.GetLayer(i).GetName() for i in range(mine.GetLayerCount())]
+expect(set(theirs_names) <= set(mine_names), f"ekle: tables {mine_names}")
+expect(sorted(set(mine_names) - set(theirs_names) - {"kentos_uids"}) == ["Tampon"], f"ekle: the new tables {mine_names}")
+for t in theirs_names:
+    expect(table_rows(mine, t) == table_rows(theirs, t), f"ekle: {t} is not as QGIS wrote it")
+tampon = mine.GetLayerByName("Tampon")
+expect(tampon.GetSpatialRef().GetAuthorityCode(None) == "5254", "ekle: Tampon's system")
+roads = layer("yol")
+expect(tampon.GetFeatureCount() == len(roads), f"ekle: {tampon.GetFeatureCount()} rows for {len(roads)} roads")
+for f in tampon:
+    g = f.GetGeometryRef().GetLinearGeometry(0.0005)
+    road = next(e for e in roads if e["attrs"]["Ad"] == f.GetField("Ad"))
+    expect(g.IsValid() and close(g.GetArea(), line(road).Buffer(5, 1024).GetArea(), 5e-4), f"ekle: Tampon {f.GetField('Ad')}")
+c = sqlite3.connect(GPKG / "kentos-run-ekle.gpkg")
+ref = c.execute("SELECT r.reference_scope, r.table_name, m.md_standard_uri FROM gpkg_metadata_reference r "
+                "JOIN gpkg_metadata m ON m.id = r.md_file_id").fetchall()
+expect(ref == [("table", "Tampon", "https://kentos.app/lineage/1")], f"ekle: lineage references {ref}")
+uids = c.execute("SELECT COUNT(*) FROM kentos_uids WHERE table_name = 'Tampon'").fetchone()[0] \
+    if "table_name" in [r[1] for r in c.execute("PRAGMA table_info(kentos_uids)")] else None
+if uids is not None:
+    expect(uids == tampon.GetFeatureCount(), f"ekle: {uids} ids")
+expect(c.execute("PRAGMA integrity_check").fetchone()[0] == "ok", "ekle: integrity_check")
+expect(c.execute("PRAGMA foreign_key_check").fetchall() == [], "ekle: foreign_key_check")
+try:
+    from osgeo_utils.samples import validate_gpkg
+    # GDAL 3.12's validator reads the empty flag from the wrong bit (finding 152 in QGIS's own file too, see
+    # geopackage_cases.py); the added table may have no finding QGIS's file lacks.
+    found = validate_gpkg.check(str(GPKG / "kentos-run-ekle.gpkg"), abort_at_first_error=False) or []
+    own = validate_gpkg.check(str(GPKG / "qgis.gpkg"), abort_at_first_error=False) or []
+    expect(not [f for f in found if f not in own], f"ekle: validate_gpkg {found}")
+except ImportError:
+    pass
+
 if problems:
     print("\n".join(problems))
     sys.exit(1)
-print("İşlem sonuçlarının GeoPackage'ları tutarlı: 3 dosya")
+print("İşlem sonuçlarının GeoPackage'ları tutarlı: 3 yeni dosya, 1 var olan dosyaya eklenen")
