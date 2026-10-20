@@ -226,6 +226,8 @@ Liste:
 - [ ] `CBS-38` Veri girişinin satır kapsamı (ADR 0539, 20 Ekim): web'de gerekenler: formun `scope`'u web'in form tasarımcısında
   (Kapsam alanı ve ön denetimin `form_scope_invalid`'i), `@kullanici_eposta` web'in `model/projectVariables.ts`'inde ve İfade
   oluşturucu'da; sunucu tarafı ortaktır.
+- [ ] `CBS-39` dayanıklı sunucu işleri (ADR 0542, 20 Ekim): web'de gerekenler: projenin işleri (iste, listele, durum, iptal,
+  sonuç dosyasını indir) web'in bulut arayüzünde; sunucu ve sözleşme ortaktır (`ServerJob` türleri `contracts/generated`'da).
 - [ ] `CBS-33` iki zamanlı katmanlar (ADR 0537, 20 Ekim): web'de gerekenler: `.kcad` şema 90'ın `recordedStart` ve `recordedEnd`'i web'in
   kodeğinde (`io/kcad.ts`) ve `model/snapshot.ts`'te, `cad.time.query`'nin işleyicisi, Zaman ayarları'nın kayıt alanları, Zaman
   sürgüsünün Bilinen günü (WASM deposunun `set_recorded`, `set_known_at`'i), `cad.layers.time`'ın yeni durumları web'in oynatıcısında.
@@ -2043,6 +2045,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   dışına çıkaran yazma 403, commit'te kilit altında; masaüstünde Formlar penceresinin Kapsam'ı. Kalan: olayların kimlik listesi,
   sağlayıcıya ve kaynağın DB rolüne taşınma, kaynak, dataset, katman, alan, dışa aktarma, medya, işlem ve onay yetkilerinin ortak
   çözücüsü, yapay zekâ bağlamı ve önbellekler, Düzenleyici için kapsam. — **20 Ekim, [ADR 0539](docs/adr/0539-form-scope.md).**
+- [ ] `CBS-39` dayanıklı sunucu işleri (dilim): projenin işi `kentos.server_job` (göç 0029): değişmez girdi ve SHA-256'sı, istendiği
+  revizyon, istek kimliğiyle tek iş, durum ve ilerleme, deneme ve süre sınırı; işçi kira ve çitle (`claim_job`, `beat_job`,
+  `finish_job`), ölen işçinin işi sonrakine geçer, eski çitin bitirmesi geçmez; `project.export` sonucu önce nesne deposuna yazar,
+  bitirme isteyen kullanıcı olarak yetkiyi ve revizyonu yeniden sorar, geçmezse dosya silinir, sahipsiz dosyayı temizlik siler; iptal;
+  yollar `…/jobs`, `kentosd serve`'ün `KENTOS_WORKERS`'ı ve `kentosd worker`; Python `export_job`, `wait_job`, `job_artifact`. Kalan:
+  başka iş türleri, CPU, bellek ve disk kotası, masaüstünde işler listesi, önbellek anahtarı, yedek ve geri yükleme tatbikatı, ölçümler.
+  — **20 Ekim, [ADR 0542](docs/adr/0542-durable-server-jobs.md).**
 - [ ] `CBS-37` kaynakla uzlaştırma (dilim): bağın tabanı (projenin `sourceBases`'i, `.kcad` şema 91: son eşleşmede her nesnenin
   katmandaki ve tablodaki özeti; bağlama, okuma ve yazma yeniden alır), `cad.sources.reconcile` (tabana göre iki yanın ekleme, değiştirme
   ve silmeleri; yalnız bir yanın değiştirdiği o yandan, aynı biçimde değişen uyuşur; öbürleri çatışma: farklı öznitelikler iki yanın

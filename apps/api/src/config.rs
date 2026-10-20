@@ -46,6 +46,9 @@ pub struct Config {
     /// besides the public internet (`KENTOS_PROXY_ALLOW`: `10.20.0.0/16, fd00::/8`;
     /// docs/adr/0208 §13). Absent: none.
     pub proxy_allow: Option<String>,
+    /// How many server-job workers `kentosd serve` runs beside the API (`KENTOS_WORKERS`, 0–16; docs/adr/0542).
+    /// Absent: 1. `kentosd worker` runs workers alone.
+    pub workers: u32,
 }
 
 /// Days of event log kept unless `KENTOS_EVENT_RETENTION_DAYS` says otherwise.
@@ -137,6 +140,15 @@ impl Config {
                         .join(".run/blobs")
                 }),
             proxy_allow: get("KENTOS_PROXY_ALLOW"),
+            workers: match get("KENTOS_WORKERS") {
+                None => 1,
+                Some(v) => v
+                    .trim()
+                    .parse::<u32>()
+                    .ok()
+                    .filter(|n| *n <= 16)
+                    .ok_or_else(|| format!("KENTOS_WORKERS 0 ile 16 arasında bir sayı olmalı: {v}"))?,
+            },
             env_file,
             vars,
         })

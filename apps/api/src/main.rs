@@ -176,6 +176,7 @@ async fn serve(config: Config) -> Result<(), String> {
         tokio::spawn(prune_events(db.clone(), config.event_retention));
         tokio::spawn(purge_trash(db.clone()));
         tokio::spawn(clean_store(db.clone(), blobs.clone()));
+        spawn_workers(db, &blobs, config.workers);
     }
     let state = AppState {
         config: Arc::new(config),
@@ -196,6 +197,50 @@ async fn serve(config: Config) -> Result<(), String> {
         .map_err(|e| format!("KentOS API durdu: {e}"))
 }
 
+/// How long a worker's claim lasts without a beat, and how long an idle worker waits before looking again.
+const WORKER_LEASE: Duration = Duration::from_secs(60);
+const WORKER_IDLE: Duration = Duration::from_secs(2);
+
+/// Server-job workers (docs/adr/0542): each claims, runs and finishes one job at a time.
+fn spawn_workers(db: &Db, blobs: &kentos_application::blobs::Blobs, count: u32) -> Vec<tokio::task::JoinHandle<()>> {
+    (0..count)
+        .map(|_| {
+            let owner = uuid::Uuid::now_v7();
+            tokio::spawn(kentos_application::jobs::run_worker(
+                db.clone(),
+                blobs.clone(),
+                owner,
+                WORKER_LEASE,
+                WORKER_IDLE,
+                Arc::new(std::sync::atomic::AtomicBool::new(false)),
+                move |done| match done {
+                    Ok(w) => tracing::info!(worker = %owner, job = %w.job, state = ?w.state, "sunucu işi bitti"),
+                    Err(e) => tracing::warn!(worker = %owner, error = %e, "sunucu işi alınamadı; yeniden denenecek"),
+                },
+            ))
+        })
+        .collect()
+}
+
+/// `kentosd worker`: server-job workers alone, without the API (`KENTOS_WORKERS`, at least one).
+async fn worker(config: Config) -> Result<(), String> {
+    let url = config
+        .database_url
+        .clone()
+        .ok_or("KENTOS_DATABASE_URL yok: işler veritabanında; `kentosd db-setup` ile kurun.")?;
+    let db = Db::connect(&url, 4 + config.workers.max(1) * 2, Duration::from_secs(10))
+        .await
+        .map_err(|e| format!("veritabanına bağlanılamadı: {e}"))?;
+    if !db.schema_ready().await.map_err(|e| e.to_string())? {
+        return Err("Veritabanının şeması bu sürümün değil: `kentosd migrate` çalıştırın.".into());
+    }
+    let blobs = kentos_application::blobs::Blobs::new(&config.blob_dir);
+    let handles = spawn_workers(&db, &blobs, config.workers.max(1));
+    println!("KentOS sunucu işleri: {} çalışan", handles.len());
+    shutdown().await;
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt()
@@ -210,6 +255,8 @@ async fn main() {
         let config = Config::load()?;
         if args.words.is_empty() || args.words == ["serve"] {
             serve(config).await
+        } else if args.words == ["worker"] {
+            worker(config).await
         } else {
             cli::run(&config, &args).await
         }

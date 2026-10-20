@@ -7,6 +7,9 @@ pub mod auth;
 #[cfg(test)]
 mod catalog_tests;
 pub mod checkpoints;
+pub mod jobs;
+#[cfg(test)]
+mod jobs_tests;
 #[cfg(test)]
 mod checkpoints_tests;
 #[cfg(test)]
@@ -212,6 +215,22 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/v1/tenants/{tenant}/projects/{project}/checkpoints/{checkpoint}",
             get(checkpoints::download),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/jobs",
+            get(jobs::list).post(jobs::create),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/jobs/{job}",
+            get(jobs::get),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/jobs/{job}/cancel",
+            post(jobs::cancel),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/jobs/{job}/artifact",
+            get(jobs::artifact),
         )
         .route("/v1/ws", get(ws::upgrade))
         .route("/v1/proxy", get(proxy::forward).post(proxy::forward))

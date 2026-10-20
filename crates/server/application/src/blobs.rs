@@ -71,6 +71,11 @@ impl Blobs {
         format!("checkpoints/{tenant}/{project}/{checkpoint}-{sha256}")
     }
 
+    /// A server job's staged artifact (docs/adr/0542).
+    pub fn job_key(tenant: Uuid, project: Uuid, job: Uuid, sha256: &str) -> String {
+        format!("jobs/{tenant}/{project}/{job}-{sha256}")
+    }
+
     fn path(&self, key: &str) -> io::Result<PathBuf> {
         // Keys are made above from ids, numbers and hex; anything else is a bug, never a path.
         let safe = !key.is_empty()
@@ -267,7 +272,7 @@ impl Blobs {
 
     /// Removes everything of a project removed for good.
     pub async fn remove_project(&self, tenant: Uuid, project: Uuid) -> io::Result<()> {
-        for kind in ["uploads", "revisions", "checkpoints"] {
+        for kind in ["uploads", "revisions", "checkpoints", "jobs"] {
             let dir = self
                 .root
                 .join(kind)
@@ -289,7 +294,7 @@ impl Blobs {
     pub async fn projects(&self, settled: Duration) -> io::Result<Vec<(Uuid, Uuid)>> {
         let mut found = Vec::new();
         let now = SystemTime::now();
-        for kind in ["revisions", "checkpoints"] {
+        for kind in ["revisions", "checkpoints", "jobs"] {
             let Ok(mut tenants) = tokio::fs::read_dir(self.root.join(kind)).await else {
                 continue;
             };
@@ -315,9 +320,19 @@ impl Blobs {
     /// key): a snapshot's object is written a moment before its row is
     /// committed, and one whose row never was belongs to nothing.
     pub async fn checkpoint_objects(&self, settled: Duration) -> io::Result<Vec<(Uuid, String)>> {
+        self.objects_in("checkpoints", settled).await
+    }
+
+    /// The server jobs' artifacts unchanged for `settled`, as (job id, key): an artifact is written before its job is
+    /// finished, and one whose finish never came (a lost lease, a cancel, a refused commit) belongs to nothing.
+    pub async fn job_objects(&self, settled: Duration) -> io::Result<Vec<(Uuid, String)>> {
+        self.objects_in("jobs", settled).await
+    }
+
+    async fn objects_in(&self, kind: &str, settled: Duration) -> io::Result<Vec<(Uuid, String)>> {
         let mut found = Vec::new();
         let now = SystemTime::now();
-        let Ok(mut tenants) = tokio::fs::read_dir(self.root.join("checkpoints")).await else {
+        let Ok(mut tenants) = tokio::fs::read_dir(self.root.join(kind)).await else {
             return Ok(found);
         };
         while let Some(t) = tenants.next_entry().await? {
@@ -338,7 +353,7 @@ impl Blobs {
                         .and_then(|id| Uuid::parse_str(id).ok());
                     let still = age(&o.metadata().await?, now).is_some_and(|d| d >= settled);
                     if let (Some(id), true) = (id, still) {
-                        found.push((id, format!("checkpoints/{tenant}/{project}/{name}")));
+                        found.push((id, format!("{kind}/{tenant}/{project}/{name}")));
                     }
                 }
             }

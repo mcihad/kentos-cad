@@ -24,6 +24,7 @@ mod idempotency;
 pub mod identity;
 pub mod importing;
 pub mod invitations;
+pub mod jobs;
 mod journal;
 pub mod lifecycle;
 pub mod listing;

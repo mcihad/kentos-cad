@@ -207,6 +207,65 @@ class ProjectRef:
         project = urllib.parse.quote(self.project_id, safe="")
         return self.connection._bytes(f"/v1/tenants/{tenant}/projects/{project}/snapshot")
 
+    # ------------------------------------------------------------ server jobs (docs/adr/0542)
+
+    def _jobs(self) -> str:
+        tenant = urllib.parse.quote(self.tenant_id, safe="")
+        project = urllib.parse.quote(self.project_id, safe="")
+        return f"/v1/tenants/{tenant}/projects/{project}/jobs"
+
+    def export_job(
+        self,
+        *,
+        expected_revision: str | None = None,
+        request_id: str | None = None,
+        timeout_seconds: int | None = None,
+    ) -> dict[str, Any]:
+        """Asks the server to write the project as one ``.kcad`` file (``project.export``). The same ``request_id``
+        sent again gives the same job; ``expected_revision`` refuses the export when the project has moved on."""
+        body: dict[str, Any] = {
+            "kind": "project.export",
+            "input": {} if expected_revision is None else {"expectedRevision": expected_revision},
+            "requestId": request_id or str(uuid.uuid4()),
+        }
+        if timeout_seconds is not None:
+            body["timeoutSeconds"] = timeout_seconds
+        answer: dict[str, Any] = self.connection._request("POST", self._jobs(), body)
+        return answer
+
+    def jobs(self) -> list[dict[str, Any]]:
+        """The project's server jobs, newest first."""
+        answer: dict[str, Any] = self.connection._request("GET", self._jobs())
+        return list(answer["jobs"])
+
+    def job(self, job: str) -> dict[str, Any]:
+        answer: dict[str, Any] = self.connection._request("GET", f"{self._jobs()}/{urllib.parse.quote(job, safe='')}")
+        return answer
+
+    def cancel_job(self, job: str) -> dict[str, Any]:
+        """Cancels a queued job at once and a running one at its worker's next beat."""
+        answer: dict[str, Any] = self.connection._request(
+            "POST", f"{self._jobs()}/{urllib.parse.quote(job, safe='')}/cancel", {}
+        )
+        return answer
+
+    def wait_job(self, job: str, *, every: float = 1.0, within: float = 600.0) -> dict[str, Any]:
+        """Asks after the job until it is over (succeeded, failed or cancelled) and gives it back."""
+        import time
+
+        until = time.monotonic() + within
+        while True:
+            answer = self.job(job)
+            if answer["state"] in ("succeeded", "failed", "cancelled"):
+                return answer
+            if time.monotonic() >= until:
+                raise TimeoutError(f"{job} işi {within:g} saniyede bitmedi; durumu: {answer['state']}.")
+            time.sleep(every)
+
+    def job_artifact(self, job: str) -> bytes:
+        """A succeeded export's file; ``Document.from_bytes`` opens it."""
+        return self.connection._bytes(f"{self._jobs()}/{urllib.parse.quote(job, safe='')}/artifact")
+
     def _command(
         self,
         command: str,

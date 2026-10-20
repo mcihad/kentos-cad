@@ -703,6 +703,8 @@ pub struct Cleanup {
     /// Checkpoint objects of no checkpoint: its row was never committed, or
     /// was removed and the object was not (docs/adr/0034).
     pub checkpoints: usize,
+    /// Server jobs' artifacts no succeeded job holds (docs/adr/0542).
+    pub jobs: usize,
 }
 
 /// How long a project's folder in the store stays unchanged before the
@@ -765,6 +767,21 @@ pub async fn cleanup(
             if !existing.contains(&id) {
                 blobs.remove(&key).await?;
                 done.checkpoints += 1;
+            }
+        }
+    }
+    let objects = blobs.job_objects(settled).await?;
+    if !objects.is_empty() {
+        let keys: Vec<String> = objects.iter().map(|(_, k)| k.clone()).collect();
+        let held: Vec<String> =
+            sqlx::query_scalar("select artifact_key from kentos.existing_job_artifacts($1)")
+                .bind(&keys)
+                .fetch_all(&db.pool)
+                .await?;
+        for (_, key) in objects {
+            if !held.contains(&key) {
+                blobs.remove(&key).await?;
+                done.jobs += 1;
             }
         }
     }

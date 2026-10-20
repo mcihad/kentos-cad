@@ -28,20 +28,29 @@ fn config() -> Config {
         trash_retention: std::time::Duration::from_secs(30 * 24 * 3600),
         blob_dir: std::env::temp_dir().join("kentos-api-tests-blobs"),
         proxy_allow: None,
+        workers: 0,
     }
 }
 
 pub(super) fn app(database: Option<Db>) -> Router {
+    // Each router its own store, so tests never see each other's objects.
+    app_with(
+        database,
+        kentos_application::blobs::Blobs::new(
+            std::env::temp_dir().join(format!("kentos-api-blobs-{}", uuid::Uuid::now_v7())),
+        ),
+    )
+}
+
+/// A router over the given object store (a test's worker writes to the same one).
+pub(super) fn app_with(database: Option<Db>, blobs: kentos_application::blobs::Blobs) -> Router {
     router(AppState {
         config: Arc::new(config()),
         database,
         oidc: None,
         hub: crate::hub::Hub::default(),
         logins: Default::default(),
-        // Each router its own store, so tests never see each other's objects.
-        blobs: kentos_application::blobs::Blobs::new(
-            std::env::temp_dir().join(format!("kentos-api-blobs-{}", uuid::Uuid::now_v7())),
-        ),
+        blobs,
         proxy: None,
     })
 }

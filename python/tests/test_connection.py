@@ -137,6 +137,33 @@ class ConnectionTests(unittest.TestCase):
             cad.project.archive(project)
         self.assertFalse(conn.signed_in, "a 401 forgets the session")
 
+    def test_a_server_job_is_asked_waited_and_cancelled(self) -> None:
+        conn = cad.Connection.login(self.server.url, "ayse", "parola")
+        project = conn.project(PROJECT["id"], TENANT)
+        base = f"/v1/tenants/{TENANT}/projects/{PROJECT['id']}/jobs"
+        job = {"id": "j1", "kind": "project.export", "state": "succeeded", "artifact": {"size": "3", "sha256": "0" * 64, "name": "a.kcad"}}
+        self.server.replies[base] = (201, {**job, "state": "queued"}, {})
+        self.server.replies[f"{base}/j1"] = (200, job, {})
+        self.server.replies[f"{base}/j1/cancel"] = (200, {**job, "state": "cancelled"}, {})
+        asked = project.export_job(expected_revision="7", request_id="istek-1", timeout_seconds=60)
+        self.assertEqual(asked["state"], "queued")
+        sent = self.server.requests[-1]
+        self.assertEqual((sent["method"], sent["path"]), ("POST", base))
+        self.assertEqual(
+            sent["body"],
+            {"kind": "project.export", "input": {"expectedRevision": "7"}, "requestId": "istek-1", "timeoutSeconds": 60},
+        )
+        self.assertEqual(sent["headers"]["cookie"], "kentos_session=tok-123")
+        self.assertEqual(project.wait_job("j1", every=0.01)["state"], "succeeded")
+        self.assertEqual(project.cancel_job("j1")["state"], "cancelled")
+        self.assertEqual(self.server.requests[-1]["path"], f"{base}/j1/cancel")
+        self.server.replies[f"{base}/j1"] = (200, {**job, "state": "running"}, {})
+        with self.assertRaises(TimeoutError):
+            project.wait_job("j1", every=0.01, within=0.05)
+        self.server.replies[f"{base}/yok"] = (404, {"error": "not_found", "message": "İş bulunamadı."}, {})
+        with self.assertRaises(cad.NotFound):
+            project.job("yok")
+
     def test_a_server_that_does_not_answer(self) -> None:
         url = self.server.url
         self.server.close()

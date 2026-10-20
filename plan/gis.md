@@ -502,6 +502,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-10/24/28/35…38/42. G1'de iptal, kapanma ve yerel recovery geçmeli; sunucu scheduler gerekmiyor. G2'de worker ölmesi, disk dolması, yarım upload, duplicate dispatch ve kaynak değişimiyle sınanmalı. Restore tatbikatı revision/kimlik/ek/form ilişkilerini korumalı; backup alındı bildirimi restore kanıtı yerine geçmemeli.
 
+  *Kısmen (20 Ekim 2026; [ADR 0542](../docs/adr/0542-durable-server-jobs.md)): kalıcı sunucu işi: kimlik, değişmez girdi ve SHA-256'sı, istendiği revizyon, durum ve ilerleme, istek kimliğiyle tek iş (duplicate dispatch), kira, yoklama ve çit (ölen işçinin işi sonrakine geçer, geç bitirme geçmez), deneme ve süre sınırı, iptal; `project.export`'un sonucu staged, bitirmede yetki ve revizyon yeniden sorulur, sahipsiz dosyayı temizlik siler; işçi `kentosd serve`'ün yanında ya da `kentosd worker`. Geçici PostGIS'te sınandı. Kalan: başka iş türleri, CPU/bellek/disk kotası, masaüstünde işler listesi, önbellek anahtarı, disk dolması ve yarım yükleme senaryoları, yedek ve geri yükleme tatbikatı, ölçümler.*
+
 ## I — Kullanım, otomasyon, performans ve teslim kabulü
 
 - [ ] **CBS-40 — Yeni provider akışını mevcut GIS arayüzüne bağla ve kullanıcı kabulünü yap — P0**
