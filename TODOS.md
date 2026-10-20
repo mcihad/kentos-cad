@@ -228,6 +228,9 @@ Liste:
   oluşturucu'da; sunucu tarafı ortaktır.
 - [ ] `CBS-39` dayanıklı sunucu işleri (ADR 0542, 20 Ekim): web'de gerekenler: projenin işleri (iste, listele, durum, iptal,
   sonuç dosyasını indir) web'in bulut arayüzünde; sunucu ve sözleşme ortaktır (`ServerJob` türleri `contracts/generated`'da).
+- [ ] `CBS-20` ve `CBS-40` Öznitelik tablosunda dışarı çıkanlar (ADR 0546, 20 Ekim): web'de gerekenler: Sütunlar ▾, Kopyala, formda
+  `redact`'lı alanın kopyaya, dosyaya, İstatistik'e ve Grafik'e girmemesi, İncele ▾ ve Göster ▾'in Tablonun süzgeciyle'si; bağlı katman
+  web'e gelince tablonun Kaynak satırı.
 - [ ] `CBS-40` Kaynak durumu (ADR 0543, 20 Ekim): web'de gerekenler: bağlı katmanlar web'e dönünce Kaynak durumu penceresi (durumun
   `objects`, `rows`, `total`, `next`'i ve satırın düğmesi); kural ve komut ortaktır.
 - [ ] `CBS-33` iki zamanlı katmanlar (ADR 0537, 20 Ekim): web'de gerekenler: `.kcad` şema 90'ın `recordedStart` ve `recordedEnd`'i web'in
@@ -2009,6 +2012,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   açık değerler, kimliklerle nesneler, plan kopyada); ev sahiplerinin kaydı `processing_host`; Python ve MCP katalogdan; 40 + 23
   ortak durum `processing_command_cases.py`'den (İşlemler'in kendi durumları ve web'in envanteri). Kalan: başsız dosya erişimi,
   modeller, pencerenin komut kaydı, uzun iş yolu, kapsam matrisi. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md).**
+- [ ] `CBS-20` ve `CBS-40` Öznitelik tablosunda dışarı çıkanlar ve kaynak satırı (dilim): Sütunlar ▾, Kopyala, Dışa aktar gösterilen
+  sütunlarla, formda `redact`'lı alan dışarı çıkmaz; İstatistik ve Grafik Tablonun süzgeciyle; bağlı katmanın tablosunda Kaynak satırı.
+  Kalan: kaynağa itilen sıralama, süzgeç ve toplam, imleçli sayfalar (ADR 0546 §4'ün tasarımı), sütun başlığı menüsü, alan yetkisinin
+  ortak çözücüsü (CBS-38), bilgi kartında kaynak satırı. — **20 Ekim, [ADR 0546](docs/adr/0546-attribute-table-outgoing-and-source-line.md).**
 - [ ] `CBS-41` kapsam matrisi ve eşdeğerlik (dilim): `scripts/gis/coverage.py` (işlem + seçenek + veri türü + ev sahibi, kanıtı ortak
   durumlardan) → `docs/gis/coverage.{json,md}`; `tests/cases/equivalence.rs` 276 durumu pencereden ve `cad.processing.run`'dan
   oynatır, ikisi aynı. Kalan: raster, nokta bulutu ve çok boyutlu araçların komutla eşdeğerliği, açık seçenek hücreleri. — **20 Ekim,
