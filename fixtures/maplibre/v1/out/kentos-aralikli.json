@@ -1,0 +1,128 @@
+{
+  "layers": [
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "alan"
+        ],
+        [
+          ">=",
+          [
+            "to-number",
+            [
+              "get",
+              "alan"
+            ]
+          ],
+          0
+        ],
+        [
+          "<=",
+          [
+            "to-number",
+            [
+              "get",
+              "alan"
+            ]
+          ],
+          5000
+        ]
+      ],
+      "id": "import-parsel/1",
+      "metadata": {
+        "kentos:labels": [
+          "küçük",
+          "orta",
+          "büyük"
+        ],
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "paint": {
+        "fill-color": [
+          "step",
+          [
+            "to-number",
+            [
+              "get",
+              "alan"
+            ]
+          ],
+          "#fee5d9",
+          500,
+          "#fcae91",
+          1000,
+          "#de2d26"
+        ],
+        "fill-opacity": 1
+      },
+      "source": "import-parsel",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "alan"
+        ],
+        [
+          ">=",
+          [
+            "to-number",
+            [
+              "get",
+              "alan"
+            ]
+          ],
+          0
+        ],
+        [
+          "<=",
+          [
+            "to-number",
+            [
+              "get",
+              "alan"
+            ]
+          ],
+          5000
+        ]
+      ],
+      "id": "import-parsel/2",
+      "layout": {
+        "line-cap": "butt",
+        "line-join": "miter"
+      },
+      "metadata": {
+        "kentos:labels": [
+          "küçük",
+          "orta",
+          "büyük"
+        ],
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "paint": {
+        "line-color": "#222222",
+        "line-opacity": 1,
+        "line-width": 1.5118
+      },
+      "source": "import-parsel",
+      "type": "line"
+    }
+  ],
+  "metadata": {
+    "kentos:format": "kentos-maplibre/1"
+  },
+  "name": "parsel",
+  "sources": {
+    "import-parsel": {
+      "data": "kentos-aralikli.geojson",
+      "type": "geojson"
+    }
+  },
+  "version": 8
+}

@@ -97,6 +97,12 @@ pub enum Event {
     QmlImport(String),
     QmlExportTo(String, Option<std::path::PathBuf>),
     QmlImportFrom(String, Option<std::path::PathBuf>),
+    /// Görünüşü MapLibre stili olarak kaydet… and MapLibre stilinden görünüş al… (layer_maplibre.rs,
+    /// docs/adr/0560); with no layer the whole map's (Dosya alışverişi).
+    MaplibreExport(String),
+    MaplibreImport(String),
+    MaplibreExportTo(Option<String>, Option<std::path::PathBuf>),
+    MaplibreImportFrom(Option<String>, Option<std::path::PathBuf>),
     /// Sil: the layer, or the group with everything under it, and their objects.
     Remove(String),
     /// A layer's own snapping, a group's on all its layers (the magnet, Kenet ▸;
@@ -258,6 +264,16 @@ impl App {
                 self.qml_import_from(id, path);
                 return Task::none();
             }
+            Event::MaplibreExport(id) => return self.maplibre_export_ask(Some(id)),
+            Event::MaplibreImport(id) => return self.maplibre_import_ask(Some(id)),
+            Event::MaplibreExportTo(id, path) => {
+                self.maplibre_export_to(id, path);
+                return Task::none();
+            }
+            Event::MaplibreImportFrom(id, path) => {
+                self.maplibre_import_from(id, path);
+                return Task::none();
+            }
             _ => {}
         }
         if let Event::ZoomTo(id) = &event {
@@ -380,7 +396,11 @@ impl App {
             | Event::QmlExport(_)
             | Event::QmlImport(_)
             | Event::QmlExportTo(..)
-            | Event::QmlImportFrom(..) => {}
+            | Event::QmlImportFrom(..)
+            | Event::MaplibreExport(_)
+            | Event::MaplibreImport(_)
+            | Event::MaplibreExportTo(..)
+            | Event::MaplibreImportFrom(..) => {}
             Event::Snap(id, snap) => model.set_layer_snap(&id, snap),
             Event::SelectObjects(id) => {
                 let Some(node) = model.layers().get(&id) else {
@@ -828,6 +848,17 @@ impl App {
             .icon(icon("qmlExport"))
             .item("QML'den görünüş al…", event(Event::QmlImport(id.clone())))
             .icon(icon("qmlImport"))
+            // MapLibre (docs/adr/0560): the look out as a style with its GeoJSON, and a style's in.
+            .item(
+                "Görünüşü MapLibre stili olarak kaydet…",
+                event(Event::MaplibreExport(id.clone())),
+            )
+            .icon(icon("maplibreExport"))
+            .item(
+                "MapLibre stilinden görünüş al…",
+                event(Event::MaplibreImport(id.clone())),
+            )
+            .icon(icon("maplibreImport"))
             .separator()
             // Değişikliğin etkisi (docs/adr/0314 §4): what a change of its look would reach.
             .item(
@@ -1511,6 +1542,7 @@ fn screens() {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
             for name in [
                 "tek", "cok", "menu", "renk", "ad", "sil", "komutlar", "durumlar", "sld", "qml",
+                "maplibre", "maplibre-yaz", "menu-gorunus",
             ]
             .into_iter()
             .filter(|n| {
@@ -1560,6 +1592,16 @@ fn screens() {
                     "renk" => {
                         snapshot.input(&mut app, App::view, &mut update, Input::Click(swatch))
                     }
+                    // The menu's Görünüş submenu: SLD, QML and MapLibre out and in (docs/adr/0516, 0555, 0560).
+                    "menu-gorunus" => {
+                        snapshot.input(&mut app, App::view, &mut update, Input::RightClick(bina));
+                        let at = if width > 1200.0 {
+                            iced::Point::new(1095.0, 537.0)
+                        } else {
+                            iced::Point::new(741.0, 238.0)
+                        };
+                        snapshot.input(&mut app, App::view, &mut update, Input::Click(at));
+                    }
                     "ad" => {
                         let _ = app.update(Message::Layer(Event::Rename("bina".into())));
                         let _ = app
@@ -1606,6 +1648,41 @@ fn screens() {
                             renderer.as_ref().map(|r| r["type"].clone()),
                             Some("single".into())
                         );
+                        app.selection.set(Vec::new());
+                    }
+                    // MapLibre stilinden görünüş al (docs/adr/0560): a third party's categorized style on Parsel.
+                    "maplibre" => {
+                        let style = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                            .join("../../fixtures/maplibre/v1/kategorili.json");
+                        let _ = app.update(Message::Layer(Event::MaplibreImportFrom(
+                            Some("parsel".into()),
+                            Some(style),
+                        )));
+                        let model = &app.document.as_ref().expect("open").model;
+                        let renderer = model
+                            .layers()
+                            .get("parsel")
+                            .and_then(|n| n.style.renderer.clone());
+                        assert_eq!(
+                            renderer.as_ref().map(|r| r["type"].clone()),
+                            Some("categorized".into())
+                        );
+                        app.selection.set(Vec::new());
+                        app.open_layer_style(Some("parsel".into()));
+                    }
+                    // Görünüşü MapLibre stili olarak kaydet (docs/adr/0560): the visible layers as one style.
+                    "maplibre-yaz" => {
+                        let dir = std::env::temp_dir()
+                            .join(format!("kentos-maplibre-{}", std::process::id()));
+                        let _ = std::fs::remove_dir_all(&dir);
+                        std::fs::create_dir_all(&dir).expect("a folder");
+                        let style = dir.join("harita.json");
+                        let _ = app.update(Message::Layer(Event::MaplibreExportTo(
+                            None,
+                            Some(style.clone()),
+                        )));
+                        assert!(style.exists(), "the style is written");
+                        let _ = std::fs::remove_dir_all(&dir);
                         app.selection.set(Vec::new());
                     }
                     "komutlar" => {

@@ -1,0 +1,15 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "baska",
+   "type": "fill",
+   "source-layer": "baska",
+   "paint": {
+    "fill-color": "#000000"
+   }
+  }
+ ]
+}

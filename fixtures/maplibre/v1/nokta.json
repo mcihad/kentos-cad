@@ -1,0 +1,33 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "durak-1",
+   "type": "circle",
+   "source": "s",
+   "source-layer": "durak",
+   "paint": {
+    "circle-radius": 4,
+    "circle-color": "#ff0000",
+    "circle-stroke-color": "#000000",
+    "circle-stroke-width": 1,
+    "circle-opacity": 0.5
+   }
+  },
+  {
+   "id": "durak-2",
+   "type": "circle",
+   "source": "s",
+   "source-layer": "durak",
+   "paint": {
+    "circle-radius": 6,
+    "circle-color": "#00ff00",
+    "circle-opacity": 0,
+    "circle-stroke-color": "#0000ff",
+    "circle-stroke-width": 2
+   }
+  }
+ ]
+}

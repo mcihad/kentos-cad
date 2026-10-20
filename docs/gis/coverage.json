@@ -18431,6 +18431,38 @@
    "kinds": []
   },
   {
+   "id": "file.export.maplibre",
+   "title": "Görünüşü MapLibre stili olarak dışa aktar",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 0,
+   "files": [],
+   "options": [
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "sourceKind",
+     "value": "geojson",
+     "covered": false
+    },
+    {
+     "key": "sourceKind",
+     "value": "vector",
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "file.export.pdf",
    "title": "PDF olarak yazdır",
    "effect": "query",
@@ -18829,6 +18861,24 @@
      "covered": true
     }
    ],
+   "kinds": []
+  },
+  {
+   "id": "file.import.maplibre",
+   "title": "MapLibre stilinden görünüş al",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 34,
+   "files": [
+    "fixtures/commands/v1/file.import.maplibre.json"
+   ],
+   "options": [],
    "kinds": []
   },
   {

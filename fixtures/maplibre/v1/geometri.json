@@ -1,0 +1,68 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "g1",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "#cccccc"
+   }
+  },
+  {
+   "id": "g2",
+   "type": "line",
+   "source-layer": "parsel",
+   "filter": [
+    "==",
+    [
+     "geometry-type"
+    ],
+    "Polygon"
+   ],
+   "paint": {
+    "line-color": "#333333",
+    "line-width": 2
+   }
+  },
+  {
+   "id": "g3",
+   "type": "line",
+   "source-layer": "parsel",
+   "filter": [
+    "==",
+    [
+     "geometry-type"
+    ],
+    "LineString"
+   ],
+   "paint": {
+    "line-color": "#0000ff",
+    "line-width": 4
+   }
+  },
+  {
+   "id": "g4",
+   "type": "circle",
+   "source-layer": "parsel",
+   "filter": [
+    "match",
+    [
+     "geometry-type"
+    ],
+    [
+     "Point",
+     "MultiPoint"
+    ],
+    true,
+    false
+   ],
+   "paint": {
+    "circle-radius": 3,
+    "circle-color": "#ff0000"
+   }
+  }
+ ]
+}

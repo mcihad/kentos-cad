@@ -1,0 +1,5251 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "file.import.maplibre",
+ "commandVersion": 1,
+ "title": "MapLibre stilinden görünüş al",
+ "note": "ADR 0560. Elle yazılmış MapLibre stilleri (fixtures/maplibre/v1); görünüşler ADR'nin okuma kuralıyla burada, json ile kurulur. Bağımsız başvuru: scripts/fixtures/maplibre_cases.py; elle düzenlemeyin.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "MapLibre'den görünüş",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "durak",
+    "name": "Durak",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "imar",
+    "name": "İmar",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "imar-alan",
+      "name": "İmar alanı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "altlik",
+    "name": "OpenStreetMap",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "service": {
+     "kind": "xyz",
+     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+     "maxZoom": 19
+    }
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ada": "A",
+     "alan": "420"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420014
+     },
+     {
+      "x": 487000,
+      "y": 4420014
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 2,
+    "layerId": "yol",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420020
+     },
+     {
+      "x": 487060,
+      "y": 4420020
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 3,
+    "layerId": "durak",
+    "attrs": {
+     "ad": "Merkez"
+    },
+    "p": {
+     "x": 487010,
+     "y": 4420025
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Üçüncü tarafın kategorili stili: match üç değer, yedek Diğerleri; kenar çizgisi dolgunun kenarı; saydamlık renge katılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/kategorili.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "parsel-dolgu",
+          "parsel-kenar"
+         ],
+         "kind": "categorized",
+         "rules": 4,
+         "renderer": {
+          "type": "categorized",
+          "expr": "[ada]",
+          "categories": [
+           {
+            "value": "A",
+            "label": "A",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#e41a1cb3",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#222222",
+                "width": 1.5,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "value": "B",
+            "label": "B",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#377eb8b3",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#222222",
+                "width": 1.5,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "value": "C",
+            "label": "C",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#377eb8b3",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#222222",
+                "width": 1.5,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           }
+          ],
+          "other": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#999999b3",
+              "id": "f0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#222222",
+              "width": 1.5,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "f1"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "categorized",
+          "expr": "[ada]",
+          "categories": [
+           {
+            "value": "A",
+            "label": "A",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#e41a1cb3",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#222222",
+                "width": 1.5,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "value": "B",
+            "label": "B",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#377eb8b3",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#222222",
+                "width": 1.5,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "value": "C",
+            "label": "C",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#377eb8b3",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#222222",
+                "width": 1.5,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           }
+          ],
+          "other": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#999999b3",
+              "id": "f0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#222222",
+              "width": 1.5,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "f1"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralıklı stil: step, süzgecin sınırları aralığın uçları, KentOS'un yazdığı etiketler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/aralikli.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "alan-sinif",
+          "alan-kenar"
+         ],
+         "kind": "graduated",
+         "rules": 3,
+         "renderer": {
+          "type": "graduated",
+          "expr": "[alan]",
+          "classes": [
+           {
+            "min": 0.0,
+            "max": 500.0,
+            "label": "Küçük",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#fee5d9",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#a50f15",
+                "width": 1.0,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "min": 500.0,
+            "max": 1000.0,
+            "label": "Orta",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#fcae91",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#67000d",
+                "width": 1.0,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "min": 1000.0,
+            "max": 5000.0,
+            "label": "Büyük",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#de2d26",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#000000",
+                "width": 1.0,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           }
+          ]
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "graduated",
+          "expr": "[alan]",
+          "classes": [
+           {
+            "min": 0.0,
+            "max": 500.0,
+            "label": "Küçük",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#fee5d9",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#a50f15",
+                "width": 1.0,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "min": 500.0,
+            "max": 1000.0,
+            "label": "Orta",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#fcae91",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#67000d",
+                "width": 1.0,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "min": 1000.0,
+            "max": 5000.0,
+            "label": "Büyük",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#de2d26",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#000000",
+                "width": 1.0,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           }
+          ]
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sınırsız step: açık uçlu kurallar olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/acik-aralikli.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "acik"
+         ],
+         "kind": "rules",
+         "rules": 3,
+         "renderer": {
+          "type": "rules",
+          "rules": [
+           {
+            "id": "r1",
+            "label": "< 500",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#fee5d9",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[alan] < 500"
+           },
+           {
+            "id": "r2",
+            "label": "500 - 1000",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#fcae91",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[alan] >= 500 ve [alan] < 1000"
+           },
+           {
+            "id": "r3",
+            "label": "≥ 1000",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#de2d26",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[alan] >= 1000"
+           }
+          ]
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "rules",
+          "rules": [
+           {
+            "id": "r1",
+            "label": "< 500",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#fee5d9",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[alan] < 500"
+           },
+           {
+            "id": "r2",
+            "label": "500 - 1000",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#fcae91",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[alan] >= 500 ve [alan] < 1000"
+           },
+           {
+            "id": "r3",
+            "label": "≥ 1000",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#de2d26",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[alan] >= 1000"
+           }
+          ]
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Süzgeçli katmanlar kurallı görünüş: ifade süzgeçleri, yakınlaştırma ölçeğe, in'in değili",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/kurallar.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "k1",
+          "k2",
+          "k3"
+         ],
+         "kind": "rules",
+         "rules": 3,
+         "renderer": {
+          "type": "rules",
+          "rules": [
+           {
+            "id": "r1",
+            "label": "Kural 1",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#1b9e77",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[kullanim] = 'Konut'"
+           },
+           {
+            "id": "r2",
+            "label": "Kural 2",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#d95f02",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[alan] > 1000 ve [ada] <> 'B'",
+            "minScale": 533.0,
+            "maxScale": 17062.0
+           },
+           {
+            "id": "r3",
+            "label": "Kural 3",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#7570b3",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "değil ([kullanim] = 'Konut' veya [kullanim] = 'Ticaret')"
+           }
+          ]
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "lost": [
+        "yakınlaştırma düzeyleri ölçek paydasına yaklaşık çevrildi (OGC'nin 0,28 mm pikseli, ekvator, 512 pikselli karo)"
+       ]
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "Stilin bazı parçaları alınamadı: yakınlaştırma düzeyleri ölçek paydasına yaklaşık çevrildi (OGC'nin 0,28 mm pikseli, ekvator, 512 pikselli karo).",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "rules",
+          "rules": [
+           {
+            "id": "r1",
+            "label": "Kural 1",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#1b9e77",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[kullanim] = 'Konut'"
+           },
+           {
+            "id": "r2",
+            "label": "Kural 2",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#d95f02",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[alan] > 1000 ve [ada] <> 'B'",
+            "minScale": 533.0,
+            "maxScale": 17062.0
+           },
+           {
+            "id": "r3",
+            "label": "Kural 3",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#7570b3",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "değil ([kullanim] = 'Konut' veya [kullanim] = 'Ticaret')"
+           }
+          ]
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi: eski $type süzgeci, metre genişliği, kesikler genişlik oranından, uç ve köşe",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yol",
+      "path": "$fixture:maplibre/v1/cizgi.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "yol",
+         "from": [
+          "yol-1",
+          "yol-2"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "type": "simpleLine",
+              "color": "#3366cc",
+              "width": 5.0,
+              "unit": "m",
+              "dash": [
+               10.0,
+               5.0
+              ],
+              "cap": "round",
+              "join": "round",
+              "id": "l0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#ffffff",
+              "width": 3.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "l1"
+             }
+            ],
+            "opacity": 0.8
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "type": "simpleLine",
+              "color": "#3366cc",
+              "width": 5.0,
+              "unit": "m",
+              "dash": [
+               10.0,
+               5.0
+              ],
+              "cap": "round",
+              "join": "round",
+              "id": "l0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#ffffff",
+              "width": 3.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "l1"
+             }
+            ],
+            "opacity": 0.8
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çember: yarıçap çapa, dolgu ve kenarın saydamlıkları ayrı, dolgusuz çember",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "durak",
+      "path": "$fixture:maplibre/v1/nokta.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "durak",
+         "from": [
+          "durak-1",
+          "durak-2"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "size": 8.0,
+              "unit": "px",
+              "fill": "#ff000080",
+              "stroke": "#000000",
+              "strokeWidth": 1.0,
+              "id": "m0"
+             },
+             {
+              "type": "shape",
+              "shape": "circle",
+              "size": 12.0,
+              "unit": "px",
+              "fill": null,
+              "stroke": "#0000ff",
+              "strokeWidth": 2.0,
+              "id": "m1"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "size": 8.0,
+              "unit": "px",
+              "fill": "#ff000080",
+              "stroke": "#000000",
+              "strokeWidth": 1.0,
+              "id": "m0"
+             },
+             {
+              "type": "shape",
+              "shape": "circle",
+              "size": 12.0,
+              "unit": "px",
+              "fill": null,
+              "stroke": "#0000ff",
+              "strokeWidth": 2.0,
+              "id": "m1"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eski süzgeç biçimi: ==, in, !has, !in, bir çift sınır arasında, bir önek",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/eski.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "e1",
+          "e2",
+          "e3",
+          "e4",
+          "e5",
+          "e6"
+         ],
+         "kind": "rules",
+         "rules": 6,
+         "renderer": {
+          "type": "rules",
+          "rules": [
+           {
+            "id": "r1",
+            "label": "Kural 1",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#111111",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[ada] = 'A' ve [alan] boş değil"
+           },
+           {
+            "id": "r2",
+            "label": "Kural 2",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#222222",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[kullanim] = 'Konut' veya [kullanim] = 'Ticaret'"
+           },
+           {
+            "id": "r3",
+            "label": "Kural 3",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#333333",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[tapu] boş"
+           },
+           {
+            "id": "r4",
+            "label": "Kural 4",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#444444",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "değil ([ada] = 'A' veya [ada] = 'B')"
+           },
+           {
+            "id": "r5",
+            "label": "Kural 5",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#555555",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[kat] arasında 2 ve 4"
+           },
+           {
+            "id": "r6",
+            "label": "Kural 6",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#666666",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[ad] gibi 'Ba%'"
+           }
+          ]
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "rules",
+          "rules": [
+           {
+            "id": "r1",
+            "label": "Kural 1",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#111111",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[ada] = 'A' ve [alan] boş değil"
+           },
+           {
+            "id": "r2",
+            "label": "Kural 2",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#222222",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[kullanim] = 'Konut' veya [kullanim] = 'Ticaret'"
+           },
+           {
+            "id": "r3",
+            "label": "Kural 3",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#333333",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[tapu] boş"
+           },
+           {
+            "id": "r4",
+            "label": "Kural 4",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#444444",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "değil ([ada] = 'A' veya [ada] = 'B')"
+           },
+           {
+            "id": "r5",
+            "label": "Kural 5",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#555555",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[kat] arasında 2 ve 4"
+           },
+           {
+            "id": "r6",
+            "label": "Kural 6",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#666666",
+                "id": "f0"
+               }
+              ]
+             }
+            },
+            "filter": "[ad] gibi 'Ba%'"
+           }
+          ]
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alınamayanlar söylenir: etiket, fill-extrusion, zoom eğrisi, case, çevrilemeyen süzgeç, desen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/kayipli.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "parsel/etiket",
+          "parsel/yukseklik",
+          "parsel/egri",
+          "parsel/durum",
+          "parsel/suzgec"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#abcdef",
+              "id": "f0"
+             }
+            ],
+            "opacity": 0.2
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "lost": [
+        "“parsel/etiket” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır",
+        "“parsel/yukseklik” katmanı: “fill-extrusion” katmanı KentOS'un çizebileceği bir katman değil, alınmadı",
+        "“parsel/egri” katmanı: “fill-opacity” yakınlaştırmaya göre değişen bir eğri; ilk durağının değeri alındı",
+        "“parsel/egri” katmanı: fill-pattern, fill-translate özellikleri alınmadı",
+        "“parsel/durum” katmanı: “fill-color” değerindeki “case” ifadesi KentOS'ta yok; değer alınmadı",
+        "“parsel/durum” katmanı: “fill-color” okunamadığı için katman alınmadı",
+        "“parsel/suzgec” katmanı: süzgeci KentOS'un ifadesine çevrilemedi (yalnız alanın değerinin karşılaştırmaları, boşluk, in, match ve all, any, ! okunur); katman alınmadı"
+       ]
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "Stilin bazı parçaları alınamadı: “parsel/etiket” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır; “parsel/yukseklik” katmanı: “fill-extrusion” katmanı KentOS'un çizebileceği bir katman değil, alınmadı; “parsel/egri” katmanı: “fill-opacity” yakınlaştırmaya göre değişen bir eğri; ilk durağının değeri alındı; “parsel/egri” katmanı: fill-pattern, fill-translate özellikleri alınmadı; “parsel/durum” katmanı: “fill-color” değerindeki “case” ifadesi KentOS'ta yok; değer alınmadı; “parsel/durum” katmanı: “fill-color” okunamadığı için katman alınmadı; “parsel/suzgec” katmanı: süzgeci KentOS'un ifadesine çevrilemedi (yalnız alanın değerinin karşılaştırmaları, boşluk, in, match ve all, any, ! okunur); katman alınmadı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#abcdef",
+              "id": "f0"
+             }
+            ],
+            "opacity": 0.2
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "CSS renkleri: #abc, rgb, rgba, hsl, hsla, adlı, transparent, rgba ifadesi, sekiz haneli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/renkler.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "r1",
+          "r2",
+          "r3",
+          "r4",
+          "r5",
+          "r6",
+          "r7",
+          "r8",
+          "r9"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#aabbcc",
+              "id": "f0"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#ff8000",
+              "id": "f1"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#00800080",
+              "id": "f2"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#0000ff",
+              "id": "f3"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#80808040",
+              "id": "f4"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#ff0000",
+              "id": "f5"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#00000000",
+              "id": "f6"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#0a141e80",
+              "id": "f7"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#11223344",
+              "id": "f8"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#aabbcc",
+              "id": "f0"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#ff8000",
+              "id": "f1"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#00800080",
+              "id": "f2"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#0000ff",
+              "id": "f3"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#80808040",
+              "id": "f4"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#ff0000",
+              "id": "f5"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#00000000",
+              "id": "f6"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#0a141e80",
+              "id": "f7"
+             },
+             {
+              "type": "simpleFill",
+              "color": "#11223344",
+              "id": "f8"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geometri süzgeçleri hangi simgenin olduğunu söyler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/geometri.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "g1",
+          "g2",
+          "g3",
+          "g4"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#cccccc",
+              "id": "f0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#333333",
+              "width": 2.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "f1"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "type": "simpleLine",
+              "color": "#0000ff",
+              "width": 4.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "l0"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "size": 6.0,
+              "unit": "px",
+              "fill": "#ff0000",
+              "id": "m0"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#cccccc",
+              "id": "f0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#333333",
+              "width": 2.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "f1"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "type": "simpleLine",
+              "color": "#0000ff",
+              "width": 4.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "l0"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "size": 6.0,
+              "unit": "px",
+              "fill": "#ff0000",
+              "id": "m0"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Görünmez stil katmanı kapalı katman olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/kapali.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "p1",
+          "p2"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#cccccc",
+              "id": "f0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#000000",
+              "width": 1.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "f1",
+              "enabled": false
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#cccccc",
+              "id": "f0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#000000",
+              "width": 1.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "f1",
+              "enabled": false
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "KentOS'un yazdığı biçim: metadata kentos:layer, üyelik süzgeci Diğerleri'ni kapatır, etiketler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "durak",
+      "path": "$fixture:maplibre/v1/kentos.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "durak",
+         "from": [
+          "durak/1"
+         ],
+         "kind": "categorized",
+         "rules": 2,
+         "renderer": {
+          "type": "categorized",
+          "expr": "[tur]",
+          "categories": [
+           {
+            "value": "E",
+            "label": "Eczane",
+            "symbols": {
+             "marker": {
+              "type": "marker",
+              "layers": [
+               {
+                "type": "shape",
+                "shape": "circle",
+                "size": 10.0,
+                "unit": "px",
+                "fill": "#e41a1c",
+                "id": "m0"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "value": "H",
+            "label": "H",
+            "symbols": {
+             "marker": {
+              "type": "marker",
+              "layers": [
+               {
+                "type": "shape",
+                "shape": "circle",
+                "size": 16.0,
+                "unit": "px",
+                "fill": "#377eb8",
+                "id": "m0"
+               }
+              ]
+             }
+            }
+           }
+          ]
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "categorized",
+          "expr": "[tur]",
+          "categories": [
+           {
+            "value": "E",
+            "label": "Eczane",
+            "symbols": {
+             "marker": {
+              "type": "marker",
+              "layers": [
+               {
+                "type": "shape",
+                "shape": "circle",
+                "size": 10.0,
+                "unit": "px",
+                "fill": "#e41a1c",
+                "id": "m0"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "value": "H",
+            "label": "H",
+            "symbols": {
+             "marker": {
+              "type": "marker",
+              "layers": [
+               {
+                "type": "shape",
+                "shape": "circle",
+                "size": 16.0,
+                "unit": "px",
+                "fill": "#377eb8",
+                "id": "m0"
+               }
+              ]
+             }
+            }
+           }
+          ]
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başka bir ad: from ile source-layer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "from": "building",
+      "path": "$fixture:maplibre/v1/baska-ad.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "building-fill"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#d9d0c9",
+              "id": "f0"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#d9d0c9",
+              "id": "f0"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bütün katmanlar: kimliğe, ada, source-layer'a göre; denk gelmeyenler söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:maplibre/v1/cok-katman.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "p-dolgu"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#e5d8bd",
+              "id": "f0"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        },
+        {
+         "layer": "yol",
+         "from": [
+          "yol-cizgi"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "type": "simpleLine",
+              "color": "#888888",
+              "width": 2.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "l0"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        },
+        {
+         "layer": "durak",
+         "from": [
+          "durak/1"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "size": 10.0,
+              "unit": "px",
+              "fill": "#ff5500",
+              "id": "m0"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        },
+        {
+         "layer": "imar-alan",
+         "from": [
+          "imar-alan"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#abd9e9",
+              "id": "f0"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "lost": [
+        "2 stil katmanı çizimin hiçbir katmanına denk gelmedi, alınmadı: arka-plan, okyanus"
+       ]
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "Stilin bazı parçaları alınamadı: 2 stil katmanı çizimin hiçbir katmanına denk gelmedi, alınmadı: arka-plan, okyanus.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#e5d8bd",
+              "id": "f0"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "type": "simpleLine",
+              "color": "#888888",
+              "width": 2.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "l0"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "size": 10.0,
+              "unit": "px",
+              "fill": "#ff5500",
+              "id": "m0"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25,
+           "renderer": {
+            "type": "single",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#abd9e9",
+                "id": "f0"
+               }
+              ]
+             }
+            }
+           }
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Stil dosya yerine metin olarak verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "text": "{\n \"version\": 8,\n \"name\": \"deneme\",\n \"sources\": {},\n \"layers\": [\n  {\n   \"id\": \"parsel-dolgu\",\n   \"type\": \"fill\",\n   \"source\": \"s\",\n   \"source-layer\": \"parsel\",\n   \"paint\": {\n    \"fill-color\": [\n     \"match\",\n     [\n      \"get\",\n      \"ada\"\n     ],\n     \"A\",\n     \"#e41a1c\",\n     [\n      \"B\",\n      \"C\"\n     ],\n     \"#377eb8\",\n     \"#999999\"\n    ],\n    \"fill-opacity\": 0.7\n   }\n  },\n  {\n   \"id\": \"parsel-kenar\",\n   \"type\": \"line\",\n   \"source\": \"s\",\n   \"source-layer\": \"parsel\",\n   \"paint\": {\n    \"line-color\": \"#222222\",\n    \"line-width\": 1.5\n   }\n  }\n ]\n}\n"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "parsel-dolgu",
+          "parsel-kenar"
+         ],
+         "kind": "categorized",
+         "rules": 4,
+         "renderer": {
+          "type": "categorized",
+          "expr": "[ada]",
+          "categories": [
+           {
+            "value": "A",
+            "label": "A",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#e41a1cb3",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#222222",
+                "width": 1.5,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "value": "B",
+            "label": "B",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#377eb8b3",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#222222",
+                "width": 1.5,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "value": "C",
+            "label": "C",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#377eb8b3",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#222222",
+                "width": 1.5,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           }
+          ],
+          "other": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#999999b3",
+              "id": "f0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#222222",
+              "width": 1.5,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "f1"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "categorized",
+          "expr": "[ada]",
+          "categories": [
+           {
+            "value": "A",
+            "label": "A",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#e41a1cb3",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#222222",
+                "width": 1.5,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "value": "B",
+            "label": "B",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#377eb8b3",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#222222",
+                "width": 1.5,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "value": "C",
+            "label": "C",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#377eb8b3",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#222222",
+                "width": 1.5,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           }
+          ],
+          "other": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#999999b3",
+              "id": "f0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#222222",
+              "width": 1.5,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "f1"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı stil ikinci kez: değişmez, adım yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/kapali.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "p1",
+          "p2"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#cccccc",
+              "id": "f0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#000000",
+              "width": 1.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "f1",
+              "enabled": false
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/kapali.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "p1",
+          "p2"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#cccccc",
+              "id": "f0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#000000",
+              "width": 1.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "f1",
+              "enabled": false
+             }
+            ]
+           }
+          }
+         },
+         "changed": false
+        }
+       ],
+       "changed": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#cccccc",
+              "id": "f0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#000000",
+              "width": 1.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "f1",
+              "enabled": false
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan okur, hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/aralikli.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "alan-sinif",
+          "alan-kenar"
+         ],
+         "kind": "graduated",
+         "rules": 3,
+         "renderer": {
+          "type": "graduated",
+          "expr": "[alan]",
+          "classes": [
+           {
+            "min": 0.0,
+            "max": 500.0,
+            "label": "Küçük",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#fee5d9",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#a50f15",
+                "width": 1.0,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "min": 500.0,
+            "max": 1000.0,
+            "label": "Orta",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#fcae91",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#67000d",
+                "width": 1.0,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "min": 1000.0,
+            "max": 5000.0,
+            "label": "Büyük",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#de2d26",
+                "id": "f0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#000000",
+                "width": 1.0,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "f1"
+               }
+              ]
+             }
+            }
+           }
+          ]
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Birden çok katman tek geri alma adımıdır: geri alınır ve yinelenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:maplibre/v1/cok-katman.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "p-dolgu"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#e5d8bd",
+              "id": "f0"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        },
+        {
+         "layer": "yol",
+         "from": [
+          "yol-cizgi"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "type": "simpleLine",
+              "color": "#888888",
+              "width": 2.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "l0"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        },
+        {
+         "layer": "durak",
+         "from": [
+          "durak/1"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "size": 10.0,
+              "unit": "px",
+              "fill": "#ff5500",
+              "id": "m0"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        },
+        {
+         "layer": "imar-alan",
+         "from": [
+          "imar-alan"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#abd9e9",
+              "id": "f0"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "lost": [
+        "2 stil katmanı çizimin hiçbir katmanına denk gelmedi, alınmadı: arka-plan, okyanus"
+       ]
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "Stilin bazı parçaları alınamadı: 2 stil katmanı çizimin hiçbir katmanına denk gelmedi, alınmadı: arka-plan, okyanus.",
+        "path": "path"
+       }
+      ]
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "canUndo": false,
+      "canRedo": true,
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    },
+    {
+     "op": "redo",
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#e5d8bd",
+              "id": "f0"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "type": "simpleLine",
+              "color": "#888888",
+              "width": 2.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "l0"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "size": 10.0,
+              "unit": "px",
+              "fill": "#ff5500",
+              "id": "m0"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25,
+           "renderer": {
+            "type": "single",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "type": "simpleFill",
+                "color": "#abd9e9",
+                "id": "f0"
+               }
+              ]
+             }
+            }
+           }
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ne yol ne metin",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Stilin ya yolunu (path) ya da kendisini (text) verin, ikisini birden değil.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hem yol hem metin",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/nokta.json",
+      "text": "{}"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Stilin ya yolunu (path) ya da kendisini (text) verin, ikisini birden değil.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/yok.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_unreadable",
+       "message": "“$fixture:maplibre/v1/yok.json” okunamadı: No such file or directory (os error 2). Dosyanın yerinde olduğunu denetleyin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "JSON olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/bozuk.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_maplibre",
+       "message": "Dosya okunabilir bir JSON değil.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nesne olmayan JSON",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/dizi.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_maplibre",
+       "message": "Dosya bir MapLibre stili değil: kökü bir nesne değil.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürümü 8 olmayan stil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/surum7.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_maplibre",
+       "message": "Dosya bir MapLibre stili değil ya da sürümü okunamıyor: version 7, yalnız 8 okunur.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman listesi olmayan stil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/katmansiz.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_maplibre",
+       "message": "Stilde katman listesi (layers) yok.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizilebilecek katmanı olmayan stil (yalnız etiket ve arka plan)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/cizilemeyen.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_maplibre",
+       "message": "“Parsel” katmanının stili okunamadı: Stilde KentOS'un çizebileceği (fill, line, circle) bir katman yok. “parsel/etiket” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır; “parsel/arka” katmanı: “background” katmanı KentOS'un çizebileceği bir katman değil, alınmadı",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman için stil katmanı olmayan stil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/eslesmeyen.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "style_layer_not_found",
+       "message": "Stilde “parsel” katmanı için bir stil katmanı yok: metadata kentos:layer, source-layer ya da id katmanın kimliği ya da adı olmalı; başka bir ad için from verin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "from ile olmayan ad",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "from": "yok",
+      "path": "$fixture:maplibre/v1/baska-ad.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "style_layer_not_found",
+       "message": "Stilde “yok” adlı (source-layer ya da id) bir katman yok. Stilin katmanlarının adlarına bakın.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hiçbir katmana denk gelmeyen stil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:maplibre/v1/eslesmeyen.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "style_layer_not_found",
+       "message": "Stilde çizimin hiçbir katmanı için bir stil katmanı yok: metadata kentos:layer, source-layer ya da id katmanların kimliği ya da adı olmalı.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yok",
+      "path": "$fixture:maplibre/v1/nokta.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman grubu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "imar",
+      "path": "$fixture:maplibre/v1/nokta.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“İmar” bir katman grubu; görünüş katmanındır. Grubun bir katmanını verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Servis katmanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "altlik",
+      "path": "$fixture:maplibre/v1/nokta.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "service_layer",
+       "message": "“OpenStreetMap” servisten çizilir ve nesne tutmaz; görünüş nesneleri olan katmanın olur.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eski sürüme göre hazırlanmış istek: hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "durak",
+      "path": "$fixture:maplibre/v1/nokta.json",
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -86,6 +86,7 @@ pub mod file_import_csv;
 pub mod file_import_fgb;
 pub mod file_import_gml;
 pub mod shapefile;
+pub mod maplibre;
 pub mod qml;
 pub mod sld;
 pub mod sources;
@@ -1146,6 +1147,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::FILE_IMPORT_QML,
         kentos_commands::FILE_IMPORT_QML_VERSION,
+    ),
+    // A MapLibre style's look made the layers' ([`maplibre`], docs/adr/0560).
+    (
+        kentos_commands::FILE_IMPORT_MAPLIBRE,
+        kentos_commands::FILE_IMPORT_MAPLIBRE_VERSION,
     ),
     // A PDF page into the drawing ([`file_import_pdf`], docs/adr/0352).
     (

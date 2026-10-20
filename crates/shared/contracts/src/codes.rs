@@ -1285,6 +1285,10 @@ codes! {
     INVALID_SLD = "invalid_sld", Failed, false, "Dosya okunabilir bir SLD değil ya da KentOS'un çizebileceği bir kuralı yok.";
     /// A QML whose look KentOS cannot read (docs/adr/0555).
     INVALID_QML = "invalid_qml", Failed, false, "Dosya okunabilir bir QGIS stil dosyası (QML) değil ya da KentOS'un çizebileceği bir görünüşü yok.";
+    /// A MapLibre style whose look KentOS cannot read (docs/adr/0560).
+    INVALID_MAPLIBRE = "invalid_maplibre", Failed, false, "Dosya okunabilir bir MapLibre stili (sürüm 8) değil ya da KentOS'un çizebileceği bir katmanı yok.";
+    /// A MapLibre style with no layer for the layers asked (docs/adr/0560).
+    STYLE_LAYER_NOT_FOUND = "style_layer_not_found", Failed, false, "Stilde istenen katman için bir stil katmanı yok: metadata kentos:layer, source-layer ya da id katmanın kimliği ya da adı olmalı (ya da from verin).";
     /// Objects a file format has no place for, or written approximately (docs/adr/0502).
     EXPORT_LOSSES = "export_losses", Warning, false, "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir.";
     /// The PDF could not be made.

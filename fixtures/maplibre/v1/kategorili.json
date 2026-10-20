@@ -1,0 +1,41 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "parsel-dolgu",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": [
+     "match",
+     [
+      "get",
+      "ada"
+     ],
+     "A",
+     "#e41a1c",
+     [
+      "B",
+      "C"
+     ],
+     "#377eb8",
+     "#999999"
+    ],
+    "fill-opacity": 0.7
+   }
+  },
+  {
+   "id": "parsel-kenar",
+   "type": "line",
+   "source": "s",
+   "source-layer": "parsel",
+   "paint": {
+    "line-color": "#222222",
+    "line-width": 1.5
+   }
+  }
+ ]
+}

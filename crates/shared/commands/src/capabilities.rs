@@ -3459,6 +3459,36 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "file.export.maplibre",
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "layer_not_found",
+            "not_a_layer",
+            "service_layer",
+            "no_system",
+            "nothing_to_export",
+            "file_unwritable",
+        ]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "file.import.maplibre",
+        refusals: &[&[
+            "invalid_input",
+            "file_unreadable",
+            "invalid_maplibre",
+            "layer_not_found",
+            "not_a_layer",
+            "service_layer",
+            "style_layer_not_found",
+            "revision_conflict",
+        ]],
+        warnings: &["import_losses"],
+        targets: none,
+    },
+    Entry {
         id: "file.import.qml",
         refusals: &[&[
             "invalid_input",

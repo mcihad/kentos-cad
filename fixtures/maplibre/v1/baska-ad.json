@@ -1,0 +1,26 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "building-fill",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "building",
+   "paint": {
+    "fill-color": "#d9d0c9"
+   }
+  },
+  {
+   "id": "road",
+   "type": "line",
+   "source": "s",
+   "source-layer": "road",
+   "paint": {
+    "line-color": "#ffffff",
+    "line-width": 2
+   }
+  }
+ ]
+}

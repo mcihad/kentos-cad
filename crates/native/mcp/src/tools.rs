@@ -661,6 +661,8 @@ fn command_tool(c: &Value) -> Value {
             | "file.import.sld"
             | "file.export.qml"
             | "file.import.qml"
+            | "file.export.maplibre"
+            | "file.import.maplibre"
             | "file.export.csv"
             | "file.export.fgb"
             | "file.export.gml"

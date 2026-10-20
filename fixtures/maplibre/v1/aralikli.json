@@ -1,0 +1,120 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "alan-sinif",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "parsel",
+   "filter": [
+    "all",
+    [
+     "has",
+     "alan"
+    ],
+    [
+     ">=",
+     [
+      "to-number",
+      [
+       "get",
+       "alan"
+      ]
+     ],
+     0
+    ],
+    [
+     "<=",
+     [
+      "to-number",
+      [
+       "get",
+       "alan"
+      ]
+     ],
+     5000
+    ]
+   ],
+   "paint": {
+    "fill-color": [
+     "step",
+     [
+      "to-number",
+      [
+       "get",
+       "alan"
+      ]
+     ],
+     "#fee5d9",
+     500,
+     "#fcae91",
+     1000,
+     "#de2d26"
+    ]
+   }
+  },
+  {
+   "id": "alan-kenar",
+   "type": "line",
+   "source": "s",
+   "source-layer": "parsel",
+   "filter": [
+    "all",
+    [
+     "has",
+     "alan"
+    ],
+    [
+     ">=",
+     [
+      "to-number",
+      [
+       "get",
+       "alan"
+      ]
+     ],
+     0
+    ],
+    [
+     "<=",
+     [
+      "to-number",
+      [
+       "get",
+       "alan"
+      ]
+     ],
+     5000
+    ]
+   ],
+   "metadata": {
+    "kentos:symbol": "fill",
+    "kentos:labels": [
+     "Küçük",
+     "Orta",
+     "Büyük"
+    ]
+   },
+   "paint": {
+    "line-color": [
+     "step",
+     [
+      "to-number",
+      [
+       "get",
+       "alan"
+      ]
+     ],
+     "#a50f15",
+     500,
+     "#67000d",
+     1000,
+     "#000000"
+    ],
+    "line-width": 1
+   }
+  }
+ ]
+}

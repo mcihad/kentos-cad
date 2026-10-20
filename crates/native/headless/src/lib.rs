@@ -38,6 +38,7 @@ pub mod package;
 mod query;
 pub mod rpc;
 mod session;
+pub mod maplibre_export;
 pub mod shp_export;
 
 pub use dispatch::{Op, call_envelope, commands, with_own_file};

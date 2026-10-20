@@ -1,0 +1,71 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "durak/1",
+   "type": "circle",
+   "source": "durak",
+   "metadata": {
+    "kentos:layer": "durak",
+    "kentos:symbol": "marker",
+    "kentos:labels": {
+     "E": "Eczane"
+    }
+   },
+   "filter": [
+    "match",
+    [
+     "to-string",
+     [
+      "get",
+      "tur"
+     ]
+    ],
+    [
+     "E",
+     "H"
+    ],
+    true,
+    false
+   ],
+   "paint": {
+    "circle-radius": [
+     "match",
+     [
+      "to-string",
+      [
+       "get",
+       "tur"
+      ]
+     ],
+     "E",
+     5,
+     "H",
+     8,
+     8
+    ],
+    "circle-color": [
+     "match",
+     [
+      "to-string",
+      [
+       "get",
+       "tur"
+      ]
+     ],
+     "E",
+     "#e41a1c",
+     "H",
+     "#377eb8",
+     "#377eb8"
+    ],
+    "circle-opacity": 1,
+    "circle-stroke-color": "#000000",
+    "circle-stroke-width": 0,
+    "circle-stroke-opacity": 0
+   }
+  }
+ ]
+}

@@ -1,0 +1,27 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "p1",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "#cccccc"
+   }
+  },
+  {
+   "id": "p2",
+   "type": "line",
+   "source-layer": "parsel",
+   "layout": {
+    "visibility": "none"
+   },
+   "paint": {
+    "line-color": "#000000",
+    "line-width": 1
+   }
+  }
+ ]
+}

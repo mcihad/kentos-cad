@@ -12,6 +12,9 @@ use serde_json::{Value, json};
 #[path = "headless/atlas_cases.rs"]
 mod atlas_cases;
 
+#[path = "headless/maplibre.rs"]
+mod maplibre;
+
 #[path = "headless/own_file.rs"]
 mod own_file;
 

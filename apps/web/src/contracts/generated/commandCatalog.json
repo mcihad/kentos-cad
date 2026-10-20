@@ -1057767,6 +1057767,572 @@
       ]
     },
     {
+      "id": "file.export.maplibre",
+      "version": 1,
+      "title": "Görünüşü MapLibre stili olarak dışa aktar",
+      "summary": "Bir katmanın (layer) ya da görünen bütün katmanların görünüşünü MapLibre GL stili (sürüm 8) olarak path'e (.json) yazar; MapLibre GL JS, MapLibre Native, Maputnik ve QGIS'in vektör karo stili açar. Her katmanın nesneleri sourceUrl verilmezse WGS 84 GeoJSON olarak stilin yanına yazılır (tek katmanda <ad>.geojson, birden çokta <ad>.<katman kimliği>.geojson) ve stilin kaynağı o dosyadır; sourceUrl verilirse kaynak o adrestir (vektör karo ya da GeoJSON adresi), katman adı source-layer olur. Katmanlar alan, çizgi ve daire (circle) katmanlarına yazılır: tek simge sabit değerlerle, kategorili görünüş `match` ile, aralıklı görünüş `step` ile (sınıflar aynı yapıdaysa her simge katmanı için tek stil katmanı, değilse sınıf başına katman ve süzgeç), kurallar MapLibre'nin ifade süzgeciyle (iç içe kurallar üst kuralın süzgeciyle, ELSE öncekilerin değili, ölçek aralıkları yakınlaştırma düzeyi olarak); etiketler yazı (symbol) katmanı olarak, metin şablonu `concat` ile. Birimler: mm 96 dpi'de CSS pikseline çevrilir (1 mm = 96/25,4 px), piksel kalır, metre ekvatordaki ölçüyle yakınlaştırmayla büyüyen piksel olur; simgenin ve katmanın saydamlığı katılır, katman görünürlüğü yalnız görünen katmanları seçer. Daire dışındaki işaret şekilleri, tarama, degrade, desen ve resim dolgusu, işaretli çizgi, SVG ve yazı işareti, veriye göre değer, efektler ve etiketin çağrı çizgisi, zemini, gölgesi gibi ayarları MapLibre'de yoktur; export_losses ile söylenir. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "maplibreout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "MaplibreSourceKind": {
+            "description": "What kind of source `sourceUrl` names.",
+            "oneOf": [
+              {
+                "const": "geojson",
+                "description": "A GeoJSON file at the URL (`type: geojson`, `data`).",
+                "type": "string"
+              },
+              {
+                "const": "vector",
+                "description": "Vector tiles: a URL with `{z}/{x}/{y}` is the tile template (`tiles`), any other a TileJSON (`url`); each\nKentOS layer is a tile layer of its name (`source-layer`).",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.maplibre` v1: the look of `layer` (or of every visible layer, the one drawn last on top,\nwhen `layer` is not given) as a MapLibre style at `path`, a `.json`. Without `sourceUrl` each layer's objects\nare written as a WGS 84 GeoJSON beside the style (`<name>.geojson` for one layer, `<name>.<layer id>.geojson`\nfor several) and the style's source names that file; a project with no coordinate system cannot be written so\nand `sourceUrl` is asked for. Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`,\n`not_a_layer`, `no_system`, `nothing_to_export` (no class or rule MapLibre's layers here can draw),\n`file_unwritable`. Warnings: `export_losses`.",
+        "properties": {
+          "glyphs": {
+            "description": "The glyph server's URL for the labels' fonts (`{fontstack}` and `{range}` in it); absent, MapLibre's demo\nserver. Only a style with labels has it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The layer's id; absent, the visible layers.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over files that are there.",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "An absolute path ending `.json`.",
+            "type": "string"
+          },
+          "sourceKind": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MaplibreSourceKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the URL is; absent, vector tiles when it has `{z}` or ends `.pbf` or `.mvt`, else GeoJSON."
+          },
+          "sourceUrl": {
+            "description": "The source's URL, instead of GeoJSON files written beside the style.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportMaplibre",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "MaplibreData": {
+            "description": "A GeoJSON file `file.export.maplibre` wrote (or with `plan` would write) beside the style.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "features": {
+                "description": "Objects written.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "path",
+              "features",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.maplibre` wrote (or with `plan` would write).",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "data": {
+            "description": "The GeoJSON files written beside the style.",
+            "items": {
+              "$ref": "#/$defs/MaplibreData"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "The ids of the layers written, the bottom one first.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "lost": {
+            "description": "What the style could not say, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "rules": {
+            "description": "Classes and rules written.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "styleLayers": {
+            "description": "The style's layers.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "layers",
+          "styleLayers",
+          "rules",
+          "bytes",
+          "sha256"
+        ],
+        "title": "MaplibreExported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "MaplibreData": {
+            "description": "A GeoJSON file `file.export.maplibre` wrote (or with `plan` would write) beside the style.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "features": {
+                "description": "Objects written.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "path",
+              "features",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.maplibre` wrote (or with `plan` would write).",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "data": {
+            "description": "The GeoJSON files written beside the style.",
+            "items": {
+              "$ref": "#/$defs/MaplibreData"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "The ids of the layers written, the bottom one first.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "lost": {
+            "description": "What the style could not say, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "rules": {
+            "description": "Classes and rules written.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "styleLayers": {
+            "description": "The style's layers.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "layers",
+          "styleLayers",
+          "rules",
+          "bytes",
+          "sha256"
+        ],
+        "title": "MaplibreExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "layer_not_found",
+          "not_a_layer",
+          "service_layer",
+          "no_system",
+          "nothing_to_export",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel katmanı, GeoJSON'u yanında",
+          "input": {
+            "layer": "parsel",
+            "overwrite": true,
+            "path": "/veri/parsel.json"
+          }
+        },
+        {
+          "title": "Görünen katmanlar, kendi vektör karolarına",
+          "input": {
+            "path": "/veri/harita.json",
+            "sourceUrl": "https://karo.example.org/{z}/{x}/{y}.pbf"
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.import.maplibre",
+      "version": 1,
+      "title": "MapLibre stilinden görünüş al",
+      "summary": "path'teki (ya da text'teki) MapLibre GL stilinin (sürüm 8) fill, line ve circle katmanlarının görünüşünü katmanların işleyicisi yapar, hepsi tek geri alma adımı (Katman stili). Stil katmanı KentOS katmanınındır: metadata kentos:layer katmanın kimliğiyse (KentOS'un yazdığı stil), yoksa source-layer ya da id katmanın kimliği ya da adıysa, from verilmişse source-layer ya da id from ise. layer verilirse o katmanın, verilmezse stilin katmanı olduğu her katmanın. Bir alanın `match`i kategorili, `step`i aralıklı, süzgeçli katmanlar kurallı işleyici, hiçbiri yoksa tek simge olur; süzgeç (ifade ve eski biçim: ==, !=, <, in, has, all, any, !, match) KentOS'un ifadesine çevrilir; geometri türü süzgeci hangi simgenin olduğunu söyler; pikseller piksel, yakınlaştırmayla büyüyen metre genişlikleri metre olur; yakınlaştırma düzeyleri ölçek aralığı olur. Etiket (symbol) katmanları, başka katman türleri, yakınlaştırmaya göre eğriler, case ve başka ifadeler, çevrilemeyen süzgeç, desen ve kaydırma gibi özellikler alınmaz, import_losses ile söylenir. Katman aynı görünüşteyse adım yazılmaz (changed false). plan dosyayı okur, hiçbir şey yazmaz.",
+      "aliases": [
+        "maplibrein"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.maplibre` v1: the look of the style at `path` (or its `text`) made the renderer of the\nlayers it is for, one undo step “Katman stili”. A style layer is for a KentOS layer when its `metadata`\n`kentos:layer` is the layer's id (a style KentOS wrote), else its `source-layer` or its `id` is the layer's id\nor name, else, when `from` is given, its `source-layer` or `id` is `from`. With `layer` the one layer's;\nwithout, every layer the style has layers for. MapLibre's `match` over a field becomes a categorized\nrenderer, `step` a graduated one, filters rules, and a style with none a single symbol; sizes stay in pixels and\nwidths that grow with the zoom as metres. Refusals, in order: `invalid_input` (neither or both of `path` and\n`text`), `file_unreadable`, `invalid_maplibre`, `layer_not_found`, `not_a_layer`, `service_layer`,\n`style_layer_not_found`, `revision_conflict`. Warnings: `import_losses`.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "description": "The style's `source-layer` or layer `id` to take for `layer`, when the style does not name it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The layer's id; absent, every layer the style is for.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "An absolute path to a `.json`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "description": "The style itself, instead of a path.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "ImportMaplibre",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "MaplibreLayerImported": {
+            "description": "One layer's look `file.import.maplibre` made.",
+            "properties": {
+              "changed": {
+                "description": "Whether the layer's look changed.",
+                "type": "boolean"
+              },
+              "from": {
+                "description": "The style layers taken, by their ids.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "description": "The renderer's type: `single`, `categorized`, `graduated` or `rules`.",
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "renderer": {
+                "description": "The renderer as the layer now has it."
+              },
+              "rules": {
+                "description": "Classes and rules taken.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "layer",
+              "from",
+              "kind",
+              "rules",
+              "renderer",
+              "changed"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.maplibre` made of the layers' looks.",
+        "properties": {
+          "changed": {
+            "description": "Whether any layer's look changed (an undo step was written).",
+            "type": "boolean"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/MaplibreLayerImported"
+            },
+            "type": "array"
+          },
+          "lost": {
+            "description": "What KentOS could not take, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layers",
+          "changed",
+          "revision"
+        ],
+        "title": "MaplibreImported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "MaplibreLayerImported": {
+            "description": "One layer's look `file.import.maplibre` made.",
+            "properties": {
+              "changed": {
+                "description": "Whether the layer's look changed.",
+                "type": "boolean"
+              },
+              "from": {
+                "description": "The style layers taken, by their ids.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "description": "The renderer's type: `single`, `categorized`, `graduated` or `rules`.",
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "renderer": {
+                "description": "The renderer as the layer now has it."
+              },
+              "rules": {
+                "description": "Classes and rules taken.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "layer",
+              "from",
+              "kind",
+              "rules",
+              "renderer",
+              "changed"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.maplibre` made of the layers' looks.",
+        "properties": {
+          "changed": {
+            "description": "Whether any layer's look changed (an undo step was written).",
+            "type": "boolean"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/MaplibreLayerImported"
+            },
+            "type": "array"
+          },
+          "lost": {
+            "description": "What KentOS could not take, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layers",
+          "changed",
+          "revision"
+        ],
+        "title": "MaplibreImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "file_unreadable",
+          "invalid_maplibre",
+          "layer_not_found",
+          "not_a_layer",
+          "service_layer",
+          "style_layer_not_found",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "KentOS'un yazdığı stil, bütün katmanlar",
+          "input": {
+            "path": "/veri/harita.json"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.dxf",
       "version": 1,
       "title": "DXF dışa aktar",
@@ -1061756,6 +1062322,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Dosya okunabilir bir QGIS stil dosyası (QML) değil ya da KentOS'un çizebileceği bir görünüşü yok."
+    },
+    {
+      "code": "invalid_maplibre",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosya okunabilir bir MapLibre stili (sürüm 8) değil ya da KentOS'un çizebileceği bir katmanı yok."
+    },
+    {
+      "code": "style_layer_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Stilde istenen katman için bir stil katmanı yok: metadata kentos:layer, source-layer ya da id katmanın kimliği ya da adı olmalı (ya da from verin)."
     },
     {
       "code": "export_losses",

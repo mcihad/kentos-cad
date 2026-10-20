@@ -1,0 +1,68 @@
+{
+  "layers": [
+    {
+      "id": "import-parsel/1",
+      "metadata": {
+        "kentos:labels": {
+          "A": "Ada A",
+          "B": "Ada B"
+        },
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "paint": {
+        "fill-color": [
+          "match",
+          [
+            "to-string",
+            [
+              "get",
+              "ada"
+            ]
+          ],
+          "A",
+          "#e41a1c",
+          "B",
+          "#377eb8",
+          "rgba(153,153,153,0.502)"
+        ],
+        "fill-opacity": 1
+      },
+      "source": "import-parsel",
+      "type": "fill"
+    },
+    {
+      "id": "import-parsel/2",
+      "layout": {
+        "line-cap": "butt",
+        "line-join": "miter"
+      },
+      "metadata": {
+        "kentos:labels": {
+          "A": "Ada A",
+          "B": "Ada B"
+        },
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "paint": {
+        "line-color": "#222222",
+        "line-opacity": 1,
+        "line-width": 1.5118
+      },
+      "source": "import-parsel",
+      "type": "line"
+    }
+  ],
+  "metadata": {
+    "kentos:format": "kentos-maplibre/1"
+  },
+  "name": "parsel",
+  "sources": {
+    "import-parsel": {
+      "data": "kentos-kategorili.geojson",
+      "type": "geojson"
+    }
+  },
+  "version": 8
+}

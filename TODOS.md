@@ -220,6 +220,9 @@ Liste:
 - [ ] `CBS-17` QML alışverişi (ADR 0555, 20 Ekim): web'de gerekenler: `file.export.qml` ve `file.import.qml`'nin işleyicileri
   (`qml`'in WASM bağlayıcısı, `formats-wasm`'e), Katmanlar'ın sağ tık menüsünde iki öğe (ikonlar `qmlExport`, `qmlImport`); TS
   türleri üretildi.
+- [ ] `CBS-17` MapLibre alışverişi (ADR 0560, 20 Ekim): web'de gerekenler: `file.export.maplibre` ve `file.import.maplibre`'nin
+  işleyicileri (`maplibre`'nin WASM bağlayıcısı, `formats-wasm`'e; GeoJSON yazımı mevcut `writeGeoJsonWgs84`'le), Katmanlar'ın sağ
+  tık menüsünde iki öğe ve Veri › Dosya alışverişi'nde ikisi (ikonlar `maplibreExport`, `maplibreImport`); TS türleri üretildi.
 - [ ] `CBS-28` COG (ADR 0515, 19 Ekim): web'de gerekenler: çözümleme işçisinin raster sonuçlarını `cog::plan`'la COG'a çevirmesi
   (WASM bağlayıcısı; indirilen dosya da COG), Raster işlemleri'nde COG olarak kaydet (`copy` işi bağlayıcıda).
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
@@ -2311,6 +2314,15 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   `qml_cases.py`'nin bağımsız okuyucusundan, QGIS 4.2'nin QML'leri ve KentOS'unkiler QGIS'te `loadNamedStyle` ile. Kalan:
   QGIS'in öbür simge katmanları, veriye bağlı değerler, etiketler, MapLibre. — **20 Ekim,
   [ADR 0555](docs/adr/0555-qml-style-exchange.md).**
+- [ ] `CBS-17` MapLibre alışverişi (üçüncü dilim): `kentos_formats::maplibre` (stil sürüm 8: tek simge sabit değerlerle, kategorili
+  `match`, aralıklı `step`, kurallı süzgeçli katmanlar, iç içe, Diğerleri, ölçek aralığı zoom; `fill`, `line`, `circle` ve etiket
+  `symbol` katmanları; mm 96 dpi'de piksel, metre zoom'la büyüyen genişlik; süzgeçler KentOS'un ifadesinden ve ifadesine, eski süzgeç
+  biçimi de), `file.export.maplibre` (görünen katmanlar tek stil, her birinin WGS 84 GeoJSON'u yanında ya da `sourceUrl` ile vektör
+  karo; `export_losses`, `no_system`) ve `file.import.maplibre` (`invalid_maplibre`, `style_layer_not_found`; her katman için tek
+  adım Katman stili); Katmanlar'ın sağ tıkında ve Dosya alışverişi'nde; Python ve MCP; 33 ortak durum `maplibre_cases.py`'nin bağımsız
+  okuyucusundan, KentOS'un stilleri MapLibre'nin resmî doğrulayıcısından (`gl-style-validate` 26.4.4) ve ifade değerlendiricisinden
+  geçer. Kalan: sprite ve simgeler (daire dışı şekiller, desen), `case` ve veriye bağlı değerler, etiketlerin içe alınması,
+  `fill-extrusion` ve öbür katman türleri. — **20 Ekim, [ADR 0560](docs/adr/0560-maplibre-style-exchange.md).**
 - [x] `CBS-25` permütasyon/FDR ve deney profili: Moran I ve Gi*'a tohumlu permütasyon (`kentos.spatial-inference/1`: SplitMix64 +
   xoshiro256**, katlanmış sözde p, yerelde koşullu permütasyon), Gi*'a FDR (Benjamini–Hochberg) ve Bonferroni, yeni Yerel Moran
   (LISA) `stats.localMoran`; `profile` tablosu ve `experiment` JSON'u (tohum, permütasyon, komşuluk, kapsam, girdinin SHA-256'sı);
