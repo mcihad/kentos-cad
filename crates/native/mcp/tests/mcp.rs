@@ -128,8 +128,25 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "project.share",
         "project.create",
         "project.rename",
+        "jobs.start",
+        "jobs.status",
+        "jobs.cancel",
+        "jobs.result",
     ] {
         assert!(names.contains(&name), "{name}");
+    }
+    // Asking for a job may write the project (a commit); reading one and taking its result do not.
+    for (name, read_only) in [
+        ("jobs.start", false),
+        ("jobs.status", true),
+        ("jobs.cancel", false),
+        ("jobs.result", true),
+    ] {
+        let tool = tools.iter().find(|t| t["name"] == name).expect("the tool");
+        assert_eq!(tool["annotations"]["readOnlyHint"], read_only, "{name}");
+        assert_eq!(tool["annotations"]["openWorldHint"], true, "{name}");
+        assert_eq!(tool["inputSchema"]["required"][0], "tenant");
+        assert_eq!(tool["inputSchema"]["required"][1], "project");
     }
     let share = tools
         .iter()
@@ -781,6 +798,13 @@ fn the_servers_tools_need_the_account_the_environment_names() {
         listed["structuredContent"]["error"]["code"],
         "not_configured"
     );
+    let job = call(
+        &mut server,
+        "jobs.status",
+        json!({ "tenant": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "project": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                "job": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f" }),
+    );
+    assert_eq!(job["structuredContent"]["error"]["code"], "not_configured");
     let shared = call(
         &mut server,
         "project.share",
@@ -1537,14 +1561,20 @@ fn an_agent_prepares_a_stac_item_and_a_bad_search_is_a_refusal() {
         .expect("the search tool");
     assert_eq!(search["annotations"]["readOnlyHint"], true);
     let made = call(&mut server, "drawing.new", json!({ "srid": 32637 }));
-    let drawing = made["structuredContent"]["drawing"].as_str().expect("a handle").to_owned();
+    let drawing = made["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
     let refused = call(
         &mut server,
         "cad.stac.search",
         json!({ "drawing": drawing, "endpoint": "ftp://x.example/v1" }),
     );
     assert_eq!(refused["isError"], true);
-    assert_eq!(refused["structuredContent"]["error"]["code"], "invalid_stac_endpoint");
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"],
+        "invalid_stac_endpoint"
+    );
     let asset = |key: &str, common: &str| {
         json!({
             "key": key, "href": format!("https://h.example/{key}.tif"), "roles": ["data", "reflectance"],
@@ -1574,7 +1604,18 @@ fn an_agent_prepares_a_stac_item_and_a_bad_search_is_a_refusal() {
     assert_eq!(record["format"], "kentos.stac-preparation");
     assert_eq!(record["bands"][0]["asset"], "red");
     assert_eq!(record["bands"][0]["scale"], 0.0001);
-    assert_eq!(record["reflectance"], json!({ "scale": 0.0001, "offset": -0.1 }));
-    let page = call(&mut server, "drawing.entities", json!({ "drawing": drawing, "kinds": ["raster"] }));
-    assert_eq!(page["structuredContent"]["items"].as_array().map(Vec::len), Some(2), "{page}");
+    assert_eq!(
+        record["reflectance"],
+        json!({ "scale": 0.0001, "offset": -0.1 })
+    );
+    let page = call(
+        &mut server,
+        "drawing.entities",
+        json!({ "drawing": drawing, "kinds": ["raster"] }),
+    );
+    assert_eq!(
+        page["structuredContent"]["items"].as_array().map(Vec::len),
+        Some(2),
+        "{page}"
+    );
 }

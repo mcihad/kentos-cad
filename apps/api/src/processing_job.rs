@@ -1,8 +1,9 @@
-//! The server's processor for `project.processing` jobs (docs/adr/0559 §3): an İşlemler tool runs in a process of its
-//! own, so the server can measure what it takes, stop it at its budget and survive what it does.
+//! The server's processor for `project.processing`, `project.import` and `project.atlas` jobs (docs/adr/0559 §3, 0561 §3):
+//! an İşlemler tool, an import command or the atlas export runs in a process of its own, so the server can measure what
+//! it takes, stop it at its budget and survive what it does.
 //!
-//! The processor ([`ChildProcessor`]) writes the task to a private work folder (the project's `.kcad` and the
-//! request), starts `kentos-jobrun <folder>` (the headless host and the tools, a program of its own so the server does
+//! The processor ([`ChildProcessor`]) writes the task to a private work folder (the project's `.kcad`, the request and,
+//! for an import, a link to the staged file), starts `kentos-jobrun <folder>` (the headless host and the tools, a program of its own so the server does
 //! not carry them) with an empty environment (the server's secrets stay in the server), reads the progress the child
 //! prints, and watches it: every sample it reads the child's CPU time and resident memory (`/proc` where there is
 //! one, `ps` elsewhere); past the task's budget it kills the child (`cpu_limit`, `memory_limit`); when the worker says
@@ -15,6 +16,7 @@ use std::process::{Command, Stdio};
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 
+use kentos_application::processing_job::RunRequest;
 use kentos_application::processing_job::{
     ProcessFailure, ProcessHooks, Processed, ProcessingBudget, ProcessingTask, Processor,
 };
@@ -37,6 +39,8 @@ fn measure_every() -> Duration {
         Duration::from_millis(200)
     }
 }
+/// How long after it starts a child is measured more often.
+const EARLY: Duration = Duration::from_secs(2);
 /// How much of the child's standard error is kept for a failure's message.
 const STDERR_KEEP: usize = 4096;
 /// The files of the work folder.
@@ -45,6 +49,7 @@ const REQUEST: &str = "request.json";
 const ANSWER: &str = "answer.json";
 const FAILURE: &str = "failure.json";
 const SINK: &str = "sink.gpkg";
+const ATLAS: &str = "atlas.pdf";
 
 // ── What a process takes ────────────────────────────────────────────────────
 
@@ -143,10 +148,15 @@ pub fn over_budget(budget: &ProcessingBudget, taken: &Taken) -> Option<ProcessFa
     None
 }
 
-fn usage_of(peak: &Taken, last: &Taken) -> ProcessingUsage {
+/// What a run took: the larger of what the parent saw while it ran and what the child told at its end (a run over
+/// between two samples is told by the child alone, docs/adr/0561 §5).
+fn usage_of(peak: &Taken, last: &Taken, own: &ProcessingUsage) -> ProcessingUsage {
     ProcessingUsage {
-        cpu_seconds: (last.cpu_seconds * 100.0).round() / 100.0,
-        peak_memory_mb: (peak.rss_bytes as f64 / (1024.0 * 1024.0) * 10.0).round() / 10.0,
+        cpu_seconds: (last.cpu_seconds.max(own.cpu_seconds) * 100.0).round() / 100.0,
+        peak_memory_mb: ((peak.rss_bytes as f64 / (1024.0 * 1024.0)).max(own.peak_memory_mb)
+            * 10.0)
+            .round()
+            / 10.0,
     }
 }
 
@@ -264,8 +274,22 @@ impl Processor for ChildProcessor {
         wrote(SNAPSHOT, &task.snapshot)?;
         wrote(
             REQUEST,
-            &serde_json::to_vec(&task.input).unwrap_or_default(),
+            &serde_json::to_vec(&task.request).unwrap_or_default(),
         )?;
+        // An import's file is read where the object store keeps it: linked into the folder, copied where a link cannot
+        // be made (a staged file is gigabytes at most, never read into the server's memory).
+        if let (RunRequest::Import(run), Some(file)) = (&task.request, &task.file) {
+            let to = folder.0.join(format!("import.{}", run.format.extension()));
+            link_or_copy(&file.path, &to).map_err(|e| {
+                ProcessFailure::new(
+                    "failed",
+                    format!(
+                        "Hazırlanan dosya işin klasörüne konamadı ({}): {e}",
+                        file.name
+                    ),
+                )
+            })?;
+        }
         let mut child = Command::new(&self.exe)
             .arg(&folder.0)
             .env_clear()
@@ -289,16 +313,22 @@ impl Processor for ChildProcessor {
         let mut peak = Taken::default();
         let mut last = Taken::default();
         let every = measure_every();
-        let mut measured = std::time::Instant::now()
-            .checked_sub(every)
-            .unwrap_or_else(std::time::Instant::now);
+        let began = std::time::Instant::now();
+        let mut measured = began.checked_sub(every).unwrap_or(began);
         let status = loop {
             if hooks.stop.load(Ordering::SeqCst) {
                 let _ = child.kill();
                 let _ = child.wait();
                 return Err(ProcessFailure::new("stopped", "İş durduruldu."));
             }
-            let due = measured.elapsed() >= every;
+            // Looked at four times as often while the child starts: a run that is over in a fraction of a second is
+            // still seen working (what a sample misses of one that ends between two is told in docs/adr/0561 §5).
+            let step = if began.elapsed() < EARLY {
+                every / 4
+            } else {
+                every
+            };
+            let due = measured.elapsed() >= step;
             if due {
                 measured = std::time::Instant::now();
             }
@@ -342,11 +372,29 @@ impl Processor for ChildProcessor {
         };
         let mut processed: Processed = serde_json::from_slice(&answer)
             .map_err(|e| ProcessFailure::new("crashed", format!("Aracın cevabı okunamadı: {e}")))?;
-        if task.input.mode == ProcessingJobMode::Sink {
-            processed.sink = read(SINK);
+        match &task.request {
+            RunRequest::Processing(input) if input.mode == ProcessingJobMode::Sink => {
+                processed.file = read(SINK);
+            }
+            RunRequest::Atlas(_) => processed.file = read(ATLAS),
+            _ => {}
         }
-        processed.usage = usage_of(&peak, &last);
+        processed.usage = usage_of(&peak, &last, &processed.usage);
         Ok(processed)
+    }
+}
+
+/// A symbolic link where the system has them, else a copy. The link names the file by its absolute path: a link to a
+/// relative one is read from the link's own folder, not from where the server runs (the object store's root may be
+/// relative, `KENTOS_BLOB_DIR=.run/blobs`).
+fn link_or_copy(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    #[cfg(unix)]
+    {
+        std::os::unix::fs::symlink(std::fs::canonicalize(from)?, to)
+    }
+    #[cfg(not(unix))]
+    {
+        std::fs::copy(from, to).map(|_| ())
     }
 }
 
@@ -421,6 +469,23 @@ mod tests {
         assert_eq!(parse_ps_time("12.5"), Some(12.5));
         assert_eq!(parse_ps_time("a:b"), None);
         assert_eq!(parse_ps_time("1:2:3:4"), None);
+    }
+
+    #[test]
+    fn a_file_named_by_a_relative_path_is_linked_by_its_absolute_one() {
+        // The object store's root may be relative to where the server runs; the link is read from its own folder.
+        let name = format!("kentos-relative-link-{}", std::process::id());
+        std::fs::write(&name, b"bytes").expect("a file in the working folder");
+        let folder = std::env::temp_dir().join(format!("{name}-folder"));
+        std::fs::create_dir_all(&folder).expect("a folder");
+        let link = folder.join("import.gpkg");
+        link_or_copy(std::path::Path::new(&name), &link).expect("linked");
+        assert_eq!(
+            std::fs::read(&link).expect("read through the link"),
+            b"bytes"
+        );
+        let _ = std::fs::remove_file(&name);
+        let _ = std::fs::remove_dir_all(&folder);
     }
 
     #[test]

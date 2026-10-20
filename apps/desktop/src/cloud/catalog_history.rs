@@ -423,6 +423,7 @@ impl App {
                 fetch: Fetch::Revision(r.revision),
                 name,
                 listed: Some(r.sha256),
+                extension: "kcad",
                 compare: None,
             },
         )
@@ -461,6 +462,7 @@ impl App {
                 fetch,
                 name: name.clone(),
                 listed,
+                extension: "kcad",
                 compare: Some(name),
             },
         )
@@ -481,6 +483,7 @@ impl App {
                 fetch: Fetch::Checkpoint(c.id),
                 name,
                 listed: Some(c.sha256),
+                extension: "kcad",
                 compare: None,
             },
         )

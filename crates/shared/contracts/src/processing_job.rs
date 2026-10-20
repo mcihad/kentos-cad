@@ -1,27 +1,33 @@
-//! What an İşlemler tool run as a server job decides without a database, and what its process answers (docs/adr/0559;
-//! plan/gis.md CBS-39): shared by the server, which asks for the run and commits its result, and by the process that
-//! runs the tool (`kentos-jobrun`), which must not carry the server.
+//! What an İşlemler tool, a file import or an atlas run as a server job decides without a database, and what its process
+//! answers (docs/adr/0559, 0561; plan/gis.md CBS-39): shared by the server, which asks for the run and commits its
+//! result, and by the process that runs it (`kentos-jobrun`), which must not carry the server.
 //!
 //! - **The request** ([`check_input`]): a `project.processing` job's input is checked when it is asked for (a tool's
 //!   id, values with no local file in them, the objects and the box as the command takes them, the revision and a
 //!   budget no bigger than the server's), and again by the process, whatever the server did.
-//! - **What a tool did** ([`Processed`], [`ProcessFailure`]): the answer of the process, a [`Delta`] to commit or a
-//!   GeoPackage, or why it did not finish.
+//! - **What a run did** ([`Processed`], [`ProcessFailure`]): the answer of the process, a [`Delta`] to commit or a
+//!   file (a GeoPackage, the atlas's PDF), or why it did not finish; what it was asked ([`RunRequest`]).
+//! - **An import and an atlas** ([`check_import_input`], [`check_atlas_input`]): their inputs, checked as a tool's.
 //! - **The delta** ([`delta`]): what the tool changed, found by comparing the drawing as it was opened with the
 //!   drawing after the run, both through the same document code, so an object the tool did not touch is never sent
 //!   back. It is one `project.changes` command's input; the commit is the job's finish.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::{
-    DocumentSnapshotV2, Entity, EntityId, FeatureChange, ProcessingJobInput, ProcessingJobNote,
-    ProcessingUsage, ProjectChanges, ProjectPatch,
+    BlockChange, BlockDefinition, BlockId, DocumentSnapshotV2, Entity, EntityId, FeatureChange,
+    ImportFormat, ProcessingJobInput, ProcessingJobNote, ProcessingUsage, ProjectAtlasInput,
+    ProjectChanges, ProjectImportInput, ProjectPatch,
 };
 
 /// The most object changes one `project.changes` command carries (the server's limit).
 pub const PROJECT_CHANGES_MAX: usize = 5000;
+/// The most object and block changes a job's result may carry (docs/adr/0561 §1): a job's commit is made inside the
+/// server, not read from a request, so it may be bigger than a request's.
+pub const JOB_CHANGES_MAX: usize = 100_000;
 /// The most objects a request names as chosen.
 pub const PROCESSING_SELECTION_MAX: usize = 100_000;
 /// The most values a request gives.
@@ -127,22 +133,173 @@ pub fn check_input(input: &ProcessingJobInput) -> Option<InputFault> {
     None
 }
 
-// ── What the process answers ────────────────────────────────────────────────
+fn check_run_limits(
+    expected: Option<&str>,
+    cpu_seconds: Option<u32>,
+    memory_mb: Option<u32>,
+) -> Option<InputFault> {
+    if let Some(r) = expected
+        && r.parse::<i64>().ok().filter(|n| *n >= 0).is_none()
+    {
+        return Some(fault(
+            "input.expectedRevision",
+            format!("expectedRevision bir veri revizyonu (sıfır ya da artı tam sayı) olmalı: {r}"),
+        ));
+    }
+    if cpu_seconds == Some(0) {
+        return Some(fault("input.cpuSeconds", "cpuSeconds en az 1 olmalı."));
+    }
+    if memory_mb.is_some_and(|m| m < PROCESSING_MEMORY_FLOOR_MB) {
+        return Some(fault(
+            "input.memoryMb",
+            format!("memoryMb en az {PROCESSING_MEMORY_FLOOR_MB} olmalı."),
+        ));
+    }
+    None
+}
 
-/// What a tool did.
+fn check_text(path: &str, text: &str, what: &str, most: usize) -> Option<InputFault> {
+    if text.trim().is_empty() || text.chars().count() > most || text.chars().any(char::is_control) {
+        return Some(fault(path, format!("{what} 1–{most} karakter olmalı.")));
+    }
+    None
+}
+
+/// The input of a `project.import` job, checked (docs/adr/0561 §1): the fault, with its path, or none. The staged
+/// file's id is a UUID, the options hold no file path (the server gives the file), the budget is no smaller than the
+/// floor; whether the staged file exists, is the caller's and the format fits it, is asked of the file's name.
+pub fn check_import_input(input: &ProjectImportInput) -> Option<InputFault> {
+    if EntityId::parse(&input.upload).is_none() {
+        return Some(fault(
+            "input.upload",
+            format!(
+                "“{}” hazırlanmış bir dosyanın kimliği (küçük harfli UUID) değil; önce dosyayı job-inputs ile yükleyin.",
+                input.upload
+            ),
+        ));
+    }
+    if input.options.len() > PROCESSING_PARAMETERS_MAX {
+        return Some(fault(
+            "input.options",
+            format!("Bir iş en çok {PROCESSING_PARAMETERS_MAX} seçenek taşır."),
+        ));
+    }
+    if input.options.contains_key("path") {
+        return Some(fault(
+            "input.options.path",
+            "Dosyanın yolunu sunucu verir: yüklediğiniz dosya okunur, seçeneklerde yol verilmez.",
+        ));
+    }
+    for (name, value) in &input.options {
+        if let Some(at) = file_value(value, &format!("input.options.{name}")) {
+            return Some(fault(
+                at,
+                "Sunucu işi yerel dosya okumaz: seçeneklerde dosya yolu verilmez.",
+            ));
+        }
+    }
+    if let Some(label) = &input.label
+        && label.chars().count() > 200
+    {
+        return Some(fault("input.label", "label en çok 200 karakter olmalı."));
+    }
+    check_run_limits(
+        input.expected_revision.as_deref(),
+        input.cpu_seconds,
+        input.memory_mb,
+    )
+}
+
+/// The input of a `project.atlas` job, checked (docs/adr/0561 §2).
+pub fn check_atlas_input(input: &ProjectAtlasInput) -> Option<InputFault> {
+    if let Some(f) = check_text("input.sheet", &input.sheet, "sheet (pafta kimliği)", 200) {
+        return Some(f);
+    }
+    if let Some(fields) = &input.fields {
+        if fields.len() > PROCESSING_PARAMETERS_MAX {
+            return Some(fault(
+                "input.fields",
+                format!("Bir iş en çok {PROCESSING_PARAMETERS_MAX} alan adı taşır."),
+            ));
+        }
+        for (i, f) in fields.iter().enumerate() {
+            if let Some(fault) = check_text(&format!("input.fields[{i}]"), f, "alan adı", 200) {
+                return Some(fault);
+            }
+        }
+    }
+    if let Some(theme) = &input.theme
+        && let Some(f) = check_text("input.theme", theme, "theme (katman durumunun adı)", 200)
+    {
+        return Some(f);
+    }
+    if let Some(time) = &input.time
+        && let Some(f) = check_text(
+            "input.time",
+            time,
+            "time (2024-06-30 ya da 2024-06-30T12:00)",
+            40,
+        )
+    {
+        return Some(f);
+    }
+    if input.crs == Some(0) {
+        return Some(fault("input.crs", "crs bir EPSG kodu olmalı."));
+    }
+    if let Some(label) = &input.label
+        && label.chars().count() > 200
+    {
+        return Some(fault("input.label", "label en çok 200 karakter olmalı."));
+    }
+    check_run_limits(
+        input.expected_revision.as_deref(),
+        input.cpu_seconds,
+        input.memory_mb,
+    )
+}
+
+// ── What the process is asked and what it answers ───────────────────────────
+
+/// What the process `kentos-jobrun` is asked to do (`request.json` of its folder, docs/adr/0561 §3).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", content = "input", rename_all = "camelCase")]
+pub enum RunRequest {
+    /// An İşlemler tool (docs/adr/0559).
+    Processing(ProcessingJobInput),
+    /// A file of the folder (`file`, its name there) read by the format's import command.
+    Import(ImportRun),
+    /// The atlas of a sheet, written to the folder as `atlas.pdf`.
+    Atlas(ProjectAtlasInput),
+}
+
+/// An import the process runs.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportRun {
+    pub format: ImportFormat,
+    /// The staged file's name as its owner gave it, for the command's words.
+    pub name: String,
+    #[serde(default)]
+    pub options: BTreeMap<String, Value>,
+}
+
+/// What a run did.
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Processed {
-    /// The tool's own sentence.
+    /// The tool's (or the command's) own sentence.
     pub summary: String,
     pub notes: Vec<ProcessingJobNote>,
-    /// `commit`: what to write to the project.
+    /// `commit`, import: what to write to the project.
     pub delta: Option<Delta>,
-    /// `sink`: the GeoPackage the objects it made were written to (a file beside the answer, not in it).
+    /// A tool's `sink` GeoPackage, the atlas's PDF: the file the run made (beside the answer, not in it).
     #[serde(skip)]
-    pub sink: Option<Vec<u8>>,
+    pub file: Option<Vec<u8>>,
     /// `sink`: how many rows the file holds.
-    pub sink_rows: u64,
+    pub rows: u64,
+    /// What the command answered (an import's tables or layers, an atlas's pages and pin), as it said it.
+    #[serde(default)]
+    pub details: Value,
     /// What the process took, as the parent measured it.
     pub usage: ProcessingUsage,
 }
@@ -172,6 +329,9 @@ impl ProcessFailure {
 pub struct Delta {
     /// Created, changed and removed objects, in that order, as one `project.changes` command's.
     pub features: Vec<FeatureChange>,
+    /// The block definitions made, replaced and removed, as that command's.
+    #[serde(default)]
+    pub blocks: Vec<BlockChange>,
     /// The project's metadata the tool changed, whole: the layer tree, the settings, the styles, the sheet book, the
     /// arrays, the constraints.
     pub project: Option<ProjectPatch>,
@@ -183,7 +343,7 @@ pub struct Delta {
 impl Delta {
     /// Nothing changed.
     pub fn is_empty(&self) -> bool {
-        self.features.is_empty() && self.project.is_none()
+        self.features.is_empty() && self.blocks.is_empty() && self.project.is_none()
     }
 
     /// The command's input.
@@ -191,8 +351,20 @@ impl Delta {
         ProjectChanges {
             features: self.features.clone(),
             project: self.project.clone(),
-            blocks: Vec::new(),
+            blocks: self.blocks.clone(),
         }
+    }
+
+    /// The block definitions the command replaces or removes (their versions are expected).
+    pub fn guarded_blocks(&self) -> Vec<BlockId> {
+        self.blocks
+            .iter()
+            .filter_map(|c| match c {
+                BlockChange::Update { block } => Some(block.id),
+                BlockChange::Delete { id } => Some(*id),
+                BlockChange::Create { .. } => None,
+            })
+            .collect()
     }
 
     /// The objects the command updates or deletes (their versions are expected), by their persistent ids as text.
@@ -210,6 +382,34 @@ impl Delta {
 /// Why a result cannot be a delta: a code and words.
 pub type DeltaRefusal = ProcessFailure;
 
+/// The block definitions `after` has that `before` has not, has differently, and has lost, in that order.
+fn block_changes(before: &[BlockDefinition], after: &[BlockDefinition]) -> Vec<BlockChange> {
+    let was: HashMap<BlockId, &BlockDefinition> = before.iter().map(|b| (b.id, b)).collect();
+    let kept: HashSet<BlockId> = after.iter().map(|b| b.id).collect();
+    let mut creates = Vec::new();
+    let mut updates = Vec::new();
+    for block in after {
+        match was.get(&block.id) {
+            None => creates.push(BlockChange::Create {
+                block: block.clone(),
+            }),
+            Some(old) if !same(*old, block) => updates.push(BlockChange::Update {
+                block: block.clone(),
+            }),
+            Some(_) => {}
+        }
+    }
+    let mut changes = creates;
+    changes.extend(updates);
+    changes.extend(
+        before
+            .iter()
+            .filter(|b| !kept.contains(&b.id))
+            .map(|b| BlockChange::Delete { id: b.id }),
+    );
+    changes
+}
+
 fn same(a: &impl Serialize, b: &impl Serialize) -> bool {
     match (serde_json::to_value(a), serde_json::to_value(b)) {
         (Ok(a), Ok(b)) => a == b,
@@ -219,18 +419,14 @@ fn same(a: &impl Serialize, b: &impl Serialize) -> bool {
 
 /// What the tool changed: `after` against `before`, both as the same document code writes them. An object is created
 /// when its persistent id is new, changed when it differs from itself before (its slot number is not content), and
-/// removed when it is gone; the metadata is what differs whole. Blocks are not carried (`unsupported_change`), and a
-/// command takes at most [`PROJECT_CHANGES_MAX`] objects (`too_many_changes`).
+/// removed when it is gone; the metadata is what differs whole. A block definition is created, replaced whole or
+/// removed the same way, by its id (docs/adr/0561 §1), and a result takes at most [`JOB_CHANGES_MAX`] object and block
+/// changes (`too_many_changes`).
 pub fn delta(
     before: &DocumentSnapshotV2,
     after: &DocumentSnapshotV2,
 ) -> Result<Delta, DeltaRefusal> {
-    if !same(&before.blocks, &after.blocks) {
-        return Err(ProcessFailure::new(
-            "unsupported_change",
-            "Aracın sonucu blok tanımlarını değiştiriyor; sunucudaki iş bu sürümde blok tanımı yazmaz. Sonucu dosyaya (sink) yazdırın ya da aracı bilgisayarınızda çalıştırın.",
-        ));
-    }
+    let blocks = block_changes(&before.blocks, &after.blocks);
     let mut was: HashMap<&EntityId, &Entity> = HashMap::with_capacity(before.uids.len());
     for (uid, e) in before.uids.iter().zip(&before.entities) {
         was.insert(uid, e);
@@ -275,12 +471,12 @@ pub fn delta(
             removed += 1;
         }
     }
-    if features.len() > PROJECT_CHANGES_MAX {
+    if features.len() + blocks.len() > JOB_CHANGES_MAX {
         return Err(ProcessFailure::new(
             "too_many_changes",
             format!(
-                "Aracın sonucu {} nesne değişikliği; bir komut en çok {PROJECT_CHANGES_MAX} yazar. Girdiyi daraltın ya da sonucu dosyaya (sink) yazdırın.",
-                features.len()
+                "Sonuç {} nesne ve blok değişikliği; bir iş en çok {JOB_CHANGES_MAX} yazar. Girdiyi daraltın ya da dosyayı parçalara bölün.",
+                features.len() + blocks.len()
             ),
         ));
     }
@@ -320,6 +516,7 @@ pub fn delta(
     }
     Ok(Delta {
         features,
+        blocks,
         project: metadata.then_some(patch),
         added,
         changed,

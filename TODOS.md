@@ -249,6 +249,9 @@ Liste:
 - [ ] `CBS-38` Veri girişinin satır kapsamı (ADR 0539, 20 Ekim): web'de gerekenler: formun `scope`'u web'in form tasarımcısında
   (Kapsam alanı ve ön denetimin `form_scope_invalid`'i), `@kullanici_eposta` web'in `model/projectVariables.ts`'inde ve İfade
   oluşturucu'da; sunucu tarafı ortaktır.
+- [ ] `CBS-39` içe aktarma ve atlas sunucu işleri, MCP iş araçları (ADR 0561, 20 Ekim): web'de gerekenler: içe aktarma pencerelerinde “Sunucuya içe aktar”
+  (hazırlanan dosya `POST/PUT …/job-inputs`, sonra `project.import` işi) ve Atlası PDF yap'ta “Atlası sunucuda yap” (`project.atlas`, önizlemenin pin'i), Sunucu işleri
+  sekmesinde iki türün satırları ve `.pdf` indirme uzantısı, yeni hata kodlarının önerileri (`pin_mismatch`, `crs_mismatch`, `gone`); sunucu, çocuk süreç, MCP ve sözleşme ortaktır.
 - [ ] `CBS-39` İşlemler araçları sunucu işi olarak (ADR 0559, 20 Ekim): web'de gerekenler: Nerede çalışır'da “KentOS sunucusunda” ve Sonuç
   seçimi (projeye yaz, dosyaya yaz), isteğin `ProcessingJobInput` olarak kurulması (`cad.processing.run`'ın değerleri, seçim, görünür alan), Sunucu işleri
   sekmesinde işlem satırları (ilerleme sözcükleri, sonuç satırı, `.gpkg` indirme) ve yeni hata kodlarının önerileri; sunucu, çocuk süreç ve sözleşme ortaktır.
@@ -2151,6 +2154,15 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   sekmesinde işlem satırları; Python `processing_job`. Kalan: MCP'de iş türleri, blok yazan ve 5000'den çok nesne yazan araçlar, dosya alan araçlar, modeller,
   büyük içe aktarma ve atlas PDF'i türleri, gerçek Linux'ta `/proc` ölçümü ve cgroup, kullanıcı başına kota, önbellek anahtarı, yedek ve geri yükleme tatbikatı.
   — **20 Ekim, [ADR 0559](docs/adr/0559-processing-server-jobs.md).**
+- [ ] `CBS-39` içe aktarma ve atlas sunucu işleri, MCP iş araçları (dilim 4): dördüncü ve beşinci iş türü `project.import` (hazırlanan dosya `kentos.job_input`, göç 0032,
+  `POST/PUT/GET …/job-inputs`, tek akışlı gövde, boy ve SHA-256 denetimi, `KENTOS_JOB_INPUT_MAX_MB`; GeoPackage, FlatGeobuf, GML, CSV, DXF; çocuk süreç masaüstünün
+  `file.import.*` komutunu çalıştırır; komut kodu işin kodu, kayıplar sonuçta) ve `project.atlas` (`file.export.atlas`, pin masaüstündeki gibi denetlenir, PDF artifact'ı Range ile
+  indirilir); sonucun delta'sı blok tanımlarını taşır ve işin kesinleşmesi 100 000 değişikliğe çıktı; çocuk kendi kullanımını söyler ve ebeveyn erken sık örnekler (job_run'ın kök nedeni:
+  kısa işte örnek alınamaması); MCP `jobs.start`, `jobs.status`, `jobs.cancel`, `jobs.result` (içe aktarmada `file`, sonuçta `savePath`); Python `stage_file`, `import_job`,
+  `atlas_job`; masaüstünde ortak “Sunucuya gönder” penceresi (içe aktarma pencerelerinde ve Atlası PDF yap'ta), Sunucu işleri'nde iki türün satırları, İndir'in doğru uzantısı.
+  Kalan: Shapefile, GeoJSON ve KML içe aktarma komutları ve işleri, devam ettirilebilir parçalı yükleme (masaüstü dosyayı belleğe okur), yan dosyalar, çok satırlı toplu yazma,
+  2 köşeli yaylı alanı kabul eden sunucu yazma kuralı, gerçek Linux'ta `/proc` ölçümü ve cgroup, kullanıcı başına kota, önbellek anahtarı, yedek ve geri yükleme tatbikatı.
+  — **20 Ekim, [ADR 0561](docs/adr/0561-import-atlas-and-mcp-jobs.md).**
 - [ ] `CBS-40` arayüz akışı (dilim): `cad.sources.describe`'ın bağ durumunda `objects`, `rows`, `total` ve durumun istediği iş `next`
   (`SourceNext::of`: yeniden bağla, yok, uzlaştır, yaz, oku; kullanıcının işini götüren öneri yok); masaüstünde Kaynak durumu penceresi
   (kaynak ve salt okunurluk, durum, yüklü ve toplam satır, sistem, satırın düğmesi Kaynak ▸'nın komutlarıyla). Kalan: aynı bilgi Öznitelik

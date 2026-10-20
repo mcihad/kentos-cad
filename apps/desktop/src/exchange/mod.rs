@@ -68,6 +68,9 @@ pub(crate) mod photo_import;
 mod postgis;
 #[cfg(test)]
 mod postgis_tests;
+pub(crate) mod server_work;
+#[cfg(test)]
+mod server_work_tests;
 pub(crate) mod shp_export;
 #[cfg(test)]
 mod tests;
@@ -148,6 +151,8 @@ pub enum Window {
     CsvExport(csv_exchange::ExportState),
     CsvImport(csv_exchange::ImportState),
     /// FlatGeobuf dışa aktar and içe aktar (docs/adr/0544).
+    /// Sunucuya içe aktar and Atlası sunucuda yap (docs/adr/0561 §4).
+    ServerWork(server_work::State),
     FgbExport(fgb_exchange::ExportState),
     FgbImport(fgb_exchange::ImportState),
     /// GML dışa aktar and içe aktar, XYZ dışa aktar (docs/adr/0545).
@@ -192,6 +197,7 @@ pub enum Event {
     Package(package::Event),
     ShpExport(shp_export::Event),
     Csv(csv_exchange::Event),
+    ServerWork(server_work::Event),
     Fgb(fgb_exchange::Event),
     Gml(gml_exchange::Event),
     Xyz(xyz_exchange::Event),
@@ -490,6 +496,7 @@ impl App {
             Event::ShpExport(e) => self.shp_export_event(e),
             Event::Csv(e) => self.csv_event(e),
             Event::Fgb(e) => self.fgb_event(e),
+            Event::ServerWork(e) => self.server_work_event(e),
             Event::Gml(e) => self.gml_event(e),
             Event::Xyz(e) => self.xyz_event(e),
             Event::Area(e) => self.area_event(e),
@@ -540,6 +547,7 @@ impl App {
             Some(Window::CsvExport(s)) => self.csv_export_view(s),
             Some(Window::AtlasExport(s)) => self.atlas_export_view(s),
             Some(Window::CsvImport(s)) => self.csv_import_view(s),
+            Some(Window::ServerWork(s)) => self.server_work_view(s),
             Some(Window::FgbExport(s)) => self.fgb_export_view(s),
             Some(Window::FgbImport(s)) => self.fgb_import_view(s),
             Some(Window::GmlExport(s)) => self.gml_export_view(s),

@@ -1092,16 +1092,68 @@ impl App {
             ));
         }
         let can = self.drawing_can_import(s);
+        let mut dialog = Dialog::new(s.source.title())
+            // As tall as its content; a long body (a file with many layers) scrolls, the buttons stay in view.
+            .scroll(body)
+            .action(words::ghost("Başka dosya…", Some(event(Event::Another))));
+        if can
+            && let Some(work) = self.dxf_server_work(s)
+            && let Some(button) = self.server_work_button(work)
+        {
+            dialog = dialog.action(button);
+        }
         overlay::blocking(
-            Dialog::new(s.source.title())
-                // As tall as its content; a long body (a file with many layers) scrolls, the buttons stay in view.
-                .scroll(body)
-                .action(words::ghost("Başka dosya…", Some(event(Event::Another))))
+            dialog
                 .action(words::secondary("Vazgeç", Some(event(Event::Cancel))))
                 .action(words::primary("İçe aktar", can.then(|| event(Event::Run))))
                 .width(900.0)
                 .max_height(820.0),
         )
+    }
+
+    /// What “Sunucuya içe aktar” asks of the server for a DXF as the window stands (docs/adr/0561 §4): the command's
+    /// input without its path, the bytes the window read, the layers left out; none for a Netcad drawing or while the
+    /// file is not read.
+    pub(super) fn dxf_server_work(&self, s: &State) -> Option<super::server_work::Work> {
+        if s.source != Source::Dxf {
+            return None;
+        }
+        let result = s.result.as_ref()?;
+        let included: BTreeSet<&str> = self
+            .drawing_included(s)
+            .into_iter()
+            .map(|l| l.name.as_str())
+            .collect();
+        let skipped: Vec<String> = result
+            .layers
+            .iter()
+            .filter(|l| !included.contains(l.name.as_str()))
+            .map(|l| l.name.clone())
+            .collect();
+        let mut lines = vec![format!("{} katman alınır.", included.len())];
+        if !skipped.is_empty() {
+            lines.push(format!("Dışarıda kalan katmanlar: {}.", skipped.join(", ")));
+        }
+        if s.explode {
+            lines.push("Bloklar patlatılır: yerleştirmeler nesnelerine açılır.".to_owned());
+        }
+        let input = ImportDxf {
+            path: String::new(),
+            file_unit: s.file_unit,
+            explode_blocks: s.explode,
+            closed_polylines: s.closed,
+            skip_layers: skipped,
+            layers: std::collections::BTreeMap::new(),
+            group: None,
+            expected_revision: None,
+        };
+        Some(super::server_work::Work::import(
+            kentos_commands::ImportFormat::Dxf,
+            s.file.name.clone(),
+            super::server_work::Source::Bytes(s.file.bytes.clone()),
+            serde_json::to_value(input).unwrap_or_default(),
+            lines,
+        ))
     }
 
     /// Kapalı çoklu çizgiler (docs/adr/0258 §1): the project type's choice, or one chosen.

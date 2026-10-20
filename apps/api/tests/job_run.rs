@@ -1,7 +1,8 @@
-//! The server's processor for `project.processing` jobs (docs/adr/0559 §3) against the real child process:
-//! `kentos-jobrun` opens a project's `.kcad`, runs an İşlemler tool in the headless host and answers with a delta or a
-//! GeoPackage; the parent says what the tool said, measures it, kills it at its budget or at a stop, and says what a
-//! child that ended with no answer was. No database: the processor takes a `.kcad` and gives what the tool did.
+//! The server's processor for `project.processing`, `project.import` and `project.atlas` jobs (docs/adr/0559 §3,
+//! 0561 §3) against the real child process: `kentos-jobrun` opens a project's `.kcad`, runs an İşlemler tool, an import
+//! command or the atlas export in the headless host and answers with a delta or a file; the parent says what it said,
+//! measures it, kills it at its budget or at a stop, and says what a child that ended with no answer was. No database:
+//! the processor takes a `.kcad` and gives what the work did.
 
 #![allow(dead_code)]
 
@@ -15,10 +16,13 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use kentos_application::processing_job::{
-    JobProgress, ProcessFailure, ProcessHooks, Processed, ProcessingBudget, ProcessingTask,
-    Processor,
+    ImportRun, JobProgress, ProcessFailure, ProcessHooks, Processed, ProcessingBudget,
+    ProcessingTask, Processor, RunRequest, StagedFile,
 };
-use kentos_contracts::{FeatureChange, ProcessingJobInput, ProcessingJobMode};
+use kentos_contracts::{
+    BlockChange, FeatureChange, ImportFormat, ProcessingJobInput, ProcessingJobMode,
+    ProjectAtlasInput,
+};
 use processing_job::ChildProcessor;
 use uuid::Uuid;
 
@@ -46,7 +50,8 @@ fn task(input: ProcessingJobInput, budget: ProcessingBudget) -> ProcessingTask {
     ProcessingTask {
         job: Uuid::now_v7(),
         snapshot: parcels(),
-        input,
+        request: RunRequest::Processing(input),
+        file: None,
         budget,
     }
 }
@@ -113,12 +118,15 @@ fn a_tool_runs_in_a_child_and_what_it_changed_comes_back_as_a_delta() {
     // It said where it was, and what it took was measured.
     let (fraction, words) = hooks.progress.get().expect("the child said something");
     assert!(fraction > 0.0 && !words.is_empty(), "{fraction} {words}");
+    // What it took is said whatever its length: the parent samples it while it runs, and the child tells its own at its
+    // end (docs/adr/0561 §5), so a run over between two samples is not told as nothing.
     assert!(
         processed.usage.peak_memory_mb > 1.0,
         "{:?}",
         processed.usage
     );
-    assert!(processed.sink.is_none());
+    assert!(processed.usage.cpu_seconds > 0.0, "{:?}", processed.usage);
+    assert!(processed.file.is_none());
     // The work folder is gone.
     assert_eq!(
         std::fs::read_dir(&root).map(Iterator::count).unwrap_or(0),
@@ -130,9 +138,9 @@ fn a_tool_runs_in_a_child_and_what_it_changed_comes_back_as_a_delta() {
 fn a_result_to_a_file_comes_back_as_the_geopackage() {
     let (out, _) = run(numbering(ProcessingJobMode::Sink));
     let processed = out.expect("the tool ran");
-    let file = processed.sink.expect("a GeoPackage");
+    let file = processed.file.expect("a GeoPackage");
     assert!(file.starts_with(b"SQLite format 3\0"), "a SQLite file");
-    assert_eq!(processed.sink_rows, 6);
+    assert_eq!(processed.rows, 6);
     assert!(processed.delta.is_none());
 }
 
@@ -169,17 +177,24 @@ fn a_tool_that_fails_or_a_request_the_child_refuses_says_why() {
 
 #[test]
 fn a_memory_budget_is_kept_by_killing_the_child() {
+    // A child that stays alive (the real one can be over before its first sample: docs/adr/0561 §5) and a budget of a
+    // few kilobytes, which any process is past.
+    let waiter = support::shell_program("sleep 30");
     let started = Instant::now();
     let hooks = hooks();
     let tiny = ProcessingBudget {
         cpu_seconds: 600,
-        memory_bytes: 1 << 20,
+        memory_bytes: 64 << 10,
     };
-    let failure = processor()
+    let failure = ChildProcessor::with(waiter, work_dir())
         .process(&task(numbering(ProcessingJobMode::Commit), tiny), &hooks)
         .expect_err("past the memory budget");
     assert_eq!(failure.code, "memory_limit", "{failure:?}");
-    assert!(failure.message.contains("1 MB"), "{}", failure.message);
+    assert!(
+        failure.message.contains("bellek bütçesi"),
+        "{}",
+        failure.message
+    );
     assert!(started.elapsed() < Duration::from_secs(20));
 }
 
@@ -262,4 +277,235 @@ fn a_child_that_ends_with_no_answer_is_said_to_have_crashed() {
         )
         .expect_err("not started");
     assert_eq!(failure.code, "tool_unavailable");
+}
+
+// ── Imports and the atlas (docs/adr/0561) ───────────────────────────────────
+
+const ATLAS: &[u8] = include_bytes!("../../../fixtures/server-jobs/v1/atlas.kcad");
+const ATLAS_PIN: &str = include_str!("../../../fixtures/server-jobs/v1/atlas-pin.json");
+const GPKG: &[u8] = include_bytes!("../../../fixtures/geopackage/v1/kentos-export.gpkg");
+const GPKG_WGS84: &[u8] =
+    include_bytes!("../../../fixtures/geopackage/v1/kentos-synced-wgs84.gpkg");
+const DXF_BLOCKS: &[u8] = include_bytes!("../../../fixtures/formats/v1/blocks.dxf");
+
+/// A file staged for an import: the bytes in a file of their own, as the object store keeps them.
+fn staged(name: &str, bytes: &[u8]) -> StagedFile {
+    let dir = work_dir();
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let path = dir.join(name);
+    std::fs::write(&path, bytes).expect("the file");
+    StagedFile {
+        path,
+        name: name.to_owned(),
+        size: bytes.len() as u64,
+    }
+}
+
+fn import_task(
+    name: &str,
+    bytes: &[u8],
+    format: ImportFormat,
+    options: serde_json::Value,
+) -> ProcessingTask {
+    let options = options
+        .as_object()
+        .map(|m| m.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
+        .unwrap_or_default();
+    ProcessingTask {
+        job: Uuid::now_v7(),
+        snapshot: parcels(),
+        request: RunRequest::Import(ImportRun {
+            format,
+            name: name.to_owned(),
+            options,
+        }),
+        file: Some(staged(name, bytes)),
+        budget: budget(),
+    }
+}
+
+fn atlas_task(input: ProjectAtlasInput) -> ProcessingTask {
+    ProcessingTask {
+        job: Uuid::now_v7(),
+        snapshot: ATLAS.to_vec(),
+        request: RunRequest::Atlas(input),
+        file: None,
+        budget: budget(),
+    }
+}
+
+fn atlas_pin() -> kentos_contracts::AtlasPin {
+    serde_json::from_str(ATLAS_PIN).expect("the pin the plan gave")
+}
+
+#[test]
+fn a_geopackage_is_taken_in_by_the_import_command_in_the_child() {
+    let out = processor().process(
+        &import_task(
+            "kentos-export.gpkg",
+            GPKG,
+            ImportFormat::Gpkg,
+            serde_json::json!({}),
+        ),
+        &hooks(),
+    );
+    let processed = out.expect("the import ran");
+    let delta = processed.delta.expect("a delta");
+    assert_eq!((delta.added, delta.changed, delta.removed), (10, 0, 0));
+    assert!(
+        delta
+            .features
+            .iter()
+            .all(|c| matches!(c, FeatureChange::Create { .. }))
+    );
+    assert!(
+        processed.summary.contains("10 nesne eklendi"),
+        "{}",
+        processed.summary
+    );
+    // What the command answered is kept: the tables it read.
+    assert_eq!(processed.details["objects"], 10);
+    assert!(
+        processed.details["tables"]
+            .as_array()
+            .is_some_and(|t| !t.is_empty())
+    );
+}
+
+#[test]
+fn a_file_in_another_system_is_refused_with_the_commands_own_code_and_taken_when_asked_to_move() {
+    let failure = processor()
+        .process(
+            &import_task(
+                "wgs84.gpkg",
+                GPKG_WGS84,
+                ImportFormat::Gpkg,
+                serde_json::json!({}),
+            ),
+            &hooks(),
+        )
+        .expect_err("another system");
+    assert_eq!(failure.code, "crs_mismatch", "{failure:?}");
+    let moved = processor()
+        .process(
+            &import_task(
+                "wgs84.gpkg",
+                GPKG_WGS84,
+                ImportFormat::Gpkg,
+                serde_json::json!({ "reproject": true }),
+            ),
+            &hooks(),
+        )
+        .expect("moved into the project's system");
+    assert!(moved.delta.expect("a delta").added > 0);
+}
+
+#[test]
+fn a_dxf_with_blocks_brings_its_block_definitions_with_it() {
+    let processed = processor()
+        .process(
+            &import_task(
+                "bloklar.dxf",
+                DXF_BLOCKS,
+                ImportFormat::Dxf,
+                serde_json::json!({}),
+            ),
+            &hooks(),
+        )
+        .expect("the import ran");
+    let delta = processed.delta.expect("a delta");
+    assert!(
+        delta
+            .blocks
+            .iter()
+            .any(|b| matches!(b, BlockChange::Create { .. })),
+        "{:?} blocks",
+        delta.blocks.len()
+    );
+    assert!(delta.added > 0, "its objects too");
+}
+
+#[test]
+fn a_path_among_the_options_or_a_file_that_is_not_there_is_refused_by_the_child_too() {
+    let failure = processor()
+        .process(
+            &import_task(
+                "a.gpkg",
+                GPKG,
+                ImportFormat::Gpkg,
+                serde_json::json!({ "path": "/etc/passwd" }),
+            ),
+            &hooks(),
+        )
+        .expect_err("no path of the request's own");
+    assert_eq!(failure.code, "invalid");
+    assert!(
+        failure.message.contains("input.options.path"),
+        "{}",
+        failure.message
+    );
+    // No file in the folder: the server gave none.
+    let mut missing = import_task("a.gpkg", GPKG, ImportFormat::Gpkg, serde_json::json!({}));
+    missing.file = None;
+    let failure = processor()
+        .process(&missing, &hooks())
+        .expect_err("no file");
+    assert_eq!(failure.code, "invalid");
+}
+
+#[test]
+fn the_atlas_comes_back_as_a_pdf_of_a_page_for_each_object() {
+    let hooks = hooks();
+    let processed = processor()
+        .process(
+            &atlas_task(ProjectAtlasInput {
+                sheet: "atlas-paftasi".into(),
+                pin: Some(atlas_pin()),
+                ..ProjectAtlasInput::default()
+            }),
+            &hooks,
+        )
+        .expect("the atlas was made");
+    let pdf = processed.file.expect("a PDF");
+    assert!(pdf.starts_with(b"%PDF-"));
+    assert_eq!(processed.details["pages"].as_array().map(Vec::len), Some(6));
+    assert_eq!(
+        processed.details["pin"]["digest"].as_str(),
+        Some(atlas_pin().digest.as_str())
+    );
+    assert!(
+        processed.summary.contains("6 sayfalık"),
+        "{}",
+        processed.summary
+    );
+    assert!(processed.delta.is_none());
+    assert!(hooks.progress.get().is_some());
+}
+
+#[test]
+fn a_pin_the_project_has_moved_on_from_and_a_sheet_that_is_not_there_are_refused_by_code() {
+    let mut pin = atlas_pin();
+    pin.digest = "0".repeat(64);
+    pin.layers = "0".repeat(64);
+    let failure = processor()
+        .process(
+            &atlas_task(ProjectAtlasInput {
+                sheet: "atlas-paftasi".into(),
+                pin: Some(pin),
+                ..ProjectAtlasInput::default()
+            }),
+            &hooks(),
+        )
+        .expect_err("not the state the pin names");
+    assert_eq!(failure.code, "pin_mismatch", "{failure:?}");
+    let failure = processor()
+        .process(
+            &atlas_task(ProjectAtlasInput {
+                sheet: "yok".into(),
+                ..ProjectAtlasInput::default()
+            }),
+            &hooks(),
+        )
+        .expect_err("no such sheet");
+    assert_eq!(failure.code, "unknown_sheet", "{failure:?}");
 }

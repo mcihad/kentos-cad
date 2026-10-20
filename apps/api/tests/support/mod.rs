@@ -24,8 +24,8 @@ pub fn shell_program(body: &str) -> PathBuf {
 }
 
 /// The child program `kentos-jobrun`: `KENTOS_JOBRUN`, else beside the test's own binaries (`target/<profile>`), built
-/// first when it is not there (`cargo build -p kentos-jobrun`: another package's program is not built by this one's
-/// tests).
+/// first, once for the test process (`cargo build -p kentos-jobrun`: another package's program is not built by this
+/// one's tests, and one built before the sources changed would answer for the old ones).
 pub fn child_exe() -> PathBuf {
     if let Some(path) = std::env::var_os("KENTOS_JOBRUN") {
         return path.into();
@@ -37,7 +37,8 @@ pub fn child_exe() -> PathBuf {
         .expect("target/<profile>/deps/<test>")
         .to_path_buf();
     let exe = profile.join("kentos-jobrun");
-    if !exe.is_file() {
+    static BUILT: std::sync::Once = std::sync::Once::new();
+    BUILT.call_once(|| {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
         let mut build = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".into()));
         build
@@ -49,7 +50,7 @@ pub fn child_exe() -> PathBuf {
         }
         let status = build.status().expect("cargo builds kentos-jobrun");
         assert!(status.success(), "cargo build -p kentos-jobrun failed");
-    }
+    });
     assert!(exe.is_file(), "{} yok", exe.display());
     exe
 }

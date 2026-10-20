@@ -27,6 +27,7 @@ mod fields;
 pub mod memory;
 pub mod panel;
 mod plan;
+pub(crate) use plan::ServerPlace;
 mod server;
 
 /// The İşlemler panel's event as the app's message (the ribbon's model buttons send it too).

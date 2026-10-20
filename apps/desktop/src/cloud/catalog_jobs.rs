@@ -406,6 +406,7 @@ impl App {
                 name,
                 listed: Some(artifact.sha256),
                 compare: None,
+                extension: server_jobs::download_extension(&job),
             },
         )
     }

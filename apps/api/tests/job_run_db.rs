@@ -1,6 +1,7 @@
-//! A processing job through the whole chain (docs/adr/0559): a database project, the job asked for as a user, a worker
-//! that runs the tool in a real child process (`kentosd job-run`), and the result committed in the finish or staged as
-//! a GeoPackage. Real database (`KENTOS_TEST_DB=required` makes a missing one a failure).
+//! A processing, import or atlas job through the whole chain (docs/adr/0559, 0561): a database project, the job asked
+//! for as a user (an import's file staged first), a worker that runs the work in a real child process (`kentos-jobrun`),
+//! and the result committed in the finish or staged as a file. Real database (`KENTOS_TEST_DB=required` makes a
+//! missing one a failure).
 
 #![allow(dead_code)]
 
@@ -88,11 +89,17 @@ async fn run_one(
     jobs::get(&db.app, access, worked.job).await.unwrap()
 }
 
-#[tokio::test]
-async fn a_tool_run_by_a_worker_in_a_child_commits_its_result_or_stages_its_file() {
-    let Some(db) = TestDb::create().await else {
-        return;
-    };
+/// A project of a drawing's objects, layers and sheets, owned by a project manager of the organisation "buro"; the
+/// access, the objects' persistent ids and how many there are.
+async fn project_of(
+    db: &TestDb,
+    name: &str,
+    doc: &kentos_contracts::DocumentSnapshotV2,
+) -> (
+    kentos_application::access::ProjectAccess,
+    Vec<String>,
+    usize,
+) {
     admin::create_tenant(&db.owner, "buro", "Büro", 6)
         .await
         .unwrap();
@@ -112,21 +119,20 @@ async fn a_tool_run_by_a_worker_in_a_child_commits_its_result_or_stages_its_file
         .unwrap();
     let ayse = tenancy::access(&db.app, &actor, tenant).await.unwrap();
 
-    // A project of the parcels: their settings, layers and styles, each parcel under its persistent id.
-    let doc = parcels();
+    // A project of the drawing: its settings, layers and styles, each object under its persistent id.
     let created = projects::create(
         &db.app,
         &ayse,
         ProjectCreate {
             constraints: Default::default(),
-            name: "Parseller".into(),
+            name: name.into(),
             settings: doc.settings.clone(),
             origin: doc.origin,
             home_view: doc.home_view,
             layers: unlocked(doc.layers.clone()),
             active_layer: doc.active_layer.clone(),
             styles: doc.styles.clone(),
-            sheets: None,
+            sheets: doc.sheets.clone(),
             arrays: Vec::new(),
             description: None,
             project_type: None,
@@ -176,6 +182,16 @@ async fn a_tool_run_by_a_worker_in_a_child_commits_its_result_or_stages_its_file
     )
     .await
     .unwrap();
+    (access, ids, objects)
+}
+
+#[tokio::test]
+async fn a_tool_run_by_a_worker_in_a_child_commits_its_result_or_stages_its_file() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let doc = parcels();
+    let (access, ids, objects) = project_of(&db, "Parseller", &doc).await;
     let store = kentos_application::blobs::Blobs::new(
         std::env::temp_dir().join(format!("kentos-job-run-blobs-{}", Uuid::now_v7())),
     );
@@ -201,6 +217,7 @@ async fn a_tool_run_by_a_worker_in_a_child_commits_its_result_or_stages_its_file
     assert!(result.summary.contains("3 nesnede"), "{}", result.summary);
     assert_eq!((result.added, result.changed, result.removed), (0, 3, 0));
     assert_eq!(result.revision.as_deref(), Some("2"));
+    // What it took is said whatever its length (docs/adr/0561 §5).
     assert!(result.usage.peak_memory_mb > 1.0, "{:?}", result.usage);
     let after = snapshot::snapshot(&db.app, &access).await.unwrap();
     assert_eq!((after.objects, after.revision), (objects, 2));
@@ -284,5 +301,250 @@ async fn a_tool_run_by_a_worker_in_a_child_commits_its_result_or_stages_its_file
     let job = run_one(&db, &store, &access, pinned).await;
     assert_eq!(job.state, ServerJobState::Failed);
     assert_eq!(job.error.unwrap().code, "revision_conflict");
+    db.close().await;
+}
+
+// ── Imports and the atlas through the chain (docs/adr/0561) ─────────────────
+
+const ATLAS: &[u8] = include_bytes!("../../../fixtures/server-jobs/v1/atlas.kcad");
+const GPKG: &[u8] = include_bytes!("../../../fixtures/geopackage/v1/kentos-genis.gpkg");
+const GPKG_WGS84: &[u8] =
+    include_bytes!("../../../fixtures/geopackage/v1/kentos-synced-wgs84.gpkg");
+const DXF_BLOCKS: &[u8] = include_bytes!("../../../fixtures/formats/v1/blocks.dxf");
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    use sha2::{Digest, Sha256};
+    Sha256::digest(bytes)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
+}
+
+/// `bytes` staged as the caller's file for the project: asked for, sent, received.
+async fn stage_file(
+    db: &TestDb,
+    store: &kentos_application::blobs::Blobs,
+    access: &kentos_application::access::ProjectAccess,
+    name: &str,
+    bytes: &[u8],
+) -> String {
+    let begun = kentos_application::job_inputs::begin(
+        &db.app,
+        access,
+        kentos_contracts::JobInputBegin {
+            name: name.into(),
+            size: bytes.len() as u64,
+            sha256: sha256_hex(bytes),
+        },
+        1 << 30,
+    )
+    .await
+    .unwrap();
+    let mut receiving = kentos_application::job_inputs::start_receive(
+        &db.app,
+        store,
+        access,
+        Uuid::parse_str(&begun.id).unwrap(),
+    )
+    .await
+    .unwrap();
+    receiving.writer.write(bytes).await.unwrap();
+    kentos_application::job_inputs::finish_receive(&db.app, store, access, receiving)
+        .await
+        .unwrap();
+    begun.id
+}
+
+fn ask_import(request: &str, upload: &str, options: serde_json::Value) -> ServerJobCreate {
+    ServerJobCreate {
+        kind: kentos_contracts::PROJECT_IMPORT_JOB.into(),
+        input: serde_json::json!({ "upload": upload, "options": options }),
+        request_id: request.into(),
+        timeout_seconds: None,
+    }
+}
+
+#[tokio::test]
+async fn a_file_staged_for_the_project_is_imported_by_the_child_and_committed_by_the_job() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let doc = parcels();
+    let (access, _ids, objects) = project_of(&db, "Parseller", &doc).await;
+    let store = kentos_application::blobs::Blobs::new(
+        std::env::temp_dir().join(format!("kentos-job-run-blobs-{}", Uuid::now_v7())),
+    );
+    // A GeoPackage in the project's system: its three objects come in, one commit, and the command's words with them.
+    let gpkg = stage_file(&db, &store, &access, "kentos-genis.gpkg", GPKG).await;
+    let job = run_one(
+        &db,
+        &store,
+        &access,
+        ask_import("a", &gpkg, serde_json::json!({})),
+    )
+    .await;
+    assert_eq!(job.state, ServerJobState::Succeeded, "{:?}", job.error);
+    let result: kentos_contracts::ProjectImportResult =
+        serde_json::from_value(job.result.unwrap()).unwrap();
+    assert_eq!(result.command, "file.import.gpkg");
+    assert_eq!(
+        (result.file.as_str(), result.bytes, result.sha256.as_str()),
+        (
+            "kentos-genis.gpkg",
+            GPKG.len() as u64,
+            sha256_hex(GPKG).as_str()
+        )
+    );
+    assert_eq!((result.added, result.changed, result.removed), (3, 0, 0));
+    assert_eq!(
+        (result.base_revision.as_str(), result.revision.as_deref()),
+        ("1", Some("2"))
+    );
+    assert!(
+        result.summary.contains("3 nesne eklendi"),
+        "{}",
+        result.summary
+    );
+    assert_eq!(result.details["objects"], 3);
+    let after = snapshot::snapshot(&db.app, &access).await.unwrap();
+    assert_eq!((after.objects, after.revision), (objects + 3, 2));
+
+    // A file in another coordinate system: the command's refusal is the job's code, and nothing was written.
+    let wgs84 = stage_file(&db, &store, &access, "wgs84.gpkg", GPKG_WGS84).await;
+    let job = run_one(
+        &db,
+        &store,
+        &access,
+        ask_import("b", &wgs84, serde_json::json!({})),
+    )
+    .await;
+    assert_eq!(job.state, ServerJobState::Failed);
+    assert_eq!(job.error.unwrap().code, "crs_mismatch");
+    assert_eq!(
+        snapshot::snapshot(&db.app, &access).await.unwrap().revision,
+        2
+    );
+    // Asked to move its coordinates into the project's, it comes in.
+    let job = run_one(
+        &db,
+        &store,
+        &access,
+        ask_import("c", &wgs84, serde_json::json!({ "reproject": true })),
+    )
+    .await;
+    assert_eq!(job.state, ServerJobState::Succeeded, "{:?}", job.error);
+    assert_eq!(
+        snapshot::snapshot(&db.app, &access).await.unwrap().revision,
+        3
+    );
+
+    // A DXF with blocks: its block definitions are committed with its objects.
+    let dxf = stage_file(&db, &store, &access, "bloklar.dxf", DXF_BLOCKS).await;
+    let job = run_one(
+        &db,
+        &store,
+        &access,
+        ask_import("d", &dxf, serde_json::json!({})),
+    )
+    .await;
+    assert_eq!(job.state, ServerJobState::Succeeded, "{:?}", job.error);
+    let result: kentos_contracts::ProjectImportResult =
+        serde_json::from_value(job.result.unwrap()).unwrap();
+    assert!(result.blocks > 0, "{result:?}");
+    let snap = snapshot::snapshot(&db.app, &access).await.unwrap();
+    assert_eq!(snap.revision, 4);
+    assert_eq!(
+        kentos_kcad::decode(&snap.bytes).unwrap().blocks.len() as u64,
+        result.blocks
+    );
+    db.close().await;
+}
+
+#[tokio::test]
+async fn the_atlas_of_a_sheet_is_drawn_by_the_child_and_downloaded_as_the_jobs_pdf() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let doc = kentos_kcad::decode(ATLAS).expect("the atlas project reads");
+    let (access, _ids, objects) = project_of(&db, "Parsel atlası", &doc).await;
+    let store = kentos_application::blobs::Blobs::new(
+        std::env::temp_dir().join(format!("kentos-job-run-blobs-{}", Uuid::now_v7())),
+    );
+    let ask = |request: &str, input: serde_json::Value| ServerJobCreate {
+        kind: kentos_contracts::PROJECT_ATLAS_JOB.into(),
+        input,
+        request_id: request.into(),
+        timeout_seconds: None,
+    };
+    // The pin a plan of the same drawing made (here by the Python SDK, from the file): the project the server keeps is
+    // the same state, so its pages are made.
+    let good: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/server-jobs/v1/atlas-pin.json"
+    ))
+    .unwrap();
+    let job = run_one(
+        &db,
+        &store,
+        &access,
+        ask(
+            "a",
+            serde_json::json!({ "sheet": "atlas-paftasi", "pin": good }),
+        ),
+    )
+    .await;
+    assert_eq!(job.state, ServerJobState::Succeeded, "{:?}", job.error);
+    let result: kentos_contracts::ProjectAtlasResult =
+        serde_json::from_value(job.result.clone().unwrap()).unwrap();
+    assert_eq!(result.pages, 6);
+    assert_eq!(result.first.as_deref(), Some("A1/1"));
+    assert_eq!(result.sheet, "atlas-paftasi");
+    assert_eq!(result.pin_digest.len(), 64);
+    assert!(
+        result.withheld.iter().any(|f| f == "Malik"),
+        "{:?}",
+        result.withheld
+    );
+    let artifact = job.artifact.clone().expect("a PDF");
+    assert_eq!(artifact.name, "Parsel atlası - atlas-paftasi.pdf");
+    let (_, mut file) = jobs::artifact(&db.app, &store, &access, Uuid::parse_str(&job.id).unwrap())
+        .await
+        .unwrap();
+    let mut pdf = Vec::new();
+    tokio::io::AsyncReadExt::read_to_end(&mut file, &mut pdf)
+        .await
+        .unwrap();
+    assert!(pdf.starts_with(b"%PDF-"));
+    assert_eq!(pdf.len().to_string(), artifact.size);
+    // Nothing of the project changed.
+    let after = snapshot::snapshot(&db.app, &access).await.unwrap();
+    assert_eq!((after.objects, after.revision), (objects, 1));
+    // A pin that is not the project's state: the command refuses it by its code and writes nothing.
+    let mut pin: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/server-jobs/v1/atlas-pin.json"
+    ))
+    .unwrap();
+    pin["digest"] = serde_json::json!("0".repeat(64));
+    pin["layers"] = serde_json::json!("0".repeat(64));
+    let job = run_one(
+        &db,
+        &store,
+        &access,
+        ask(
+            "b",
+            serde_json::json!({ "sheet": "atlas-paftasi", "pin": pin }),
+        ),
+    )
+    .await;
+    assert_eq!(job.state, ServerJobState::Failed);
+    assert_eq!(job.error.unwrap().code, "pin_mismatch");
+    // A sheet that is not there.
+    let job = run_one(
+        &db,
+        &store,
+        &access,
+        ask("c", serde_json::json!({ "sheet": "yok" })),
+    )
+    .await;
+    assert_eq!(job.error.unwrap().code, "unknown_sheet");
     db.close().await;
 }

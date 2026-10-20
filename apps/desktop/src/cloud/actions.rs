@@ -105,6 +105,8 @@ pub enum Settle {
     Job(Box<kentos_commands::ProjectSummary>),
     /// An İşlemler tool run as a job on the server, asked once the open project's edits went (processing/server.rs).
     ProcessingJob(Box<kentos_commands::ProcessingJobInput>),
+    /// A file import or an atlas asked for from its window as a job (docs/adr/0561 §4): the window holds the work.
+    ServerWork,
     /// The open project in the other storage mode, once its edits went (catalog_forms.rs).
     Convert(
         Box<(
@@ -363,6 +365,7 @@ impl App {
             }
             Some(Settle::Job(p)) => self.jobs_send_export(&p),
             Some(Settle::ProcessingJob(input)) => self.processing_job_send(*input),
+            Some(Settle::ServerWork) => self.server_work_send(),
             Some(Settle::Metadata(what)) => self.metadata_renamed(*what, sent),
             Some(Settle::Convert(what)) => {
                 let (p, input) = *what;

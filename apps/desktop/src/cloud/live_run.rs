@@ -313,6 +313,17 @@ fn upload(r: &mut Runner, name: &str, storage: ProjectStorage, shot: Option<&str
     let mut doc = crate::files_testing::drawing(0);
     // The sample's “Çizim” layer is hidden; the point the run moves is on it.
     doc.model.set_layer_visible("cizim", true);
+    upload_document(r, name, storage, doc, shot);
+}
+
+/// Uploads `doc` as a new project kept `storage`-wise; it opens from the server.
+fn upload_document(
+    r: &mut Runner,
+    name: &str,
+    storage: ProjectStorage,
+    mut doc: crate::document::Document,
+    shot: Option<&str>,
+) {
     let revision = doc.model.revision();
     doc.model.mark_saved(revision);
     r.send(Message::Opened(Some(Ok(Box::new(doc)))));
@@ -1234,13 +1245,17 @@ fn jobs_live() {
 
     // 2. Projeyi dışa aktar: the job is listed at once, polled, and a worker finishes it.
     r.cloud(Event::JobExport);
-    r.until("iş istendi", Duration::from_secs(15), |a| !jobs(a).is_empty());
+    r.until("iş istendi", Duration::from_secs(15), |a| {
+        !jobs(a).is_empty()
+    });
     r.shot("isler-02-istendi");
     r.until("iş bitti", Duration::from_secs(40), |a| over(a, 1));
     let first = jobs(&r.app).remove(0);
     assert_eq!(first.state, ServerJobState::Succeeded, "{:?}", first.error);
     assert!(
-        said(&r.app).iter().any(|l| l.starts_with("Sunucu işi bitti")),
+        said(&r.app)
+            .iter()
+            .any(|l| l.starts_with("Sunucu işi bitti")),
         "the log says it ended"
     );
     r.shot("isler-03-bitti");
@@ -1261,7 +1276,9 @@ fn jobs_live() {
 
     // 4. A second job stopped at once: a queued job is cancelled by the server on the spot.
     r.cloud(Event::JobExport);
-    r.until("ikinci iş", Duration::from_secs(15), |a| jobs(a).len() == 2);
+    r.until("ikinci iş", Duration::from_secs(15), |a| {
+        jobs(a).len() == 2
+    });
     let second = jobs(&r.app)[0].clone();
     assert_ne!(second.id, first.id);
     r.cloud(Event::JobStop(second.id.clone()));
@@ -1315,7 +1332,10 @@ fn jobs_live() {
     let result: kentos_commands::ProcessingJobResult =
         serde_json::from_value(ran.result.clone().expect("a result")).expect("its result");
     assert_eq!(result.tool, "attributes.calculate");
-    assert!(result.changed >= 1 && result.revision.is_some(), "{result:?}");
+    assert!(
+        result.changed >= 1 && result.revision.is_some(),
+        "{result:?}"
+    );
     assert!(result.usage.peak_memory_mb > 1.0, "{:?}", result.usage);
     r.until("proje değişti", Duration::from_secs(40), |a| {
         a.document.as_ref().is_some_and(|d| {
@@ -1340,7 +1360,10 @@ fn jobs_live() {
         jobs(a).len() == 3
     });
     assert_eq!(
-        jobs(&r.app).iter().map(|j| j.id.clone()).collect::<Vec<_>>(),
+        jobs(&r.app)
+            .iter()
+            .map(|j| j.id.clone())
+            .collect::<Vec<_>>(),
         vec![ran.id.clone(), second.id.clone(), first.id.clone()]
     );
     r.shot("isler-07-yeniden-acildi");
@@ -1371,4 +1394,134 @@ fn jobs_live() {
     r.until("kalıcı silme", Duration::from_secs(30), |a| {
         last(a).contains("kalıcı olarak silindi")
     });
+    server_work_live(&mut r, &name);
+}
+
+/// An atlas and a file import as jobs on the server (docs/adr/0561): the atlas project (a few parcels, a sheet with an
+/// atlas) is made on the server, the atlas window asks for the pages with the pin of its preview (a project the server
+/// keeps is the state the preview showed, so the pages are made), the PDF is downloaded from the Sunucu işleri tab; then a
+/// GeoPackage of another system is taken in with Projenin sistemine çevir, the project grows by its objects and the job's
+/// result says what came in.
+fn server_work_live(r: &mut Runner, name: &str) {
+    use crate::cloud::catalog::Tab;
+    use crate::exchange::server_work::Event as W;
+    use crate::exchange::{Event as Exchange, Window};
+    use kentos_commands::ServerJobState;
+
+    let jobs = |a: &App| -> Vec<kentos_commands::ServerJob> {
+        a.cloud
+            .catalog
+            .as_ref()
+            .map(|c| c.jobs.list().to_vec())
+            .unwrap_or_default()
+    };
+    let asked = |a: &App| {
+        matches!(
+            &a.exchange,
+            Some(Window::ServerWork(s)) if s.job.is_some()
+        )
+    };
+    let snapshot = kentos_kcad::decode(include_bytes!(
+        "../../../../fixtures/server-jobs/v1/atlas.kcad"
+    ))
+    .expect("the atlas project reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    upload_document(
+        r,
+        &format!("{name} atlas"),
+        ProjectStorage::Database,
+        doc,
+        None,
+    );
+
+    // 7. Atlası sunucuda yap: the preview's pin goes with the job.
+    r.send(Message::Run("file.export.atlas"));
+    r.until("atlas penceresi", Duration::from_secs(20), |a| {
+        matches!(a.exchange, Some(Window::AtlasExport(_)))
+    });
+    let work = match &r.app.exchange {
+        Some(Window::AtlasExport(s)) => App::atlas_server_work(s),
+        _ => None,
+    }
+    .expect("the atlas window with a preview");
+    r.send(Message::Exchange(Box::new(Exchange::ServerWork(W::Open(
+        Box::new(work),
+    )))));
+    r.shot("isler-08-atlas-pencere");
+    r.send(Message::Exchange(Box::new(Exchange::ServerWork(W::Send))));
+    r.until("atlas işi istendi", Duration::from_secs(30), asked);
+    r.shot("isler-09-atlas-istendi");
+    r.send(Message::Exchange(Box::new(Exchange::ServerWork(W::Jobs))));
+    r.until("atlas işi bitti", Duration::from_secs(180), |a| {
+        let list = jobs(a);
+        list.len() == 1 && list[0].state.is_over()
+    });
+    let atlas = jobs(&r.app).remove(0);
+    assert_eq!(atlas.state, ServerJobState::Succeeded, "{:?}", atlas.error);
+    assert_eq!(atlas.kind, "project.atlas");
+    let result: kentos_commands::ProjectAtlasResult =
+        serde_json::from_value(atlas.result.clone().expect("a result")).expect("its result");
+    assert_eq!(result.pages, 6, "{result:?}");
+    assert!(result.withheld.iter().any(|f| f == "Malik"), "{result:?}");
+    r.shot("isler-10-atlas-bitti");
+    let pdf = run_dir().join("jobs-live").join("atlas.pdf");
+    r.app.picker = crate::app::Picker::File(pdf.clone());
+    r.cloud(Event::JobDownload(atlas.clone()));
+    r.until("pdf indirme", Duration::from_secs(30), |a| {
+        last(a).contains(" indirildi: ")
+    });
+    let bytes = std::fs::read(&pdf).expect("the PDF was written");
+    assert!(bytes.starts_with(b"%PDF-"));
+    assert_eq!(
+        kentos_cloud::api::hex_sha256(&bytes),
+        atlas.artifact.as_ref().expect("a file").sha256
+    );
+    r.app.picker = crate::app::Picker::Dialog;
+    r.cloud(Event::Close);
+
+    // 8. Sunucuya içe aktar: a GeoPackage in another coordinate system, moved into the project's.
+    let before = r.app.document.as_ref().expect("open").model.len();
+    r.app.picker =
+        crate::app::Picker::File(repo().join("fixtures/geopackage/v1/kentos-synced-wgs84.gpkg"));
+    r.send(Message::Run("file.import.gpkg"));
+    r.until("GeoPackage penceresi", Duration::from_secs(20), |a| {
+        matches!(a.exchange, Some(Window::Gpkg(_)))
+    });
+    r.send(Message::Exchange(Box::new(Exchange::Gpkg(
+        crate::exchange::gpkg::Event::Reproject,
+    ))));
+    let work = match &r.app.exchange {
+        Some(Window::Gpkg(s)) => Some(App::gpkg_server_work(s)),
+        _ => None,
+    }
+    .expect("the GeoPackage window");
+    r.send(Message::Exchange(Box::new(Exchange::ServerWork(W::Open(
+        Box::new(work),
+    )))));
+    r.shot("isler-11-ice-aktar-pencere");
+    r.send(Message::Exchange(Box::new(Exchange::ServerWork(W::Send))));
+    r.until("içe aktarma istendi", Duration::from_secs(60), asked);
+    r.shot("isler-12-ice-aktar-istendi");
+    r.send(Message::Exchange(Box::new(Exchange::ServerWork(W::Jobs))));
+    r.cloud(Event::CatalogTab(Tab::Jobs));
+    r.until("içe aktarma bitti", Duration::from_secs(120), |a| {
+        let list = jobs(a);
+        list.len() == 2 && list[0].state.is_over()
+    });
+    let import = jobs(&r.app).remove(0);
+    assert_eq!(import.kind, "project.import");
+    assert_eq!(
+        import.state,
+        ServerJobState::Succeeded,
+        "{:?}",
+        import.error
+    );
+    let result: kentos_commands::ProjectImportResult =
+        serde_json::from_value(import.result.clone().expect("a result")).expect("its result");
+    assert_eq!(result.command, "file.import.gpkg");
+    assert!(result.added > 0 && result.revision.is_some(), "{result:?}");
+    r.until("proje büyüdü", Duration::from_secs(40), |a| {
+        a.document.as_ref().is_some_and(|d| d.model.len() > before)
+    });
+    r.shot("isler-13-ice-aktar-bitti");
 }

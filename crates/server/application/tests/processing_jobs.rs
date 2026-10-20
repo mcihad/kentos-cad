@@ -189,7 +189,7 @@ async fn a_tool_result_is_committed_with_the_job_and_its_progress_is_read_meanwh
     assert_eq!(standing(&db, &owner).await, (1, 1));
     let moved = existing.clone();
     let processor = Fake::new(move |task, hooks| {
-        assert_eq!(task.input.tool, "geometry.buffer");
+        assert_eq!(task.tool().unwrap().tool, "geometry.buffer");
         hooks.progress.set(0.5, "Yarı yolda");
         std::thread::sleep(Duration::from_millis(2600));
         let mut delta = creates(486_900.0);
@@ -521,8 +521,8 @@ async fn a_result_to_a_file_is_staged_as_the_artifact_and_the_project_does_not_c
     let processor = Fake::new(|_, _| {
         Ok(Processed {
             summary: "3 satır yazıldı".into(),
-            sink: Some(b"GPKG-bytes".to_vec()),
-            sink_rows: 3,
+            file: Some(b"GPKG-bytes".to_vec()),
+            rows: 3,
             ..Processed::default()
         })
     });
@@ -684,5 +684,743 @@ async fn a_result_that_changes_the_projects_metadata_needs_the_right_to_edit_it(
         (true, Some("2"))
     );
     assert_eq!(standing(&db, &owner).await, (2, 2));
+    db.close().await;
+}
+
+// ── A file import and an atlas (docs/adr/0561) ──────────────────────────────
+
+use kentos_application::job_inputs;
+use kentos_application::processing_job::RunRequest;
+use kentos_contracts::{
+    BlockChange, BlockDefinition, ImportFormat, JobInput, JobInputBegin, PROJECT_ATLAS_JOB,
+    PROJECT_IMPORT_JOB, ProjectAtlasInput, ProjectAtlasResult, ProjectImportInput,
+    ProjectImportResult,
+};
+use sha2::{Digest, Sha256};
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    Sha256::digest(bytes)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
+}
+
+/// Stages `bytes` as the caller's file for the project: asked for, sent, received.
+async fn stage_file(
+    db: &TestDb,
+    store: &kentos_application::blobs::Blobs,
+    access: &kentos_application::access::ProjectAccess,
+    name: &str,
+    bytes: &[u8],
+) -> JobInput {
+    let begun = job_inputs::begin(
+        &db.app,
+        access,
+        JobInputBegin {
+            name: name.into(),
+            size: bytes.len() as u64,
+            sha256: sha256_hex(bytes),
+        },
+        1 << 30,
+    )
+    .await
+    .unwrap();
+    let mut receiving =
+        job_inputs::start_receive(&db.app, store, access, Uuid::parse_str(&begun.id).unwrap())
+            .await
+            .unwrap();
+    receiving.writer.write(bytes).await.unwrap();
+    job_inputs::finish_receive(&db.app, store, access, receiving)
+        .await
+        .unwrap()
+}
+
+fn ask_import(request: &str, upload: &str) -> ServerJobCreate {
+    ServerJobCreate {
+        kind: PROJECT_IMPORT_JOB.into(),
+        input: serde_json::to_value(ProjectImportInput {
+            upload: upload.into(),
+            ..ProjectImportInput::default()
+        })
+        .unwrap(),
+        request_id: request.into(),
+        timeout_seconds: None,
+    }
+}
+
+fn ask_atlas(request: &str, input: ProjectAtlasInput) -> ServerJobCreate {
+    ServerJobCreate {
+        kind: PROJECT_ATLAS_JOB.into(),
+        input: serde_json::to_value(input).unwrap(),
+        request_id: request.into(),
+        timeout_seconds: None,
+    }
+}
+
+fn atlas_of(sheet: &str) -> ProjectAtlasInput {
+    ProjectAtlasInput {
+        sheet: sheet.into(),
+        ..ProjectAtlasInput::default()
+    }
+}
+
+#[tokio::test]
+async fn a_staged_file_is_taken_in_by_the_worker_and_its_objects_are_committed_with_the_job() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let (_pm, owner, _project, _) = project_of_one(&db).await;
+    let store = blobs();
+    let bytes = b"not a real gpkg: the fake reads only that it is the file".to_vec();
+    let file = stage_file(&db, &store, &owner, "parsel.gpkg", &bytes).await;
+    assert!(file.received);
+    let want = bytes.clone();
+    let processor = Fake::new(move |task, hooks| {
+        let RunRequest::Import(run) = &task.request else {
+            panic!("an import: {:?}", task.request);
+        };
+        assert_eq!(
+            (run.format, run.name.as_str()),
+            (ImportFormat::Gpkg, "parsel.gpkg")
+        );
+        assert_eq!(run.options["reproject"], true);
+        // The processor is handed the file where the store keeps it, not its bytes.
+        let staged = task.file.as_ref().expect("the staged file");
+        assert_eq!(std::fs::read(&staged.path).unwrap(), want);
+        assert_eq!(
+            (staged.name.as_str(), staged.size),
+            ("parsel.gpkg", want.len() as u64)
+        );
+        hooks.progress.set(0.6, "Dosya okunuyor");
+        let mut done = answer(creates(486_900.0));
+        done.summary = "“parsel.gpkg” içe aktarıldı: 1 nesne eklendi.".into();
+        done.notes = vec![kentos_contracts::ProcessingJobNote {
+            level: "warn".into(),
+            text: "import_losses: 2 satırın geometrisi okunamadı".into(),
+        }];
+        done.details = json!({ "objects": 1, "tables": [{ "table": "parsel", "objects": 1 }] });
+        Ok(done)
+    });
+    let mut asked = ask_import("i1", &file.id);
+    asked.input["options"] = json!({ "reproject": true });
+    let job = create(&db, &owner, asked).await.unwrap();
+    assert_eq!(job.kind, PROJECT_IMPORT_JOB);
+    let worked = work(&db, &store, &processor).await.unwrap();
+    assert_eq!(worked.state, ServerJobState::Succeeded);
+    let job = jobs::get(&db.app, &owner, id_of(&job)).await.unwrap();
+    assert!(job.artifact.is_none(), "an import leaves no file");
+    let result: ProjectImportResult = serde_json::from_value(job.result.unwrap()).unwrap();
+    assert_eq!(result.command, "file.import.gpkg");
+    assert_eq!(
+        (result.file.as_str(), result.bytes, result.sha256.as_str()),
+        (
+            "parsel.gpkg",
+            bytes.len() as u64,
+            sha256_hex(&bytes).as_str()
+        )
+    );
+    assert_eq!(
+        (result.base_revision.as_str(), result.revision.as_deref()),
+        ("1", Some("2"))
+    );
+    assert_eq!((result.added, result.changed, result.removed), (1, 0, 0));
+    assert_eq!(result.notes.len(), 1, "the losses are in the result");
+    assert!(result.notes[0].text.starts_with("import_losses"));
+    assert_eq!(result.details["tables"][0]["table"], "parsel");
+    assert_eq!(standing(&db, &owner).await, (2, 2));
+    db.close().await;
+}
+
+#[tokio::test]
+async fn an_import_bigger_than_a_request_may_carry_is_one_commit_of_the_job() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let (pm, owner, project, _) = project_of_one(&db).await;
+    let store = blobs();
+    let file = stage_file(&db, &store, &owner, "noktalar.csv", b"X,Y\n1,2\n").await;
+    // 6 001 points: past what `project.changes` takes from a request (5 000), within what a job's own commit takes.
+    let processor = Fake::new(|_, _| {
+        let mut delta = Delta::default();
+        for i in 0..6001 {
+            delta
+                .features
+                .extend(a_point(486_000.0 + f64::from(i)).features);
+        }
+        delta.added = 6001;
+        Ok(answer(delta))
+    });
+    let job = create(&db, &owner, ask_import("i1", &file.id))
+        .await
+        .unwrap();
+    assert_eq!(
+        work(&db, &store, &processor).await.unwrap().state,
+        ServerJobState::Succeeded
+    );
+    let job = jobs::get(&db.app, &owner, id_of(&job)).await.unwrap();
+    let result: ProjectImportResult = serde_json::from_value(job.result.unwrap()).unwrap();
+    assert_eq!(
+        (result.added, result.revision.as_deref()),
+        (6001, Some("2"))
+    );
+    assert_eq!(standing(&db, &owner).await, (6002, 2));
+    // The same set as a request is refused.
+    let refused = changes::commit(
+        &db.app,
+        &owner,
+        envelope(
+            &pm,
+            project,
+            {
+                let mut all = a_point(1.0);
+                for i in 0..5000 {
+                    all.features.extend(a_point(2.0 + f64::from(i)).features);
+                }
+                all
+            },
+            &[],
+        ),
+    )
+    .await
+    .unwrap_err();
+    assert!(refused.to_string().contains("en çok 5000"), "{refused}");
+    db.close().await;
+}
+
+fn a_block(id: u128, name: &str) -> BlockDefinition {
+    serde_json::from_value(json!({
+        "id": Uuid::from_u128(id).to_string(), "name": name, "base": { "x": 0.0, "y": 0.0 },
+        "entities": [{ "kind": "point", "id": 1, "layerId": "0", "attrs": {}, "p": { "x": 0.0, "y": 0.0 } }]
+    }))
+    .unwrap()
+}
+
+/// How many block definitions the project holds, by the file the server hands over.
+async fn block_names(
+    db: &TestDb,
+    access: &kentos_application::access::ProjectAccess,
+) -> Vec<String> {
+    let snap = snapshot::snapshot(&db.app, access).await.unwrap();
+    let mut names: Vec<String> = kentos_kcad::decode(&snap.bytes)
+        .unwrap()
+        .blocks
+        .into_iter()
+        .map(|b| b.name)
+        .collect();
+    names.sort();
+    names
+}
+
+#[tokio::test]
+async fn an_import_brings_block_definitions_and_a_later_job_replaces_and_removes_them() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let (_pm, owner, _project, _) = project_of_one(&db).await;
+    let store = blobs();
+    let file = stage_file(&db, &store, &owner, "bloklar.dxf", b"0\nEOF\n").await;
+    let blocks = |changes: Vec<BlockChange>| {
+        Fake::new(move |_, _| {
+            Ok(answer(Delta {
+                blocks: changes.clone(),
+                ..Delta::default()
+            }))
+        })
+    };
+    // Made.
+    let made = blocks(vec![
+        BlockChange::Create {
+            block: a_block(0x2001, "Kapı"),
+        },
+        BlockChange::Create {
+            block: a_block(0x2002, "Pencere"),
+        },
+    ]);
+    create(&db, &owner, ask_import("b1", &file.id))
+        .await
+        .unwrap();
+    assert_eq!(
+        work(&db, &store, &made).await.unwrap().state,
+        ServerJobState::Succeeded
+    );
+    assert_eq!(block_names(&db, &owner).await, ["Kapı", "Pencere"]);
+    // One replaced, one removed: the versions the commit expects are the ones it reads under the lock.
+    let changed = blocks(vec![
+        BlockChange::Update {
+            block: a_block(0x2001, "Kapı 2"),
+        },
+        BlockChange::Delete {
+            id: kentos_contracts::BlockId(Uuid::from_u128(0x2002).into_bytes()),
+        },
+    ]);
+    let job = create(&db, &owner, ask_import("b2", &file.id))
+        .await
+        .unwrap();
+    assert_eq!(
+        work(&db, &store, &changed).await.unwrap().state,
+        ServerJobState::Succeeded
+    );
+    assert_eq!(block_names(&db, &owner).await, ["Kapı 2"]);
+    let job = jobs::get(&db.app, &owner, id_of(&job)).await.unwrap();
+    let result: ProjectImportResult = serde_json::from_value(job.result.unwrap()).unwrap();
+    assert_eq!(result.blocks, 2);
+    db.close().await;
+}
+
+#[tokio::test]
+async fn an_import_names_a_file_the_caller_staged_whose_bytes_came_and_a_format_it_fits() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let (_pm, owner, project, _) = project_of_one(&db).await;
+    let store = blobs();
+    let file = stage_file(&db, &store, &owner, "parsel.gpkg", b"abc").await;
+    let other = member(&db, "buro", "baskasi", TenantRole::ProjectManager).await;
+    let theirs = new_project(&db, &other, "Başkasının").await;
+    let others = open(&db, &other, theirs).await;
+    let foreign = stage_file(&db, &store, &others, "baskasi.gpkg", b"xyz").await;
+    // Begun and never sent.
+    let waiting = job_inputs::begin(
+        &db.app,
+        &owner,
+        JobInputBegin {
+            name: "bekleyen.gpkg".into(),
+            size: 3,
+            sha256: sha256_hex(b"abc"),
+        },
+        1 << 30,
+    )
+    .await
+    .unwrap();
+    let unnamed = stage_file(&db, &store, &owner, "adsiz", b"abc").await;
+    let invalid = |e: AppError, path: &str| {
+        let AppError::Invalid { path: at, .. } = &e else {
+            panic!("{e:?}");
+        };
+        assert_eq!(at.as_deref(), Some(path), "{e}");
+    };
+    // Not a file of this project's, someone else's file, a file that has not arrived, a name that says no format.
+    invalid(
+        create(&db, &owner, ask_import("a", &Uuid::new_v4().to_string()))
+            .await
+            .unwrap_err(),
+        "input.upload",
+    );
+    invalid(
+        create(&db, &owner, ask_import("b", &foreign.id))
+            .await
+            .unwrap_err(),
+        "input.upload",
+    );
+    invalid(
+        create(&db, &owner, ask_import("c", &waiting.id))
+            .await
+            .unwrap_err(),
+        "input.upload",
+    );
+    invalid(
+        create(&db, &owner, ask_import("d", &unnamed.id))
+            .await
+            .unwrap_err(),
+        "input.format",
+    );
+    // A format said overrides the name's.
+    let mut said = ask_import("e", &unnamed.id);
+    said.input["format"] = json!("csv");
+    create(&db, &owner, said).await.unwrap();
+    // The path of an option is refused with its path; a project's other users cannot read the file.
+    let mut path = ask_import("f", &file.id);
+    path.input["options"] = json!({ "path": "/etc/passwd" });
+    invalid(
+        create(&db, &owner, path).await.unwrap_err(),
+        "input.options.path",
+    );
+    let viewer = member(&db, "buro", "izleyici", TenantRole::Viewer).await;
+    share(&db, &owner, &viewer.actor, GrantRole::Viewer).await;
+    let viewer = open(&db, &viewer, project).await;
+    assert!(matches!(
+        create(&db, &viewer, ask_import("g", &file.id)).await,
+        Err(AppError::Forbidden(_))
+    ));
+    db.close().await;
+}
+
+#[tokio::test]
+async fn a_staged_file_is_kept_only_when_its_size_and_hash_are_the_declared_ones() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let (_pm, owner, project, _) = project_of_one(&db).await;
+    let store = blobs();
+    let begin = |name: &str, size: u64, sha: String| JobInputBegin {
+        name: name.into(),
+        size,
+        sha256: sha,
+    };
+    // A declared size past the server's limit, an empty file, a hash that is not a hash, a name with a folder.
+    for (asked, path) in [
+        (begin("a.gpkg", 3, sha256_hex(b"abc")), "ok"),
+        (begin("a.gpkg", 2048, sha256_hex(b"abc")), "size"),
+        (begin("a.gpkg", 0, sha256_hex(b"abc")), "size"),
+        (begin("a.gpkg", 3, "xyz".into()), "sha256"),
+        (begin("klasor/a.gpkg", 3, sha256_hex(b"abc")), "name"),
+        (begin("  ", 3, sha256_hex(b"abc")), "name"),
+    ] {
+        let got = job_inputs::begin(&db.app, &owner, asked, 1024).await;
+        match (got, path) {
+            (Ok(_), "ok") => {}
+            (Err(AppError::Invalid { path: at, .. }), want) => {
+                assert_eq!(at.as_deref(), Some(want));
+            }
+            (other, _) => panic!("{other:?}"),
+        }
+    }
+    // Bytes that are not the declared ones: nothing is kept and the same file may come again.
+    let begun = job_inputs::begin(
+        &db.app,
+        &owner,
+        begin("a.gpkg", 3, sha256_hex(b"abc")),
+        1024,
+    )
+    .await
+    .unwrap();
+    let id = Uuid::parse_str(&begun.id).unwrap();
+    let mut receiving = job_inputs::start_receive(&db.app, &store, &owner, id)
+        .await
+        .unwrap();
+    receiving.writer.write(b"abd").await.unwrap();
+    let refused = job_inputs::finish_receive(&db.app, &store, &owner, receiving)
+        .await
+        .unwrap_err();
+    assert!(
+        refused.to_string().contains("bildirilenle aynı değil"),
+        "{refused}"
+    );
+    assert!(!job_inputs::get(&db.app, &owner, id).await.unwrap().received);
+    let mut receiving = job_inputs::start_receive(&db.app, &store, &owner, id)
+        .await
+        .unwrap();
+    receiving.writer.write(b"abc").await.unwrap();
+    assert!(
+        job_inputs::finish_receive(&db.app, &store, &owner, receiving)
+            .await
+            .unwrap()
+            .received
+    );
+    // Received bytes are not taken twice; a viewer opens nothing.
+    assert!(
+        job_inputs::start_receive(&db.app, &store, &owner, id)
+            .await
+            .is_err()
+    );
+    let viewer = member(&db, "buro", "izleyici", TenantRole::Viewer).await;
+    share(&db, &owner, &viewer.actor, GrantRole::Viewer).await;
+    let viewer = open(&db, &viewer, project).await;
+    assert!(matches!(
+        job_inputs::begin(
+            &db.app,
+            &viewer,
+            begin("a.gpkg", 3, sha256_hex(b"abc")),
+            1024
+        )
+        .await,
+        Err(AppError::Forbidden(_))
+    ));
+    db.close().await;
+}
+
+#[tokio::test]
+async fn a_file_gone_from_the_store_and_a_commands_refusal_end_the_job_with_their_codes() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let (_pm, owner, project, _) = project_of_one(&db).await;
+    let store = blobs();
+    let file = stage_file(&db, &store, &owner, "parsel.gpkg", b"abc").await;
+    // The object is gone by the time a worker comes.
+    let key = kentos_application::blobs::Blobs::job_input_key(
+        owner.tenant,
+        project,
+        Uuid::parse_str(&file.id).unwrap(),
+        &file.sha256,
+    );
+    let processor = Fake::new(|_, _| Ok(answer(creates(486_900.0))));
+    let job = create(&db, &owner, ask_import("g", &file.id))
+        .await
+        .unwrap();
+    store.remove(&key).await.unwrap();
+    work(&db, &store, &processor).await.unwrap();
+    let job = jobs::get(&db.app, &owner, id_of(&job)).await.unwrap();
+    assert_eq!(job.error.unwrap().code, "gone");
+    assert_eq!(processor.calls(), 0, "nothing ran");
+    // A command's own refusal code is the job's, once; a code of no shape is `failed`.
+    let file = stage_file(&db, &store, &owner, "baska.gpkg", b"abc").await;
+    for (k, (code, want)) in [
+        ("crs_mismatch", "crs_mismatch"),
+        ("nothing_to_import", "nothing_to_import"),
+        ("Kötü Kod!", "failed"),
+        ("", "failed"),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let processor = Fake::new(move |_, _| Err(ProcessFailure::new(code, "söz")));
+        let job = create(&db, &owner, ask_import(&format!("r{k}"), &file.id))
+            .await
+            .unwrap();
+        work(&db, &store, &processor).await.unwrap();
+        let job = jobs::get(&db.app, &owner, id_of(&job)).await.unwrap();
+        assert_eq!(job.attempts, 1, "{code}");
+        assert_eq!(job.error.unwrap().code, want, "{code}");
+    }
+    assert_eq!(standing(&db, &owner).await, (1, 1));
+    db.close().await;
+}
+
+#[tokio::test]
+async fn an_import_over_a_project_that_moved_takes_nothing() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let (pm, owner, project, _) = project_of_one(&db).await;
+    let store = blobs();
+    let file = stage_file(&db, &store, &owner, "parsel.gpkg", b"abc").await;
+    let handle = tokio::runtime::Handle::current();
+    let (app, who, as_owner) = (db.app.clone(), pm.clone(), owner.clone());
+    let processor = Fake::new(move |_, _| {
+        handle
+            .block_on(changes::commit(
+                &app,
+                &as_owner,
+                envelope(&who, project, a_point(487_000.0), &[]),
+            ))
+            .unwrap();
+        Ok(answer(creates(486_900.0)))
+    });
+    let job = create(&db, &owner, ask_import("a", &file.id))
+        .await
+        .unwrap();
+    assert_eq!(
+        work(&db, &store, &processor).await.unwrap().state,
+        ServerJobState::Failed
+    );
+    let job = jobs::get(&db.app, &owner, id_of(&job)).await.unwrap();
+    assert_eq!(job.error.unwrap().code, "revision_conflict");
+    assert_eq!(standing(&db, &owner).await, (2, 2));
+    db.close().await;
+}
+
+#[tokio::test]
+async fn an_atlas_is_staged_as_a_pdf_and_says_its_pages_and_the_state_it_was_made_from() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let (_pm, owner, project, _) = project_of_one(&db).await;
+    let store = blobs();
+    let processor = Fake::new(|task, hooks| {
+        let RunRequest::Atlas(input) = &task.request else {
+            panic!("an atlas: {:?}", task.request);
+        };
+        assert_eq!(input.sheet, "atlas-paftasi");
+        assert!(task.file.is_none());
+        hooks.progress.set(0.5, "Atlasın sayfaları çiziliyor");
+        Ok(Processed {
+            summary: "2 sayfalık atlas yazıldı (11 bayt).".into(),
+            file: Some(b"%PDF-1.7 ok".to_vec()),
+            details: json!({
+                "pages": [{ "name": "A1/1" }, { "name": "A1/2" }],
+                "pin": { "digest": "ab12" },
+                "bindings": { "srid": 5253, "geo": true },
+                "fields": ["Ada", "Parsel"],
+                "withheld": ["Malik"],
+            }),
+            notes: vec![kentos_contracts::ProcessingJobNote {
+                level: "info".into(),
+                text: "Bir SVG resim kutu olarak çizildi.".into(),
+            }],
+            usage: ProcessingUsage {
+                cpu_seconds: 1.5,
+                peak_memory_mb: 120.0,
+            },
+            ..Processed::default()
+        })
+    });
+    let job = create(&db, &owner, ask_atlas("a1", atlas_of("atlas-paftasi")))
+        .await
+        .unwrap();
+    assert_eq!(job.kind, PROJECT_ATLAS_JOB);
+    assert_eq!(
+        work(&db, &store, &processor).await.unwrap().state,
+        ServerJobState::Succeeded
+    );
+    let atlas_id = id_of(&job);
+    let job = jobs::get(&db.app, &owner, id_of(&job)).await.unwrap();
+    let artifact = job.artifact.clone().expect("a PDF");
+    assert_eq!(
+        (artifact.size.as_str(), artifact.name.as_str()),
+        ("11", "Araç işi - atlas-paftasi.pdf")
+    );
+    let result: ProjectAtlasResult = serde_json::from_value(job.result.unwrap()).unwrap();
+    assert_eq!(result.pages, 2);
+    assert_eq!(
+        (result.first.as_deref(), result.last.as_deref()),
+        (Some("A1/1"), Some("A1/2"))
+    );
+    assert_eq!(result.pin_digest, "ab12");
+    assert_eq!(result.fields, ["Ada", "Parsel"]);
+    assert_eq!(result.withheld, ["Malik"]);
+    assert_eq!(result.base_revision, "1");
+    assert_eq!(result.bindings["srid"], 5253);
+    assert_eq!(result.notes.len(), 1);
+    assert_eq!(result.usage.cpu_seconds, 1.5);
+    let (_, mut file) = jobs::artifact(&db.app, &store, &owner, atlas_id)
+        .await
+        .unwrap();
+    let mut bytes = Vec::new();
+    tokio::io::AsyncReadExt::read_to_end(&mut file, &mut bytes)
+        .await
+        .unwrap();
+    assert_eq!(bytes, b"%PDF-1.7 ok");
+    // The project did not change, and the pin the command refused is the job's code.
+    assert_eq!(standing(&db, &owner).await, (1, 1));
+    let refusing = Fake::new(|_, _| {
+        Err(ProcessFailure::new(
+            "pin_mismatch",
+            "Çizim sabitlenen durumda değil.",
+        ))
+    });
+    let again = create(&db, &owner, ask_atlas("a2", atlas_of("atlas-paftasi")))
+        .await
+        .unwrap();
+    work(&db, &store, &refusing).await.unwrap();
+    let again = jobs::get(&db.app, &owner, id_of(&again)).await.unwrap();
+    assert_eq!(again.error.unwrap().code, "pin_mismatch");
+    assert_eq!(refusing.calls(), 1, "a refusal is not tried again");
+    // A reader runs no job; a pinned revision that is not the project's is refused before anything is drawn.
+    let viewer = member(&db, "buro", "izleyici", TenantRole::Viewer).await;
+    share(&db, &owner, &viewer.actor, GrantRole::Viewer).await;
+    let viewer = open(&db, &viewer, project).await;
+    assert!(matches!(
+        create(&db, &viewer, ask_atlas("v", atlas_of("atlas-paftasi"))).await,
+        Err(AppError::Forbidden(_))
+    ));
+    let pinned = create(
+        &db,
+        &owner,
+        ask_atlas(
+            "p",
+            ProjectAtlasInput {
+                expected_revision: Some("0".into()),
+                ..atlas_of("atlas-paftasi")
+            },
+        ),
+    )
+    .await
+    .unwrap();
+    let before = refusing.calls();
+    work(&db, &store, &refusing).await.unwrap();
+    assert_eq!(refusing.calls(), before, "the revision was refused first");
+    let pinned = jobs::get(&db.app, &owner, id_of(&pinned)).await.unwrap();
+    assert_eq!(pinned.error.unwrap().code, "revision_conflict");
+    db.close().await;
+}
+
+#[tokio::test]
+async fn the_retention_removes_staged_files_and_the_cleanup_the_objects_no_row_holds() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let (_pm, owner, project, _) = project_of_one(&db).await;
+    let store = blobs();
+    let file = stage_file(&db, &store, &owner, "parsel.gpkg", b"abc").await;
+    let key = kentos_application::blobs::Blobs::job_input_key(
+        owner.tenant,
+        project,
+        Uuid::parse_str(&file.id).unwrap(),
+        &file.sha256,
+    );
+    assert_eq!(store.len(&key).await.unwrap(), 3);
+    // Nothing is that old yet; with no retention everything is.
+    let kept =
+        kentos_application::job_upkeep::expire(&db.app, &store, Duration::from_secs(3600), 10)
+            .await
+            .unwrap();
+    assert_eq!(kept.inputs, 0);
+    let gone = kentos_application::job_upkeep::expire(&db.app, &store, Duration::ZERO, 10)
+        .await
+        .unwrap();
+    assert_eq!(gone.inputs, 1);
+    assert_eq!(
+        store.len(&key).await.unwrap(),
+        0,
+        "the object went with its row"
+    );
+    assert!(
+        job_inputs::get(&db.app, &owner, Uuid::parse_str(&file.id).unwrap())
+            .await
+            .is_err()
+    );
+    // An object of no row is the store's cleanup's.
+    let stray = kentos_application::blobs::Blobs::job_input_key(
+        owner.tenant,
+        project,
+        Uuid::new_v4(),
+        &sha256_hex(b"x"),
+    );
+    let mut w = store.create(&stray, 1).await.unwrap();
+    w.write(b"x").await.unwrap();
+    w.finish().await.unwrap();
+    let done = kentos_application::files::cleanup(&db.app, &store, Duration::ZERO)
+        .await
+        .unwrap();
+    assert_eq!(done.job_inputs, 1);
+    assert_eq!(store.len(&stray).await.unwrap(), 0);
+    db.close().await;
+}
+
+/// The time a big import's commit takes (docs/adr/0561 Performans): `KENTOS_PERF_CHANGES` points (50 000) created in
+/// the finish of one job, the revision they make and the snapshot the next job reads.
+///
+/// ```text
+/// KENTOS_TEST_DB=required cargo test --release -p kentos-application --test processing_jobs import_timing -- --ignored --nocapture
+/// ```
+#[tokio::test]
+#[ignore = "timing, run by hand"]
+async fn import_timing() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let (_pm, owner, _project, _) = project_of_one(&db).await;
+    let store = blobs();
+    let count: u32 = std::env::var("KENTOS_PERF_CHANGES")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(50_000);
+    let file = stage_file(&db, &store, &owner, "noktalar.csv", b"X,Y\n1,2\n").await;
+    let processor = Fake::new(move |_, _| {
+        let mut delta = Delta::default();
+        for i in 0..count {
+            delta
+                .features
+                .extend(a_point(486_000.0 + f64::from(i)).features);
+        }
+        delta.added = u64::from(count);
+        Ok(answer(delta))
+    });
+    let job = create(&db, &owner, ask_import("t", &file.id))
+        .await
+        .unwrap();
+    let started = std::time::Instant::now();
+    let worked = work(&db, &store, &processor).await.unwrap();
+    let took = started.elapsed();
+    assert_eq!(worked.state, ServerJobState::Succeeded);
+    let job = jobs::get(&db.app, &owner, id_of(&job)).await.unwrap();
+    println!(
+        "{count} nesnelik içe aktarma: {:.2} sn (iş, işleme ve commit dahil; nesne başına {:.0} µs), proje {} nesne",
+        took.as_secs_f64(),
+        took.as_secs_f64() * 1e6 / f64::from(count),
+        standing(&db, &owner).await.0
+    );
+    assert!(job.error.is_none());
     db.close().await;
 }

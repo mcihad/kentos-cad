@@ -22,6 +22,8 @@ pub struct Expired {
     pub jobs: usize,
     /// Their artifacts removed from the object store.
     pub objects: usize,
+    /// Staged files of jobs removed (their rows and their objects, docs/adr/0561 §1).
+    pub inputs: usize,
 }
 
 /// Removes finished jobs that ended more than `retention` ago and their artifacts, `batch` jobs at a time.
@@ -47,6 +49,26 @@ pub async fn expire(
         for key in keys.into_iter().flatten() {
             if blobs.remove(&key).await.is_ok() {
                 done.objects += 1;
+            }
+        }
+        if round < usize::try_from(batch).unwrap_or(1) {
+            break;
+        }
+    }
+    // The staged files are as old as the retention, whatever became of their jobs: the job that read one has been over
+    // for as long, or never was.
+    loop {
+        let keys: Vec<String> = sqlx::query_scalar(
+            "select blob_key from kentos.expire_job_inputs(now() - make_interval(secs => $1), $2)",
+        )
+        .bind(secs)
+        .bind(batch)
+        .fetch_all(&db.pool)
+        .await?;
+        let round = keys.len();
+        for key in keys {
+            if blobs.remove(&key).await.is_ok() {
+                done.inputs += 1;
             }
         }
         if round < usize::try_from(batch).unwrap_or(1) {

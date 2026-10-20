@@ -76,6 +76,17 @@ impl Blobs {
         format!("jobs/{tenant}/{project}/{job}-{sha256}")
     }
 
+    /// A file staged for a server job (docs/adr/0561 §1).
+    pub fn job_input_key(tenant: Uuid, project: Uuid, input: Uuid, sha256: &str) -> String {
+        format!("job-inputs/{tenant}/{project}/{input}-{sha256}")
+    }
+
+    /// Where the object store keeps an object, for a process that reads it in place (a staged file is gigabytes at
+    /// most: it is linked into a worker's folder, not read into memory).
+    pub fn local_path(&self, key: &str) -> io::Result<PathBuf> {
+        self.path(key)
+    }
+
     fn path(&self, key: &str) -> io::Result<PathBuf> {
         // Keys are made above from ids, numbers and hex; anything else is a bug, never a path.
         let safe = !key.is_empty()
@@ -327,6 +338,11 @@ impl Blobs {
     /// finished, and one whose finish never came (a lost lease, a cancel, a refused commit) belongs to nothing.
     pub async fn job_objects(&self, settled: Duration) -> io::Result<Vec<(Uuid, String)>> {
         self.objects_in("jobs", settled).await
+    }
+
+    /// The staged files unchanged for `settled`, as (staged file id, key): one whose row is gone belongs to nothing.
+    pub async fn job_input_objects(&self, settled: Duration) -> io::Result<Vec<(Uuid, String)>> {
+        self.objects_in("job-inputs", settled).await
     }
 
     async fn objects_in(&self, kind: &str, settled: Duration) -> io::Result<Vec<(Uuid, String)>> {

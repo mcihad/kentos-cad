@@ -33,12 +33,13 @@ class Server:
             def answer(self) -> None:
                 length = int(self.headers.get("Content-Length") or 0)
                 body = self.rfile.read(length) if length else b""
+                is_json = "json" in (self.headers.get("Content-Type") or "")
                 outer.requests.append(
                     {
                         "method": self.command,
                         "path": self.path,
                         "headers": {k.lower(): v for k, v in self.headers.items()},
-                        "body": json.loads(body) if body else None,
+                        "body": (json.loads(body) if body else None) if is_json or not body else body,
                     }
                 )
                 status, reply, headers = outer.replies.get(self.path.split("?")[0], (404, {"error": "not_found", "message": "Yok."}, {}))
@@ -53,6 +54,7 @@ class Server:
 
             do_GET = answer
             do_POST = answer
+            do_PUT = answer
 
         self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         self.url = f"http://127.0.0.1:{self.httpd.server_address[1]}"
@@ -250,6 +252,106 @@ class ConnectionTests(unittest.TestCase):
         )
         with self.assertRaises(cad.ServerError) as refused:
             project.processing_job("x", parameters={"dosya": {"path": "/etc/passwd"}})
+        self.assertEqual(refused.exception.code, "invalid")
+
+    def test_a_file_is_staged_and_imported_and_an_atlas_asked_for(self) -> None:
+        import hashlib
+        import tempfile
+
+        conn = cad.Connection.login(self.server.url, "ayse", "parola")
+        project = conn.project(PROJECT["id"], TENANT)
+        root = f"/v1/tenants/{TENANT}/projects/{PROJECT['id']}"
+        staged = {"id": "g1", "name": "parsel.gpkg", "size": 9, "sha256": "x", "createdAt": "t", "received": True}
+        self.server.replies[f"{root}/job-inputs"] = (201, {**staged, "received": False}, {})
+        self.server.replies[f"{root}/job-inputs/g1"] = (200, staged, {})
+        self.server.replies[f"{root}/jobs"] = (201, {"id": "j9", "kind": "project.import", "state": "queued"}, {})
+        data = b"GPKG-data"
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "parsel.gpkg"
+            path.write_bytes(data)
+            asked = project.import_job(
+                path, options={"reproject": True}, expected_revision="3", label="Parseller", request_id="i-1"
+            )
+        self.assertEqual(asked["kind"], "project.import")
+        begun, sent, job = self.server.requests[-3:]
+        # Its name, size and hash are declared, its bytes go in one body, and the job names what the server said.
+        self.assertEqual(begun["body"], {"name": "parsel.gpkg", "size": len(data), "sha256": hashlib.sha256(data).hexdigest()})
+        self.assertEqual((sent["method"], sent["path"]), ("PUT", f"{root}/job-inputs/g1"))
+        self.assertEqual(sent["body"], data)
+        self.assertEqual(sent["headers"]["content-type"], "application/octet-stream")
+        self.assertEqual(sent["headers"]["content-length"], str(len(data)))
+        self.assertEqual(sent["headers"]["cookie"], "kentos_session=tok-123")
+        self.assertEqual(
+            job["body"],
+            {
+                "kind": "project.import",
+                "input": {
+                    "upload": "g1",
+                    "options": {"reproject": True},
+                    "label": "Parseller",
+                    "expectedRevision": "3",
+                },
+                "requestId": "i-1",
+            },
+        )
+        # A file already sent is named, bytes need their name, and a file and an upload are not both given.
+        project.import_job(upload="g1", format="csv", cpu_seconds=60, memory_mb=256, request_id="i-2")
+        self.assertEqual(
+            self.server.requests[-1]["body"]["input"],
+            {"upload": "g1", "format": "csv", "cpuSeconds": 60, "memoryMb": 256},
+        )
+        with self.assertRaises(ValueError):
+            project.import_job(b"abc")
+        with self.assertRaises(ValueError):
+            project.import_job(data, upload="g1", name="a.gpkg")
+        with self.assertRaises(ValueError):
+            project.import_job()
+        project.import_job(data, name="a.gpkg", request_id="i-3")
+        self.assertEqual(self.server.requests[-3]["body"]["name"], "a.gpkg")
+        # The atlas: the sheet and what the plan pinned.
+        self.server.replies[f"{root}/jobs"] = (201, {"id": "j10", "kind": "project.atlas", "state": "queued"}, {})
+        project.atlas_job(
+            "atlas-paftasi",
+            fields=["Ada"],
+            theme="Gece",
+            time="2024-06-30",
+            crs=5253,
+            pin={"digest": "ab"},
+            expected_revision="4",
+            label="Ada 1",
+            cpu_seconds=120,
+            memory_mb=1024,
+            request_id="a-1",
+        )
+        self.assertEqual(
+            self.server.requests[-1]["body"],
+            {
+                "kind": "project.atlas",
+                "input": {
+                    "sheet": "atlas-paftasi",
+                    "fields": ["Ada"],
+                    "theme": "Gece",
+                    "time": "2024-06-30",
+                    "crs": 5253,
+                    "pin": {"digest": "ab"},
+                    "label": "Ada 1",
+                    "expectedRevision": "4",
+                    "cpuSeconds": 120,
+                    "memoryMb": 1024,
+                },
+                "requestId": "a-1",
+            },
+        )
+        project.atlas_job("a", request_id="a-2")
+        self.assertEqual(self.server.requests[-1]["body"]["input"], {"sheet": "a"})
+        # A file the server refuses is its refusal, typed.
+        self.server.replies[f"{root}/job-inputs"] = (
+            422,
+            {"error": "invalid", "message": "Dosya çok büyük.", "path": "size"},
+            {},
+        )
+        with self.assertRaises(cad.ServerError) as refused:
+            project.stage_file(data, name="b.gpkg")
         self.assertEqual(refused.exception.code, "invalid")
 
     def test_a_server_that_does_not_answer(self) -> None:

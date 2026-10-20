@@ -682,6 +682,156 @@ mod screens {
         );
     }
 
+    /// The tab with an import and an atlas as jobs (docs/adr/0561): an import running with the words its worker says, one
+    /// committed with its warnings counted, one the command refused (another coordinate system), an atlas that made its
+    /// PDF (İndir) and one refused because the project moved on from the pinned state.
+    #[test]
+    #[ignore = "pictures"]
+    fn the_tab_with_import_and_atlas_jobs() {
+        for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+            for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+                import_atlas_shot(mode, suffix, width, height);
+            }
+        }
+    }
+
+    fn import_atlas_jobs() -> Vec<ServerJob> {
+        let import = |n: u8, label: &str| ServerJob {
+            kind: "project.import".into(),
+            input: json!({ "upload": "0199aaaa-0000-7000-8000-000000000009", "label": label }),
+            created_at: format!("2026-10-20T10:{:02}:00Z", 10 - n),
+            ..job(&jid(n), ServerJobState::Queued)
+        };
+        let atlas = |n: u8, label: &str| ServerJob {
+            kind: "project.atlas".into(),
+            input: json!({ "sheet": "atlas-paftasi", "label": label }),
+            created_at: format!("2026-10-20T10:{:02}:00Z", 10 - n),
+            ..job(&jid(n), ServerJobState::Queued)
+        };
+        let usage = json!({ "cpuSeconds": 41.2, "peakMemoryMb": 1480.0 });
+        let running = ServerJob {
+            progress: 0.45,
+            progress_text: Some("Dosya okunuyor: parseller.gpkg".into()),
+            started_at: Some("2026-10-20T10:09:02Z".into()),
+            state: ServerJobState::Running,
+            ..import(1, "parseller.gpkg")
+        };
+        let done = ServerJob {
+            state: ServerJobState::Succeeded,
+            progress: 1.0,
+            finished_at: Some("2026-10-20T10:07:41Z".into()),
+            result: Some(json!({
+                "command": "file.import.gpkg", "file": "binalar.gpkg", "bytes": 48_234_496, "sha256": "e".repeat(64),
+                "baseRevision": "11", "revision": "12",
+                "summary": "“binalar.gpkg” içe aktarıldı: 38 412 nesne eklendi, 2 katman açıldı.",
+                "added": 38412, "changed": 0, "removed": 0, "metadata": true, "blocks": 0,
+                "notes": [{ "level": "warn", "text": "import_losses: 3 satırın geometrisi okunamadı" }],
+                "details": {}, "usage": usage
+            })),
+            ..import(2, "binalar.gpkg")
+        };
+        let refused = ServerJob {
+            state: ServerJobState::Failed,
+            finished_at: Some("2026-10-20T10:05:30Z".into()),
+            error: Some(ServerJobError {
+                code: "crs_mismatch".into(),
+                message: "yollar.gpkg EPSG:4326 sisteminde, proje EPSG:5256. Koordinatların projenin sistemine çevrilmesini isteyin.".into(),
+            }),
+            ..import(3, "yollar.gpkg")
+        };
+        let pdf = ServerJob {
+            state: ServerJobState::Succeeded,
+            progress: 1.0,
+            finished_at: Some("2026-10-20T10:04:12Z".into()),
+            artifact: Some(ServerJobArtifact {
+                size: "3407872".into(),
+                sha256: "f".repeat(64),
+                name: "Ada 1246 - Parsel atlası.pdf".into(),
+            }),
+            result: Some(json!({
+                "sheet": "atlas-paftasi", "baseRevision": "11", "pages": 100, "first": "A1/1", "last": "A4/25",
+                "pinDigest": "ab".repeat(32), "bindings": { "srid": 5253 }, "fields": ["Ada", "Parsel"],
+                "withheld": ["Malik"], "usage": usage
+            })),
+            ..atlas(4, "Parsel atlası")
+        };
+        let pinned = ServerJob {
+            state: ServerJobState::Failed,
+            finished_at: Some("2026-10-20T10:02:20Z".into()),
+            error: Some(ServerJobError {
+                code: "pin_mismatch".into(),
+                message: "Çizim sabitlenen durumdan değişti: katmanlar farklı.".into(),
+            }),
+            ..atlas(5, "Parsel atlası")
+        };
+        vec![running, done, refused, pdf, pinned]
+    }
+
+    fn import_atlas_shot(mode: &str, suffix: &str, width: f32, height: f32) {
+        let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+        let mut app = jobs_of(ProjectStorage::Database);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+        app.apply_settings();
+        answer(&mut app, Vec::new());
+        answer_more_shot(&mut app, import_atlas_jobs());
+        shot(
+            &mut snapshot,
+            &mut app,
+            &format!("ice-aktar-atlas-isleri-{width}x{height}{suffix}"),
+        );
+    }
+
+    #[test]
+    fn the_rows_of_an_import_and_an_atlas_are_worded_and_the_pdf_has_its_own_name() {
+        use kentos_cloud::server_jobs as words;
+        let jobs = import_atlas_jobs();
+        assert_eq!(words::kind_label(&jobs[0]), "İçe aktar: parseller.gpkg");
+        assert_eq!(
+            words::progress_text(&jobs[0]).as_deref(),
+            Some("%45 · Dosya okunuyor: parseller.gpkg")
+        );
+        assert!(
+            words::result_text(&jobs[1])
+                .unwrap()
+                .contains("38 412 nesne eklendi")
+        );
+        assert!(
+            words::result_text(&jobs[1])
+                .unwrap()
+                .contains("1 uyarı (ayrıntı iş sonucunda)")
+        );
+        assert!(
+            words::failure_text(&jobs[2])
+                .unwrap()
+                .contains("Projenin sistemine çevir")
+        );
+        assert_eq!(words::kind_label(&jobs[3]), "Atlas (PDF): Parsel atlası");
+        assert_eq!(
+            words::result_text(&jobs[3]).as_deref(),
+            Some(
+                "100 sayfa · 3,2 MB · veri revizyonu 11 · 1 alan taşınmadı · işlemci 41,2 sn, bellek 1480 MB"
+            )
+        );
+        assert_eq!(words::download_extension(&jobs[3]), "pdf");
+        assert_eq!(
+            words::download_name(&jobs[3]),
+            "Ada 1246 - Parsel atlası (veri revizyonu 11)"
+        );
+        assert!(
+            words::failure_text(&jobs[4])
+                .unwrap()
+                .contains("atlas planını yeniden")
+        );
+        // A job's file is saved under its own extension: a drawing's .kcad, a tool's .gpkg, an atlas's .pdf.
+        let mut tool_job = jobs[3].clone();
+        tool_job.artifact.as_mut().unwrap().name = "Ada - Kesişim.gpkg".into();
+        assert_eq!(words::download_extension(&tool_job), "gpkg");
+        tool_job.artifact.as_mut().unwrap().name = "Ada.kcad".into();
+        assert_eq!(words::download_extension(&tool_job), "kcad");
+    }
+
     fn answer_more_shot(app: &mut App, jobs: Vec<ServerJob>) {
         cloud(app, Event::JobsRetry);
         answer(app, jobs);

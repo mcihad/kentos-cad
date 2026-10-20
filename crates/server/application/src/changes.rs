@@ -464,7 +464,7 @@ pub async fn commit(
     envelope: CommandEnvelope,
 ) -> AppResult<CommitResult> {
     let mut tx = db.scoped(access.scope()).await?;
-    let result = commit_in(&mut tx, access, envelope, None).await?;
+    let result = commit_in(&mut tx, access, envelope, None, MAX_CHANGES).await?;
     tx.commit().await?;
     Ok(result)
 }
@@ -472,11 +472,14 @@ pub async fn commit(
 /// [`commit`] inside a transaction the caller owns and commits (docs/adr/0559 §2: a server job's commit and its
 /// finish are one transaction, so a lost lease takes the commit back). `at_revision`: the project must be at this data
 /// revision under the lock, else nothing is written and the answer is a conflict with the project's revision.
+/// `max_changes`: the most object and block changes it takes ([`MAX_CHANGES`] for a request; a job's own commit takes
+/// more, docs/adr/0561 §1).
 pub(crate) async fn commit_in(
     tx: &mut Transaction<'static, Postgres>,
     access: &ProjectAccess,
     envelope: CommandEnvelope,
     at_revision: Option<i64>,
+    max_changes: usize,
 ) -> AppResult<CommitResult> {
     if envelope.command_name != PROJECT_CHANGES {
         return Err(AppError::invalid(format!(
@@ -495,9 +498,9 @@ pub(crate) async fn commit_in(
     let key = envelope.idempotency_key.as_str();
     let input: ProjectChanges = serde_json::from_value(envelope.input.clone())
         .map_err(|e| AppError::invalid(format!("Komut girdisi okunamadı: {e}")))?;
-    if input.features.len() + input.blocks.len() > MAX_CHANGES {
+    if input.features.len() + input.blocks.len() > max_changes {
         return Err(AppError::invalid(format!(
-            "Bir komutta en çok {MAX_CHANGES} nesne değişikliği olabilir; değişiklikleri parçalara bölün."
+            "Bir komutta en çok {max_changes} nesne değişikliği olabilir; değişiklikleri parçalara bölün."
         )));
     }
 

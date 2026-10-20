@@ -27,15 +27,16 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use kentos_contracts::{
-    CheckpointCreate, CommandEnvelope, PROJECT_CHANGES, PROJECT_CHANGES_VERSION,
-    PROJECT_CHECKPOINT_CREATE, PROJECT_CHECKPOINT_CREATE_VERSION, PROJECT_CHECKPOINT_JOB,
-    PROJECT_EXPORT_JOB, PROJECT_META_KEY, PROJECT_PROCESSING_JOB, ProcessingJobInput,
-    ProcessingJobMode, ProcessingJobResult, ProjectExportInput, ProjectPermission,
-    ProjectStorage, SERVER_JOB_ARTIFACT_MAX_DEFAULT, SERVER_JOB_CPU_DEFAULT_SECONDS,
-    SERVER_JOB_KINDS, SERVER_JOB_LIST_MAX, SERVER_JOB_MEMORY_DEFAULT_MB,
-    SERVER_JOB_TENANT_ACTIVE_DEFAULT, SERVER_JOB_TIMEOUT_DEFAULT, SERVER_JOB_TIMEOUT_MAX,
-    ServerJob, ServerJobArtifact, ServerJobCreate, ServerJobError, ServerJobList, ServerJobState,
-    SignInMethod,
+    CheckpointCreate, CommandEnvelope, ImportFormat, PROJECT_ATLAS_JOB, PROJECT_CHANGES,
+    PROJECT_CHANGES_VERSION, PROJECT_CHECKPOINT_CREATE, PROJECT_CHECKPOINT_CREATE_VERSION,
+    PROJECT_CHECKPOINT_JOB, PROJECT_EXPORT_JOB, PROJECT_IMPORT_JOB, PROJECT_META_KEY,
+    PROJECT_PROCESSING_JOB, ProcessingJobInput, ProcessingJobMode, ProcessingJobResult,
+    ProjectAtlasInput, ProjectAtlasResult, ProjectExportInput, ProjectImportInput,
+    ProjectImportResult, ProjectPermission, ProjectStorage, SERVER_JOB_ARTIFACT_MAX_DEFAULT,
+    SERVER_JOB_CPU_DEFAULT_SECONDS, SERVER_JOB_INPUT_MAX_DEFAULT, SERVER_JOB_KINDS,
+    SERVER_JOB_LIST_MAX, SERVER_JOB_MEMORY_DEFAULT_MB, SERVER_JOB_TENANT_ACTIVE_DEFAULT,
+    SERVER_JOB_TIMEOUT_DEFAULT, SERVER_JOB_TIMEOUT_MAX, ServerJob, ServerJobArtifact,
+    ServerJobCreate, ServerJobError, ServerJobList, ServerJobState, SignInMethod,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -46,7 +47,8 @@ use crate::access::ProjectAccess;
 use crate::blobs::{Blobs, WriteError};
 use crate::error::{AppError, AppResult};
 use crate::processing_job::{
-    Delta, JobProgress, ProcessHooks, ProcessingTask, Processor, budget_of, check_input,
+    Delta, ImportRun, JOB_CHANGES_MAX, JobProgress, ProcessHooks, ProcessingTask, Processor,
+    RunRequest, StagedFile, budget_from, check_atlas_input, check_import_input, check_input,
 };
 use crate::projects::{rfc3339, storage_of};
 
@@ -62,6 +64,8 @@ pub struct JobLimits {
     /// and its resident memory in megabytes. A request may ask for less, never for more.
     pub cpu_seconds: u32,
     pub memory_mb: u32,
+    /// The biggest file a job may be staged with, in bytes (`KENTOS_JOB_INPUT_MAX_MB`, docs/adr/0561 §1).
+    pub input_max: u64,
 }
 
 impl Default for JobLimits {
@@ -71,6 +75,7 @@ impl Default for JobLimits {
             artifact_max: SERVER_JOB_ARTIFACT_MAX_DEFAULT,
             cpu_seconds: SERVER_JOB_CPU_DEFAULT_SECONDS,
             memory_mb: SERVER_JOB_MEMORY_DEFAULT_MB,
+            input_max: SERVER_JOB_INPUT_MAX_DEFAULT,
         }
     }
 }
@@ -167,20 +172,24 @@ fn view(row: JobRow, project_name: &str) -> ServerJob {
 }
 
 /// The file name a job's artifact is downloaded under: the project's name and `.kcad` for an export; the project's
-/// name, the tool's name and `.gpkg` for a processing job's file (docs/adr/0559 §2).
+/// name, the tool's name and `.gpkg` for a processing job's file (docs/adr/0559 §2); the project's name, the sheet (or the
+/// label) and `.pdf` for an atlas (docs/adr/0561 §2).
 fn artifact_name(kind: &str, input: &Value, project: &str) -> String {
-    if kind != PROJECT_PROCESSING_JOB {
+    if kind != PROJECT_PROCESSING_JOB && kind != PROJECT_ATLAS_JOB {
         return format!("{project}.kcad");
     }
     let tool = input["label"]
         .as_str()
         .filter(|l| !l.trim().is_empty())
         .or_else(|| input["tool"].as_str())
+        .or_else(|| input["sheet"].as_str())
         .unwrap_or("islem");
     let clean = |text: &str| -> String {
         text.chars()
             .map(|c| {
-                if c.is_control() || matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') {
+                if c.is_control()
+                    || matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|')
+                {
                     '-'
                 } else {
                     c
@@ -188,7 +197,12 @@ fn artifact_name(kind: &str, input: &Value, project: &str) -> String {
             })
             .collect()
     };
-    format!("{} - {}.gpkg", clean(project), clean(tool))
+    let extension = if kind == PROJECT_ATLAS_JOB {
+        "pdf"
+    } else {
+        "gpkg"
+    };
+    format!("{} - {}.{extension}", clean(project), clean(tool))
 }
 
 fn job_not_found() -> AppError {
@@ -262,6 +276,28 @@ fn checked_input(kind: &str, input: &Value) -> AppResult<Value> {
             }
             Ok(input.clone())
         }
+        PROJECT_IMPORT_JOB => {
+            let parsed: ProjectImportInput =
+                serde_json::from_value(input.clone()).map_err(|e| {
+                    AppError::invalid_at(
+                        "input",
+                        format!("project.import'un girdisi okunamadı: {e}"),
+                    )
+                })?;
+            if let Some((path, message)) = check_import_input(&parsed) {
+                return Err(AppError::invalid_at(path, message));
+            }
+            Ok(input.clone())
+        }
+        PROJECT_ATLAS_JOB => {
+            let parsed: ProjectAtlasInput = serde_json::from_value(input.clone()).map_err(|e| {
+                AppError::invalid_at("input", format!("project.atlas'ın girdisi okunamadı: {e}"))
+            })?;
+            if let Some((path, message)) = check_atlas_input(&parsed) {
+                return Err(AppError::invalid_at(path, message));
+            }
+            Ok(input.clone())
+        }
         other => Err(AppError::invalid_at(
             "kind",
             format!(
@@ -304,6 +340,15 @@ pub async fn create(
         access.writable()?;
         access.require(ProjectPermission::FeatureWrite)?;
     }
+    if asked.kind == PROJECT_IMPORT_JOB {
+        // What is read is written to the project, as `project.changes` asks.
+        access.writable()?;
+        access.require(ProjectPermission::FeatureWrite)?;
+    }
+    if asked.kind == PROJECT_ATLAS_JOB {
+        // The PDF is a file of the project's data: as an export's.
+        access.require(ProjectPermission::Download)?;
+    }
     if asked.kind == PROJECT_PROCESSING_JOB {
         let parsed: ProcessingJobInput = serde_json::from_value(input.clone()).unwrap_or_default();
         match parsed.mode {
@@ -338,6 +383,47 @@ pub async fn create(
             "“{}” projesi dosya olarak saklanıyor; araçlar sunucuda yalnız veritabanı projesinde çalışır. Projeyi bilgisayarınızda açıp aracı orada çalıştırın.",
             access.name
         )));
+    }
+    if (asked.kind == PROJECT_IMPORT_JOB || asked.kind == PROJECT_ATLAS_JOB)
+        && storage_of(&storage) == ProjectStorage::File
+    {
+        return Err(AppError::invalid(format!(
+            "“{}” projesi dosya olarak saklanıyor; içe aktarma ve atlas işleri sunucuda yalnız veritabanı projesinde çalışır. Projeyi bilgisayarınızda açıp işi orada yapın.",
+            access.name
+        )));
+    }
+    // An import names a file the caller staged for this project, whose bytes have arrived, and a format it fits.
+    if asked.kind == PROJECT_IMPORT_JOB {
+        let parsed: ProjectImportInput = serde_json::from_value(input.clone()).unwrap_or_default();
+        let staged = match Uuid::parse_str(&parsed.upload) {
+            Ok(id) => crate::job_inputs::staged_in(&mut tx, access, id).await,
+            Err(_) => Err(AppError::not_found("")),
+        }
+        .map_err(|_| {
+            AppError::invalid_at(
+                "input.upload",
+                "Hazırlanmış böyle bir dosya yok (süresi dolmuş ya da başkasına ait olabilir); önce dosyayı job-inputs ile yükleyin.",
+            )
+        })?;
+        if !staged.received {
+            return Err(AppError::invalid_at(
+                "input.upload",
+                format!(
+                    "“{}” dosyasının baytları henüz gelmedi; önce dosyayı gönderin.",
+                    staged.name
+                ),
+            ));
+        }
+        if parsed.format.is_none() && ImportFormat::of_name(&staged.name).is_none() {
+            return Err(AppError::invalid_at(
+                "input.format",
+                format!(
+                    "“{}” dosyasının biçimi adından anlaşılmadı; format olarak {} verin.",
+                    staged.name,
+                    ImportFormat::ALL.map(|f| f.extension()).join(", ")
+                ),
+            ));
+        }
     }
     // A retried request gets its job back whatever the organisation's load; a new one needs a place.
     let earlier: Option<Uuid> = sqlx::query_scalar(
@@ -532,6 +618,11 @@ enum Outcome {
         code: &'static str,
         message: String,
     },
+    /// Failed with the refusal code of a command the worker ran (docs/adr/0561): its own, not one of ours.
+    Refused {
+        code: String,
+        message: String,
+    },
     /// Asked to stop, or the lease lost: no finish.
     Stopped,
 }
@@ -667,9 +758,7 @@ where
         let stop = stop.clone();
         let progress = progress.clone();
         tokio::spawn(async move {
-            let every = Duration::from_millis(
-                (lease.as_millis() / 3).clamp(100, 2_000) as u64,
-            );
+            let every = Duration::from_millis((lease.as_millis() / 3).clamp(100, 2_000) as u64);
             loop {
                 tokio::time::sleep(every).await;
                 let (fraction, said) = match progress.get() {
@@ -728,11 +817,8 @@ async fn run(
     match claim.kind.as_str() {
         PROJECT_EXPORT_JOB => export(db, blobs, claim, &access, stop, limits).await,
         PROJECT_CHECKPOINT_JOB => checkpoint(db, blobs, claim, &access, stop).await,
-        PROJECT_PROCESSING_JOB => {
-            processing(
-                db, blobs, claim, &access, stop, limits, processor, progress,
-            )
-            .await
+        PROJECT_PROCESSING_JOB | PROJECT_IMPORT_JOB | PROJECT_ATLAS_JOB => {
+            external(db, blobs, claim, &access, stop, limits, processor, progress).await
         }
         other => Outcome::Failed {
             code: "invalid",
@@ -787,7 +873,15 @@ async fn export(
     if stop.load(Ordering::SeqCst) {
         return Outcome::Stopped;
     }
-    let (key, size) = match stage(blobs, claim, &snap.bytes, &snap.sha256, limits, "Projenin dosyası").await
+    let (key, size) = match stage(
+        blobs,
+        claim,
+        &snap.bytes,
+        &snap.sha256,
+        limits,
+        "Projenin dosyası",
+    )
+    .await
     {
         Ok(staged) => staged,
         Err(failed) => return failed,
@@ -845,10 +939,119 @@ async fn stage(
     Ok((key, i64::try_from(size).unwrap_or(i64::MAX)))
 }
 
-/// `project.processing`: the project read at one revision, the tool run by the host's processor under its budget, the
-/// result a delta to commit in the finish or a GeoPackage staged as the artifact (docs/adr/0559).
+/// What a worker-run job (`project.processing`, `project.import`, `project.atlas`) asks of the host's processor, read
+/// from the claim's input.
+struct External {
+    request: RunRequest,
+    expected_revision: Option<String>,
+    cpu_seconds: Option<u32>,
+    memory_mb: Option<u32>,
+    /// The result is written to the project (a tool in `commit` mode, an import).
+    writes: bool,
+    /// The result is a file the caller downloads (a tool's `sink`, the atlas's PDF).
+    downloads: bool,
+    /// An import's staged file, as its row says.
+    staged: Option<crate::job_inputs::Staged>,
+}
+
+/// The job's request, with the staged file an import names read as the user who asked.
+async fn external_of(
+    db: &kentos_postgres::Db,
+    claim: &Claim,
+    access: &ProjectAccess,
+) -> Result<External, Outcome> {
+    let invalid = |message: String| Outcome::Failed {
+        code: "invalid",
+        message,
+    };
+    match claim.kind.as_str() {
+        PROJECT_PROCESSING_JOB => {
+            let input: ProcessingJobInput = serde_json::from_value(claim.input.clone())
+                .map_err(|e| invalid(format!("İşin girdisi okunamadı: {e}")))?;
+            Ok(External {
+                writes: input.mode == ProcessingJobMode::Commit,
+                downloads: input.mode == ProcessingJobMode::Sink,
+                expected_revision: input.expected_revision.clone(),
+                cpu_seconds: input.cpu_seconds,
+                memory_mb: input.memory_mb,
+                request: RunRequest::Processing(input),
+                staged: None,
+            })
+        }
+        PROJECT_IMPORT_JOB => {
+            let input: ProjectImportInput = serde_json::from_value(claim.input.clone())
+                .map_err(|e| invalid(format!("İşin girdisi okunamadı: {e}")))?;
+            let id = Uuid::parse_str(&input.upload).map_err(|_| {
+                invalid("input.upload: hazırlanmış dosyanın kimliği geçersiz.".into())
+            })?;
+            let staged = crate::job_inputs::staged(db, access, id)
+                .await
+                .map_err(|e| {
+                    let (code, message) = failed_of(&e);
+                    Outcome::Failed { code, message }
+                })?;
+            if !staged.received {
+                return Err(invalid(format!(
+                    "“{}” dosyasının baytları sunucuya hiç gelmedi; dosyayı yeniden gönderip işi yeniden isteyin.",
+                    staged.name
+                )));
+            }
+            let format = input
+                .format
+                .or_else(|| ImportFormat::of_name(&staged.name))
+                .ok_or_else(|| {
+                    invalid(format!(
+                        "“{}” dosyasının biçimi adından anlaşılmadı; format olarak {} verin.",
+                        staged.name,
+                        ImportFormat::ALL.map(|f| f.extension()).join(", ")
+                    ))
+                })?;
+            Ok(External {
+                writes: true,
+                downloads: false,
+                expected_revision: input.expected_revision.clone(),
+                cpu_seconds: input.cpu_seconds,
+                memory_mb: input.memory_mb,
+                request: RunRequest::Import(ImportRun {
+                    format,
+                    name: staged.name.clone(),
+                    options: input.options.clone(),
+                }),
+                staged: Some(staged),
+            })
+        }
+        PROJECT_ATLAS_JOB => {
+            let input: ProjectAtlasInput = serde_json::from_value(claim.input.clone())
+                .map_err(|e| invalid(format!("İşin girdisi okunamadı: {e}")))?;
+            Ok(External {
+                writes: false,
+                downloads: true,
+                expected_revision: input.expected_revision.clone(),
+                cpu_seconds: input.cpu_seconds,
+                memory_mb: input.memory_mb,
+                request: RunRequest::Atlas(input),
+                staged: None,
+            })
+        }
+        other => Err(invalid(format!("“{other}” bu sunucunun bilmediği bir iş."))),
+    }
+}
+
+/// A command's refusal code as a job's error code: the shape the commands' codes have, else `failed`.
+fn passed_code(code: &str) -> Option<String> {
+    let ok = !code.is_empty()
+        && code.len() <= 64
+        && code.starts_with(|c: char| c.is_ascii_lowercase())
+        && code
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_');
+    ok.then(|| code.to_owned())
+}
+
+/// A job a worker runs through the host's processor (docs/adr/0559, 0561): the project read at one revision, the work
+/// run under its budget, the result a delta to commit in the finish, or a file staged as the artifact.
 #[allow(clippy::too_many_arguments)]
-async fn processing(
+async fn external(
     db: &kentos_postgres::Db,
     blobs: &Blobs,
     claim: &Claim,
@@ -862,21 +1065,31 @@ async fn processing(
     let Some(processor) = processor else {
         return failed(
             "tool_unavailable",
-            "Bu sunucu işçisi İşlemler araçlarını çalıştıramıyor.".into(),
+            "Bu sunucu işçisi araçları, içe aktarmayı ve atlası çalıştıramıyor.".into(),
         );
     };
-    let input: ProcessingJobInput = match serde_json::from_value(claim.input.clone()) {
-        Ok(i) => i,
-        Err(e) => return failed("invalid", format!("İşin girdisi okunamadı: {e}")),
+    let work = match external_of(db, claim, access).await {
+        Ok(w) => w,
+        Err(outcome) => return outcome,
     };
     let rights = access
         .live()
         .and_then(|()| access.require(ProjectPermission::JobsRun))
-        .and_then(|()| match input.mode {
-            ProcessingJobMode::Commit => access
-                .writable()
-                .and_then(|()| access.require(ProjectPermission::FeatureWrite)),
-            ProcessingJobMode::Sink => access.require(ProjectPermission::Download),
+        .and_then(|()| {
+            if work.writes {
+                access
+                    .writable()
+                    .and_then(|()| access.require(ProjectPermission::FeatureWrite))
+            } else {
+                Ok(())
+            }
+        })
+        .and_then(|()| {
+            if work.downloads {
+                access.require(ProjectPermission::Download)
+            } else {
+                Ok(())
+            }
         });
     if let Err(e) = rights {
         let (code, message) = failed_of(&e);
@@ -890,45 +1103,87 @@ async fn processing(
             return Outcome::Failed { code, message };
         }
     };
-    if let Some(expected) = input.expected_revision.as_deref()
+    if let Some(expected) = work.expected_revision.as_deref()
         && expected != snap.revision.to_string()
     {
         return failed(
             "revision_conflict",
             format!(
-                "Proje {expected}. revizyonda değil ({}); araç çalıştırılmadı. İşi şimdiki revizyonla yeniden isteyin.",
+                "Proje {expected}. revizyonda değil ({}); iş çalıştırılmadı. İşi şimdiki revizyonla yeniden isteyin.",
                 snap.revision
             ),
         );
     }
-    // A copy cut by the forms' marks is not the project: what a tool computes on it must not be written back.
-    if input.mode == ProcessingJobMode::Commit && snap.cut {
+    // A copy cut by the forms' marks is not the project: what is computed on it must not be written back.
+    if work.writes && snap.cut {
         return failed(
             "forbidden",
             "Formların gizlediği alanlar var ve onları görme yetkiniz yok; bu kopya üzerinde hesaplanan sonuç projeye yazılırsa o alanlar bozulur. Sonucu dosyaya (sink) yazdırın.".into(),
         );
     }
-    let budget = budget_of(&input, limits);
-    let need = kentos_contracts::processing_memory_estimate(snap.bytes.len() as u64);
+    let budget = budget_from(work.cpu_seconds, work.memory_mb, limits);
+    let file_bytes = work.staged.as_ref().map_or(0, |s| s.size);
+    let need = if work.staged.is_some() {
+        kentos_contracts::import_memory_estimate(snap.bytes.len() as u64, file_bytes)
+    } else {
+        kentos_contracts::processing_memory_estimate(snap.bytes.len() as u64)
+    };
     if need > budget.memory_bytes {
         return failed(
             "memory_estimate",
             format!(
-                "Projenin dosyası {} bayt; aracın bunun için yaklaşık {} MB belleğe ihtiyacı olur, bu işin bellek bütçesi {} MB. İşe daha büyük bir memoryMb vermeyi deneyin (sunucunun sınırını aşamaz) ya da sunucu yöneticisine başvurun.",
+                "Projenin dosyası {} bayt{}; işin bunun için yaklaşık {} MB belleğe ihtiyacı olur, bu işin bellek bütçesi {} MB. İşe daha büyük bir memoryMb vermeyi deneyin (sunucunun sınırını aşamaz){} ya da sunucu yöneticisine başvurun.",
                 snap.bytes.len(),
+                if file_bytes > 0 {
+                    format!(" ve içe aktarılacak dosya {file_bytes} bayt")
+                } else {
+                    String::new()
+                },
                 need / (1024 * 1024),
-                budget.memory_bytes / (1024 * 1024)
+                budget.memory_bytes / (1024 * 1024),
+                if file_bytes > 0 {
+                    ", dosyayı parçalara bölmeyi"
+                } else {
+                    ""
+                },
             ),
         );
     }
+    let file = match &work.staged {
+        Some(staged) => {
+            let path = match blobs.local_path(&staged.blob_key) {
+                Ok(p) => p,
+                Err(e) => return failed("storage", format!("Hazırlanan dosya okunamadı: {e}")),
+            };
+            match blobs.len(&staged.blob_key).await {
+                Ok(n) if n == staged.size => {}
+                _ => {
+                    return failed(
+                        "gone",
+                        format!(
+                            "“{}” dosyası nesne deposunda yok ya da eksik; dosyayı yeniden gönderip işi yeniden isteyin.",
+                            staged.name
+                        ),
+                    );
+                }
+            }
+            Some(StagedFile {
+                path,
+                name: staged.name.clone(),
+                size: staged.size,
+            })
+        }
+        None => None,
+    };
     if stop.load(Ordering::SeqCst) {
         return Outcome::Stopped;
     }
-    progress.set(0.04, "Araç hazırlanıyor");
+    progress.set(0.04, "Çalışma hazırlanıyor");
     let task = ProcessingTask {
         job: claim.id,
         snapshot: snap.bytes,
-        input: input.clone(),
+        request: work.request.clone(),
+        file,
         budget,
     };
     let hooks = ProcessHooks {
@@ -940,39 +1195,114 @@ async fn processing(
     let processed = match ran {
         Ok(Ok(p)) => p,
         Ok(Err(f)) if f.code == "stopped" => return Outcome::Stopped,
-        Ok(Err(f)) => return failed(static_code(&f.code), f.message),
+        Ok(Err(f)) => {
+            let code = static_code(&f.code);
+            if code == "failed"
+                && let Some(own) = passed_code(&f.code)
+            {
+                return Outcome::Refused {
+                    code: own,
+                    message: f.message,
+                };
+            }
+            return failed(code, f.message);
+        }
         Err(e) => {
-            return failed("crashed", format!("Aracın çalışması yarıda kaldı: {e}"));
+            return failed("crashed", format!("İşin çalışması yarıda kaldı: {e}"));
         }
     };
     if stop.load(Ordering::SeqCst) {
         return Outcome::Stopped;
     }
-    let mut result = ProcessingJobResult {
-        tool: input.tool.clone(),
-        mode: input.mode,
-        base_revision: snap.revision.to_string(),
-        revision: None,
-        summary: processed.summary.clone(),
-        added: 0,
-        changed: 0,
-        removed: 0,
-        metadata: false,
-        notes: processed.notes.clone(),
-        usage: processed.usage.clone(),
-    };
-    match input.mode {
-        ProcessingJobMode::Commit => {
+    let usage = processed.usage.clone();
+    match &work.request {
+        RunRequest::Processing(input) => {
+            let mut result = ProcessingJobResult {
+                tool: input.tool.clone(),
+                mode: input.mode,
+                base_revision: snap.revision.to_string(),
+                revision: None,
+                summary: processed.summary.clone(),
+                added: 0,
+                changed: 0,
+                removed: 0,
+                metadata: false,
+                notes: processed.notes.clone(),
+                usage,
+            };
+            match input.mode {
+                ProcessingJobMode::Commit => {
+                    let Some(delta) = processed.delta else {
+                        return failed(
+                            "failed",
+                            "İşçi aracın sonucunu vermedi; hiçbir şey yazılmadı.".into(),
+                        );
+                    };
+                    result.added = delta.added;
+                    result.changed = delta.changed;
+                    result.removed = delta.removed;
+                    result.metadata = delta.project.is_some() || !delta.blocks.is_empty();
+                    progress.set(0.95, "Sonuç projeye yazılıyor");
+                    Outcome::Done {
+                        result: serde_json::to_value(&result).unwrap_or(Value::Null),
+                        artifact: None,
+                        reach: snap.reach,
+                        commit: Some(Box::new(Staged {
+                            delta,
+                            revision: snap.revision,
+                        })),
+                    }
+                }
+                ProcessingJobMode::Sink => {
+                    let Some(bytes) = processed.file else {
+                        return failed(
+                            "failed",
+                            "İşçi sonuç dosyasını vermedi; hiçbir şey yazılmadı.".into(),
+                        );
+                    };
+                    result.added = processed.rows;
+                    progress.set(0.95, "Sonuç dosyası saklanıyor");
+                    let sha256 = sha256_hex(&bytes);
+                    let (key, size) =
+                        match stage(blobs, claim, &bytes, &sha256, limits, "Sonuç dosyası").await
+                        {
+                            Ok(staged) => staged,
+                            Err(failed) => return failed,
+                        };
+                    Outcome::Done {
+                        result: serde_json::to_value(&result).unwrap_or(Value::Null),
+                        artifact: Some((key, size, sha256)),
+                        reach: snap.reach,
+                        commit: None,
+                    }
+                }
+            }
+        }
+        RunRequest::Import(run) => {
             let Some(delta) = processed.delta else {
                 return failed(
                     "failed",
-                    "İşçi aracın sonucunu vermedi; hiçbir şey yazılmadı.".into(),
+                    "İşçi içe aktarmanın sonucunu vermedi; hiçbir şey yazılmadı.".into(),
                 );
             };
-            result.added = delta.added;
-            result.changed = delta.changed;
-            result.removed = delta.removed;
-            result.metadata = delta.project.is_some();
+            let staged = work.staged.as_ref();
+            let result = ProjectImportResult {
+                command: run.format.command().to_owned(),
+                file: staged.map(|s| s.name.clone()).unwrap_or_default(),
+                bytes: staged.map_or(0, |s| s.size),
+                sha256: staged.map(|s| s.sha256.clone()).unwrap_or_default(),
+                base_revision: snap.revision.to_string(),
+                revision: None,
+                summary: processed.summary.clone(),
+                added: delta.added,
+                changed: delta.changed,
+                removed: delta.removed,
+                metadata: delta.project.is_some(),
+                blocks: delta.blocks.len() as u64,
+                notes: processed.notes.clone(),
+                details: processed.details.clone(),
+                usage,
+            };
             progress.set(0.95, "Sonuç projeye yazılıyor");
             Outcome::Done {
                 result: serde_json::to_value(&result).unwrap_or(Value::Null),
@@ -984,20 +1314,48 @@ async fn processing(
                 })),
             }
         }
-        ProcessingJobMode::Sink => {
-            let Some(bytes) = processed.sink else {
+        RunRequest::Atlas(input) => {
+            let Some(bytes) = processed.file else {
                 return failed(
                     "failed",
-                    "İşçi sonuç dosyasını vermedi; hiçbir şey yazılmadı.".into(),
+                    "İşçi atlasın PDF'ini vermedi; hiçbir şey yazılmadı.".into(),
                 );
             };
-            result.added = processed.sink_rows;
-            progress.set(0.95, "Sonuç dosyası saklanıyor");
-            let sha256 = sha256_hex(&bytes);
-            let (key, size) = match stage(blobs, claim, &bytes, &sha256, limits, "Sonuç dosyası").await {
-                Ok(staged) => staged,
-                Err(failed) => return failed,
+            let pages = processed.details["pages"].as_array();
+            let page_name =
+                |p: Option<&Value>| p.and_then(|p| p["name"].as_str()).map(str::to_owned);
+            let strings = |v: &Value| -> Vec<String> {
+                v.as_array()
+                    .map(|a| {
+                        a.iter()
+                            .filter_map(|s| s.as_str().map(str::to_owned))
+                            .collect()
+                    })
+                    .unwrap_or_default()
             };
+            let result = ProjectAtlasResult {
+                sheet: input.sheet.clone(),
+                base_revision: snap.revision.to_string(),
+                pages: pages.map_or(0, |p| p.len() as u64),
+                first: page_name(pages.and_then(|p| p.first())),
+                last: page_name(pages.and_then(|p| p.last())),
+                pin_digest: processed.details["pin"]["digest"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .to_owned(),
+                bindings: processed.details["bindings"].clone(),
+                fields: strings(&processed.details["fields"]),
+                withheld: strings(&processed.details["withheld"]),
+                notes: processed.notes.clone(),
+                usage,
+            };
+            progress.set(0.95, "PDF saklanıyor");
+            let sha256 = sha256_hex(&bytes);
+            let (key, size) =
+                match stage(blobs, claim, &bytes, &sha256, limits, "Atlasın PDF'i").await {
+                    Ok(staged) => staged,
+                    Err(failed) => return failed,
+                };
             Outcome::Done {
                 result: serde_json::to_value(&result).unwrap_or(Value::Null),
                 artifact: Some((key, size, sha256)),
@@ -1061,22 +1419,8 @@ async fn finish(
 ) -> AppResult<ServerJobState> {
     match outcome {
         Outcome::Stopped => Ok(ServerJobState::Running),
-        Outcome::Failed { code, message } => {
-            let passed: bool = sqlx::query_scalar(
-                "select kentos.finish_job($1, $2, false, null, null, null, null, $3, $4)",
-            )
-            .bind(claim.id)
-            .bind(claim.fence)
-            .bind(code)
-            .bind(&message)
-            .fetch_one(&db.pool)
-            .await?;
-            Ok(if passed {
-                ServerJobState::Failed
-            } else {
-                ServerJobState::Running
-            })
-        }
+        Outcome::Failed { code, message } => fail(db, claim, code, &message).await,
+        Outcome::Refused { code, message } => fail(db, claim, &code, &message).await,
         Outcome::Done {
             result,
             artifact,
@@ -1193,6 +1537,29 @@ async fn finish(
     }
 }
 
+/// Finishes the claim as failed with `code`: `Failed` when the claim still held the lease, else the job is not ours.
+async fn fail(
+    db: &kentos_postgres::Db,
+    claim: &Claim,
+    code: &str,
+    message: &str,
+) -> AppResult<ServerJobState> {
+    let passed: bool = sqlx::query_scalar(
+        "select kentos.finish_job($1, $2, false, null, null, null, null, $3, $4)",
+    )
+    .bind(claim.id)
+    .bind(claim.fence)
+    .bind(code)
+    .bind(message)
+    .fetch_one(&db.pool)
+    .await?;
+    Ok(if passed {
+        ServerJobState::Failed
+    } else {
+        ServerJobState::Running
+    })
+}
+
 /// The commit of a processing job's delta inside the finish transaction: the versions of the objects it changes or
 /// removes and of the project's metadata as the transaction sees them, expected, and the project required to be at the
 /// revision the tool read, so the delta is the tool's on exactly the project it read.
@@ -1222,6 +1589,28 @@ async fn commit_staged(
             expected.insert(id.to_string(), version.to_string());
         }
     }
+    let block_ids: Vec<Uuid> = staged
+        .delta
+        .guarded_blocks()
+        .iter()
+        .map(|b| Uuid::from_bytes(b.0))
+        .collect();
+    if !block_ids.is_empty() {
+        let rows: Vec<(Uuid, i64)> = sqlx::query_as(
+            "select id, version from kentos.block_definition where tenant_id = $1 and project_id = $2 and id = any($3)",
+        )
+        .bind(access.tenant)
+        .bind(access.project)
+        .bind(&block_ids)
+        .fetch_all(&mut **tx)
+        .await?;
+        for (id, version) in rows {
+            expected.insert(
+                kentos_contracts::block_key(kentos_contracts::BlockId(*id.as_bytes())),
+                version.to_string(),
+            );
+        }
+    }
     if staged.delta.project.is_some() {
         let meta: i64 = sqlx::query_scalar(
             "select meta_version from kentos.project where tenant_id = $1 and id = $2",
@@ -1243,7 +1632,8 @@ async fn commit_staged(
         input: serde_json::to_value(staged.delta.changes()).unwrap_or(Value::Null),
     };
     let done =
-        crate::changes::commit_in(tx, access, envelope, Some(staged.revision)).await?;
+        crate::changes::commit_in(tx, access, envelope, Some(staged.revision), JOB_CHANGES_MAX)
+            .await?;
     Ok(done.data_revision)
 }
 

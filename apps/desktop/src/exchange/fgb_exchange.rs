@@ -9,13 +9,14 @@ use std::path::PathBuf;
 use iced::widget::Column;
 use iced::{Element, Task};
 use kentos_commands::{
-    CommandResult, CommandWarning, ExportFgb, FgbExported, GpkgImported, ImportFgb,
+    CommandResult, CommandWarning, ExportFgb, FgbExported, GpkgImported, ImportFgb, ImportFormat,
 };
 use kentos_domain::Slot;
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, fgb_table, file_import_fgb};
 use kentos_ui::widget::{Dialog, overlay};
 
+use super::server_work;
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Window, message, off_thread};
 use crate::app::{App, Message, Picker};
@@ -100,6 +101,23 @@ impl App {
         }
     }
 
+    /// What “Sunucuya içe aktar” asks of the server for the window as it stands (docs/adr/0561 §4): the command's
+    /// input without its path, the file, the choices in words.
+    pub(super) fn fgb_server_work(s: &ImportState) -> server_work::Work {
+        server_work::Work::import(
+            ImportFormat::Fgb,
+            s.path
+                .file_name()
+                .map_or_else(String::new, |n| n.to_string_lossy().into_owned()),
+            server_work::Source::Path(s.path.clone()),
+            serde_json::to_value(Self::fgb_import_input(s)).unwrap_or_default(),
+            s.reproject
+                .then(|| "Başka sistemdeyse projenin sistemine çevrilir.".to_owned())
+                .into_iter()
+                .collect(),
+        )
+    }
+
     /// The import's plan for the window's choice, made on a copy of the drawing.
     fn fgb_import_replan(&mut self) {
         let Some(Window::FgbImport(s)) = &self.exchange else {
@@ -107,13 +125,16 @@ impl App {
         };
         let input = Self::fgb_import_input(s);
         let plan = match &self.document {
-            Some(doc) => match file_import_fgb::plan(&ExecutionContext::new(&mut doc.model.clone()), &input) {
-                CommandResult::Completed { output, warnings } => Ok((output, warnings)),
-                CommandResult::Failed { error } | CommandResult::Conflict { error } => {
-                    Err(error.message)
+            Some(doc) => {
+                match file_import_fgb::plan(&ExecutionContext::new(&mut doc.model.clone()), &input)
+                {
+                    CommandResult::Completed { output, warnings } => Ok((output, warnings)),
+                    CommandResult::Failed { error } | CommandResult::Conflict { error } => {
+                        Err(error.message)
+                    }
+                    _ => Err("FlatGeobuf okunamadı.".into()),
                 }
-                _ => Err("FlatGeobuf okunamadı.".into()),
-            },
+            }
             None => Err("Açık çizim yok.".into()),
         };
         if let Some(Window::FgbImport(s)) = &mut self.exchange {
@@ -230,7 +251,10 @@ impl App {
                     } else {
                         Level::Warn
                     },
-                    format!("“{}” alındı: {} nesne; Ctrl+Z geri alır.", output.file, output.objects),
+                    format!(
+                        "“{}” alındı: {} nesne; Ctrl+Z geri alır.",
+                        output.file, output.objects
+                    ),
                 );
                 for w in warnings {
                     self.say(Level::Warn, w.message);
@@ -261,8 +285,16 @@ impl App {
                     format!(
                         "{} nesne, geometri türü {}; sütunlar: {}",
                         out.features,
-                        if out.geometry == "Unknown" { "karışık" } else { out.geometry.as_str() },
-                        if cols.is_empty() { "yok".to_owned() } else { cols.join(", ") }
+                        if out.geometry == "Unknown" {
+                            "karışık"
+                        } else {
+                            out.geometry.as_str()
+                        },
+                        if cols.is_empty() {
+                            "yok".to_owned()
+                        } else {
+                            cols.join(", ")
+                        }
                     ),
                 ));
                 lines.push(words::text_line(
@@ -277,7 +309,10 @@ impl App {
                     lines.push(words::text_line(Line::Warn, l.clone()));
                 }
                 if out.lost.is_empty() {
-                    lines.push(words::text_line(Line::Ok, "Her nesne ve değer olduğu gibi yazılır."));
+                    lines.push(words::text_line(
+                        Line::Ok,
+                        "Her nesne ve değer olduğu gibi yazılır.",
+                    ));
                 }
                 true
             }
@@ -305,7 +340,10 @@ impl App {
             Dialog::new("FlatGeobuf dışa aktar")
                 .scroll(body)
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
-                .action(words::primary("Dışa aktar…", ready.then(|| event(Event::Save))))
+                .action(words::primary(
+                    "Dışa aktar…",
+                    ready.then(|| event(Event::Save)),
+                ))
                 .width(640.0)
                 .max_height(720.0),
         )
@@ -347,7 +385,10 @@ impl App {
                     ),
                 ));
                 if let Some(srid) = out.srid {
-                    lines.push(words::text_line(Line::Info, format!("Dosyanın sistemi EPSG:{srid}.")));
+                    lines.push(words::text_line(
+                        Line::Info,
+                        format!("Dosyanın sistemi EPSG:{srid}."),
+                    ));
                 }
                 for w in warnings {
                     lines.push(words::text_line(Line::Warn, w.message.clone()));
@@ -365,11 +406,17 @@ impl App {
         if let Some(text) = &s.status {
             body = body.push(words::text_line(Line::Error, text.clone()));
         }
+        let mut dialog = Dialog::new("FlatGeobuf içe aktar").scroll(body);
+        if let Some(button) = self.server_work_button(Self::fgb_server_work(s)) {
+            dialog = dialog.action(button);
+        }
         overlay::blocking(
-            Dialog::new("FlatGeobuf içe aktar")
-                .scroll(body)
+            dialog
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
-                .action(words::primary("İçe aktar", ready.then(|| event(Event::Run))))
+                .action(words::primary(
+                    "İçe aktar",
+                    ready.then(|| event(Event::Run)),
+                ))
                 .width(640.0)
                 .max_height(720.0),
         )

@@ -20,6 +20,7 @@ use kentos_native_application::ExecutionContext;
 use kentos_ui::widget::{Dialog, overlay};
 use serde_json::json;
 
+use super::server_work;
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Picker, Window, message};
 use crate::app::{App, Message};
@@ -185,6 +186,29 @@ impl App {
             Event::Run => self.gpkg_run(),
         }
         Task::none()
+    }
+
+    /// What “Sunucuya içe aktar” asks of the server for the window as it stands (docs/adr/0561 §4): the chosen tables,
+    /// whether the coordinates move into the project's system.
+    pub(crate) fn gpkg_server_work(s: &State) -> server_work::Work {
+        let tables: Vec<&str> = s
+            .tables
+            .iter()
+            .zip(&s.chosen)
+            .filter(|(_, c)| **c)
+            .map(|(t, _)| t.name.as_str())
+            .collect();
+        let mut lines = vec![format!("Tablolar: {}.", tables.join(", "))];
+        if s.reproject {
+            lines.push("Başka sistemdeyse projenin sistemine çevrilir.".to_owned());
+        }
+        server_work::Work::import(
+            kentos_commands::ImportFormat::Gpkg,
+            s.file.clone(),
+            server_work::Source::Path(s.path.clone()),
+            json!({ "tables": tables, "reproject": s.reproject }),
+            lines,
+        )
     }
 
     fn gpkg_run(&mut self) {
@@ -507,20 +531,28 @@ impl App {
             ));
         }
         let ready = chosen > 0 && (!mismatch || s.reproject);
+        let mut dialog = Dialog::new(if s.bind {
+            "Kaynağa bağla"
+        } else {
+            "GeoPackage içe aktar"
+        })
+        .scroll(body);
+        // A bound layer is the table's working copy on this computer: the server's job takes the rows in as objects.
+        if !s.bind
+            && chosen > 0
+            && let Some(button) = self.server_work_button(Self::gpkg_server_work(s))
+        {
+            dialog = dialog.action(button);
+        }
         overlay::blocking(
-            Dialog::new(if s.bind {
-                "Kaynağa bağla"
-            } else {
-                "GeoPackage içe aktar"
-            })
-            .scroll(body)
-            .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
-            .action(words::primary(
-                if s.bind { "Bağla" } else { "İçe aktar" },
-                ready.then(|| event(Event::Run)),
-            ))
-            .width(640.0)
-            .max_height(720.0),
+            dialog
+                .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
+                .action(words::primary(
+                    if s.bind { "Bağla" } else { "İçe aktar" },
+                    ready.then(|| event(Event::Run)),
+                ))
+                .width(640.0)
+                .max_height(720.0),
         )
     }
 }

@@ -7,6 +7,7 @@ pub mod auth;
 #[cfg(test)]
 mod catalog_tests;
 pub mod checkpoints;
+pub mod job_inputs;
 pub mod jobs;
 #[cfg(test)]
 mod jobs_tests;
@@ -217,6 +218,10 @@ pub fn router(state: AppState) -> Router {
             get(checkpoints::download),
         )
         .route(
+            "/v1/tenants/{tenant}/projects/{project}/job-inputs",
+            post(job_inputs::begin),
+        )
+        .route(
             "/v1/tenants/{tenant}/projects/{project}/jobs",
             get(jobs::list).post(jobs::create),
         )
@@ -254,5 +259,24 @@ pub fn router(state: AppState) -> Router {
             put(files::receive).get(files::upload),
         )
         .layer(upload_layers);
-    api.merge(uploads).with_state(state)
+    // The file of an import job (docs/adr/0561 §1): the same, with the limit the server sets for it.
+    let input_layers = ServiceBuilder::new()
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
+        .layer(TraceLayer::new_for_http().make_span_with(|req: &axum::http::Request<_>| {
+            let rid = req.headers().get("x-request-id").and_then(|v| v.to_str().ok()).unwrap_or("-");
+            tracing::info_span!("iş dosyası", method = %req.method(), path = %req.uri().path(), request_id = %rid)
+        }))
+        .layer(PropagateRequestIdLayer::x_request_id())
+        .layer(CatchPanicLayer::new())
+        .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, UPLOAD_TIMEOUT))
+        .layer(RequestBodyLimitLayer::new(
+            usize::try_from(state.config.job_limits.input_max).unwrap_or(usize::MAX),
+        ));
+    let inputs = Router::new()
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/job-inputs/{input}",
+            put(job_inputs::receive).get(job_inputs::get),
+        )
+        .layer(input_layers);
+    api.merge(uploads).merge(inputs).with_state(state)
 }

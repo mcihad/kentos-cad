@@ -1,12 +1,14 @@
-//! What a `project.processing` job decides without a database (docs/adr/0559), against the shared cases
+//! What a `project.processing` or `project.import` job decides without a database (docs/adr/0559, 0561), against the
+//! shared cases
 //! `fixtures/server-jobs/v1/processing.json` that `scripts/fixtures/processing_job_cases.py` writes from the ADR's rules
 //! without KentOS code: the request's faults, the memory estimate, the budget, and the delta (what a tool changed)
 //! found by comparing two drawings. The cases describe the drawings compactly; this test builds the documents.
 
 use kentos_application::processing_job::{budget_of, check_input, delta};
 use kentos_contracts::{
-    BlockDefinition, DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV1, DocumentSnapshotV2,
-    Entity, EntityId, FeatureChange, LayerNode, ProcessingJobInput, processing_memory_estimate,
+    BlockChange, BlockDefinition, DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV1,
+    DocumentSnapshotV2, Entity, EntityId, FeatureChange, LayerNode, ProcessingJobInput,
+    processing_memory_estimate,
 };
 use serde_json::{Value, json};
 use uuid::Uuid;
@@ -16,6 +18,13 @@ const SAMPLE: &str = include_str!("../../../../fixtures/document/v1/sample.json"
 
 fn cases() -> Value {
     serde_json::from_str(CASES).expect("the cases read")
+}
+
+/// The block definition of compact id `n` has the id `BLOCK_BASE + n`.
+const BLOCK_BASE: u128 = 0x1000;
+
+fn block_number(id: kentos_contracts::BlockId) -> u64 {
+    (Uuid::from_bytes(id.0).as_u128() - BLOCK_BASE) as u64
 }
 
 fn layer(id: &str) -> LayerNode {
@@ -63,11 +72,10 @@ fn document(compact: &Value) -> DocumentSnapshotV2 {
         .cloned()
         .unwrap_or_default()
         .iter()
-        .enumerate()
-        .map(|(i, name)| {
+        .map(|b| {
             serde_json::from_value(json!({
-                "id": Uuid::from_u128(0x1000 + i as u128).to_string(),
-                "name": name, "base": { "x": 0.0, "y": 0.0 }, "entities": []
+                "id": Uuid::from_u128(BLOCK_BASE + u128::from(b[0].as_u64().expect("an id"))).to_string(),
+                "name": b[1], "base": { "x": 0.0, "y": 0.0 }, "entities": []
             }))
             .expect("a block")
         })
@@ -227,6 +235,26 @@ fn what_a_tool_changed_is_found_as_the_reference_finds_it() {
             })
             .collect();
         assert!(order.windows(2).all(|w| w[0] <= w[1]), "{name}");
+        // The block definitions made, replaced and removed, by their compact ids.
+        let (mut made, mut replaced, mut removed) = (Vec::new(), Vec::new(), Vec::new());
+        for b in &got.blocks {
+            match b {
+                BlockChange::Create { block } => made.push(block_number(block.id)),
+                BlockChange::Update { block } => replaced.push(block_number(block.id)),
+                BlockChange::Delete { id } => removed.push(block_number(*id)),
+            }
+        }
+        let numbers = |key: &str| -> Vec<u64> {
+            want["blocks"][key]
+                .as_array()
+                .expect("block ids")
+                .iter()
+                .map(|v| v.as_u64().expect("an id"))
+                .collect()
+        };
+        assert_eq!(made, numbers("created"), "{name}: blocks created");
+        assert_eq!(replaced, numbers("updated"), "{name}: blocks replaced");
+        assert_eq!(removed, numbers("deleted"), "{name}: blocks removed");
         // The metadata the delta carries, by the parts of the patch it sets.
         let mut patch: Vec<&str> = Vec::new();
         if let Some(p) = &got.project {
@@ -260,7 +288,8 @@ fn what_a_tool_changed_is_found_as_the_reference_finds_it() {
             want["added"] == 0
                 && want["changed"] == 0
                 && want["removed"] == 0
-                && want_patch.is_empty(),
+                && want_patch.is_empty()
+                && got.blocks.is_empty(),
             "{name}"
         );
     }

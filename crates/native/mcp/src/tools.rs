@@ -376,10 +376,99 @@ pub fn list(catalog: &Value) -> Vec<Value> {
         ),
         remote(true, false),
     ));
+    tools.extend(job_tools());
     for c in commands.iter().filter(|c| !local(c)) {
         tools.push(server_tool(c));
     }
     tools
+}
+
+const JOB: &str = "İşin kimliği (jobs.start'ın verdiği id).";
+
+/// The server's durable jobs as tools (docs/adr/0561 §3): the work a worker on the server does for a project, which
+/// goes on when the client is gone: ask for it, read it, stop it, take its result.
+fn job_tools() -> Vec<Value> {
+    let scope = |extra: Value, required: &[&str]| {
+        let mut properties = json!({
+            "tenant": { "type": "string", "description": TENANT },
+            "project": { "type": "string", "description": PROJECT }
+        });
+        if let (Some(p), Some(e)) = (properties.as_object_mut(), extra.as_object()) {
+            for (k, v) in e {
+                p.insert(k.clone(), v.clone());
+            }
+        }
+        let mut all = vec!["tenant", "project"];
+        all.extend_from_slice(required);
+        object(properties, &all)
+    };
+    vec![
+        tool(
+            "jobs.start",
+            "Sunucu işi iste",
+            "Veritabanı projesi için sunucuda çalışacak bir iş ister; iş siz gittikten sonra da sürer, jobs.status ile izlenir. \
+             kind ve input: export (input: expectedRevision), checkpoint (name, note), \
+             processing (İşlemler aracı: tool, parameters, selection, view, mode commit ya da sink, expectedRevision, label), \
+             import (file: bu bilgisayardaki dosyanın tam yolu, sunucuya gönderilir; input: format gpkg, fgb, gml, csv ya da dxf, \
+             options: içe aktarma komutunun kendi seçenekleri (tables, layers, reproject, srid …; yol verilmez), expectedRevision), \
+             atlas (input: sheet, fields, theme, time, crs, pin, expectedRevision). Hepsinde isteğe bağlı cpuSeconds ve memoryMb \
+             sunucunun bütçesinden küçük olabilir. Aynı requestId aynı işi verir. Sonuç projeye tek commit olarak yazılır \
+             (processing commit, import) ya da dosya olur (export, processing sink, atlas); proje işin okuduğu revizyondan \
+             ilerlemişse hiçbir şey yazılmaz (revision_conflict).",
+            scope(
+                json!({
+                    "kind": { "type": "string", "enum": ["export", "checkpoint", "processing", "import", "atlas"] },
+                    "input": { "type": "object", "description": "İşin girdisi (kind'a göre)." },
+                    "file": { "type": "string", "description": "Yalnız import: içe aktarılacak dosyanın bu bilgisayardaki tam yolu." },
+                    "requestId": { "type": "string", "description": "Aynı kimlikle yeniden istek aynı işi verir." },
+                    "timeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 86400 }
+                }),
+                &["kind"],
+            ),
+            remote(false, true),
+        ),
+        tool(
+            "jobs.status",
+            "Sunucu işinin durumu",
+            "Bir sunucu işini okur: durum, ilerleme (0–1) ve çalışanın birkaç sözcüğü (progressText), bitince sonuç ya da hata \
+             kodu. waitSeconds (en çok 120) verilirse iş bitene kadar saniyede bir sorulur.",
+            scope(
+                json!({
+                    "job": { "type": "string", "description": JOB },
+                    "waitSeconds": { "type": "integer", "minimum": 0, "maximum": 120 }
+                }),
+                &["job"],
+            ),
+            remote(true, false),
+        ),
+        tool(
+            "jobs.cancel",
+            "Sunucu işini durdur",
+            "Sırada bekleyen işi hemen, çalışanı çalıştıranın bir sonraki yoklamasında durdurur. Durdurulan iş projeye \
+             hiçbir şey yazmaz. İsteyen ya da proje düzenleme yetkisi olan durdurabilir.",
+            scope(
+                json!({ "job": { "type": "string", "description": JOB } }),
+                &["job"],
+            ),
+            remote(false, false),
+        ),
+        tool(
+            "jobs.result",
+            "Sunucu işinin sonucu",
+            "Biten bir işin sonucunu verir (durum, sonuç özeti, sayılar, yeni revizyon, uyarılar, harcanan işlemci ve bellek; \
+             başarısızsa hata kodu ve sözü). İşin dosyası varsa (export, processing sink, atlas) savePath ile bu bilgisayara \
+             yazılır (var olan dosyanın üstüne yalnız overwrite: true ile); dosyanın baytları modele verilmez, boyu ve SHA-256'sı söylenir.",
+            scope(
+                json!({
+                    "job": { "type": "string", "description": JOB },
+                    "savePath": { "type": "string", "description": "İşin dosyasının yazılacağı tam yol." },
+                    "overwrite": { "type": "boolean", "default": false }
+                }),
+                &["job"],
+            ),
+            remote(true, false),
+        ),
+    ]
 }
 
 /// A server command as a tool: its input schema with the project it acts on,
@@ -978,7 +1067,10 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
             // The drawing asked for by its number, else the one in front: the handle keeps it (docs/adr/0351 §3).
             let asked = args.get("document").cloned().filter(|v| !v.is_null());
             let hello = link
-                .ask("hello", asked.map_or_else(|| json!({}), |d| json!({ "document": d })))
+                .ask(
+                    "hello",
+                    asked.map_or_else(|| json!({}), |d| json!({ "document": d })),
+                )
                 .map_err(|(code, message)| refused(&code, message))?;
             link.document = hello.get("document").and_then(Value::as_u64);
             let handle = format!("desktop-{}", Uuid::new_v4());
@@ -1171,6 +1263,18 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
             opened["content"][0]["text"] =
                 json!(serde_json::to_string(&opened["structuredContent"]).unwrap_or_default());
             Ok(opened)
+        }
+        "jobs.start" | "jobs.status" | "jobs.cancel" | "jobs.result" => {
+            let value = match name {
+                "jobs.start" => server.account.job_start(args),
+                "jobs.status" => server.account.job_status(args),
+                "jobs.cancel" => server.account.job_cancel(args),
+                _ => server.account.job_result(args),
+            }
+            .map_err(|f| cloud::refusal(&f))?;
+            // A job that failed is an error the model reads; one still going is not.
+            let failed = value["state"] == "failed";
+            Ok(answer(value, failed))
         }
         remote if remote.starts_with("project.") => {
             let Some(c) = server.catalog["commands"]

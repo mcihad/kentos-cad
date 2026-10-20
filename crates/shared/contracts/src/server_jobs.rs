@@ -3,7 +3,8 @@
 //! revision when asked; a worker claims it with a lease and a fence, and finishes it as the user who asked, with the
 //! access asked again. The kinds are the server's own: `project.export`, the project as one `.kcad` file, and
 //! `project.checkpoint`, a checkpoint made as a job (docs/adr/0547), and `project.processing`, an İşlemler tool run on
-//! the server against the project at a pinned revision (docs/adr/0559).
+//! the server, against the project at a pinned revision (docs/adr/0559), `project.import`, a staged file taken into the
+//! project by the worker, and `project.atlas`, the atlas of a sheet as one PDF (docs/adr/0561).
 
 use std::collections::BTreeMap;
 
@@ -17,7 +18,15 @@ pub const SERVER_JOB_KINDS: &[&str] = &[
     PROJECT_EXPORT_JOB,
     PROJECT_CHECKPOINT_JOB,
     PROJECT_PROCESSING_JOB,
+    PROJECT_IMPORT_JOB,
+    PROJECT_ATLAS_JOB,
 ];
+/// A staged file taken into a database project by the worker (docs/adr/0561 §1): the input is a [`ProjectImportInput`],
+/// the result a [`ProjectImportResult`], committed in the job's finish like a processing job's.
+pub const PROJECT_IMPORT_JOB: &str = "project.import";
+/// The atlas of a sheet as one PDF (docs/adr/0561 §2): the input is a [`ProjectAtlasInput`], the result a
+/// [`ProjectAtlasResult`], the artifact the PDF.
+pub const PROJECT_ATLAS_JOB: &str = "project.atlas";
 /// An İşlemler tool run as a job on a database project (docs/adr/0559): the input is a [`ProcessingJobInput`], the
 /// result a [`ProcessingJobResult`]; with `mode: sink` the artifact is a GeoPackage.
 pub const PROJECT_PROCESSING_JOB: &str = "project.processing";
@@ -39,6 +48,8 @@ pub const SERVER_JOB_RETENTION_DAYS_DEFAULT: u64 = 14;
 /// `KENTOS_JOB_MEMORY_MB`, docs/adr/0559 §4): CPU seconds of the process the tool runs in, and its resident memory.
 pub const SERVER_JOB_CPU_DEFAULT_SECONDS: u32 = 1_800;
 pub const SERVER_JOB_MEMORY_DEFAULT_MB: u32 = 4_096;
+/// The biggest file a job input may be, in bytes unless the server says otherwise (`KENTOS_JOB_INPUT_MAX_MB`).
+pub const SERVER_JOB_INPUT_MAX_DEFAULT: u64 = 2 * 1024 * 1024 * 1024;
 /// The longest time a job may run, in seconds, and its default.
 pub const SERVER_JOB_TIMEOUT_MAX: u32 = 86_400;
 pub const SERVER_JOB_TIMEOUT_DEFAULT: u32 = 600;
@@ -161,6 +172,237 @@ pub struct ProcessingJobInput {
     pub memory_mb: Option<u32>,
 }
 
+/// What a user says of a file to stage for a job (`POST …/projects/{project}/job-inputs`, docs/adr/0561 §1).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct JobInputBegin {
+    /// The file's name as the user has it (1–200 characters, no folder): `parcels.gpkg`.
+    pub name: String,
+    /// Its size in bytes, as the bytes will come.
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    pub size: u64,
+    /// Its SHA-256: 64 lowercase hexadecimal digits.
+    pub sha256: String,
+}
+
+/// A file staged for a job: asked for, then sent in one streamed body (`PUT …/job-inputs/{id}`), then named by a
+/// `project.import` job's `upload`. It is kept as long as finished jobs are (`KENTOS_JOB_RETENTION_DAYS`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct JobInput {
+    pub id: String,
+    pub name: String,
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    pub size: u64,
+    pub sha256: String,
+    pub created_at: String,
+    /// Whether its bytes arrived and are the declared ones.
+    pub received: bool,
+}
+
+/// The formats a `project.import` job takes (docs/adr/0561 §1): the ones `file.import.*` commands read.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ImportFormat {
+    Gpkg,
+    Fgb,
+    Gml,
+    Csv,
+    Dxf,
+}
+
+impl ImportFormat {
+    pub const ALL: [ImportFormat; 5] = [Self::Gpkg, Self::Fgb, Self::Gml, Self::Csv, Self::Dxf];
+
+    /// The command that reads the file.
+    pub fn command(self) -> &'static str {
+        match self {
+            Self::Gpkg => "file.import.gpkg",
+            Self::Fgb => "file.import.fgb",
+            Self::Gml => "file.import.gml",
+            Self::Csv => "file.import.csv",
+            Self::Dxf => "file.import.dxf",
+        }
+    }
+
+    /// The file name's extension the command reads it by.
+    pub fn extension(self) -> &'static str {
+        match self {
+            Self::Gpkg => "gpkg",
+            Self::Fgb => "fgb",
+            Self::Gml => "gml",
+            Self::Csv => "csv",
+            Self::Dxf => "dxf",
+        }
+    }
+
+    /// The format of a file name by its extension, case aside.
+    pub fn of_name(name: &str) -> Option<Self> {
+        let ext = name.rsplit_once('.')?.1.to_lowercase();
+        match ext.as_str() {
+            "gpkg" => Some(Self::Gpkg),
+            "fgb" => Some(Self::Fgb),
+            "gml" | "xml" => Some(Self::Gml),
+            "csv" | "txt" => Some(Self::Csv),
+            "dxf" => Some(Self::Dxf),
+            _ => None,
+        }
+    }
+}
+
+/// `project.import`'s input (docs/adr/0561 §1): a file staged for the project (`upload`, its id) read by the `format`'s
+/// import command with `options` (that command's input without its `path`), and what was read committed to the project
+/// when it is still at the revision the worker read. A file's local path is never an option: the server gives the file
+/// it staged.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectImportInput {
+    /// The staged file's id (`JobInput.id`).
+    pub upload: String,
+    /// The format; absent: the staged file's name tells (`ImportFormat::of_name`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub format: Option<ImportFormat>,
+    /// The import command's input without `path`: `tables`, `layers`, `reproject`, `srid`, `layer`, `geometry`,
+    /// `fileUnit`, `explodeBlocks`, `group` … as the command takes them.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>", optional))]
+    pub options: BTreeMap<String, Value>,
+    /// For lists; only said.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<String>,
+    /// The data revision the worker must read; absent: the one the job was asked at.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub expected_revision: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub cpu_seconds: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub memory_mb: Option<u32>,
+}
+
+/// `project.atlas`'s input (docs/adr/0561 §2): `file.export.atlas`'s input without its `path`, run on the project at the
+/// revision the worker read (or `expectedRevision`), the pages made from the state `pin` names: a pin that is not the
+/// project's state refuses the job (`pin_mismatch`).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectAtlasInput {
+    /// The sheet that has the atlas, by id.
+    pub sheet: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fields: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub theme: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub time: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub crs: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub pin: Option<crate::AtlasPin>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub expected_revision: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub cpu_seconds: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub memory_mb: Option<u32>,
+}
+
+/// A succeeded `project.import` job's result (docs/adr/0561 §1).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectImportResult {
+    /// The import command that read the file.
+    pub command: String,
+    /// The file's name, bytes and SHA-256 (as the command read them).
+    pub file: String,
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    pub bytes: u64,
+    pub sha256: String,
+    /// The data revision the worker read, and the one the commit made, as text.
+    pub base_revision: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub revision: Option<String>,
+    /// The command's own words: what came in.
+    pub summary: String,
+    /// How many objects were created, changed and removed; whether the project's layer tree (or other metadata) changed
+    /// with them, and how many block definitions the file brought.
+    pub added: u64,
+    pub changed: u64,
+    pub removed: u64,
+    #[serde(default)]
+    pub metadata: bool,
+    #[serde(default)]
+    pub blocks: u64,
+    /// What the file could not give or the import left out: the command's warnings (`import_losses`, `crs_undeclared`,
+    /// `unit_assumed` …) and the notes of the run, in words, with the warning's code in front of its words.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProcessingJobNote>>", optional))]
+    pub notes: Vec<ProcessingJobNote>,
+    /// What the import command answered (the tables or layers read, the counts, the coordinate system).
+    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
+    pub details: Value,
+    pub usage: ProcessingUsage,
+}
+
+/// A succeeded `project.atlas` job's result (docs/adr/0561 §2): the artifact is the PDF.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectAtlasResult {
+    pub sheet: String,
+    /// The data revision the worker read, as text.
+    pub base_revision: String,
+    /// How many pages the PDF has.
+    pub pages: u64,
+    /// The first page's name and the last's, for lists.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub first: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub last: Option<String>,
+    /// The state the pages were made from (`AtlasPin`'s digest) and what the run was bound to.
+    pub pin_digest: String,
+    #[cfg_attr(feature = "ts", ts(type = "unknown"))]
+    pub bindings: Value,
+    /// The attributes the pages carry and the ones they do not (a form's `redact`, or not asked for).
+    pub fields: Vec<String>,
+    pub withheld: Vec<String>,
+    /// The sheet core's findings and the notes of a host without a window, in words.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProcessingJobNote>>", optional))]
+    pub notes: Vec<ProcessingJobNote>,
+    pub usage: ProcessingUsage,
+}
+
 /// What a `project.processing` job took (docs/adr/0559 §4).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -225,6 +467,17 @@ pub fn processing_memory_estimate(snapshot_bytes: u64) -> u64 {
     PROCESSING_MEMORY_BASE.saturating_add(snapshot_bytes.saturating_mul(PROCESSING_MEMORY_FACTOR))
 }
 
+/// How many times the staged file's size an import takes in memory beyond the project's (docs/adr/0561 §1): the file is
+/// read whole and its objects are built next to it.
+pub const IMPORT_MEMORY_FACTOR: u64 = 32;
+
+/// How much memory a `project.import` job is expected to need for a project whose `.kcad` file is `snapshot_bytes` long
+/// and a staged file of `file_bytes`, in bytes: a processing job's estimate and the file's share.
+pub fn import_memory_estimate(snapshot_bytes: u64, file_bytes: u64) -> u64 {
+    processing_memory_estimate(snapshot_bytes)
+        .saturating_add(file_bytes.saturating_mul(IMPORT_MEMORY_FACTOR))
+}
+
 /// A succeeded job's artifact in the object store.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -248,7 +501,8 @@ pub struct ServerJobError {
     /// not be written: no space, no folder), `too_large` (the artifact is past the server's limit) or `failed`; a
     /// `project.processing` job also `cpu_limit`, `memory_limit` (stopped at its budget), `memory_estimate` (refused
     /// before it ran), `tool_failed`, `tool_unavailable`, `unsupported_change`, `too_many_changes` and `crashed`
-    /// (docs/adr/0559).
+    /// (docs/adr/0559); a `project.import` or `project.atlas` job also the refusal code of the command the worker ran
+    /// (`import_unreadable`, `crs_mismatch`, `nothing_to_import`, `pin_mismatch`, `atlas_empty` …, docs/adr/0561).
     pub code: String,
     pub message: String,
 }

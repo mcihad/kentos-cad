@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""The shared cases of what a `project.processing` server job decides without a database (docs/adr/0559): the request
-checked when it is made, the memory a project's file is estimated to need, the budget a request may ask for, and the
-delta, what a tool changed, found by comparing the drawing as it was opened with the drawing after the run.
+"""The shared cases of what a `project.processing` server job decides without a database (docs/adr/0559, 0561 §1): the
+request checked when it is made, the memory a project's file is estimated to need, the budget a request may ask for,
+and the delta, what a tool (or an import) changed, found by comparing the drawing as it was opened with the drawing
+after the run: objects by their persistent ids, block definitions by theirs.
 
 Written from the ADR's rules and plain Python, not from KentOS code: the delta of a case is worked out here from a
 compact description of the two drawings (objects by persistent id with a layer, a place and attributes; the layer
-tree's ids; the project's name, plot scale, active layer and block names) and the Rust test
+tree's ids; the project's name, plot scale, active layer and its block definitions as (id, name)) and the Rust test
 (crates/server/application/tests/processing_job_cases.rs) builds the two documents the description names and compares
 what its function answers.
 
@@ -21,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/server-jobs/v1/processing.json"
 
-MAX_CHANGES = 5000
+MAX_CHANGES = 100_000
 SELECTION_MAX = 100_000
 PARAMETERS_MAX = 256
 MEMORY_FLOOR_MB = 64
@@ -126,14 +127,19 @@ def content(e: dict):
 
 def delta(before: dict, after: dict) -> dict:
     before, after = expand(before), expand(after)
-    if before.get("blocks", []) != after.get("blocks", []):
-        return {"refused": "unsupported_change"}
+    was_blocks = {b[0]: b for b in before.get("blocks", [])}
+    now_blocks = {b[0]: b for b in after.get("blocks", [])}
+    blocks = {
+        "created": [i for i in now_blocks if i not in was_blocks],
+        "updated": [i for i in now_blocks if i in was_blocks and now_blocks[i] != was_blocks[i]],
+        "deleted": [i for i in was_blocks if i not in now_blocks],
+    }
     was = {e["uid"]: e for e in before["entities"]}
     kept = {e["uid"] for e in after["entities"]}
     created = [e["uid"] for e in after["entities"] if e["uid"] not in was]
     updated = [e["uid"] for e in after["entities"] if e["uid"] in was and content(e) != content(was[e["uid"]])]
     deleted = [e["uid"] for e in before["entities"] if e["uid"] not in kept]
-    if len(created) + len(updated) + len(deleted) > MAX_CHANGES:
+    if len(created) + len(updated) + len(deleted) + sum(len(v) for v in blocks.values()) > MAX_CHANGES:
         return {"refused": "too_many_changes"}
     patch = []
     if before["name"] != after["name"]:
@@ -149,6 +155,7 @@ def delta(before: dict, after: dict) -> dict:
         "added": len(created),
         "changed": len(updated),
         "removed": len(deleted),
+        "blocks": blocks,
     }
     # The ids are listed for a small delta; a big one (the generated ones) is told by its counts alone.
     for key, ids in (("created", created), ("updated", updated), ("deleted", deleted)):
@@ -203,18 +210,24 @@ def delta_cases() -> list[dict]:
     add("the project renamed", drawing(), drawing(name="Yeni ad"))
     add("the plot scale changed", drawing(), drawing(scale=500.0))
     add("metadata and objects together", drawing(entities=base), drawing(layers=("cizim", "sonuc"), name="Başka", scale=250.0, entities=[*base, pt(9, layer="sonuc")]))
-    add("a block added is not carried", drawing(), drawing(blocks=("Kapı",)))
-    add("a block removed is not carried", drawing(blocks=("Kapı",)), drawing())
-    add("a block renamed is not carried", drawing(blocks=("Kapı",)), drawing(blocks=("Pencere",)))
-    add("blocks beside objects: the blocks refuse", drawing(entities=base, blocks=("Kapı",)), drawing(entities=[*base, pt(4)], blocks=("Kapı", "Yeni")))
-    add("the same blocks and a created object", drawing(entities=base, blocks=("Kapı",)), drawing(entities=[*base, pt(4)], blocks=("Kapı",)))
-    add("exactly the most a command takes", drawing(), drawing(generate={"count": MAX_CHANGES, "layer": "cizim"}))
+    door, window, gate = (1, "Kapı"), (2, "Pencere"), (3, "Kapı")
+    add("a block added is carried", drawing(), drawing(blocks=(door,)))
+    add("a block removed is carried", drawing(blocks=(door,)), drawing())
+    add("a block renamed is replaced", drawing(blocks=(door,)), drawing(blocks=((1, "Pencere"),)))
+    add("another block under the same name is a new one and the old is gone", drawing(blocks=(door,)), drawing(blocks=(gate,)))
+    add("blocks beside objects", drawing(entities=base, blocks=(door,)), drawing(entities=[*base, pt(4)], blocks=(door, window)))
+    add("the same blocks and a created object", drawing(entities=base, blocks=(door,)), drawing(entities=[*base, pt(4)], blocks=(door,)))
+    add("two blocks, one replaced, one removed, one made", drawing(blocks=(door, window)), drawing(blocks=((1, "Kapı 2"), (4, "Yeni"))))
+    add("a block change beside metadata", drawing(), drawing(name="Başka", blocks=(door,)))
+    add("the most a job takes: a hundred thousand objects", drawing(), drawing(generate={"count": MAX_CHANGES, "layer": "cizim"}))
     add("one past the most", drawing(), drawing(generate={"count": MAX_CHANGES + 1, "layer": "cizim"}))
+    add("an object and a block past the most together", drawing(), drawing(blocks=(door,), generate={"count": MAX_CHANGES, "layer": "cizim"}))
     add(
         "a removal and a creation count together",
-        drawing(generate={"count": 2600, "layer": "cizim"}),
-        drawing(generate={"count": 2600, "layer": "cizim", "from": 2601}),
+        drawing(generate={"count": 50_001, "layer": "cizim"}),
+        drawing(generate={"count": 50_001, "layer": "cizim", "from": 50_002}),
     )
+    add("more than a request takes, within a job's", drawing(), drawing(generate={"count": 6000, "layer": "cizim"}))
     add("many unchanged objects are not changes", drawing(generate={"count": 6000, "layer": "cizim"}), drawing(generate={"count": 6000, "layer": "cizim"}))
     add("a change of place the size of a float step", drawing(entities=[pt(1, x=0.1)]), drawing(entities=[pt(1, x=0.1 + 1e-16)]))
     return [{"name": n, "before": b, "after": a, "expect": delta(b, a)} for n, b, a in cases]

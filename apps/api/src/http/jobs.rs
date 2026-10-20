@@ -1,6 +1,7 @@
 //! The routes of durable server jobs (docs/adr/0542): asking for one, listing and reading a project's jobs, cancelling
-//! one and downloading a succeeded job's file (an export's `.kcad`, a processing job's GeoPackage, docs/adr/0559). The server's workers run them (`kentosd serve` beside the API, or
-//! `kentosd worker` alone).
+//! one and downloading a succeeded job's file (an export's `.kcad`, a processing job's GeoPackage, docs/adr/0559, an
+//! atlas's PDF, docs/adr/0561). The server's workers run them (`kentosd serve` beside the API, or `kentosd worker`
+//! alone).
 
 use axum::Json;
 use axum::body::Body;
@@ -103,7 +104,11 @@ pub async fn artifact(
         let revision = job
             .result
             .as_ref()
-            .and_then(|r| r["revision"].as_str().or_else(|| r["baseRevision"].as_str()))
+            .and_then(|r| {
+                r["revision"]
+                    .as_str()
+                    .or_else(|| r["baseRevision"].as_str())
+            })
             .unwrap_or_default()
             .to_owned();
         let size: u64 = artifact.size.parse().unwrap_or(0);
@@ -138,6 +143,12 @@ pub async fn artifact(
             }
         }
         kcad_headers(h, &artifact.sha256, &revision, &artifact.name);
+        if artifact.name.ends_with(".pdf") {
+            h.insert(
+                header::CONTENT_TYPE,
+                HeaderValue::from_static("application/pdf"),
+            );
+        }
         if start.is_some() {
             *response.status_mut() = StatusCode::PARTIAL_CONTENT;
         }

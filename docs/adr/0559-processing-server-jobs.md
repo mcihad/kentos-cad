@@ -9,14 +9,11 @@
   - 0253 (komut protokolü), 0550 (erişim çözücüsü: kesilmiş kopya), 0015 (proje erişimi);
   - CLAUDE.md §9.2, §18.
 - **Web:** ertelendi (ADR 0228). Web'de gerekenler TODOS.md §0.2'de.
-- **Sonraya kalan:**
-  - MCP'de iş türleri (bugün sunucu işleri MCP'de yok; Python'da var);
-  - sonuçta blok tanımı değişen araçlar (`unsupported_change`) ve 5000'den çok nesne yazan araçlar (`too_many_changes`): çok komutlu
-    commit, Dosyaya yaz ile giderilir;
+- **Sonraya kalan** (MCP'de iş türleri, blok tanımı yazan sonuçlar, 5000'den çok nesne yazan sonuçlar, büyük içe aktarma ve atlas PDF'i
+  [ADR 0561](0561-import-atlas-and-mcp-jobs.md) ile kapandı; blok tanımı delta'ya girdi ve işin kesinleşmesi 100 000 değişikliğe çıktı):
   - dosya alan ya da uzaktan okuyan araçlar (raster, nokta bulutu, dosya parametresi): sunucuda yerel dosya yok, o araçlar reddedilir
     ya da `tool_failed` verir; proje içinde gömülü olanlar çalışır;
   - modeller (`model:` kimlikleri) sunucuda çalışmaz;
-  - büyük içe aktarma ve atlas PDF'i iş türleri;
   - Linux'ta `/proc` ölçümünün gerçek bir Linux sunucuda sınanması (bu işte yalnız ayrıştırıcıları birim testli, macOS'ta `ps` yolu
     gerçek süreçle sınandı) ve cgroup ile işletim sistemi düzeyinde bellek tavanı;
   - kullanıcı başına iş kotası (bugün kurum başına sayı ve iş başına CPU/bellek var);
