@@ -931,6 +931,39 @@ impl Cloud {
         })
     }
 
+    /// Opens a file staged for a server job (`POST …/job-inputs`, docs/adr/0561 §1): its name, size and SHA-256.
+    pub fn begin_job_input(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+        begin: kentos_contracts::JobInputBegin,
+    ) -> impl Future<Output = Result<kentos_contracts::JobInput, ApiFailure>> + Send + 'static {
+        self.call(move |inner| async move {
+            let url = inner.project_url(tenant, project, "/job-inputs")?;
+            let b = Inner::json_body(inner.request(Method::POST, url, TIMEOUT), &begin)?;
+            inner.json(b, TIMEOUT).await
+        })
+    }
+
+    /// The staged file's bytes (`PUT …/job-inputs/{input}`), one body; every try of the same file shares them
+    /// without a copy. The server keeps them only when their size and SHA-256 are the declared ones.
+    pub fn send_job_input(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+        input: Uuid,
+        bytes: bytes::Bytes,
+    ) -> impl Future<Output = Result<kentos_contracts::JobInput, ApiFailure>> + Send + 'static {
+        self.call(move |inner| async move {
+            let url = inner.project_url(tenant, project, &format!("/job-inputs/{input}"))?;
+            let b = inner
+                .request(Method::PUT, url, FILE_TIMEOUT)
+                .header(header::CONTENT_TYPE, "application/octet-stream")
+                .body(bytes);
+            inner.json(b, FILE_TIMEOUT).await
+        })
+    }
+
     /// Opens an upload for a file of this size and SHA-256 (`POST …/uploads`).
     pub fn begin_upload(
         &self,

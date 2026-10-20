@@ -12,7 +12,7 @@ use iced::widget::Column;
 use iced::{Element, Task};
 use kentos_commands::{
     CommandResult, CommandWarning, CsvExported, CsvGeometry, CsvGeometryIn, CsvSeparator,
-    ExportCsv, GpkgImported, ImportCsv,
+    ExportCsv, GpkgImported, ImportCsv, ImportFormat,
 };
 use kentos_domain::Slot;
 use kentos_interaction::Level;
@@ -21,6 +21,7 @@ use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog, overlay};
 
+use super::server_work;
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Window, message, off_thread};
 use crate::app::{App, Message, Picker};
@@ -120,6 +121,23 @@ fn event(e: Event) -> Message {
 }
 
 impl ImportState {
+    /// What “Sunucuya içe aktar” asks of the server for the window as it stands (docs/adr/0561 §4).
+    pub(super) fn server_work(&self) -> server_work::Work {
+        let mut chosen = vec![format!("Geometri: {}.", self.form)];
+        if self.reproject {
+            chosen.push("Başka sistemdeyse projenin sistemine çevrilir.".to_owned());
+        }
+        server_work::Work::import(
+            ImportFormat::Csv,
+            self.path
+                .file_name()
+                .map_or_else(String::new, |n| n.to_string_lossy().into_owned()),
+            server_work::Source::Path(self.path.clone()),
+            serde_json::to_value(self.input()).unwrap_or_default(),
+            chosen,
+        )
+    }
+
     fn input(&self) -> ImportCsv {
         let col = |i: usize| self.columns.get(i).cloned().unwrap_or_default();
         ImportCsv {
@@ -601,9 +619,12 @@ impl App {
         if let Some(text) = &s.status {
             body = body.push(words::text_line(Line::Error, text.clone()));
         }
+        let mut dialog = Dialog::new("CSV içe aktar").scroll(body);
+        if let Some(button) = self.server_work_button(s.server_work()) {
+            dialog = dialog.action(button);
+        }
         overlay::blocking(
-            Dialog::new("CSV içe aktar")
-                .scroll(body)
+            dialog
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary(
                     "İçe aktar",

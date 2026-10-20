@@ -10,7 +10,9 @@ Standard library only (``urllib``).
 
 from __future__ import annotations
 
+import io
 import json
+import os
 import socket
 import urllib.error
 import urllib.parse
@@ -140,6 +142,36 @@ class Connection:
         response = self._send(method, path, text)
         with response:
             data = response.read()
+        return json.loads(data) if data else None
+
+    def _put_file(self, path: str, source: Any, size: int) -> Any:
+        """Sends a file's bytes as one streamed body (``source``: an open binary file) and gives the answer."""
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/octet-stream",
+            "Content-Length": str(size),
+            "x-kentos-client": CLIENT,
+        }
+        if self._token is not None:
+            headers["Cookie"] = f"{SESSION_COOKIE}={self._token}"
+        request = urllib.request.Request(self.url + path, data=source, method="PUT", headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=max(self.timeout, 600.0)) as response:
+                data = response.read()
+        except urllib.error.HTTPError as err:
+            with err:
+                raw = err.read()
+            try:
+                answer = json.loads(raw) if raw else {}
+            except ValueError:
+                answer = {}
+            raise server_error(err.code, answer if isinstance(answer, dict) else {}) from None
+        except (urllib.error.URLError, socket.timeout, TimeoutError, ConnectionError) as err:
+            reason = getattr(err, "reason", err)
+            raise Unreachable(
+                "unreachable",
+                f"{self.url} yanıt vermedi ({reason}). Aynı dosya yeniden gönderilebilir: yarım kalan bayt saklanmaz.",
+            ) from None
         return json.loads(data) if data else None
 
     def _bytes(self, path: str) -> bytes:
@@ -309,6 +341,140 @@ class ProjectRef:
         answer: dict[str, Any] = self.connection._request("POST", self._jobs(), body)
         return answer
 
+    def stage_file(self, file: str | os.PathLike[str] | bytes, *, name: str | None = None) -> dict[str, Any]:
+        """Sends a file to the server for a job to read (docs/adr/0561 §1): the file's path (or its bytes, with
+        ``name``), its size and SHA-256 declared, its bytes streamed in one body. A cut-off send keeps nothing; sending
+        the same file again is safe. The answer's ``id`` is what ``import_job`` names as its ``upload``."""
+        import hashlib
+
+        if isinstance(file, bytes):
+            if name is None:
+                raise ValueError("Baytlar verilince dosyanın adı (name=) da gerekir.")
+            digest = hashlib.sha256(file).hexdigest()
+            size = len(file)
+            opened: Any = io.BytesIO(file)
+        else:
+            path = os.fspath(file)
+            name = name or os.path.basename(path)
+            h = hashlib.sha256()
+            with open(path, "rb") as f:
+                for chunk in iter(lambda: f.read(1 << 20), b""):
+                    h.update(chunk)
+            digest = h.hexdigest()
+            size = os.path.getsize(path)
+            opened = open(path, "rb")
+        tenant = urllib.parse.quote(self.tenant_id, safe="")
+        project = urllib.parse.quote(self.project_id, safe="")
+        base = f"/v1/tenants/{tenant}/projects/{project}/job-inputs"
+        try:
+            begun: dict[str, Any] = self.connection._request(
+                "POST", base, {"name": name, "size": size, "sha256": digest}
+            )
+            sent: dict[str, Any] = self.connection._put_file(f"{base}/{begun['id']}", opened, size)
+        finally:
+            opened.close()
+        return sent
+
+    def import_job(
+        self,
+        file: str | os.PathLike[str] | bytes | None = None,
+        *,
+        upload: str | None = None,
+        name: str | None = None,
+        format: str | None = None,
+        options: Mapping[str, Any] | None = None,
+        expected_revision: str | None = None,
+        label: str | None = None,
+        cpu_seconds: int | None = None,
+        memory_mb: int | None = None,
+        request_id: str | None = None,
+        timeout_seconds: int | None = None,
+    ) -> dict[str, Any]:
+        """Asks the server to take a file into the project (``project.import``; docs/adr/0561): a GeoPackage, a
+        FlatGeobuf, a GML, a CSV or a DXF, read by the same command as the desktop's (``file.import.gpkg`` …), on a
+        worker, under a CPU and memory budget, the result committed in one revision if the project is still at the
+        revision the worker read. ``file`` is a path (or bytes with ``name``) sent first (``stage_file``), or give the
+        ``upload`` id of a file already sent. ``format`` is ``gpkg``, ``fgb``, ``gml``, ``csv`` or ``dxf``; absent, the
+        file's name tells. ``options`` are the import command's own (``tables``, ``layers``, ``reproject``, ``srid``,
+        ``layer``, ``geometry``, ``fileUnit``, ``explodeBlocks`` …), never a path. The job's ``result`` holds the
+        counts, the new revision, the command's answer and its warnings (what the file could not give)."""
+        if (file is None) == (upload is None):
+            raise ValueError("Ya file ya da upload verin.")
+        if upload is None:
+            upload = str(self.stage_file(file, name=name)["id"])  # type: ignore[arg-type]
+        input_: dict[str, Any] = {"upload": upload}
+        if format is not None:
+            input_["format"] = format
+        if options:
+            input_["options"] = dict(options)
+        if label:
+            input_["label"] = label
+        if expected_revision is not None:
+            input_["expectedRevision"] = expected_revision
+        if cpu_seconds is not None:
+            input_["cpuSeconds"] = cpu_seconds
+        if memory_mb is not None:
+            input_["memoryMb"] = memory_mb
+        body: dict[str, Any] = {
+            "kind": "project.import",
+            "input": input_,
+            "requestId": request_id or str(uuid.uuid4()),
+        }
+        if timeout_seconds is not None:
+            body["timeoutSeconds"] = timeout_seconds
+        answer: dict[str, Any] = self.connection._request("POST", self._jobs(), body)
+        return answer
+
+    def atlas_job(
+        self,
+        sheet: str,
+        *,
+        fields: Sequence[str] | None = None,
+        theme: str | None = None,
+        time: str | None = None,
+        crs: int | None = None,
+        pin: Mapping[str, Any] | None = None,
+        expected_revision: str | None = None,
+        label: str | None = None,
+        cpu_seconds: int | None = None,
+        memory_mb: int | None = None,
+        request_id: str | None = None,
+        timeout_seconds: int | None = None,
+    ) -> dict[str, Any]:
+        """Asks the server to write the atlas of a sheet as one PDF (``project.atlas``; docs/adr/0561): the same
+        ``file.export.atlas`` as the desktop's, on a worker, the project at one revision. ``pin`` is the state a plan
+        pinned (``cad.file.export.atlas.plan(...).pin``): a project that is not in that state refuses the job
+        (``pin_mismatch``). ``job_artifact`` fetches the PDF; the job's ``result`` holds the pages, the pin's digest,
+        what the pages carry and what they withhold."""
+        input_: dict[str, Any] = {"sheet": sheet}
+        if fields is not None:
+            input_["fields"] = list(fields)
+        if theme is not None:
+            input_["theme"] = theme
+        if time is not None:
+            input_["time"] = time
+        if crs is not None:
+            input_["crs"] = crs
+        if pin is not None:
+            input_["pin"] = dict(pin)
+        if label:
+            input_["label"] = label
+        if expected_revision is not None:
+            input_["expectedRevision"] = expected_revision
+        if cpu_seconds is not None:
+            input_["cpuSeconds"] = cpu_seconds
+        if memory_mb is not None:
+            input_["memoryMb"] = memory_mb
+        body: dict[str, Any] = {
+            "kind": "project.atlas",
+            "input": input_,
+            "requestId": request_id or str(uuid.uuid4()),
+        }
+        if timeout_seconds is not None:
+            body["timeoutSeconds"] = timeout_seconds
+        answer: dict[str, Any] = self.connection._request("POST", self._jobs(), body)
+        return answer
+
     def jobs(self) -> list[dict[str, Any]]:
         """The project's server jobs, newest first."""
         answer: dict[str, Any] = self.connection._request("GET", self._jobs())
@@ -339,8 +505,8 @@ class ProjectRef:
             time.sleep(every)
 
     def job_artifact(self, job: str) -> bytes:
-        """A succeeded job's file: an export's ``.kcad`` (``Document.from_bytes`` opens it) or a processing job's
-        GeoPackage (``mode="sink"``). A server that limits an organisation's jobs
+        """A succeeded job's file: an export's ``.kcad`` (``Document.from_bytes`` opens it), a processing job's
+        GeoPackage (``mode="sink"``) or an atlas's PDF. A server that limits an organisation's jobs
         answers a request past the limit with ``ServerError`` (code ``quota_exceeded``, ``retryable``)."""
         return self.connection._bytes(f"{self._jobs()}/{urllib.parse.quote(job, safe='')}/artifact")
 

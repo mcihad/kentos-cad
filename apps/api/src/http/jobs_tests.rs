@@ -207,11 +207,11 @@ impl kentos_application::processing_job::Processor for Words {
         kentos_application::processing_job::ProcessFailure,
     > {
         hooks.progress.set(0.7, "Araç çalışıyor");
-        assert_eq!(task.input.tool, "geometry.buffer");
+        assert_eq!(task.tool().unwrap().tool, "geometry.buffer");
         Ok(kentos_application::processing_job::Processed {
             summary: "3 tampon yapıldı".into(),
-            sink: Some(b"GPKG-bytes".to_vec()),
-            sink_rows: 3,
+            file: Some(b"GPKG-bytes".to_vec()),
+            rows: 3,
             ..Default::default()
         })
     }
@@ -264,9 +264,7 @@ async fn a_processing_job_is_asked_checked_run_and_its_file_downloaded_over_http
     .await;
     let project = serde_json::from_slice::<ProjectInfo>(&body).unwrap().id;
     let base = format!("/v1/tenants/{tenant}/projects/{project}/jobs");
-    let ask = |request: &str, input: serde_json::Value| {
-        serde_json::json!({ "kind": "project.processing", "input": input, "requestId": request })
-    };
+    let ask = |request: &str, input: serde_json::Value| serde_json::json!({ "kind": "project.processing", "input": input, "requestId": request });
 
     // A local file in a value is refused where it is, in the request's own words.
     let (status, _, body) = send(
@@ -371,5 +369,253 @@ async fn a_processing_job_is_asked_checked_run_and_its_file_downloaded_over_http
     // Another organisation finds the job as it finds no project.
     let (status, _, _) = send(&router, get(&one, &can)).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
+    db.close().await;
+}
+
+/// A processor that takes the staged file in as one point and writes an atlas of a few bytes (docs/adr/0561).
+struct Kinds;
+
+impl kentos_application::processing_job::Processor for Kinds {
+    fn process(
+        &self,
+        task: &kentos_application::processing_job::ProcessingTask,
+        hooks: &kentos_application::processing_job::ProcessHooks,
+    ) -> Result<
+        kentos_application::processing_job::Processed,
+        kentos_application::processing_job::ProcessFailure,
+    > {
+        use kentos_application::processing_job::{Delta, Processed, RunRequest};
+        hooks.progress.set(0.5, "Çalışıyor");
+        match &task.request {
+            RunRequest::Import(run) => {
+                let staged = task.file.as_ref().expect("the file");
+                assert_eq!(std::fs::read(&staged.path).unwrap(), b"X,Y\n1,2\n");
+                assert_eq!(run.name, "noktalar.csv");
+                let entity: kentos_contracts::Entity = serde_json::from_value(serde_json::json!({
+                    "kind": "point", "id": 0, "layerId": "cizim", "attrs": {}, "p": { "x": 1.0, "y": 2.0 }
+                }))
+                .unwrap();
+                Ok(Processed {
+                    summary: "1 nesne eklendi".into(),
+                    delta: Some(Delta {
+                        features: vec![kentos_contracts::FeatureChange::Create {
+                            id: uuid::Uuid::new_v4().to_string(),
+                            entity,
+                        }],
+                        added: 1,
+                        ..Delta::default()
+                    }),
+                    ..Processed::default()
+                })
+            }
+            RunRequest::Atlas(_) => Ok(Processed {
+                summary: "1 sayfalık atlas".into(),
+                file: Some(b"%PDF-1.7 atlas-bytes".to_vec()),
+                details: serde_json::json!({ "pages": [{ "name": "A1/1" }], "pin": { "digest": "ab" } }),
+                ..Processed::default()
+            }),
+            RunRequest::Processing(_) => unreachable!("a tool is not asked here"),
+        }
+    }
+}
+
+#[tokio::test]
+async fn a_file_is_staged_imported_by_a_job_and_an_atlas_downloaded_over_http() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let tenant = admin::create_tenant(&db.owner, "buro", "Harita Bürosu", 3)
+        .await
+        .unwrap()
+        .to_string();
+    admin::create_tenant(&db.owner, "diger", "Diğer", 2)
+        .await
+        .unwrap();
+    for (login, t, role) in [
+        ("ayse", "buro", TenantRole::ProjectManager),
+        ("can", "diger", TenantRole::Owner),
+    ] {
+        admin::create_local_user(&db.owner, login, login, None, "dogru-parola-1")
+            .await
+            .unwrap();
+        admin::set_membership(&db.owner, t, login, role, true)
+            .await
+            .unwrap();
+    }
+    let store = kentos_application::blobs::Blobs::new(
+        std::env::temp_dir().join(format!("kentos-api-jobs-{}", uuid::Uuid::now_v7())),
+    );
+    let router = app_with(Some(db.app.clone()), store.clone());
+    let (ayse, can) = (
+        signed_in(&router, "ayse").await,
+        signed_in(&router, "can").await,
+    );
+    let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
+        "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
+    let create = serde_json::json!({ "name": "Ada 3", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+        "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
+    let (_, _, body) = send(
+        &router,
+        json_req(
+            "POST",
+            &format!("/v1/tenants/{tenant}/projects"),
+            &ayse,
+            create,
+        ),
+    )
+    .await;
+    let project = serde_json::from_slice::<ProjectInfo>(&body).unwrap().id;
+    let base = format!("/v1/tenants/{tenant}/projects/{project}");
+    let content: &[u8] = b"X,Y\n1,2\n";
+    let sha: String = Sha256::digest(content)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
+
+    // A file is asked for (its size and hash declared), sent in one body, and told to have arrived.
+    let (status, _, body) = send(
+        &router,
+        json_req(
+            "POST",
+            &format!("{base}/job-inputs"),
+            &ayse,
+            serde_json::json!({ "name": "noktalar.csv", "size": content.len(), "sha256": sha }),
+        ),
+    )
+    .await;
+    assert_eq!(
+        status,
+        StatusCode::CREATED,
+        "{}",
+        String::from_utf8_lossy(&body)
+    );
+    let staged: kentos_contracts::JobInput = serde_json::from_slice(&body).unwrap();
+    assert!(!staged.received);
+    let put = |bytes: &[u8], cookie: &str| {
+        axum::http::Request::put(format!("{base}/job-inputs/{}", staged.id))
+            .header(axum::http::header::COOKIE, cookie)
+            .header("x-kentos-client", "web")
+            .header(axum::http::header::CONTENT_TYPE, "application/octet-stream")
+            .body(axum::body::Body::from(bytes.to_vec()))
+            .unwrap()
+    };
+    // Other bytes are refused and nothing is kept; another organisation finds the file as no project's.
+    let (status, _, _) = send(&router, put(b"X,Y\n9,9\n", &ayse)).await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    let (status, _, _) = send(&router, put(content, &can)).await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    let (status, _, body) = send(&router, put(content, &ayse)).await;
+    assert_eq!(status, StatusCode::OK, "{}", String::from_utf8_lossy(&body));
+    assert!(
+        serde_json::from_slice::<kentos_contracts::JobInput>(&body)
+            .unwrap()
+            .received
+    );
+    let (_, _, body) = send(
+        &router,
+        get(&format!("{base}/job-inputs/{}", staged.id), &ayse),
+    )
+    .await;
+    assert!(
+        serde_json::from_slice::<kentos_contracts::JobInput>(&body)
+            .unwrap()
+            .received
+    );
+    // A file that does not exist is not a file to import, in the request's own words.
+    let jobs_uri = format!("{base}/jobs");
+    let (status, _, body) = send(
+        &router,
+        json_req(
+            "POST",
+            &jobs_uri,
+            &ayse,
+            serde_json::json!({ "kind": "project.import", "requestId": "i-0",
+                "input": { "upload": uuid::Uuid::now_v7().to_string() } }),
+        ),
+    )
+    .await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    assert_eq!(
+        serde_json::from_slice::<serde_json::Value>(&body).unwrap()["path"],
+        "input.upload"
+    );
+
+    // The import is asked for and run; the atlas too, its PDF downloaded in parts.
+    let (status, _, body) = send(
+        &router,
+        json_req(
+            "POST",
+            &jobs_uri,
+            &ayse,
+            serde_json::json!({ "kind": "project.import", "requestId": "i-1", "input": { "upload": staged.id } }),
+        ),
+    )
+    .await;
+    assert_eq!(
+        status,
+        StatusCode::CREATED,
+        "{}",
+        String::from_utf8_lossy(&body)
+    );
+    let import: ServerJob = serde_json::from_slice(&body).unwrap();
+    let (status, _, body) = send(
+        &router,
+        json_req(
+            "POST",
+            &jobs_uri,
+            &ayse,
+            serde_json::json!({ "kind": "project.atlas", "requestId": "a-1", "input": { "sheet": "atlas-paftasi" } }),
+        ),
+    )
+    .await;
+    assert_eq!(
+        status,
+        StatusCode::CREATED,
+        "{}",
+        String::from_utf8_lossy(&body)
+    );
+    let atlas: ServerJob = serde_json::from_slice(&body).unwrap();
+    let processor: std::sync::Arc<dyn kentos_application::processing_job::Processor> =
+        std::sync::Arc::new(Kinds);
+    for _ in 0..2 {
+        jobs::work_once_with(
+            &db.app,
+            &store,
+            uuid::Uuid::now_v7(),
+            std::time::Duration::from_secs(30),
+            &Default::default(),
+            Some(processor.clone()),
+        )
+        .await
+        .unwrap()
+        .expect("a job ran");
+    }
+    let (_, _, body) = send(&router, get(&format!("{jobs_uri}/{}", import.id), &ayse)).await;
+    let done: ServerJob = serde_json::from_slice(&body).unwrap();
+    assert_eq!(done.state, ServerJobState::Succeeded, "{:?}", done.error);
+    assert_eq!(done.result.as_ref().unwrap()["command"], "file.import.csv");
+    assert_eq!(done.result.as_ref().unwrap()["revision"], "1");
+    let (_, _, body) = send(&router, get(&format!("{jobs_uri}/{}", atlas.id), &ayse)).await;
+    let done: ServerJob = serde_json::from_slice(&body).unwrap();
+    assert_eq!(done.state, ServerJobState::Succeeded, "{:?}", done.error);
+    assert_eq!(done.result.as_ref().unwrap()["pages"], 1);
+    let artifact_uri = format!("{jobs_uri}/{}/artifact", atlas.id);
+    let (status, headers, pdf) = send(&router, get(&artifact_uri, &ayse)).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(headers["content-type"], "application/pdf");
+    assert_eq!(&pdf[..], b"%PDF-1.7 atlas-bytes");
+    assert!(
+        headers["content-disposition"]
+            .to_str()
+            .unwrap()
+            .contains("Ada 3 - atlas-paftasi.pdf")
+    );
+    let mut ranged = get(&artifact_uri, &ayse);
+    ranged
+        .headers_mut()
+        .insert(axum::http::header::RANGE, "bytes=5-".parse().unwrap());
+    let (status, _, rest) = send(&router, ranged).await;
+    assert_eq!(status, StatusCode::PARTIAL_CONTENT);
+    assert_eq!([&pdf[..5], &rest[..]].concat(), pdf);
     db.close().await;
 }

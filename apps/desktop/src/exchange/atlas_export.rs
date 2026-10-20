@@ -129,6 +129,44 @@ impl Definition {
 }
 
 impl App {
+    /// What “Atlası sunucuda yap” asks of the server for the window as it stands (docs/adr/0561 §4): the sheet, the
+    /// theme and the moment chosen, and the pin the preview showed; none while there is no preview.
+    pub(crate) fn atlas_server_work(s: &State) -> Option<super::server_work::Work> {
+        let (Ok(planned), Some(row)) = (&s.plan, s.sheets.get(s.sheet)) else {
+            return None;
+        };
+        let theme = s
+            .theme
+            .checked_sub(1)
+            .and_then(|i| s.themes.get(i))
+            .cloned();
+        let time = (!s.time.trim().is_empty()).then(|| s.time.trim().to_owned());
+        let mut lines = vec![format!(
+            "{} sayfa; pafta “{}”.",
+            planned.pages.len(),
+            row.name
+        )];
+        if let Some(t) = &theme {
+            lines.push(format!("Tema: {t}."));
+        }
+        if let Some(t) = &time {
+            lines.push(format!("Zaman: {t}."));
+        }
+        Some(super::server_work::Work::Atlas {
+            input: Box::new(kentos_commands::ProjectAtlasInput {
+                sheet: row.id.clone(),
+                theme,
+                time,
+                pin: Some(planned.pin.clone()),
+                label: Some(row.name.clone()),
+                ..kentos_commands::ProjectAtlasInput::default()
+            }),
+            sheet: row.name.clone(),
+            pages: planned.pages.len(),
+            lines,
+        })
+    }
+
     /// The window's state for the open drawing, the sheet `keep` (by id) chosen when it is still there.
     fn atlas_state(&self, keep: Option<&str>, old: Option<&State>) -> Result<State, String> {
         let Some(doc) = &self.document else {
@@ -674,9 +712,16 @@ impl App {
             container(preview).width(iced::Length::FillPortion(6)),
         ]
         .spacing(16);
+        let mut dialog = Dialog::new("Atlası PDF yap").scroll(body);
+        // The server makes the same pages from the state the preview pinned (docs/adr/0561 §4).
+        if ready
+            && let Some(work) = Self::atlas_server_work(s)
+            && let Some(button) = self.server_work_button(work)
+        {
+            dialog = dialog.action(button);
+        }
         overlay::blocking(
-            Dialog::new("Atlası PDF yap")
-                .scroll(body)
+            dialog
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary(
                     "Dışa aktar…",

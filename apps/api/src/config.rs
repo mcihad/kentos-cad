@@ -51,7 +51,7 @@ pub struct Config {
     pub workers: u32,
     /// What server jobs may take (`KENTOS_JOB_LIMIT`: queued and running jobs of one organisation together,
     /// 1–10 000, default 50; `KENTOS_JOB_ARTIFACT_MAX_MB`: the biggest artifact of a job, 1–1 048 576 MB, default
-    /// 2 048; docs/adr/0547).
+    /// 2 048; docs/adr/0547; `KENTOS_JOB_INPUT_MAX_MB`: the biggest file staged for an import job, default 2 048).
     pub job_limits: kentos_application::jobs::JobLimits,
     /// How long a finished job and its artifact are kept (`KENTOS_JOB_RETENTION_DAYS`, 1–3650 days, default 14).
     pub job_retention: Duration,
@@ -72,13 +72,15 @@ pub fn job_retention(value: Option<&str>) -> Result<Duration, String> {
     )
 }
 
-/// `KENTOS_JOB_LIMIT`, `KENTOS_JOB_ARTIFACT_MAX_MB`, `KENTOS_JOB_CPU_SECONDS` and `KENTOS_JOB_MEMORY_MB`: what server
-/// jobs may take (the last two are a `project.processing` job's budget, docs/adr/0559 §4).
+/// `KENTOS_JOB_LIMIT`, `KENTOS_JOB_ARTIFACT_MAX_MB`, `KENTOS_JOB_CPU_SECONDS`, `KENTOS_JOB_MEMORY_MB` and
+/// `KENTOS_JOB_INPUT_MAX_MB`: what server jobs may take (CPU and memory are a worker-run job's budget, docs/adr/0559 §4;
+/// the last is the biggest file staged for a `project.import` job, docs/adr/0561 §1).
 pub fn job_limits(
     limit: Option<&str>,
     artifact_mb: Option<&str>,
     cpu_seconds: Option<&str>,
     memory_mb: Option<&str>,
+    input_mb: Option<&str>,
 ) -> Result<kentos_application::jobs::JobLimits, String> {
     let defaults = kentos_application::jobs::JobLimits::default();
     let number = |name: &str, value: Option<&str>, max: u64, default: u64| -> Result<u64, String> {
@@ -116,11 +118,18 @@ pub fn job_limits(
         4_194_304,
         u64::from(defaults.memory_mb),
     )?;
+    let input = number(
+        "KENTOS_JOB_INPUT_MAX_MB",
+        input_mb,
+        1_048_576,
+        defaults.input_max / (1024 * 1024),
+    )?;
     Ok(kentos_application::jobs::JobLimits {
         tenant_active: u32::try_from(tenant_active).unwrap_or(u32::MAX),
         artifact_max: mb * 1024 * 1024,
         cpu_seconds: u32::try_from(cpu).unwrap_or(u32::MAX),
         memory_mb: u32::try_from(memory).unwrap_or(u32::MAX),
+        input_max: input * 1024 * 1024,
     })
 }
 
@@ -223,6 +232,7 @@ impl Config {
                 get("KENTOS_JOB_ARTIFACT_MAX_MB").as_deref(),
                 get("KENTOS_JOB_CPU_SECONDS").as_deref(),
                 get("KENTOS_JOB_MEMORY_MB").as_deref(),
+                get("KENTOS_JOB_INPUT_MAX_MB").as_deref(),
             )?,
             job_retention: job_retention(get("KENTOS_JOB_RETENTION_DAYS").as_deref())?,
             env_file,
@@ -264,12 +274,20 @@ mod tests {
                 .unwrap_err()
                 .contains("KENTOS_JOB_RETENTION_DAYS")
         );
-        let defaults = job_limits(None, None, None, None).unwrap();
+        let defaults = job_limits(None, None, None, None, None).unwrap();
         assert_eq!(
             (defaults.tenant_active, defaults.artifact_max),
             (50, 2 << 30)
         );
-        let set = job_limits(Some(" 5 "), Some("64"), Some("90"), Some("512")).unwrap();
+        let set = job_limits(
+            Some(" 5 "),
+            Some("64"),
+            Some("90"),
+            Some("512"),
+            Some("128"),
+        )
+        .unwrap();
+        assert_eq!((defaults.input_max, set.input_max), (2 << 30, 128 << 20));
         assert_eq!((set.tenant_active, set.artifact_max), (5, 64 << 20));
         assert_eq!((defaults.cpu_seconds, defaults.memory_mb), (1_800, 4_096));
         assert_eq!((set.cpu_seconds, set.memory_mb), (90, 512));
@@ -280,7 +298,7 @@ mod tests {
             (None, Some("4194305"), "KENTOS_JOB_MEMORY_MB"),
         ] {
             assert!(
-                job_limits(None, None, cpu, memory)
+                job_limits(None, None, cpu, memory, None)
                     .unwrap_err()
                     .contains(name),
                 "{name}"
@@ -288,16 +306,24 @@ mod tests {
         }
         for bad in ["0", "10001", "x", "-1", ""] {
             assert!(
-                job_limits(Some(bad), None, None, None)
+                job_limits(Some(bad), None, None, None, None)
                     .unwrap_err()
                     .contains("KENTOS_JOB_LIMIT"),
                 "{bad}"
             );
         }
         assert!(
-            job_limits(None, Some("0"), None, None)
+            job_limits(None, Some("0"), None, None, None)
                 .unwrap_err()
                 .contains("KENTOS_JOB_ARTIFACT_MAX_MB")
         );
+        for bad in ["0", "1048577", "x"] {
+            assert!(
+                job_limits(None, None, None, None, Some(bad))
+                    .unwrap_err()
+                    .contains("KENTOS_JOB_INPUT_MAX_MB"),
+                "{bad}"
+            );
+        }
     }
 }

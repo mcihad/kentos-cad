@@ -84,6 +84,9 @@ pub struct Download {
     /// Revizyonla karşılaştır (docs/adr/0210 §8): the point's name; the file goes to a
     /// place of the app's own and opens as Veri karşılaştır's Eski veri, not to a place chosen.
     pub compare: Option<String>,
+    /// The file's extension, without the dot: `kcad` for a drawing, `gpkg` and `pdf` for what a job made
+    /// (docs/adr/0561 §4); the save window offers and adds it.
+    pub extension: &'static str,
 }
 
 /// The action on its way: which, on what, and its request.
@@ -157,6 +160,7 @@ impl App {
                         fetch: Fetch::Project,
                         name,
                         listed: None,
+                        extension: "kcad",
                         compare: None,
                     },
                 )
@@ -474,7 +478,8 @@ impl App {
     /// checked against the server's SHA-256, then written (the web's `downloadKcad`).
     pub(crate) fn catalog_download(&mut self, p: ProjectSummary, d: Download) -> Task<Message> {
         let id = self.cloud.next_id();
-        let file = format!("{}.kcad", safe_name(&d.name));
+        let extension = d.extension;
+        let file = format!("{}.{extension}", safe_name(&d.name));
         let Some(c) = self.cloud.catalog.as_mut() else {
             return Task::none();
         };
@@ -514,17 +519,22 @@ impl App {
         }
         Task::perform(
             async move {
+                let (title, kind) = match extension {
+                    "gpkg" => (".gpkg olarak indir", "GeoPackage (.gpkg)"),
+                    "pdf" => (".pdf olarak indir", "PDF (.pdf)"),
+                    _ => (".kcad olarak indir", "KentOS çizimi (.kcad)"),
+                };
                 let file = rfd::AsyncFileDialog::new()
-                    .set_title(".kcad olarak indir")
-                    .add_filter("KentOS çizimi (.kcad)", &["kcad"])
+                    .set_title(title)
+                    .add_filter(kind, &[extension])
                     .set_file_name(file)
                     .save_file()
                     .await?;
                 let path = file.path().to_path_buf();
-                Some(if path.extension().is_some_and(|e| e == "kcad") {
+                Some(if path.extension().is_some_and(|e| e == extension) {
                     path
                 } else {
-                    path.with_extension("kcad")
+                    path.with_extension(extension)
                 })
             },
             move |path| crate::cloud::msg(Event::CatalogDownloadTo { id, path }),

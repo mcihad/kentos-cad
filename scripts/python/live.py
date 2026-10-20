@@ -19,7 +19,11 @@ real kentosd on a free port, then with kentos.cad only:
 - then the same through the MCP server (kentos-mcp, docs/adr/0134) with ayse's
   account in its environment: the project found in the catalog, opened and
   measured (the same id, 250 m²), shared with mehmet and taken back, and a
-  refusal of the server read with its field.
+  refusal of the server read with its field;
+- server jobs (docs/adr/0561): a GeoPackage staged and taken in by a worker as a job (the project grows by its
+  three objects in one revision), the same file in another coordinate system refused with the command's code
+  (nothing written), the project exported as a job and its file opened; and the same through the MCP tools
+  (`jobs.start`, `jobs.status`, `jobs.result` with a `savePath`).
 
 Run with the SDK's environment after building the server and the MCP server:
 
@@ -152,10 +156,36 @@ def scenario(url: str, password: str) -> tuple[cad.ProjectInfo, str, str]:
     record = back.entity(made.uid)
     assert isinstance(record.entity, cad.PolygonEntity)
     say(f"projenin görüntüsü açıldı: {len(back)} nesne, aynı kimlikle 250 m²")
+    jobs_scenario(project, len(back))
     ayse.logout()
     expect(cad.NotSignedIn, ayse.me)
     say("çıkış yapıldı")
     return created, made.uid, str(mehmet_id)
+
+
+def jobs_scenario(project: cad.ProjectRef, objects: int) -> None:
+    """A file import and an export as server jobs, asked from Python (docs/adr/0561)."""
+    gpkg = ROOT / "fixtures/geopackage/v1/kentos-genis.gpkg"
+    asked = project.import_job(gpkg, label="kentos-genis.gpkg", request_id="live-ice-aktar")
+    again = project.import_job(upload=asked["input"]["upload"], request_id="live-ice-aktar")
+    assert again["id"] == asked["id"], "aynı istek kimliği aynı işi verir"
+    done = project.wait_job(asked["id"], every=0.5, within=180)
+    assert done["state"] == "succeeded", done
+    result = done["result"]
+    assert result["command"] == "file.import.gpkg" and result["added"] == 3, result
+    assert done["progress"] == 1.0
+    say(f"içe aktarma işi: {result['summary']} (veri revizyonu {result['revision']})")
+    refused = project.import_job(
+        ROOT / "fixtures/geopackage/v1/kentos-synced-wgs84.gpkg", request_id="live-ice-aktar-yabanci"
+    )
+    failed = project.wait_job(refused["id"], every=0.5, within=180)
+    assert failed["state"] == "failed" and failed["error"]["code"] == "crs_mismatch", failed
+    say(f"başka sistemdeki dosya reddedildi: {failed['error']['code']}")
+    exported = project.wait_job(project.export_job()["id"], every=0.5, within=180)
+    assert exported["state"] == "succeeded", exported
+    grown = cad.Document.from_bytes(project.job_artifact(exported["id"]))
+    assert len(grown) == objects + 3, (len(grown), objects)
+    say(f"dışa aktarma işi: proje dosyasında {len(grown)} nesne (3'ü içe aktarılan)")
 
 
 class Mcp:
@@ -218,6 +248,32 @@ def mcp_scenario(url: str, password: str, created: cad.ProjectInfo, uid: str, me
         error = refused["structuredContent"]["error"]  # type: ignore[index]
         assert refused["isError"] is True and error["status"] == 422 and error["path"] == "name", refused
         say(f"MCP sunucunun reddi: {error['status']} {error['code']} ({error.get('path')})")
+        scope = {"tenant": created.tenant_id, "project": created.id}
+        started = mcp.call("jobs.start", kind="export", requestId="live-mcp-disa", **scope)
+        assert started["isError"] is False, started
+        job = started["structuredContent"]["id"]  # type: ignore[index]
+        status = mcp.call("jobs.status", job=job, waitSeconds=120, **scope)
+        assert status["structuredContent"]["state"] == "succeeded", status  # type: ignore[index]
+        target = ROOT / ".run" / "live-mcp-export.kcad"
+        target.parent.mkdir(exist_ok=True)
+        target.unlink(missing_ok=True)
+        saved = mcp.call("jobs.result", job=job, savePath=str(target), **scope)
+        assert saved["isError"] is False, saved
+        assert cad.Document.from_bytes(target.read_bytes()).info().name.startswith("Python E2E")
+        say(f"MCP jobs.start, jobs.status ve jobs.result: dışa aktarma işi, dosya {saved['structuredContent']['saved']['bytes']} bayt")  # type: ignore[index]
+        foreign = mcp.call(
+            "jobs.start",
+            kind="import",
+            file=str(ROOT / "fixtures/geopackage/v1/kentos-synced-wgs84.gpkg"),
+            requestId="live-mcp-yabanci",
+            **scope,
+        )
+        assert foreign["isError"] is False, foreign
+        waited = mcp.call(
+            "jobs.status", job=foreign["structuredContent"]["id"], waitSeconds=120, **scope  # type: ignore[index]
+        )
+        assert waited["isError"] is True and waited["structuredContent"]["error"]["code"] == "crs_mismatch", waited  # type: ignore[index]
+        say("MCP içe aktarma işi: başka sistemdeki dosya reddedildi, isError ve kodu crs_mismatch")
     finally:
         mcp.close()
 

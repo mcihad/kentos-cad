@@ -714,6 +714,8 @@ pub struct Cleanup {
     pub checkpoints: usize,
     /// Server jobs' artifacts no succeeded job holds (docs/adr/0542).
     pub jobs: usize,
+    /// Staged files of jobs (docs/adr/0561) no row holds.
+    pub job_inputs: usize,
 }
 
 /// How long a project's folder in the store stays unchanged before the
@@ -791,6 +793,21 @@ pub async fn cleanup(
             if !held.contains(&key) {
                 blobs.remove(&key).await?;
                 done.jobs += 1;
+            }
+        }
+    }
+    let objects = blobs.job_input_objects(settled).await?;
+    if !objects.is_empty() {
+        let keys: Vec<String> = objects.iter().map(|(_, k)| k.clone()).collect();
+        let held: Vec<String> =
+            sqlx::query_scalar("select blob_key from kentos.existing_job_inputs($1)")
+                .bind(&keys)
+                .fetch_all(&db.pool)
+                .await?;
+        for (_, key) in objects {
+            if !held.contains(&key) {
+                blobs.remove(&key).await?;
+                done.job_inputs += 1;
             }
         }
     }

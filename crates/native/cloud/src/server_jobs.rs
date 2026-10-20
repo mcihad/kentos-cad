@@ -8,9 +8,11 @@
 use std::time::Duration;
 
 use kentos_contracts::{
-    CheckpointCreate, PROJECT_CHECKPOINT_JOB, PROJECT_EXPORT_JOB, PROJECT_PROCESSING_JOB,
-    ProcessingJobInput, ProcessingJobMode, ProcessingJobResult, ProjectExportInput,
-    ProjectPermission, ProjectState, ProjectStorage, ServerJob, ServerJobCreate, ServerJobState,
+    CheckpointCreate, PROJECT_ATLAS_JOB, PROJECT_CHECKPOINT_JOB, PROJECT_EXPORT_JOB,
+    PROJECT_IMPORT_JOB, PROJECT_PROCESSING_JOB, ProcessingJobInput, ProcessingJobMode,
+    ProcessingJobResult, ProjectAtlasInput, ProjectAtlasResult, ProjectExportInput,
+    ProjectImportInput, ProjectImportResult, ProjectPermission, ProjectState, ProjectStorage,
+    ServerJob, ServerJobCreate, ServerJobState,
 };
 use uuid::Uuid;
 
@@ -63,9 +65,50 @@ pub fn processing_request(request_id: &str, input: &ProcessingJobInput) -> Serve
     }
 }
 
+/// The request for a staged file taken into the project by a worker (docs/adr/0561 §1): `input` names the staged
+/// file, the format, the import command's own options and the revision it must read.
+pub fn import_request(request_id: &str, input: &ProjectImportInput) -> ServerJobCreate {
+    ServerJobCreate {
+        kind: PROJECT_IMPORT_JOB.to_owned(),
+        input: serde_json::to_value(input).unwrap_or_default(),
+        request_id: request_id.to_owned(),
+        timeout_seconds: None,
+    }
+}
+
+/// The request for the atlas of a sheet as a PDF made by a worker (docs/adr/0561 §2): `input` is `file.export.atlas`'s
+/// without a path, with the pin the plan made.
+pub fn atlas_request(request_id: &str, input: &ProjectAtlasInput) -> ServerJobCreate {
+    ServerJobCreate {
+        kind: PROJECT_ATLAS_JOB.to_owned(),
+        input: serde_json::to_value(input).unwrap_or_default(),
+        request_id: request_id.to_owned(),
+        timeout_seconds: None,
+    }
+}
+
 /// What a job is, in a row's first line.
 pub fn kind_label(job: &ServerJob) -> String {
     match job.kind.as_str() {
+        PROJECT_IMPORT_JOB => {
+            let name = job.input["label"]
+                .as_str()
+                .filter(|l| !l.trim().is_empty())
+                .unwrap_or_default();
+            if name.is_empty() {
+                "İçe aktar (sunucuda)".to_owned()
+            } else {
+                format!("İçe aktar: {name}")
+            }
+        }
+        PROJECT_ATLAS_JOB => {
+            let name = job.input["label"]
+                .as_str()
+                .filter(|l| !l.trim().is_empty())
+                .or_else(|| job.input["sheet"].as_str())
+                .unwrap_or_default();
+            format!("Atlas (PDF): {name}")
+        }
         PROJECT_PROCESSING_JOB => {
             let name = job.input["label"]
                 .as_str()
@@ -137,7 +180,18 @@ pub fn failure_text(job: &ServerJob) -> Option<String> {
         }
         // `cpu_limit`, `memory_limit`, `memory_estimate`, `unsupported_change` and `too_many_changes` come with their
         // own advice in the server's message (docs/adr/0559); the words here add to the ones that do not.
-        "tool_failed" => " Araç çalıştı ve durdu; projeye hiçbir şey yazılmadı. Değerleri ve seçimi gözden geçirip yeniden isteyin.",
+        "pin_mismatch" => {
+            " Atlasın sabitlendiği durum ile proje artık aynı değil; atlas planını yeniden yapıp işi yeniden isteyin."
+        }
+        "crs_mismatch" => {
+            " Dosya başka bir koordinat sisteminde; içe aktarma penceresinde “Projenin sistemine çevir”i işaretleyip yeniden isteyin."
+        }
+        "gone" => {
+            " Hazırlanan dosya sunucuda artık yok; dosyayı yeniden gönderip işi yeniden isteyin."
+        }
+        "tool_failed" => {
+            " Araç çalıştı ve durdu; projeye hiçbir şey yazılmadı. Değerleri ve seçimi gözden geçirip yeniden isteyin."
+        }
         "tool_unavailable" => {
             " Sunucu bu aracı çalıştıramıyor; aracı bilgisayarınızda çalıştırın ya da sunucu yöneticisine bildirin."
         }
@@ -217,6 +271,50 @@ pub fn why_not_processing(
     None
 }
 
+/// Why the account may not ask for an import here (`project.jobs.run` and the right to write objects; a database
+/// project that is not in the archive or the trash), or none (docs/adr/0561 §1). The server decides.
+pub fn why_not_import(
+    permissions: &[ProjectPermission],
+    storage: ProjectStorage,
+    state: ProjectState,
+) -> Option<String> {
+    if let Some(why) = why_not_processing(permissions, storage, state) {
+        return Some(why.replace(
+            "araçlar bu bilgisayarda çalışır",
+            "içe aktarma bu bilgisayarda yapılır",
+        ));
+    }
+    if !permissions.contains(&ProjectPermission::FeatureWrite) {
+        return Some(missing(ProjectPermission::FeatureWrite, "nesne yazma"));
+    }
+    None
+}
+
+/// Why the account may not ask for an atlas here (`project.jobs.run` and `project.download`; a database project that is
+/// not in the trash), or none (docs/adr/0561 §2). The server decides.
+pub fn why_not_atlas(
+    permissions: &[ProjectPermission],
+    storage: ProjectStorage,
+    state: ProjectState,
+) -> Option<String> {
+    if state == ProjectState::Trashed {
+        return Some("Çöp kutusundaki projede iş istenmez.".to_owned());
+    }
+    if storage == ProjectStorage::File {
+        return Some(
+            "Dosya olarak saklanan projede atlas bu bilgisayarda yapılır; sunucuda yapmak için projeyi veritabanı projesine çevirin."
+                .to_owned(),
+        );
+    }
+    if !permissions.contains(&ProjectPermission::JobsRun) {
+        return Some(missing(ProjectPermission::JobsRun, "sunucu işi isteme"));
+    }
+    if !permissions.contains(&ProjectPermission::Download) {
+        return Some(missing(ProjectPermission::Download, "indirme"));
+    }
+    None
+}
+
 /// Why the account may not stop this job, or none: its asker or a holder of `project.edit` may, and only while it
 /// waits or runs.
 pub fn why_not_stop(
@@ -259,17 +357,32 @@ pub fn why_not_download(job: &ServerJob, permissions: &[ProjectPermission]) -> O
     None
 }
 
+/// The extension a job's download is saved with, without the dot: the server's file name says (`.gpkg` of a tool's
+/// file, `.pdf` of an atlas), a `.kcad` otherwise.
+pub fn download_extension(job: &ServerJob) -> &'static str {
+    let name = job.artifact.as_ref().map_or("", |a| a.name.as_str());
+    if name.ends_with(".gpkg") {
+        "gpkg"
+    } else if name.ends_with(".pdf") {
+        "pdf"
+    } else {
+        "kcad"
+    }
+}
+
 /// The file name a job's download is offered under: the server's, without its `.kcad` (the save window adds it).
 pub fn download_name(job: &ServerJob) -> String {
     let name = job.artifact.as_ref().map_or("proje", |a| a.name.as_str());
     let base = name
         .strip_suffix(".kcad")
         .or_else(|| name.strip_suffix(".gpkg"))
+        .or_else(|| name.strip_suffix(".pdf"))
         .unwrap_or(name);
-    let revision = job
-        .result
-        .as_ref()
-        .and_then(|r| r["revision"].as_str().or_else(|| r["baseRevision"].as_str()));
+    let revision = job.result.as_ref().and_then(|r| {
+        r["revision"]
+            .as_str()
+            .or_else(|| r["baseRevision"].as_str())
+    });
     match revision {
         Some(r) => format!("{base} (veri revizyonu {r})"),
         None => base.to_owned(),
@@ -283,6 +396,12 @@ pub fn result_text(job: &ServerJob) -> Option<String> {
     }
     if job.kind == PROJECT_PROCESSING_JOB {
         return processing_text(job);
+    }
+    if job.kind == PROJECT_IMPORT_JOB {
+        return import_text(job);
+    }
+    if job.kind == PROJECT_ATLAS_JOB {
+        return atlas_text(job);
     }
     if let Some(a) = &job.artifact {
         let bytes: f64 = a.size.parse().unwrap_or(0.0);
@@ -341,6 +460,53 @@ fn processing_text(job: &ServerJob) -> Option<String> {
             }
             parts.push("projeye yazılmadı".to_owned());
         }
+    }
+    if result.usage.cpu_seconds > 0.0 || result.usage.peak_memory_mb > 0.0 {
+        parts.push(format!(
+            "işlemci {} sn, bellek {} MB",
+            format!("{:.1}", result.usage.cpu_seconds).replace('.', ","),
+            result.usage.peak_memory_mb.round()
+        ));
+    }
+    Some(parts.join(" · "))
+}
+
+/// The line under a succeeded import (docs/adr/0561 §1): what the command said, what came in and the revision it made,
+/// how many warnings it had, and what it took.
+fn import_text(job: &ServerJob) -> Option<String> {
+    let result: ProjectImportResult = serde_json::from_value(job.result.clone()?).ok()?;
+    let mut parts: Vec<String> = Vec::new();
+    if !result.summary.trim().is_empty() {
+        parts.push(result.summary.trim().to_owned());
+    }
+    if let Some(r) = &result.revision {
+        parts.push(format!("veri revizyonu {r}"));
+    }
+    let warnings = result.notes.iter().filter(|n| n.level == "warn").count();
+    if warnings > 0 {
+        parts.push(format!("{warnings} uyarı (ayrıntı iş sonucunda)"));
+    }
+    if result.usage.cpu_seconds > 0.0 || result.usage.peak_memory_mb > 0.0 {
+        parts.push(format!(
+            "işlemci {} sn, bellek {} MB",
+            format!("{:.1}", result.usage.cpu_seconds).replace('.', ","),
+            result.usage.peak_memory_mb.round()
+        ));
+    }
+    Some(parts.join(" · "))
+}
+
+/// The line under a succeeded atlas (docs/adr/0561 §2): the pages, the file's size, the revision the pages are made
+/// from, and what they withhold.
+fn atlas_text(job: &ServerJob) -> Option<String> {
+    let result: ProjectAtlasResult = serde_json::from_value(job.result.clone()?).ok()?;
+    let mut parts = vec![format!("{} sayfa", result.pages)];
+    if let Some(a) = &job.artifact {
+        parts.push(size_text(a.size.parse().unwrap_or(0.0)));
+    }
+    parts.push(format!("veri revizyonu {}", result.base_revision));
+    if !result.withheld.is_empty() {
+        parts.push(format!("{} alan taşınmadı", result.withheld.len()));
     }
     if result.usage.cpu_seconds > 0.0 || result.usage.peak_memory_mb > 0.0 {
         parts.push(format!(
@@ -477,7 +643,9 @@ mod tests {
         }));
         assert_eq!(
             result_text(&j).as_deref(),
-            Some("12 tampon yapıldı · 12 nesne eklendi, katmanlar ya da ayarlar güncellendi · veri revizyonu 4 · işlemci 1,2 sn, bellek 240 MB")
+            Some(
+                "12 tampon yapıldı · 12 nesne eklendi, katmanlar ya da ayarlar güncellendi · veri revizyonu 4 · işlemci 1,2 sn, bellek 240 MB"
+            )
         );
         // A succeeded one to a file.
         j.input = json!({ "tool": "geometry.buffer", "mode": "sink" });
@@ -516,7 +684,10 @@ mod tests {
                 message: "Söz.".into(),
             });
             let text = failure_text(&j).unwrap();
-            assert!(text.starts_with("Söz. ") && text.len() > 30, "{code}: {text}");
+            assert!(
+                text.starts_with("Söz. ") && text.len() > 30,
+                "{code}: {text}"
+            );
         }
         // The codes whose message says what to do are the server's words alone.
         for code in [
@@ -557,6 +728,136 @@ mod tests {
             why_not_processing(&[JobsRun], db, ProjectState::Archived)
                 .unwrap()
                 .contains("Arşiv")
+        );
+    }
+
+    #[test]
+    fn an_import_and_an_atlas_are_asked_for_worded_and_checked_for_who_may() {
+        let import = ProjectImportInput {
+            upload: "0199aaaa-0000-7000-8000-000000000009".into(),
+            label: Some("parsel.gpkg".into()),
+            ..ProjectImportInput::default()
+        };
+        let r = import_request("desktop-1", &import);
+        assert_eq!(
+            (r.kind.as_str(), r.request_id.as_str()),
+            ("project.import", "desktop-1")
+        );
+        assert_eq!(
+            r.input,
+            json!({ "upload": "0199aaaa-0000-7000-8000-000000000009", "label": "parsel.gpkg" })
+        );
+        let atlas = ProjectAtlasInput {
+            sheet: "atlas-paftasi".into(),
+            ..ProjectAtlasInput::default()
+        };
+        let a = atlas_request("desktop-2", &atlas);
+        assert_eq!(a.kind, "project.atlas");
+        assert_eq!(a.input, json!({ "sheet": "atlas-paftasi" }));
+        // Rows.
+        let mut j = job(ServerJobState::Succeeded);
+        j.kind = PROJECT_IMPORT_JOB.to_owned();
+        j.input = r.input.clone();
+        assert_eq!(kind_label(&j), "İçe aktar: parsel.gpkg");
+        j.input = json!({ "upload": "x" });
+        assert_eq!(kind_label(&j), "İçe aktar (sunucuda)");
+        j.result = Some(json!({
+            "command": "file.import.gpkg", "file": "parsel.gpkg", "bytes": 1000, "sha256": "0",
+            "baseRevision": "3", "revision": "4", "summary": "“parsel.gpkg” içe aktarıldı: 10 nesne eklendi.",
+            "added": 10, "changed": 0, "removed": 0, "metadata": true, "blocks": 0,
+            "notes": [{ "level": "warn", "text": "import_losses: 2 satır" }, { "level": "info", "text": "x" }],
+            "details": {}, "usage": { "cpuSeconds": 2.0, "peakMemoryMb": 300.0 }
+        }));
+        assert_eq!(
+            result_text(&j).as_deref(),
+            Some(
+                "“parsel.gpkg” içe aktarıldı: 10 nesne eklendi. · veri revizyonu 4 · 1 uyarı (ayrıntı iş sonucunda) · işlemci 2,0 sn, bellek 300 MB"
+            )
+        );
+        j.kind = PROJECT_ATLAS_JOB.to_owned();
+        j.input = json!({ "sheet": "atlas-paftasi" });
+        assert_eq!(kind_label(&j), "Atlas (PDF): atlas-paftasi");
+        j.artifact = Some(kentos_contracts::ServerJobArtifact {
+            size: "2048".into(),
+            sha256: "0".repeat(64),
+            name: "Ada 3 - atlas-paftasi.pdf".into(),
+        });
+        j.result = Some(json!({
+            "sheet": "atlas-paftasi", "baseRevision": "3", "pages": 12, "pinDigest": "ab", "bindings": {},
+            "fields": ["Ada"], "withheld": ["Malik"], "usage": { "cpuSeconds": 0.0, "peakMemoryMb": 0.0 }
+        }));
+        assert_eq!(
+            result_text(&j).as_deref(),
+            Some("12 sayfa · 2,0 KB · veri revizyonu 3 · 1 alan taşınmadı")
+        );
+        assert_eq!(
+            download_name(&j),
+            "Ada 3 - atlas-paftasi (veri revizyonu 3)"
+        );
+        // Advice for the codes a command's refusal makes.
+        for (code, word) in [
+            ("pin_mismatch", "atlas planını"),
+            ("crs_mismatch", "Projenin sistemine çevir"),
+            ("gone", "yeniden gönderip"),
+        ] {
+            j.error = Some(kentos_contracts::ServerJobError {
+                code: code.into(),
+                message: "Söz.".into(),
+            });
+            let text = failure_text(&j).unwrap();
+            assert!(
+                text.starts_with("Söz. ") && text.contains(word),
+                "{code}: {text}"
+            );
+        }
+        // Who may ask.
+        use ProjectPermission::*;
+        let db = ProjectStorage::Database;
+        assert_eq!(
+            why_not_import(&[Read, FeatureWrite, JobsRun], db, ProjectState::Active),
+            None
+        );
+        assert!(
+            why_not_import(&[Read, JobsRun], db, ProjectState::Active)
+                .unwrap()
+                .contains("feature.write")
+        );
+        assert!(
+            why_not_import(
+                &[JobsRun, FeatureWrite],
+                ProjectStorage::File,
+                ProjectState::Active
+            )
+            .unwrap()
+            .contains("içe aktarma bu bilgisayarda")
+        );
+        assert_eq!(
+            why_not_atlas(&[Read, Download, JobsRun], db, ProjectState::Active),
+            None
+        );
+        assert_eq!(
+            why_not_atlas(&[Read, Download, JobsRun], db, ProjectState::Archived),
+            None,
+            "an atlas reads, so an archived project has one"
+        );
+        assert!(
+            why_not_atlas(&[Read, JobsRun], db, ProjectState::Active)
+                .unwrap()
+                .contains("project.download")
+        );
+        assert!(
+            why_not_atlas(&[Read, Download], db, ProjectState::Active)
+                .unwrap()
+                .contains("project.jobs.run")
+        );
+        assert!(
+            why_not_atlas(
+                &[Read, Download, JobsRun],
+                ProjectStorage::File,
+                ProjectState::Active
+            )
+            .unwrap()
+            .contains("atlas bu bilgisayarda")
         );
     }
 

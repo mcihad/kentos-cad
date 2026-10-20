@@ -155,7 +155,10 @@ fn server_drawing() -> kentos_domain::Document {
 }
 
 fn opened(info: ProjectInfo) -> Opened {
-    let document = server_drawing();
+    opened_with(info, server_drawing())
+}
+
+fn opened_with(info: ProjectInfo, document: kentos_domain::Document) -> Opened {
     let source = match info.storage {
         ProjectStorage::Database => Source::Database {
             versions: document
@@ -193,6 +196,18 @@ pub(crate) fn open(app: &mut App, info: ProjectInfo) {
     let _ = app.start_cloud_open(uuid(TENANT), uuid(PROJECT));
     let id = app.cloud.opening.as_ref().expect("opening").id;
     answer_open(app, id, info);
+}
+
+/// [`open`] with a drawing of the test's own as the server's content (the atlas window needs a book of sheets).
+pub(crate) fn open_with(app: &mut App, info: ProjectInfo, document: kentos_domain::Document) {
+    app.cloud.open_hint = Some((info.name.clone(), info.storage));
+    let _ = app.start_cloud_open(uuid(TENANT), uuid(PROJECT));
+    let id = app.cloud.opening.as_ref().expect("opening").id;
+    let task = app.update(crate::cloud::msg(Event::Opened {
+        id,
+        result: Ok(Once::new(opened_with(info, document))),
+    }));
+    drive(app, task);
 }
 
 /// The server's answer to open `id`, driven through the copy's step.

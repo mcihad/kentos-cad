@@ -46,6 +46,7 @@ pub mod sheet_templates;
 pub mod sync;
 
 pub use api::{CatalogQuery, Cloud, Download, Progress};
+pub use bytes::Bytes;
 pub use drafts::{DraftKey, DraftStore, Loaded};
 pub use failure::{ApiFailure, Failure};
 pub use open::{Opened, Revision, Source, open};

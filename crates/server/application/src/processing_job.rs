@@ -1,5 +1,5 @@
-//! An İşlemler tool as a server job (docs/adr/0559; plan/gis.md CBS-39): what the application layer decides without
-//! running a tool, and the seam the tool runs through.
+//! An İşlemler tool, a file import or an atlas as a server job (docs/adr/0559, 0561; plan/gis.md CBS-39): what the
+//! application layer decides without running anything, and the seam the work runs through.
 //!
 //! - **The request and the delta** are the contracts' (`kentos_contracts::processing_job`, shared with the process that
 //!   runs the tool, which must not carry the server); re-exported here: the input checked when it is asked for
@@ -9,10 +9,13 @@
 //! - **The seam** ([`Processor`]): the server crate does not know the tools (they are the native crates', and the
 //!   server may not use them: `scripts/arch/deps.mjs`). The host (`kentosd`) gives a processor that runs the tool in a
 //!   process of its own with a CPU and memory budget; a test gives a fake. A processor gets the project's `.kcad` at
-//!   the revision the worker read and answers with what the tool did: a [`Delta`] to commit or a GeoPackage.
+//!   the revision the worker read and answers with what it did: a [`Delta`] to commit or a file (a GeoPackage, the
+//!   atlas's PDF).
 
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex, PoisonError};
+
+use std::path::PathBuf;
 
 use kentos_contracts::{
     ProcessingJobInput, SERVER_JOB_CPU_DEFAULT_SECONDS, SERVER_JOB_MEMORY_DEFAULT_MB,
@@ -20,8 +23,9 @@ use kentos_contracts::{
 use uuid::Uuid;
 
 pub use kentos_contracts::processing_job::{
-    Delta, DeltaRefusal, InputFault, PROCESSING_MEMORY_FLOOR_MB, PROCESSING_PARAMETERS_MAX,
-    PROCESSING_SELECTION_MAX, ProcessFailure, Processed, check_input, delta,
+    Delta, DeltaRefusal, ImportRun, InputFault, JOB_CHANGES_MAX, PROCESSING_MEMORY_FLOOR_MB,
+    PROCESSING_PARAMETERS_MAX, PROCESSING_SELECTION_MAX, ProcessFailure, Processed, RunRequest,
+    check_atlas_input, check_import_input, check_input, delta,
 };
 
 use crate::jobs::JobLimits;
@@ -35,11 +39,20 @@ pub struct ProcessingBudget {
 
 /// The budget of a request: the server's, or a smaller one the request asks for.
 pub fn budget_of(input: &ProcessingJobInput, limits: &JobLimits) -> ProcessingBudget {
-    let cpu = match input.cpu_seconds {
+    budget_from(input.cpu_seconds, input.memory_mb, limits)
+}
+
+/// [`budget_of`] for any kind of job: the cpu and memory a request asked for, if it did.
+pub fn budget_from(
+    cpu_seconds: Option<u32>,
+    memory_mb: Option<u32>,
+    limits: &JobLimits,
+) -> ProcessingBudget {
+    let cpu = match cpu_seconds {
         Some(own) => own.min(limits.cpu_seconds),
         None => limits.cpu_seconds,
     };
-    let mb = match input.memory_mb {
+    let mb = match memory_mb {
         Some(own) => own.min(limits.memory_mb),
         None => limits.memory_mb,
     };
@@ -82,13 +95,35 @@ impl JobProgress {
     }
 }
 
+/// A staged file an import reads: where the object store keeps it (a file the processor links or copies, not bytes in
+/// memory: it may be gigabytes), its name as its owner gave it and its size.
+#[derive(Clone, Debug)]
+pub struct StagedFile {
+    pub path: PathBuf,
+    pub name: String,
+    pub size: u64,
+}
+
 /// What a processor is given.
 pub struct ProcessingTask {
     pub job: Uuid,
     /// The project as one `.kcad` file at the revision the worker read.
     pub snapshot: Vec<u8>,
-    pub input: ProcessingJobInput,
+    /// What to run: a tool, an import, an atlas.
+    pub request: RunRequest,
+    /// An import's file.
+    pub file: Option<StagedFile>,
     pub budget: ProcessingBudget,
+}
+
+impl ProcessingTask {
+    /// The tool's request, when it is a tool the task runs.
+    pub fn tool(&self) -> Option<&ProcessingJobInput> {
+        match &self.request {
+            RunRequest::Processing(input) => Some(input),
+            _ => None,
+        }
+    }
 }
 
 /// The worker's side of a running processor: it says what it does, and it is told to stop.
@@ -98,7 +133,8 @@ pub struct ProcessHooks {
     pub stop: Arc<AtomicBool>,
 }
 
-/// Runs an İşlemler tool for the server (docs/adr/0559 §3): the host's, since the tools are not the server's.
+/// Runs an İşlemler tool, an import or an atlas for the server (docs/adr/0559 §3, 0561 §3): the host's, since the tools
+/// and the commands are not the server's.
 /// `process` blocks (the worker runs it on a blocking thread); it says its progress to `hooks.progress`, stops at
 /// `hooks.stop`, and keeps the task's budget.
 pub trait Processor: Send + Sync {

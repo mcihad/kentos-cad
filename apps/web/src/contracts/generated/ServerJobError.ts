@@ -9,6 +9,7 @@ export type ServerJobError = {
  * not be written: no space, no folder), `too_large` (the artifact is past the server's limit) or `failed`; a
  * `project.processing` job also `cpu_limit`, `memory_limit` (stopped at its budget), `memory_estimate` (refused
  * before it ran), `tool_failed`, `tool_unavailable`, `unsupported_change`, `too_many_changes` and `crashed`
- * (docs/adr/0559).
+ * (docs/adr/0559); a `project.import` or `project.atlas` job also the refusal code of the command the worker ran
+ * (`import_unreadable`, `crs_mismatch`, `nothing_to_import`, `pin_mismatch`, `atlas_empty` …, docs/adr/0561).
  */
 code: string, message: string, };

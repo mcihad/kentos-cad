@@ -2,7 +2,7 @@
  "doc": "docs/adr/0559-processing-server-jobs.md",
  "note": "written by scripts/fixtures/processing_job_cases.py; read by crates/server/application/tests/processing_job_cases.rs",
  "limits": {
-  "maxChanges": 5000,
+  "maxChanges": 100000,
   "selectionMax": 100000,
   "parametersMax": 256,
   "memoryFloorMb": 64
@@ -1007,6 +1007,11 @@
     "added": 0,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [],
     "deleted": []
@@ -1101,6 +1106,11 @@
     "added": 1,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [
      "00000000-0000-4000-8000-000000000004"
     ],
@@ -1213,6 +1223,11 @@
     "added": 3,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [
      "00000000-0000-4000-8000-000000000004",
      "00000000-0000-4000-8000-000000000005",
@@ -1303,6 +1318,11 @@
     "added": 0,
     "changed": 1,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [
      "00000000-0000-4000-8000-000000000001"
@@ -1391,6 +1411,11 @@
     "added": 0,
     "changed": 1,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [
      "00000000-0000-4000-8000-000000000003"
@@ -1481,6 +1506,11 @@
     "added": 0,
     "changed": 1,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [
      "00000000-0000-4000-8000-000000000002"
@@ -1571,6 +1601,11 @@
     "added": 0,
     "changed": 1,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [
      "00000000-0000-4000-8000-000000000001"
@@ -1651,6 +1686,11 @@
     "added": 0,
     "changed": 0,
     "removed": 1,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [],
     "deleted": [
@@ -1712,6 +1752,11 @@
     "added": 0,
     "changed": 0,
     "removed": 3,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [],
     "deleted": [
@@ -1802,6 +1847,11 @@
     "added": 1,
     "changed": 1,
     "removed": 1,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [
      "00000000-0000-4000-8000-000000000007"
     ],
@@ -1894,6 +1944,11 @@
     "added": 0,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [],
     "deleted": []
@@ -1980,6 +2035,11 @@
     "added": 0,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [],
     "deleted": []
@@ -2029,6 +2089,11 @@
     "added": 2,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [
      "00000000-0000-4000-8000-000000000001",
      "00000000-0000-4000-8000-000000000002"
@@ -2067,6 +2132,11 @@
     "added": 0,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [],
     "deleted": []
@@ -2164,6 +2234,11 @@
     "added": 1,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [
      "00000000-0000-4000-8000-000000000008"
     ],
@@ -2201,6 +2276,11 @@
     "added": 0,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [],
     "deleted": []
@@ -2237,6 +2317,11 @@
     "added": 0,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [],
     "deleted": []
@@ -2273,6 +2358,11 @@
     "added": 0,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [],
     "deleted": []
@@ -2307,6 +2397,11 @@
     "added": 0,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [],
     "deleted": []
@@ -2341,6 +2436,11 @@
     "added": 0,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [],
     "deleted": []
@@ -2440,6 +2540,11 @@
     "added": 1,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [
      "00000000-0000-4000-8000-000000000009"
     ],
@@ -2448,7 +2553,7 @@
    }
   },
   {
-   "name": "a block added is not carried",
+   "name": "a block added is carried",
    "before": {
     "name": "Proje",
     "plotScale": 1000.0,
@@ -2467,16 +2572,32 @@
     ],
     "activeLayer": "cizim",
     "blocks": [
-     "Kapı"
+     [
+      1,
+      "Kapı"
+     ]
     ],
     "entities": []
    },
    "expect": {
-    "refused": "unsupported_change"
+    "patch": [],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "blocks": {
+     "created": [
+      1
+     ],
+     "updated": [],
+     "deleted": []
+    },
+    "created": [],
+    "updated": [],
+    "deleted": []
    }
   },
   {
-   "name": "a block removed is not carried",
+   "name": "a block removed is carried",
    "before": {
     "name": "Proje",
     "plotScale": 1000.0,
@@ -2485,7 +2606,10 @@
     ],
     "activeLayer": "cizim",
     "blocks": [
-     "Kapı"
+     [
+      1,
+      "Kapı"
+     ]
     ],
     "entities": []
    },
@@ -2500,11 +2624,24 @@
     "entities": []
    },
    "expect": {
-    "refused": "unsupported_change"
+    "patch": [],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": [
+      1
+     ]
+    },
+    "created": [],
+    "updated": [],
+    "deleted": []
    }
   },
   {
-   "name": "a block renamed is not carried",
+   "name": "a block renamed is replaced",
    "before": {
     "name": "Proje",
     "plotScale": 1000.0,
@@ -2513,7 +2650,10 @@
     ],
     "activeLayer": "cizim",
     "blocks": [
-     "Kapı"
+     [
+      1,
+      "Kapı"
+     ]
     ],
     "entities": []
    },
@@ -2525,16 +2665,32 @@
     ],
     "activeLayer": "cizim",
     "blocks": [
-     "Pencere"
+     [
+      1,
+      "Pencere"
+     ]
     ],
     "entities": []
    },
    "expect": {
-    "refused": "unsupported_change"
+    "patch": [],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [
+      1
+     ],
+     "deleted": []
+    },
+    "created": [],
+    "updated": [],
+    "deleted": []
    }
   },
   {
-   "name": "blocks beside objects: the blocks refuse",
+   "name": "another block under the same name is a new one and the old is gone",
    "before": {
     "name": "Proje",
     "plotScale": 1000.0,
@@ -2543,36 +2699,12 @@
     ],
     "activeLayer": "cizim",
     "blocks": [
-     "Kapı"
+     [
+      1,
+      "Kapı"
+     ]
     ],
-    "entities": [
-     {
-      "uid": "00000000-0000-4000-8000-000000000001",
-      "slot": 1,
-      "layer": "cizim",
-      "x": 1.0,
-      "y": 0.0,
-      "attrs": {}
-     },
-     {
-      "uid": "00000000-0000-4000-8000-000000000002",
-      "slot": 2,
-      "layer": "cizim",
-      "x": 2.0,
-      "y": 0.0,
-      "attrs": {}
-     },
-     {
-      "uid": "00000000-0000-4000-8000-000000000003",
-      "slot": 3,
-      "layer": "cizim",
-      "x": 3.0,
-      "y": 0.0,
-      "attrs": {
-       "a": "1"
-      }
-     }
-    ]
+    "entities": []
    },
    "after": {
     "name": "Proje",
@@ -2582,52 +2714,34 @@
     ],
     "activeLayer": "cizim",
     "blocks": [
-     "Kapı",
-     "Yeni"
+     [
+      3,
+      "Kapı"
+     ]
     ],
-    "entities": [
-     {
-      "uid": "00000000-0000-4000-8000-000000000001",
-      "slot": 1,
-      "layer": "cizim",
-      "x": 1.0,
-      "y": 0.0,
-      "attrs": {}
-     },
-     {
-      "uid": "00000000-0000-4000-8000-000000000002",
-      "slot": 2,
-      "layer": "cizim",
-      "x": 2.0,
-      "y": 0.0,
-      "attrs": {}
-     },
-     {
-      "uid": "00000000-0000-4000-8000-000000000003",
-      "slot": 3,
-      "layer": "cizim",
-      "x": 3.0,
-      "y": 0.0,
-      "attrs": {
-       "a": "1"
-      }
-     },
-     {
-      "uid": "00000000-0000-4000-8000-000000000004",
-      "slot": 4,
-      "layer": "cizim",
-      "x": 0.0,
-      "y": 0.0,
-      "attrs": {}
-     }
-    ]
+    "entities": []
    },
    "expect": {
-    "refused": "unsupported_change"
+    "patch": [],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "blocks": {
+     "created": [
+      3
+     ],
+     "updated": [],
+     "deleted": [
+      1
+     ]
+    },
+    "created": [],
+    "updated": [],
+    "deleted": []
    }
   },
   {
-   "name": "the same blocks and a created object",
+   "name": "blocks beside objects",
    "before": {
     "name": "Proje",
     "plotScale": 1000.0,
@@ -2636,7 +2750,10 @@
     ],
     "activeLayer": "cizim",
     "blocks": [
-     "Kapı"
+     [
+      1,
+      "Kapı"
+     ]
     ],
     "entities": [
      {
@@ -2675,7 +2792,14 @@
     ],
     "activeLayer": "cizim",
     "blocks": [
-     "Kapı"
+     [
+      1,
+      "Kapı"
+     ],
+     [
+      2,
+      "Pencere"
+     ]
     ],
     "entities": [
      {
@@ -2719,6 +2843,13 @@
     "added": 1,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [
+      2
+     ],
+     "updated": [],
+     "deleted": []
+    },
     "created": [
      "00000000-0000-4000-8000-000000000004"
     ],
@@ -2727,7 +2858,225 @@
    }
   },
   {
-   "name": "exactly the most a command takes",
+   "name": "the same blocks and a created object",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     [
+      1,
+      "Kapı"
+     ]
+    ],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     [
+      1,
+      "Kapı"
+     ]
+    ],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000004",
+      "slot": 4,
+      "layer": "cizim",
+      "x": 0.0,
+      "y": 0.0,
+      "attrs": {}
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 1,
+    "changed": 0,
+    "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
+    "created": [
+     "00000000-0000-4000-8000-000000000004"
+    ],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "two blocks, one replaced, one removed, one made",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     [
+      1,
+      "Kapı"
+     ],
+     [
+      2,
+      "Pencere"
+     ]
+    ],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     [
+      1,
+      "Kapı 2"
+     ],
+     [
+      4,
+      "Yeni"
+     ]
+    ],
+    "entities": []
+   },
+   "expect": {
+    "patch": [],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "blocks": {
+     "created": [
+      4
+     ],
+     "updated": [
+      1
+     ],
+     "deleted": [
+      2
+     ]
+    },
+    "created": [],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "a block change beside metadata",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "after": {
+    "name": "Başka",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     [
+      1,
+      "Kapı"
+     ]
+    ],
+    "entities": []
+   },
+   "expect": {
+    "patch": [
+     "name"
+    ],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "blocks": {
+     "created": [
+      1
+     ],
+     "updated": [],
+     "deleted": []
+    },
+    "created": [],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "the most a job takes: a hundred thousand objects",
    "before": {
     "name": "Proje",
     "plotScale": 1000.0,
@@ -2748,15 +3097,20 @@
     "blocks": [],
     "entities": [],
     "generate": {
-     "count": 5000,
+     "count": 100000,
      "layer": "cizim"
     }
    },
    "expect": {
     "patch": [],
-    "added": 5000,
+    "added": 100000,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "updated": [],
     "deleted": []
    }
@@ -2783,7 +3137,42 @@
     "blocks": [],
     "entities": [],
     "generate": {
-     "count": 5001,
+     "count": 100001,
+     "layer": "cizim"
+    }
+   },
+   "expect": {
+    "refused": "too_many_changes"
+   }
+  },
+  {
+   "name": "an object and a block past the most together",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     [
+      1,
+      "Kapı"
+     ]
+    ],
+    "entities": [],
+    "generate": {
+     "count": 100000,
      "layer": "cizim"
     }
    },
@@ -2803,7 +3192,7 @@
     "blocks": [],
     "entities": [],
     "generate": {
-     "count": 2600,
+     "count": 50001,
      "layer": "cizim"
     }
    },
@@ -2817,13 +3206,53 @@
     "blocks": [],
     "entities": [],
     "generate": {
-     "count": 2600,
+     "count": 50001,
      "layer": "cizim",
-     "from": 2601
+     "from": 50002
     }
    },
    "expect": {
     "refused": "too_many_changes"
+   }
+  },
+  {
+   "name": "more than a request takes, within a job's",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [],
+    "generate": {
+     "count": 6000,
+     "layer": "cizim"
+    }
+   },
+   "expect": {
+    "patch": [],
+    "added": 6000,
+    "changed": 0,
+    "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
+    "updated": [],
+    "deleted": []
    }
   },
   {
@@ -2861,6 +3290,11 @@
     "added": 0,
     "changed": 0,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [],
     "deleted": []
@@ -2911,6 +3345,11 @@
     "added": 0,
     "changed": 1,
     "removed": 0,
+    "blocks": {
+     "created": [],
+     "updated": [],
+     "deleted": []
+    },
     "created": [],
     "updated": [
      "00000000-0000-4000-8000-000000000001"
