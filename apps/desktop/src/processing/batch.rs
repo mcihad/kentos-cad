@@ -318,7 +318,7 @@ impl App {
             .collect();
         let v = self.viewport.camera.visible_bounds();
         let view = Some([v.min_x, v.min_y, v.max_x, v.max_y]);
-        let input =
+        let mut input =
             match batch_table::input(&doc.model, &window.tool, common, selection, view, &b.table) {
                 Ok(input) => input,
                 Err(refusal) => {
@@ -331,6 +331,8 @@ impl App {
                     return;
                 }
             };
+        // A raster's relative path is found from the drawing's folder (docs/adr/0548 §3).
+        input.drawing = doc.path.as_ref().map(|p| p.display().to_string());
         let envelope = CallEnvelope {
             command: CAD_PROCESSING_BATCH.into(),
             version: None,

@@ -40,7 +40,7 @@ pub mod rpc;
 mod session;
 pub mod shp_export;
 
-pub use dispatch::{Op, call_envelope, commands};
+pub use dispatch::{Op, call_envelope, commands, with_own_file};
 pub use error::HeadlessError;
 pub use query::{
     Basis, Conventions, MEASURE_MAX, Measure, MeasureItem, Measures, Method, Page, Totals, Units,

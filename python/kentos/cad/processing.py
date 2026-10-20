@@ -61,6 +61,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         *,
         tool: str,
         rows: Sequence[BatchRow],
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
@@ -89,6 +90,8 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             doc: The drawing it works on.
             tool:
             rows:
+            drawing: As `cad.processing.run`'s: the open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
+                folder (then in the project's search paths), a result written beside it. The host gives it.
             parameters: The values every row takes unless it gives its own.
             selection: As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.
             view: Unit: length.
@@ -107,6 +110,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         return self.execute_input(doc, ProcessingBatch(
             tool=tool,
             rows=list(rows),
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             view=_opt(view, lambda x: list(x)),
@@ -119,6 +123,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         *,
         tool: str,
         rows: Sequence[BatchRow],
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
@@ -129,6 +134,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         return self.plan_input(doc, ProcessingBatch(
             tool=tool,
             rows=list(rows),
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             view=_opt(view, lambda x: list(x)),
@@ -141,6 +147,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         *,
         tool: str,
         rows: Sequence[BatchRow],
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
@@ -151,6 +158,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         return self.validate_input(doc, ProcessingBatch(
             tool=tool,
             rows=list(rows),
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             view=_opt(view, lambda x: list(x)),
@@ -163,6 +171,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         *,
         tool: str,
         rows: Sequence[BatchRow],
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
@@ -178,6 +187,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         return self.answer_input(doc, ProcessingBatch(
             tool=tool,
             rows=list(rows),
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             view=_opt(view, lambda x: list(x)),
@@ -243,6 +253,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         /,
         *,
         tool: str,
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -292,6 +303,8 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         Args:
             doc: The drawing it works on.
             tool:
+            drawing: The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
+                folder (then in the project's search paths), a result written beside it. The host gives it.
             parameters:
             selection: The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
             sink: Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
@@ -310,6 +323,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         """
         return self.execute_input(doc, ProcessingRun(
             tool=tool,
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,
@@ -322,6 +336,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         /,
         *,
         tool: str,
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -332,6 +347,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         """
         return self.plan_input(doc, ProcessingRun(
             tool=tool,
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,
@@ -344,6 +360,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         /,
         *,
         tool: str,
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -354,6 +371,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         """
         return self.validate_input(doc, ProcessingRun(
             tool=tool,
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,
@@ -366,6 +384,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         /,
         *,
         tool: str,
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -381,6 +400,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         """
         return self.answer_input(doc, ProcessingRun(
             tool=tool,
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,

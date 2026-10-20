@@ -999689,6 +999689,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes\nits default for the drawing. A features input is `{ \"scope\": \"all\" }` (the visible layers), `{ \"scope\": \"layer\",\n\"layerId\": … }`, `{ \"scope\": \"uids\", \"uids\": [ … ] }`, `{ \"scope\": \"selection\" }` (the objects `selection` names)\nor `{ \"scope\": \"visible\" }` (those in `view`), optionally with `kinds`; a features input's default is the\nselection, so a run on chosen objects gives `selection`. A file parameter is `{ \"path\": … }` (a table file read\nas the dialog reads it) or `{ \"name\": …, \"rows\": [[…]] }`. Refusals, in order: `tools_unavailable`,\n`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has\nnot, a value its rules refuse, a file unread, the visible scope without `view`), `tool_failed` (it ran and\nstopped: a locked layer, nothing to do, its own refusal; nothing written).",
         "properties": {
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its\nfolder (then in the project's search paths), a result written beside it. The host gives it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "parameters": {
             "additionalProperties": true,
             "type": [
@@ -1000908,6 +1000915,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `cad.processing.batch` v1: one tool (or model, `model:…`) run over a table of rows of parameter values,\nthrough the same descriptor and executor as `cad.processing.run`: each row is the run `tool` with `parameters`\nand the row's own values over them, with the input's `selection` and `view`. The rows run in order, each seeing\nwhat the rows before it wrote; the whole batch is one undo step named “Toplu: <tool>”, written all or not at all:\na row that stops (or a stop asked between rows) takes back what the earlier rows did. At most 500 rows. Refusals,\nin order: `tools_unavailable`, `empty_batch`, `too_many_rows`, then each row's as `cad.processing.run` refuses\nthem (`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters`), the path prefixed `rows[i].`; at run\ntime `batch_row_failed` (the row ran and stopped, or its values no longer fit what the rows before it wrote:\nnothing written).",
         "properties": {
+          "drawing": {
+            "description": "As `cad.processing.run`'s: the open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its\nfolder (then in the project's search paths), a result written beside it. The host gives it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "parameters": {
             "additionalProperties": true,
             "description": "The values every row takes unless it gives its own.",

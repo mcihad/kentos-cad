@@ -74,6 +74,7 @@ fn three_rows(doc: &Document) -> ProcessingBatch {
             .collect(),
         selection: (1..=3).map(|n| uid(doc, n)).collect(),
         view: None,
+        drawing: None,
     }
 }
 
@@ -193,6 +194,7 @@ fn a_model_that_stops_in_the_middle_leaves_no_layer_behind() {
         selection: vec![uid(&doc, 1), uid(&doc, 2)],
         view: None,
         sink: None,
+        drawing: None,
     };
     let error = tools()
         .expect("registered")
@@ -224,6 +226,7 @@ fn a_record_names_the_objects_the_seed_and_the_system() {
         selection: Vec::new(),
         view: None,
         sink: None,
+        drawing: None,
     };
     let (ran, _) = tools()
         .expect("registered")
@@ -263,6 +266,7 @@ fn running_a_record_again_is_told_apart() {
         selection: Vec::new(),
         view: None,
         sink: None,
+        drawing: None,
     };
     let (ran, _) = tools()
         .expect("registered")
@@ -344,6 +348,7 @@ fn batch_timing() {
             .collect(),
         selection: Vec::new(),
         view: None,
+        drawing: None,
     };
     let clock = std::time::Instant::now();
     let BatchEnd::Ran(ran) = tools()
@@ -374,6 +379,7 @@ fn batch_timing() {
             .collect(),
         selection: Vec::new(),
         view: None,
+        drawing: None,
     };
     let clock = std::time::Instant::now();
     let BatchEnd::Ran(_) = tools()
@@ -431,6 +437,7 @@ fn a_raster_run_records_its_grids() {
         selection: Vec::new(),
         view: None,
         sink: None,
+        drawing: None,
     };
     let (ran, _) = tools()
         .expect("registered")

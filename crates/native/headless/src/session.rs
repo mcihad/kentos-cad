@@ -183,7 +183,8 @@ impl Session {
     /// A command by the protocol (docs/adr/0253 §4): `envelope` is a
     /// `CallEnvelope`'s JSON, the answer a `CallAnswer`'s.
     pub fn call(&mut self, envelope: Value) -> Result<Value, HeadlessError> {
-        let envelope = crate::rpc::envelope(&envelope)?;
+        let mut envelope = crate::rpc::envelope(&envelope)?;
+        dispatch::with_own_file(&envelope.command, &mut envelope.input, self.path.as_deref());
         to_json(&crate::dispatch::call_envelope(
             &mut self.doc,
             None,
@@ -194,7 +195,8 @@ impl Session {
     /// Starts a command as a job (docs/adr/0253 §9): computed on a copy of
     /// the drawing on another thread; its `JobStatus`.
     pub fn start(&mut self, envelope: Value) -> Result<Value, HeadlessError> {
-        let envelope = crate::rpc::envelope(&envelope)?;
+        let mut envelope = crate::rpc::envelope(&envelope)?;
+        dispatch::with_own_file(&envelope.command, &mut envelope.input, self.path.as_deref());
         to_json(&self.jobs.start(&self.doc, envelope))
     }
 
@@ -253,8 +255,9 @@ impl Session {
         command: &str,
         version: Option<u32>,
         op: Op,
-        input: Value,
+        mut input: Value,
     ) -> Result<Value, HeadlessError> {
+        dispatch::with_own_file(command, &mut input, self.path.as_deref());
         dispatch::run(&mut self.doc, command, version, op, input)
     }
 

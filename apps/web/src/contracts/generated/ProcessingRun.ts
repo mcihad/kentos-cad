@@ -24,4 +24,9 @@ view?: [number, number, number, number],
 /**
  * Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
  */
-sink?: RunSink, };
+sink?: RunSink, 
+/**
+ * The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
+ * folder (then in the project's search paths), a result written beside it. The host gives it.
+ */
+drawing?: string, };

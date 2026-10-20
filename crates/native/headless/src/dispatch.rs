@@ -14,6 +14,35 @@ use serde_json::Value;
 use crate::HeadlessError;
 use crate::file_commands;
 
+/// The commands whose input names the open drawing's own file (`drawing`: relative paths are found from its folder,
+/// a reference to it is a cycle), from the catalog.
+fn naming_their_drawing() -> &'static std::collections::BTreeSet<String> {
+    static NAMES: std::sync::OnceLock<std::collections::BTreeSet<String>> =
+        std::sync::OnceLock::new();
+    NAMES.get_or_init(|| {
+        kentos_commands::catalog::catalog()
+            .commands
+            .into_iter()
+            .filter(|c| c.input.pointer("/properties/drawing").is_some())
+            .map(|c| c.id)
+            .collect()
+    })
+}
+
+/// `input` with the open drawing's file as its `drawing` when the command takes one and the caller gave none: the
+/// host knows where the drawing came from, Python and MCP need not say it (and MCP cannot: its `drawing` is the
+/// handle). A drawing with no file leaves it out.
+pub fn with_own_file(command: &str, input: &mut Value, drawing: Option<&std::path::Path>) {
+    let (Some(path), Some(fields)) = (drawing, input.as_object_mut()) else {
+        return;
+    };
+    if naming_their_drawing().contains(command) && fields.get("drawing").is_none_or(Value::is_null)
+    {
+        let path = std::path::absolute(path).unwrap_or_else(|_| path.to_path_buf());
+        fields.insert("drawing".into(), Value::String(path.display().to_string()));
+    }
+}
+
 /// The commands this host runs, by name and version: the desktop's document
 /// commands (`DESKTOP_COMMANDS`) and the ones that write files (`FILE_COMMANDS`).
 pub fn commands() -> Vec<(&'static str, u32)> {

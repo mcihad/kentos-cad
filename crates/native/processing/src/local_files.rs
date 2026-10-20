@@ -60,6 +60,8 @@ impl Bytes {
 /// embedded rasters.
 pub struct LocalFiles {
     folder: Option<PathBuf>,
+    /// The project's search paths (docs/adr/0349 §1): a raster not at its path is looked for there.
+    search: Vec<String>,
     assets: HashMap<String, String>,
 }
 
@@ -78,7 +80,11 @@ impl LocalFiles {
                 assets.insert(id.to_owned(), data.to_owned());
             }
         }
-        LocalFiles { folder, assets }
+        LocalFiles {
+            folder,
+            search: doc.settings().xref_paths.clone(),
+            assets,
+        }
     }
 
     fn resolve(&self, file: &str) -> PathBuf {
@@ -103,7 +109,26 @@ impl LocalFiles {
                 Ok(Bytes::Memory(Arc::new(data)))
             }
             (None, Some(f), _) => {
-                let path = self.resolve(f);
+                // As the desktop finds a linked file: its path, its relative path from the drawing's folder, the
+                // search paths (docs/adr/0548 §3); a drawing with no file reads a relative path as it is given.
+                let found = kentos_native_application::links::find_in(
+                    f,
+                    None,
+                    self.folder.as_deref(),
+                    &self.search,
+                );
+                let path = match found.at {
+                    Some(at) => at,
+                    None if self.folder.is_none() && Path::new(f).is_file() => PathBuf::from(f),
+                    None if !found.tried.is_empty() => {
+                        return Err(format!(
+                            "Rasterin dosyası “{f}” bulunamadı; bakılan yerler: {}. Dosyayı yerine koyun ya da \
+                             projenin arama yollarına klasörünü ekleyin.",
+                            found.tried.join(", ")
+                        ));
+                    }
+                    None => self.resolve(f),
+                };
                 let file = File::open(&path).map_err(|e| {
                     format!(
                         "Rasterin dosyası “{}” açılamadı: {e}. Dosyanın yerinde olduğunu denetleyin.",

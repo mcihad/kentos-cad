@@ -2018,8 +2018,9 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   Kalan: kaynağa itilen sıralama, süzgeç ve toplam, imleçli sayfalar (ADR 0546 §4'ün tasarımı), sütun başlığı menüsü, alan yetkisinin
   ortak çözücüsü (CBS-38), bilgi kartında kaynak satırı. — **20 Ekim, [ADR 0546](docs/adr/0546-attribute-table-outgoing-and-source-line.md).**
 - [ ] `CBS-41` kapsam matrisi ve eşdeğerlik (dilim): `scripts/gis/coverage.py` (işlem + seçenek + veri türü + ev sahibi, kanıtı ortak
-  durumlardan) → `docs/gis/coverage.{json,md}`; `tests/cases/equivalence.rs` 276 durumu pencereden ve `cad.processing.run`'dan
-  oynatır, ikisi aynı. Kalan: raster, nokta bulutu ve çok boyutlu araçların komutla eşdeğerliği, açık seçenek hücreleri. — **20 Ekim,
+  durumlardan) → `docs/gis/coverage.{json,md}`; `tests/cases/equivalence.rs` 420 durumu (raster dosyaları bayt bayt) pencereden ve `cad.processing.run`'dan
+  oynatır, ikisi aynı; ev sahibi `drawing` alanlı komutlara açık çizimin dosyasını verir (`with_own_file`). Kalan: nokta bulutu
+  ve çok boyutlu araçların başsız yolu, `cad.processing.run`'ın çağrı kaydı, açık seçenek hücreleri. — **20 Ekim,
   [ADR 0548](docs/adr/0548-coverage-matrix-and-run-equivalence.md).**
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (dilim): `feed::Ending`, `profile::FeedProfile`,
   `FeedConnecting::conformance_request`; masaüstünde Uygunluk satırı ve kayan form; Python `Taken.ending`, teklifin `profile`'ı;

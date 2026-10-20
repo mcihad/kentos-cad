@@ -12,6 +12,9 @@ use serde_json::{Value, json};
 #[path = "headless/atlas_cases.rs"]
 mod atlas_cases;
 
+#[path = "headless/own_file.rs"]
+mod own_file;
+
 fn scratch(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("kentos-headless-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);

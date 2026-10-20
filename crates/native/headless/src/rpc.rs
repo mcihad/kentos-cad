@@ -108,6 +108,23 @@ pub fn call_with(
     method: &str,
     params: &Value,
 ) -> Result<Value, HeadlessError> {
+    call_from(doc, jobs, None, method, params)
+}
+
+/// [`call_with`] for a drawing read from `drawing`: a command that takes the open drawing's file is given it
+/// (`dispatch::with_own_file`).
+pub fn call_from(
+    doc: &mut Document,
+    jobs: Option<&mut Jobs>,
+    drawing: Option<&std::path::Path>,
+    method: &str,
+    params: &Value,
+) -> Result<Value, HeadlessError> {
+    let envelope = |params: &Value| -> Result<CallEnvelope, HeadlessError> {
+        let mut e = envelope(params)?;
+        crate::dispatch::with_own_file(&e.command, &mut e.input, drawing);
+        Ok(e)
+    };
     match method {
         "call" => to_value(&call_envelope(doc, None, envelope(params)?)),
         "journal" => to_value(&journal_of(doc)),
@@ -138,7 +155,7 @@ pub fn call_with(
                 _ => to_value(&jobs.cancel(doc, text(params, "id")?)?),
             }
         }
-        _ => plain(doc, method, params),
+        _ => plain(doc, drawing, method, params),
     }
 }
 
@@ -151,7 +168,12 @@ pub fn envelope(params: &Value) -> Result<CallEnvelope, HeadlessError> {
     })
 }
 
-fn plain(doc: &mut Document, method: &str, params: &Value) -> Result<Value, HeadlessError> {
+fn plain(
+    doc: &mut Document,
+    drawing: Option<&std::path::Path>,
+    method: &str,
+    params: &Value,
+) -> Result<Value, HeadlessError> {
     match method {
         "run" => {
             let command = text(params, "command")?;
@@ -164,7 +186,8 @@ fn plain(doc: &mut Document, method: &str, params: &Value) -> Result<Value, Head
                         .ok_or_else(|| invalid("version bir sürüm numarası olmalı"))?,
                 ),
             };
-            let input = params.get("input").cloned().unwrap_or(Value::Null);
+            let mut input = params.get("input").cloned().unwrap_or(Value::Null);
+            dispatch::with_own_file(command, &mut input, drawing);
             dispatch::run(doc, command, version, op, input)
         }
         "summary" => Ok(summary(doc)),

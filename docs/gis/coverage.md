@@ -135,7 +135,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 
 - 151 araç; seçenekler 769 hücre, 436 tanesi bir durumda deneniyor (333 açık).
 - Ortak durumu olmayan araç: 10.
-- Komutla (`cad.processing.run`, `.batch` ya da eşdeğerlik testi; başsız, Python, MCP) durumu olmayan araç: 70.
+- Komutla (`cad.processing.run`, `.batch` ya da eşdeğerlik testi; başsız, Python, MCP) durumu olmayan araç: 13.
 
 ### Açık hücreler
 
@@ -149,29 +149,28 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | `convert.tablePoints` | 4 | 4 | system="5253", system="5254", system="5255", system="5256", system="5257", system="5258", system="5259", system="5252", system="2319", system="2320", system="2321", system="2322", system="2323", system="2324", system="2325", system="23035", system="23036", system="23037", system="23038", system="32635", system="32636", system="32637", system="32638", system="3857" |
 | `convert.vertices` | 4 | 4 | which="start" |
 | `convert.xyLine` | 1 | 1 | sourceKind="layer" |
-| `density.kernel` | 2 | 0 | kernel="triangular", kernel="uniform", kernel="epanechnikov", kernel="triweight", unit="decare", unit="squareMetre", extent="raster", add=false |
-| `density.line` | 2 | 0 | unit="metrePerSquareMetre", extent="raster", add=false |
-| `distance.corridor` | 2 | 0 | useSurface=true, surfaceLength=true, threshold="none", sample="f64", add=false |
-| `distance.cost` | 8 | 0 | add=false |
-| `distance.euclidean` | 5 | 0 | add=false |
-| `distance.path` | 3 | 0 | — |
+| `density.kernel` | 2 | 2 | kernel="triangular", kernel="uniform", kernel="epanechnikov", kernel="triweight", unit="decare", unit="squareMetre", extent="raster", add=false |
+| `density.line` | 2 | 2 | unit="metrePerSquareMetre", extent="raster", add=false |
+| `distance.corridor` | 2 | 2 | useSurface=true, surfaceLength=true, threshold="none", sample="f64", add=false |
+| `distance.cost` | 8 | 8 | add=false |
+| `distance.euclidean` | 5 | 5 | add=false |
 | `generalize.dropParts` | 4 | 4 | holes=false |
 | `generate.concaveHull` | 5 | 5 | group="each" |
 | `geometry.buffer` | 6 | 7 | side="right" |
 | `geometry.reproject` | 2 | 3 | source="5253", source="5255", source="5256", source="5257", source="5258", source="5259", source="5252", source="2319", source="2321", source="2322", source="2323", source="2324", source="2325", source="23035", source="23036", source="23037", source="23038", source="32635", source="32636", source="32637", source="32638", source="4326", source="3857" |
-| `hydrology.basins` | 4 | 0 | fill=false |
-| `hydrology.fill` | 4 | 0 | add=false |
-| `hydrology.flowAccumulation` | 4 | 0 | fill=false, add=false |
-| `hydrology.flowDirection` | 3 | 0 | add=false |
-| `hydrology.pourPoint` | 1 | 0 | fill=false |
-| `hydrology.streams` | 2 | 0 | fill=false |
-| `hydrology.watershed` | 1 | 0 | fill=false |
-| `hydrology.wetness` | 1 | 0 | fill=false, method="d8", method="dinf", add=false |
-| `interpolation.idw` | 5 | 0 | add=false |
-| `interpolation.kriging` | 3 | 0 | model="exponential", model="gaussian", extent="raster" |
-| `interpolation.naturalNeighbor` | 1 | 0 | extent="raster", cross=false, add=false |
-| `interpolation.spline` | 1 | 0 | splineType="tension", extent="raster", cross=false, add=false |
-| `interpolation.tin` | 2 | 0 | extent="raster", add=false |
+| `hydrology.basins` | 4 | 4 | fill=false |
+| `hydrology.fill` | 4 | 4 | add=false |
+| `hydrology.flowAccumulation` | 4 | 4 | fill=false, add=false |
+| `hydrology.flowDirection` | 3 | 3 | add=false |
+| `hydrology.pourPoint` | 1 | 1 | fill=false |
+| `hydrology.streams` | 2 | 2 | fill=false |
+| `hydrology.watershed` | 1 | 1 | fill=false |
+| `hydrology.wetness` | 1 | 1 | fill=false, method="d8", method="dinf", add=false |
+| `interpolation.idw` | 5 | 5 | add=false |
+| `interpolation.kriging` | 3 | 3 | model="exponential", model="gaussian", extent="raster" |
+| `interpolation.naturalNeighbor` | 1 | 1 | extent="raster", cross=false, add=false |
+| `interpolation.spline` | 1 | 1 | splineType="tension", extent="raster", cross=false, add=false |
+| `interpolation.tin` | 2 | 2 | extent="raster", add=false |
 | `linearRef.calibrateRoutes` | 1 | 1 | before=false, after=false, ignoreGaps=false |
 | `linearRef.createRoutes` | 4 | 4 | priority="upperLeft", priority="upperRight", priority="lowerRight" |
 | `linearRef.eventDrift` | 3 | 3 | side="left" |
@@ -193,47 +192,40 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | `points.numberVertices` | 7 | 14 | start="north", start="first", start="point", shared=false, output="text" |
 | `proximity.nearest` | 2 | 2 | measure="centers", bearing=false |
 | `proximity.neighbors` | 1 | 1 | corners=false, overlaps=false, write=false |
-| `raster.calculator` | 4 | 0 | empty="expression", sample="f64", add=false |
-| `raster.cellStatistics` | 1 | 0 | stat="sum", stat="min", stat="max", stat="range", stat="std", stat="median", stat="majority", stat="minority", stat="variety", stat="count", ignore=false, add=false |
-| `raster.clipByMask` | 2 | 0 | crop=false, add=false |
+| `raster.calculator` | 4 | 4 | empty="expression", sample="f64", add=false |
+| `raster.cellStatistics` | 1 | 1 | stat="sum", stat="min", stat="max", stat="range", stat="std", stat="median", stat="majority", stat="minority", stat="variety", stat="count", ignore=false, add=false |
+| `raster.clipByMask` | 2 | 2 | crop=false, add=false |
 | `raster.cog` | 0 | 0 | add=true, add=false |
-| `raster.focalStatistics` | 1 | 0 | shape="circle", shape="ring", stat="sum", stat="min", stat="max", stat="range", stat="std", stat="median", stat="majority", stat="minority", stat="variety", ignore=false, add=false |
-| `raster.histogram` | 1 | 0 | — |
-| `raster.mosaic` | 2 | 0 | overlap="bottom", overlap="mean", overlap="min", overlap="max", sampling="bilinear", sampling="cubic", add=false |
-| `raster.rasterize` | 3 | 0 | overlap="first", overlap="min", overlap="sum", overlap="count", sample="i32", add=false |
-| `raster.reclassify` | 1 | 0 | bounds="lowerClosed", unmatched="empty", sample="i32", sample="u8", add=false |
-| `raster.resample` | 2 | 0 | method="bilinear", method="cubic", method="mode", method="min", method="max", add=false |
-| `raster.toLines` | 2 | 0 | select="range" |
-| `raster.toPoints` | 1 | 0 | mode="step", mode="all", elevation=false |
-| `raster.toPolygons` | 1 | 0 | connect="eight" |
-| `raster.zonalStatistics` | 1 | 0 | stat="count", stat="sum", stat="min", stat="max", stat="range", stat="std", stat="median", stat="majority", stat="minority", stat="variety", stat="area" |
-| `remote.accuracy` | 2 | 0 | — |
-| `remote.change` | 3 | 0 | method="ratio", method="normalized", add=false |
-| `remote.composite` | 2 | 0 | sampling="bilinear", add=false |
-| `remote.index` | 4 | 0 | index="gndvi", index="savi", index="ndwi", index="ndbi", index="ratio", add=false |
-| `remote.pansharpen` | 4 | 0 | add=false |
-| `remote.split` | 1 | 0 | add=false |
-| `remote.supervised` | 3 | 0 | add=false |
-| `remote.unsupervised` | 2 | 0 | add=false |
-| `scan.captureLine` | 1 | 0 | — |
-| `scan.closeArea` | 3 | 0 | — |
-| `scan.contourElevations` | 2 | 0 | — |
+| `raster.focalStatistics` | 1 | 1 | shape="circle", shape="ring", stat="sum", stat="min", stat="max", stat="range", stat="std", stat="median", stat="majority", stat="minority", stat="variety", ignore=false, add=false |
+| `raster.mosaic` | 2 | 2 | overlap="bottom", overlap="mean", overlap="min", overlap="max", sampling="bilinear", sampling="cubic", add=false |
+| `raster.rasterize` | 3 | 3 | overlap="first", overlap="min", overlap="sum", overlap="count", sample="i32", add=false |
+| `raster.reclassify` | 1 | 1 | bounds="lowerClosed", unmatched="empty", sample="i32", sample="u8", add=false |
+| `raster.resample` | 2 | 2 | method="bilinear", method="cubic", method="mode", method="min", method="max", add=false |
+| `raster.toLines` | 2 | 2 | select="range" |
+| `raster.toPoints` | 1 | 1 | mode="step", mode="all", elevation=false |
+| `raster.toPolygons` | 1 | 1 | connect="eight" |
+| `raster.zonalStatistics` | 1 | 1 | stat="count", stat="sum", stat="min", stat="max", stat="range", stat="std", stat="median", stat="majority", stat="minority", stat="variety", stat="area" |
+| `remote.change` | 3 | 3 | method="ratio", method="normalized", add=false |
+| `remote.composite` | 2 | 2 | sampling="bilinear", add=false |
+| `remote.index` | 4 | 4 | index="gndvi", index="savi", index="ndwi", index="ndbi", index="ratio", add=false |
+| `remote.pansharpen` | 4 | 4 | add=false |
+| `remote.split` | 1 | 1 | add=false |
+| `remote.supervised` | 3 | 3 | add=false |
+| `remote.unsupervised` | 2 | 2 | add=false |
 | `selection.byExpression` | 6 | 14 | mode="add", mode="remove" |
 | `selection.byLocation` | 8 | 16 | mode="add", mode="within" |
 | `stats.directionalDistribution` | 1 | 1 | deviations="2", deviations="3" |
 | `stats.localMoran` | 6 | 6 | concept="inverse", significance="0.01" |
 | `stats.standardDistance` | 1 | 1 | deviations="1", deviations="3" |
-| `suitability.fuzzyMembership` | 4 | 0 | function="power", function="small", function="near", sample="f64", add=false |
-| `suitability.fuzzyOverlay` | 3 | 0 | op="or", op="product", op="sum", sample="f64", add=false |
-| `suitability.pairwise` | 4 | 0 | sample="f64", add=false |
-| `suitability.roc` | 4 | 0 | — |
-| `suitability.weightedOverlay` | 3 | 0 | bounds="lowerClosed", add=false |
-| `suitability.weightedSum` | 3 | 0 | sample="f64", add=false |
-| `surface.aspect` | 2 | 0 | area="objects", add=false |
-| `surface.colorRelief` | 2 | 0 | ramp="Gri", ramp="Spektral", ramp="Mavi-kırmızı", ramp="Sıcaklık", area="objects", add=false |
-| `surface.contours` | 1 | 0 | area="objects" |
-| `surface.curvature` | 3 | 0 | curvature="profile", curvature="plan", add=false |
-| `surface.hillshade` | 3 | 0 | add=false |
-| `surface.insolation` | 3 | 0 | period="year", startMonth="1", startMonth="3", startMonth="4", startMonth="5", startMonth="7", startMonth="8", startMonth="9", startMonth="10", startMonth="11", startMonth="12", endMonth="1", endMonth="2", endMonth="3", endMonth="4", endMonth="5", endMonth="6", endMonth="7", endMonth="10", endMonth="11", endMonth="12", hourStep="0.25", hourStep="2", add=false |
-| `surface.ruggedness` | 1 | 0 | index="triRiley", index="triWilson", index="roughness", area="objects", add=false |
-| `surface.slope` | 5 | 0 | — |
+| `suitability.fuzzyMembership` | 4 | 4 | function="power", function="small", function="near", sample="f64", add=false |
+| `suitability.fuzzyOverlay` | 3 | 3 | op="or", op="product", op="sum", sample="f64", add=false |
+| `suitability.pairwise` | 4 | 4 | sample="f64", add=false |
+| `suitability.weightedOverlay` | 3 | 3 | bounds="lowerClosed", add=false |
+| `suitability.weightedSum` | 3 | 3 | sample="f64", add=false |
+| `surface.aspect` | 2 | 2 | area="objects", add=false |
+| `surface.colorRelief` | 2 | 2 | ramp="Gri", ramp="Spektral", ramp="Mavi-kırmızı", ramp="Sıcaklık", area="objects", add=false |
+| `surface.contours` | 1 | 1 | area="objects" |
+| `surface.curvature` | 3 | 3 | curvature="profile", curvature="plan", add=false |
+| `surface.hillshade` | 3 | 3 | add=false |
+| `surface.insolation` | 3 | 3 | period="year", startMonth="1", startMonth="3", startMonth="4", startMonth="5", startMonth="7", startMonth="8", startMonth="9", startMonth="10", startMonth="11", startMonth="12", endMonth="1", endMonth="2", endMonth="3", endMonth="4", endMonth="5", endMonth="6", endMonth="7", endMonth="10", endMonth="11", endMonth="12", hourStep="0.25", hourStep="2", add=false |
+| `surface.ruggedness` | 1 | 1 | index="triRiley", index="triWilson", index="roughness", area="objects", add=false |

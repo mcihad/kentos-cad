@@ -130,7 +130,11 @@ pub struct ProcessingRun {
     /// Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    pub sink: Option<RunSink>,
+    pub sink: Option<RunSink>,    /// The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
+    /// folder (then in the project's search paths), a result written beside it. The host gives it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing: Option<String>,
 }
 
 /// A run's result written to a new GeoPackage instead of the drawing (docs/adr/0508 §4): the tool runs on a copy,
@@ -457,6 +461,11 @@ pub struct ProcessingBatch {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub view: Option<[f64; 4]>,
+    /// As `cad.processing.run`'s: the open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
+    /// folder (then in the project's search paths), a result written beside it. The host gives it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing: Option<String>,
 }
 
 /// A row of a batch as it ran.

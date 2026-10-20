@@ -154,6 +154,8 @@ struct Ready {
     values: Values,
     selection: Vec<Slot>,
     view: Option<Bounds>,
+    /// The open drawing's folder: a raster's relative path is found from it.
+    folder: Option<PathBuf>,
 }
 
 fn invalid(param: &str, message: String) -> Box<CommandError> {
@@ -308,12 +310,18 @@ fn ready(
             issue.param.map(|p| format!("parameters.{p}")),
         ));
     }
+    let folder = input
+        .drawing
+        .as_deref()
+        .and_then(|d| Path::new(d).parent())
+        .map(Path::to_path_buf);
     Ok(Ready {
         tool,
         model,
         values,
         selection,
         view,
+        folder,
     })
 }
 
@@ -627,6 +635,7 @@ fn row_run(input: &ProcessingBatch, row: &kentos_commands::BatchRow) -> Processi
         selection: input.selection.clone(),
         view: input.view,
         sink: None,
+        drawing: None,
     }
 }
 
@@ -902,6 +911,7 @@ fn run_on(
         values,
         selection,
         view,
+        folder,
     } = ready;
     let before = layer_ids(doc);
     let mut host = Headless {
@@ -912,7 +922,7 @@ fn run_on(
     };
     let mut log = Vec::new();
     // The raster tools read and write files where there is no window too (docs/adr/0515).
-    let files = crate::local_files::LocalFiles::of(host.doc, None);
+    let files = crate::local_files::LocalFiles::of(host.doc, folder);
     let mut runner = Runner::with_files(std::sync::Arc::new(files));
     let outcome = match &model {
         // A model's steps one after another, one undo step, taken back whole when one stops.

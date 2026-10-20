@@ -23246,7 +23246,7 @@
    "id": "density.kernel",
    "title": "Çekirdek yoğunluğu",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "kernel",
@@ -23319,7 +23319,7 @@
    "id": "density.line",
    "title": "Çizgi yoğunluğu",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "unit",
@@ -23362,7 +23362,7 @@
    "id": "distance.corridor",
    "title": "Maliyet koridoru",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "neighbours",
@@ -23435,7 +23435,7 @@
    "id": "distance.cost",
    "title": "Birikimli maliyet",
    "cases": 8,
-   "command": 0,
+   "command": 8,
    "options": [
     {
      "key": "neighbours",
@@ -23503,7 +23503,7 @@
    "id": "distance.euclidean",
    "title": "Uzaklık yüzeyi",
    "cases": 5,
-   "command": 0,
+   "command": 5,
    "options": [
     {
      "key": "from",
@@ -23551,7 +23551,7 @@
    "id": "distance.path",
    "title": "En düşük maliyetli yol",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "neighbours",
@@ -24040,7 +24040,7 @@
    "id": "hydrology.basins",
    "title": "Havzalar",
    "cases": 4,
-   "command": 0,
+   "command": 4,
    "options": [
     {
      "key": "fill",
@@ -24073,7 +24073,7 @@
    "id": "hydrology.fill",
    "title": "Çukur doldur",
    "cases": 4,
-   "command": 0,
+   "command": 4,
    "options": [
     {
      "key": "result",
@@ -24101,7 +24101,7 @@
    "id": "hydrology.flowAccumulation",
    "title": "Akış birikimi",
    "cases": 4,
-   "command": 0,
+   "command": 4,
    "options": [
     {
      "key": "fill",
@@ -24159,7 +24159,7 @@
    "id": "hydrology.flowDirection",
    "title": "Akış yönü",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "fill",
@@ -24197,7 +24197,7 @@
    "id": "hydrology.pourPoint",
    "title": "Döküm noktası",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "fill",
@@ -24215,7 +24215,7 @@
    "id": "hydrology.streams",
    "title": "Dere ağı",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "fill",
@@ -24233,7 +24233,7 @@
    "id": "hydrology.watershed",
    "title": "Noktadan havza",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "fill",
@@ -24251,7 +24251,7 @@
    "id": "hydrology.wetness",
    "title": "Topografik nemlilik indisi",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "fill",
@@ -24294,7 +24294,7 @@
    "id": "interpolation.idw",
    "title": "Ters uzaklık (IDW)",
    "cases": 5,
-   "command": 0,
+   "command": 5,
    "options": [
     {
      "key": "extent",
@@ -24332,7 +24332,7 @@
    "id": "interpolation.kriging",
    "title": "Kriging",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "model",
@@ -24405,7 +24405,7 @@
    "id": "interpolation.naturalNeighbor",
    "title": "Doğal komşu",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "extent",
@@ -24443,7 +24443,7 @@
    "id": "interpolation.spline",
    "title": "Spline",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "splineType",
@@ -24491,7 +24491,7 @@
    "id": "interpolation.tin",
    "title": "TIN'den raster",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "extent",
@@ -25521,7 +25521,7 @@
    "id": "raster.calculator",
    "title": "Raster hesaplayıcı",
    "cases": 4,
-   "command": 0,
+   "command": 4,
    "options": [
     {
      "key": "empty",
@@ -25559,7 +25559,7 @@
    "id": "raster.cellStatistics",
    "title": "Hücre istatistiği",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "stat",
@@ -25642,7 +25642,7 @@
    "id": "raster.clipByMask",
    "title": "Maskeyle kırp",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "crop",
@@ -25688,7 +25688,7 @@
    "id": "raster.focalStatistics",
    "title": "Komşuluk istatistiği",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "shape",
@@ -25781,14 +25781,14 @@
    "id": "raster.histogram",
    "title": "Histogram",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": []
   },
   {
    "id": "raster.mosaic",
    "title": "Mozaik",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "overlap",
@@ -25846,7 +25846,7 @@
    "id": "raster.rasterize",
    "title": "Rasterleştir",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "valueFrom",
@@ -25934,7 +25934,7 @@
    "id": "raster.reclassify",
    "title": "Yeniden sınıflandır",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "bounds",
@@ -25987,7 +25987,7 @@
    "id": "raster.resample",
    "title": "Yeniden örnekle",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "method",
@@ -26040,7 +26040,7 @@
    "id": "raster.toLines",
    "title": "Rasterden çizgi",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "select",
@@ -26063,7 +26063,7 @@
    "id": "raster.toPoints",
    "title": "Rasterden nokta",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "mode",
@@ -26096,7 +26096,7 @@
    "id": "raster.toPolygons",
    "title": "Rasterden alan",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "connect",
@@ -26114,7 +26114,7 @@
    "id": "raster.zonalStatistics",
    "title": "Bölgesel istatistik",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "stat",
@@ -26182,14 +26182,14 @@
    "id": "remote.accuracy",
    "title": "Doğruluk analizi",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": []
   },
   {
    "id": "remote.change",
    "title": "Değişim tespiti",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "method",
@@ -26227,7 +26227,7 @@
    "id": "remote.composite",
    "title": "Bant birleştir",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "sampling",
@@ -26255,7 +26255,7 @@
    "id": "remote.index",
    "title": "Spektral indis",
    "cases": 4,
-   "command": 0,
+   "command": 4,
    "options": [
     {
      "key": "index",
@@ -26318,7 +26318,7 @@
    "id": "remote.pansharpen",
    "title": "Görüntü birleştirme",
    "cases": 4,
-   "command": 0,
+   "command": 4,
    "options": [
     {
      "key": "method",
@@ -26361,7 +26361,7 @@
    "id": "remote.split",
    "title": "Bantlara ayır",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "add",
@@ -26379,7 +26379,7 @@
    "id": "remote.supervised",
    "title": "Denetimli sınıflandırma",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "method",
@@ -26407,7 +26407,7 @@
    "id": "remote.unsupervised",
    "title": "Denetimsiz sınıflandırma",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "add",
@@ -26533,14 +26533,14 @@
    "id": "scan.captureLine",
    "title": "Çizgi yakala",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": []
   },
   {
    "id": "scan.closeArea",
    "title": "Alan kapat",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "holes",
@@ -26558,7 +26558,7 @@
    "id": "scan.contourElevations",
    "title": "Eğrilere kot ver",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": []
   },
   {
@@ -26899,7 +26899,7 @@
    "id": "suitability.fuzzyMembership",
    "title": "Bulanık üyelik",
    "cases": 4,
-   "command": 0,
+   "command": 4,
    "options": [
     {
      "key": "function",
@@ -26957,7 +26957,7 @@
    "id": "suitability.fuzzyOverlay",
    "title": "Bulanık çakıştırma",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "op",
@@ -27010,7 +27010,7 @@
    "id": "suitability.pairwise",
    "title": "İkili karşılaştırma (AHP)",
    "cases": 4,
-   "command": 0,
+   "command": 4,
    "options": [
     {
      "key": "write",
@@ -27048,7 +27048,7 @@
    "id": "suitability.roc",
    "title": "ROC ile doğrulama",
    "cases": 4,
-   "command": 0,
+   "command": 4,
    "options": [
     {
      "key": "background",
@@ -27076,7 +27076,7 @@
    "id": "suitability.weightedOverlay",
    "title": "Ağırlıklı çakıştırma",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "bounds",
@@ -27104,7 +27104,7 @@
    "id": "suitability.weightedSum",
    "title": "Ağırlıklı toplam",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "sample",
@@ -27132,7 +27132,7 @@
    "id": "surface.aspect",
    "title": "Bakı",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "method",
@@ -27170,7 +27170,7 @@
    "id": "surface.colorRelief",
    "title": "Renkli kabartma",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "colors",
@@ -27268,7 +27268,7 @@
    "id": "surface.contours",
    "title": "Eş yükselti eğrileri",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "area",
@@ -27286,7 +27286,7 @@
    "id": "surface.curvature",
    "title": "Eğrilik",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "curvature",
@@ -27329,7 +27329,7 @@
    "id": "surface.hillshade",
    "title": "Gölgeli kabartma",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "area",
@@ -27357,7 +27357,7 @@
    "id": "surface.insolation",
    "title": "Güneşlenme",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "period",
@@ -27540,7 +27540,7 @@
    "id": "surface.ruggedness",
    "title": "Pürüzlülük",
    "cases": 1,
-   "command": 0,
+   "command": 1,
    "options": [
     {
      "key": "index",
@@ -27588,7 +27588,7 @@
    "id": "surface.slope",
    "title": "Eğim",
    "cases": 5,
-   "command": 0,
+   "command": 5,
    "options": [
     {
      "key": "method",

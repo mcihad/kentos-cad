@@ -7,7 +7,10 @@
   - 0244 (CAD işlem manifesti).
 - **Web:** ertelendi (ADR 0228). Bu dilim web'e bir şey eklemiyor.
 - **Sonraya kalan:**
-  - raster, nokta bulutu ve çok boyutlu araçların komutla eşdeğerliği (dosyaları test ev sahibinden okur ve yazar);
+  - nokta bulutu ve çok boyutlu (NetCDF) araçların komutla eşdeğerliği: başsız dosyalar onları bilerek yalnız masaüstüne bırakır
+    (ADR 0515);
+  - `cad.processing.run`'ın çağrı kaydı: komut olarak değil aracın düzenleme adımı olarak düşüyor (girdisi kayıtta yok), tekrar
+    oynatma onu yeniden çalıştıramaz;
   - komutların açık seçenek hücrelerine durum yazmak (matris onları sayar, kapatmaz);
   - doğal dil başarısının ölçümü.
 
@@ -43,8 +46,8 @@ okur.
 - 213 komutta 3534 seçenek hücresinin 1180'i bir durumda deneniyor;
 - 151 araçta 769 seçenek hücresinin 436'sı deneniyor;
 - 10 aracın ortak durumu yok (nokta bulutu araçları kendi `pointcloud_ops_cases.py`'leriyle, `raster.cog` COG testiyle);
-- 70 aracın komutla kanıtı yok: raster, yüzey, hidroloji, uzaklık, uygunluk, uzaktan algılama, çok boyutlu, interpolasyon ve
-  nokta bulutu.
+- eşdeğerlik testiyle komutla kanıtı olmayan araç 13: nokta bulutu ve çok boyutlu araçlar (başsız dosyalar onları yalnız
+  masaüstüne bırakır) ve COG olarak kaydet (kendi testi `cog.rs`).
 
 ### 2. Eşdeğerlik testi
 
@@ -63,7 +66,38 @@ Karşılaştırılanlar:
 276 durumun hepsi iki yolda aynı. Test yazılırken bulunan tek fark testin kendisindeydi: pencerenin kaydı dosyanın içeriğini
 saklamaz, komut dosyayı yolundan okur.
 
+Raster araçlarının sekiz durum dosyası (yüzey, interpolasyon, raster işlemleri, raster ve vektör, hidroloji, uzaklık, uygunluk, uzaktan
+algılama; 144 durum) da iki yoldan oynatılır:
+- pencere rasterleri test ev sahibinin belleğinden okur ve yazdığını orada tutar;
+- komut rasterleri geçici bir klasörde çizimin dosyasının yanından okur, sonuçlarını oraya yazar (`drawing`, §3).
+Çizimler, özetler ve notlar (dosya yolu klasörsüz) ve yazılan bütün dosyalar bayt bayt aynı. Toplam 420 durum.
+
+### 3. Komutlara açık çizimin dosyası
+
+Eşdeğerlik testi bir hatayı gösterdi:
+- `cad.processing.run` raster dosyalarını `LocalFiles::of(doc, None)` ile açıyordu;
+- göreli yol çizimin klasörüne göre değil, sürecin çalışma klasörüne göre çözülüyordu;
+- Python'da ya da MCP'de başka bir klasörden açılan çizimin rasteri bulunamıyordu.
+
+Sekiz komutun girdisinde zaten açık çizimin dosyası vardı (`drawing`: `cad.xrefs.edit`, `.list`, `cad.rasters.georef`, `.mosaic`,
+`cad.pointclouds.describe`, `.query`, `cad.images.edit`, `cad.assets.check`). Ama başsız sunucu onu doldurmuyordu. MCP'de bu ad çizimin
+tutamacıyla çakıştığından hiç gönderilemiyordu.
+
+Karar:
+- `cad.processing.run` ve `.batch` de `drawing` alır. Raster dosyası masaüstünün kuralıyla aranır: kayıtlı yolu, çizimin klasöründen
+  göreli yolu, projenin arama yolları (`links::find_in`). Bulunamazsa bakılan yerler söylenir. Sonuç kaynağın yanına yazılır.
+- Ev sahibi, girdisinde `drawing` olan komuta (kataloğun şemasından) çağıran vermemişse çizimin dosyasını verir
+  (`kentos_headless::with_own_file`):
+  - başsız oturum (Python, MCP);
+  - `rpc::call_from` (masaüstünün Python konsolu ve ajan bağlantısı);
+  - masaüstünün Toplu çalıştır'ı.
+- Verilen dosya değiştirilmez. Dosyası olmayan çizim vermez.
+
+Doğrulama `kentos-headless`'in `own_file` testleri: dosyadan açılan çizimin rasteri yanından okunur ve sonucu yanına yazılır; aynı
+çizim dosyasız açılınca rasteri bulunmaz; verilen dosya kalır, başka komutun girdisi değişmez.
+
 ## Doğrulama
 
-- `cargo test -p kentos-processing --test cases equivalence` (276 durum).
+- `cargo test -p kentos-processing --test cases equivalence` (420 durum).
+- `cargo test -p kentos-headless --test headless own_file`.
 - `.run/py/bin/python scripts/gis/coverage.py --check`.

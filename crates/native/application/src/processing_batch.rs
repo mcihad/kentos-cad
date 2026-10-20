@@ -104,6 +104,7 @@ mod tests {
             rows: vec![Default::default()],
             selection: Vec::new(),
             view: None,
+            drawing: None,
         };
         let CommandResult::Failed { error } = super::validate(&cx, &batch) else {
             panic!("refused");

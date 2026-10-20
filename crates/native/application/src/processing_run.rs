@@ -72,6 +72,7 @@ mod tests {
             selection: Vec::new(),
             view: None,
             sink: None,
+            drawing: None,
         };
         let CommandResult::Failed { error } = super::validate(&cx, &run) else {
             panic!("refused");

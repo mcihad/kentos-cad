@@ -30958,12 +30958,15 @@ class ProcessingBatch(_Model):
     time `batch_row_failed` (the row ran and stopped, or its values no longer fit what the rows before it wrote:
     nothing written).
     Attributes:
+        drawing: As `cad.processing.run`'s: the open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
+            folder (then in the project's search paths), a result written beside it. The host gives it.
         parameters: The values every row takes unless it gives its own.
         selection: As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.
         view: Unit: length.
     """
     tool: str
     rows: list[BatchRow]
+    drawing: str | None | Unset = UNSET
     parameters: dict[str, Any] | None | Unset = UNSET
     selection: list[str] | Unset = UNSET
     view: list[float] | None | Unset = UNSET
@@ -30972,6 +30975,8 @@ class ProcessingBatch(_Model):
         out: dict[str, Any] = {}
         out["tool"] = self.tool
         out["rows"] = [e0.to_json() for e0 in self.rows]
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
         if self.parameters is not UNSET:
             out["parameters"] = None if self.parameters is None else dict(self.parameters)
         if self.selection is not UNSET:
@@ -30985,6 +30990,7 @@ class ProcessingBatch(_Model):
         return cls(
             tool=data["tool"],
             rows=[BatchRow.from_json(e0) for e0 in data["rows"]],
+            drawing=data.get("drawing", UNSET),
             parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
             selection=list(data["selection"]) if "selection" in data else UNSET,
             view=UNSET if "view" not in data else None if data["view"] is None else [float(e0) for e0 in data["view"]],
@@ -31229,11 +31235,14 @@ class ProcessingRun(_Model):
     not, a value its rules refuse, a file unread, the visible scope without `view`), `tool_failed` (it ran and
     stopped: a locked layer, nothing to do, its own refusal; nothing written).
     Attributes:
+        drawing: The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
+            folder (then in the project's search paths), a result written beside it. The host gives it.
         selection: The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
         sink: Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
         view: The box taken as on screen (minimum east, north, maximum east, north): a features input's `visible` scope. Unit: length.
     """
     tool: str
+    drawing: str | None | Unset = UNSET
     parameters: dict[str, Any] | None | Unset = UNSET
     selection: list[str] | Unset = UNSET
     sink: RunSink | None | Unset = UNSET
@@ -31242,6 +31251,8 @@ class ProcessingRun(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["tool"] = self.tool
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
         if self.parameters is not UNSET:
             out["parameters"] = None if self.parameters is None else dict(self.parameters)
         if self.selection is not UNSET:
@@ -31256,6 +31267,7 @@ class ProcessingRun(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ProcessingRun:
         return cls(
             tool=data["tool"],
+            drawing=data.get("drawing", UNSET),
             parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
             selection=list(data["selection"]) if "selection" in data else UNSET,
             sink=UNSET if "sink" not in data else None if data["sink"] is None else RunSink.from_json(data["sink"]),

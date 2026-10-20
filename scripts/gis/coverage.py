@@ -173,8 +173,10 @@ def command_evidence() -> dict[str, dict]:
 def equivalent_files() -> set[str]:
     """The case files the equivalence test plays through the window and the command both."""
     text = EQUIVALENCE.read_text(encoding="utf-8") if EQUIVALENCE.exists() else ""
-    m = re.search(r"const FILES: \[&str; \d+\] = \[(.*?)\];", text, re.S)
-    return set(re.findall(r'"([^"]+\.json)"', m.group(1))) if m else set()
+    found: set[str] = set()
+    for m in re.finditer(r"const (?:RASTER_)?FILES: \[&str; \d+\] = \[(.*?)\];", text, re.S):
+        found |= set(re.findall(r'"([^"]+\.json)"', m.group(1)))
+    return found
 
 
 def processing_evidence() -> dict[str, dict]:
