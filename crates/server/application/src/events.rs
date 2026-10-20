@@ -14,9 +14,10 @@
 
 use std::time::Duration;
 
-use kentos_contracts::{EventPage, EventRecord, ProjectPermission};
+use kentos_contracts::{EventPage, EventRecord, FeatureOp, ProjectPermission};
 use serde_json::Value;
 use sqlx::{Postgres, Transaction};
+use uuid::Uuid;
 
 use crate::access::{ProjectAccess, not_found};
 use crate::error::{AppError, AppResult};
@@ -101,6 +102,17 @@ pub async fn after(
     .bind(limit.clamp(1, PAGE_MAX))
     .fetch_all(&mut *tx)
     .await?;
+    // A Veri girişi hears of a record out of its reach only as a removal (docs/adr/0550 §2): the
+    // record's version and kind of change stay with those who read it.
+    let narrowed = if access.through_forms() && !rows.is_empty() {
+        let parsed = rows
+            .iter()
+            .map(|(s, p)| record(*s, p.clone()))
+            .collect::<AppResult<Vec<_>>>()?;
+        Some(hide_out_of_reach(&mut tx, access, parsed).await?)
+    } else {
+        None
+    };
     // Read after the events: a prune that removed some of them had committed its
     // horizon before, so it shows here. (One committing in between only makes
     // this a resync that was not needed.)
@@ -126,14 +138,59 @@ pub async fn after(
         return Err(resync());
     }
     let next = rows.last().map(|(s, _)| *s).unwrap_or(after);
-    let events = rows
-        .into_iter()
-        .map(|(s, p)| record(s, p))
-        .collect::<AppResult<_>>()?;
+    let events = match narrowed {
+        Some(events) => events,
+        None => rows
+            .into_iter()
+            .map(|(s, p)| record(s, p))
+            .collect::<AppResult<_>>()?,
+    };
     Ok(EventPage {
         events,
         next: next.to_string(),
     })
+}
+
+/// `events` with the changes of records the caller does not reach turned into removals, without their
+/// versions: a record that is there but out of reach is, to the caller, one that is gone.
+async fn hide_out_of_reach(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+    mut events: Vec<EventRecord>,
+) -> AppResult<Vec<EventRecord>> {
+    let ids: Vec<Uuid> = events
+        .iter()
+        .flat_map(|e| e.features.iter())
+        .filter(|f| f.op != FeatureOp::Delete)
+        .filter_map(|f| Uuid::parse_str(&f.id).ok())
+        .collect();
+    if ids.is_empty() {
+        return Ok(events);
+    }
+    let reading = crate::projects::reading_of(tx, access).await?;
+    let stored: Vec<crate::projects::FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "select {} from kentos.feature where tenant_id = $1 and project_id = $2 and id = any($3)",
+        crate::projects::FEATURE_COLUMNS
+    )))
+    .bind(access.tenant)
+    .bind(access.project)
+    .bind(&ids)
+    .fetch_all(&mut **tx)
+    .await?;
+    let mut hidden = std::collections::HashSet::new();
+    for row in stored {
+        let r = crate::projects::record(row)?;
+        if !reading.sees(&r) {
+            hidden.insert(r.id);
+        }
+    }
+    for f in events.iter_mut().flat_map(|e| e.features.iter_mut()) {
+        if f.op != FeatureOp::Delete && hidden.contains(&f.id) {
+            f.op = FeatureOp::Delete;
+            f.version = None;
+        }
+    }
+    Ok(events)
 }
 
 /// The newest cursor and the horizon of a project's log (a subscription checks its cursor against both).

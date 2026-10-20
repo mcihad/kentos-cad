@@ -81,6 +81,18 @@ pub struct ProjectSnapshot {
     pub objects: usize,
     /// The drawing's settings, layers and styles, as the file has them.
     pub meta: DrawingMeta,
+    /// What the file was cut by (docs/adr/0550 §3): the reach's stamp ([`kentos_forms::reach::Reach::stamp`])
+    /// of the caller it was taken for; none for a whole copy.
+    pub reach: Option<String>,
+}
+
+/// How a copy of the whole project is taken (docs/adr/0550 §3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Take {
+    /// As the records are: a backup (a checkpoint) or a copy for someone who may have all of it.
+    Whole,
+    /// As the caller may take it out: the attributes forms mark `redact` cut, unless the caller designs forms.
+    Cut,
 }
 
 /// The project in scope as one KCAD v2 file (`project.download`).
@@ -90,7 +102,7 @@ pub async fn snapshot(
 ) -> AppResult<ProjectSnapshot> {
     access.live()?;
     access.require(ProjectPermission::Download)?;
-    take(db, access).await
+    take(db, access, Take::Cut).await
 }
 
 /// The file itself, for a caller that checked what it needs (a checkpoint
@@ -98,10 +110,38 @@ pub async fn snapshot(
 pub(crate) async fn take(
     db: &kentos_postgres::Db,
     access: &ProjectAccess,
+    how: Take,
 ) -> AppResult<ProjectSnapshot> {
     let mut tx = db.snapshot(access.scope()).await?;
-    let (doc, revision, event_cursor) = read(&mut tx, access).await?;
+    let (mut doc, revision, event_cursor) = read(&mut tx, access).await?;
     tx.commit().await?;
+    // Cut by the same moment's forms: the settings the file carries are the ones it was judged by.
+    let reach = match how {
+        Take::Whole => None,
+        Take::Cut => {
+            // A Veri girişi reads records through forms; it has no right to a copy (no `project.download`).
+            if access.through_forms() {
+                return Err(AppError::forbidden(
+                    "Veri girişi projenin kopyasını almaz; kayıtlarını formla okur.",
+                ));
+            }
+            let variables =
+                crate::form_guard::variables_for(&doc.name, &doc.settings, &access.actor);
+            let reach = crate::form_guard::reach_with(
+                &doc.settings,
+                &doc.layers,
+                &variables,
+                crate::projects::caller_of(access),
+            );
+            if !reach.whole_copy_ok() {
+                doc.entities = std::mem::take(&mut doc.entities)
+                    .into_iter()
+                    .map(|e| crate::form_guard::cut(e, &reach))
+                    .collect();
+            }
+            Some(reach.stamp())
+        }
+    };
     let name = doc.name.clone();
     let objects = doc.entities.len();
     let meta = DrawingMeta::of(&doc);
@@ -131,6 +171,7 @@ pub(crate) async fn take(
         sha256,
         objects,
         meta,
+        reach,
     })
 }
 

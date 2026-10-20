@@ -10,6 +10,7 @@ use kentos_contracts::{
     ProjectPermission, ProjectSettings, forms_problem, relations_problem,
 };
 use kentos_expression::{Unit, Variable};
+use kentos_forms::reach::{Caller, Reach};
 use kentos_forms::{OtherLayer, Prepared, World};
 
 /// The permissions a settings change from `before` to `after` needs besides `project.edit`: a
@@ -151,59 +152,51 @@ fn find<'a>(nodes: &'a [LayerNode], id: &str) -> Option<&'a LayerNode> {
     })
 }
 
-/// The fields a Veri girişi reads on each layer that has a published form (docs/adr/0411 §6): the
-/// names of the layer fields its forms' latest versions show. A layer without one is not here: all
-/// of its attributes are read.
-pub fn shown_fields(
+/// The one resolver of what `caller` reads and takes out of the project's records (docs/adr/0550),
+/// over its forms, its layers and the `@` values it is judged with.
+pub fn reach_with(
     settings: &ProjectSettings,
     tree: &[LayerNode],
-) -> BTreeMap<String, std::collections::BTreeSet<String>> {
-    let mut out: BTreeMap<String, std::collections::BTreeSet<String>> = BTreeMap::new();
-    for form in &settings.forms {
-        let Some(release) = form.releases.last() else {
-            continue;
-        };
-        let fields = find(tree, &form.layer)
-            .map(|n| n.fields.clone())
-            .unwrap_or_default();
-        let shown = out.entry(form.layer.clone()).or_default();
-        for (_, item) in release.body.walk() {
-            if let FormItem::Field(f) = item
-                && let Some(field) = fields.iter().find(|x| x.key() == f.field)
-            {
-                shown.insert(field.name.clone());
-            }
-        }
-    }
-    out
+    variables: &[Variable],
+    caller: Caller,
+) -> Reach {
+    let empty: &[LayerField] = &[];
+    Reach::new(
+        &settings.forms,
+        |layer| find(tree, layer).map_or(empty, |n| n.fields.as_slice()),
+        variables,
+        Unit::per_metre(settings.unit().per_metre()),
+        caller,
+    )
 }
 
-/// `e` as a Veri girişi reads it: on a layer with a published form, the attributes its forms show.
-pub fn projected(
-    mut e: Entity,
-    shown: &BTreeMap<String, std::collections::BTreeSet<String>>,
-) -> Entity {
-    if let Some(names) = shown.get(&e.base().layer_id) {
-        e.base_mut().attrs.retain(|k, _| names.contains(k));
-    }
+/// `e` as the caller of `reach` reads it: the attributes its forms hide left out (a Veri girişi's; for
+/// anyone else every attribute is read).
+pub fn projected(mut e: Entity, reach: &Reach) -> Entity {
+    let layer = e.base().layer_id.clone();
+    let attrs = reach.readable(&layer, &e.base().attrs);
+    e.base_mut().attrs = attrs;
+    e
+}
+
+/// `e` as a copy of the whole project carries it for the caller of `reach` (docs/adr/0550 §3): the
+/// attributes forms mark `redact` cut, unless the caller designs forms.
+pub fn cut(mut e: Entity, reach: &Reach) -> Entity {
+    let layer = e.base().layer_id.clone();
+    let attrs = reach.copy_attrs(&layer, &e.base().attrs);
+    e.base_mut().attrs = attrs;
     e
 }
 
 /// A Veri girişi's `after` with what it does not read kept from `stored` (docs/adr/0411 §6): the
 /// attributes its layer's forms do not show come from the stored copy; the ones they show are the
 /// writer's.
-pub fn merged(
-    mut after: Entity,
-    stored: &Entity,
-    shown: &BTreeMap<String, std::collections::BTreeSet<String>>,
-) -> Entity {
-    let Some(names) = shown.get(&after.base().layer_id) else {
-        return after;
-    };
+pub fn merged(mut after: Entity, stored: &Entity, reach: &Reach) -> Entity {
+    let layer = after.base().layer_id.clone();
     let attrs = &mut after.base_mut().attrs;
-    attrs.retain(|k, _| names.contains(k));
+    attrs.retain(|k, _| reach.level(&layer, k).readable());
     for (k, v) in &stored.base().attrs {
-        if !names.contains(k) {
+        if !reach.level(&layer, k).readable() {
             attrs.insert(k.clone(), v.clone());
         }
     }
@@ -377,33 +370,13 @@ pub fn variables_for(
     variables
 }
 
-/// The scopes of a project's layers (docs/adr/0539): which records a Veri girişi reads and writes.
-pub fn scopes_of(
-    settings: &ProjectSettings,
-    tree: &[LayerNode],
-    variables: &[Variable],
-) -> kentos_forms::scope::Scopes {
-    let empty: &[LayerField] = &[];
-    kentos_forms::scope::Scopes::new(
-        &settings.forms,
-        |layer| find(tree, layer).map_or(empty, |n| n.fields.as_slice()),
-        variables,
-        Unit::per_metre(settings.unit().per_metre()),
-    )
-}
-
-/// Whether a stored object is within a Veri girişi's reach (docs/adr/0539).
-pub fn in_scope(
-    scopes: &kentos_forms::scope::Scopes,
-    tree: &[LayerNode],
-    e: &Entity,
-    uid: &str,
-) -> bool {
+/// Whether a stored object is within the reach of the caller of `reach` (docs/adr/0539, 0550).
+pub fn in_reach(reach: &Reach, tree: &[LayerNode], e: &Entity, uid: &str) -> bool {
     let layer = &e.base().layer_id;
     let name = find(tree, layer).map_or("", |n| n.name.as_str());
     let mut object = kentos_forms::object_of(e, name, 0.0);
     object.uid = Some(uid.to_owned());
-    scopes.sees(layer, &e.base().attrs, &object)
+    reach.sees(layer, &e.base().attrs, &object)
 }
 
 #[cfg(test)]
@@ -554,12 +527,12 @@ mod tests {
     #[test]
     fn a_data_entry_reads_the_forms_fields_and_keeps_the_others() {
         let (s, t) = (settings(json!([form(false, true)])), tree());
-        let shown = shown_fields(&s, &t);
+        let reach = reach_with(&s, &t, &[], Caller::THROUGH_FORMS);
         let stored = building(
             json!({ "Durum": "iyi", "Kat": "2", "Not": "gizli", "Ek": "x" }),
             10.0,
         );
-        let read = projected(stored.clone(), &shown);
+        let read = projected(stored.clone(), &reach);
         assert_eq!(
             read.base().attrs,
             building(json!({ "Durum": "iyi", "Kat": "2" }), 10.0)
@@ -568,7 +541,7 @@ mod tests {
         );
         let mut written = read.clone();
         written.base_mut().attrs.insert("Kat".into(), "3".into());
-        let kept = merged(written, &stored, &shown);
+        let kept = merged(written, &stored, &reach);
         assert_eq!(
             kept.base().attrs,
             building(
@@ -580,7 +553,16 @@ mod tests {
         );
         assert_eq!(judge(&s, &t).entry_write("u", &stored, &kept), Ok(()));
         // A draft is no published form: nothing is hidden.
-        assert!(shown_fields(&settings(json!([form(false, false)])), &t).is_empty());
+        let draft = reach_with(
+            &settings(json!([form(false, false)])),
+            &t,
+            &[],
+            Caller::THROUGH_FORMS,
+        );
+        assert_eq!(
+            projected(stored.clone(), &draft).base().attrs,
+            stored.base().attrs
+        );
     }
 
     /// §4: a form that enforces its rules refuses a write that breaks them, from anyone; a write that

@@ -183,21 +183,53 @@ async fn guard_forms(
             }
         }
     }
-    let rows: Vec<(String, Uuid, Value)> = if read.is_empty() {
-        Vec::new()
-    } else {
-        sqlx::query_as(
+    let variables = crate::form_guard::variables_for(name, settings, &access.actor);
+    // A Veri girişi writes only the records its forms reach (docs/adr/0539, 0550).
+    let reach = entry.then(|| {
+        crate::form_guard::reach_with(
+            settings,
+            tree,
+            &variables,
+            kentos_forms::reach::Caller::THROUGH_FORMS,
+        )
+    });
+    // The world the forms read: for a Veri girişi only the records it reaches and the fields it reads, so
+    // a value the form refuses or accepts never says whether a record out of its reach exists.
+    let mut rows: Vec<(String, String, BTreeMap<String, String>)> = Vec::new();
+    if !read.is_empty()
+        && let Some(reach) = &reach
+    {
+        let stored: Vec<crate::projects::FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+            "select {} from kentos.feature where tenant_id = $1 and project_id = $2 and layer_id = any($3)",
+            crate::projects::FEATURE_COLUMNS
+        )))
+        .bind(access.tenant)
+        .bind(access.project)
+        .bind(&read)
+        .fetch_all(&mut **tx)
+        .await?;
+        for row in stored {
+            let r = crate::projects::record(row)?;
+            if !crate::form_guard::in_reach(reach, tree, &r.entity, &r.id) {
+                continue;
+            }
+            let entity = crate::form_guard::projected(r.entity, reach);
+            rows.push((
+                entity.base().layer_id.clone(),
+                r.id,
+                entity.base().attrs.clone(),
+            ));
+        }
+    } else if !read.is_empty() {
+        let stored: Vec<(String, Uuid, Value)> = sqlx::query_as(
             "select layer_id, id, properties from kentos.feature where tenant_id = $1 and project_id = $2 and layer_id = any($3)",
         )
         .bind(access.tenant)
         .bind(access.project)
         .bind(&read)
         .fetch_all(&mut **tx)
-        .await?
-    };
-    let rows: Vec<(String, String, BTreeMap<String, String>)> = rows
-        .into_iter()
-        .map(|(layer, id, props)| {
+        .await?;
+        for (layer, id, props) in stored {
             let attrs = props
                 .as_object()
                 .map(|m| {
@@ -209,12 +241,9 @@ async fn guard_forms(
                         .collect()
                 })
                 .unwrap_or_default();
-            (layer, id.to_string(), attrs)
-        })
-        .collect();
-    let variables = crate::form_guard::variables_for(name, settings, &access.actor);
-    // A Veri girişi writes only the records its forms' scopes reach (docs/adr/0539).
-    let scopes = entry.then(|| crate::form_guard::scopes_of(settings, tree, &variables));
+            rows.push((layer, id.to_string(), attrs));
+        }
+    }
     let judge = crate::form_guard::Judge {
         settings,
         tree,
@@ -235,12 +264,12 @@ async fn guard_forms(
                     "Veri girişi nesne oluşturmaz; yalnız var olan kayıtları formla düzenler.",
                 ));
             };
-            if let Some(scopes) = &scopes {
+            if let Some(reach) = &reach {
                 // A record out of reach is not there for it; one it would take out of reach is refused.
-                if !crate::form_guard::in_scope(scopes, tree, &old.entity, id) {
+                if !crate::form_guard::in_reach(reach, tree, &old.entity, id) {
                     return Err(AppError::not_found("Kayıt bulunamadı."));
                 }
-                if !crate::form_guard::in_scope(scopes, tree, after, id) {
+                if !crate::form_guard::in_reach(reach, tree, after, id) {
                     return Err(AppError::forbidden(
                         "Bu değişiklik kaydı formun kapsamının dışına çıkarır; kapsamdaki değerlerle yazın ya da proje yöneticisine başvurun.",
                     ));
@@ -519,9 +548,9 @@ pub async fn commit(
     let access = &now;
     // A Veri girişi writes what it reads (docs/adr/0411 §6): the attributes its forms do not show
     // are kept as stored.
-    let shown = crate::projects::shown_fields_for(&mut tx, access).await?;
-    let input = match &shown {
-        Some(shown) if entry => {
+    let reading = crate::projects::reading_for(&mut tx, access).await?;
+    let input = match &reading {
+        Some(reading) if entry => {
             let ids: Vec<Uuid> = input
                 .features
                 .iter()
@@ -536,7 +565,8 @@ pub async fn commit(
                 if let FeatureChange::Update { id, entity } = change
                     && let Some(before) = Uuid::parse_str(id).ok().and_then(|u| stored.get(&u))
                 {
-                    *entity = crate::form_guard::merged(entity.clone(), &before.entity, shown);
+                    *entity =
+                        crate::form_guard::merged(entity.clone(), &before.entity, &reading.reach);
                 }
             }
             input
@@ -723,9 +753,23 @@ pub async fn commit(
     .into_iter()
     .map(|(id, v, l)| (id, (v, l)))
     .collect();
+    // A record out of a Veri girişi's reach is not there for it (docs/adr/0539, 0550 §2): a change to one
+    // is a 404 before any version is compared, so neither its version nor its copy is ever told.
+    let hidden: HashSet<Uuid> = match &reading {
+        Some(reading) if entry => current_copies(&mut tx, access, &ids)
+            .await?
+            .into_iter()
+            .filter(|(_, r)| !reading.sees(r))
+            .map(|(id, _)| id)
+            .collect(),
+        _ => HashSet::new(),
+    };
     let mut conflicting_ids = Vec::new();
     for p in &plan {
         let key = p.id.to_string();
+        if hidden.contains(&p.id) {
+            return Err(AppError::not_found("Kayıt bulunamadı."));
+        }
         let actual = existing.get(&p.id).map(|(v, _)| *v);
         let reason = match p.op {
             FeatureOp::Create => actual.map(|_| ConflictReason::Exists),
@@ -770,8 +814,8 @@ pub async fn commit(
             if let Ok(id) = Uuid::parse_str(&c.id) {
                 // A Veri girişi sees the server's copy as it reads it (docs/adr/0411 §6).
                 c.current = copies.remove(&id).map(|mut r| {
-                    if let Some(shown) = &shown {
-                        r.entity = crate::form_guard::projected(r.entity, shown);
+                    if let Some(reading) = &reading {
+                        r.entity = crate::form_guard::projected(r.entity, &reading.reach);
                     }
                     r
                 });

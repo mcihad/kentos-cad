@@ -271,14 +271,27 @@ pub async fn details(db: &Db, access: &ProjectAccess) -> AppResult<ProjectDetail
             .fetch_one(&mut *tx)
             .await?;
     type Extent = (i64, Option<f64>, Option<f64>, Option<f64>, Option<f64>);
+    // A Veri girişi counts and bounds only the records in its reach (docs/adr/0550 §2): neither the
+    // number nor the extent of the others is told.
+    let (limited, reached): (Vec<String>, Vec<Uuid>) =
+        match crate::projects::reading_for(&mut tx, access).await? {
+            Some(reading) if reading.narrows() => (
+                reading.scoped_layers(),
+                crate::projects::reached_ids(&mut tx, access, &reading).await?,
+            ),
+            _ => (Vec::new(), Vec::new()),
+        };
     let (objects, min_x, min_y, max_x, max_y): Extent = sqlx::query_as(
         "select count(*),
                 public.st_xmin(public.st_extent(geom)::public.box3d), public.st_ymin(public.st_extent(geom)::public.box3d),
                 public.st_xmax(public.st_extent(geom)::public.box3d), public.st_ymax(public.st_extent(geom)::public.box3d)
-           from kentos.feature where tenant_id = $1 and project_id = $2",
+           from kentos.feature where tenant_id = $1 and project_id = $2
+            and (layer_id <> all($3) or id = any($4))",
     )
     .bind(access.tenant)
     .bind(access.project)
+    .bind(&limited)
+    .bind(&reached)
     .fetch_one(&mut *tx)
     .await?;
     tx.commit().await?;
