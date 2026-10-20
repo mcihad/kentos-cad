@@ -6,7 +6,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 ## Ürün komutları
 
 - 220 komut; masaüstü 199, başsız 220, Python 220, MCP 199, sunucu 21.
-- Seçenekler: 3552 hücre, 1186 tanesi bir durumda deneniyor (2366 açık).
+- Seçenekler: 3555 hücre, 1189 tanesi bir durumda deneniyor (2366 açık).
 - Veri türleri (hedef türler): 182 hücre, 124 tanesi bir durumda deneniyor (58 açık).
 - Ortak komut durumu olmayan: 34; 21 sunucu komutu (sunucunun veritabanı testlerinde), 13 dosya komutu (başsız testlerde ve biçim başvurularında: file.export.atlas, file.export.block, file.export.csv, file.export.dxf, file.export.fgb, file.export.gis, file.export.gml, file.export.gpkg, file.export.pdf, file.export.shp, file.export.sld, file.export.xyz, file.package).
 
@@ -144,7 +144,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | Araç | Durum | Komutla | Denenmeyen seçenekler |
 |---|---|---|---|
 | `annotation.edgeLengths` | 2 | 2 | shared=false |
-| `attributes.calculate` | 15 | 49 | empty="clear" |
+| `attributes.calculate` | 15 | 58 | empty="clear" |
 | `attributes.fromInside` | 5 | 7 | stat="min", stat="max" |
 | `attributes.joinByField` | 6 | 7 | existing="empty" |
 | `convert.tableEllipse` | 1 | 1 | sourceKind="layer", unit="deg" |
@@ -193,7 +193,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | `pointcloud.tile` | 0 | 0 | vpc=true, vpc=false, format="laz", format="las", format="copc", add=true, add=false |
 | `points.numberVertices` | 7 | 14 | start="north", start="first", start="point", shared=false, output="text" |
 | `proximity.nearest` | 2 | 2 | measure="centers", bearing=false |
-| `proximity.neighbors` | 1 | 1 | corners=false, overlaps=false, write=false |
+| `proximity.neighbors` | 1 | 2 | corners=false, overlaps=false, write=false |
 | `raster.calculator` | 4 | 4 | empty="expression", sample="f64", add=false |
 | `raster.cellStatistics` | 1 | 1 | stat="sum", stat="min", stat="max", stat="range", stat="std", stat="median", stat="majority", stat="minority", stat="variety", stat="count", ignore=false, add=false |
 | `raster.clipByMask` | 2 | 2 | crop=false, add=false |
@@ -214,7 +214,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | `remote.split` | 1 | 1 | add=false |
 | `remote.supervised` | 3 | 3 | add=false |
 | `remote.unsupervised` | 2 | 2 | add=false |
-| `selection.byExpression` | 6 | 14 | mode="add", mode="remove" |
+| `selection.byExpression` | 6 | 15 | mode="add", mode="remove" |
 | `selection.byLocation` | 8 | 16 | mode="add", mode="within" |
 | `stats.directionalDistribution` | 1 | 1 | deviations="2", deviations="3" |
 | `stats.localMoran` | 6 | 6 | concept="inverse", significance="0.01" |
