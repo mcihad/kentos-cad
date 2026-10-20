@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document id="root_doc">
+    <Schema id="parsel.schema">
+      <SimpleField name="ada" type="string"/>
+      <SimpleField name="parsel_no" type="int"/>
+      <SimpleField name="alan" type="double"/>
+      <SimpleField name="kimlik" type="string"/>
+      <SimpleField name="tescil" type="string"/>
+      <SimpleField name="guncelleme" type="string"/>
+      <SimpleField name="tapulu" type="bool"/>
+      <SimpleField name="not" type="string"/>
+    </Schema>
+    <Document id="parsel">
+      <name>parsel</name>
+      <Placemark id="parsel.1">
+        <ExtendedData>
+          <SchemaData schemaUrl="#parsel.schema">
+            <SimpleData name="ada">Çağlayan</SimpleData>
+            <SimpleData name="parsel_no">5</SimpleData>
+            <SimpleData name="alan">1234.56</SimpleData>
+            <SimpleData name="kimlik">9007199254740993</SimpleData>
+            <SimpleData name="tescil">2024/02/29</SimpleData>
+            <SimpleData name="guncelleme">2024-03-01T10:20:30Z</SimpleData>
+            <SimpleData name="tapulu">true</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <MultiGeometry>
+          <Polygon>
+            <outerBoundaryIs>
+              <LinearRing>
+                <coordinates>
+                  35.8479546520161,39.9140793411447,0
+                  35.8481885671615,39.9140796476119,0
+                  35.8481881694818,39.9142597736337,0
+                  35.8479542537237,39.9142594671646,0
+                  35.8479546520161,39.9140793411447,0
+                </coordinates>
+              </LinearRing>
+            </outerBoundaryIs>
+            <innerBoundaryIs>
+              <LinearRing>
+                <coordinates>
+                  35.8480130312676,39.9141244493114,0
+                  35.848012931733,39.9141694808167,0
+                  35.8480714105958,39.9141695574484,0
+                  35.8480715100922,39.914124525943,0
+                  35.8480130312676,39.9141244493114,0
+                </coordinates>
+              </LinearRing>
+            </innerBoundaryIs>
+          </Polygon>
+          <Polygon>
+            <outerBoundaryIs>
+              <LinearRing>
+                <coordinates>
+                  35.8483055247355,39.9140798006685,0
+                  35.8484224823104,39.9140799536072,0
+                  35.8484222837774,39.9141700166198,0
+                  35.8483055247355,39.9140798006685,0
+                </coordinates>
+              </LinearRing>
+            </outerBoundaryIs>
+          </Polygon>
+        </MultiGeometry>
+      </Placemark>
+      <Placemark id="parsel.2">
+        <ExtendedData>
+          <SchemaData schemaUrl="#parsel.schema">
+            <SimpleData name="ada">Işık-Ğüşöç</SimpleData>
+            <SimpleData name="tapulu">false</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Polygon>
+          <outerBoundaryIs>
+            <LinearRing>
+              <coordinates>
+                35.8491242277785,39.9140808687621,0
+                35.8492411853597,39.9140810208751,0
+                35.849240987899,39.914171083891,0
+                35.8491240301647,39.9141709317776,0
+                35.8491242277785,39.9140808687621,0
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </Polygon>
+      </Placemark>
+      <Placemark id="parsel.3">
+        <ExtendedData>
+          <SchemaData schemaUrl="#parsel.schema">
+            <SimpleData name="ada">geometrisiz</SimpleData>
+            <SimpleData name="parsel_no">7</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <MultiGeometry/>
+      </Placemark>
+    </Document>
+  </Document>
+</kml>

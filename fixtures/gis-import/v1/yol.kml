@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document id="root_doc">
+    <Schema id="yol.schema">
+      <SimpleField name="ad" type="string"/>
+    </Schema>
+    <Document id="yol">
+      <name>yol</name>
+      <Placemark id="yol.1">
+        <ExtendedData>
+          <SchemaData schemaUrl="#yol.schema">
+            <SimpleData name="ad">Atatürk Cd.</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <LineString>
+          <coordinates>
+            35.8479536562785,39.914529656184,10
+            35.8485384479782,39.9145304214793,12
+            35.849123042082,39.9146212468341,15
+          </coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark id="yol.2">
+        <LineString>
+          <coordinates>
+            35.8479532579771,39.9147097821898,0
+            35.8480702166217,39.9147099354858,1
+          </coordinates>
+        </LineString>
+      </Placemark>
+    </Document>
+  </Document>
+</kml>

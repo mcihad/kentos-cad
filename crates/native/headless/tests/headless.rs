@@ -2537,3 +2537,75 @@ fn xyz_files_go_out() {
     }
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+fn gis_fixture(name: &str) -> String {
+    format!("{}/../../../fixtures/gis-import/v1/{name}", env!("CARGO_MANIFEST_DIR"))
+}
+
+/// A Shapefile, a GeoJSON file and a KML go into a drawing as the product commands (docs/adr/0563): each is one
+/// recorded step under its command's name, the plan says what execute takes, the file's system is a question the
+/// input answers, and the journal replays on another drawing.
+#[test]
+fn gis_files_are_taken_in_by_their_commands() {
+    let mut s = new_drawing();
+    for (command, name, srid, objects) in [
+        ("file.import.shp", "nokta.shp", None, 1),
+        ("file.import.shp", "katmanlar.zip", None, 5),
+        ("file.import.geojson", "katmanli.geojson", None, 3),
+        ("file.import.geojson", "parsel-rfc7946.geojson", Some(4326), 2),
+        ("file.import.kml", "nokta.kml", Some(4326), 1),
+    ] {
+        let mut input = json!({ "path": gis_fixture(name) });
+        if srid.is_some() {
+            input["reproject"] = json!(true);
+        }
+        let planned = s
+            .call(json!({ "command": command, "op": "plan", "input": input }))
+            .expect("answers");
+        assert_eq!(planned["status"], "completed", "{name}: {planned}");
+        let took = s
+            .call(json!({ "command": command, "input": input }))
+            .expect("answers");
+        assert_eq!(took["status"], "completed", "{name}: {took}");
+        assert_eq!(took["output"]["objects"], objects, "{name}: {took}");
+        assert_eq!(took["output"]["objects"], planned["output"]["objects"], "{name}");
+        assert_eq!(took["output"]["moved"].is_object(), srid.is_some(), "{name}: {took}");
+    }
+    // The system is a question: WGS 84 coordinates are not moved unless asked.
+    let refused = s
+        .call(json!({ "command": "file.import.geojson",
+            "input": { "path": gis_fixture("nokta-rfc7946.geojson") } }))
+        .expect("answers");
+    assert_eq!(refused["error"]["code"], "crs_mismatch", "{refused}");
+    assert_eq!(refused["error"]["path"], "reproject");
+    // Each import is a row of the journal named by the command, and the journal replays on another drawing.
+    let journal = s.journal();
+    let rows: Vec<&str> = journal["calls"]
+        .as_array()
+        .expect("rows")
+        .iter()
+        .filter_map(|r| r["command"].as_str())
+        .filter(|c| c.starts_with("file.import."))
+        .collect();
+    assert_eq!(
+        rows,
+        [
+            "file.import.shp",
+            "file.import.shp",
+            "file.import.geojson",
+            "file.import.geojson",
+            "file.import.kml"
+        ]
+    );
+    let mut other = new_drawing();
+    let report = other.replay(journal).expect("replays");
+    assert!(
+        report["steps"]
+            .as_array()
+            .expect("steps")
+            .iter()
+            .filter(|r| r["command"].as_str().is_some_and(|c| c.starts_with("file.import.")))
+            .all(|r| r["outcome"] == "same"),
+        "{report}"
+    );
+}

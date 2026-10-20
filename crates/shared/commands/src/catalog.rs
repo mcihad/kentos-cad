@@ -8144,6 +8144,94 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::FILE_IMPORT_SHP.into(),
+            version: crate::FILE_IMPORT_SHP_VERSION,
+            title: "Shapefile içe aktar".into(),
+            summary: "path'teki Shapefile'ı (.shp; yanındaki .shx, .dbf, .prj ve .cpg adından, büyük küçük harfe bakmadan bulunur, eksik olan söylenir) ya da .zip arşivini (her .shp bir katman; entry biri seçer) açık çizime alır, tek geri alma adımı (“Shapefile: ad.shp”). \
+                      Nokta, çok nokta, çizgi, çok parçalı çizgi, alan (delikleriyle, çok parçalı) ve Z ile M ölçüleri okunur; DBF alanları türleriyle katmanın alanları ve nesnelerin öznitelikleri olur (kod sayfası .cpg'den ya da DBF'in dil sürücüsünden). \
+                      Sistem önce srid'den, yoksa dosyanın bildirdiğinden (.prj dosyası), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. \
+                      Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. \
+                      Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["shpin".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportShp>(),
+            output: schema::<crate::GisImported>(),
+            plan: Some(schema::<crate::GisImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "TM dilimindeki parseller, var olan katmana".into(),
+                input: json!({ "path": "/veri/parseller.shp", "layer": "parsel" }),
+                output: None,
+            }, CommandExample {
+                title: "WGS 84'teki arşiv projenin sistemine çevrilerek".into(),
+                input: json!({ "path": "/veri/portal.zip", "entry": "binalar", "reproject": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_GEOJSON.into(),
+            version: crate::FILE_IMPORT_GEOJSON_VERSION,
+            title: "GeoJSON içe aktar".into(),
+            summary: "path'teki GeoJSON dosyasını (FeatureCollection, Feature ya da çıplak geometri; RFC 7946 ve 2008'in crs üyesi) açık çizime alır, tek geri alma adımı (“GeoJSON: ad.geojson”). \
+                      Point, MultiPoint, LineString, MultiLineString, Polygon (delikleriyle), MultiPolygon ve GeometryCollection okunur, üçüncü sayı kottur; KentOS'un yazdığı kentos üyesi katmanı ve etiketi geri verir, ötekiler dosyanın name'indeki ya da dosya adındaki katmana gider; özellikler öznitelik olur, alanların türleri değerlerinden çıkar. \
+                      Sistem önce srid'den, yoksa dosyanın bildirdiğinden (crs üyesi, yoksa RFC 7946'nın WGS 84 boylam, enlemi), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. \
+                      Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. \
+                      Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["geojsonin".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportGeojson>(),
+            output: schema::<crate::GisImported>(),
+            plan: Some(schema::<crate::GisImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "WGS 84'teki noktalar projenin sistemine çevrilerek".into(),
+                input: json!({ "path": "/veri/noktalar.geojson", "reproject": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_KML.into(),
+            version: crate::FILE_IMPORT_KML_VERSION,
+            title: "KML/KMZ içe aktar".into(),
+            summary: "path'teki KML dosyasını ya da KMZ arşivini (ana .kml'i) açık çizime alır, tek geri alma adımı (“KML: ad.kml”). \
+                      Klasörler katman, yer imleri nesne olur (Point, LineString, LinearRing, Polygon delikleriyle, MultiGeometry, gx:Track); biçemin rengi ve kalınlığı, adı etiket, açıklaması, zamanı ve verileri öznitelik olur; resim kaplamaları, modeller ve bağlantılar alınmaz, söylenir. \
+                      Sistem önce srid'den, yoksa dosyanın bildirdiğinden (KML 2.2'nin WGS 84 boylam, enlemi), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. \
+                      Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. \
+                      Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["kmlin".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportKml>(),
+            output: schema::<crate::GisImported>(),
+            plan: Some(schema::<crate::GisImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Google Earth'ün yer imleri projenin sistemine çevrilerek".into(),
+                input: json!({ "path": "/veri/yerler.kmz", "reproject": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_XYZ.into(),
             version: crate::FILE_EXPORT_XYZ_VERSION,
             title: "XYZ dışa aktar".into(),
@@ -9279,6 +9367,15 @@ mod tests {
                     }
                     crate::FILE_IMPORT_FGB => {
                         serde_json::from_value::<crate::ImportFgb>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_IMPORT_SHP => {
+                        serde_json::from_value::<crate::ImportShp>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_IMPORT_GEOJSON => {
+                        serde_json::from_value::<crate::ImportGeojson>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_IMPORT_KML => {
+                        serde_json::from_value::<crate::ImportKml>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_GML => {
                         serde_json::from_value::<crate::ExportGml>(e.input.clone()).map(|_| ())

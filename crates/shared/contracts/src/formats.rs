@@ -346,6 +346,7 @@ pub struct DeclaredCrs {
     /// The EPSG code the statement names, when it names one the reader recognises.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// The statement as the window shows it ("urn:ogc:def:crs:EPSG::5256", "TUREF_TM36").
     pub text: String,

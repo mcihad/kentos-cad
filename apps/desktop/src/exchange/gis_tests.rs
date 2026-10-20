@@ -86,6 +86,19 @@ fn a_geojson_in_the_projects_system_goes_in_as_one_undo_step() {
         last_said(&app),
         "“tm.geojson”: 2 nesne 2 katmana alındı; 1 yeni katman “tm.geojson” grubunda. Tek adımda geri alınabilir."
     );
+    // The window writes with the command: its row in the journal names it, with the window's choices (docs/adr/0563 §2).
+    let row = model.journal().last().expect("a row");
+    assert_eq!(row.command.as_deref(), Some("file.import.geojson"));
+    assert_eq!(row.label.as_deref(), Some("GeoJSON: tm.geojson"));
+    let input = row.input.clone().expect("the input");
+    assert!(
+        input["path"]
+            .as_str()
+            .is_some_and(|p| p.ends_with("gis/tm.geojson")),
+        "{input}"
+    );
+    // “Bina” is locked: the window leaves it out, and says so to the command.
+    assert_eq!(input["skipLayers"], serde_json::json!(["Bina"]));
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(count(&app), before, "one undo step takes all of it back");
 }
@@ -173,6 +186,13 @@ fn a_zipped_shapefile_offers_its_layers_one_at_a_time() {
     import(&mut app);
     assert_eq!(count(&app) - before, roads);
     let model = &app.document.as_ref().expect("open").model;
+    // The archive's layer is the command's `entry`, the system the user chose over the .prj's its `srid`.
+    let row = model.journal().last().expect("a row");
+    assert_eq!(row.command.as_deref(), Some("file.import.shp"));
+    assert_eq!(row.label.as_deref(), Some("Shapefile: katmanlar.zip"));
+    let input = row.input.clone().expect("the input");
+    assert_eq!(input["entry"], "katmanlar/yollar");
+    assert_eq!(input["srid"], 5256);
     let group = model
         .layers()
         .nodes()
@@ -473,6 +493,45 @@ fn screens() {
                 Event::GeoJsonExport(geojson_export::Event::Scope(dxf_export::Scope::All)),
             );
             picture(&mut app, &format!("gis-{mode}-7-geojson-ver-bloklar"));
+
+            // The windows write with their commands (docs/adr/0563): the history says what was asked and its
+            // answer's words, one row each, named by the command.
+            let mut app = fresh();
+            app.command_expanded = true;
+            app.picker = Picker::File(gis("tm.geojson"));
+            run(&mut app, "file.import.geojson");
+            import(&mut app);
+            picture(&mut app, &format!("gis-{mode}-8-geojson-komutla"));
+
+            let mut app = fresh();
+            app.command_expanded = true;
+            let files = [
+                "parseller.shp",
+                "parseller.shx",
+                "parseller.dbf",
+                "parseller.prj",
+            ]
+            .map(picked)
+            .to_vec();
+            send(
+                &mut app,
+                Event::PickedMany(Kind::Shapefile, Some(Ok(files))),
+            );
+            send(&mut app, Event::GisImport(gis_import::Event::Convert(true)));
+            picture(&mut app, &format!("gis-{mode}-9-shapefile-cevirme"));
+            import(&mut app);
+            picture(&mut app, &format!("gis-{mode}-10-shapefile-komutla"));
+
+            let mut app = fresh();
+            app.command_expanded = true;
+            app.picker = Picker::File(
+                PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                    .join("../../fixtures/formats/v1/kml/parsel.kml"),
+            );
+            run(&mut app, "file.import.kml");
+            send(&mut app, Event::GisImport(gis_import::Event::Convert(true)));
+            import(&mut app);
+            picture(&mut app, &format!("gis-{mode}-11-kml-komutla"));
         }
     }
 }

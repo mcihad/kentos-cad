@@ -3226,12 +3226,14 @@
    "id": "file.import.geojson",
    "kind": "command",
    "title": "GeoJSON…",
-   "level": "none",
-   "via": [],
+   "level": "semantic",
+   "via": [
+    "file.import.geojson"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "Connection: file.import.geojson",
+   "mcp": "file.import.geojson",
+   "note": "GeoJSON penceresi dosyayı bir kez okur, sistemin sorusunu ve katmanların yerini gösterir; İçe aktar komutla (execute_read) tek adımda alır, günlükte komutun adıyla (ADR 0563).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -3286,12 +3288,14 @@
    "id": "file.import.kml",
    "kind": "command",
    "title": "KML/KMZ…",
-   "level": "none",
-   "via": [],
+   "level": "semantic",
+   "via": [
+    "file.import.kml"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "Connection: file.import.kml",
+   "mcp": "file.import.kml",
+   "note": "KML/KMZ penceresi dosyayı bir kez okur, sistemin sorusunu ve katmanların yerini gösterir; İçe aktar komutla (execute_read) tek adımda alır, günlükte komutun adıyla (ADR 0563).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -3358,12 +3362,14 @@
    "id": "file.import.shp",
    "kind": "command",
    "title": "Shapefile…",
-   "level": "none",
-   "via": [],
+   "level": "semantic",
+   "via": [
+    "file.import.shp"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "Connection: file.import.shp",
+   "mcp": "file.import.shp",
+   "note": "Shapefile penceresi dosyayı bir kez okur, sistemin sorusunu ve katmanların yerini gösterir; İçe aktar komutla (execute_read) tek adımda alır, günlükte komutun adıyla (ADR 0563).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2

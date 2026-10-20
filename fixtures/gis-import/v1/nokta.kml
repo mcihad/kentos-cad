@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document id="root_doc">
+    <Schema id="nokta.schema">
+      <SimpleField name="ad" type="string"/>
+      <SimpleField name="kot" type="double"/>
+    </Schema>
+    <Document id="nokta">
+      <name>nokta</name>
+      <Placemark id="nokta.1">
+        <ExtendedData>
+          <SchemaData schemaUrl="#nokta.schema">
+            <SimpleData name="ad">N1</SimpleData>
+            <SimpleData name="kot">101.75</SimpleData>
+          </SchemaData>
+        </ExtendedData>
+        <Point>
+          <coordinates>
+            35.8479692418436,39.9140928697644,101.75
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Document>
+  </Document>
+</kml>

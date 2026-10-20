@@ -1,0 +1,1 @@
+{"type": "FeatureCollection", "name": "bilinmeyen", "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::9999"}}, "features": [{"type": "Feature", "properties": {"ad": "a"}, "geometry": {"type": "Point", "coordinates": [486512.25, 4420187.5]}}]}

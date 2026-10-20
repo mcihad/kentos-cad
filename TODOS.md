@@ -246,6 +246,10 @@ Liste:
 - [ ] `CBS-38` Veri girişinin satır kapsamı (ADR 0539, 20 Ekim): web'de gerekenler: formun `scope`'u web'in form tasarımcısında
   (Kapsam alanı ve ön denetimin `form_scope_invalid`'i), `@kullanici_eposta` web'in `model/projectVariables.ts`'inde ve İfade
   oluşturucu'da; sunucu tarafı ortaktır.
+- [ ] `CBS-05` Shapefile, GeoJSON ve KML içe aktarma komutları (ADR 0563, 21 Ekim): web'de gerekenler: `file.import.shp`, `.geojson` ve `.kml`'in
+  web işleyicileri (web'in GeoJSON/Shapefile/KML penceresi dosyayı kendisi yazıyor), cevabın `moved`'ının (çevirmenin yolu ve doğruluğu) pencerede, `srid` ve `reproject` girdisi,
+  yeni kodların (`crs_unknown`, `crs_overridden`, `crs_unofficial`, `entry_not_found`) iletileri; sunucu işinin üç yeni biçimi (`shp` arşivi, `geojson`, `kml`) web'in
+  içe aktarma pencerelerinde; sunucu, komutlar ve ortak durumlar ortaktır.
 - [ ] `CBS-39` içe aktarma ve atlas sunucu işleri, MCP iş araçları (ADR 0561, 20 Ekim): web'de gerekenler: içe aktarma pencerelerinde “Sunucuya içe aktar”
   (hazırlanan dosya `POST/PUT …/job-inputs`, sonra `project.import` işi) ve Atlası PDF yap'ta “Atlası sunucuda yap” (`project.atlas`, önizlemenin pin'i), Sunucu işleri
   sekmesinde iki türün satırları ve `.pdf` indirme uzantısı, yeni hata kodlarının önerileri (`pin_mismatch`, `crs_mismatch`, `gone`); sunucu, çocuk süreç, MCP ve sözleşme ortaktır.
@@ -2157,9 +2161,16 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   indirilir); sonucun delta'sı blok tanımlarını taşır ve işin kesinleşmesi 100 000 değişikliğe çıktı; çocuk kendi kullanımını söyler ve ebeveyn erken sık örnekler (job_run'ın kök nedeni:
   kısa işte örnek alınamaması); MCP `jobs.start`, `jobs.status`, `jobs.cancel`, `jobs.result` (içe aktarmada `file`, sonuçta `savePath`); Python `stage_file`, `import_job`,
   `atlas_job`; masaüstünde ortak “Sunucuya gönder” penceresi (içe aktarma pencerelerinde ve Atlası PDF yap'ta), Sunucu işleri'nde iki türün satırları, İndir'in doğru uzantısı.
-  Kalan: Shapefile, GeoJSON ve KML içe aktarma komutları ve işleri, devam ettirilebilir parçalı yükleme (masaüstü dosyayı belleğe okur), yan dosyalar, çok satırlı toplu yazma,
-  2 köşeli yaylı alanı kabul eden sunucu yazma kuralı, gerçek Linux'ta `/proc` ölçümü ve cgroup, kullanıcı başına kota, önbellek anahtarı, yedek ve geri yükleme tatbikatı.
+  Kalan: devam ettirilebilir parçalı yükleme (masaüstü dosyayı belleğe okur), yan dosyalar, çok satırlı toplu yazma,
+  gerçek Linux'ta `/proc` ölçümü ve cgroup, kullanıcı başına kota, önbellek anahtarı, yedek ve geri yükleme tatbikatı.
   — **20 Ekim, [ADR 0561](docs/adr/0561-import-atlas-and-mcp-jobs.md).**
+- [ ] `CBS-05` Shapefile, GeoJSON ve KML içe aktarma komutları (dilim): `file.import.shp` (`.shp` yanındaki `.shx`, `.dbf`, `.prj`, `.cpg`'siyle ya da `.zip` arşivi, `entry`),
+  `file.import.geojson`, `file.import.kml` (KML ve KMZ): ortak okuyucular, katmanların yönlendirmesi DXF'inkiyle ortak (`layers`, `layer`, `skipLayers`, `group`), dosyanın sistemi veri olarak
+  (`srid`, `reproject`; `crs_unknown`, `crs_mismatch`, `crs_overridden`, `crs_undeclared`; yerel proje olduğu gibi alır), cevapta `moved` (yol, doğruluk, resmî mi, çevrilen ve dışarıda kalan),
+  tek geri alma adımı ve günlükte komutun adı; masaüstü pencereleri `execute_read` ile yazar (çevirme iş parçacığında yapılmışsa `Premoved`); sunucu işi `project.import` üç biçimi alır;
+  ortak durumlar GDAL/OGR, `tools/formats/gis.py`, KML başvurusu ve PROJ'dan (50, 33, 31); Python `test_gis_import.py`; sunucunun iki köşeli yaylı alan kuralı masaüstüyle aynı ve PostGIS
+  izdüşümü (daire, mercek; geçici PostGIS'te). Kalan: GeoJSON ve KML pencerelerinde “Sunucuya içe aktar”, Shapefile yan dosyalarının işe ayrı hazırlanması, `file.export.kml` ve GeoJSON'un komutu.
+  — **21 Ekim, [ADR 0563](docs/adr/0563-gis-file-import-commands.md).**
 - [ ] `CBS-40` arayüz akışı (dilim): `cad.sources.describe`'ın bağ durumunda `objects`, `rows`, `total` ve durumun istediği iş `next`
   (`SourceNext::of`: yeniden bağla, yok, uzlaştır, yaz, oku; kullanıcının işini götüren öneri yok); masaüstünde Kaynak durumu penceresi
   (kaynak ve salt okunurluk, durum, yüklü ve toplam satır, sistem, satırın düğmesi Kaynak ▸'nın komutlarıyla). Kalan: aynı bilgi Öznitelik

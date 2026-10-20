@@ -1056726,6 +1056726,1775 @@
       ]
     },
     {
+      "id": "file.import.shp",
+      "version": 1,
+      "title": "Shapefile içe aktar",
+      "summary": "path'teki Shapefile'ı (.shp; yanındaki .shx, .dbf, .prj ve .cpg adından, büyük küçük harfe bakmadan bulunur, eksik olan söylenir) ya da .zip arşivini (her .shp bir katman; entry biri seçer) açık çizime alır, tek geri alma adımı (“Shapefile: ad.shp”). Nokta, çok nokta, çizgi, çok parçalı çizgi, alan (delikleriyle, çok parçalı) ve Z ile M ölçüleri okunur; DBF alanları türleriyle katmanın alanları ve nesnelerin öznitelikleri olur (kod sayfası .cpg'den ya da DBF'in dil sürücüsünden). Sistem önce srid'den, yoksa dosyanın bildirdiğinden (.prj dosyası), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz.",
+      "aliases": [
+        "shpin"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.shp` v1: the Shapefile at `path` taken into the drawing as one undo step “Shapefile:\nad.shp”. `path` is a `.shp` (the `.shx`, `.dbf`, `.prj` and `.cpg` of its name beside it, found without case; a\nfile missing is read without it and said) or a `.zip` whose every `.shp` is a layer (`entry` names one). The\nsystem comes from the `.prj`; a file without one is taken to be in the project's system (`crs_undeclared`), one\nwhose `.prj` KentOS does not know needs `srid`. A file in another system than the project's comes in only with\n`reproject`. Each source layer goes onto the layer `layers` names, else `layer`, else the drawing's layer of the\nsame name (case and Turkish marks aside), else onto a new layer in the import's group with the DBF's fields.\nRefusals, in order: `invalid_file_path` (empty, relative, a folder, neither .shp nor .zip), `invalid_revision`,\n`revision_conflict`, `file_not_found`, `import_unreadable`, `entry_not_found` (at `entry`), `crs_unknown` (at\n`srid`), `layer_not_found`, `not_a_layer` and `layer_locked` (at `layer` or `layers.<name>`), `crs_mismatch` (at\n`reproject`: the file is in another system and the move was not asked, or cannot be made), `nothing_to_import`.\nWarnings: `crs_undeclared`, `crs_overridden`, `crs_unofficial`, `import_losses`.",
+        "properties": {
+          "entry": {
+            "description": "A zip archive's layer: its path in the archive (`katmanlar/parseller.shp`) or its name (`parseller`); absent:\nevery layer in the archive.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "description": "The drawing's revision the input was prepared against.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "group": {
+            "description": "The group the new layers go into, found by its name or made. Absent: one named after the file; empty: the\ntop of the tree.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The drawing's layer (its id) every layer `layers` does not name goes onto.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "A file's layer (its name in the file) → the drawing's layer (its id) its objects go onto.",
+            "type": "object"
+          },
+          "path": {
+            "description": "The `.shp` or `.zip` to read, an absolute path.",
+            "type": "string"
+          },
+          "reproject": {
+            "description": "Move the coordinates of a file in another system into the project's (docs/adr/0222 §2).",
+            "type": "boolean"
+          },
+          "skipLayers": {
+            "description": "The file's layers (by their names in the file) whose objects are left out.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "srid": {
+            "description": "The system the coordinates are in (EPSG), whatever the file says: a file without a `.prj`, or one KentOS\ncannot read.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ImportShp",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "CrsMove": {
+            "description": "How a file's coordinates were moved into the project's system, and how sure that is (docs/adr/0222 §2): the two\nsystems' EPSG codes (the project's is 0 when it is its own definition), the datum shift's operations (empty when\nonly the projection changed), its accuracy in metres (none when a step's is not written), whether an operation\nthat is not the official transformation was used, the same as a sentence, and what the move left out.",
+            "properties": {
+              "accuracy": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "left": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "moved": {
+                "description": "Objects moved, and objects left out because a vertex could not be moved (the report says why).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "text": {
+                "description": "“±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil”, “kesin, yalnız projeksiyon”.",
+                "type": "string"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "unofficial": {
+                "type": "boolean"
+              },
+              "via": {
+                "description": "The datum shift's operations joined by “ + ”; empty when only the projection changed.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "via",
+              "unofficial",
+              "text",
+              "moved",
+              "left"
+            ],
+            "type": "object"
+          },
+          "CrsSource": {
+            "description": "Where a file's statement of its coordinate system comes from.",
+            "oneOf": [
+              {
+                "const": "rfc7946",
+                "description": "A GeoJSON file without a `crs` member: RFC 7946 makes it WGS 84 longitude, latitude.",
+                "type": "string"
+              },
+              {
+                "const": "geoJsonCrs",
+                "description": "A GeoJSON file's legacy `crs` member (the 2008 specification).",
+                "type": "string"
+              },
+              {
+                "const": "prj",
+                "description": "A Shapefile's `.prj` (WKT).",
+                "type": "string"
+              },
+              {
+                "const": "ncz",
+                "description": "A Netcad NCZ drawing's MPROJ block (datum, projection, zone) and the\nSRS its TILED_XML block names (docs/adr/0138).",
+                "type": "string"
+              },
+              {
+                "const": "kml",
+                "description": "A KML or KMZ file: OGC KML 2.2 makes it WGS 84 longitude, latitude (docs/adr/0222).",
+                "type": "string"
+              }
+            ]
+          },
+          "DeclaredCrs": {
+            "description": "The coordinate system a file declares: what the file says, never a\nguess (CLAUDE.md §5). The import window shows it as the answer to its\nquestion, and the user confirms or changes it; nothing is transformed.",
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/CrsSource"
+              },
+              "srid": {
+                "description": "The EPSG code the statement names, when it names one the reader recognises.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "text": {
+                "description": "The statement as the window shows it (\"urn:ogc:def:crs:EPSG::5256\", \"TUREF_TM36\").",
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "source"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.shp`, `.geojson` or `.kml` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "declared": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DeclaredCrs"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the file says of its system (a `.prj`'s, a `crs` member, RFC 7946's or KML's WGS 84); none: nothing."
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256 (a Shapefile's: its `.shp`'s).",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CrsMove"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the coordinates were moved; absent when they were taken as they are."
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "report": {
+            "description": "What the reader counted and could not take (`ImportReport`)."
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "sourceLayers": {
+            "description": "The file's layers read (a zip's every `.shp`), as they are named in the file.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "srid": {
+            "description": "The system the coordinates were taken to be in: `srid`, else the file's, else the project's.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "targets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "description": "A file's layer → the drawing's layer (its id) its objects went onto.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "sourceLayers",
+          "layers",
+          "report",
+          "revision"
+        ],
+        "title": "GisImported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "CrsMove": {
+            "description": "How a file's coordinates were moved into the project's system, and how sure that is (docs/adr/0222 §2): the two\nsystems' EPSG codes (the project's is 0 when it is its own definition), the datum shift's operations (empty when\nonly the projection changed), its accuracy in metres (none when a step's is not written), whether an operation\nthat is not the official transformation was used, the same as a sentence, and what the move left out.",
+            "properties": {
+              "accuracy": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "left": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "moved": {
+                "description": "Objects moved, and objects left out because a vertex could not be moved (the report says why).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "text": {
+                "description": "“±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil”, “kesin, yalnız projeksiyon”.",
+                "type": "string"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "unofficial": {
+                "type": "boolean"
+              },
+              "via": {
+                "description": "The datum shift's operations joined by “ + ”; empty when only the projection changed.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "via",
+              "unofficial",
+              "text",
+              "moved",
+              "left"
+            ],
+            "type": "object"
+          },
+          "CrsSource": {
+            "description": "Where a file's statement of its coordinate system comes from.",
+            "oneOf": [
+              {
+                "const": "rfc7946",
+                "description": "A GeoJSON file without a `crs` member: RFC 7946 makes it WGS 84 longitude, latitude.",
+                "type": "string"
+              },
+              {
+                "const": "geoJsonCrs",
+                "description": "A GeoJSON file's legacy `crs` member (the 2008 specification).",
+                "type": "string"
+              },
+              {
+                "const": "prj",
+                "description": "A Shapefile's `.prj` (WKT).",
+                "type": "string"
+              },
+              {
+                "const": "ncz",
+                "description": "A Netcad NCZ drawing's MPROJ block (datum, projection, zone) and the\nSRS its TILED_XML block names (docs/adr/0138).",
+                "type": "string"
+              },
+              {
+                "const": "kml",
+                "description": "A KML or KMZ file: OGC KML 2.2 makes it WGS 84 longitude, latitude (docs/adr/0222).",
+                "type": "string"
+              }
+            ]
+          },
+          "DeclaredCrs": {
+            "description": "The coordinate system a file declares: what the file says, never a\nguess (CLAUDE.md §5). The import window shows it as the answer to its\nquestion, and the user confirms or changes it; nothing is transformed.",
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/CrsSource"
+              },
+              "srid": {
+                "description": "The EPSG code the statement names, when it names one the reader recognises.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "text": {
+                "description": "The statement as the window shows it (\"urn:ogc:def:crs:EPSG::5256\", \"TUREF_TM36\").",
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "source"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.shp`, `.geojson` or `.kml` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "declared": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DeclaredCrs"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the file says of its system (a `.prj`'s, a `crs` member, RFC 7946's or KML's WGS 84); none: nothing."
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256 (a Shapefile's: its `.shp`'s).",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CrsMove"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the coordinates were moved; absent when they were taken as they are."
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "report": {
+            "description": "What the reader counted and could not take (`ImportReport`)."
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "sourceLayers": {
+            "description": "The file's layers read (a zip's every `.shp`), as they are named in the file.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "srid": {
+            "description": "The system the coordinates were taken to be in: `srid`, else the file's, else the project's.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "targets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "description": "A file's layer → the drawing's layer (its id) its objects went onto.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "sourceLayers",
+          "layers",
+          "report",
+          "revision"
+        ],
+        "title": "GisImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "invalid_revision",
+          "revision_conflict",
+          "file_not_found",
+          "import_unreadable",
+          "entry_not_found",
+          "crs_unknown",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "crs_mismatch",
+          "nothing_to_import"
+        ],
+        "warnings": [
+          "crs_undeclared",
+          "crs_overridden",
+          "crs_unofficial",
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "TM dilimindeki parseller, var olan katmana",
+          "input": {
+            "layer": "parsel",
+            "path": "/veri/parseller.shp"
+          }
+        },
+        {
+          "title": "WGS 84'teki arşiv projenin sistemine çevrilerek",
+          "input": {
+            "entry": "binalar",
+            "path": "/veri/portal.zip",
+            "reproject": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.import.geojson",
+      "version": 1,
+      "title": "GeoJSON içe aktar",
+      "summary": "path'teki GeoJSON dosyasını (FeatureCollection, Feature ya da çıplak geometri; RFC 7946 ve 2008'in crs üyesi) açık çizime alır, tek geri alma adımı (“GeoJSON: ad.geojson”). Point, MultiPoint, LineString, MultiLineString, Polygon (delikleriyle), MultiPolygon ve GeometryCollection okunur, üçüncü sayı kottur; KentOS'un yazdığı kentos üyesi katmanı ve etiketi geri verir, ötekiler dosyanın name'indeki ya da dosya adındaki katmana gider; özellikler öznitelik olur, alanların türleri değerlerinden çıkar. Sistem önce srid'den, yoksa dosyanın bildirdiğinden (crs üyesi, yoksa RFC 7946'nın WGS 84 boylam, enlemi), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz.",
+      "aliases": [
+        "geojsonin"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.geojson` v1: the GeoJSON file at `path` taken into the drawing as one undo step “GeoJSON:\nad.geojson”. The objects of a file that names its layers (`kentos.layer`, KentOS's own members) go onto those\nlayers, the others onto the layer the document's `name` (else the file's name) gives. The system is the `crs`\nmember's, else WGS 84 longitude, latitude (RFC 7946). Refusals, warnings and the rest as `file.import.shp`'s\n(`entry_not_found` does not apply; a GeoJSON file always declares a system, so `crs_undeclared` does not either).",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "path": {
+            "description": "The file to read, an absolute path.",
+            "type": "string"
+          },
+          "reproject": {
+            "type": "boolean"
+          },
+          "skipLayers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "srid": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ImportGeojson",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "CrsMove": {
+            "description": "How a file's coordinates were moved into the project's system, and how sure that is (docs/adr/0222 §2): the two\nsystems' EPSG codes (the project's is 0 when it is its own definition), the datum shift's operations (empty when\nonly the projection changed), its accuracy in metres (none when a step's is not written), whether an operation\nthat is not the official transformation was used, the same as a sentence, and what the move left out.",
+            "properties": {
+              "accuracy": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "left": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "moved": {
+                "description": "Objects moved, and objects left out because a vertex could not be moved (the report says why).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "text": {
+                "description": "“±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil”, “kesin, yalnız projeksiyon”.",
+                "type": "string"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "unofficial": {
+                "type": "boolean"
+              },
+              "via": {
+                "description": "The datum shift's operations joined by “ + ”; empty when only the projection changed.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "via",
+              "unofficial",
+              "text",
+              "moved",
+              "left"
+            ],
+            "type": "object"
+          },
+          "CrsSource": {
+            "description": "Where a file's statement of its coordinate system comes from.",
+            "oneOf": [
+              {
+                "const": "rfc7946",
+                "description": "A GeoJSON file without a `crs` member: RFC 7946 makes it WGS 84 longitude, latitude.",
+                "type": "string"
+              },
+              {
+                "const": "geoJsonCrs",
+                "description": "A GeoJSON file's legacy `crs` member (the 2008 specification).",
+                "type": "string"
+              },
+              {
+                "const": "prj",
+                "description": "A Shapefile's `.prj` (WKT).",
+                "type": "string"
+              },
+              {
+                "const": "ncz",
+                "description": "A Netcad NCZ drawing's MPROJ block (datum, projection, zone) and the\nSRS its TILED_XML block names (docs/adr/0138).",
+                "type": "string"
+              },
+              {
+                "const": "kml",
+                "description": "A KML or KMZ file: OGC KML 2.2 makes it WGS 84 longitude, latitude (docs/adr/0222).",
+                "type": "string"
+              }
+            ]
+          },
+          "DeclaredCrs": {
+            "description": "The coordinate system a file declares: what the file says, never a\nguess (CLAUDE.md §5). The import window shows it as the answer to its\nquestion, and the user confirms or changes it; nothing is transformed.",
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/CrsSource"
+              },
+              "srid": {
+                "description": "The EPSG code the statement names, when it names one the reader recognises.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "text": {
+                "description": "The statement as the window shows it (\"urn:ogc:def:crs:EPSG::5256\", \"TUREF_TM36\").",
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "source"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.shp`, `.geojson` or `.kml` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "declared": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DeclaredCrs"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the file says of its system (a `.prj`'s, a `crs` member, RFC 7946's or KML's WGS 84); none: nothing."
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256 (a Shapefile's: its `.shp`'s).",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CrsMove"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the coordinates were moved; absent when they were taken as they are."
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "report": {
+            "description": "What the reader counted and could not take (`ImportReport`)."
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "sourceLayers": {
+            "description": "The file's layers read (a zip's every `.shp`), as they are named in the file.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "srid": {
+            "description": "The system the coordinates were taken to be in: `srid`, else the file's, else the project's.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "targets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "description": "A file's layer → the drawing's layer (its id) its objects went onto.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "sourceLayers",
+          "layers",
+          "report",
+          "revision"
+        ],
+        "title": "GisImported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "CrsMove": {
+            "description": "How a file's coordinates were moved into the project's system, and how sure that is (docs/adr/0222 §2): the two\nsystems' EPSG codes (the project's is 0 when it is its own definition), the datum shift's operations (empty when\nonly the projection changed), its accuracy in metres (none when a step's is not written), whether an operation\nthat is not the official transformation was used, the same as a sentence, and what the move left out.",
+            "properties": {
+              "accuracy": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "left": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "moved": {
+                "description": "Objects moved, and objects left out because a vertex could not be moved (the report says why).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "text": {
+                "description": "“±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil”, “kesin, yalnız projeksiyon”.",
+                "type": "string"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "unofficial": {
+                "type": "boolean"
+              },
+              "via": {
+                "description": "The datum shift's operations joined by “ + ”; empty when only the projection changed.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "via",
+              "unofficial",
+              "text",
+              "moved",
+              "left"
+            ],
+            "type": "object"
+          },
+          "CrsSource": {
+            "description": "Where a file's statement of its coordinate system comes from.",
+            "oneOf": [
+              {
+                "const": "rfc7946",
+                "description": "A GeoJSON file without a `crs` member: RFC 7946 makes it WGS 84 longitude, latitude.",
+                "type": "string"
+              },
+              {
+                "const": "geoJsonCrs",
+                "description": "A GeoJSON file's legacy `crs` member (the 2008 specification).",
+                "type": "string"
+              },
+              {
+                "const": "prj",
+                "description": "A Shapefile's `.prj` (WKT).",
+                "type": "string"
+              },
+              {
+                "const": "ncz",
+                "description": "A Netcad NCZ drawing's MPROJ block (datum, projection, zone) and the\nSRS its TILED_XML block names (docs/adr/0138).",
+                "type": "string"
+              },
+              {
+                "const": "kml",
+                "description": "A KML or KMZ file: OGC KML 2.2 makes it WGS 84 longitude, latitude (docs/adr/0222).",
+                "type": "string"
+              }
+            ]
+          },
+          "DeclaredCrs": {
+            "description": "The coordinate system a file declares: what the file says, never a\nguess (CLAUDE.md §5). The import window shows it as the answer to its\nquestion, and the user confirms or changes it; nothing is transformed.",
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/CrsSource"
+              },
+              "srid": {
+                "description": "The EPSG code the statement names, when it names one the reader recognises.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "text": {
+                "description": "The statement as the window shows it (\"urn:ogc:def:crs:EPSG::5256\", \"TUREF_TM36\").",
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "source"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.shp`, `.geojson` or `.kml` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "declared": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DeclaredCrs"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the file says of its system (a `.prj`'s, a `crs` member, RFC 7946's or KML's WGS 84); none: nothing."
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256 (a Shapefile's: its `.shp`'s).",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CrsMove"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the coordinates were moved; absent when they were taken as they are."
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "report": {
+            "description": "What the reader counted and could not take (`ImportReport`)."
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "sourceLayers": {
+            "description": "The file's layers read (a zip's every `.shp`), as they are named in the file.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "srid": {
+            "description": "The system the coordinates were taken to be in: `srid`, else the file's, else the project's.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "targets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "description": "A file's layer → the drawing's layer (its id) its objects went onto.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "sourceLayers",
+          "layers",
+          "report",
+          "revision"
+        ],
+        "title": "GisImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "invalid_revision",
+          "revision_conflict",
+          "file_not_found",
+          "import_unreadable",
+          "crs_unknown",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "crs_mismatch",
+          "nothing_to_import"
+        ],
+        "warnings": [
+          "crs_overridden",
+          "crs_unofficial",
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "WGS 84'teki noktalar projenin sistemine çevrilerek",
+          "input": {
+            "path": "/veri/noktalar.geojson",
+            "reproject": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.import.kml",
+      "version": 1,
+      "title": "KML/KMZ içe aktar",
+      "summary": "path'teki KML dosyasını ya da KMZ arşivini (ana .kml'i) açık çizime alır, tek geri alma adımı (“KML: ad.kml”). Klasörler katman, yer imleri nesne olur (Point, LineString, LinearRing, Polygon delikleriyle, MultiGeometry, gx:Track); biçemin rengi ve kalınlığı, adı etiket, açıklaması, zamanı ve verileri öznitelik olur; resim kaplamaları, modeller ve bağlantılar alınmaz, söylenir. Sistem önce srid'den, yoksa dosyanın bildirdiğinden (KML 2.2'nin WGS 84 boylam, enlemi), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz.",
+      "aliases": [
+        "kmlin"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.kml` v1: the KML file or KMZ archive at `path` taken into the drawing as one undo step\n“KML: ad.kml”. Folders and placemarks become layers and objects (a placemark's style its colour and weight, its\nname, description, time and data its label and attributes); the coordinates are WGS 84 longitude, latitude (KML 2.2).\nRefusals, warnings and the rest as `file.import.shp`'s (`entry_not_found` does not apply; a KML file is always in\nWGS 84, so `crs_unknown` and `crs_undeclared` do not either).",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "path": {
+            "description": "The file to read, an absolute path (`.kml` or `.kmz`).",
+            "type": "string"
+          },
+          "reproject": {
+            "type": "boolean"
+          },
+          "skipLayers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "srid": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ImportKml",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "CrsMove": {
+            "description": "How a file's coordinates were moved into the project's system, and how sure that is (docs/adr/0222 §2): the two\nsystems' EPSG codes (the project's is 0 when it is its own definition), the datum shift's operations (empty when\nonly the projection changed), its accuracy in metres (none when a step's is not written), whether an operation\nthat is not the official transformation was used, the same as a sentence, and what the move left out.",
+            "properties": {
+              "accuracy": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "left": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "moved": {
+                "description": "Objects moved, and objects left out because a vertex could not be moved (the report says why).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "text": {
+                "description": "“±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil”, “kesin, yalnız projeksiyon”.",
+                "type": "string"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "unofficial": {
+                "type": "boolean"
+              },
+              "via": {
+                "description": "The datum shift's operations joined by “ + ”; empty when only the projection changed.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "via",
+              "unofficial",
+              "text",
+              "moved",
+              "left"
+            ],
+            "type": "object"
+          },
+          "CrsSource": {
+            "description": "Where a file's statement of its coordinate system comes from.",
+            "oneOf": [
+              {
+                "const": "rfc7946",
+                "description": "A GeoJSON file without a `crs` member: RFC 7946 makes it WGS 84 longitude, latitude.",
+                "type": "string"
+              },
+              {
+                "const": "geoJsonCrs",
+                "description": "A GeoJSON file's legacy `crs` member (the 2008 specification).",
+                "type": "string"
+              },
+              {
+                "const": "prj",
+                "description": "A Shapefile's `.prj` (WKT).",
+                "type": "string"
+              },
+              {
+                "const": "ncz",
+                "description": "A Netcad NCZ drawing's MPROJ block (datum, projection, zone) and the\nSRS its TILED_XML block names (docs/adr/0138).",
+                "type": "string"
+              },
+              {
+                "const": "kml",
+                "description": "A KML or KMZ file: OGC KML 2.2 makes it WGS 84 longitude, latitude (docs/adr/0222).",
+                "type": "string"
+              }
+            ]
+          },
+          "DeclaredCrs": {
+            "description": "The coordinate system a file declares: what the file says, never a\nguess (CLAUDE.md §5). The import window shows it as the answer to its\nquestion, and the user confirms or changes it; nothing is transformed.",
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/CrsSource"
+              },
+              "srid": {
+                "description": "The EPSG code the statement names, when it names one the reader recognises.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "text": {
+                "description": "The statement as the window shows it (\"urn:ogc:def:crs:EPSG::5256\", \"TUREF_TM36\").",
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "source"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.shp`, `.geojson` or `.kml` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "declared": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DeclaredCrs"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the file says of its system (a `.prj`'s, a `crs` member, RFC 7946's or KML's WGS 84); none: nothing."
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256 (a Shapefile's: its `.shp`'s).",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CrsMove"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the coordinates were moved; absent when they were taken as they are."
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "report": {
+            "description": "What the reader counted and could not take (`ImportReport`)."
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "sourceLayers": {
+            "description": "The file's layers read (a zip's every `.shp`), as they are named in the file.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "srid": {
+            "description": "The system the coordinates were taken to be in: `srid`, else the file's, else the project's.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "targets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "description": "A file's layer → the drawing's layer (its id) its objects went onto.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "sourceLayers",
+          "layers",
+          "report",
+          "revision"
+        ],
+        "title": "GisImported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "CrsMove": {
+            "description": "How a file's coordinates were moved into the project's system, and how sure that is (docs/adr/0222 §2): the two\nsystems' EPSG codes (the project's is 0 when it is its own definition), the datum shift's operations (empty when\nonly the projection changed), its accuracy in metres (none when a step's is not written), whether an operation\nthat is not the official transformation was used, the same as a sentence, and what the move left out.",
+            "properties": {
+              "accuracy": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "left": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "moved": {
+                "description": "Objects moved, and objects left out because a vertex could not be moved (the report says why).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "text": {
+                "description": "“±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil”, “kesin, yalnız projeksiyon”.",
+                "type": "string"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "unofficial": {
+                "type": "boolean"
+              },
+              "via": {
+                "description": "The datum shift's operations joined by “ + ”; empty when only the projection changed.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "via",
+              "unofficial",
+              "text",
+              "moved",
+              "left"
+            ],
+            "type": "object"
+          },
+          "CrsSource": {
+            "description": "Where a file's statement of its coordinate system comes from.",
+            "oneOf": [
+              {
+                "const": "rfc7946",
+                "description": "A GeoJSON file without a `crs` member: RFC 7946 makes it WGS 84 longitude, latitude.",
+                "type": "string"
+              },
+              {
+                "const": "geoJsonCrs",
+                "description": "A GeoJSON file's legacy `crs` member (the 2008 specification).",
+                "type": "string"
+              },
+              {
+                "const": "prj",
+                "description": "A Shapefile's `.prj` (WKT).",
+                "type": "string"
+              },
+              {
+                "const": "ncz",
+                "description": "A Netcad NCZ drawing's MPROJ block (datum, projection, zone) and the\nSRS its TILED_XML block names (docs/adr/0138).",
+                "type": "string"
+              },
+              {
+                "const": "kml",
+                "description": "A KML or KMZ file: OGC KML 2.2 makes it WGS 84 longitude, latitude (docs/adr/0222).",
+                "type": "string"
+              }
+            ]
+          },
+          "DeclaredCrs": {
+            "description": "The coordinate system a file declares: what the file says, never a\nguess (CLAUDE.md §5). The import window shows it as the answer to its\nquestion, and the user confirms or changes it; nothing is transformed.",
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/CrsSource"
+              },
+              "srid": {
+                "description": "The EPSG code the statement names, when it names one the reader recognises.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "text": {
+                "description": "The statement as the window shows it (\"urn:ogc:def:crs:EPSG::5256\", \"TUREF_TM36\").",
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "source"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.shp`, `.geojson` or `.kml` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "declared": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DeclaredCrs"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the file says of its system (a `.prj`'s, a `crs` member, RFC 7946's or KML's WGS 84); none: nothing."
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256 (a Shapefile's: its `.shp`'s).",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CrsMove"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the coordinates were moved; absent when they were taken as they are."
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "report": {
+            "description": "What the reader counted and could not take (`ImportReport`)."
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "sourceLayers": {
+            "description": "The file's layers read (a zip's every `.shp`), as they are named in the file.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "srid": {
+            "description": "The system the coordinates were taken to be in: `srid`, else the file's, else the project's.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "targets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "description": "A file's layer → the drawing's layer (its id) its objects went onto.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "sourceLayers",
+          "layers",
+          "report",
+          "revision"
+        ],
+        "title": "GisImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "invalid_revision",
+          "revision_conflict",
+          "file_not_found",
+          "import_unreadable",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "crs_mismatch",
+          "nothing_to_import"
+        ],
+        "warnings": [
+          "crs_overridden",
+          "crs_unofficial",
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Google Earth'ün yer imleri projenin sistemine çevrilerek",
+          "input": {
+            "path": "/veri/yerler.kmz",
+            "reproject": true
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.xyz",
       "version": 1,
       "title": "XYZ dışa aktar",
@@ -1062969,6 +1064738,30 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Dosya koordinat sistemi bildirmiyor; koordinatlar olduğu gibi alındı."
+    },
+    {
+      "code": "crs_unknown",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosyanın koordinat sistemi okunamadı ya da KentOS'ta tanımlı değil; koordinatların sistemini srid ile verin."
+    },
+    {
+      "code": "crs_overridden",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Verilen srid dosyanın bildirdiğinden başka; koordinatlar dönüştürülmeden verilen sistemde sayıldı."
+    },
+    {
+      "code": "crs_unofficial",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Koordinatlar resmî olmayan bir dönüşümle projenin sistemine çevrildi; doğruluğu çıktıda yazılı."
+    },
+    {
+      "code": "entry_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Adı verilen katman arşivde yok."
     },
     {
       "code": "entity_exists",

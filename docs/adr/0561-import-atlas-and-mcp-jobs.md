@@ -11,9 +11,8 @@
   - CLAUDE.md §9.2, §18.
 - **Web:** ertelendi (ADR 0228); web'de gerekenler TODOS.md §0.2'de.
 - **Sonraya kalan:**
-  - **Shapefile ve GeoJSON ve KML içe aktarma** iş olarak: bunların içe aktarma komutu yok (okuyucu ve eşleme masaüstü penceresinde,
-    `exchange/gis_import.rs`); önce `file.import.shp`, `.geojson`, `.kml` komutları gerekir. Koordinatörün listesindeki “Shapefile zip” bu yüzden
-    bu dilimde yok.
+  - ~~Shapefile, GeoJSON ve KML içe aktarma işleri~~: [ADR 0563](0563-gis-file-import-commands.md) ile kapandı (`file.import.shp`, `.geojson`, `.kml` komutları;
+    iş Shapefile'ı `.zip` arşivi olarak alır).
   - **Devam ettirilebilir (parçalı) dosya yükleme**: hazırlanan dosya tek akışlı bir gövdedir; kesilen gönderim baştan yapılır (yarım bayt saklanmaz). Masaüstü
     istemcisi de dosyayı bütünüyle belleğe okur (`reqwest`'in akış özelliği çalışma alanında yok, yeni bağımlılık eklenmedi).
   - **Yan dosyalar** (`.csvt`, `.prj`, `.xsd`, `.gfs`) hazırlanmaz; CSV ve GML'nin türleri değerlerden, sistemi `srid` seçeneğinden belirlenir.
@@ -78,7 +77,7 @@ kodlarıyla; kayıplar böylece sonuçta söylenir), `details` (komutun kendi ce
 (`^[a-z][a-z0-9_]{1,63}$` biçimindeyse) olduğu gibi söyler, öbürleri `failed` olur (`Outcome::Refused`). Yeniden denenmez.
 
 **Bilinen sınır:** sunucunun nesne yazma kuralı (`to_stored`) en az 3 köşeli alan ister; yaylı kenarla 2 köşeli alanı (daire gibi, ADR 0069) içeren bir dosyanın
-komutu masaüstünde kabul eder ama sunucuda kesinleşirken `invalid` verir (“Alan en az 3 köşe ister”; gerçek GeoPackage'da görüldü). İş bu durumda hiçbir şey yazmaz ve
+komutu masaüstünde kabul eder ama sunucuda kesinleşirken `invalid` verir (ADR 0563 §4'te düzeldi) (“Alan en az 3 köşe ister”; gerçek GeoPackage'da görüldü). İş bu durumda hiçbir şey yazmaz ve
 iletide nesnenin sırasını söyler. Sunucunun bu kuralı ayrı iştir.
 
 ### 2. `project.atlas`: atlasın sunucuda PDF'e çizilmesi

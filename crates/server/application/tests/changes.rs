@@ -815,3 +815,132 @@ async fn a_layer_goes_with_its_objects_or_not_at_all() {
     assert!(!layer_ids(&db, project).await.contains(&"cizim".to_owned()));
     db.close().await;
 }
+
+/// A polygon of the sample's active layer from its rings, as JSON the contract reads.
+fn an_area(layer: &str, geometry: serde_json::Value) -> Entity {
+    let mut value =
+        serde_json::json!({ "kind": "polygon", "id": 1, "layerId": layer, "attrs": {} });
+    value
+        .as_object_mut()
+        .unwrap()
+        .extend(geometry.as_object().unwrap().clone());
+    serde_json::from_value(value).unwrap()
+}
+
+/// The server holds the area the desktop does (docs/adr/0069, 0563 §4): two corners are an area when one of the two
+/// edges is an arc (a lens or a half disc), a hole or a part of two corners likewise, and the PostGIS projection of it
+/// is a valid polygon of the arcs' points; two straight corners are none; an arc flatter than the projection's
+/// tolerance leaves no polygon to project (the geometry is NULL, the definition is kept).
+#[tokio::test]
+async fn an_area_of_two_corners_with_an_arc_edge_is_stored_and_projected() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Büro", 5)
+        .await
+        .unwrap();
+    let ayse = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
+    let project = new_project(&db, &ayse).await;
+    let ayse_p = open(&db, &ayse, project).await;
+    let layer = sample().active_layer;
+    let corner = |x: f64, y: f64| serde_json::json!({ "x": x, "y": y });
+    let commit = |entity: Entity| {
+        let id = Uuid::new_v4().to_string();
+        let envelope = envelope(
+            &ayse,
+            project,
+            changes_of(vec![FeatureChange::Create {
+                id: id.clone(),
+                entity,
+            }]),
+            &[],
+        );
+        let (db, ayse_p) = (&db, &ayse_p);
+        async move { (id, changes::commit(&db.app, ayse_p, envelope).await) }
+    };
+
+    // A half disc: the chord 20 m long, the arc of bulge 1 (a half circle), the way back straight.
+    let half = serde_json::json!({ "pts": [corner(486500.0, 4420200.0), corner(486520.0, 4420200.0)],
+                                   "bulges": [1.0, 0.0] });
+    let (id, made) = commit(an_area(&layer, half.clone())).await;
+    made.expect("a two-corner area with an arc edge is stored");
+    let back = projects::features_by_id(&db.app, &ayse_p, &[Uuid::parse_str(&id).unwrap()])
+        .await
+        .unwrap();
+    let mut got = serde_json::to_value(&back[0].entity).unwrap();
+    got["id"] = 1.into();
+    assert_eq!(got["pts"].as_array().unwrap().len(), 2);
+    assert_eq!(got["bulges"], serde_json::json!([1.0, 0.0]));
+    let (valid, points, area): (bool, i32, f64) = sqlx::query_as(
+        "select st_isvalid(geom), st_npoints(geom), st_area(geom) from kentos.feature where id = $1",
+    )
+    .bind(Uuid::parse_str(&id).unwrap())
+    .fetch_one(&db.owner)
+    .await
+    .unwrap();
+    assert!(valid, "the projection is a valid polygon");
+    assert!(points > 8, "the arc has its inner points: {points}");
+    // Half of the disc of radius 10: the tessellation lies inside the circle by the tolerance.
+    let disc = std::f64::consts::PI * 100.0 / 2.0;
+    assert!(
+        (area - disc).abs() < 0.2,
+        "area {area}, a half disc is {disc}"
+    );
+
+    // A lens: both edges arcs. A hole of two corners in an ordinary area, and a part of two corners.
+    let lens = serde_json::json!({ "pts": [corner(486600.0, 4420200.0), corner(486620.0, 4420200.0)],
+                                   "bulges": [0.5, 0.5] });
+    commit(an_area(&layer, lens)).await.1.expect("a lens");
+    let with_hole = serde_json::json!({
+        "pts": [corner(486700.0, 4420200.0), corner(486740.0, 4420200.0), corner(486740.0, 4420240.0),
+                corner(486700.0, 4420240.0)],
+        "holes": [{ "pts": [corner(486710.0, 4420210.0), corner(486720.0, 4420210.0)], "bulges": [0.0, -1.0] }],
+        "parts": [{ "pts": [corner(486800.0, 4420200.0), corner(486810.0, 4420200.0)], "bulges": [1.0] }]
+    });
+    let (id, made) = commit(an_area(&layer, with_hole)).await;
+    made.expect("a hole and a part of two corners");
+    let (valid, kind): (bool, String) = sqlx::query_as(
+        "select st_isvalid(geom), geometrytype(geom) from kentos.feature where id = $1",
+    )
+    .bind(Uuid::parse_str(&id).unwrap())
+    .fetch_one(&db.owner)
+    .await
+    .unwrap();
+    assert!(valid && kind == "MULTIPOLYGON", "{valid} {kind}");
+
+    // Two straight corners are no area, whichever ring they are.
+    for bad in [
+        serde_json::json!({ "pts": [corner(0.0, 0.0), corner(10.0, 0.0)] }),
+        serde_json::json!({ "pts": [corner(0.0, 0.0), corner(10.0, 0.0)], "bulges": [0.0, 0.0] }),
+        serde_json::json!({
+            "pts": [corner(0.0, 0.0), corner(40.0, 0.0), corner(40.0, 40.0), corner(0.0, 40.0)],
+            "holes": [{ "pts": [corner(10.0, 10.0), corner(20.0, 10.0)] }]
+        }),
+        serde_json::json!({
+            "pts": [corner(0.0, 0.0), corner(40.0, 0.0), corner(40.0, 40.0)],
+            "parts": [{ "pts": [corner(100.0, 0.0), corner(110.0, 0.0)] }]
+        }),
+    ] {
+        match commit(an_area(&layer, bad)).await.1 {
+            Err(AppError::Invalid { message, .. }) => {
+                assert!(message.contains("en az 3 köşe ister"), "{message}");
+            }
+            other => panic!("two straight corners are refused, got {other:?}"),
+        }
+    }
+
+    // An arc flatter than the tolerance leaves two points: the object is kept, with no geometry to project.
+    let flat = serde_json::json!({ "pts": [corner(486900.0, 4420200.0), corner(486920.0, 4420200.0)],
+                                   "bulges": [1e-12, 0.0] });
+    let (id, made) = commit(an_area(&layer, flat)).await;
+    made.expect("an almost straight arc is stored");
+    let (null, kept): (bool, bool) = sqlx::query_as(
+        "select geom is null, cad_definition is not null from kentos.feature where id = $1",
+    )
+    .bind(Uuid::parse_str(&id).unwrap())
+    .fetch_one(&db.owner)
+    .await
+    .unwrap();
+    assert!(null && kept, "no geometry, the definition kept");
+    db.close().await;
+}

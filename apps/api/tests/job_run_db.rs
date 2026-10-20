@@ -548,3 +548,108 @@ async fn the_atlas_of_a_sheet_is_drawn_by_the_child_and_downloaded_as_the_jobs_p
     assert_eq!(job.error.unwrap().code, "unknown_sheet");
     db.close().await;
 }
+
+const SHP_ZIP: &[u8] = include_bytes!("../../../fixtures/gis-import/v1/katmanlar.zip");
+const GEOJSON: &[u8] = include_bytes!("../../../fixtures/gis-import/v1/katmanli.geojson");
+const KML_WGS84: &[u8] = include_bytes!("../../../fixtures/gis-import/v1/nokta.kml");
+const QGIS_GPKG: &[u8] = include_bytes!("../../../fixtures/geopackage/v1/qgis.gpkg");
+
+/// A Shapefile archive, a GeoJSON file and a KML are taken in by their commands and committed by the job
+/// (docs/adr/0563 §3); a GeoPackage with a circle, an area of two corners whose edges are arcs (docs/adr/0069), is
+/// committed too, and its PostGIS projection is a valid polygon (§4: the server's rule is the desktop's).
+#[tokio::test]
+async fn shapefile_geojson_and_kml_files_and_a_circle_are_committed_by_the_job() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let doc = parcels();
+    let (access, _ids, objects) = project_of(&db, "Parseller", &doc).await;
+    let store = kentos_application::blobs::Blobs::new(
+        std::env::temp_dir().join(format!("kentos-job-run-blobs-{}", Uuid::now_v7())),
+    );
+    let mut revision = 1;
+    let mut count = objects as u64;
+    for (request, name, bytes, options, added, command) in [
+        (
+            "a",
+            "katmanlar.zip",
+            SHP_ZIP,
+            serde_json::json!({}),
+            5,
+            "file.import.shp",
+        ),
+        (
+            "b",
+            "katmanli.geojson",
+            GEOJSON,
+            serde_json::json!({}),
+            3,
+            "file.import.geojson",
+        ),
+        (
+            "c",
+            "nokta.kml",
+            KML_WGS84,
+            serde_json::json!({ "reproject": true }),
+            1,
+            "file.import.kml",
+        ),
+    ] {
+        let upload = stage_file(&db, &store, &access, name, bytes).await;
+        let job = run_one(&db, &store, &access, ask_import(request, &upload, options)).await;
+        assert_eq!(
+            job.state,
+            ServerJobState::Succeeded,
+            "{name}: {:?}",
+            job.error
+        );
+        let result: kentos_contracts::ProjectImportResult =
+            serde_json::from_value(job.result.unwrap()).unwrap();
+        assert_eq!(result.command, command);
+        assert_eq!(result.added, added, "{name}: {result:?}");
+        revision += 1;
+        count += added;
+        let after = snapshot::snapshot(&db.app, &access).await.unwrap();
+        assert_eq!(
+            (after.objects as u64, after.revision),
+            (count, revision),
+            "{name}"
+        );
+    }
+    // WGS 84 without the move: the command's refusal is the job's code, nothing is written.
+    let upload = stage_file(&db, &store, &access, "nokta.kml", KML_WGS84).await;
+    let job = run_one(
+        &db,
+        &store,
+        &access,
+        ask_import("d", &upload, serde_json::json!({})),
+    )
+    .await;
+    assert_eq!(job.state, ServerJobState::Failed);
+    assert_eq!(job.error.unwrap().code, "crs_mismatch");
+    assert_eq!(
+        snapshot::snapshot(&db.app, &access).await.unwrap().revision,
+        revision
+    );
+    // The QGIS GeoPackage's circle (two corners, two arcs): committed, and PostGIS holds a valid polygon of it.
+    let upload = stage_file(&db, &store, &access, "qgis.gpkg", QGIS_GPKG).await;
+    let job = run_one(
+        &db,
+        &store,
+        &access,
+        ask_import("e", &upload, serde_json::json!({ "tables": ["egri"] })),
+    )
+    .await;
+    assert_eq!(job.state, ServerJobState::Succeeded, "{:?}", job.error);
+    let (valid, points): (bool, i32) = sqlx::query_as(
+        "select bool_and(st_isvalid(geom)), max(st_npoints(geom)) from kentos.feature \
+         where project_id = $1 and kind = 'polygon' and source_kind = 'cad'",
+    )
+    .bind(access.project)
+    .fetch_one(&db.owner)
+    .await
+    .unwrap();
+    assert!(valid, "the circle's projection is a valid polygon");
+    assert!(points > 8, "its arcs have their inner points: {points}");
+    db.close().await;
+}

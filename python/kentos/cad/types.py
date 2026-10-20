@@ -954,6 +954,26 @@ CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut",
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
+class CrsSource(_StrEnum):
+    """Where a file's statement of its coordinate system comes from.
+
+    - ``rfc7946``: A GeoJSON file without a `crs` member: RFC 7946 makes it WGS 84 longitude, latitude.
+    - ``geoJsonCrs``: A GeoJSON file's legacy `crs` member (the 2008 specification).
+    - ``prj``: A Shapefile's `.prj` (WKT).
+    - ``ncz``: A Netcad NCZ drawing's MPROJ block (datum, projection, zone) and the
+    - ``kml``: A KML or KMZ file: OGC KML 2.2 makes it WGS 84 longitude, latitude (docs/adr/0222).
+    """
+    RFC7946 = "rfc7946"
+    GEO_JSON_CRS = "geoJsonCrs"
+    PRJ = "prj"
+    NCZ = "ncz"
+    KML = "kml"
+
+
+CrsSourceName = Literal["rfc7946", "geoJsonCrs", "prj", "ncz", "kml"]
+"""The names of :class:`CrsSource`, for a plain string."""
+
+
 class CsvGeometry(_StrEnum):
     """Where a CSV's geometry is.
 
@@ -11807,6 +11827,57 @@ class CrsDefinition(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CrsMove(_Model):
+    """How a file's coordinates were moved into the project's system, and how sure that is (docs/adr/0222 §2): the two
+    systems' EPSG codes (the project's is 0 when it is its own definition), the datum shift's operations (empty when
+    only the projection changed), its accuracy in metres (none when a step's is not written), whether an operation
+    that is not the official transformation was used, the same as a sentence, and what the move left out.
+    Attributes:
+        from_: Unit: epsg.
+        to: Unit: epsg.
+        via: The datum shift's operations joined by “ + ”; empty when only the projection changed.
+        text: “±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil”, “kesin, yalnız projeksiyon”.
+        moved: Objects moved, and objects left out because a vertex could not be moved (the report says why). Unit: count.
+        left: Unit: count.
+        accuracy: Unit: m.
+    """
+    from_: int
+    to: int
+    via: str
+    unofficial: bool
+    text: str
+    moved: int
+    left: int
+    accuracy: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["via"] = self.via
+        out["unofficial"] = self.unofficial
+        out["text"] = self.text
+        out["moved"] = self.moved
+        out["left"] = self.left
+        if self.accuracy is not UNSET:
+            out["accuracy"] = None if self.accuracy is None else float(self.accuracy)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsMove:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            via=data["via"],
+            unofficial=data["unofficial"],
+            text=data["text"],
+            moved=data["moved"],
+            left=data["left"],
+            accuracy=UNSET if "accuracy" not in data else None if data["accuracy"] is None else float(data["accuracy"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CrsOperation(_Model):
     """The operation a call ran, as a record: its sides, its identity (the datum steps' EPSG codes or the project's
     names joined by “ + ”; empty when the datum stays), its steps, a PROJ pipeline that runs the same, the engine, the
@@ -12330,6 +12401,36 @@ class DatumTransform(_Model):
             name=data["name"],
             grid=UNSET if "grid" not in data else None if data["grid"] is None else GridChoice.from_json(data["grid"]),
             helmert=UNSET if "helmert" not in data else None if data["helmert"] is None else Helmert.from_json(data["helmert"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeclaredCrs(_Model):
+    """The coordinate system a file declares: what the file says, never a
+    guess (CLAUDE.md §5). The import window shows it as the answer to its
+    question, and the user confirms or changes it; nothing is transformed.
+    Attributes:
+        text: The statement as the window shows it ("urn:ogc:def:crs:EPSG::5256", "TUREF_TM36").
+        srid: The EPSG code the statement names, when it names one the reader recognises. Unit: epsg.
+    """
+    text: str
+    source: CrsSource | CrsSourceName
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["text"] = self.text
+        out["source"] = _enum_out(self.source)
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeclaredCrs:
+        return cls(
+            text=data["text"],
+            source=_enum_in(CrsSource, data["source"]),
+            srid=data.get("srid", UNSET),
         )
 
 
@@ -20530,6 +20631,76 @@ class GisExported(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GisImported(_Model):
+    """What `file.import.shp`, `.geojson` or `.kml` took in, or with `plan` would take.
+    Attributes:
+        file: The file's name, its bytes and their SHA-256 (a Shapefile's: its `.shp`'s).
+        bytes: Unit: bytes.
+        objects: Unit: count.
+        source_layers: The file's layers read (a zip's every `.shp`), as they are named in the file.
+        layers: The layers made, in the tree's order, and the group they went into.
+        report: What the reader counted and could not take (`ImportReport`).
+        revision: The drawing's revision after the step (plan: before it).
+        declared: What the file says of its system (a `.prj`'s, a `crs` member, RFC 7946's or KML's WGS 84); none: nothing.
+        moved: How the coordinates were moved; absent when they were taken as they are.
+        srid: The system the coordinates were taken to be in: `srid`, else the file's, else the project's. Unit: epsg.
+        targets: A file's layer → the drawing's layer (its id) its objects went onto.
+    """
+    file: str
+    bytes: int
+    sha256: str
+    objects: int
+    source_layers: list[str]
+    layers: list[ImportedLayer]
+    report: Any
+    revision: str
+    declared: DeclaredCrs | None | Unset = UNSET
+    group: str | None | Unset = UNSET
+    moved: CrsMove | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    targets: dict[str, str] = field(default_factory=dict)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["objects"] = self.objects
+        out["sourceLayers"] = list(self.source_layers)
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["report"] = self.report
+        out["revision"] = self.revision
+        if self.declared is not UNSET:
+            out["declared"] = None if self.declared is None else self.declared.to_json()
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.moved is not UNSET:
+            out["moved"] = None if self.moved is None else self.moved.to_json()
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        out["targets"] = dict(self.targets)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisImported:
+        return cls(
+            file=data["file"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            objects=data["objects"],
+            source_layers=list(data["sourceLayers"]),
+            layers=[ImportedLayer.from_json(e0) for e0 in data["layers"]],
+            report=data["report"],
+            revision=data["revision"],
+            declared=UNSET if "declared" not in data else None if data["declared"] is None else DeclaredCrs.from_json(data["declared"]),
+            group=data.get("group", UNSET),
+            moved=UNSET if "moved" not in data else None if data["moved"] is None else CrsMove.from_json(data["moved"]),
+            srid=data.get("srid", UNSET),
+            targets=dict(data["targets"]) if "targets" in data else dict(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GisLeft(_Model):
     """Objects of one kind left out of the dataset, and why.
     Attributes:
@@ -22464,6 +22635,59 @@ class ImportFgb(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImportGeojson(_Model):
+    """Input of `file.import.geojson` v1: the GeoJSON file at `path` taken into the drawing as one undo step “GeoJSON:
+    ad.geojson”. The objects of a file that names its layers (`kentos.layer`, KentOS's own members) go onto those
+    layers, the others onto the layer the document's `name` (else the file's name) gives. The system is the `crs`
+    member's, else WGS 84 longitude, latitude (RFC 7946). Refusals, warnings and the rest as `file.import.shp`'s
+    (`entry_not_found` does not apply; a GeoJSON file always declares a system, so `crs_undeclared` does not either).
+    Attributes:
+        path: The file to read, an absolute path.
+        srid: Unit: epsg.
+    """
+    path: str
+    expected_revision: str | None | Unset = UNSET
+    group: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    layers: dict[str, str] | Unset = UNSET
+    reproject: bool | Unset = UNSET
+    skip_layers: list[str] | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.layers is not UNSET:
+            out["layers"] = dict(self.layers)
+        if self.reproject is not UNSET:
+            out["reproject"] = self.reproject
+        if self.skip_layers is not UNSET:
+            out["skipLayers"] = list(self.skip_layers)
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportGeojson:
+        return cls(
+            path=data["path"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            group=data.get("group", UNSET),
+            layer=data.get("layer", UNSET),
+            layers=dict(data["layers"]) if "layers" in data else UNSET,
+            reproject=data.get("reproject", UNSET),
+            skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImportGml(_Model):
     """Input of `file.import.gml` v1: the GML at `path` taken into the drawing as one undo step “GML: ad.gml”, each
     feature an object (or a record without a geometry), its properties its attributes. GML 2, 3.1 and 3.2 are read
@@ -22549,6 +22773,59 @@ class ImportGpkg(_Model):
             layers=dict(data["layers"]) if "layers" in data else UNSET,
             reproject=data.get("reproject", UNSET),
             tables=list(data["tables"]) if "tables" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportKml(_Model):
+    """Input of `file.import.kml` v1: the KML file or KMZ archive at `path` taken into the drawing as one undo step
+    “KML: ad.kml”. Folders and placemarks become layers and objects (a placemark's style its colour and weight, its
+    name, description, time and data its label and attributes); the coordinates are WGS 84 longitude, latitude (KML 2.2).
+    Refusals, warnings and the rest as `file.import.shp`'s (`entry_not_found` does not apply; a KML file is always in
+    WGS 84, so `crs_unknown` and `crs_undeclared` do not either).
+    Attributes:
+        path: The file to read, an absolute path (`.kml` or `.kmz`).
+        srid: Unit: epsg.
+    """
+    path: str
+    expected_revision: str | None | Unset = UNSET
+    group: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    layers: dict[str, str] | Unset = UNSET
+    reproject: bool | Unset = UNSET
+    skip_layers: list[str] | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.layers is not UNSET:
+            out["layers"] = dict(self.layers)
+        if self.reproject is not UNSET:
+            out["reproject"] = self.reproject
+        if self.skip_layers is not UNSET:
+            out["skipLayers"] = list(self.skip_layers)
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportKml:
+        return cls(
+            path=data["path"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            group=data.get("group", UNSET),
+            layer=data.get("layer", UNSET),
+            layers=dict(data["layers"]) if "layers" in data else UNSET,
+            reproject=data.get("reproject", UNSET),
+            skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
+            srid=data.get("srid", UNSET),
         )
 
 
@@ -22679,6 +22956,80 @@ class ImportQml(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             path=data.get("path", UNSET),
             text=data.get("text", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportShp(_Model):
+    """Input of `file.import.shp` v1: the Shapefile at `path` taken into the drawing as one undo step “Shapefile:
+    ad.shp”. `path` is a `.shp` (the `.shx`, `.dbf`, `.prj` and `.cpg` of its name beside it, found without case; a
+    file missing is read without it and said) or a `.zip` whose every `.shp` is a layer (`entry` names one). The
+    system comes from the `.prj`; a file without one is taken to be in the project's system (`crs_undeclared`), one
+    whose `.prj` KentOS does not know needs `srid`. A file in another system than the project's comes in only with
+    `reproject`. Each source layer goes onto the layer `layers` names, else `layer`, else the drawing's layer of the
+    same name (case and Turkish marks aside), else onto a new layer in the import's group with the DBF's fields.
+    Refusals, in order: `invalid_file_path` (empty, relative, a folder, neither .shp nor .zip), `invalid_revision`,
+    `revision_conflict`, `file_not_found`, `import_unreadable`, `entry_not_found` (at `entry`), `crs_unknown` (at
+    `srid`), `layer_not_found`, `not_a_layer` and `layer_locked` (at `layer` or `layers.<name>`), `crs_mismatch` (at
+    `reproject`: the file is in another system and the move was not asked, or cannot be made), `nothing_to_import`.
+    Warnings: `crs_undeclared`, `crs_overridden`, `crs_unofficial`, `import_losses`.
+    Attributes:
+        path: The `.shp` or `.zip` to read, an absolute path.
+        entry: A zip archive's layer: its path in the archive (`katmanlar/parseller.shp`) or its name (`parseller`); absent:
+            every layer in the archive.
+        expected_revision: The drawing's revision the input was prepared against.
+        group: The group the new layers go into, found by its name or made. Absent: one named after the file; empty: the
+            top of the tree.
+        layer: The drawing's layer (its id) every layer `layers` does not name goes onto.
+        layers: A file's layer (its name in the file) → the drawing's layer (its id) its objects go onto.
+        reproject: Move the coordinates of a file in another system into the project's (docs/adr/0222 §2).
+        skip_layers: The file's layers (by their names in the file) whose objects are left out.
+        srid: The system the coordinates are in (EPSG), whatever the file says: a file without a `.prj`, or one KentOS
+            cannot read. Unit: epsg.
+    """
+    path: str
+    entry: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    group: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    layers: dict[str, str] | Unset = UNSET
+    reproject: bool | Unset = UNSET
+    skip_layers: list[str] | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.entry is not UNSET:
+            out["entry"] = self.entry
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.layers is not UNSET:
+            out["layers"] = dict(self.layers)
+        if self.reproject is not UNSET:
+            out["reproject"] = self.reproject
+        if self.skip_layers is not UNSET:
+            out["skipLayers"] = list(self.skip_layers)
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportShp:
+        return cls(
+            path=data["path"],
+            entry=data.get("entry", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            group=data.get("group", UNSET),
+            layer=data.get("layer", UNSET),
+            layers=dict(data["layers"]) if "layers" in data else UNSET,
+            reproject=data.get("reproject", UNSET),
+            skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
+            srid=data.get("srid", UNSET),
         )
 
 
@@ -58585,10 +58936,13 @@ __all__ = [
     "CrossingSelectRegion",
     "CrsBase",
     "CrsDefinition",
+    "CrsMove",
     "CrsOperation",
     "CrsPlane",
     "CrsPoint",
     "CrsSide",
+    "CrsSource",
+    "CrsSourceName",
     "CrsSystem",
     "CrsTransform",
     "CrsTransformed",
@@ -58608,6 +58962,7 @@ __all__ = [
     "DataProfile",
     "DatasetDim",
     "DatumTransform",
+    "DeclaredCrs",
     "DecurveCurveEdit",
     "DeleteBlockChange",
     "DeleteColumnsTableEdit",
@@ -58925,6 +59280,7 @@ __all__ = [
     "GisDerivation",
     "GisDerived",
     "GisExported",
+    "GisImported",
     "GisLeft",
     "GisTableExported",
     "GisTableRole",
@@ -59010,10 +59366,13 @@ __all__ = [
     "ImportDomainsOp",
     "ImportDxf",
     "ImportFgb",
+    "ImportGeojson",
     "ImportGml",
     "ImportGpkg",
+    "ImportKml",
     "ImportPdf",
     "ImportQml",
+    "ImportShp",
     "ImportSld",
     "ImportedLayer",
     "InfoCard",

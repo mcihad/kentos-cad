@@ -1,0 +1,3878 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "file.import.geojson",
+ "commandVersion": 1,
+ "title": "GeoJSON içe aktar: RFC 7946 ve crs üyesi, kentos katmanları, sistem sorusu, çevirme",
+ "note": "ADR 0563. Dosyaları GDAL (QGIS 4.2.3) yazar ya da elle yazılmıştır (fixtures/formats/v1); beklenenler bağımsız başvurulardan kurulur: Shapefile ve GeoJSON tools/formats/gis.py'den, KML scripts/fixtures/kml_cases.py'den, çevirme PROJ'dan (±1e-6 m); komutun sistem sorusu, katman yönlendirmesi ve kimlikleri ADR'nin kuralından. Bağımsız başvuru: scripts/fixtures/gis_import_cases.py; elle düzenlemeyin.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Shapefile, GeoJSON ve KML alma",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "GDAL'ın RFC 7946 parselleri WGS 84'te: çevirme istenmeden alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-rfc7946.geojson"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "parsel-rfc7946.geojson EPSG:4326 sisteminde, proje EPSG:5256. Koordinatların projenin sistemine çevrilmesi için reproject verin ya da projeyi EPSG:4326'de açın.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "RFC 7946 parselleri reproject ile TM36'ya çevrilir (GDAL'ın yazdığı WGS 84, PROJ'un çevirdiği TM36)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-rfc7946.geojson",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-rfc7946.geojson",
+       "bytes": 1185,
+       "sha256": "43f5ea4fedc42d68b8d51a8ffff034e7ef80ae9ef7af40475a091d800250a3ec",
+       "objects": 2,
+       "sourceLayers": [
+        "parsel"
+       ],
+       "targets": {
+        "parsel": "import-parsel"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "RFC 7946: WGS 84 boylam, enlem (dosyada crs üyesi yok)",
+        "source": "rfc7946",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 2,
+        "left": 0
+       },
+       "group": "import-parsel-rfc7946-geojson"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.00409488496,
+          "y": 4419999.99542459
+         },
+         {
+          "x": 487020.00279873644,
+          "y": 4419999.994708733
+         },
+         {
+          "x": 487020.0026143,
+          "y": 4420020.002923089
+         },
+         {
+          "x": 487000.00396285695,
+          "y": 4420020.003639074
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487004.9973172728,
+            "y": 4420004.994529357
+           },
+           {
+            "x": 487004.9972904344,
+            "y": 4420010.002134604
+           },
+           {
+            "x": 487009.99910209177,
+            "y": 4420010.0047261715
+           },
+           {
+            "x": 487009.9991322113,
+            "y": 4420004.997120935
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487029.99788497126,
+            "y": 4419999.999929364
+           },
+           {
+            "x": 487040.0015212223,
+            "y": 4420000.005148564
+           },
+           {
+            "x": 487040.0013839138,
+            "y": 4420009.998152296
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487099.99763077183,
+          "y": 4420000.003472451
+         },
+         {
+          "x": 487110.00124784594,
+          "y": 4419999.997680066
+         },
+         {
+          "x": 487110.00103766326,
+          "y": 4420010.00178688
+         },
+         {
+          "x": 487099.9974149372,
+          "y": 4420009.996475993
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "name": "parsel",
+        "type": "layer",
+        "parent": "import-parsel-rfc7946-geojson",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal",
+          "scale": 2
+         },
+         {
+          "name": "kimlik",
+          "kind": "decimal",
+          "scale": 0
+         },
+         {
+          "name": "tescil",
+          "kind": "text"
+         },
+         {
+          "name": "guncelleme",
+          "kind": "text"
+         },
+         {
+          "name": "tapulu",
+          "kind": "boolean"
+         },
+         {
+          "name": "not",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-parsel-rfc7946-geojson": {
+        "name": "parsel-rfc7946.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "plan hiçbir şey yazmaz; execute bir adımda yazar ve geri alınır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-rfc7946.geojson",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-rfc7946.geojson",
+       "bytes": 1185,
+       "sha256": "43f5ea4fedc42d68b8d51a8ffff034e7ef80ae9ef7af40475a091d800250a3ec",
+       "objects": 2,
+       "sourceLayers": [
+        "parsel"
+       ],
+       "targets": {
+        "parsel": "import-parsel"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "RFC 7946: WGS 84 boylam, enlem (dosyada crs üyesi yok)",
+        "source": "rfc7946",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 2,
+        "left": 0
+       },
+       "group": "import-parsel-rfc7946-geojson"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-rfc7946.geojson",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-rfc7946.geojson",
+       "bytes": 1185,
+       "sha256": "43f5ea4fedc42d68b8d51a8ffff034e7ef80ae9ef7af40475a091d800250a3ec",
+       "objects": 2,
+       "sourceLayers": [
+        "parsel"
+       ],
+       "targets": {
+        "parsel": "import-parsel"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "RFC 7946: WGS 84 boylam, enlem (dosyada crs üyesi yok)",
+        "source": "rfc7946",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 2,
+        "left": 0
+       },
+       "group": "import-parsel-rfc7946-geojson"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.00409488496,
+          "y": 4419999.99542459
+         },
+         {
+          "x": 487020.00279873644,
+          "y": 4419999.994708733
+         },
+         {
+          "x": 487020.0026143,
+          "y": 4420020.002923089
+         },
+         {
+          "x": 487000.00396285695,
+          "y": 4420020.003639074
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487004.9973172728,
+            "y": 4420004.994529357
+           },
+           {
+            "x": 487004.9972904344,
+            "y": 4420010.002134604
+           },
+           {
+            "x": 487009.99910209177,
+            "y": 4420010.0047261715
+           },
+           {
+            "x": 487009.9991322113,
+            "y": 4420004.997120935
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487029.99788497126,
+            "y": 4419999.999929364
+           },
+           {
+            "x": 487040.0015212223,
+            "y": 4420000.005148564
+           },
+           {
+            "x": 487040.0013839138,
+            "y": 4420009.998152296
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487099.99763077183,
+          "y": 4420000.003472451
+         },
+         {
+          "x": 487110.00124784594,
+          "y": 4419999.997680066
+         },
+         {
+          "x": 487110.00103766326,
+          "y": 4420010.00178688
+         },
+         {
+          "x": 487099.9974149372,
+          "y": 4420009.996475993
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "name": "parsel",
+        "type": "layer",
+        "parent": "import-parsel-rfc7946-geojson",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal",
+          "scale": 2
+         },
+         {
+          "name": "kimlik",
+          "kind": "decimal",
+          "scale": 0
+         },
+         {
+          "name": "tescil",
+          "kind": "text"
+         },
+         {
+          "name": "guncelleme",
+          "kind": "text"
+         },
+         {
+          "name": "tapulu",
+          "kind": "boolean"
+         },
+         {
+          "name": "not",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-parsel-rfc7946-geojson": {
+        "name": "parsel-rfc7946.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    },
+    {
+     "op": "undo",
+     "returns": "GeoJSON: parsel-rfc7946.geojson",
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-tm36.geojson"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "crs üyesi TM36 olan dosya projenin sisteminde olduğundan çevirme istemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-tm36.geojson"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-tm36.geojson",
+       "bytes": 1220,
+       "sha256": "7ba2135262f12ed6936ff1b72574ccc4ae2ed401a486e5be993eb37c2f5e136f",
+       "objects": 2,
+       "sourceLayers": [
+        "parsel"
+       ],
+       "targets": {
+        "parsel": "import-parsel"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "urn:ogc:def:crs:EPSG::5256",
+        "source": "geoJsonCrs",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-parsel-tm36-geojson"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "name": "parsel",
+        "type": "layer",
+        "parent": "import-parsel-tm36-geojson",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal",
+          "scale": 2
+         },
+         {
+          "name": "kimlik",
+          "kind": "decimal",
+          "scale": 0
+         },
+         {
+          "name": "tescil",
+          "kind": "text"
+         },
+         {
+          "name": "guncelleme",
+          "kind": "text"
+         },
+         {
+          "name": "tapulu",
+          "kind": "boolean"
+         },
+         {
+          "name": "not",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-parsel-tm36-geojson": {
+        "name": "parsel-tm36.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "crs üyeli çizgiler: Z, M ve alanlar türleriyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/yol-tm36.geojson"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yol-tm36.geojson",
+       "bytes": 472,
+       "sha256": "f2449129dc5e8e9b7a2eb927b52dafe963cc6e72d4d137207f15df12fb33d1ab",
+       "objects": 2,
+       "sourceLayers": [
+        "yol"
+       ],
+       "targets": {
+        "yol": "import-yol"
+       },
+       "layers": [
+        {
+         "id": "import-yol",
+         "name": "yol"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "urn:ogc:def:crs:EPSG::5256",
+        "source": "geoJsonCrs",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-yol-tm36-geojson"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-yol",
+        "kind": "polyline",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         10.0,
+         12.0,
+         15.0
+        ]
+       },
+       "3": {
+        "layerId": "import-yol",
+        "kind": "line",
+        "attrs": {},
+        "a": {
+         "x": 487000.0,
+         "y": 4420070.0
+        },
+        "b": {
+         "x": 487010.0,
+         "y": 4420070.0
+        },
+        "za": 0.0,
+        "zb": 1.0
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-yol": {
+        "name": "yol",
+        "type": "layer",
+        "parent": "import-yol-tm36-geojson",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-yol-tm36-geojson": {
+        "name": "yol-tm36.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "RFC 7946 noktaları çevrilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta-rfc7946.geojson",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta-rfc7946.geojson",
+       "bytes": 196,
+       "sha256": "77bb721e77420146cd36504f5d8e373a456dd3172e66754e2a9392d20263e848",
+       "objects": 1,
+       "sourceLayers": [
+        "nokta"
+       ],
+       "targets": {
+        "nokta": "import-nokta"
+       },
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "RFC 7946: WGS 84 boylam, enlem (dosyada crs üyesi yok)",
+        "source": "rfc7946",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 1,
+        "left": 0
+       },
+       "group": "import-nokta-rfc7946-geojson"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-nokta",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.75"
+        },
+        "p": {
+         "x": 487001.246428049,
+         "y": 4420001.503363238
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-nokta": {
+        "name": "nokta",
+        "type": "layer",
+        "parent": "import-nokta-rfc7946-geojson",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text"
+         },
+         {
+          "name": "kot",
+          "kind": "decimal",
+          "scale": 2
+         }
+        ]
+       },
+       "import-nokta-rfc7946-geojson": {
+        "name": "nokta-rfc7946.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Dosyanın katman adı yoksa dosya adı: bare-polygon",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/bare-polygon.geojson",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "bare-polygon.geojson",
+       "bytes": 309,
+       "sha256": "6a97de2ef4efdc9b43358200de01acafdd06decf9a38a9f70880622c84efaa66",
+       "objects": 1,
+       "sourceLayers": [
+        "bare-polygon"
+       ],
+       "targets": {
+        "bare-polygon": "import-bare-polygon"
+       },
+       "layers": [
+        {
+         "id": "import-bare-polygon",
+         "name": "bare-polygon"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "RFC 7946: WGS 84 boylam, enlem (dosyada crs üyesi yok)",
+        "source": "rfc7946",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 1,
+        "left": 0
+       },
+       "group": "import-bare-polygon-geojson"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-bare-polygon",
+        "kind": "polygon",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -87732.43790659169,
+          "y": 4474639.286188737
+         },
+         {
+          "x": -79207.9153881506,
+          "y": 4473978.29396806
+         },
+         {
+          "x": -78351.38738366368,
+          "y": 4485095.088862299
+         },
+         {
+          "x": -86863.16213565983,
+          "y": 4485756.454602066
+         }
+        ],
+        "zs": [
+         100.0,
+         101.5,
+         102.25,
+         100.75
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": -83038.91147967067,
+            "y": 4479866.0703033395
+           },
+           {
+            "x": -82779.96138159407,
+            "y": 4483201.160881577
+           },
+           {
+            "x": -80225.67629727744,
+            "y": 4483003.213031888
+           },
+           {
+            "x": -80483.47884082573,
+            "y": 4479668.155893665
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-bare-polygon": {
+        "name": "bare-polygon",
+        "type": "layer",
+        "parent": "import-bare-polygon-geojson"
+       },
+       "import-bare-polygon-geojson": {
+        "name": "bare-polygon.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "KentOS'un kentos üyesi katmanı ve etiketi geri verir (iki katman, grup tek)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/katmanli.geojson"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "katmanli.geojson",
+       "bytes": 791,
+       "sha256": "f047f87434ff6a186626bef35e141a3054bc28282afca7772c3b08bc16306955",
+       "objects": 3,
+       "sourceLayers": [
+        "Parsel",
+        "Bina",
+        "katmanli"
+       ],
+       "targets": {
+        "Parsel": "import-parsel",
+        "Bina": "import-bina",
+        "katmanli": "import-katmanli"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "Parsel"
+        },
+        {
+         "id": "import-bina",
+         "name": "Bina"
+        },
+        {
+         "id": "import-katmanli",
+         "name": "katmanli"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "urn:ogc:def:crs:EPSG::5256",
+        "source": "geoJsonCrs",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-katmanli-geojson"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5"
+        },
+        "label": "101/5",
+        "pts": [
+         {
+          "x": 486512.5,
+          "y": 4420187.25
+         },
+         {
+          "x": 486562.5,
+          "y": 4420187.25
+         },
+         {
+          "x": 486562.5,
+          "y": 4420237.25
+         },
+         {
+          "x": 486512.5,
+          "y": 4420237.25
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-bina",
+        "kind": "polygon",
+        "attrs": {
+         "kat": "4"
+        },
+        "label": "B-1",
+        "pts": [
+         {
+          "x": 486520.0,
+          "y": 4420195.0
+         },
+         {
+          "x": 486530.0,
+          "y": 4420195.0
+         },
+         {
+          "x": 486530.0,
+          "y": 4420205.0
+         }
+        ]
+       },
+       "4": {
+        "layerId": "import-katmanli",
+        "kind": "point",
+        "attrs": {
+         "ad": "kapı"
+        },
+        "p": {
+         "x": 486550.0,
+         "y": 4420215.5
+        },
+        "z": 101.25
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "name": "Parsel",
+        "type": "layer",
+        "parent": "import-katmanli-geojson",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "integer"
+         },
+         {
+          "name": "parsel",
+          "kind": "integer"
+         }
+        ]
+       },
+       "import-bina": {
+        "name": "Bina",
+        "type": "layer",
+        "parent": "import-katmanli-geojson",
+        "fields": [
+         {
+          "name": "kat",
+          "kind": "integer"
+         }
+        ]
+       },
+       "import-katmanli": {
+        "name": "katmanli",
+        "type": "layer",
+        "parent": "import-katmanli-geojson",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-katmanli-geojson": {
+        "name": "katmanli.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "tm.geojson: crs adı EPSG:5256, katmanlar ve etiketler, iki noktalı nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/tm.geojson"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "tm.geojson",
+       "bytes": 1541,
+       "sha256": "7828619f4fe7a25f099d53f9a94418b5e588ac2b291c611dae7cf9bdfa358f15",
+       "objects": 4,
+       "sourceLayers": [
+        "Parsel",
+        "Bina",
+        "tm"
+       ],
+       "targets": {
+        "Parsel": "import-parsel",
+        "Bina": "import-bina",
+        "tm": "import-tm"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "Parsel"
+        },
+        {
+         "id": "import-bina",
+         "name": "Bina"
+        },
+        {
+         "id": "import-tm",
+         "name": "tm"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "urn:ogc:def:crs:EPSG::5256",
+        "source": "geoJsonCrs",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-tm-geojson"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "alan": "2345.678",
+         "mahalle": "Çamlıbel"
+        },
+        "label": "101/5",
+        "pts": [
+         {
+          "x": 486512.3456789,
+          "y": 4420187.12345678
+         },
+         {
+          "x": 486562.3456789,
+          "y": 4420187.12345678
+         },
+         {
+          "x": 486562.34567891236,
+          "y": 4420237.123456789
+         },
+         {
+          "x": 486512.3456789,
+          "y": 4420237.12345678
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 486530.001,
+            "y": 4420200.002
+           },
+           {
+            "x": 486530.007,
+            "y": 4420210.008
+           },
+           {
+            "x": 486540.005,
+            "y": 4420210.006
+           },
+           {
+            "x": 486540.003,
+            "y": 4420200.004
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-bina",
+        "kind": "polygon",
+        "attrs": {
+         "kat": "4",
+         "yapi": "betonarme"
+        },
+        "label": "B-1",
+        "pts": [
+         {
+          "x": 486545.125,
+          "y": 4420215.25
+         },
+         {
+          "x": 486555.875,
+          "y": 4420215.25
+         },
+         {
+          "x": 486555.875,
+          "y": 4420228.5
+         },
+         {
+          "x": 486545.125,
+          "y": 4420228.5
+         }
+        ]
+       },
+       "4": {
+        "layerId": "import-tm",
+        "kind": "point",
+        "attrs": {
+         "tur": "poligon noktası"
+        },
+        "p": {
+         "x": 486512.3456789,
+         "y": 4420187.12345678
+        },
+        "z": 1021.345,
+        "parts": [
+         {
+          "p": {
+           "x": 486562.3456789,
+           "y": 4420187.12345678
+          },
+          "z": 1019.8765
+         }
+        ]
+       },
+       "5": {
+        "layerId": "import-bina",
+        "kind": "point",
+        "attrs": {
+         "ad": "kapı"
+        },
+        "p": {
+         "x": 486550.0,
+         "y": 4420215.5
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "name": "Parsel",
+        "type": "layer",
+        "parent": "import-tm-geojson",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal",
+          "scale": 3
+         },
+         {
+          "name": "mahalle",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-bina": {
+        "name": "Bina",
+        "type": "layer",
+        "parent": "import-tm-geojson",
+        "fields": [
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "yapi",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-tm": {
+        "name": "tm",
+        "type": "layer",
+        "parent": "import-tm-geojson",
+        "fields": [
+         {
+          "name": "tur",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-tm-geojson": {
+        "name": "tm.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "kotlu.geojson: kotlar köşe başına",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/kotlu.geojson"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "kotlu.geojson",
+       "bytes": 2949,
+       "sha256": "250ae709ecfb3f8c668aca10b16bbcf240d752db38cec1b448186cc48da22d02",
+       "objects": 9,
+       "sourceLayers": [
+        "Kot cizgisi",
+        "kotlu",
+        "Parsel"
+       ],
+       "targets": {
+        "Kot cizgisi": "import-kot-cizgisi",
+        "kotlu": "import-kotlu",
+        "Parsel": "import-parsel"
+       },
+       "layers": [
+        {
+         "id": "import-kot-cizgisi",
+         "name": "Kot cizgisi"
+        },
+        {
+         "id": "import-kotlu",
+         "name": "kotlu"
+        },
+        {
+         "id": "import-parsel",
+         "name": "Parsel"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "urn:ogc:def:crs:EPSG::5256",
+        "source": "geoJsonCrs",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-kotlu-geojson"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kot-cizgisi",
+        "kind": "line",
+        "attrs": {
+         "tur": "iki konum, ikisi de kotlu"
+        },
+        "label": "K-1",
+        "a": {
+         "x": 486512.3456,
+         "y": 4420187.1234
+        },
+        "b": {
+         "x": 486562.3456,
+         "y": 4420187.1234
+        },
+        "za": 1021.345,
+        "zb": 1019.8765
+       },
+       "3": {
+        "layerId": "import-kotlu",
+        "kind": "line",
+        "attrs": {
+         "tur": "iki konum, yalniz ilki kotlu"
+        },
+        "a": {
+         "x": 486570.0,
+         "y": 4420190.0
+        },
+        "b": {
+         "x": 486580.0,
+         "y": 4420195.0
+        },
+        "za": 1018.5
+       },
+       "4": {
+        "layerId": "import-kotlu",
+        "kind": "polyline",
+        "attrs": {
+         "tur": "sifir ve eksi kot"
+        },
+        "pts": [
+         {
+          "x": 486600.0,
+          "y": 4420200.0
+         },
+         {
+          "x": 486610.0,
+          "y": 4420210.0
+         },
+         {
+          "x": 486620.0,
+          "y": 4420215.0
+         },
+         {
+          "x": 486630.0,
+          "y": 4420225.0
+         }
+        ],
+        "zs": [
+         10.5,
+         11.25,
+         0.0,
+         -2.5
+        ]
+       },
+       "5": {
+        "layerId": "import-kotlu",
+        "kind": "polyline",
+        "attrs": {
+         "tur": "karisik konumlar"
+        },
+        "pts": [
+         {
+          "x": 486640.0,
+          "y": 4420230.0
+         },
+         {
+          "x": 486650.0,
+          "y": 4420240.0
+         },
+         {
+          "x": 486660.0,
+          "y": 4420245.0
+         },
+         {
+          "x": 486670.0,
+          "y": 4420250.0
+         }
+        ],
+        "zs": [
+         null,
+         55.5,
+         null,
+         57.25
+        ]
+       },
+       "6": {
+        "layerId": "import-kotlu",
+        "kind": "polyline",
+        "attrs": {
+         "tur": "coklu cizgi, bir uyesi kotlu"
+        },
+        "pts": [
+         {
+          "x": 486700.0,
+          "y": 4420300.0
+         },
+         {
+          "x": 486710.0,
+          "y": 4420310.0
+         },
+         {
+          "x": 486720.0,
+          "y": 4420320.0
+         }
+        ],
+        "zs": [
+         100.0,
+         101.5,
+         103.0
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 486730.0,
+            "y": 4420330.0
+           },
+           {
+            "x": 486740.0,
+            "y": 4420340.0
+           },
+           {
+            "x": 486750.0,
+            "y": 4420350.0
+           }
+          ]
+         }
+        ]
+       },
+       "7": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "tur": "kotlu parsel: kotlu delik, kotsuz delik"
+        },
+        "label": "P-7",
+        "pts": [
+         {
+          "x": 486800.0,
+          "y": 4420400.0
+         },
+         {
+          "x": 486850.0,
+          "y": 4420400.0
+         },
+         {
+          "x": 486850.0,
+          "y": 4420450.0
+         },
+         {
+          "x": 486800.0,
+          "y": 4420450.0
+         }
+        ],
+        "zs": [
+         900.0,
+         902.5,
+         905.0,
+         901.25
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 486810.0,
+            "y": 4420410.0
+           },
+           {
+            "x": 486820.0,
+            "y": 4420410.0
+           },
+           {
+            "x": 486820.0,
+            "y": 4420420.0
+           }
+          ],
+          "zs": [
+           901.0,
+           901.5,
+           902.0
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 486830.0,
+            "y": 4420430.0
+           },
+           {
+            "x": 486840.0,
+            "y": 4420430.0
+           },
+           {
+            "x": 486840.0,
+            "y": 4420440.0
+           }
+          ]
+         }
+        ]
+       },
+       "8": {
+        "layerId": "import-kotlu",
+        "kind": "polyline",
+        "attrs": {
+         "tur": "dort sayili konumlar"
+        },
+        "pts": [
+         {
+          "x": 486900.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 486910.0,
+          "y": 4420510.0
+         },
+         {
+          "x": 486920.0,
+          "y": 4420520.0
+         }
+        ],
+        "zs": [
+         800.0,
+         801.0,
+         802.0
+        ]
+       },
+       "9": {
+        "layerId": "import-kotlu",
+        "kind": "line",
+        "attrs": {
+         "tur": "koleksiyon"
+        },
+        "a": {
+         "x": 487000.0,
+         "y": 4420600.0
+        },
+        "b": {
+         "x": 487010.0,
+         "y": 4420610.0
+        },
+        "za": 700.0,
+        "zb": 701.0
+       },
+       "10": {
+        "layerId": "import-kotlu",
+        "kind": "polygon",
+        "attrs": {
+         "tur": "koleksiyon"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420700.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420700.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420710.0
+         }
+        ],
+        "zs": [
+         600.0,
+         601.0,
+         null
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kot-cizgisi": {
+        "name": "Kot cizgisi",
+        "type": "layer",
+        "parent": "import-kotlu-geojson",
+        "fields": [
+         {
+          "name": "tur",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-kotlu": {
+        "name": "kotlu",
+        "type": "layer",
+        "parent": "import-kotlu-geojson",
+        "fields": [
+         {
+          "name": "tur",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-parsel": {
+        "name": "Parsel",
+        "type": "layer",
+        "parent": "import-kotlu-geojson",
+        "fields": [
+         {
+          "name": "tur",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-kotlu-geojson": {
+        "name": "kotlu.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "features.geojson: her geometri türü, WGS 84; nesne çevrilmeden önce çevirme ister",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/features.geojson"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "features.geojson EPSG:4326 sisteminde, proje EPSG:5256. Koordinatların projenin sistemine çevrilmesi için reproject verin ya da projeyi EPSG:4326'de açın.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "features.geojson: eğrili olmayanların hepsi çevrilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/features.geojson",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "features.geojson",
+       "bytes": 4580,
+       "sha256": "3c089b0965dee892d2c05d3b01ae02657de80ee210c37392d9cde6d06dcffc8d",
+       "objects": 14,
+       "sourceLayers": [
+        "ornek",
+        "Sınır"
+       ],
+       "targets": {
+        "ornek": "import-ornek",
+        "Sınır": "import-sinir"
+       },
+       "layers": [
+        {
+         "id": "import-ornek",
+         "name": "ornek"
+        },
+        {
+         "id": "import-sinir",
+         "name": "Sınır"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "RFC 7946: WGS 84 boylam, enlem (dosyada crs üyesi yok)",
+        "source": "rfc7946",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 14,
+        "left": 0
+       },
+       "group": "import-features-geojson"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-ornek",
+        "kind": "point",
+        "attrs": {
+         "ad": "Çankaya İlçesi Şehit Öğretmen Işık Üstün Sokağı",
+         "no": "12",
+         "oran": "1.50",
+         "bin": "1e3",
+         "sifir": "0.0",
+         "durum": "yeni",
+         "aktif": "true",
+         "kapali": "false",
+         "detay": "{\"kat\":3,\"cephe\":\"güney\",\"alan\":120.750,\"isaret\":\"📍\",\"ic\":{\"x\":null,\"y\":[true,false]}}",
+         "notlar": "[\"ilk satır\\nikinci \\\"söz\\\"\",\"a/b\\tc\\u0001d\\\\e\",2,-1.5E-3]"
+        },
+        "p": {
+         "x": 231553.42172736314,
+         "y": 4426858.9286117945
+        },
+        "z": 938.5
+       },
+       "3": {
+        "layerId": "import-ornek",
+        "kind": "point",
+        "attrs": {
+         "ad": "Kadıköy",
+         "bos_metin": "",
+         "bos_nesne": "{}",
+         "bos_dizi": "[]",
+         "eksi_sifir": "0",
+         "buyuk": "123456789012345678901234567890",
+         "pi": "3.14159265358979323846264338327950288"
+        },
+        "p": {
+         "x": -90896.03001903556,
+         "y": 4565306.117809448
+        },
+        "z": 39.25,
+        "parts": [
+         {
+          "p": {
+           "x": -86441.00414428487,
+           "y": 4568751.455481142
+          }
+         }
+        ]
+       },
+       "4": {
+        "layerId": "import-ornek",
+        "kind": "line",
+        "attrs": {
+         "tur": "yol"
+        },
+        "a": {
+         "x": -274152.7880814987,
+         "y": 4291883.093001513
+        },
+        "b": {
+         "x": -268755.56217088795,
+         "y": 4295439.791423795
+        }
+       },
+       "5": {
+        "layerId": "import-ornek",
+        "kind": "polyline",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 28599.51815524377,
+          "y": 4098147.6905376515
+         },
+         {
+          "x": 29216.524271955597,
+          "y": 4098458.9294140595
+         },
+         {
+          "x": 29903.938299492816,
+          "y": 4096648.7848597458
+         },
+         {
+          "x": 30939.789733812155,
+          "y": 4097249.019257785
+         }
+        ],
+        "zs": [
+         null,
+         12.5,
+         null,
+         null
+        ]
+       },
+       "6": {
+        "layerId": "import-ornek",
+        "kind": "polyline",
+        "attrs": {
+         "tur": "dere"
+        },
+        "pts": [
+         {
+          "x": 454671.1541646649,
+          "y": 4288792.73316032
+         },
+         {
+          "x": 455659.1753766363,
+          "y": 4289764.100595509
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 456534.67138038226,
+            "y": 4290869.420457769
+           },
+           {
+            "x": 457409.92585294845,
+            "y": 4291974.836445915
+           },
+           {
+            "x": 458276.20441318944,
+            "y": 4291415.171515969
+           }
+          ]
+         }
+        ]
+       },
+       "7": {
+        "layerId": "import-ornek",
+        "kind": "polygon",
+        "attrs": {
+         "tur": "park"
+        },
+        "pts": [
+         {
+          "x": 182893.99762713484,
+          "y": 4191409.549481252
+         },
+         {
+          "x": 200516.3293757257,
+          "y": 4190748.9337599734
+         },
+         {
+          "x": 201123.87344850536,
+          "y": 4207405.324292264
+         },
+         {
+          "x": 183537.40584626392,
+          "y": 4208066.818345754
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 187510.9106503359,
+            "y": 4196793.163236405
+           },
+           {
+            "x": 192122.0281898536,
+            "y": 4202179.0260226475
+           },
+           {
+            "x": 196316.10504498845,
+            "y": 4196462.708328235
+           }
+          ]
+         }
+        ]
+       },
+       "8": {
+        "layerId": "import-ornek",
+        "kind": "polygon",
+        "attrs": {
+         "tur": "ada"
+        },
+        "pts": [
+         {
+          "x": 811424.8903869146,
+          "y": 4544951.49278743
+         },
+         {
+          "x": 814792.3162220751,
+          "y": 4545095.075348965
+         },
+         {
+          "x": 814601.7538657263,
+          "y": 4549538.560552786
+         },
+         {
+          "x": 811236.3730677915,
+          "y": 4549394.949903494
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 949214.062653047,
+            "y": 4429421.27072541
+           },
+           {
+            "x": 953494.4529244549,
+            "y": 4429674.668355469
+           },
+           {
+            "x": 955073.9069458437,
+            "y": 4431999.058791013
+           },
+           {
+            "x": 953229.9645675434,
+            "y": 4434119.3520973595
+           },
+           {
+            "x": 948952.0873554139,
+            "y": 4433865.891711366
+           }
+          ]
+         }
+        ]
+       },
+       "9": {
+        "layerId": "import-ornek",
+        "kind": "point",
+        "attrs": {
+         "tur": "koleksiyon"
+        },
+        "p": {
+         "x": 1144519.799634499,
+         "y": 4288283.377567605
+        }
+       },
+       "10": {
+        "layerId": "import-ornek",
+        "kind": "polyline",
+        "attrs": {
+         "tur": "koleksiyon"
+        },
+        "pts": [
+         {
+          "x": 1144269.0286274299,
+          "y": 4287793.0255850535
+         },
+         {
+          "x": 1145927.2745721329,
+          "y": 4289046.283530415
+         },
+         {
+          "x": 1147630.1159688197,
+          "y": 4289743.876940376
+         }
+        ]
+       },
+       "11": {
+        "layerId": "import-ornek",
+        "kind": "point",
+        "attrs": {
+         "tur": "dort sayi"
+        },
+        "p": {
+         "x": 370240.4309204639,
+         "y": 4330676.997810558
+        },
+        "z": 1100.5
+       },
+       "12": {
+        "layerId": "import-sinir",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "12",
+         "parsel": "7"
+        },
+        "label": "P-12",
+        "pts": [
+         {
+          "x": 240095.8462143476,
+          "y": 4322788.231647708
+         },
+         {
+          "x": 248760.89631359238,
+          "y": 4322507.21681787
+         },
+         {
+          "x": 249115.29458352044,
+          "y": 4333611.820298138
+         },
+         {
+          "x": 240462.49410597648,
+          "y": 4333893.042239755
+         }
+        ]
+       },
+       "13": {
+        "layerId": "import-ornek",
+        "kind": "line",
+        "attrs": {
+         "tur": "sadece etiket"
+        },
+        "label": "K-1",
+        "a": {
+         "x": 500000.0,
+         "y": 4096510.9747344814
+        },
+        "b": {
+         "x": 508895.33667013317,
+         "y": 4102064.557365073
+        }
+       },
+       "14": {
+        "layerId": "import-ornek",
+        "kind": "point",
+        "attrs": {
+         "tur": "ic ice"
+        },
+        "p": {
+         "x": 676860.2749234098,
+         "y": 4153881.698402323
+        },
+        "z": -12.25
+       },
+       "15": {
+        "layerId": "import-ornek",
+        "kind": "line",
+        "attrs": {
+         "tur": "bos kentos"
+        },
+        "a": {
+         "x": 544212.8688061401,
+         "y": 4152119.583457774
+        },
+        "b": {
+         "x": 553020.1212109082,
+         "y": 4157720.7134761624
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-ornek": {
+        "name": "ornek",
+        "type": "layer",
+        "parent": "import-features-geojson",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "scale": 2
+         },
+         {
+          "name": "bin",
+          "kind": "text"
+         },
+         {
+          "name": "sifir",
+          "kind": "decimal",
+          "scale": 1
+         },
+         {
+          "name": "durum",
+          "kind": "text"
+         },
+         {
+          "name": "aktif",
+          "kind": "boolean"
+         },
+         {
+          "name": "kapali",
+          "kind": "boolean"
+         },
+         {
+          "name": "detay",
+          "kind": "text"
+         },
+         {
+          "name": "notlar",
+          "kind": "text"
+         },
+         {
+          "name": "bos_metin",
+          "kind": "text"
+         },
+         {
+          "name": "bos_nesne",
+          "kind": "text"
+         },
+         {
+          "name": "bos_dizi",
+          "kind": "text"
+         },
+         {
+          "name": "eksi_sifir",
+          "kind": "integer"
+         },
+         {
+          "name": "buyuk",
+          "kind": "decimal",
+          "scale": 0
+         },
+         {
+          "name": "pi",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-sinir": {
+        "name": "Sınır",
+        "type": "layer",
+        "parent": "import-features-geojson",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "integer"
+         }
+        ]
+       },
+       "import-features-geojson": {
+        "name": "features.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "EPSG:2320 crs üyesi (ED50 / TM30): resmî olmayan dönüşüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/feature-epsg.geojson",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "feature-epsg.geojson",
+       "bytes": 267,
+       "sha256": "f23b08577a10e790689b2bac68d5c225bda9fb9d8c40edf792ea47f50e2710b0",
+       "objects": 1,
+       "sourceLayers": [
+        "feature-epsg"
+       ],
+       "targets": {
+        "feature-epsg": "import-feature-epsg"
+       },
+       "layers": [
+        {
+         "id": "import-feature-epsg",
+         "name": "feature-epsg"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "EPSG:2320",
+        "source": "geoJsonCrs",
+        "srid": 2320
+       },
+       "srid": 2320,
+       "moved": {
+        "from": 2320,
+        "to": 5256,
+        "via": "EPSG:1783 + EPSG:5260",
+        "accuracy": 2.1,
+        "unofficial": true,
+        "text": "±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil",
+        "moved": 1,
+        "left": 0
+       },
+       "group": "import-feature-epsg-geojson"
+      },
+      "warnings": [
+       {
+        "code": "crs_unofficial",
+        "message": "feature-epsg.geojson koordinatları resmî olmayan bir dönüşümle projenin sistemine çevrildi (±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil); resmî dönüşümü olan bir dosya gerekiyorsa dosyayı o dönüşümle çevirip verin.",
+        "path": "reproject"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-feature-epsg",
+        "kind": "polyline",
+        "attrs": {
+         "yol": "D-100",
+         "serit": "3"
+        },
+        "pts": [
+         {
+          "x": -89371.02825040533,
+          "y": 4564256.350293512
+         },
+         {
+          "x": -89244.9268501153,
+          "y": 4564313.633134786
+         },
+         {
+          "x": -89033.08250318468,
+          "y": 4564287.557610509
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-feature-epsg": {
+        "name": "feature-epsg",
+        "type": "layer",
+        "parent": "import-feature-epsg-geojson",
+        "fields": [
+         {
+          "name": "yol",
+          "kind": "text"
+         },
+         {
+          "name": "serit",
+          "kind": "integer"
+         }
+        ]
+       },
+       "import-feature-epsg-geojson": {
+        "name": "feature-epsg.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "EPSG:2320 çevirme istenmeden alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/feature-epsg.geojson"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "feature-epsg.geojson EPSG:2320 sisteminde, proje EPSG:5256. Koordinatların projenin sistemine çevrilmesi için reproject verin ya da projeyi EPSG:2320'de açın.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "srid dosyanın crs'ini ezer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/feature-epsg.geojson",
+      "srid": 5256
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "feature-epsg.geojson",
+       "bytes": 267,
+       "sha256": "f23b08577a10e790689b2bac68d5c225bda9fb9d8c40edf792ea47f50e2710b0",
+       "objects": 1,
+       "sourceLayers": [
+        "feature-epsg"
+       ],
+       "targets": {
+        "feature-epsg": "import-feature-epsg"
+       },
+       "layers": [
+        {
+         "id": "import-feature-epsg",
+         "name": "feature-epsg"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "EPSG:2320",
+        "source": "geoJsonCrs",
+        "srid": 2320
+       },
+       "srid": 5256,
+       "group": "import-feature-epsg-geojson"
+      },
+      "warnings": [
+       {
+        "code": "crs_overridden",
+        "message": "feature-epsg.geojson EPSG:2320 diyor; srid ile EPSG:5256 verildi: koordinatlar EPSG:5256 sayıldı, dönüştürülmeden (reproject verilirse yalnız EPSG:5256'den projenin sistemine çevrilir).",
+        "path": "srid"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-feature-epsg",
+        "kind": "polyline",
+        "attrs": {
+         "yol": "D-100",
+         "serit": "3"
+        },
+        "pts": [
+         {
+          "x": 415678.901,
+          "y": 4541234.567
+         },
+         {
+          "x": 415800.25,
+          "y": 4541300.125
+         },
+         {
+          "x": 416012.5,
+          "y": 4541288.75
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-feature-epsg": {
+        "name": "feature-epsg",
+        "type": "layer",
+        "parent": "import-feature-epsg-geojson",
+        "fields": [
+         {
+          "name": "yol",
+          "kind": "text"
+         },
+         {
+          "name": "serit",
+          "kind": "integer"
+         }
+        ]
+       },
+       "import-feature-epsg-geojson": {
+        "name": "feature-epsg.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Okunamayan crs adı: crs_unknown",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/belirsiz-crs.geojson"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_unknown",
+       "message": "belirsiz-crs.geojson'nin koordinat sistemi okunamadı (“yerel şantiye sistemi”). Koordinatların hangi sistemde olduğunu srid ile verin.",
+       "path": "srid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Okunamayan crs adına srid verilirse alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/belirsiz-crs.geojson",
+      "srid": 5256
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "belirsiz-crs.geojson",
+       "bytes": 257,
+       "sha256": "a454aa0df468ad30aef5a701771b9b7c3166df92e6e9f2773cdfd61625805880",
+       "objects": 1,
+       "sourceLayers": [
+        "belirsiz"
+       ],
+       "targets": {
+        "belirsiz": "import-belirsiz"
+       },
+       "layers": [
+        {
+         "id": "import-belirsiz",
+         "name": "belirsiz"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "yerel şantiye sistemi",
+        "source": "geoJsonCrs"
+       },
+       "srid": 5256,
+       "group": "import-belirsiz-crs-geojson"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-belirsiz",
+        "kind": "point",
+        "attrs": {
+         "ad": "a"
+        },
+        "p": {
+         "x": 486512.25,
+         "y": 4420187.5
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-belirsiz": {
+        "name": "belirsiz",
+        "type": "layer",
+        "parent": "import-belirsiz-crs-geojson",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-belirsiz-crs-geojson": {
+        "name": "belirsiz-crs.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "KentOS'ta tanımlı olmayan EPSG kodu: crs_unknown",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/bilinmeyen-epsg.geojson"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_unknown",
+       "message": "bilinmeyen-epsg.geojson koordinatların EPSG:9999 sisteminde olduğunu söylüyor; bu sistem KentOS'ta tanımlı değil. Koordinatlar projenin sistemindeyse srid olarak onu verin, değilse dosyayı projenin sistemine çevirip verin.",
+       "path": "srid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yerel proje WGS 84 dosyanın koordinatlarını olduğu gibi alır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta-rfc7946.geojson"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta-rfc7946.geojson",
+       "bytes": 196,
+       "sha256": "77bb721e77420146cd36504f5d8e373a456dd3172e66754e2a9392d20263e848",
+       "objects": 1,
+       "sourceLayers": [
+        "nokta"
+       ],
+       "targets": {
+        "nokta": "import-nokta"
+       },
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "RFC 7946: WGS 84 boylam, enlem (dosyada crs üyesi yok)",
+        "source": "rfc7946",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "group": "import-nokta-rfc7946-geojson"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-nokta",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.75"
+        },
+        "p": {
+         "x": 35.8479692,
+         "y": 39.9140929
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-nokta": {
+        "name": "nokta",
+        "type": "layer",
+        "parent": "import-nokta-rfc7946-geojson",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text"
+         },
+         {
+          "name": "kot",
+          "kind": "decimal",
+          "scale": 2
+         }
+        ]
+       },
+       "import-nokta-rfc7946-geojson": {
+        "name": "nokta-rfc7946.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Yerel proje",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "cad",
+     "drawingUnit": "m"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Yerel projede reproject reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta-rfc7946.geojson",
+      "reproject": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "nokta-rfc7946.geojson EPSG:4326 sisteminde; projenin koordinat sistemi yok (yerel proje), çevrilecek bir sistem yok. Projeyi bir koordinat sisteminde açın ya da reproject vermeyin: koordinatlar olduğu gibi alınır.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Yerel proje",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "cad",
+     "drawingUnit": "m"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "layer var olan katmana",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-tm36.geojson",
+      "layer": "cizim"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-tm36.geojson",
+       "bytes": 1220,
+       "sha256": "7ba2135262f12ed6936ff1b72574ccc4ae2ed401a486e5be993eb37c2f5e136f",
+       "objects": 2,
+       "sourceLayers": [
+        "parsel"
+       ],
+       "targets": {
+        "parsel": "cizim"
+       },
+       "layers": [],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "urn:ogc:def:crs:EPSG::5256",
+        "source": "geoJsonCrs",
+        "srid": 5256
+       },
+       "srid": 5256
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "cizim",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "cizim",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "layers kentos üyesinin katman adıyla yönlendirir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/katmanli.geojson",
+      "layers": {
+       "Bina": "cizim"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "katmanli.geojson",
+       "bytes": 791,
+       "sha256": "f047f87434ff6a186626bef35e141a3054bc28282afca7772c3b08bc16306955",
+       "objects": 3,
+       "sourceLayers": [
+        "Parsel",
+        "Bina",
+        "katmanli"
+       ],
+       "targets": {
+        "Parsel": "import-parsel",
+        "Bina": "cizim",
+        "katmanli": "import-katmanli"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "Parsel"
+        },
+        {
+         "id": "import-katmanli",
+         "name": "katmanli"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "urn:ogc:def:crs:EPSG::5256",
+        "source": "geoJsonCrs",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-katmanli-geojson"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5"
+        },
+        "label": "101/5",
+        "pts": [
+         {
+          "x": 486512.5,
+          "y": 4420187.25
+         },
+         {
+          "x": 486562.5,
+          "y": 4420187.25
+         },
+         {
+          "x": 486562.5,
+          "y": 4420237.25
+         },
+         {
+          "x": 486512.5,
+          "y": 4420237.25
+         }
+        ]
+       },
+       "3": {
+        "layerId": "cizim",
+        "kind": "polygon",
+        "attrs": {
+         "kat": "4"
+        },
+        "label": "B-1",
+        "pts": [
+         {
+          "x": 486520.0,
+          "y": 4420195.0
+         },
+         {
+          "x": 486530.0,
+          "y": 4420195.0
+         },
+         {
+          "x": 486530.0,
+          "y": 4420205.0
+         }
+        ]
+       },
+       "4": {
+        "layerId": "import-katmanli",
+        "kind": "point",
+        "attrs": {
+         "ad": "kapı"
+        },
+        "p": {
+         "x": 486550.0,
+         "y": 4420215.5
+        },
+        "z": 101.25
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "name": "Parsel",
+        "type": "layer",
+        "parent": "import-katmanli-geojson",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "integer"
+         },
+         {
+          "name": "parsel",
+          "kind": "integer"
+         }
+        ]
+       },
+       "import-katmanli": {
+        "name": "katmanli",
+        "type": "layer",
+        "parent": "import-katmanli-geojson",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-katmanli-geojson": {
+        "name": "katmanli.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "skipLayers bir katmanı bırakır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/katmanli.geojson",
+      "skipLayers": [
+       "Bina"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "katmanli.geojson",
+       "bytes": 791,
+       "sha256": "f047f87434ff6a186626bef35e141a3054bc28282afca7772c3b08bc16306955",
+       "objects": 2,
+       "sourceLayers": [
+        "Parsel",
+        "Bina",
+        "katmanli"
+       ],
+       "targets": {
+        "Parsel": "import-parsel",
+        "katmanli": "import-katmanli"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "Parsel"
+        },
+        {
+         "id": "import-katmanli",
+         "name": "katmanli"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "urn:ogc:def:crs:EPSG::5256",
+        "source": "geoJsonCrs",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-katmanli-geojson"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5"
+        },
+        "label": "101/5",
+        "pts": [
+         {
+          "x": 486512.5,
+          "y": 4420187.25
+         },
+         {
+          "x": 486562.5,
+          "y": 4420187.25
+         },
+         {
+          "x": 486562.5,
+          "y": 4420237.25
+         },
+         {
+          "x": 486512.5,
+          "y": 4420237.25
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-katmanli",
+        "kind": "point",
+        "attrs": {
+         "ad": "kapı"
+        },
+        "p": {
+         "x": 486550.0,
+         "y": 4420215.5
+        },
+        "z": 101.25
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "name": "Parsel",
+        "type": "layer",
+        "parent": "import-katmanli-geojson",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "integer"
+         },
+         {
+          "name": "parsel",
+          "kind": "integer"
+         }
+        ]
+       },
+       "import-katmanli": {
+        "name": "katmanli",
+        "type": "layer",
+        "parent": "import-katmanli-geojson",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       },
+       "import-katmanli-geojson": {
+        "name": "katmanli.geojson",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hedef kilitli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/katmanli.geojson",
+      "layers": {
+       "Parsel": "kilitli"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; kilidi Katmanlar panelinden açın ya da başka bir katman verin.",
+       "path": "layers.Parsel"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nesnesiz FeatureCollection",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/bos.geojson",
+      "reproject": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_import",
+       "message": "bos.geojson dosyasında alınacak nesne yok.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hedef katman yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-tm36.geojson",
+      "layer": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok; “parsel” katmanının nesnelerini var olan bir katmanın kimliğine yönlendirin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hedef bir grup",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-tm36.geojson",
+      "layer": "grup"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir grup; nesneler yalnız katmana konur. Grubun altındaki bir katmanı verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm bir tamsayı değilse",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-tm36.geojson",
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bozuk JSON",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/bozuk.geojson"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "bozuk.geojson GeoJSON olarak okunamadı: GeoJSON okunamadı: satır 2: dosya bir değerin yerinde bitiyor. Dosya bozuk ya da yarım kalmış olabilir; hiçbir şey alınmadı.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/yok.geojson"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$fixture:gis-import/v1/yok.geojson yok; dosyanın yolunu denetleyin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Göreli yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "veri/parsel.geojson"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“veri/parsel.geojson” mutlak bir dosya yolu değil; okunacak dosyanın tam yolunu verin (/klasör/ad.geojson).",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm değişmişse çatışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-tm36.geojson",
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}
