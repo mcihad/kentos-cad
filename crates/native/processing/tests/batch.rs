@@ -1,12 +1,17 @@
 //! Batch runs and run records (docs/adr/0529): what the shared command cases cannot say because they cannot stop a
 //! run between rows or look at the drawing's layers: a stop between rows takes back the rows before it, a batch is one
 //! undo step, a model that stops in the middle leaves no layer behind, a record names the persistent ids and the seed,
-//! and running a record again is told apart (same revision, same data, changed data).
+//! and running a record again is told apart (same revision, same data, changed data). With `onError: continue` a row
+//! that stops is taken back alone (docs/adr/0551 §1), and a stop heard inside a row takes the whole batch back (§4).
 
 use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
-use kentos_commands::{BatchRow, DocumentSnapshotV1, ProcessingBatch, ProcessingRun};
+use kentos_commands::{
+    BatchOnError, BatchRow, DocumentSnapshotV1, ProcessingBatch, ProcessingRun,
+};
 use kentos_domain::{Document, Slot};
 use kentos_native_application::processing_host::{BatchEnd, BatchFlow, RunEnd, tools};
 use kentos_processing::record::{Rerun, rerun_kind};
@@ -29,6 +34,8 @@ struct Flow {
     stop_at: u32,
     asked: Cell<u32>,
     progress: RefCell<Vec<(u64, u64)>>,
+    /// The stop as a flag the running tool reads (a job's), when the flow has one.
+    flag: Option<Arc<AtomicBool>>,
 }
 
 impl Flow {
@@ -37,6 +44,15 @@ impl Flow {
             stop_at,
             asked: Cell::new(0),
             progress: RefCell::new(Vec::new()),
+            flag: None,
+        }
+    }
+
+    /// A flow never asked to stop between rows whose flag is `flag`.
+    fn with_flag(flag: Arc<AtomicBool>) -> Self {
+        Flow {
+            flag: Some(flag),
+            ..Flow::new(u32::MAX)
         }
     }
 }
@@ -50,6 +66,10 @@ impl BatchFlow for Flow {
 
     fn progress(&self, done: u64, total: u64) {
         self.progress.borrow_mut().push((done, total));
+    }
+
+    fn stop_flag(&self) -> Option<Arc<AtomicBool>> {
+        self.flag.clone()
     }
 }
 
@@ -87,6 +107,7 @@ fn three_rows(doc: &Document) -> ProcessingBatch {
         selection: (1..=3).map(|n| uid(doc, n)).collect(),
         view: None,
         drawing: None,
+        on_error: Default::default(),
     }
 }
 
@@ -126,7 +147,7 @@ fn a_batch_is_one_undo_step_and_tells_its_progress() {
         .expect("registered")
         .batch(&mut doc, &batch, &flow)
         .expect("not refused");
-    let BatchEnd::Ran(ran) = end else {
+    let BatchEnd::Ran(ran, _) = end else {
         panic!("ran");
     };
     assert_eq!(
@@ -150,7 +171,7 @@ fn a_batch_record_has_its_rows_as_steps() {
     setup();
     let mut doc = load("parcels.kcad");
     let batch = three_rows(&doc);
-    let BatchEnd::Ran(ran) = tools()
+    let BatchEnd::Ran(ran, _) = tools()
         .expect("registered")
         .batch(&mut doc, &batch, &Flow::new(u32::MAX))
         .expect("not refused")
@@ -355,9 +376,10 @@ fn batch_timing() {
         selection: Vec::new(),
         view: None,
         drawing: None,
+        on_error: Default::default(),
     };
     let clock = std::time::Instant::now();
-    let BatchEnd::Ran(ran) = tools()
+    let BatchEnd::Ran(ran, _) = tools()
         .expect("registered")
         .batch(&mut doc, &batch, &Flow::new(u32::MAX))
         .expect("runs")
@@ -386,9 +408,10 @@ fn batch_timing() {
         selection: Vec::new(),
         view: None,
         drawing: None,
+        on_error: Default::default(),
     };
     let clock = std::time::Instant::now();
-    let BatchEnd::Ran(_) = tools()
+    let BatchEnd::Ran(..) = tools()
         .expect("registered")
         .batch(&mut doc, &choose, &Flow::new(u32::MAX))
         .expect("runs")
@@ -463,4 +486,285 @@ fn a_raster_run_records_its_grids() {
     let out = grids[1].file.clone().expect("the result's file");
     assert!(std::path::Path::new(&out).exists(), "{out}");
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+// ── onError: continue and a stop inside a row (docs/adr/0551) ───────────────
+
+/// Three rows of Öznitelik hesapla into the parcel layer's whole-number field “Ağaç sayısı”, over queries.kcad: the
+/// second row's value is no number and the field refuses it when the row writes.
+fn tree_rows(on_error: BatchOnError, values_of: [&str; 3]) -> ProcessingBatch {
+    ProcessingBatch {
+        tool: "attributes.calculate".into(),
+        parameters: values(&[
+            ("input", json!({ "scope": "layer", "layerId": "parsel" })),
+            ("field", json!("Ağaç sayısı")),
+        ]),
+        rows: values_of
+            .iter()
+            .map(|v| BatchRow {
+                label: None,
+                parameters: values(&[("value", json!(v))]),
+            })
+            .collect(),
+        selection: Vec::new(),
+        view: None,
+        drawing: None,
+        on_error,
+    }
+}
+
+fn trees(doc: &Document) -> Vec<Option<String>> {
+    (1..=4)
+        .map(|n| {
+            doc.get(Slot(n))
+                .and_then(|e| e.base().attrs.get("Ağaç sayısı").cloned())
+        })
+        .collect()
+}
+
+#[test]
+fn with_continue_a_row_that_stops_is_taken_back_alone_and_the_others_are_written() {
+    setup();
+    let mut doc = load("queries.kcad");
+    let before = trees(&doc);
+    let batch = tree_rows(BatchOnError::Continue, ["5", "'çok'", "7"]);
+    let BatchEnd::Ran(ran, warnings) = tools()
+        .expect("registered")
+        .batch(&mut doc, &batch, &Flow::new(u32::MAX))
+        .expect("not refused")
+    else {
+        panic!("ran");
+    };
+    assert_eq!(
+        ran.rows.iter().map(|r| r.index).collect::<Vec<_>>(),
+        [0, 2],
+        "the rows that ran"
+    );
+    assert_eq!(ran.failed.len(), 1);
+    assert_eq!(
+        (ran.failed[0].index, ran.failed[0].code.as_str()),
+        (1, "tool_failed")
+    );
+    assert!(ran.failed[0].message.contains("tam sayı ister"), "{}", ran.failed[0].message);
+    assert_eq!(warnings.len(), 1);
+    assert_eq!(warnings[0].code, "batch_rows_failed");
+    assert!(ran.summary.contains("1 satır çalışmadı"), "{}", ran.summary);
+    // The record names the rows that ran as steps and the one that stopped as a failure.
+    assert_eq!(
+        ran.record.steps.iter().map(|s| s.id.as_str()).collect::<Vec<_>>(),
+        ["rows[0]", "rows[2]"]
+    );
+    assert_eq!(ran.record.failed.len(), 1);
+    assert_eq!(ran.record.failed[0].id, "rows[1]");
+    // The last row's value stands, the step is one and takes it all back.
+    assert_eq!(trees(&doc), vec![Some("7".to_owned()); 4]);
+    assert_eq!(ran.step.as_deref(), Some("Toplu: Öznitelik hesapla"));
+    assert_eq!(doc.undo().as_deref(), Some("Toplu: Öznitelik hesapla"));
+    assert!(!doc.can_undo());
+    assert_eq!(trees(&doc), before);
+}
+
+#[test]
+fn with_stop_the_same_batch_takes_everything_back() {
+    setup();
+    let mut doc = load("queries.kcad");
+    let before = trees(&doc);
+    let revision = doc.revision();
+    let batch = tree_rows(BatchOnError::Stop, ["5", "'çok'", "7"]);
+    let error = tools()
+        .expect("registered")
+        .batch(&mut doc, &batch, &Flow::new(u32::MAX))
+        .err()
+        .expect("refused");
+    assert_eq!(error.code, "batch_row_failed");
+    assert_eq!(error.path.as_deref(), Some("rows[1]"));
+    assert_eq!(trees(&doc), before);
+    assert_eq!(doc.revision(), revision);
+    assert!(!doc.can_undo());
+}
+
+#[test]
+fn with_continue_a_batch_whose_rows_all_stop_writes_nothing() {
+    setup();
+    let mut doc = load("queries.kcad");
+    let before = trees(&doc);
+    let revision = doc.revision();
+    let batch = tree_rows(BatchOnError::Continue, ["'a'", "'b'", "'c'"]);
+    let BatchEnd::Ran(ran, warnings) = tools()
+        .expect("registered")
+        .batch(&mut doc, &batch, &Flow::new(u32::MAX))
+        .expect("not refused")
+    else {
+        panic!("ran");
+    };
+    assert!(ran.rows.is_empty());
+    assert_eq!(ran.failed.len(), 3);
+    assert_eq!(warnings[0].code, "batch_rows_failed");
+    assert!(ran.step.is_none(), "no step: nothing was written");
+    assert_eq!(trees(&doc), before);
+    assert_eq!(doc.revision(), revision);
+    assert!(!doc.can_undo());
+}
+
+/// A model row that stops in its middle step has its first step's objects and layer taken back, the rows after it run.
+#[test]
+fn with_continue_a_model_row_that_stops_in_the_middle_leaves_no_layer_behind() {
+    setup();
+    let mut json_doc: Value = serde_json::from_str(
+        &std::fs::read_to_string(
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../../fixtures/processing/v1/parcels.kcad"),
+        )
+        .expect("file"),
+    )
+    .expect("json");
+    json_doc["layers"].as_array_mut().expect("layers").push(json!({
+        "id": "islem-kenar-olculeri", "name": "Kenar ölçüleri", "type": "layer", "visible": true,
+        "locked": false, "expanded": true,
+        "style": { "color": "fg-dim", "lineType": "continuous", "lineWeight": 0.18 }, "children": [],
+        "fields": [{ "name": "Uzunluk (m)", "kind": "integer" }]
+    }));
+    let mut doc = Document::from_snapshot(
+        DocumentSnapshotV1::from_json(&json_doc.to_string()).expect("reads"),
+    )
+    .expect("opens");
+    let count = doc.entities().count();
+    let revision = doc.revision();
+    let batch = ProcessingBatch {
+        tool: "model:builtin.parcelSheet".into(),
+        parameters: BTreeMap::new(),
+        rows: vec![BatchRow::default(), BatchRow::default()],
+        selection: vec![uid(&doc, 1), uid(&doc, 2)],
+        view: None,
+        drawing: None,
+        on_error: BatchOnError::Continue,
+    };
+    let BatchEnd::Ran(ran, _) = tools()
+        .expect("registered")
+        .batch(&mut doc, &batch, &Flow::new(u32::MAX))
+        .expect("not refused")
+    else {
+        panic!("ran");
+    };
+    assert!(ran.rows.is_empty());
+    assert_eq!(ran.failed.len(), 2, "both rows stop at their second step");
+    assert!(ran.failed[0].message.contains("2. adım"), "{}", ran.failed[0].message);
+    assert_eq!(doc.entities().count(), count, "each row's first step is taken back");
+    assert!(doc.layers().get("islem-kose-noktalari").is_none());
+    assert!(!doc.can_undo());
+    assert_eq!(doc.revision(), revision);
+}
+
+/// A stop heard inside the row (the job's flag, read as the tool runs) is not a row's failure: whatever the
+/// `onError`, the whole batch is taken back and nothing is written.
+#[test]
+fn a_stop_heard_inside_a_row_takes_the_whole_batch_back() {
+    setup();
+    for on_error in [BatchOnError::Stop, BatchOnError::Continue] {
+        let mut doc = load("queries.kcad");
+        let before = trees(&doc);
+        let revision = doc.revision();
+        let batch = tree_rows(on_error, ["5", "6", "7"]);
+        // The between-rows question is never answered yes; only the flag the tool reads is set.
+        let flag = Arc::new(AtomicBool::new(true));
+        let flow = Flow::with_flag(Arc::clone(&flag));
+        assert!(flow.flag.as_ref().is_some_and(|f| f.load(Ordering::Relaxed)));
+        let end = tools()
+            .expect("registered")
+            .batch(&mut doc, &batch, &flow)
+            .expect("not refused");
+        assert!(matches!(end, BatchEnd::Cancelled), "{on_error:?}");
+        assert_eq!(trees(&doc), before);
+        assert_eq!(doc.revision(), revision);
+        assert!(!doc.can_undo());
+    }
+}
+
+/// The same for one run (`cad.processing.run` as a job): stopped inside, the drawing is as it was.
+#[test]
+fn a_stop_heard_inside_a_run_leaves_the_drawing_as_it_was() {
+    setup();
+    let mut doc = load("queries.kcad");
+    let before = trees(&doc);
+    let revision = doc.revision();
+    let run = ProcessingRun {
+        tool: "attributes.calculate".into(),
+        parameters: values(&[
+            ("input", json!({ "scope": "layer", "layerId": "parsel" })),
+            ("field", json!("Ağaç sayısı")),
+            ("value", json!("5")),
+        ]),
+        selection: Vec::new(),
+        view: None,
+        sink: None,
+        drawing: None,
+    };
+    let flag = Arc::new(AtomicBool::new(true));
+    let end = tools()
+        .expect("registered")
+        .run(&mut doc, &run, true, &Flow::with_flag(flag))
+        .expect("not refused");
+    assert!(matches!(end, RunEnd::Cancelled));
+    assert_eq!(trees(&doc), before);
+    assert_eq!(doc.revision(), revision);
+    assert!(!doc.can_undo());
+}
+
+/// A layer's digest is taken again for each state of its objects, also inside a command's open step (where the
+/// document's generation does not move): the second row, which reads what the first wrote, has another digest.
+#[test]
+fn a_row_that_reads_what_the_row_before_it_wrote_takes_a_new_digest() {
+    setup();
+    let mut doc = load("queries.kcad");
+    let batch = tree_rows(BatchOnError::Stop, ["5", "6", "7"]);
+    // Inside an open transaction, as the command protocol runs a command.
+    let ran: Result<kentos_commands::ProcessingBatched, ()> = doc.transact("Komut", |doc| {
+        match tools()
+            .expect("registered")
+            .batch(doc, &batch, &Flow::new(u32::MAX))
+            .map_err(|_| ())?
+        {
+            BatchEnd::Ran(ran, _) => Ok(ran),
+            BatchEnd::Cancelled => Err(()),
+        }
+    });
+    let ran = ran.expect("ran");
+    let digests: Vec<&str> = ran
+        .rows
+        .iter()
+        .map(|r| r.ran.record.inputs[0].digest.as_str())
+        .collect();
+    assert_eq!(digests.len(), 3);
+    assert_ne!(digests[0], digests[1], "row 2 read what row 1 wrote");
+    assert_ne!(digests[1], digests[2]);
+}
+
+/// A run given a `requestId` leaves its answer, record included, in the project's request ledger: what the file keeps
+/// of it (docs/adr/0551 §6; the ledger is saved with the drawing, docs/adr/0253 §6).
+#[test]
+fn a_run_with_a_request_id_keeps_its_record_in_the_projects_ledger() {
+    use kentos_commands::{CallEnvelope, CallOp, CommandResult};
+    setup();
+    let mut doc = load("queries.kcad");
+    let envelope = CallEnvelope {
+        relax_constraints: false,
+        command: "cad.processing.run".into(),
+        version: None,
+        op: CallOp::Execute,
+        input: json!({ "tool": "attributes.calculate", "parameters": {
+            "input": { "scope": "layer", "layerId": "parsel" }, "field": "Ağaç sayısı", "value": "5" } }),
+        request_id: Some("kayit:1".into()),
+        expected: None,
+    };
+    let answer = kentos_native_application::call::call(&mut doc, None, envelope);
+    assert!(matches!(answer.result, CommandResult::Completed { .. }), "{:?}", answer.result);
+    let ledger = doc.requests();
+    let kept = ledger.iter().find(|r| r.request_id == "kayit:1").expect("in the ledger");
+    assert_eq!(kept.command, "cad.processing.run");
+    let stored: Value = serde_json::from_str(kept.answer.as_deref().expect("the answer")).expect("JSON");
+    let record = &stored["output"]["record"];
+    assert_eq!(record["format"], "kentos.run-record");
+    assert_eq!(record["tool"], "attributes.calculate");
+    assert_eq!(record["inputs"][0]["layer"], "parsel");
+    assert!(record["inputs"][0]["digest"].as_str().is_some_and(|d| d.len() == 64));
 }

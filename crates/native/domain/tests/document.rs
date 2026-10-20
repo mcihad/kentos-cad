@@ -272,6 +272,61 @@ fn an_open_group_counts_its_changes() {
     assert_eq!(doc.len(), 0);
 }
 
+/// A batch row that stops takes back its own edits, the rows before it stay and the group ends as one step
+/// (docs/adr/0551 §1).
+#[test]
+fn a_group_goes_back_to_a_savepoint_and_goes_on() {
+    let mut doc = empty();
+    assert!(doc.group_savepoint().is_none(), "no group, no savepoint");
+    let revision = doc.revision();
+    let group = doc.begin_group("Toplu");
+    let kept = doc.add(point("a", 1.0)).expect("slot");
+    let at = doc.group_savepoint().expect("a savepoint");
+    let gone = doc.add(point("a", 2.0)).expect("slot");
+    doc.update(kept, moved(&doc, kept, 5.0));
+    assert_eq!(doc.group_changes(), 3);
+    let shown = doc.generation();
+    doc.rollback_to(at);
+    assert_eq!(doc.group_changes(), 1, "what came before stays");
+    assert!(doc.get(gone).is_none(), "the later object is gone");
+    let Some(Entity::Point(p)) = doc.get(kept) else {
+        panic!("a point");
+    };
+    assert_eq!(p.p.x, 1.0, "the later move is taken back");
+    assert!(doc.generation() > shown, "and shows it");
+    // The group goes on and ends as one step with what stayed.
+    doc.add(point("a", 3.0)).expect("slot");
+    doc.end_group(group);
+    assert_eq!(doc.len(), 2);
+    assert_ne!(doc.revision(), revision);
+    assert_eq!(doc.undo().as_deref(), Some("Toplu"));
+    assert_eq!(doc.len(), 0, "one undo takes all the rows back");
+    // A command's step is open (the protocol writes inside one): the savepoint is in it, the group is not asked.
+    let group = doc.begin_group("Toplu");
+    let done: Result<(), ()> = doc.transact("Komut", |doc| {
+        let kept = doc.add(point("a", 1.0)).expect("slot");
+        let at = doc.group_savepoint().expect("a savepoint");
+        let gone = doc.add(point("a", 2.0)).expect("slot");
+        doc.rollback_to(at);
+        assert!(doc.get(gone).is_none());
+        assert!(doc.get(kept).is_some());
+        doc.add(point("a", 3.0)).expect("slot");
+        Ok(())
+    });
+    assert_eq!(done, Ok(()));
+    doc.end_group(group);
+    assert_eq!(doc.len(), 2, "the row that stayed and the one after it");
+    assert_eq!(doc.undo().as_deref(), Some("Toplu"));
+    assert_eq!(doc.len(), 0);
+    // Nothing gathered since the savepoint: nothing to take back.
+    let group = doc.begin_group("Boş");
+    let at = doc.group_savepoint().expect("a savepoint");
+    let shown = doc.generation();
+    doc.rollback_to(at);
+    assert_eq!(doc.generation(), shown);
+    doc.cancel_group(group);
+}
+
 /// What shows the drawing follows a group as it goes (a large import fills
 /// in frame by frame), and its taking back; the edit waits for its end.
 #[test]

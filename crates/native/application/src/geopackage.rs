@@ -582,7 +582,10 @@ pub fn table_of_rows(
 #[derive(Clone, Debug, PartialEq)]
 pub struct TableWritten {
     pub table: String,
-    pub layer: String,
+    /// The layer the rows are the objects of; none for a table output (docs/adr/0551 §3).
+    pub layer: Option<String>,
+    /// The tool's output a table holds; none for a layer's table.
+    pub output: Option<String>,
     pub rows: u32,
     pub geometry: Option<String>,
     /// Whether the geometry column holds Z and M: 0 none, 1 every row, 2 some rows.
@@ -1041,6 +1044,29 @@ fn conform(g: Geometry, name: &str) -> Geometry {
     }
 }
 
+/// A table a tool made (a summary, a report: `{ columns, rows }`), to be written as an attribute table of text columns
+/// (docs/adr/0551 §3): the cells are the text the tool shows.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TextTable {
+    /// The tool's output the table is.
+    pub output: String,
+    /// Its name; the table is called so (made one the file's names do not already hold).
+    pub label: String,
+    pub columns: Vec<String>,
+    pub rows: Vec<Vec<String>>,
+}
+
+/// A text table's table, worked out before any of it is written.
+struct TextPlan {
+    output: String,
+    table: String,
+    columns: Vec<gpkg::Column>,
+    /// The header each column reads.
+    headers: Vec<String>,
+    rows: usize,
+    replaces: bool,
+}
+
 /// One layer's table, worked out before any of it is written.
 struct Plan {
     layer: String,
@@ -1089,6 +1115,19 @@ pub fn write_in(
     batch: usize,
     flow: &Flow<'_>,
 ) -> Result<Written, WriteStop> {
+    write_with_tables(doc, layers, &[], session, clash, batch, flow)
+}
+
+/// [`write_in`] with a tool's table outputs written too, each as an attribute table after the layers' (docs/adr/0551 §3).
+pub fn write_with_tables(
+    doc: &Document,
+    layers: &[String],
+    tables: &[TextTable],
+    session: &gpkg::Session<'_>,
+    clash: Option<Clash>,
+    batch: usize,
+    flow: &Flow<'_>,
+) -> Result<Written, WriteStop> {
     let srs = srs_of(doc);
     if let Some(have) = session.srs(srs.id)?
         && (have.organization != srs.organization || have.organization_id != srs.organization_id)
@@ -1100,8 +1139,9 @@ pub fn write_in(
     }
     session.add_srs(&srs)?;
     let mut out = Written::default();
-    let plans = plan(doc, layers, session, clash, &mut out)?;
-    let total: u64 = plans.iter().map(|p| u64::from(p.rows)).sum();
+    let (plans, text_plans) = plan(doc, layers, tables, session, clash, &mut out)?;
+    let total: u64 = plans.iter().map(|p| u64::from(p.rows)).sum::<u64>()
+        + text_plans.iter().map(|p| p.rows as u64).sum::<u64>();
     let mut done = 0u64;
     for p in &plans {
         if (flow.stopped)() {
@@ -1173,7 +1213,8 @@ pub fn write_in(
         session.finish_table(w)?;
         out.tables.push(TableWritten {
             table: p.table.clone(),
-            layer: p.layer.clone(),
+            layer: Some(p.layer.clone()),
+            output: None,
             rows: p.rows,
             geometry: p.type_name.clone(),
             z: p.z,
@@ -1187,6 +1228,60 @@ pub fn write_in(
             replaced: p.replaces,
         });
     }
+    for (p, t) in text_plans.iter().zip(tables) {
+        if (flow.stopped)() {
+            return Err(WriteStop::Cancelled);
+        }
+        if p.replaces {
+            session.drop_table(&p.table)?;
+        }
+        let def = gpkg::TableDef {
+            name: p.table.clone(),
+            data_type: DataType::Attributes,
+            identifier: Some(p.table.clone()),
+            description: None,
+            srs_id: None,
+            geometry: None,
+            columns: p.columns.clone(),
+        };
+        let mut w = session.start_table(&def)?;
+        for chunk in t.rows.chunks(batch.max(1)) {
+            if (flow.stopped)() {
+                return Err(WriteStop::Cancelled);
+            }
+            let rows: Vec<gpkg::NewRow> = chunk
+                .iter()
+                .map(|r| gpkg::NewRow {
+                    fid: None,
+                    geometry: None,
+                    values: (0..p.columns.len())
+                        .map(|i| r.get(i).map_or(Value::Null, |c| Value::Text(c.clone())))
+                        .collect(),
+                })
+                .collect();
+            session.append(&mut w, &rows, None)?;
+            out.batches += 1;
+            done += rows.len() as u64;
+            (flow.progress)(done, total);
+        }
+        session.finish_table(w)?;
+        out.tables.push(TableWritten {
+            table: p.table.clone(),
+            layer: None,
+            output: Some(p.output.clone()),
+            rows: p.rows as u32,
+            geometry: None,
+            z: 0,
+            m: 0,
+            columns: p
+                .headers
+                .iter()
+                .zip(&p.columns)
+                .map(|(h, c)| (h.clone(), c.name.clone()))
+                .collect(),
+            replaced: p.replaces,
+        });
+    }
     Ok(out)
 }
 
@@ -1196,10 +1291,11 @@ pub fn write_in(
 fn plan(
     doc: &Document,
     layers: &[String],
+    tables: &[TextTable],
     session: &gpkg::Session<'_>,
     clash: Option<Clash>,
     out: &mut Written,
-) -> Result<Vec<Plan>, WriteStop> {
+) -> Result<(Vec<Plan>, Vec<TextPlan>), WriteStop> {
     let ids: Vec<String> = if layers.is_empty() {
         doc.layers().leaves().iter().map(|n| n.id.clone()).collect()
     } else {
@@ -1291,38 +1387,7 @@ fn plan(
                     .push((node.name.clone(), k.clone(), c.name.clone()));
             }
         }
-        let mut table = node.name.trim().to_owned();
-        if table.is_empty()
-            || table.to_ascii_lowercase().starts_with("gpkg_")
-            || table.starts_with("rtree_")
-        {
-            table = format!("katman_{table}");
-        }
-        let base = table.clone();
-        let mut k = 2;
-        while !names.insert(table.to_ascii_lowercase()) {
-            table = format!("{base}_{k}");
-            k += 1;
-        }
-        let mut replaces = false;
-        if let Some(clash) = clash {
-            match session.taken(&table)? {
-                gpkg::Taken::Free => {}
-                gpkg::Taken::Data(_) if clash == Clash::Replace => replaces = true,
-                gpkg::Taken::Data(_) => {
-                    return Err(WriteStop::Taken {
-                        table,
-                        replaceable: true,
-                    });
-                }
-                gpkg::Taken::Other => {
-                    return Err(WriteStop::Taken {
-                        table,
-                        replaceable: false,
-                    });
-                }
-            }
-        }
+        let (table, replaces) = table_name(&node.name, "katman", &mut names, session, clash)?;
         plans.push(Plan {
             layer: id.clone(),
             table,
@@ -1335,7 +1400,88 @@ fn plan(
             replaces,
         });
     }
-    Ok(plans)
+    let mut text_plans = Vec::new();
+    for t in tables {
+        let (table, replaces) = table_name(&t.label, "tablo", &mut names, session, clash)?;
+        // Each header's column: SQLite's names are one whatever their case, so a repeated header (or `fid`) gets
+        // `_2`, `_3` …; an empty one is `sutun_N`.
+        let mut taken: BTreeSet<String> = ["fid".to_owned()].into();
+        let mut columns = Vec::with_capacity(t.columns.len());
+        for (i, h) in t.columns.iter().enumerate() {
+            let base = if h.trim().is_empty() {
+                format!("sutun_{}", i + 1)
+            } else {
+                h.trim().to_owned()
+            };
+            let mut col = base.clone();
+            let mut n = 2;
+            while !taken.insert(col.to_ascii_lowercase()) {
+                col = format!("{base}_{n}");
+                n += 1;
+            }
+            columns.push(gpkg::Column {
+                name: col,
+                decl: String::new(),
+                kind: ColumnKind::Text(None),
+                not_null: false,
+                default: None,
+            });
+        }
+        text_plans.push(TextPlan {
+            output: t.output.clone(),
+            table,
+            headers: t.columns.clone(),
+            columns,
+            rows: t.rows.len(),
+            replaces,
+        });
+    }
+    Ok((plans, text_plans))
+}
+
+/// A table's name: the wanted one (`prefix_` in front when it is empty or reserved), made one the write has not given
+/// yet (`_2`, `_3` …), and how the file meets it: free, taken by a feature or attribute table the write replaces, or
+/// refused (docs/adr/0549 §1).
+fn table_name(
+    wanted: &str,
+    prefix: &str,
+    names: &mut BTreeSet<String>,
+    session: &gpkg::Session<'_>,
+    clash: Option<Clash>,
+) -> Result<(String, bool), WriteStop> {
+    let mut table = wanted.trim().to_owned();
+    if table.is_empty()
+        || table.to_ascii_lowercase().starts_with("gpkg_")
+        || table.starts_with("rtree_")
+    {
+        table = format!("{prefix}_{table}");
+    }
+    let base = table.clone();
+    let mut k = 2;
+    while !names.insert(table.to_ascii_lowercase()) {
+        table = format!("{base}_{k}");
+        k += 1;
+    }
+    let mut replaces = false;
+    if let Some(clash) = clash {
+        match session.taken(&table)? {
+            gpkg::Taken::Free => {}
+            gpkg::Taken::Data(_) if clash == Clash::Replace => replaces = true,
+            gpkg::Taken::Data(_) => {
+                return Err(WriteStop::Taken {
+                    table,
+                    replaceable: true,
+                });
+            }
+            gpkg::Taken::Other => {
+                return Err(WriteStop::Taken {
+                    table,
+                    replaceable: false,
+                });
+            }
+        }
+    }
+    Ok((table, replaces))
 }
 
 // ── One object against a table (docs/adr/0503) ─────────────────────────────

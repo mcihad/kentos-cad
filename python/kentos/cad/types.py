@@ -502,6 +502,20 @@ AuthKindName = Literal["none", "query", "header", "basic", "bearer", "arcgis", "
 """The names of :class:`AuthKind`, for a plain string."""
 
 
+class BatchOnError(_StrEnum):
+    """What a batch does when a row stops at run time (docs/adr/0551 §1).
+
+    - ``stop``: The whole batch is taken back and nothing is written (`batch_row_failed`).
+    - ``continue``: The row that stopped is taken back alone, reported in `failed`; the other rows are written, in one undo step.
+    """
+    STOP = "stop"
+    CONTINUE = "continue"
+
+
+BatchOnErrorName = Literal["stop", "continue"]
+"""The names of :class:`BatchOnError`, for a plain string."""
+
+
 class BlendMode(_StrEnum):
     """How a layer's picture meets what is under it (docs/adr/0226 §4: the W3C's
     separable blending modes, and addition).
@@ -8154,6 +8168,36 @@ class BatchRow(_Model):
         return cls(
             label=data.get("label", UNSET),
             parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BatchRowFailed(_Model):
+    """A row of a batch that stopped at run time and was taken back (`onError: continue`).
+    Attributes:
+        index: Unit: index.
+        code: The refusal's code and message, as the row run alone would have given them.
+    """
+    index: int
+    label: str
+    code: str
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["index"] = self.index
+        out["label"] = self.label
+        out["code"] = self.code
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BatchRowFailed:
+        return cls(
+            index=data["index"],
+            label=data["label"],
+            code=data["code"],
+            message=data["message"],
         )
 
 
@@ -31276,6 +31320,8 @@ class ProcessingBatch(_Model):
     Attributes:
         drawing: As `cad.processing.run`'s: the open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
             folder (then in the project's search paths), a result written beside it. The host gives it.
+        on_error: What happens when a row stops at run time: `stop` (the default) takes the whole batch back, `continue` takes
+            back only that row, writes the others and reports it in `failed` (docs/adr/0551 §1).
         parameters: The values every row takes unless it gives its own.
         selection: As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.
         view: Unit: length.
@@ -31283,6 +31329,7 @@ class ProcessingBatch(_Model):
     tool: str
     rows: list[BatchRow]
     drawing: str | None | Unset = UNSET
+    on_error: BatchOnError | BatchOnErrorName | Unset = UNSET
     parameters: dict[str, Any] | None | Unset = UNSET
     selection: list[str] | Unset = UNSET
     view: list[float] | None | Unset = UNSET
@@ -31293,6 +31340,8 @@ class ProcessingBatch(_Model):
         out["rows"] = [e0.to_json() for e0 in self.rows]
         if self.drawing is not UNSET:
             out["drawing"] = self.drawing
+        if self.on_error is not UNSET:
+            out["onError"] = _enum_out(self.on_error)
         if self.parameters is not UNSET:
             out["parameters"] = None if self.parameters is None else dict(self.parameters)
         if self.selection is not UNSET:
@@ -31307,6 +31356,7 @@ class ProcessingBatch(_Model):
             tool=data["tool"],
             rows=[BatchRow.from_json(e0) for e0 in data["rows"]],
             drawing=data.get("drawing", UNSET),
+            on_error=_enum_in(BatchOnError, data["onError"]) if "onError" in data else UNSET,
             parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
             selection=list(data["selection"]) if "selection" in data else UNSET,
             view=UNSET if "view" not in data else None if data["view"] is None else [float(e0) for e0 in data["view"]],
@@ -31317,8 +31367,9 @@ class ProcessingBatch(_Model):
 class ProcessingBatched(_Model):
     """What `cad.processing.batch` did, or with `plan` would do (on a copy of the drawing).
     Attributes:
-        rows: Every row, in order, as it ran.
+        rows: Every row that ran, in order, as it ran (with `onError: continue`, the rows that stopped are in `failed`).
         record: The batch's own record: its rows as steps.
+        failed: With `onError: continue`, the rows that stopped and were taken back: which, why (docs/adr/0551 §1).
         step: The undo step's name; none when the drawing did not change.
     """
     tool: str
@@ -31326,6 +31377,7 @@ class ProcessingBatched(_Model):
     rows: list[BatchRowRan]
     record: ProcessingRecord
     revision: str
+    failed: list[BatchRowFailed] | Unset = UNSET
     step: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -31335,6 +31387,8 @@ class ProcessingBatched(_Model):
         out["rows"] = [e0.to_json() for e0 in self.rows]
         out["record"] = self.record.to_json()
         out["revision"] = self.revision
+        if self.failed is not UNSET:
+            out["failed"] = [e0.to_json() for e0 in self.failed]
         if self.step is not UNSET:
             out["step"] = self.step
         return out
@@ -31347,6 +31401,7 @@ class ProcessingBatched(_Model):
             rows=[BatchRowRan.from_json(e0) for e0 in data["rows"]],
             record=ProcessingRecord.from_json(data["record"]),
             revision=data["revision"],
+            failed=[BatchRowFailed.from_json(e0) for e0 in data["failed"]] if "failed" in data else UNSET,
             step=data.get("step", UNSET),
         )
 
@@ -31455,6 +31510,7 @@ class ProcessingRecord(_Model):
         steps: The tool as one step, a model's steps in order, a batch's rows in order.
         total: What flowed through the whole, counted when it ended.
         definition: A model's definition as the SHA-256 of its JSON (the steps, their wiring and fixed values); none for a tool.
+        failed: A batch run with `onError: continue`: the rows that stopped and were taken back, in order (docs/adr/0551 §1).
         grids: The rasters a raster tool read and wrote, each with its grid (docs/adr/0535): the run again on the same
             grids gives the same cells.
         inputs: The layers the features inputs read, each with its content digest when it was read (docs/adr/0511).
@@ -31478,6 +31534,7 @@ class ProcessingRecord(_Model):
     steps: list[RecordStep]
     total: RecordTotal
     definition: str | None | Unset = UNSET
+    failed: list[RecordFailure] | Unset = UNSET
     grids: list[RecordGrid] | Unset = UNSET
     inputs: list[RunInput] | Unset = UNSET
     seed: int | None | Unset = UNSET
@@ -31503,6 +31560,8 @@ class ProcessingRecord(_Model):
         out["total"] = self.total.to_json()
         if self.definition is not UNSET:
             out["definition"] = self.definition
+        if self.failed is not UNSET:
+            out["failed"] = [e0.to_json() for e0 in self.failed]
         if self.grids is not UNSET:
             out["grids"] = [e0.to_json() for e0 in self.grids]
         if self.inputs is not UNSET:
@@ -31535,6 +31594,7 @@ class ProcessingRecord(_Model):
             steps=[RecordStep.from_json(e0) for e0 in data["steps"]],
             total=RecordTotal.from_json(data["total"]),
             definition=data.get("definition", UNSET),
+            failed=[RecordFailure.from_json(e0) for e0 in data["failed"]] if "failed" in data else UNSET,
             grids=[RecordGrid.from_json(e0) for e0 in data["grids"]] if "grids" in data else UNSET,
             inputs=[RunInput.from_json(e0) for e0 in data["inputs"]] if "inputs" in data else UNSET,
             seed=data.get("seed", UNSET),
@@ -34546,6 +34606,36 @@ class RecordEntity(Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class RecordFailure(_Model):
+    """A row of a batch that stopped and was taken back (docs/adr/0551 §1): which row, why.
+    Attributes:
+        id: `rows[i]`.
+        code: The refusal's code (`tool_failed`, `invalid_parameters`, …) and its message.
+    """
+    id: str
+    label: str
+    code: str
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["label"] = self.label
+        out["code"] = self.code
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordFailure:
+        return cls(
+            id=data["id"],
+            label=data["label"],
+            code=data["code"],
+            message=data["message"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RecordGrid(_Model):
     """A raster a run read or wrote and its grid (docs/adr/0535): where its cells lie, their size and how many, the
     band read, what counts as empty, the system; a source's `window` the cells the run worked out (an area's).
@@ -35404,10 +35494,13 @@ class RunSink(_Model):
     Attributes:
         path: The GeoPackage's path (`.gpkg`).
         mode: New file (the default), tables added to a file that is there, or tables added and same-named ones replaced.
+        tables: Also write the tool's table outputs (a summary, a report) as attribute tables, each named by its output's
+            label, beside the layers' tables (docs/adr/0551 §3). A tool whose result is only a table writes only that.
     """
     path: str
     mode: SinkMode | SinkModeName | Unset = UNSET
     overwrite: bool | Unset = UNSET
+    tables: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -35416,6 +35509,8 @@ class RunSink(_Model):
             out["mode"] = _enum_out(self.mode)
         if self.overwrite is not UNSET:
             out["overwrite"] = self.overwrite
+        if self.tables is not UNSET:
+            out["tables"] = self.tables
         return out
 
     @classmethod
@@ -35424,6 +35519,7 @@ class RunSink(_Model):
             path=data["path"],
             mode=_enum_in(SinkMode, data["mode"]) if "mode" in data else UNSET,
             overwrite=data.get("overwrite", UNSET),
+            tables=data.get("tables", UNSET),
         )
 
 
@@ -37000,31 +37096,36 @@ class SinkReport(_Model):
 class SinkTable(_Model):
     """One table of a sink: what it holds and how it was made.
     Attributes:
-        layer: The layer of the copy the rows are the objects of.
         rows: Unit: count.
         columns: The columns in order, each with its attribute.
         geometry: The geometry column's type; none for a table of records.
+        layer: The layer of the copy the rows are the objects of; none for a table output.
+        output: The tool's output a table holds (`sink.tables`); none for a layer's table.
         replaced: A table of the file taken out and written again (`replaceTables`).
     """
     table: str
-    layer: str
     rows: int
     z: SinkDimension | SinkDimensionName
     m: SinkDimension | SinkDimensionName
     columns: list[SinkColumn]
     geometry: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    output: str | None | Unset = UNSET
     replaced: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["table"] = self.table
-        out["layer"] = self.layer
         out["rows"] = self.rows
         out["z"] = _enum_out(self.z)
         out["m"] = _enum_out(self.m)
         out["columns"] = [e0.to_json() for e0 in self.columns]
         if self.geometry is not UNSET:
             out["geometry"] = self.geometry
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.output is not UNSET:
+            out["output"] = self.output
         if self.replaced is not UNSET:
             out["replaced"] = self.replaced
         return out
@@ -37033,12 +37134,13 @@ class SinkTable(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> SinkTable:
         return cls(
             table=data["table"],
-            layer=data["layer"],
             rows=data["rows"],
             z=_enum_in(SinkDimension, data["z"]),
             m=_enum_in(SinkDimension, data["m"]),
             columns=[SinkColumn.from_json(e0) for e0 in data["columns"]],
             geometry=data.get("geometry", UNSET),
+            layer=data.get("layer", UNSET),
+            output=data.get("output", UNSET),
             replaced=data.get("replaced", UNSET),
         )
 
@@ -55488,7 +55590,10 @@ __all__ = [
     "AutoCsvGeometryIn",
     "AzimuthDimensionMeasure",
     "BaselineDimensionMeasure",
+    "BatchOnError",
+    "BatchOnErrorName",
     "BatchRow",
+    "BatchRowFailed",
     "BatchRowRan",
     "BindLeaderEdit",
     "BindXrefsOperation",
@@ -56622,6 +56727,7 @@ __all__ = [
     "RecordChange",
     "RecordCopy",
     "RecordEntity",
+    "RecordFailure",
     "RecordGrid",
     "RecordRow",
     "RecordStep",

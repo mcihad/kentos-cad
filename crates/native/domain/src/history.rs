@@ -457,6 +457,15 @@ pub(crate) struct History {
 #[derive(Debug)]
 pub struct Group(Option<u64>);
 
+/// A place in the open step or group (`Document::group_savepoint`) to go back to with `Document::rollback_to`.
+#[derive(Clone, Copy, Debug)]
+pub struct Savepoint {
+    /// The edits are in an open transaction (a command's step), not yet in the group.
+    pending: bool,
+    ops: usize,
+    calls: usize,
+}
+
 /// The most rounds of linked texts and hatches after a step (docs/adr/0332 §2).
 const HATCH_TEXT_ROUNDS: usize = 4;
 
@@ -562,6 +571,49 @@ impl Document {
             if changed {
                 self.mark_changed();
             }
+        }
+    }
+
+    /// Marks the place of the edits now, in the open command step (a command run through the protocol writes inside
+    /// one) or else in the open group: [`Document::rollback_to`] takes back what was written after it and leaves
+    /// what was written before (a batch row that stops, docs/adr/0551 §1). None when neither is open.
+    pub fn group_savepoint(&self) -> Option<Savepoint> {
+        let calls = self.calls.waiting();
+        if let Some(step) = &self.history.pending {
+            return Some(Savepoint {
+                pending: true,
+                ops: step.ops.len(),
+                calls,
+            });
+        }
+        self.history.group.as_ref().map(|open| Savepoint {
+            pending: false,
+            ops: open.step.ops.len(),
+            calls,
+        })
+    }
+
+    /// Takes back what was written since `at`, newest first, and the command rows queued since; what was written
+    /// before stays and the step or group goes on. Nothing is recorded (the generation moves, as for a taken-back
+    /// group). Nothing happens when what holds the edits is not open any more, or holds less than at the mark.
+    pub fn rollback_to(&mut self, at: Savepoint) {
+        let undone = if at.pending {
+            match &mut self.history.pending {
+                Some(step) if at.ops <= step.ops.len() => step.ops.split_off(at.ops),
+                _ => return,
+            }
+        } else {
+            match &mut self.history.group {
+                Some(open) if self.history.pending.is_none() && at.ops <= open.step.ops.len() => {
+                    open.step.ops.split_off(at.ops)
+                }
+                _ => return,
+            }
+        };
+        self.revert(&undone);
+        self.calls.drop_waiting(at.calls);
+        if !undone.is_empty() {
+            self.mark_changed();
         }
     }
 

@@ -2829,6 +2829,7154 @@
    ]
   },
   {
+   "name": "onError continue: ortadaki satır (“çok”) durur, tek başına geri alınır; öteki iki satır yazılır, tek geri alma adımı, failed ve uyarı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlem durumları: sorgular",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.35,
+       "fill": "#E5484D1F"
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "text"
+       },
+       {
+        "name": "Parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "Ağaç sayısı",
+        "kind": "integer"
+       },
+       {
+        "name": "Taban toplamı",
+        "kind": "decimal",
+        "scale": 2
+       },
+       {
+        "name": "Taban ortalaması",
+        "kind": "decimal",
+        "scale": 1
+       }
+      ]
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#8C9AAA",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "agac",
+      "name": "Ağaç",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "ring",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      },
+      "children": []
+     },
+     {
+      "id": "kayit",
+      "name": "Tapu kayıtları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "cross",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg-dim",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "label": "1",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487000,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "label": "2",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "label": "3",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25"
+      },
+      "pts": [
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "parsel",
+      "label": "4",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Tapu alanı": "1100"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420030
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487070,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420020
+         },
+         {
+          "x": 487070,
+          "y": 4420020
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "70",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487005,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420012
+       },
+       {
+        "x": 487005,
+        "y": 4420012
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "100",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487025,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420015
+       },
+       {
+        "x": 487025,
+        "y": 4420015
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "25,5",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420025
+       },
+       {
+        "x": 487040,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "36",
+       "Kat": ""
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420018
+       },
+       {
+        "x": 487072,
+        "y": 4420018
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "bilinmiyor",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487085,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420008
+       },
+       {
+        "x": 487085,
+        "y": 4420008
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487005,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487030,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Ihlamur"
+      },
+      "p": {
+       "x": 487045,
+       "y": 4420010
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487075,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487090,
+       "y": 4420022
+      }
+     },
+     {
+      "kind": "line",
+      "id": 16,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Cumhuriyet Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487110,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 17,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Okul Sokağı"
+      },
+      "pts": [
+       {
+        "x": 487052,
+        "y": 4419990
+       },
+       {
+        "x": 487052,
+        "y": 4420040
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 18,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "1",
+       "Malik": "Ayşe Yılmaz"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 19,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "2",
+       "Malik": "Hasan Demir"
+      },
+      "p": {
+       "x": 487032,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 20,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "002",
+       "Malik": "Tekrar Kayıt"
+      },
+      "p": {
+       "x": 487033,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 21,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "9",
+       "Malik": "Kayıtsız"
+      },
+      "p": {
+       "x": 487120,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 22,
+      "layerId": "kilitli",
+      "label": "5",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "5"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420060
+       },
+       {
+        "x": 487000,
+        "y": 4420060
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "attributes.calculate",
+      "parameters": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       },
+       "field": "Ağaç sayısı"
+      },
+      "onError": "continue",
+      "rows": [
+       {
+        "parameters": {
+         "value": "5"
+        }
+       },
+       {
+        "parameters": {
+         "value": "'çok'"
+        }
+       },
+       {
+        "parameters": {
+         "value": "7"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "attributes.calculate",
+       "summary": "2 satır çalıştı: 0 nesne eklendi, 8 nesne değişti. 1 satır çalışmadı ve geri alındı (Satır 2).",
+       "rows": [
+        {
+         "index": 0,
+         "label": "Satır 1",
+         "ran": {
+          "tool": "attributes.calculate",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı.",
+          "changed": [
+           "$uidOf:1",
+           "$uidOf:2",
+           "$uidOf:3",
+           "$uidOf:4"
+          ],
+          "outputs": {
+           "count": 4,
+           "changed": [
+            "$uidOf:1",
+            "$uidOf:2",
+            "$uidOf:3",
+            "$uidOf:4"
+           ]
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "digest": "$any"
+           }
+          ],
+          "step": "Öznitelik hesapla",
+          "record": "$any",
+          "revision": "$any"
+         }
+        },
+        {
+         "index": 2,
+         "label": "Satır 3",
+         "ran": {
+          "tool": "attributes.calculate",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı.",
+          "changed": [
+           "$uidOf:1",
+           "$uidOf:2",
+           "$uidOf:3",
+           "$uidOf:4"
+          ],
+          "outputs": {
+           "count": 4,
+           "changed": [
+            "$uidOf:1",
+            "$uidOf:2",
+            "$uidOf:3",
+            "$uidOf:4"
+           ]
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "digest": "$any"
+           }
+          ],
+          "step": "Öznitelik hesapla",
+          "record": "$any",
+          "revision": "$any"
+         }
+        }
+       ],
+       "failed": [
+        {
+         "index": 1,
+         "label": "Satır 2",
+         "code": "tool_failed",
+         "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “çok” verildi. Rakamlarla, ondalıksız yazın."
+        }
+       ],
+       "step": "Toplu: Öznitelik hesapla",
+       "record": {
+        "format": "kentos.run-record",
+        "version": 1,
+        "kind": "batch",
+        "tool": "attributes.calculate",
+        "label": "Öznitelik hesapla",
+        "toolVersion": 1,
+        "parameters": {
+         "input": {
+          "scope": "layer",
+          "layerId": "parsel"
+         },
+         "field": "Ağaç sayısı"
+        },
+        "inputs": [
+         {
+          "layer": "parsel",
+          "digest": "$any"
+         }
+        ],
+        "documentRevision": "$any",
+        "engine": "$any",
+        "host": "headless",
+        "startedAt": "$any",
+        "ms": "$any",
+        "srid": 5256,
+        "steps": [
+         {
+          "id": "rows[0]",
+          "tool": "attributes.calculate",
+          "label": "Satır 1",
+          "recordsIn": 4,
+          "recordsOut": 4,
+          "ms": "$any",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı."
+         },
+         {
+          "id": "rows[2]",
+          "tool": "attributes.calculate",
+          "label": "Satır 3",
+          "recordsIn": 4,
+          "recordsOut": 4,
+          "ms": "$any",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı."
+         }
+        ],
+        "total": {
+         "recordsIn": 8,
+         "recordsOut": 4
+        },
+        "failed": [
+         {
+          "id": "rows[1]",
+          "label": "Satır 2",
+          "code": "tool_failed",
+          "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “çok” verildi. Rakamlarla, ondalıksız yazın."
+         }
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "batch_rows_failed",
+        "path": "rows",
+        "message": "1 satır çalışıp durdu ve tek tek geri alındı (Satır 2); öteki satırlar yazıldı."
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Tapu alanı": "600.00",
+         "Ağaç sayısı": "7"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Tapu alanı": "750.00",
+         "Ağaç sayısı": "7"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "3",
+         "Tapu alanı": "450,25",
+         "Ağaç sayısı": "7"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Tapu alanı": "1100",
+         "Ağaç sayısı": "7"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Toplu: Öznitelik hesapla",
+     "expect": {
+      "canUndo": false,
+      "canRedo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Tapu alanı": "600.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Tapu alanı": "750.00"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "3",
+         "Tapu alanı": "450,25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Tapu alanı": "1100"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "onError continue, plan: aynı cevap bir kopyada, çizim değişmez",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlem durumları: sorgular",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.35,
+       "fill": "#E5484D1F"
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "text"
+       },
+       {
+        "name": "Parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "Ağaç sayısı",
+        "kind": "integer"
+       },
+       {
+        "name": "Taban toplamı",
+        "kind": "decimal",
+        "scale": 2
+       },
+       {
+        "name": "Taban ortalaması",
+        "kind": "decimal",
+        "scale": 1
+       }
+      ]
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#8C9AAA",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "agac",
+      "name": "Ağaç",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "ring",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      },
+      "children": []
+     },
+     {
+      "id": "kayit",
+      "name": "Tapu kayıtları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "cross",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg-dim",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "label": "1",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487000,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "label": "2",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "label": "3",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25"
+      },
+      "pts": [
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "parsel",
+      "label": "4",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Tapu alanı": "1100"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420030
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487070,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420020
+         },
+         {
+          "x": 487070,
+          "y": 4420020
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "70",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487005,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420012
+       },
+       {
+        "x": 487005,
+        "y": 4420012
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "100",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487025,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420015
+       },
+       {
+        "x": 487025,
+        "y": 4420015
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "25,5",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420025
+       },
+       {
+        "x": 487040,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "36",
+       "Kat": ""
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420018
+       },
+       {
+        "x": 487072,
+        "y": 4420018
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "bilinmiyor",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487085,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420008
+       },
+       {
+        "x": 487085,
+        "y": 4420008
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487005,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487030,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Ihlamur"
+      },
+      "p": {
+       "x": 487045,
+       "y": 4420010
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487075,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487090,
+       "y": 4420022
+      }
+     },
+     {
+      "kind": "line",
+      "id": 16,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Cumhuriyet Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487110,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 17,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Okul Sokağı"
+      },
+      "pts": [
+       {
+        "x": 487052,
+        "y": 4419990
+       },
+       {
+        "x": 487052,
+        "y": 4420040
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 18,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "1",
+       "Malik": "Ayşe Yılmaz"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 19,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "2",
+       "Malik": "Hasan Demir"
+      },
+      "p": {
+       "x": 487032,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 20,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "002",
+       "Malik": "Tekrar Kayıt"
+      },
+      "p": {
+       "x": 487033,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 21,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "9",
+       "Malik": "Kayıtsız"
+      },
+      "p": {
+       "x": 487120,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 22,
+      "layerId": "kilitli",
+      "label": "5",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "5"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420060
+       },
+       {
+        "x": 487000,
+        "y": 4420060
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "attributes.calculate",
+      "parameters": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       },
+       "field": "Ağaç sayısı"
+      },
+      "onError": "continue",
+      "rows": [
+       {
+        "parameters": {
+         "value": "5"
+        }
+       },
+       {
+        "parameters": {
+         "value": "'çok'"
+        }
+       },
+       {
+        "parameters": {
+         "value": "7"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "attributes.calculate",
+       "summary": "2 satır çalıştı: 0 nesne eklendi, 8 nesne değişti. 1 satır çalışmadı ve geri alındı (Satır 2).",
+       "rows": [
+        {
+         "index": 0,
+         "label": "Satır 1",
+         "ran": {
+          "tool": "attributes.calculate",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı.",
+          "changed": [
+           "$uidOf:1",
+           "$uidOf:2",
+           "$uidOf:3",
+           "$uidOf:4"
+          ],
+          "outputs": {
+           "count": 4,
+           "changed": [
+            "$uidOf:1",
+            "$uidOf:2",
+            "$uidOf:3",
+            "$uidOf:4"
+           ]
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "digest": "$any"
+           }
+          ],
+          "step": "Öznitelik hesapla",
+          "record": "$any",
+          "revision": "$any"
+         }
+        },
+        {
+         "index": 2,
+         "label": "Satır 3",
+         "ran": {
+          "tool": "attributes.calculate",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı.",
+          "changed": [
+           "$uidOf:1",
+           "$uidOf:2",
+           "$uidOf:3",
+           "$uidOf:4"
+          ],
+          "outputs": {
+           "count": 4,
+           "changed": [
+            "$uidOf:1",
+            "$uidOf:2",
+            "$uidOf:3",
+            "$uidOf:4"
+           ]
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "digest": "$any"
+           }
+          ],
+          "step": "Öznitelik hesapla",
+          "record": "$any",
+          "revision": "$any"
+         }
+        }
+       ],
+       "failed": [
+        {
+         "index": 1,
+         "label": "Satır 2",
+         "code": "tool_failed",
+         "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “çok” verildi. Rakamlarla, ondalıksız yazın."
+        }
+       ],
+       "step": "Toplu: Öznitelik hesapla",
+       "record": {
+        "format": "kentos.run-record",
+        "version": 1,
+        "kind": "batch",
+        "tool": "attributes.calculate",
+        "label": "Öznitelik hesapla",
+        "toolVersion": 1,
+        "parameters": {
+         "input": {
+          "scope": "layer",
+          "layerId": "parsel"
+         },
+         "field": "Ağaç sayısı"
+        },
+        "inputs": [
+         {
+          "layer": "parsel",
+          "digest": "$any"
+         }
+        ],
+        "documentRevision": "$any",
+        "engine": "$any",
+        "host": "headless",
+        "startedAt": "$any",
+        "ms": "$any",
+        "srid": 5256,
+        "steps": [
+         {
+          "id": "rows[0]",
+          "tool": "attributes.calculate",
+          "label": "Satır 1",
+          "recordsIn": 4,
+          "recordsOut": 4,
+          "ms": "$any",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı."
+         },
+         {
+          "id": "rows[2]",
+          "tool": "attributes.calculate",
+          "label": "Satır 3",
+          "recordsIn": 4,
+          "recordsOut": 4,
+          "ms": "$any",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı."
+         }
+        ],
+        "total": {
+         "recordsIn": 8,
+         "recordsOut": 4
+        },
+        "failed": [
+         {
+          "id": "rows[1]",
+          "label": "Satır 2",
+          "code": "tool_failed",
+          "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “çok” verildi. Rakamlarla, ondalıksız yazın."
+         }
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "batch_rows_failed",
+        "path": "rows",
+        "message": "1 satır çalışıp durdu ve tek tek geri alındı (Satır 2); öteki satırlar yazıldı."
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Tapu alanı": "600.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Tapu alanı": "750.00"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "3",
+         "Tapu alanı": "450,25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Tapu alanı": "1100"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "onError continue: ilk satır durur, sonrakiler çalışır (son değer kalır)",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlem durumları: sorgular",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.35,
+       "fill": "#E5484D1F"
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "text"
+       },
+       {
+        "name": "Parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "Ağaç sayısı",
+        "kind": "integer"
+       },
+       {
+        "name": "Taban toplamı",
+        "kind": "decimal",
+        "scale": 2
+       },
+       {
+        "name": "Taban ortalaması",
+        "kind": "decimal",
+        "scale": 1
+       }
+      ]
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#8C9AAA",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "agac",
+      "name": "Ağaç",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "ring",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      },
+      "children": []
+     },
+     {
+      "id": "kayit",
+      "name": "Tapu kayıtları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "cross",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg-dim",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "label": "1",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487000,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "label": "2",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "label": "3",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25"
+      },
+      "pts": [
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "parsel",
+      "label": "4",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Tapu alanı": "1100"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420030
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487070,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420020
+         },
+         {
+          "x": 487070,
+          "y": 4420020
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "70",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487005,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420012
+       },
+       {
+        "x": 487005,
+        "y": 4420012
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "100",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487025,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420015
+       },
+       {
+        "x": 487025,
+        "y": 4420015
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "25,5",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420025
+       },
+       {
+        "x": 487040,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "36",
+       "Kat": ""
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420018
+       },
+       {
+        "x": 487072,
+        "y": 4420018
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "bilinmiyor",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487085,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420008
+       },
+       {
+        "x": 487085,
+        "y": 4420008
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487005,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487030,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Ihlamur"
+      },
+      "p": {
+       "x": 487045,
+       "y": 4420010
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487075,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487090,
+       "y": 4420022
+      }
+     },
+     {
+      "kind": "line",
+      "id": 16,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Cumhuriyet Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487110,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 17,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Okul Sokağı"
+      },
+      "pts": [
+       {
+        "x": 487052,
+        "y": 4419990
+       },
+       {
+        "x": 487052,
+        "y": 4420040
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 18,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "1",
+       "Malik": "Ayşe Yılmaz"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 19,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "2",
+       "Malik": "Hasan Demir"
+      },
+      "p": {
+       "x": 487032,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 20,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "002",
+       "Malik": "Tekrar Kayıt"
+      },
+      "p": {
+       "x": 487033,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 21,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "9",
+       "Malik": "Kayıtsız"
+      },
+      "p": {
+       "x": 487120,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 22,
+      "layerId": "kilitli",
+      "label": "5",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "5"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420060
+       },
+       {
+        "x": 487000,
+        "y": 4420060
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "attributes.calculate",
+      "parameters": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       },
+       "field": "Ağaç sayısı"
+      },
+      "onError": "continue",
+      "rows": [
+       {
+        "parameters": {
+         "value": "'çok'"
+        }
+       },
+       {
+        "parameters": {
+         "value": "5"
+        }
+       },
+       {
+        "parameters": {
+         "value": "6"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "attributes.calculate",
+       "summary": "2 satır çalıştı: 0 nesne eklendi, 8 nesne değişti. 1 satır çalışmadı ve geri alındı (Satır 1).",
+       "rows": [
+        {
+         "index": 1,
+         "label": "Satır 2",
+         "ran": {
+          "tool": "attributes.calculate",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı.",
+          "changed": [
+           "$uidOf:1",
+           "$uidOf:2",
+           "$uidOf:3",
+           "$uidOf:4"
+          ],
+          "outputs": {
+           "count": 4,
+           "changed": [
+            "$uidOf:1",
+            "$uidOf:2",
+            "$uidOf:3",
+            "$uidOf:4"
+           ]
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "digest": "$any"
+           }
+          ],
+          "step": "Öznitelik hesapla",
+          "record": "$any",
+          "revision": "$any"
+         }
+        },
+        {
+         "index": 2,
+         "label": "Satır 3",
+         "ran": {
+          "tool": "attributes.calculate",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı.",
+          "changed": [
+           "$uidOf:1",
+           "$uidOf:2",
+           "$uidOf:3",
+           "$uidOf:4"
+          ],
+          "outputs": {
+           "count": 4,
+           "changed": [
+            "$uidOf:1",
+            "$uidOf:2",
+            "$uidOf:3",
+            "$uidOf:4"
+           ]
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "digest": "$any"
+           }
+          ],
+          "step": "Öznitelik hesapla",
+          "record": "$any",
+          "revision": "$any"
+         }
+        }
+       ],
+       "failed": [
+        {
+         "index": 0,
+         "label": "Satır 1",
+         "code": "tool_failed",
+         "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “çok” verildi. Rakamlarla, ondalıksız yazın."
+        }
+       ],
+       "step": "Toplu: Öznitelik hesapla",
+       "record": {
+        "format": "kentos.run-record",
+        "version": 1,
+        "kind": "batch",
+        "tool": "attributes.calculate",
+        "label": "Öznitelik hesapla",
+        "toolVersion": 1,
+        "parameters": {
+         "input": {
+          "scope": "layer",
+          "layerId": "parsel"
+         },
+         "field": "Ağaç sayısı"
+        },
+        "inputs": [
+         {
+          "layer": "parsel",
+          "digest": "$any"
+         }
+        ],
+        "documentRevision": "$any",
+        "engine": "$any",
+        "host": "headless",
+        "startedAt": "$any",
+        "ms": "$any",
+        "srid": 5256,
+        "steps": [
+         {
+          "id": "rows[1]",
+          "tool": "attributes.calculate",
+          "label": "Satır 2",
+          "recordsIn": 4,
+          "recordsOut": 4,
+          "ms": "$any",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı."
+         },
+         {
+          "id": "rows[2]",
+          "tool": "attributes.calculate",
+          "label": "Satır 3",
+          "recordsIn": 4,
+          "recordsOut": 4,
+          "ms": "$any",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı."
+         }
+        ],
+        "total": {
+         "recordsIn": 8,
+         "recordsOut": 4
+        },
+        "failed": [
+         {
+          "id": "rows[0]",
+          "label": "Satır 1",
+          "code": "tool_failed",
+          "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “çok” verildi. Rakamlarla, ondalıksız yazın."
+         }
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "batch_rows_failed",
+        "path": "rows",
+        "message": "1 satır çalışıp durdu ve tek tek geri alındı (Satır 1); öteki satırlar yazıldı."
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Tapu alanı": "600.00",
+         "Ağaç sayısı": "6"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Tapu alanı": "750.00",
+         "Ağaç sayısı": "6"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "3",
+         "Tapu alanı": "450,25",
+         "Ağaç sayısı": "6"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Tapu alanı": "1100",
+         "Ağaç sayısı": "6"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Toplu: Öznitelik hesapla",
+     "expect": {
+      "canUndo": false,
+      "canRedo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Tapu alanı": "600.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Tapu alanı": "750.00"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "3",
+         "Tapu alanı": "450,25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Tapu alanı": "1100"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "onError continue: son satır durur, öncekiler yazılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlem durumları: sorgular",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.35,
+       "fill": "#E5484D1F"
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "text"
+       },
+       {
+        "name": "Parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "Ağaç sayısı",
+        "kind": "integer"
+       },
+       {
+        "name": "Taban toplamı",
+        "kind": "decimal",
+        "scale": 2
+       },
+       {
+        "name": "Taban ortalaması",
+        "kind": "decimal",
+        "scale": 1
+       }
+      ]
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#8C9AAA",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "agac",
+      "name": "Ağaç",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "ring",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      },
+      "children": []
+     },
+     {
+      "id": "kayit",
+      "name": "Tapu kayıtları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "cross",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg-dim",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "label": "1",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487000,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "label": "2",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "label": "3",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25"
+      },
+      "pts": [
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "parsel",
+      "label": "4",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Tapu alanı": "1100"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420030
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487070,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420020
+         },
+         {
+          "x": 487070,
+          "y": 4420020
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "70",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487005,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420012
+       },
+       {
+        "x": 487005,
+        "y": 4420012
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "100",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487025,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420015
+       },
+       {
+        "x": 487025,
+        "y": 4420015
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "25,5",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420025
+       },
+       {
+        "x": 487040,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "36",
+       "Kat": ""
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420018
+       },
+       {
+        "x": 487072,
+        "y": 4420018
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "bilinmiyor",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487085,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420008
+       },
+       {
+        "x": 487085,
+        "y": 4420008
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487005,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487030,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Ihlamur"
+      },
+      "p": {
+       "x": 487045,
+       "y": 4420010
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487075,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487090,
+       "y": 4420022
+      }
+     },
+     {
+      "kind": "line",
+      "id": 16,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Cumhuriyet Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487110,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 17,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Okul Sokağı"
+      },
+      "pts": [
+       {
+        "x": 487052,
+        "y": 4419990
+       },
+       {
+        "x": 487052,
+        "y": 4420040
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 18,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "1",
+       "Malik": "Ayşe Yılmaz"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 19,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "2",
+       "Malik": "Hasan Demir"
+      },
+      "p": {
+       "x": 487032,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 20,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "002",
+       "Malik": "Tekrar Kayıt"
+      },
+      "p": {
+       "x": 487033,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 21,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "9",
+       "Malik": "Kayıtsız"
+      },
+      "p": {
+       "x": 487120,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 22,
+      "layerId": "kilitli",
+      "label": "5",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "5"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420060
+       },
+       {
+        "x": 487000,
+        "y": 4420060
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "attributes.calculate",
+      "parameters": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       },
+       "field": "Ağaç sayısı"
+      },
+      "onError": "continue",
+      "rows": [
+       {
+        "parameters": {
+         "value": "5"
+        }
+       },
+       {
+        "parameters": {
+         "value": "6"
+        }
+       },
+       {
+        "parameters": {
+         "value": "'çok'"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "attributes.calculate",
+       "summary": "2 satır çalıştı: 0 nesne eklendi, 8 nesne değişti. 1 satır çalışmadı ve geri alındı (Satır 3).",
+       "rows": [
+        {
+         "index": 0,
+         "label": "Satır 1",
+         "ran": {
+          "tool": "attributes.calculate",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı.",
+          "changed": [
+           "$uidOf:1",
+           "$uidOf:2",
+           "$uidOf:3",
+           "$uidOf:4"
+          ],
+          "outputs": {
+           "count": 4,
+           "changed": [
+            "$uidOf:1",
+            "$uidOf:2",
+            "$uidOf:3",
+            "$uidOf:4"
+           ]
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "digest": "$any"
+           }
+          ],
+          "step": "Öznitelik hesapla",
+          "record": "$any",
+          "revision": "$any"
+         }
+        },
+        {
+         "index": 1,
+         "label": "Satır 2",
+         "ran": {
+          "tool": "attributes.calculate",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı.",
+          "changed": [
+           "$uidOf:1",
+           "$uidOf:2",
+           "$uidOf:3",
+           "$uidOf:4"
+          ],
+          "outputs": {
+           "count": 4,
+           "changed": [
+            "$uidOf:1",
+            "$uidOf:2",
+            "$uidOf:3",
+            "$uidOf:4"
+           ]
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "digest": "$any"
+           }
+          ],
+          "step": "Öznitelik hesapla",
+          "record": "$any",
+          "revision": "$any"
+         }
+        }
+       ],
+       "failed": [
+        {
+         "index": 2,
+         "label": "Satır 3",
+         "code": "tool_failed",
+         "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “çok” verildi. Rakamlarla, ondalıksız yazın."
+        }
+       ],
+       "step": "Toplu: Öznitelik hesapla",
+       "record": {
+        "format": "kentos.run-record",
+        "version": 1,
+        "kind": "batch",
+        "tool": "attributes.calculate",
+        "label": "Öznitelik hesapla",
+        "toolVersion": 1,
+        "parameters": {
+         "input": {
+          "scope": "layer",
+          "layerId": "parsel"
+         },
+         "field": "Ağaç sayısı"
+        },
+        "inputs": [
+         {
+          "layer": "parsel",
+          "digest": "$any"
+         }
+        ],
+        "documentRevision": "$any",
+        "engine": "$any",
+        "host": "headless",
+        "startedAt": "$any",
+        "ms": "$any",
+        "srid": 5256,
+        "steps": [
+         {
+          "id": "rows[0]",
+          "tool": "attributes.calculate",
+          "label": "Satır 1",
+          "recordsIn": 4,
+          "recordsOut": 4,
+          "ms": "$any",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı."
+         },
+         {
+          "id": "rows[1]",
+          "tool": "attributes.calculate",
+          "label": "Satır 2",
+          "recordsIn": 4,
+          "recordsOut": 4,
+          "ms": "$any",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı."
+         }
+        ],
+        "total": {
+         "recordsIn": 8,
+         "recordsOut": 4
+        },
+        "failed": [
+         {
+          "id": "rows[2]",
+          "label": "Satır 3",
+          "code": "tool_failed",
+          "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “çok” verildi. Rakamlarla, ondalıksız yazın."
+         }
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "batch_rows_failed",
+        "path": "rows",
+        "message": "1 satır çalışıp durdu ve tek tek geri alındı (Satır 3); öteki satırlar yazıldı."
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Tapu alanı": "600.00",
+         "Ağaç sayısı": "6"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Tapu alanı": "750.00",
+         "Ağaç sayısı": "6"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "3",
+         "Tapu alanı": "450,25",
+         "Ağaç sayısı": "6"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Tapu alanı": "1100",
+         "Ağaç sayısı": "6"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Toplu: Öznitelik hesapla",
+     "expect": {
+      "canUndo": false,
+      "canRedo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Tapu alanı": "600.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Tapu alanı": "750.00"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "3",
+         "Tapu alanı": "450,25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Tapu alanı": "1100"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "onError continue: iki satır durur (her birinin kendi nedeni), biri yazılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlem durumları: sorgular",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.35,
+       "fill": "#E5484D1F"
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "text"
+       },
+       {
+        "name": "Parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "Ağaç sayısı",
+        "kind": "integer"
+       },
+       {
+        "name": "Taban toplamı",
+        "kind": "decimal",
+        "scale": 2
+       },
+       {
+        "name": "Taban ortalaması",
+        "kind": "decimal",
+        "scale": 1
+       }
+      ]
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#8C9AAA",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "agac",
+      "name": "Ağaç",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "ring",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      },
+      "children": []
+     },
+     {
+      "id": "kayit",
+      "name": "Tapu kayıtları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "cross",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg-dim",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "label": "1",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487000,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "label": "2",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "label": "3",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25"
+      },
+      "pts": [
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "parsel",
+      "label": "4",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Tapu alanı": "1100"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420030
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487070,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420020
+         },
+         {
+          "x": 487070,
+          "y": 4420020
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "70",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487005,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420012
+       },
+       {
+        "x": 487005,
+        "y": 4420012
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "100",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487025,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420015
+       },
+       {
+        "x": 487025,
+        "y": 4420015
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "25,5",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420025
+       },
+       {
+        "x": 487040,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "36",
+       "Kat": ""
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420018
+       },
+       {
+        "x": 487072,
+        "y": 4420018
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "bilinmiyor",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487085,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420008
+       },
+       {
+        "x": 487085,
+        "y": 4420008
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487005,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487030,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Ihlamur"
+      },
+      "p": {
+       "x": 487045,
+       "y": 4420010
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487075,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487090,
+       "y": 4420022
+      }
+     },
+     {
+      "kind": "line",
+      "id": 16,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Cumhuriyet Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487110,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 17,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Okul Sokağı"
+      },
+      "pts": [
+       {
+        "x": 487052,
+        "y": 4419990
+       },
+       {
+        "x": 487052,
+        "y": 4420040
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 18,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "1",
+       "Malik": "Ayşe Yılmaz"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 19,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "2",
+       "Malik": "Hasan Demir"
+      },
+      "p": {
+       "x": 487032,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 20,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "002",
+       "Malik": "Tekrar Kayıt"
+      },
+      "p": {
+       "x": 487033,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 21,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "9",
+       "Malik": "Kayıtsız"
+      },
+      "p": {
+       "x": 487120,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 22,
+      "layerId": "kilitli",
+      "label": "5",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "5"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420060
+       },
+       {
+        "x": 487000,
+        "y": 4420060
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "attributes.calculate",
+      "parameters": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       },
+       "field": "Ağaç sayısı"
+      },
+      "onError": "continue",
+      "rows": [
+       {
+        "parameters": {
+         "value": "'bir'"
+        }
+       },
+       {
+        "parameters": {
+         "value": "9"
+        }
+       },
+       {
+        "parameters": {
+         "value": "'iki'"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "attributes.calculate",
+       "summary": "1 satır çalıştı: 0 nesne eklendi, 4 nesne değişti. 2 satır çalışmadı ve geri alındı (Satır 1, Satır 3).",
+       "rows": [
+        {
+         "index": 1,
+         "label": "Satır 2",
+         "ran": {
+          "tool": "attributes.calculate",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı.",
+          "changed": [
+           "$uidOf:1",
+           "$uidOf:2",
+           "$uidOf:3",
+           "$uidOf:4"
+          ],
+          "outputs": {
+           "count": 4,
+           "changed": [
+            "$uidOf:1",
+            "$uidOf:2",
+            "$uidOf:3",
+            "$uidOf:4"
+           ]
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "digest": "$any"
+           }
+          ],
+          "step": "Öznitelik hesapla",
+          "record": "$any",
+          "revision": "$any"
+         }
+        }
+       ],
+       "failed": [
+        {
+         "index": 0,
+         "label": "Satır 1",
+         "code": "tool_failed",
+         "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “bir” verildi. Rakamlarla, ondalıksız yazın."
+        },
+        {
+         "index": 2,
+         "label": "Satır 3",
+         "code": "tool_failed",
+         "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “iki” verildi. Rakamlarla, ondalıksız yazın."
+        }
+       ],
+       "step": "Toplu: Öznitelik hesapla",
+       "record": {
+        "format": "kentos.run-record",
+        "version": 1,
+        "kind": "batch",
+        "tool": "attributes.calculate",
+        "label": "Öznitelik hesapla",
+        "toolVersion": 1,
+        "parameters": {
+         "input": {
+          "scope": "layer",
+          "layerId": "parsel"
+         },
+         "field": "Ağaç sayısı"
+        },
+        "inputs": [
+         {
+          "layer": "parsel",
+          "digest": "$any"
+         }
+        ],
+        "documentRevision": "$any",
+        "engine": "$any",
+        "host": "headless",
+        "startedAt": "$any",
+        "ms": "$any",
+        "srid": 5256,
+        "steps": [
+         {
+          "id": "rows[1]",
+          "tool": "attributes.calculate",
+          "label": "Satır 2",
+          "recordsIn": 4,
+          "recordsOut": 4,
+          "ms": "$any",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı."
+         }
+        ],
+        "total": {
+         "recordsIn": 4,
+         "recordsOut": 4
+        },
+        "failed": [
+         {
+          "id": "rows[0]",
+          "label": "Satır 1",
+          "code": "tool_failed",
+          "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “bir” verildi. Rakamlarla, ondalıksız yazın."
+         },
+         {
+          "id": "rows[2]",
+          "label": "Satır 3",
+          "code": "tool_failed",
+          "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “iki” verildi. Rakamlarla, ondalıksız yazın."
+         }
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "batch_rows_failed",
+        "path": "rows",
+        "message": "2 satır çalışıp durdu ve tek tek geri alındı (Satır 1, Satır 3); öteki satırlar yazıldı."
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Tapu alanı": "600.00",
+         "Ağaç sayısı": "9"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Tapu alanı": "750.00",
+         "Ağaç sayısı": "9"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "3",
+         "Tapu alanı": "450,25",
+         "Ağaç sayısı": "9"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Tapu alanı": "1100",
+         "Ağaç sayısı": "9"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Toplu: Öznitelik hesapla",
+     "expect": {
+      "canUndo": false,
+      "canRedo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Tapu alanı": "600.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Tapu alanı": "750.00"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "3",
+         "Tapu alanı": "450,25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Tapu alanı": "1100"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "onError continue: bütün satırlar durur: hiçbir şey yazılmaz, adım yok, çizim değişmez",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlem durumları: sorgular",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.35,
+       "fill": "#E5484D1F"
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "text"
+       },
+       {
+        "name": "Parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "Ağaç sayısı",
+        "kind": "integer"
+       },
+       {
+        "name": "Taban toplamı",
+        "kind": "decimal",
+        "scale": 2
+       },
+       {
+        "name": "Taban ortalaması",
+        "kind": "decimal",
+        "scale": 1
+       }
+      ]
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#8C9AAA",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "agac",
+      "name": "Ağaç",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "ring",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      },
+      "children": []
+     },
+     {
+      "id": "kayit",
+      "name": "Tapu kayıtları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "cross",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg-dim",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "label": "1",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487000,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "label": "2",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "label": "3",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25"
+      },
+      "pts": [
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "parsel",
+      "label": "4",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Tapu alanı": "1100"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420030
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487070,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420020
+         },
+         {
+          "x": 487070,
+          "y": 4420020
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "70",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487005,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420012
+       },
+       {
+        "x": 487005,
+        "y": 4420012
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "100",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487025,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420015
+       },
+       {
+        "x": 487025,
+        "y": 4420015
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "25,5",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420025
+       },
+       {
+        "x": 487040,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "36",
+       "Kat": ""
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420018
+       },
+       {
+        "x": 487072,
+        "y": 4420018
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "bilinmiyor",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487085,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420008
+       },
+       {
+        "x": 487085,
+        "y": 4420008
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487005,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487030,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Ihlamur"
+      },
+      "p": {
+       "x": 487045,
+       "y": 4420010
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487075,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487090,
+       "y": 4420022
+      }
+     },
+     {
+      "kind": "line",
+      "id": 16,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Cumhuriyet Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487110,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 17,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Okul Sokağı"
+      },
+      "pts": [
+       {
+        "x": 487052,
+        "y": 4419990
+       },
+       {
+        "x": 487052,
+        "y": 4420040
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 18,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "1",
+       "Malik": "Ayşe Yılmaz"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 19,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "2",
+       "Malik": "Hasan Demir"
+      },
+      "p": {
+       "x": 487032,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 20,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "002",
+       "Malik": "Tekrar Kayıt"
+      },
+      "p": {
+       "x": 487033,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 21,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "9",
+       "Malik": "Kayıtsız"
+      },
+      "p": {
+       "x": 487120,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 22,
+      "layerId": "kilitli",
+      "label": "5",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "5"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420060
+       },
+       {
+        "x": 487000,
+        "y": 4420060
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "attributes.calculate",
+      "parameters": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       },
+       "field": "Ağaç sayısı"
+      },
+      "onError": "continue",
+      "rows": [
+       {
+        "parameters": {
+         "value": "'a'"
+        }
+       },
+       {
+        "parameters": {
+         "value": "'b'"
+        }
+       },
+       {
+        "parameters": {
+         "value": "'c'"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "attributes.calculate",
+       "summary": "0 satır çalıştı: 0 nesne eklendi, 0 nesne değişti. 3 satır çalışmadı ve geri alındı (Satır 1, Satır 2, Satır 3).",
+       "rows": [],
+       "failed": [
+        {
+         "index": 0,
+         "label": "Satır 1",
+         "code": "tool_failed",
+         "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “a” verildi. Rakamlarla, ondalıksız yazın."
+        },
+        {
+         "index": 1,
+         "label": "Satır 2",
+         "code": "tool_failed",
+         "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “b” verildi. Rakamlarla, ondalıksız yazın."
+        },
+        {
+         "index": 2,
+         "label": "Satır 3",
+         "code": "tool_failed",
+         "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “c” verildi. Rakamlarla, ondalıksız yazın."
+        }
+       ],
+       "record": {
+        "format": "kentos.run-record",
+        "version": 1,
+        "kind": "batch",
+        "tool": "attributes.calculate",
+        "label": "Öznitelik hesapla",
+        "toolVersion": 1,
+        "parameters": {
+         "input": {
+          "scope": "layer",
+          "layerId": "parsel"
+         },
+         "field": "Ağaç sayısı"
+        },
+        "documentRevision": "$any",
+        "engine": "$any",
+        "host": "headless",
+        "startedAt": "$any",
+        "ms": "$any",
+        "srid": 5256,
+        "steps": [],
+        "total": {
+         "recordsIn": 0,
+         "recordsOut": 0
+        },
+        "failed": [
+         {
+          "id": "rows[0]",
+          "label": "Satır 1",
+          "code": "tool_failed",
+          "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “a” verildi. Rakamlarla, ondalıksız yazın."
+         },
+         {
+          "id": "rows[1]",
+          "label": "Satır 2",
+          "code": "tool_failed",
+          "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “b” verildi. Rakamlarla, ondalıksız yazın."
+         },
+         {
+          "id": "rows[2]",
+          "label": "Satır 3",
+          "code": "tool_failed",
+          "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “c” verildi. Rakamlarla, ondalıksız yazın."
+         }
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "batch_rows_failed",
+        "path": "rows",
+        "message": "3 satır çalışıp durdu ve tek tek geri alındı (Satır 1, Satır 2, Satır 3); hiçbir satır yazılmadı."
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Tapu alanı": "600.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Tapu alanı": "750.00"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "3",
+         "Tapu alanı": "450,25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Tapu alanı": "1100"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "onError continue, hiçbir satır durmazsa: stop ile aynı cevap (failed yok, uyarı yok)",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlem durumları: sorgular",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.35,
+       "fill": "#E5484D1F"
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "text"
+       },
+       {
+        "name": "Parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "Ağaç sayısı",
+        "kind": "integer"
+       },
+       {
+        "name": "Taban toplamı",
+        "kind": "decimal",
+        "scale": 2
+       },
+       {
+        "name": "Taban ortalaması",
+        "kind": "decimal",
+        "scale": 1
+       }
+      ]
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#8C9AAA",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "agac",
+      "name": "Ağaç",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "ring",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      },
+      "children": []
+     },
+     {
+      "id": "kayit",
+      "name": "Tapu kayıtları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "cross",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg-dim",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "label": "1",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487000,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "label": "2",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "label": "3",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25"
+      },
+      "pts": [
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "parsel",
+      "label": "4",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Tapu alanı": "1100"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420030
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487070,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420020
+         },
+         {
+          "x": 487070,
+          "y": 4420020
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "70",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487005,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420012
+       },
+       {
+        "x": 487005,
+        "y": 4420012
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "100",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487025,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420015
+       },
+       {
+        "x": 487025,
+        "y": 4420015
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "25,5",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420025
+       },
+       {
+        "x": 487040,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "36",
+       "Kat": ""
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420018
+       },
+       {
+        "x": 487072,
+        "y": 4420018
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "bilinmiyor",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487085,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420008
+       },
+       {
+        "x": 487085,
+        "y": 4420008
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487005,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487030,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Ihlamur"
+      },
+      "p": {
+       "x": 487045,
+       "y": 4420010
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487075,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487090,
+       "y": 4420022
+      }
+     },
+     {
+      "kind": "line",
+      "id": 16,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Cumhuriyet Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487110,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 17,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Okul Sokağı"
+      },
+      "pts": [
+       {
+        "x": 487052,
+        "y": 4419990
+       },
+       {
+        "x": 487052,
+        "y": 4420040
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 18,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "1",
+       "Malik": "Ayşe Yılmaz"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 19,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "2",
+       "Malik": "Hasan Demir"
+      },
+      "p": {
+       "x": 487032,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 20,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "002",
+       "Malik": "Tekrar Kayıt"
+      },
+      "p": {
+       "x": 487033,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 21,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "9",
+       "Malik": "Kayıtsız"
+      },
+      "p": {
+       "x": 487120,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 22,
+      "layerId": "kilitli",
+      "label": "5",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "5"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420060
+       },
+       {
+        "x": 487000,
+        "y": 4420060
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "attributes.calculate",
+      "parameters": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       },
+       "field": "Ağaç sayısı"
+      },
+      "onError": "continue",
+      "rows": [
+       {
+        "parameters": {
+         "value": "5"
+        }
+       },
+       {
+        "parameters": {
+         "value": "6"
+        }
+       },
+       {
+        "parameters": {
+         "value": "7"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "attributes.calculate",
+       "summary": "3 satır çalıştı: 0 nesne eklendi, 12 nesne değişti.",
+       "rows": [
+        {
+         "index": 0,
+         "label": "Satır 1",
+         "ran": {
+          "tool": "attributes.calculate",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı.",
+          "changed": [
+           "$uidOf:1",
+           "$uidOf:2",
+           "$uidOf:3",
+           "$uidOf:4"
+          ],
+          "outputs": {
+           "count": 4,
+           "changed": [
+            "$uidOf:1",
+            "$uidOf:2",
+            "$uidOf:3",
+            "$uidOf:4"
+           ]
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "digest": "$any"
+           }
+          ],
+          "step": "Öznitelik hesapla",
+          "record": "$any",
+          "revision": "$any"
+         }
+        },
+        {
+         "index": 1,
+         "label": "Satır 2",
+         "ran": {
+          "tool": "attributes.calculate",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı.",
+          "changed": [
+           "$uidOf:1",
+           "$uidOf:2",
+           "$uidOf:3",
+           "$uidOf:4"
+          ],
+          "outputs": {
+           "count": 4,
+           "changed": [
+            "$uidOf:1",
+            "$uidOf:2",
+            "$uidOf:3",
+            "$uidOf:4"
+           ]
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "digest": "$any"
+           }
+          ],
+          "step": "Öznitelik hesapla",
+          "record": "$any",
+          "revision": "$any"
+         }
+        },
+        {
+         "index": 2,
+         "label": "Satır 3",
+         "ran": {
+          "tool": "attributes.calculate",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı.",
+          "changed": [
+           "$uidOf:1",
+           "$uidOf:2",
+           "$uidOf:3",
+           "$uidOf:4"
+          ],
+          "outputs": {
+           "count": 4,
+           "changed": [
+            "$uidOf:1",
+            "$uidOf:2",
+            "$uidOf:3",
+            "$uidOf:4"
+           ]
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "digest": "$any"
+           }
+          ],
+          "step": "Öznitelik hesapla",
+          "record": "$any",
+          "revision": "$any"
+         }
+        }
+       ],
+       "step": "Toplu: Öznitelik hesapla",
+       "record": {
+        "format": "kentos.run-record",
+        "version": 1,
+        "kind": "batch",
+        "tool": "attributes.calculate",
+        "label": "Öznitelik hesapla",
+        "toolVersion": 1,
+        "parameters": {
+         "input": {
+          "scope": "layer",
+          "layerId": "parsel"
+         },
+         "field": "Ağaç sayısı"
+        },
+        "inputs": [
+         {
+          "layer": "parsel",
+          "digest": "$any"
+         }
+        ],
+        "documentRevision": "$any",
+        "engine": "$any",
+        "host": "headless",
+        "startedAt": "$any",
+        "ms": "$any",
+        "srid": 5256,
+        "steps": [
+         {
+          "id": "rows[0]",
+          "tool": "attributes.calculate",
+          "label": "Satır 1",
+          "recordsIn": 4,
+          "recordsOut": 4,
+          "ms": "$any",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı."
+         },
+         {
+          "id": "rows[1]",
+          "tool": "attributes.calculate",
+          "label": "Satır 2",
+          "recordsIn": 4,
+          "recordsOut": 4,
+          "ms": "$any",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı."
+         },
+         {
+          "id": "rows[2]",
+          "tool": "attributes.calculate",
+          "label": "Satır 3",
+          "recordsIn": 4,
+          "recordsOut": 4,
+          "ms": "$any",
+          "summary": "4 nesnede “Ağaç sayısı” yazıldı."
+         }
+        ],
+        "total": {
+         "recordsIn": 12,
+         "recordsOut": 4
+        }
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Tapu alanı": "600.00",
+         "Ağaç sayısı": "7"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Tapu alanı": "750.00",
+         "Ağaç sayısı": "7"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "3",
+         "Tapu alanı": "450,25",
+         "Ağaç sayısı": "7"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Tapu alanı": "1100",
+         "Ağaç sayısı": "7"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "onError stop açıkça verilince varsayılanla aynı: batch_row_failed, hiçbir şey yazılmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlem durumları: sorgular",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.35,
+       "fill": "#E5484D1F"
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "text"
+       },
+       {
+        "name": "Parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "Ağaç sayısı",
+        "kind": "integer"
+       },
+       {
+        "name": "Taban toplamı",
+        "kind": "decimal",
+        "scale": 2
+       },
+       {
+        "name": "Taban ortalaması",
+        "kind": "decimal",
+        "scale": 1
+       }
+      ]
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#8C9AAA",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "agac",
+      "name": "Ağaç",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "ring",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      },
+      "children": []
+     },
+     {
+      "id": "kayit",
+      "name": "Tapu kayıtları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "cross",
+        "size": 6
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg-dim",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "label": "1",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487000,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "label": "2",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "label": "3",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25"
+      },
+      "pts": [
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "parsel",
+      "label": "4",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Tapu alanı": "1100"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420030
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487070,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420020
+         },
+         {
+          "x": 487070,
+          "y": 4420020
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "70",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487005,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420005
+       },
+       {
+        "x": 487015,
+        "y": 4420012
+       },
+       {
+        "x": 487005,
+        "y": 4420012
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "100",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487025,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420005
+       },
+       {
+        "x": 487035,
+        "y": 4420015
+       },
+       {
+        "x": 487025,
+        "y": 4420015
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "25,5",
+       "Kat": "2"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420025
+       },
+       {
+        "x": 487040,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "36",
+       "Kat": ""
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420018
+       },
+       {
+        "x": 487072,
+        "y": 4420018
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "yapi",
+      "attrs": {
+       "Taban alanı": "bilinmiyor",
+       "Kat": "1"
+      },
+      "pts": [
+       {
+        "x": 487085,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420002
+       },
+       {
+        "x": 487095,
+        "y": 4420008
+       },
+       {
+        "x": 487085,
+        "y": 4420008
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487005,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487030,
+       "y": 4420025
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Ihlamur"
+      },
+      "p": {
+       "x": 487045,
+       "y": 4420010
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Çam"
+      },
+      "p": {
+       "x": 487075,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "agac",
+      "attrs": {
+       "Tür": "Meşe"
+      },
+      "p": {
+       "x": 487090,
+       "y": 4420022
+      }
+     },
+     {
+      "kind": "line",
+      "id": 16,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Cumhuriyet Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487110,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 17,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Okul Sokağı"
+      },
+      "pts": [
+       {
+        "x": 487052,
+        "y": 4419990
+       },
+       {
+        "x": 487052,
+        "y": 4420040
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 18,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "1",
+       "Malik": "Ayşe Yılmaz"
+      },
+      "p": {
+       "x": 487010,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "point",
+      "id": 19,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "2",
+       "Malik": "Hasan Demir"
+      },
+      "p": {
+       "x": 487032,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 20,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "002",
+       "Malik": "Tekrar Kayıt"
+      },
+      "p": {
+       "x": 487033,
+       "y": 4420020
+      }
+     },
+     {
+      "kind": "point",
+      "id": 21,
+      "layerId": "kayit",
+      "attrs": {
+       "Parsel": "9",
+       "Malik": "Kayıtsız"
+      },
+      "p": {
+       "x": 487120,
+       "y": 4420015
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 22,
+      "layerId": "kilitli",
+      "label": "5",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "5"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420040
+       },
+       {
+        "x": 487020,
+        "y": 4420060
+       },
+       {
+        "x": 487000,
+        "y": 4420060
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "attributes.calculate",
+      "parameters": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       },
+       "field": "Ağaç sayısı"
+      },
+      "onError": "stop",
+      "rows": [
+       {
+        "parameters": {
+         "value": "5"
+        }
+       },
+       {
+        "parameters": {
+         "value": "'çok'"
+        }
+       },
+       {
+        "parameters": {
+         "value": "7"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "batch_row_failed",
+       "message": "Satır 2 çalışmadı: Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “çok” verildi. Rakamlarla, ondalıksız yazın. Toplu işin hiçbir sonucu yazılmadı.",
+       "path": "rows[1]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Tapu alanı": "600.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Tapu alanı": "750.00"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "3",
+         "Tapu alanı": "450,25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Tapu alanı": "1100"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "onError continue, model satırları: ortadaki adımda duran her satırın ilk adımı katmanıyla geri alınır, hiçbir şey yazılmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlem durumları: parseller",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "hybrid",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.35,
+       "fill": "#E5484D1F"
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli katman",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg-dim",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli katman",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mevcut",
+      "name": "Mevcut noktalar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E9BF0",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "cross",
+        "size": 7
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "islem-kenar-olculeri",
+      "name": "Kenar ölçüleri",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg-dim",
+       "lineType": "continuous",
+       "lineWeight": 0.18
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Uzunluk (m)",
+        "kind": "integer"
+       }
+      ]
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "label": "1",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Nitelik": "Arsa"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487000,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "label": "2",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Nitelik": "Arsa"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "label": "3",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Nitelik": "Tarla"
+      },
+      "pts": [
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kilitli",
+      "label": "1",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "1",
+       "Nitelik": "Arsa"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4419960
+       },
+       {
+        "x": 487020,
+        "y": 4419960
+       },
+       {
+        "x": 487020,
+        "y": 4419980
+       },
+       {
+        "x": 487000,
+        "y": 4419980
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "gizli",
+      "label": "2",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "2",
+       "Nitelik": "Arsa"
+      },
+      "pts": [
+       {
+        "x": 487030,
+        "y": 4419960
+       },
+       {
+        "x": 487050,
+        "y": 4419960
+       },
+       {
+        "x": 487050,
+        "y": 4419980
+       },
+       {
+        "x": 487030,
+        "y": 4419980
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "id": 6,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420040
+       },
+       {
+        "x": 487030,
+        "y": 4420040
+       },
+       {
+        "x": 487030,
+        "y": 4420055
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 7,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487040,
+       "y": 4420040
+      },
+      "b": {
+       "x": 487060,
+       "y": 4420040
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "mevcut",
+      "label": "P00001",
+      "attrs": {
+       "Nokta": "P00001",
+       "Tür": "Köşe noktası"
+      },
+      "p": {
+       "x": 487000,
+       "y": 4420030
+      }
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "mevcut",
+      "label": "P00002",
+      "attrs": {
+       "Nokta": "P00002",
+       "Tür": "Köşe noktası"
+      },
+      "p": {
+       "x": 487020,
+       "y": 4420030
+      }
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "mevcut",
+      "label": "P00003",
+      "attrs": {
+       "Nokta": "P00003",
+       "Tür": "Köşe noktası"
+      },
+      "p": {
+       "x": 487020,
+       "y": 4420000
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "model:builtin.parcelSheet",
+      "selection": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "onError": "continue",
+      "rows": [
+       {
+        "parameters": {
+         "prefix": "A"
+        }
+       },
+       {
+        "parameters": {
+         "prefix": "B"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "model:builtin.parcelSheet",
+       "summary": "0 satır çalıştı: 0 nesne eklendi, 0 nesne değişti. 2 satır çalışmadı ve geri alındı (Satır 1, Satır 2).",
+       "rows": [],
+       "failed": [
+        {
+         "index": 0,
+         "label": "Satır 1",
+         "code": "tool_failed",
+         "message": "2. adım (Kenar uzunluklarını yaz) çalışmadı: Öznitelik yazılamadı (yeni nesne): “Uzunluk (m)” alanı tam sayı ister; “20.000” verildi. Rakamlarla, ondalıksız yazın. Önceki adımların sonuçları geri alındı."
+        },
+        {
+         "index": 1,
+         "label": "Satır 2",
+         "code": "tool_failed",
+         "message": "2. adım (Kenar uzunluklarını yaz) çalışmadı: Öznitelik yazılamadı (yeni nesne): “Uzunluk (m)” alanı tam sayı ister; “20.000” verildi. Rakamlarla, ondalıksız yazın. Önceki adımların sonuçları geri alındı."
+        }
+       ],
+       "record": {
+        "format": "kentos.run-record",
+        "version": 1,
+        "kind": "batch",
+        "tool": "model:builtin.parcelSheet",
+        "label": "Parsel ölçü yazıları",
+        "toolVersion": 1,
+        "definition": "$any",
+        "parameters": {},
+        "selection": [
+         "$uidOf:1",
+         "$uidOf:2"
+        ],
+        "documentRevision": "$any",
+        "engine": "$any",
+        "host": "headless",
+        "startedAt": "$any",
+        "ms": "$any",
+        "srid": 5256,
+        "steps": [],
+        "total": {
+         "recordsIn": 0,
+         "recordsOut": 0
+        },
+        "failed": [
+         {
+          "id": "rows[0]",
+          "label": "Satır 1",
+          "code": "tool_failed",
+          "message": "2. adım (Kenar uzunluklarını yaz) çalışmadı: Öznitelik yazılamadı (yeni nesne): “Uzunluk (m)” alanı tam sayı ister; “20.000” verildi. Rakamlarla, ondalıksız yazın. Önceki adımların sonuçları geri alındı."
+         },
+         {
+          "id": "rows[1]",
+          "label": "Satır 2",
+          "code": "tool_failed",
+          "message": "2. adım (Kenar uzunluklarını yaz) çalışmadı: Öznitelik yazılamadı (yeni nesne): “Uzunluk (m)” alanı tam sayı ister; “20.000” verildi. Rakamlarla, ondalıksız yazın. Önceki adımların sonuçları geri alındı."
+         }
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "batch_rows_failed",
+        "path": "rows",
+        "message": "2 satır çalışıp durdu ve tek tek geri alındı (Satır 1, Satır 2); hiçbir satır yazılmadı."
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "onError continue: çalışmadan önceki ret yine ret (ikinci satırın yarım ifadesi), hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "attributes.calculate",
+      "selection": [
+       "$uidOf:1"
+      ],
+      "onError": "continue",
+      "rows": [
+       {},
+       {
+        "parameters": {
+         "value": "metin($alan,"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "“Değer”: 13. karakterde: İfade yarım kalmış: sonunda bir değer eksik.",
+       "path": "rows[1].parameters.value"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
    "name": "Satırı olmayan toplu iş: empty_batch",
    "steps": [
     {

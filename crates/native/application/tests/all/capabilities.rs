@@ -318,6 +318,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "dosyaya yazan execute ortak durumlarda yok (fixture dosyası değişirdi); geçici kopyada source_relations.rs sınar (ADR 0532 §1)",
     ),
     (
+        "cad.processing.run",
+        "crs_mismatch",
+        "dosyada çizimin sistem kimliğiyle başka bir sistem olması: ortak durumların dosyaları (qgis.gpkg 5256) çizimin 5254'ünü taşımaz; sistemi başka bir dosyayı geçici klasörde processing_sink.rs kurar ve sınar (ADR 0549 §1)",
+    ),
+    (
         "cad.sources.relate",
         "file_unwritable",
         "dosyaya yazan execute ortak durumlarda yok (fixture dosyası değişirdi); geçici kopyada source_relations.rs sınar (ADR 0532 §2)",

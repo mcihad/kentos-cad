@@ -34,12 +34,29 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ProcessingRun) -> CommandResult<P
     }
 }
 
+/// The run as one recorded step of the document (docs/adr/0253 §1, docs/adr/0551 §6): it is in the journal, a
+/// `requestId` makes it answered as before when sent again and keeps its answer, record included, in the project's
+/// request ledger.
 pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: ProcessingRun,
 ) -> CommandResult<ProcessingRan> {
     // A plan through the protocol runs this on a reading copy: a sink's file is not written then (docs/adr/0532 §4).
     let dry = cx.dry();
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_PROCESSING_RUN,
+        kentos_commands::CAD_PROCESSING_RUN_VERSION,
+        input,
+        move |cx, input| write_execute(cx, input, dry),
+    )
+}
+
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ProcessingRun,
+    dry: bool,
+) -> CommandResult<ProcessingRan> {
     let flow = JobFlow(cx.job);
     let ran = host().and_then(|h| {
         h.check(cx.doc, &input)?;

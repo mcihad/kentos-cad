@@ -92,21 +92,58 @@ fn completed<T>(r: Result<(T, Vec<CommandWarning>), Stop>) -> CommandResult<T> {
     }
 }
 
+/// How many objects are hashed per round, and the fewest that are worth another thread (docs/adr/0551 §5).
+const DIGEST_ROUND: usize = 1 << 15;
+const DIGEST_SPLIT: usize = 1 << 11;
+
+/// The bytes of `items` in the digest's list, comma first from the second object of the layer: `first` is the first
+/// item's place in the layer.
+fn digest_bytes(items: &[(Uuid, &kentos_commands::Entity)], first: usize) -> Vec<u8> {
+    let mut out = Vec::with_capacity(items.len() * 256);
+    for (i, (u, e)) in items.iter().enumerate() {
+        if first + i > 0 {
+            out.push(b',');
+        }
+        let item = json!([u.to_string(), gp::essence(e)]);
+        out.extend_from_slice(kentos_commands::canonical::canonical_json(&item).as_bytes());
+    }
+    out
+}
+
 /// The layer's digest: the SHA-256 of its objects' kinds, geometries and attributes by lasting id (not their look):
-/// the canonical JSON of `[[uid, essence], …]` in the ids' order, hashed one object at a time (plan/gis.md CBS-42: a
-/// million objects' JSON is not built at once; the bytes, and so the digest, are those of `digest_of` on the list).
+/// the canonical JSON of `[[uid, essence], …]` in the ids' order (plan/gis.md CBS-42: a million objects' JSON is not
+/// built at once; the bytes, and so the digest, are those of `digest_of` on the list). The objects' bytes are made
+/// 32 768 at a time, a round across the machine's threads (the bytes in the ids' order, so the digest is the same
+/// as one thread's), and hashed as they come: a batch's row that writes a layer takes the digest of the new state
+/// before the next row (docs/adr/0551 §5).
 pub fn layer_digest(doc: &Document, layer: &str) -> String {
     use sha2::{Digest, Sha256};
     let mut items: Vec<(Uuid, &kentos_commands::Entity)> = doc.by_layer_with_uids(layer).collect();
     items.sort_by_key(|(u, _)| *u);
+    let threads = std::thread::available_parallelism().map_or(1, |n| n.get().min(8));
     let mut hasher = Sha256::new();
     hasher.update(b"[");
-    for (i, (u, e)) in items.into_iter().enumerate() {
-        if i > 0 {
-            hasher.update(b",");
+    for (round, window) in items.chunks(DIGEST_ROUND).enumerate() {
+        let first = round * DIGEST_ROUND;
+        if threads < 2 || window.len() < DIGEST_SPLIT {
+            hasher.update(digest_bytes(window, first));
+            continue;
         }
-        let item = json!([u.to_string(), gp::essence(e)]);
-        hasher.update(kentos_commands::canonical::canonical_json(&item).as_bytes());
+        let piece = window.len().div_ceil(threads);
+        let parts: Vec<Vec<u8>> = std::thread::scope(|scope| {
+            let handles: Vec<_> = window
+                .chunks(piece)
+                .enumerate()
+                .map(|(k, part)| scope.spawn(move || digest_bytes(part, first + k * piece)))
+                .collect();
+            handles
+                .into_iter()
+                .map(|h| h.join().unwrap_or_default())
+                .collect()
+        });
+        for part in parts {
+            hasher.update(part);
+        }
     }
     hasher.update(b"]");
     hasher

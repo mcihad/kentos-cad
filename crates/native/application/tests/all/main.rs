@@ -42,6 +42,7 @@ mod sources;
 mod standards_cmd;
 mod rasters_georef;
 mod stretch_ties;
+mod layer_digest;
 mod tables_cmd;
 mod transform;
 mod units;

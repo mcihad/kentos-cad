@@ -5,10 +5,10 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 
 ## Ürün komutları
 
-- 213 komut; masaüstü 192, başsız 213, Python 213, MCP 192, sunucu 21.
-- Seçenekler: 3537 hücre, 1183 tanesi bir durumda deneniyor (2354 açık).
+- 216 komut; masaüstü 195, başsız 216, Python 216, MCP 195, sunucu 21.
+- Seçenekler: 3553 hücre, 1187 tanesi bir durumda deneniyor (2366 açık).
 - Veri türleri (hedef türler): 178 hücre, 120 tanesi bir durumda deneniyor (58 açık).
-- Ortak komut durumu olmayan: 32; 21 sunucu komutu (sunucunun veritabanı testlerinde), 11 dosya komutu (başsız testlerde ve biçim başvurularında: file.export.atlas, file.export.block, file.export.csv, file.export.dxf, file.export.fgb, file.export.gis, file.export.gpkg, file.export.pdf, file.export.shp, file.export.sld, file.package).
+- Ortak komut durumu olmayan: 34; 21 sunucu komutu (sunucunun veritabanı testlerinde), 13 dosya komutu (başsız testlerde ve biçim başvurularında: file.export.atlas, file.export.block, file.export.csv, file.export.dxf, file.export.fgb, file.export.gis, file.export.gml, file.export.gpkg, file.export.pdf, file.export.shp, file.export.sld, file.export.xyz, file.package).
 
 ### Açık hücreler
 
@@ -116,10 +116,12 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | `file.export.dxf` | dimensions="block", dimensions="native", metadata=true, overwrite=true | — |
 | `file.export.fgb` | overwrite=true | — |
 | `file.export.gis` | annotations="skip", annotations="table", overwrite=true | — |
+| `file.export.gml` | overwrite=true, schema=true | — |
 | `file.export.gpkg` | overwrite=true | — |
 | `file.export.pdf` | overwrite=true | — |
 | `file.export.shp` | encoding="utf-8", encoding="windows-1254", overwrite=true | — |
 | `file.export.sld` | overwrite=true | — |
+| `file.export.xyz` | header=true, overwrite=true, separator="comma", separator="semicolon", separator="space", separator="tab", vertices="all", vertices="points", withoutZ="skip", withoutZ="zero" | — |
 | `file.import.csv` | kind="auto", kind="none" | — |
 | `file.import.dxf` | fileUnit="dm", fileUnit="in", fileUnit="km", fileUnit="m", fileUnit="mi", fileUnit="usFt", fileUnit="yd" | — |
 | `file.import.pdf` | curves="polyline", fills=true, strokes=true, texts=true | — |
@@ -142,7 +144,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | Araç | Durum | Komutla | Denenmeyen seçenekler |
 |---|---|---|---|
 | `annotation.edgeLengths` | 2 | 2 | shared=false |
-| `attributes.calculate` | 15 | 49 | empty="clear" |
+| `attributes.calculate` | 15 | 58 | empty="clear" |
 | `attributes.fromInside` | 5 | 7 | stat="min", stat="max" |
 | `attributes.joinByField` | 6 | 7 | existing="empty" |
 | `convert.tableEllipse` | 1 | 1 | sourceKind="layer", unit="deg" |
@@ -191,7 +193,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | `pointcloud.tile` | 0 | 0 | vpc=true, vpc=false, format="laz", format="las", format="copc", add=true, add=false |
 | `points.numberVertices` | 7 | 14 | start="north", start="first", start="point", shared=false, output="text" |
 | `proximity.nearest` | 2 | 2 | measure="centers", bearing=false |
-| `proximity.neighbors` | 1 | 1 | corners=false, overlaps=false, write=false |
+| `proximity.neighbors` | 1 | 2 | corners=false, overlaps=false, write=false |
 | `raster.calculator` | 4 | 4 | empty="expression", sample="f64", add=false |
 | `raster.cellStatistics` | 1 | 1 | stat="sum", stat="min", stat="max", stat="range", stat="std", stat="median", stat="majority", stat="minority", stat="variety", stat="count", ignore=false, add=false |
 | `raster.clipByMask` | 2 | 2 | crop=false, add=false |
@@ -212,7 +214,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | `remote.split` | 1 | 1 | add=false |
 | `remote.supervised` | 3 | 3 | add=false |
 | `remote.unsupervised` | 2 | 2 | add=false |
-| `selection.byExpression` | 6 | 14 | mode="add", mode="remove" |
+| `selection.byExpression` | 6 | 15 | mode="add", mode="remove" |
 | `selection.byLocation` | 8 | 16 | mode="add", mode="within" |
 | `stats.directionalDistribution` | 1 | 1 | deviations="2", deviations="3" |
 | `stats.localMoran` | 6 | 6 | concept="inverse", significance="0.01" |

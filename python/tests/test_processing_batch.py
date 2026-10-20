@@ -7,12 +7,13 @@ runner the desktop's İşlemler window runs, one undo step, all or nothing, and 
 
 from __future__ import annotations
 
+import tempfile
 import unittest
 from pathlib import Path
 
 import kentos.cad as cad
 from kentos.cad.errors import CommandFailed
-from kentos.cad.types import BatchRow
+from kentos.cad.types import BatchOnError, BatchRow, RunSink
 
 ROOT = Path(__file__).resolve().parents[2]
 PARCELS = ROOT / "fixtures/processing/v1/parcels.kcad"
@@ -70,6 +71,38 @@ class ProcessingBatchTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, "batch_row_failed")
         self.assertEqual(caught.exception.path, "rows[1]")
         self.assertIsNone(doc.undo(), "nothing was written")
+
+    def test_with_continue_a_row_that_stops_is_taken_back_alone(self) -> None:
+        doc = cad.Document.open(ROOT / "fixtures/processing/v1/queries.kcad")
+        ran = cad.processing.batch(
+            doc,
+            tool="attributes.calculate",
+            parameters={"input": {"scope": "layer", "layerId": "parsel"}, "field": "Ağaç sayısı"},
+            rows=[BatchRow(parameters={"value": "5"}), BatchRow(parameters={"value": "'çok'"}),
+                  BatchRow(parameters={"value": "7"})],
+            on_error=BatchOnError.CONTINUE,
+        )
+        self.assertEqual([r.index for r in ran.rows], [0, 2])
+        self.assertEqual([(f.index, f.code) for f in ran.failed], [(1, "tool_failed")])
+        self.assertIn("tam sayı ister", ran.failed[0].message)
+        self.assertEqual([f.id for f in ran.record.failed], ["rows[1]"])
+        self.assertEqual(ran.step, "Toplu: Öznitelik hesapla")
+        self.assertEqual(doc.undo(), "Toplu: Öznitelik hesapla")
+        self.assertIsNone(doc.undo(), "one step took the rows that ran back")
+
+    def test_a_table_output_goes_to_a_geopackage_when_the_sink_asks(self) -> None:
+        doc = cad.Document.open(ROOT / "fixtures/processing/v1/queries.kcad")
+        with tempfile.TemporaryDirectory() as folder:
+            path = str(Path(folder) / "ozet.gpkg")
+            params = {"input": {"scope": "layer", "layerId": "parsel"}, "field": "Taban alanı"}
+            with self.assertRaises(CommandFailed) as caught:
+                cad.processing.run(doc, tool="statistics.summary", parameters=params, sink=RunSink(path=path))
+            self.assertEqual(caught.exception.code, "nothing_to_export")
+            ran = cad.processing.run(doc, tool="statistics.summary", parameters=params,
+                                     sink=RunSink(path=path, tables=True))
+            table = ran.sink_report.tables[0]
+            self.assertEqual((table.table, table.output), ("Özet tablosu", "table"))
+            self.assertIsNone(doc.undo(), "the drawing did not change")
 
     def test_the_models_are_listed_when_asked(self) -> None:
         doc = cad.Document.open(PARCELS)

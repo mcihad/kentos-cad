@@ -999651,7 +999651,7 @@
       "id": "cad.processing.run",
       "version": 1,
       "title": "İşlem aracını çalıştır",
-      "summary": "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Raster araçları başsız ortamda rasterin bağlı ya da gömülü GeoTIFF ve PNG dosyasını okur, sonucu COG olarak yazar; adresteki raster, JPEG, NetCDF ve nokta bulutu dosyaları yalnız masaüstünde, başsız ortamda tool_failed. sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman). sink.mode: new (varsayılan: yeni dosya), addTables (var olan GeoPackage'a tablo ekler; aynı adlı tablo table_exists ile reddedilir, dosyanın başka tablosuna dokunulmaz) ya da replaceTables (aynı adlı nesne ya da öznitelik tablosunu yenisiyle değiştirir; başka tabloya dokunulmaz); mode new dışında dosya var olmalı (file_not_found), GeoPackage olarak okunmalı (import_unreadable), çizimin koordinat sistemini taşımalı (crs_mismatch), overwrite verilmez (invalid_input). Tablolar tek SQLite işleminde, beş bin satırlık parçalarla yazılır; hata ya da durdurma (iş olarak çalışırken) dosyayı olduğu gibi bırakır. Cevabın sinkReport'u kipi, her tablonun satırlarını, geometri türünü, Z ve M'ini, sütunlarının öznitelikleriyle eşlemesini, dosyanın dokunulmayan tablolarını ve parça sayısını söyler; satırların kalıcı kimlikleri kentos_uids tablosundadır. tool “model:” ve modelin kimliği de olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler): modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri alınır, hiçbir şey yazılmaz. Cevabın record'u koşunun kaydıdır (kentos.run-record 1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje dosyasına yazılmaz.",
+      "summary": "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Raster araçları başsız ortamda rasterin bağlı ya da gömülü GeoTIFF ve PNG dosyasını okur, sonucu COG olarak yazar; adresteki raster, JPEG, NetCDF ve nokta bulutu dosyaları yalnız masaüstünde, başsız ortamda tool_failed. sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman). sink.mode: new (varsayılan: yeni dosya), addTables (var olan GeoPackage'a tablo ekler; aynı adlı tablo table_exists ile reddedilir, dosyanın başka tablosuna dokunulmaz) ya da replaceTables (aynı adlı nesne ya da öznitelik tablosunu yenisiyle değiştirir; başka tabloya dokunulmaz); mode new dışında dosya var olmalı (file_not_found), GeoPackage olarak okunmalı (import_unreadable), çizimin koordinat sistemini taşımalı (crs_mismatch), overwrite verilmez (invalid_input). Tablolar tek SQLite işleminde, beş bin satırlık parçalarla yazılır; hata ya da durdurma (iş olarak çalışırken) dosyayı olduğu gibi bırakır. sink.tables aracın tablo çıktılarını (özet, rapor) da birer öznitelik tablosu olarak yazar: adı çıktının etiketi, sütunları başlıkları (metin; hücreler aracın gösterdiği yazı), sinkReport'ta output adıyla görünür; yalnız tablo üreten araç yalnız onu yazar. Cevabın sinkReport'u kipi, her tablonun satırlarını, geometri türünü, Z ve M'ini, sütunlarının öznitelikleriyle eşlemesini, dosyanın dokunulmayan tablolarını ve parça sayısını söyler; satırların kalıcı kimlikleri kentos_uids tablosundadır. tool “model:” ve modelin kimliği de olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler): modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri alınır, hiçbir şey yazılmaz. Cevabın record'u koşunun kaydıdır (kentos.run-record 1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje dosyasına yazılmaz (yazılsa kendisi bir düzenleme olurdu, çizimin sürümünü oynatırdı); requestId verilen çağrının cevabı, kaydıyla, proje dosyasının istek defterinde kalır (256 istek, her cevap 64 KB'a kadar) ve sink'e yazılan her tablo kaydı soyunun run alanında taşır. İş olarak çalışırken durdurma aracın kendi soru noktalarında da duyulur (iptal: çizim ve dosya olduğu gibi); aracın kendisi sormuyorsa araç bitince duyulur.",
       "aliases": [
         "islem",
         "process"
@@ -999682,6 +999682,10 @@
               "path": {
                 "description": "The GeoPackage's path (`.gpkg`).",
                 "type": "string"
+              },
+              "tables": {
+                "description": "Also write the tool's table outputs (a summary, a report) as attribute tables, each named by its output's\nlabel, beside the layers' tables (docs/adr/0551 §3). A tool whose result is only a table writes only that.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -999867,6 +999871,13 @@
                 "description": "`KentOS <version>`.",
                 "type": "string"
               },
+              "failed": {
+                "description": "A batch run with `onError: continue`: the rows that stopped and were taken back, in order (docs/adr/0551 §1).",
+                "items": {
+                  "$ref": "#/$defs/RecordFailure"
+                },
+                "type": "array"
+              },
               "format": {
                 "description": "Always `kentos.run-record`.",
                 "type": "string"
@@ -999996,6 +1000007,32 @@
               "ms",
               "steps",
               "total"
+            ],
+            "type": "object"
+          },
+          "RecordFailure": {
+            "description": "A row of a batch that stopped and was taken back (docs/adr/0551 §1): which row, why.",
+            "properties": {
+              "code": {
+                "description": "The refusal's code (`tool_failed`, `invalid_parameters`, …) and its message.",
+                "type": "string"
+              },
+              "id": {
+                "description": "`rows[i]`.",
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "code",
+              "message"
             ],
             "type": "object"
           },
@@ -1000309,11 +1000346,21 @@
                 ]
               },
               "layer": {
-                "description": "The layer of the copy the rows are the objects of.",
-                "type": "string"
+                "description": "The layer of the copy the rows are the objects of; none for a table output.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m": {
                 "$ref": "#/$defs/SinkDimension"
+              },
+              "output": {
+                "description": "The tool's output a table holds (`sink.tables`); none for a layer's table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "replaced": {
                 "description": "A table of the file taken out and written again (`replaceTables`).",
@@ -1000334,7 +1000381,6 @@
             },
             "required": [
               "table",
-              "layer",
               "rows",
               "z",
               "m",
@@ -1000563,6 +1000609,13 @@
                 "description": "`KentOS <version>`.",
                 "type": "string"
               },
+              "failed": {
+                "description": "A batch run with `onError: continue`: the rows that stopped and were taken back, in order (docs/adr/0551 §1).",
+                "items": {
+                  "$ref": "#/$defs/RecordFailure"
+                },
+                "type": "array"
+              },
               "format": {
                 "description": "Always `kentos.run-record`.",
                 "type": "string"
@@ -1000692,6 +1000745,32 @@
               "ms",
               "steps",
               "total"
+            ],
+            "type": "object"
+          },
+          "RecordFailure": {
+            "description": "A row of a batch that stopped and was taken back (docs/adr/0551 §1): which row, why.",
+            "properties": {
+              "code": {
+                "description": "The refusal's code (`tool_failed`, `invalid_parameters`, …) and its message.",
+                "type": "string"
+              },
+              "id": {
+                "description": "`rows[i]`.",
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "code",
+              "message"
             ],
             "type": "object"
           },
@@ -1001005,11 +1001084,21 @@
                 ]
               },
               "layer": {
-                "description": "The layer of the copy the rows are the objects of.",
-                "type": "string"
+                "description": "The layer of the copy the rows are the objects of; none for a table output.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m": {
                 "$ref": "#/$defs/SinkDimension"
+              },
+              "output": {
+                "description": "The tool's output a table holds (`sink.tables`); none for a layer's table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "replaced": {
                 "description": "A table of the file taken out and written again (`replaceTables`).",
@@ -1001030,7 +1001119,6 @@
             },
             "required": [
               "table",
-              "layer",
               "rows",
               "z",
               "m",
@@ -1001172,7 +1001260,12 @@
           "invalid_file_path",
           "file_exists",
           "file_unwritable",
-          "nothing_to_export"
+          "nothing_to_export",
+          "file_not_found",
+          "import_unreadable",
+          "crs_mismatch",
+          "table_exists",
+          "invalid_input"
         ],
         "warnings": [
           "export_losses"
@@ -1001226,7 +1001319,7 @@
       "id": "cad.processing.batch",
       "version": 1,
       "title": "İşlem aracını toplu çalıştır",
-      "summary": "İşlemler'in bir aracını ya da modelini (tool, model: kimliğiyle) bir parametre tablosunun satırlarıyla sırayla çalıştırır: her satır cad.processing.run'ın aynı aracı, aynı çalıştırıcısı, aynı retleriyle koşar; parameters bütün satırların ortak değerleridir, rows[i].parameters satırın kendi değerleri onların üstüne gelir (örnek: aynı araç birkaç girdi katmanına ya da birkaç tampon uzaklığına); selection ve view her satıra aynen verilir. Satırlar sırayla çalışır, her biri kendinden öncekilerin yazdığını görür. Bütün toplu iş tek geri alma adımıdır (adı “Toplu: <araç>”) ve ya hep ya hiç yazılır: bir satır çalışıp dururlarsa ya da satırlar arasında durdurulursa (iş olarak çalışırken) önceki satırların sonuçları geri alınır, hiçbir şey yazılmaz. En çok 500 satır. Retler sırayla: tools_unavailable, empty_batch, too_many_rows, sonra her satır için cad.processing.run'ın retleri (unknown_tool, invalid_uid, entity_not_found, invalid_parameters), yolu rows[i]. ile başlar; çalışırken batch_row_failed (satır çalıştı ve durdu ya da değerleri önceki satırların yazdıklarına artık uymuyor; ileti satırı söyler). Cevap her satırın cad.processing.run cevabı (kendi kaydıyla), toplu işin özeti ve kaydı (kind batch, adımları satırlar) ve adımın adıdır. plan aynısını çizimin okuma kopyasında çalıştırır, çizim değişmez; sink bu komutta yoktur.",
+      "summary": "İşlemler'in bir aracını ya da modelini (tool, model: kimliğiyle) bir parametre tablosunun satırlarıyla sırayla çalıştırır: her satır cad.processing.run'ın aynı aracı, aynı çalıştırıcısı, aynı retleriyle koşar; parameters bütün satırların ortak değerleridir, rows[i].parameters satırın kendi değerleri onların üstüne gelir (örnek: aynı araç birkaç girdi katmanına ya da birkaç tampon uzaklığına); selection ve view her satıra aynen verilir. Satırlar sırayla çalışır, her biri kendinden öncekilerin yazdığını görür. Bütün toplu iş tek geri alma adımıdır (adı “Toplu: <araç>”) ve varsayılan onError: stop ile ya hep ya hiç yazılır: bir satır çalışıp dururlarsa ya da durdurulursa (iş olarak çalışırken: satırlar arasında ve çalışan aracın içinde) önceki satırların sonuçları geri alınır, hiçbir şey yazılmaz. onError: continue ile çalışırken duran satır tek başına geri alınır (modelin önceki adımlarını da), öteki satırlar yazılır, yine tek adımda; duran satırlar cevabın failed listesinde (index, label, code, message) ve kaydın failed'ında, batch_rows_failed uyarısıyla söylenir; bütün satırlar durursa hiçbir şey yazılmaz, adım yoktur. Durdurma (iptal) hiçbir kipte satır hatası değildir: bütün toplu iş geri alınır. En çok 500 satır. Retler sırayla: tools_unavailable, empty_batch, too_many_rows, sonra her satır için cad.processing.run'ın retleri (unknown_tool, invalid_uid, entity_not_found, invalid_parameters), yolu rows[i]. ile başlar; çalışırken batch_row_failed (onError: stop: satır çalıştı ve durdu ya da değerleri önceki satırların yazdıklarına artık uymuyor; ileti satırı söyler); çalıştırmadan önceki retler onError: continue ile de ret kalır. Cevap her satırın cad.processing.run cevabı (kendi kaydıyla), toplu işin özeti ve kaydı (kind batch, adımları satırlar) ve adımın adıdır. plan aynısını çizimin okuma kopyasında çalıştırır, çizim değişmez; sink bu komutta yoktur.",
       "aliases": [
         "topluislem",
         "batch"
@@ -1001244,6 +1001337,21 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "BatchOnError": {
+            "description": "What a batch does when a row stops at run time (docs/adr/0551 §1).",
+            "oneOf": [
+              {
+                "const": "stop",
+                "description": "The whole batch is taken back and nothing is written (`batch_row_failed`).",
+                "type": "string"
+              },
+              {
+                "const": "continue",
+                "description": "The row that stopped is taken back alone, reported in `failed`; the other rows are written, in one undo step.",
+                "type": "string"
+              }
+            ]
+          },
           "BatchRow": {
             "description": "The values one row of a batch takes over the batch's (docs/adr/0529 §1).",
             "properties": {
@@ -1001275,6 +1001383,10 @@
               "string",
               "null"
             ]
+          },
+          "onError": {
+            "$ref": "#/$defs/BatchOnError",
+            "description": "What happens when a row stops at run time: `stop` (the default) takes the whole batch back, `continue` takes\nback only that row, writes the others and reports it in `failed` (docs/adr/0551 §1)."
           },
           "parameters": {
             "additionalProperties": true,
@@ -1001323,6 +1001435,34 @@
       },
       "output": {
         "$defs": {
+          "BatchRowFailed": {
+            "description": "A row of a batch that stopped at run time and was taken back (`onError: continue`).",
+            "properties": {
+              "code": {
+                "description": "The refusal's code and message, as the row run alone would have given them.",
+                "type": "string"
+              },
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "label": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index",
+              "label",
+              "code",
+              "message"
+            ],
+            "type": "object"
+          },
           "BatchRowRan": {
             "description": "A row of a batch as it ran.",
             "properties": {
@@ -1001547,6 +1001687,13 @@
                 "description": "`KentOS <version>`.",
                 "type": "string"
               },
+              "failed": {
+                "description": "A batch run with `onError: continue`: the rows that stopped and were taken back, in order (docs/adr/0551 §1).",
+                "items": {
+                  "$ref": "#/$defs/RecordFailure"
+                },
+                "type": "array"
+              },
               "format": {
                 "description": "Always `kentos.run-record`.",
                 "type": "string"
@@ -1001676,6 +1001823,32 @@
               "ms",
               "steps",
               "total"
+            ],
+            "type": "object"
+          },
+          "RecordFailure": {
+            "description": "A row of a batch that stopped and was taken back (docs/adr/0551 §1): which row, why.",
+            "properties": {
+              "code": {
+                "description": "The refusal's code (`tool_failed`, `invalid_parameters`, …) and its message.",
+                "type": "string"
+              },
+              "id": {
+                "description": "`rows[i]`.",
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "code",
+              "message"
             ],
             "type": "object"
           },
@@ -1001989,11 +1002162,21 @@
                 ]
               },
               "layer": {
-                "description": "The layer of the copy the rows are the objects of.",
-                "type": "string"
+                "description": "The layer of the copy the rows are the objects of; none for a table output.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m": {
                 "$ref": "#/$defs/SinkDimension"
+              },
+              "output": {
+                "description": "The tool's output a table holds (`sink.tables`); none for a layer's table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "replaced": {
                 "description": "A table of the file taken out and written again (`replaceTables`).",
@@ -1002014,7 +1002197,6 @@
             },
             "required": [
               "table",
-              "layer",
               "rows",
               "z",
               "m",
@@ -1002043,6 +1002225,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "What `cad.processing.batch` did, or with `plan` would do (on a copy of the drawing).",
         "properties": {
+          "failed": {
+            "description": "With `onError: continue`, the rows that stopped and were taken back: which, why (docs/adr/0551 §1).",
+            "items": {
+              "$ref": "#/$defs/BatchRowFailed"
+            },
+            "type": "array"
+          },
           "record": {
             "$ref": "#/$defs/ProcessingRecord",
             "description": "The batch's own record: its rows as steps."
@@ -1002051,7 +1002240,7 @@
             "type": "string"
           },
           "rows": {
-            "description": "Every row, in order, as it ran.",
+            "description": "Every row that ran, in order, as it ran (with `onError: continue`, the rows that stopped are in `failed`).",
             "items": {
               "$ref": "#/$defs/BatchRowRan"
             },
@@ -1002083,6 +1002272,34 @@
       },
       "plan": {
         "$defs": {
+          "BatchRowFailed": {
+            "description": "A row of a batch that stopped at run time and was taken back (`onError: continue`).",
+            "properties": {
+              "code": {
+                "description": "The refusal's code and message, as the row run alone would have given them.",
+                "type": "string"
+              },
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "label": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index",
+              "label",
+              "code",
+              "message"
+            ],
+            "type": "object"
+          },
           "BatchRowRan": {
             "description": "A row of a batch as it ran.",
             "properties": {
@@ -1002307,6 +1002524,13 @@
                 "description": "`KentOS <version>`.",
                 "type": "string"
               },
+              "failed": {
+                "description": "A batch run with `onError: continue`: the rows that stopped and were taken back, in order (docs/adr/0551 §1).",
+                "items": {
+                  "$ref": "#/$defs/RecordFailure"
+                },
+                "type": "array"
+              },
               "format": {
                 "description": "Always `kentos.run-record`.",
                 "type": "string"
@@ -1002436,6 +1002660,32 @@
               "ms",
               "steps",
               "total"
+            ],
+            "type": "object"
+          },
+          "RecordFailure": {
+            "description": "A row of a batch that stopped and was taken back (docs/adr/0551 §1): which row, why.",
+            "properties": {
+              "code": {
+                "description": "The refusal's code (`tool_failed`, `invalid_parameters`, …) and its message.",
+                "type": "string"
+              },
+              "id": {
+                "description": "`rows[i]`.",
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "code",
+              "message"
             ],
             "type": "object"
           },
@@ -1002749,11 +1002999,21 @@
                 ]
               },
               "layer": {
-                "description": "The layer of the copy the rows are the objects of.",
-                "type": "string"
+                "description": "The layer of the copy the rows are the objects of; none for a table output.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m": {
                 "$ref": "#/$defs/SinkDimension"
+              },
+              "output": {
+                "description": "The tool's output a table holds (`sink.tables`); none for a layer's table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "replaced": {
                 "description": "A table of the file taken out and written again (`replaceTables`).",
@@ -1002774,7 +1003034,6 @@
             },
             "required": [
               "table",
-              "layer",
               "rows",
               "z",
               "m",
@@ -1002803,6 +1003062,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "What `cad.processing.batch` did, or with `plan` would do (on a copy of the drawing).",
         "properties": {
+          "failed": {
+            "description": "With `onError: continue`, the rows that stopped and were taken back: which, why (docs/adr/0551 §1).",
+            "items": {
+              "$ref": "#/$defs/BatchRowFailed"
+            },
+            "type": "array"
+          },
           "record": {
             "$ref": "#/$defs/ProcessingRecord",
             "description": "The batch's own record: its rows as steps."
@@ -1002811,7 +1003077,7 @@
             "type": "string"
           },
           "rows": {
-            "description": "Every row, in order, as it ran.",
+            "description": "Every row that ran, in order, as it ran (with `onError: continue`, the rows that stopped are in `failed`).",
             "items": {
               "$ref": "#/$defs/BatchRowRan"
             },
@@ -1002851,6 +1003117,9 @@
           "entity_not_found",
           "invalid_parameters",
           "batch_row_failed"
+        ],
+        "warnings": [
+          "batch_rows_failed"
         ]
       },
       "examples": [
@@ -1053097,6 +1053366,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Toplu çalıştırmanın bir satırı çalışıp durdu ya da değerleri önceki satırların yazdıklarına artık uymuyor; önceki satırların sonuçları geri alındı, hiçbir şey yazılmadı. İleti satırı ve nedenini söyler."
+    },
+    {
+      "code": "batch_rows_failed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Toplu çalıştırmanın bazı satırları çalışıp durdu ve tek tek geri alındı; öteki satırlar yazıldı. Hangi satır ve neden: yanıtın failed listesi."
     },
     {
       "code": "package_left",
