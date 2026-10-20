@@ -653,9 +653,12 @@ fn command_tool(c: &Value) -> Value {
             | "file.import.sld"
             | "file.export.csv"
             | "file.export.fgb"
+            | "file.export.gml"
+            | "file.export.xyz"
             | "file.export.atlas"
             | "file.import.csv"
             | "file.import.fgb"
+            | "file.import.gml"
             // A derived dataset's file is written over with `overwrite` (docs/adr/0530).
             | "file.export.gis"
             // With `replace` it redefines the drawing's blocks of the file's names (docs/adr/0316 §3).

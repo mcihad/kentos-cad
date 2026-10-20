@@ -1045499,6 +1045499,987 @@
       ]
     },
     {
+      "id": "file.export.gml",
+      "version": 1,
+      "title": "GML dışa aktar",
+      "summary": "Katmanların (layers boşsa nesnesi olan bütün katmanların) nesnelerini tek bir GML 3.2 dosyasına yazar (OGC basit nesneler; GDAL, QGIS ve ArcGIS okur). Her katman bir nesne türüdür (adı katmanın adından, XML adına çevrilir); katmanın alanları özellik olur, boş değer xsi:nil, geometri geometryProperty'de. Geometri: Point, LineString, Polygon (exterior ve interior), MultiPoint, MultiCurve, MultiSurface, MultiGeometry; yaylar ve bileşik eğriler Curve'ün ArcString kesimi, Ring ve CompositeCurve olarak kesin; Z posList'in srsDimension'ıyla (Z'si olmayan köşe 0 yazılır, söylenir); M GML'de yok. Elips, eğri ve NURBS kirişlerle (söylenir). Projenin sistemi urn:ogc:def:crs:EPSG::kod olarak srsName'e yazılır ve koordinatlar sistemin EPSG eksen sırasında gider (TUREF TM dilimleri ve coğrafi sistemler kuzey ya da enlem önce). Dosyanın yanına alanların türlerini veren <ad>.xsd uygulama şeması yazılır (schema false ise yazılmaz). Yazı, ölçü, tablo, resim, raster ve nokta bulutu yazılmaz, türlerine göre sayılır (export_losses). Bütün yazılır ya da hiç (önce şema, sonra GML); plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "gmlout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.gml` v1: the layers' objects as one GML 3.2 file at `path`, each layer a feature type named\nas the layer (made an XML name), its fields the feature's properties, its geometry the `geometryProperty`; the\nproject's system as `srsName` with the coordinates in the order EPSG gives the system's axes (TUREF's TM zones and\nthe geographic systems north or latitude first). An application schema `<name>.xsd` is written beside it unless\n`schema` is false. Written whole or not at all (the schema first, the GML last). Refusals, in order:\n`invalid_file_path`, `file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings:\n`export_losses`.",
+        "properties": {
+          "layers": {
+            "description": "The layers, by id (a group gives its layers); empty: every layer with objects.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over the GML and its `.xsd` when they are there.",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "An absolute path ending `.gml` (or `.xml`).",
+            "type": "string"
+          },
+          "schema": {
+            "description": "Write the `.xsd` beside the file (GDAL and QGIS read the fields' types from it); absent: written.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportGml",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GmlFileWritten": {
+            "description": "A file written.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "GmlLayerWritten": {
+            "description": "A feature type written.",
+            "properties": {
+              "columns": {
+                "description": "The properties, in order, and their types as the `.xsd` names them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "features": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "geometry": {
+                "description": "The geometry property's type as GML names it (`GeometryPropertyType` for mixed types); `None` without geometry.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The drawing's layer (its id).",
+                "type": "string"
+              },
+              "name": {
+                "description": "The feature type's element name in the file.",
+                "type": "string"
+              },
+              "types": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "layer",
+              "features",
+              "columns",
+              "types",
+              "geometry"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.gml` wrote (or with `plan` would write).",
+        "properties": {
+          "features": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "files": {
+            "description": "The GML and, unless left out, its `.xsd`.",
+            "items": {
+              "$ref": "#/$defs/GmlFileWritten"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/GmlLayerWritten"
+            },
+            "type": "array"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind (a text, a dimension …).",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "lost": {
+            "description": "What the file could not hold, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "features",
+          "layers",
+          "files"
+        ],
+        "title": "GmlExported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "GmlFileWritten": {
+            "description": "A file written.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "GmlLayerWritten": {
+            "description": "A feature type written.",
+            "properties": {
+              "columns": {
+                "description": "The properties, in order, and their types as the `.xsd` names them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "features": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "geometry": {
+                "description": "The geometry property's type as GML names it (`GeometryPropertyType` for mixed types); `None` without geometry.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The drawing's layer (its id).",
+                "type": "string"
+              },
+              "name": {
+                "description": "The feature type's element name in the file.",
+                "type": "string"
+              },
+              "types": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "layer",
+              "features",
+              "columns",
+              "types",
+              "geometry"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.gml` wrote (or with `plan` would write).",
+        "properties": {
+          "features": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "files": {
+            "description": "The GML and, unless left out, its `.xsd`.",
+            "items": {
+              "$ref": "#/$defs/GmlFileWritten"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/GmlLayerWritten"
+            },
+            "type": "array"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind (a text, a dimension …).",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "lost": {
+            "description": "What the file could not hold, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "features",
+          "layers",
+          "files"
+        ],
+        "title": "GmlExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "layer_not_found",
+          "nothing_to_export",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parseller GML 3.2 olarak",
+          "input": {
+            "layers": [
+              "parsel"
+            ],
+            "overwrite": true,
+            "path": "/veri/parsel.gml"
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.import.gml",
+      "version": 1,
+      "title": "GML içe aktar",
+      "summary": "path'teki GML'in nesnelerini açık çizime alır, tek geri alma adımı (“GML: ad.gml”): her nesne çizimin nesnesi ya da geometrisiz kayıt, özellikleri öznitelikleri. GML 2, 3.1 ve 3.2 okunur (featureMember, featureMembers ve member; Point, LineString, LinearRing, Polygon, MultiPoint, MultiCurve, MultiLineString, MultiSurface, MultiPolygon, MultiGeometry, Curve'ün LineStringSegment, ArcString ve Arc kesimleri, CompositeCurve, Ring, Surface; pos, posList ve coordinates). Yaylar kesin; Z posList'in srsDimension'ından ya da pos'un sayısından. Sistem geometrinin srsName'inden (urn ve http adları EPSG'nin eksen sırasıyla, EPSG:kod doğu önce), yoksa koleksiyonun boundedBy'ından, yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. Her nesne türü (tables, boşsa hepsi) bir tablodur: layers'ın adladığı katmana, yoksa türün adındaki katmana, yoksa özellikleri alan olan yeni katmana gider (GeoPackage içe aktarmanın kuralı). Özelliklerin türleri dosyanın yanındaki .xsd'den, yoksa .gfs'den, yoksa değerlerden; xsi:nil boş değer, boş öğe boş metin. Kalıcı kimlik dosyanın adı, nesne türü ve sırasından. plan dosyayı okur, hiçbir şey yazmaz.",
+      "aliases": [
+        "gmlin"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.gml` v1: the GML at `path` taken into the drawing as one undo step “GML: ad.gml”, each\nfeature an object (or a record without a geometry), its properties its attributes. GML 2, 3.1 and 3.2 are read\n(`featureMember`, `featureMembers` and `member`; `Point`, `LineString`, `Polygon`, the multi geometries, `Curve`\nwith `ArcString` and `Arc` segments, `CompositeCurve`, `Surface`, with `pos`, `posList` and `coordinates`); a\nfeature type is a table as GeoPackage import's: onto the layer `layers` names, else onto the drawing's layer of\nthe type's name, else onto a new layer with the properties as its fields. The properties' types come from the\n`.xsd` beside the file, else from its `.gfs`, else from the values. Refusals as `file.import.gpkg`'s:\n`invalid_file_path`, `file_not_found`, `import_unreadable`, `table_not_found`, `layer_not_found`, `not_a_layer`,\n`locked_layer`, `crs_mismatch`, `entity_exists`, `nothing_to_import`. Warnings: `crs_undeclared`,\n`import_losses`.",
+        "properties": {
+          "layers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "A feature type → the drawing's layer (its id) its features go onto.",
+            "type": "object"
+          },
+          "path": {
+            "description": "An absolute path to a `.gml` (or `.xml`).",
+            "type": "string"
+          },
+          "reproject": {
+            "default": false,
+            "description": "Move coordinates in another system into the project's.",
+            "type": "boolean"
+          },
+          "srid": {
+            "description": "The system the coordinates are in when the file names none (EPSG), in east–north order.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "tables": {
+            "description": "The feature types to take (their element names); empty: every one.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ImportGml",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GpkgTableImported": {
+            "description": "A table taken.",
+            "properties": {
+              "layer": {
+                "description": "The drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "read": {
+                "description": "Rows read, objects taken (records among them), rows left out.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "read",
+              "objects",
+              "records",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.gpkg` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "description": "Whether the coordinates were moved into the project's system.",
+            "type": "boolean"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The EPSG code the tables declare, none for an undefined system.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableImported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "tables",
+          "layers",
+          "revision"
+        ],
+        "title": "GpkgImported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "GpkgTableImported": {
+            "description": "A table taken.",
+            "properties": {
+              "layer": {
+                "description": "The drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "read": {
+                "description": "Rows read, objects taken (records among them), rows left out.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "read",
+              "objects",
+              "records",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.gpkg` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "description": "Whether the coordinates were moved into the project's system.",
+            "type": "boolean"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The EPSG code the tables declare, none for an undefined system.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableImported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "tables",
+          "layers",
+          "revision"
+        ],
+        "title": "GpkgImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "table_not_found",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "crs_mismatch",
+          "entity_exists",
+          "nothing_to_import"
+        ],
+        "warnings": [
+          "crs_undeclared",
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "GDAL'ın yazdığı parseller",
+          "input": {
+            "path": "/veri/parsel.gml"
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.export.xyz",
+      "version": 1,
+      "title": "XYZ dışa aktar",
+      "summary": "Katmanların (layers boşsa nesnesi olan bütün katmanların) konumlarını X Y Z satırları olarak metin dosyasına yazar (UTF-8, LF; X doğu, Y kuzey, projenin sisteminde; GDAL'ın XYZ sürücüsü ve nokta bulutu araçları okur). vertices points (varsayılan): nokta nesnelerinin ve çok noktanın parçalarının konumu, öbür nesneler yazılmaz ve türlerine göre sayılır; all: her nesnenin her köşesi (çizgi, alanın dış ve delik halkaları; kapalı halkanın tekrarlanan son köşesi bir kez; yayın uç noktaları, orta noktası değil). Ayırıcı boşluk, virgül, noktalı virgül ya da sekme; sayılar double'a geri okunan en kısa metin, decimals verilirse o kadar basamak (0 – 15); header ilk satıra sütun adlarını yazar. Kotu olmayan konum withoutZ'ye göre 0 kotla yazılır (zero; çizimdeki konum kotsuz kalır, söylenir) ya da yazılmaz (skip). Dosya koordinat sistemi taşımaz; projenin EPSG kodu uyarıda ve cevapta söylenir. Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "xyzout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "XyzSeparator": {
+            "description": "The XYZ file's column separator.",
+            "enum": [
+              "space",
+              "comma",
+              "semicolon",
+              "tab"
+            ],
+            "type": "string"
+          },
+          "XyzVertices": {
+            "description": "Which positions an XYZ file holds.",
+            "oneOf": [
+              {
+                "const": "points",
+                "description": "The points' positions (a multi point's parts too); every other object is left out, counted.",
+                "type": "string"
+              },
+              {
+                "const": "all",
+                "description": "Every vertex of every object: the points, the vertices of lines and of areas' rings and holes (a closed\nring's repeated last vertex once), an arc's end points (not its middle point).",
+                "type": "string"
+              }
+            ]
+          },
+          "XyzWithoutZ": {
+            "description": "What a position without an elevation becomes.",
+            "oneOf": [
+              {
+                "const": "zero",
+                "description": "Written with Z 0 (the file has three columns; the drawing's position stays without an elevation).",
+                "type": "string"
+              },
+              {
+                "const": "skip",
+                "description": "Not written, counted.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.xyz` v1: the layers' positions as text lines `X Y Z` at `path` (UTF-8, LF lines; X east and Y\nnorth in the project's system, as GDAL's XYZ driver and point cloud tools read them; the file names no system, the\nanswer does). Numbers are the shortest text that reads back to the double, or `decimals` places. Written whole or\nnot at all. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_input` (`decimals` over 15),\n`layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.",
+        "properties": {
+          "decimals": {
+            "description": "Decimal places (0 to 15), fixed; absent: the shortest text that reads back to the number.",
+            "format": "uint8",
+            "maximum": 255,
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "header": {
+            "default": false,
+            "description": "A first line naming the columns (`X Y Z`).",
+            "type": "boolean"
+          },
+          "layers": {
+            "description": "The layers, by id (a group gives its layers); empty: every layer with objects.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over the file when it is there.",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "An absolute path ending `.xyz` (or `.txt`, `.csv`, `.pts`).",
+            "type": "string"
+          },
+          "separator": {
+            "$ref": "#/$defs/XyzSeparator",
+            "default": "space"
+          },
+          "vertices": {
+            "$ref": "#/$defs/XyzVertices",
+            "default": "points"
+          },
+          "withoutZ": {
+            "$ref": "#/$defs/XyzWithoutZ",
+            "default": "zero"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportXyz",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.xyz` wrote (or with `plan` would write).",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind (with points only, every object that is no point).",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "lost": {
+            "description": "What the file could not hold, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "Objects that gave at least one line.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "points": {
+            "description": "Position lines written (the header aside).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The system the numbers are in (EPSG), which the file does not name; none for a project without one.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "withZ": {
+            "description": "Lines whose elevation is the drawing's (the others have Z 0).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "points",
+          "objects",
+          "withZ",
+          "bytes",
+          "sha256"
+        ],
+        "title": "XyzExported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.xyz` wrote (or with `plan` would write).",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind (with points only, every object that is no point).",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "lost": {
+            "description": "What the file could not hold, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "Objects that gave at least one line.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "points": {
+            "description": "Position lines written (the header aside).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The system the numbers are in (EPSG), which the file does not name; none for a project without one.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "withZ": {
+            "description": "Lines whose elevation is the drawing's (the others have Z 0).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "points",
+          "objects",
+          "withZ",
+          "bytes",
+          "sha256"
+        ],
+        "title": "XyzExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "invalid_input",
+          "layer_not_found",
+          "nothing_to_export",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ölçü noktaları, üç basamakla",
+          "input": {
+            "decimals": 3,
+            "header": true,
+            "layers": [
+              "nokta"
+            ],
+            "overwrite": true,
+            "path": "/veri/noktalar.xyz"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.atlas",
       "version": 1,
       "title": "Atlası PDF yap",

@@ -4306,6 +4306,46 @@ XrefStateName = Literal["loaded", "unloaded", "missing", "changed"]
 """The names of :class:`XrefState`, for a plain string."""
 
 
+class XyzSeparator(_StrEnum):
+    """The XYZ file's column separator."""
+    SPACE = "space"
+    COMMA = "comma"
+    SEMICOLON = "semicolon"
+    TAB = "tab"
+
+
+XyzSeparatorName = Literal["space", "comma", "semicolon", "tab"]
+"""The names of :class:`XyzSeparator`, for a plain string."""
+
+
+class XyzVertices(_StrEnum):
+    """Which positions an XYZ file holds.
+
+    - ``points``: The points' positions (a multi point's parts too); every other object is left out, counted.
+    - ``all``: Every vertex of every object: the points, the vertices of lines and of areas' rings and holes (a closed
+    """
+    POINTS = "points"
+    ALL = "all"
+
+
+XyzVerticesName = Literal["points", "all"]
+"""The names of :class:`XyzVertices`, for a plain string."""
+
+
+class XyzWithoutZ(_StrEnum):
+    """What a position without an elevation becomes.
+
+    - ``zero``: Written with Z 0 (the file has three columns; the drawing's position stays without an elevation).
+    - ``skip``: Not written, counted.
+    """
+    ZERO = "zero"
+    SKIP = "skip"
+
+
+XyzWithoutZName = Literal["zero", "skip"]
+"""The names of :class:`XyzWithoutZ`, for a plain string."""
+
+
 #: A parameter's value: a number (a length, an angle in radians), a point of the definition's coordinates, a flip
 #: or a name (a visibility state, a lookup row).
 ParamValue = Union[bool, float, str, dict[str, float]]
@@ -16764,6 +16804,46 @@ class ExportGis(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportGml(_Model):
+    """Input of `file.export.gml` v1: the layers' objects as one GML 3.2 file at `path`, each layer a feature type named
+    as the layer (made an XML name), its fields the feature's properties, its geometry the `geometryProperty`; the
+    project's system as `srsName` with the coordinates in the order EPSG gives the system's axes (TUREF's TM zones and
+    the geographic systems north or latitude first). An application schema `<name>.xsd` is written beside it unless
+    `schema` is false. Written whole or not at all (the schema first, the GML last). Refusals, in order:
+    `invalid_file_path`, `file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings:
+    `export_losses`.
+    Attributes:
+        path: An absolute path ending `.gml` (or `.xml`).
+        layers: The layers, by id (a group gives its layers); empty: every layer with objects.
+        overwrite: Write over the GML and its `.xsd` when they are there.
+        schema: Write the `.xsd` beside the file (GDAL and QGIS read the fields' types from it); absent: written.
+    """
+    path: str
+    layers: list[str] | Unset = UNSET
+    overwrite: bool = False
+    schema: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        out["overwrite"] = self.overwrite
+        if self.schema is not UNSET:
+            out["schema"] = self.schema
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportGml:
+        return cls(
+            path=data["path"],
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+            schema=data.get("schema", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportGpkg(_Model):
     """Input of `file.export.gpkg` v1: the layers (all with objects when none) as tables of a new GeoPackage, each object
     a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's
@@ -16918,6 +16998,57 @@ class ExportSld(_Model):
             path=data["path"],
             layer=data["layer"],
             overwrite=data["overwrite"] if "overwrite" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExportXyz(_Model):
+    """Input of `file.export.xyz` v1: the layers' positions as text lines `X Y Z` at `path` (UTF-8, LF lines; X east and Y
+    north in the project's system, as GDAL's XYZ driver and point cloud tools read them; the file names no system, the
+    answer does). Numbers are the shortest text that reads back to the double, or `decimals` places. Written whole or
+    not at all. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_input` (`decimals` over 15),
+    `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.
+    Attributes:
+        path: An absolute path ending `.xyz` (or `.txt`, `.csv`, `.pts`).
+        decimals: Decimal places (0 to 15), fixed; absent: the shortest text that reads back to the number. Unit: count.
+        header: A first line naming the columns (`X Y Z`).
+        layers: The layers, by id (a group gives its layers); empty: every layer with objects.
+        overwrite: Write over the file when it is there.
+    """
+    path: str
+    decimals: int | None | Unset = UNSET
+    header: bool = False
+    layers: list[str] | Unset = UNSET
+    overwrite: bool = False
+    separator: XyzSeparator | XyzSeparatorName = XyzSeparator.SPACE
+    vertices: XyzVertices | XyzVerticesName = XyzVertices.POINTS
+    without_z: XyzWithoutZ | XyzWithoutZName = XyzWithoutZ.ZERO
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.decimals is not UNSET:
+            out["decimals"] = self.decimals
+        out["header"] = self.header
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        out["overwrite"] = self.overwrite
+        out["separator"] = _enum_out(self.separator)
+        out["vertices"] = _enum_out(self.vertices)
+        out["withoutZ"] = _enum_out(self.without_z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportXyz:
+        return cls(
+            path=data["path"],
+            decimals=data.get("decimals", UNSET),
+            header=data["header"] if "header" in data else False,
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+            separator=_enum_in(XyzSeparator, data["separator"]) if "separator" in data else XyzSeparator.SPACE,
+            vertices=_enum_in(XyzVertices, data["vertices"]) if "vertices" in data else XyzVertices.POINTS,
+            without_z=_enum_in(XyzWithoutZ, data["withoutZ"]) if "withoutZ" in data else XyzWithoutZ.ZERO,
         )
 
 
@@ -20038,6 +20169,111 @@ class GisTableExported(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GmlExported(_Model):
+    """What `file.export.gml` wrote (or with `plan` would write).
+    Attributes:
+        features: Unit: count.
+        files: The GML and, unless left out, its `.xsd`.
+        left: Objects not written, by kind (a text, a dimension …). Unit: count.
+        lost: What the file could not hold, a sentence each.
+    """
+    path: str
+    features: int
+    layers: list[GmlLayerWritten]
+    files: list[GmlFileWritten]
+    left: dict[str, int] | Unset = UNSET
+    lost: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["features"] = self.features
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["files"] = [e0.to_json() for e0 in self.files]
+        if self.left is not UNSET:
+            out["left"] = dict(self.left)
+        if self.lost is not UNSET:
+            out["lost"] = list(self.lost)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GmlExported:
+        return cls(
+            path=data["path"],
+            features=data["features"],
+            layers=[GmlLayerWritten.from_json(e0) for e0 in data["layers"]],
+            files=[GmlFileWritten.from_json(e0) for e0 in data["files"]],
+            left=dict(data["left"]) if "left" in data else UNSET,
+            lost=list(data["lost"]) if "lost" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GmlFileWritten(_Model):
+    """A file written.
+    Attributes:
+        bytes: Unit: bytes.
+    """
+    name: str
+    bytes: int
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GmlFileWritten:
+        return cls(
+            name=data["name"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GmlLayerWritten(_Model):
+    """A feature type written.
+    Attributes:
+        name: The feature type's element name in the file.
+        layer: The drawing's layer (its id).
+        features: Unit: count.
+        columns: The properties, in order, and their types as the `.xsd` names them.
+        geometry: The geometry property's type as GML names it (`GeometryPropertyType` for mixed types); `None` without geometry.
+    """
+    name: str
+    layer: str
+    features: int
+    columns: list[str]
+    types: list[str]
+    geometry: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["layer"] = self.layer
+        out["features"] = self.features
+        out["columns"] = list(self.columns)
+        out["types"] = list(self.types)
+        out["geometry"] = self.geometry
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GmlLayerWritten:
+        return cls(
+            name=data["name"],
+            layer=data["layer"],
+            features=data["features"],
+            columns=list(data["columns"]),
+            types=list(data["types"]),
+            geometry=data["geometry"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GpkgExported(_Model):
     """What `file.export.gpkg` wrote, or with `plan` would write.
     Attributes:
@@ -21694,6 +21930,54 @@ class ImportFgb(_Model):
             layer=data.get("layer", UNSET),
             reproject=data["reproject"] if "reproject" in data else False,
             srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportGml(_Model):
+    """Input of `file.import.gml` v1: the GML at `path` taken into the drawing as one undo step “GML: ad.gml”, each
+    feature an object (or a record without a geometry), its properties its attributes. GML 2, 3.1 and 3.2 are read
+    (`featureMember`, `featureMembers` and `member`; `Point`, `LineString`, `Polygon`, the multi geometries, `Curve`
+    with `ArcString` and `Arc` segments, `CompositeCurve`, `Surface`, with `pos`, `posList` and `coordinates`); a
+    feature type is a table as GeoPackage import's: onto the layer `layers` names, else onto the drawing's layer of
+    the type's name, else onto a new layer with the properties as its fields. The properties' types come from the
+    `.xsd` beside the file, else from its `.gfs`, else from the values. Refusals as `file.import.gpkg`'s:
+    `invalid_file_path`, `file_not_found`, `import_unreadable`, `table_not_found`, `layer_not_found`, `not_a_layer`,
+    `locked_layer`, `crs_mismatch`, `entity_exists`, `nothing_to_import`. Warnings: `crs_undeclared`,
+    `import_losses`.
+    Attributes:
+        path: An absolute path to a `.gml` (or `.xml`).
+        layers: A feature type → the drawing's layer (its id) its features go onto.
+        reproject: Move coordinates in another system into the project's.
+        srid: The system the coordinates are in when the file names none (EPSG), in east–north order. Unit: epsg.
+        tables: The feature types to take (their element names); empty: every one.
+    """
+    path: str
+    layers: dict[str, str] | Unset = UNSET
+    reproject: bool = False
+    srid: int | None | Unset = UNSET
+    tables: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.layers is not UNSET:
+            out["layers"] = dict(self.layers)
+        out["reproject"] = self.reproject
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.tables is not UNSET:
+            out["tables"] = list(self.tables)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportGml:
+        return cls(
+            path=data["path"],
+            layers=dict(data["layers"]) if "layers" in data else UNSET,
+            reproject=data["reproject"] if "reproject" in data else False,
+            srid=data.get("srid", UNSET),
+            tables=list(data["tables"]) if "tables" in data else UNSET,
         )
 
 
@@ -44296,6 +44580,59 @@ class XrefsListed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class XyzExported(_Model):
+    """What `file.export.xyz` wrote (or with `plan` would write).
+    Attributes:
+        points: Position lines written (the header aside). Unit: count.
+        objects: Objects that gave at least one line. Unit: count.
+        with_z: Lines whose elevation is the drawing's (the others have Z 0). Unit: count.
+        bytes: Unit: bytes.
+        left: Objects not written, by kind (with points only, every object that is no point). Unit: count.
+        lost: What the file could not hold, a sentence each.
+        srid: The system the numbers are in (EPSG), which the file does not name; none for a project without one. Unit: epsg.
+    """
+    path: str
+    points: int
+    objects: int
+    with_z: int
+    bytes: int
+    sha256: str
+    left: dict[str, int] | Unset = UNSET
+    lost: list[str] | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["points"] = self.points
+        out["objects"] = self.objects
+        out["withZ"] = self.with_z
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        if self.left is not UNSET:
+            out["left"] = dict(self.left)
+        if self.lost is not UNSET:
+            out["lost"] = list(self.lost)
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> XyzExported:
+        return cls(
+            path=data["path"],
+            points=data["points"],
+            objects=data["objects"],
+            with_z=data["withZ"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            left=dict(data["left"]) if "left" in data else UNSET,
+            lost=list(data["lost"]) if "lost" in data else UNSET,
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetArchOperation(ArchOperation):
     """Değiştir: the fields given, on every object named.
     Attributes:
@@ -55366,11 +55703,13 @@ __all__ = [
     "ExportDxf",
     "ExportFgb",
     "ExportGis",
+    "ExportGml",
     "ExportGpkg",
     "ExportPdf",
     "ExportReport",
     "ExportShp",
     "ExportSld",
+    "ExportXyz",
     "ExtendWallsOperation",
     "ExtensionPointConstruction",
     "ExtentSourcesEditOp",
@@ -55506,6 +55845,9 @@ __all__ = [
     "GisTableExported",
     "GisTableRole",
     "GisTableRoleName",
+    "GmlExported",
+    "GmlFileWritten",
+    "GmlLayerWritten",
     "GpkgExported",
     "GpkgImported",
     "GpkgTableExported",
@@ -55578,6 +55920,7 @@ __all__ = [
     "ImportDomainsOp",
     "ImportDxf",
     "ImportFgb",
+    "ImportGml",
     "ImportGpkg",
     "ImportPdf",
     "ImportSld",
@@ -56634,4 +56977,11 @@ __all__ = [
     "XrefsListed",
     "XrefsOperation",
     "XyCsvGeometryIn",
+    "XyzExported",
+    "XyzSeparator",
+    "XyzSeparatorName",
+    "XyzVertices",
+    "XyzVerticesName",
+    "XyzWithoutZ",
+    "XyzWithoutZName",
 ]

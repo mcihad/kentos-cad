@@ -7745,6 +7745,89 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // GML 3.2 and XYZ, out and in (docs/adr/0545).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_GML.into(),
+            version: crate::FILE_EXPORT_GML_VERSION,
+            title: "GML dışa aktar".into(),
+            summary: "Katmanların (layers boşsa nesnesi olan bütün katmanların) nesnelerini tek bir GML 3.2 dosyasına yazar (OGC basit nesneler; GDAL, QGIS ve ArcGIS okur). \
+                      Her katman bir nesne türüdür (adı katmanın adından, XML adına çevrilir); katmanın alanları özellik olur, boş değer xsi:nil, geometri geometryProperty'de. \
+                      Geometri: Point, LineString, Polygon (exterior ve interior), MultiPoint, MultiCurve, MultiSurface, MultiGeometry; yaylar ve bileşik eğriler Curve'ün ArcString kesimi, Ring ve CompositeCurve olarak kesin; Z posList'in srsDimension'ıyla (Z'si olmayan köşe 0 yazılır, söylenir); M GML'de yok. Elips, eğri ve NURBS kirişlerle (söylenir). \
+                      Projenin sistemi urn:ogc:def:crs:EPSG::kod olarak srsName'e yazılır ve koordinatlar sistemin EPSG eksen sırasında gider (TUREF TM dilimleri ve coğrafi sistemler kuzey ya da enlem önce). Dosyanın yanına alanların türlerini veren <ad>.xsd uygulama şeması yazılır (schema false ise yazılmaz). \
+                      Yazı, ölçü, tablo, resim, raster ve nokta bulutu yazılmaz, türlerine göre sayılır (export_losses). Bütün yazılır ya da hiç (önce şema, sonra GML); plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["gmlout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportGml>(),
+            output: schema::<crate::GmlExported>(),
+            plan: Some(schema::<crate::GmlExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parseller GML 3.2 olarak".into(),
+                input: json!({ "path": "/veri/parsel.gml", "layers": ["parsel"], "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_GML.into(),
+            version: crate::FILE_IMPORT_GML_VERSION,
+            title: "GML içe aktar".into(),
+            summary: "path'teki GML'in nesnelerini açık çizime alır, tek geri alma adımı (“GML: ad.gml”): her nesne çizimin nesnesi ya da geometrisiz kayıt, özellikleri öznitelikleri. \
+                      GML 2, 3.1 ve 3.2 okunur (featureMember, featureMembers ve member; Point, LineString, LinearRing, Polygon, MultiPoint, MultiCurve, MultiLineString, MultiSurface, MultiPolygon, MultiGeometry, Curve'ün LineStringSegment, ArcString ve Arc kesimleri, CompositeCurve, Ring, Surface; pos, posList ve coordinates). Yaylar kesin; Z posList'in srsDimension'ından ya da pos'un sayısından. \
+                      Sistem geometrinin srsName'inden (urn ve http adları EPSG'nin eksen sırasıyla, EPSG:kod doğu önce), yoksa koleksiyonun boundedBy'ından, yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. \
+                      Her nesne türü (tables, boşsa hepsi) bir tablodur: layers'ın adladığı katmana, yoksa türün adındaki katmana, yoksa özellikleri alan olan yeni katmana gider (GeoPackage içe aktarmanın kuralı). Özelliklerin türleri dosyanın yanındaki .xsd'den, yoksa .gfs'den, yoksa değerlerden; xsi:nil boş değer, boş öğe boş metin. Kalıcı kimlik dosyanın adı, nesne türü ve sırasından. plan dosyayı okur, hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["gmlin".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportGml>(),
+            output: schema::<crate::GpkgImported>(),
+            plan: Some(schema::<crate::GpkgImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "GDAL'ın yazdığı parseller".into(),
+                input: json!({ "path": "/veri/parsel.gml" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_XYZ.into(),
+            version: crate::FILE_EXPORT_XYZ_VERSION,
+            title: "XYZ dışa aktar".into(),
+            summary: "Katmanların (layers boşsa nesnesi olan bütün katmanların) konumlarını X Y Z satırları olarak metin dosyasına yazar (UTF-8, LF; X doğu, Y kuzey, projenin sisteminde; GDAL'ın XYZ sürücüsü ve nokta bulutu araçları okur). \
+                      vertices points (varsayılan): nokta nesnelerinin ve çok noktanın parçalarının konumu, öbür nesneler yazılmaz ve türlerine göre sayılır; all: her nesnenin her köşesi (çizgi, alanın dış ve delik halkaları; kapalı halkanın tekrarlanan son köşesi bir kez; yayın uç noktaları, orta noktası değil). \
+                      Ayırıcı boşluk, virgül, noktalı virgül ya da sekme; sayılar double'a geri okunan en kısa metin, decimals verilirse o kadar basamak (0 – 15); header ilk satıra sütun adlarını yazar. Kotu olmayan konum withoutZ'ye göre 0 kotla yazılır (zero; çizimdeki konum kotsuz kalır, söylenir) ya da yazılmaz (skip). \
+                      Dosya koordinat sistemi taşımaz; projenin EPSG kodu uyarıda ve cevapta söylenir. Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["xyzout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportXyz>(),
+            output: schema::<crate::XyzExported>(),
+            plan: Some(schema::<crate::XyzExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ölçü noktaları, üç basamakla".into(),
+                input: json!({ "path": "/veri/noktalar.xyz", "layers": ["nokta"], "decimals": 3, "header": true, "overwrite": true }),
+                output: None,
+            }],
+        },
         // The atlas of a sheet as a PDF with a page for each object (docs/adr/0534).
         CommandDescriptor {
             id: crate::FILE_EXPORT_ATLAS.into(),
@@ -8766,6 +8849,15 @@ mod tests {
                     }
                     crate::FILE_IMPORT_FGB => {
                         serde_json::from_value::<crate::ImportFgb>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_GML => {
+                        serde_json::from_value::<crate::ExportGml>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_IMPORT_GML => {
+                        serde_json::from_value::<crate::ImportGml>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_XYZ => {
+                        serde_json::from_value::<crate::ExportXyz>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_SLD => {
                         serde_json::from_value::<crate::ExportSld>(e.input.clone()).map(|_| ())

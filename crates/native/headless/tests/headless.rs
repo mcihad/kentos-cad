@@ -2040,3 +2040,260 @@ fn flatgeobufs_go_out_and_come_back() {
     assert_eq!(refused["error"]["code"], "import_unreadable", "{refused}");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+fn gml_fixture(name: &str) -> String {
+    format!("{}/../../../fixtures/gml/v1/{name}", env!("CARGO_MANIFEST_DIR"))
+}
+
+fn wgs_drawing() -> Session {
+    Session::new(&NewDrawing {
+        name: "WGS".into(),
+        srid: 4326,
+        plot_scale: 1000.0,
+        workspace: Workspace::Gis,
+        drawing_font: DrawingFont::Barlow,
+        province: None,
+        drawing_unit: None,
+    })
+    .expect("a project")
+}
+
+#[test]
+fn gmls_go_out_and_come_back() {
+    // docs/adr/0545: the GeoPackage's layers written as GML 3.2 with their schema and read back into a new drawing:
+    // the same objects, arcs exact; the whole drawing in one file with a feature type for each layer; WGS 84 with
+    // the axes latitude first. With KENTOS_WRITE_GML=1 the files go to fixtures/gml/v1/out for
+    // scripts/fixtures/gml_exchange_cases.py, which reads them with OGR; and the fixtures' GML (GDAL's) read and
+    // written again go to fixtures/gml/v1/geri.
+    let src = format!(
+        "{}/../../../fixtures/geopackage/v1/qgis.gpkg",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let mut s = new_drawing();
+    let took = s
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": src } }))
+        .expect("answers");
+    assert_eq!(took["status"], "completed", "{took}");
+    let id = |name: &str| -> String {
+        took["output"]["layers"]
+            .as_array()
+            .and_then(|ls| ls.iter().find(|l| l["name"] == name))
+            .and_then(|l| l["id"].as_str())
+            .unwrap_or_else(|| panic!("{name}"))
+            .to_owned()
+    };
+    let dir = std::env::temp_dir().join(format!("kentos-gml-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let mut written: Vec<(String, std::path::PathBuf)> = Vec::new();
+    for (name, layers) in [
+        ("parsel", vec![id("parsel")]),
+        ("yol", vec![id("yol")]),
+        ("nokta", vec![id("nokta")]),
+        ("egri", vec![id("egri")]),
+        ("egri_yol", vec![id("egri_yol")]),
+        ("hepsi", Vec::new()),
+    ] {
+        let path = dir.join(format!("kentos-{name}.gml"));
+        let planned = s
+            .call(json!({ "command": "file.export.gml", "op": "plan",
+                "input": { "path": path.display().to_string(), "layers": layers } }))
+            .expect("answers");
+        assert_eq!(planned["status"], "completed", "{planned}");
+        assert!(!path.exists(), "plan writes nothing");
+        let out = s
+            .call(json!({ "command": "file.export.gml",
+                "input": { "path": path.display().to_string(), "layers": layers } }))
+            .expect("answers");
+        assert_eq!(out["status"], "completed", "{out}");
+        assert_eq!(out["output"], planned["output"], "plan says what execute writes");
+        assert!(path.with_extension("xsd").exists(), "the schema is beside the file");
+        let mut back = new_drawing();
+        let got = back
+            .call(json!({ "command": "file.import.gml", "input": { "path": path.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(got["status"], "completed", "{got}");
+        assert_eq!(got["output"]["objects"], out["output"]["features"], "{name}: {got}");
+        if name == "hepsi" {
+            assert_eq!(
+                got["output"]["tables"].as_array().map(Vec::len),
+                Some(6),
+                "a type for each layer: {got}"
+            );
+        }
+        written.push((name.to_owned(), path));
+    }
+    // WGS 84: the axes go latitude first and come back longitude first.
+    let mut wgs = wgs_drawing();
+    let yer = format!(
+        "{}/../../../fixtures/geopackage/v1/wgs84.gpkg",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let took = wgs
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": yer } }))
+        .expect("answers");
+    assert_eq!(took["status"], "completed", "{took}");
+    let path = dir.join("kentos-yer.gml");
+    let out = wgs
+        .call(json!({ "command": "file.export.gml", "input": { "path": path.display().to_string() } }))
+        .expect("answers");
+    assert_eq!(out["status"], "completed", "{out}");
+    let text = std::fs::read_to_string(&path).expect("written");
+    assert!(text.contains("urn:ogc:def:crs:EPSG::4326"), "{text}");
+    assert!(text.contains("<gml:pos>39.9208 32.8541</gml:pos>"), "latitude first: {text}");
+    let back = wgs_drawing()
+        .call(json!({ "command": "file.import.gml", "input": { "path": path.display().to_string() } }))
+        .expect("answers");
+    assert_eq!(back["status"], "completed", "{back}");
+    written.push(("yer".to_owned(), path));
+    // The fixtures read and written again.
+    let mut redone: Vec<(String, std::path::PathBuf)> = Vec::new();
+    for entry in std::fs::read_dir(gml_fixture("")).expect("the fixtures") {
+        let p = entry.expect("an entry").path();
+        let name = p.file_name().and_then(|n| n.to_str()).unwrap_or_default().to_owned();
+        let skip = ["bozuk.gml", "xml-degil.gml", "kesik.gml", "crs84.gml", "bos.gml"];
+        if p.extension().is_none_or(|e| e != "gml") || skip.contains(&name.as_str()) {
+            continue;
+        }
+        let mut drawing = if name == "yer.gml" { wgs_drawing() } else { new_drawing() };
+        let got = drawing
+            .call(json!({ "command": "file.import.gml", "input": { "path": p.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(got["status"], "completed", "{name}: {got}");
+        let to = dir.join(format!("geri-{name}"));
+        let out = drawing
+            .call(json!({ "command": "file.export.gml", "input": { "path": to.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(out["status"], "completed", "{name}: {out}");
+        redone.push((name, to));
+    }
+    if std::env::var_os("KENTOS_WRITE_GML").is_some() {
+        let base = gml_fixture("");
+        for (sub, files) in [("out", &written), ("geri", &redone)] {
+            let to = format!("{base}{sub}");
+            std::fs::create_dir_all(&to).expect("a folder");
+            for (name, path) in files {
+                let stem = if sub == "out" {
+                    format!("kentos-{name}")
+                } else {
+                    name.trim_end_matches(".gml").to_owned()
+                };
+                std::fs::copy(path, format!("{to}/{stem}.gml")).expect("kept");
+                std::fs::copy(path.with_extension("xsd"), format!("{to}/{stem}.xsd")).expect("kept");
+            }
+        }
+    }
+    let again = s
+        .call(json!({ "command": "file.export.gml",
+            "input": { "path": written[0].1.display().to_string(), "layers": [id("parsel")] } }))
+        .expect("answers");
+    assert_eq!(again["error"]["code"], "file_exists", "{again}");
+    let noschema = dir.join("sema-yok.gml");
+    let out = s
+        .call(json!({ "command": "file.export.gml",
+            "input": { "path": noschema.display().to_string(), "layers": [id("nokta")], "schema": false } }))
+        .expect("answers");
+    assert_eq!(out["status"], "completed", "{out}");
+    assert!(!noschema.with_extension("xsd").exists(), "no schema was asked for");
+    assert!(!std::fs::read_to_string(&noschema).expect("written").contains("schemaLocation"));
+    let as_schema = dir.join("ad.xsd");
+    let refused = s
+        .call(json!({ "command": "file.export.gml", "input": { "path": as_schema.display().to_string() } }))
+        .expect("answers");
+    assert_eq!(refused["error"]["code"], "invalid_file_path", "{refused}");
+    let missing = s
+        .call(json!({ "command": "file.export.gml",
+            "input": { "path": dir.join("yok.gml").display().to_string(), "layers": ["yok"] } }))
+        .expect("answers");
+    assert_eq!(missing["error"]["code"], "layer_not_found", "{missing}");
+    let broken = dir.join("bozuk.gml");
+    std::fs::write(&broken, b"<a><b></a>").expect("written");
+    let refused = s
+        .call(json!({ "command": "file.import.gml", "input": { "path": broken.display().to_string() } }))
+        .expect("answers");
+    assert_eq!(refused["error"]["code"], "import_unreadable", "{refused}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn xyz_files_go_out() {
+    // docs/adr/0545: the GeoPackage's points and vertices as X Y Z lines. With KENTOS_WRITE_XYZ=1 the files go to
+    // fixtures/xyz/v1/out for scripts/fixtures/gml_exchange_cases.py, which makes the lines from OGR's geometries.
+    let src = format!(
+        "{}/../../../fixtures/geopackage/v1/qgis.gpkg",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let mut s = new_drawing();
+    let took = s
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": src } }))
+        .expect("answers");
+    assert_eq!(took["status"], "completed", "{took}");
+    let id = |name: &str| -> String {
+        took["output"]["layers"]
+            .as_array()
+            .and_then(|ls| ls.iter().find(|l| l["name"] == name))
+            .and_then(|l| l["id"].as_str())
+            .unwrap_or_else(|| panic!("{name}"))
+            .to_owned()
+    };
+    let dir = std::env::temp_dir().join(format!("kentos-xyz-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let cases = [
+        ("nokta", json!({ "layers": [id("nokta")] })),
+        (
+            "yol",
+            json!({ "layers": [id("yol")], "vertices": "all", "separator": "comma", "decimals": 3, "header": true }),
+        ),
+        ("parsel", json!({ "layers": [id("parsel")], "vertices": "all" })),
+        ("egri", json!({ "layers": [id("egri")], "vertices": "all", "separator": "semicolon" })),
+        ("egri_yol", json!({ "layers": [id("egri_yol")], "vertices": "all", "separator": "tab" })),
+        ("hepsi", json!({ "vertices": "all" })),
+        ("hepsi-kotlu", json!({ "vertices": "all", "withoutZ": "skip" })),
+    ];
+    let mut written = Vec::new();
+    for (name, extra) in cases {
+        let path = dir.join(format!("xyz-{name}.xyz"));
+        let mut input = extra.clone();
+        input["path"] = json!(path.display().to_string());
+        let planned = s
+            .call(json!({ "command": "file.export.xyz", "op": "plan", "input": input }))
+            .expect("answers");
+        assert_eq!(planned["status"], "completed", "{planned}");
+        assert!(!path.exists(), "plan writes nothing");
+        let out = s
+            .call(json!({ "command": "file.export.xyz", "input": input }))
+            .expect("answers");
+        assert_eq!(out["status"], "completed", "{out}");
+        assert_eq!(out["output"], planned["output"], "plan says what execute writes");
+        let text = std::fs::read_to_string(&path).expect("written");
+        let lines = text.lines().count() as u64 - u64::from(input["header"] == true);
+        assert_eq!(out["output"]["points"], lines, "{name}");
+        assert_eq!(out["output"]["srid"], 5256);
+        written.push((name, path));
+    }
+    // A layer of areas has no points: said, and what to ask for.
+    let none = s
+        .call(json!({ "command": "file.export.xyz",
+            "input": { "path": dir.join("yok.xyz").display().to_string(), "layers": [id("parsel")] } }))
+        .expect("answers");
+    assert_eq!(none["error"]["code"], "nothing_to_export", "{none}");
+    let too_many = s
+        .call(json!({ "command": "file.export.xyz",
+            "input": { "path": dir.join("cok.xyz").display().to_string(), "decimals": 16 } }))
+        .expect("answers");
+    assert_eq!(too_many["error"]["code"], "invalid_input", "{too_many}");
+    let again = s
+        .call(json!({ "command": "file.export.xyz",
+            "input": { "path": written[0].1.display().to_string(), "layers": [id("nokta")] } }))
+        .expect("answers");
+    assert_eq!(again["error"]["code"], "file_exists", "{again}");
+    if std::env::var_os("KENTOS_WRITE_XYZ").is_some() {
+        let to = format!("{}/../../../fixtures/xyz/v1/out", env!("CARGO_MANIFEST_DIR"));
+        std::fs::create_dir_all(&to).expect("a folder");
+        for (name, path) in &written {
+            std::fs::copy(path, format!("{to}/kentos-{name}.xyz")).expect("kept");
+        }
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}

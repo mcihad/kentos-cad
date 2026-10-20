@@ -1923,6 +1923,27 @@
       ],
       "note": "Pencere komutun planını gösterir, İçe aktar komutla tek adımda alır (ADR 0544)."
     },
+    "file.export.gml": {
+      "level": "semantic",
+      "via": [
+        "file.export.gml"
+      ],
+      "note": "Pencerede nesne türleri (her katman bir tür), geometri ve özellikleri, şema ve yazılmayanlar önizlenir; Dışa aktar… komutla dosyaları bütün yazar (ADR 0545)."
+    },
+    "file.import.gml": {
+      "level": "semantic",
+      "via": [
+        "file.import.gml"
+      ],
+      "note": "Pencere komutun planını gösterir, İçe aktar komutla tek adımda alır (ADR 0545)."
+    },
+    "file.export.xyz": {
+      "level": "semantic",
+      "via": [
+        "file.export.xyz"
+      ],
+      "note": "Pencerede seçimler komutun girdisidir, satır sayısı ve yazılmayanlar komutun planından; Dışa aktar… komutla dosyayı bütün yazar (ADR 0545)."
+    },
     "file.export.csv": {
       "level": "semantic",
       "via": [

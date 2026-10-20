@@ -60,7 +60,7 @@ use kentos_native_application::{
     arrays_edit, changeset, constraints_edit, constraints_query, parameters_edit, create, curves_edit, dimensions_create, divide, drawing_audit,
     entities_boundary, entities_break, entities_cleanup, entities_copy, entities_explode,
     entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
-    entities_reverse, file_import, file_import_csv, file_import_fgb, file_import_gpkg, file_import_pdf, gis_derivation, sld, stretch,
+    entities_reverse, file_import, file_import_csv, file_import_fgb, file_import_gml, file_import_gpkg, file_import_pdf, gis_derivation, sld, stretch,
 };
 use kentos_native_application::{
     block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
@@ -2178,6 +2178,13 @@ impl Input for kentos_commands::ImportCsv {
     }
 }
 
+impl Input for kentos_commands::ImportGml {
+    /// No number: a path, feature types and layers.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::ImportFgb {
     /// No number: a path and a layer.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -3258,6 +3265,9 @@ fn run_op(
         }
         kentos_commands::FILE_IMPORT_FGB => {
             run!(file_import_fgb, kentos_commands::ImportFgb)
+        }
+        kentos_commands::FILE_IMPORT_GML => {
+            run!(file_import_gml, kentos_commands::ImportGml)
         }
         kentos_commands::CAD_GIS_DERIVATION => {
             run!(gis_derivation, kentos_commands::GisDerivation)
