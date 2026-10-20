@@ -46,7 +46,12 @@ async fn a_job_is_asked_run_and_downloaded_over_http() {
         "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
     let (status, _, body) = send(
         &router,
-        json_req("POST", &format!("/v1/tenants/{tenant}/projects"), &ayse, create),
+        json_req(
+            "POST",
+            &format!("/v1/tenants/{tenant}/projects"),
+            &ayse,
+            create,
+        ),
     )
     .await;
     assert_eq!(status, StatusCode::CREATED);
@@ -59,19 +64,41 @@ async fn a_job_is_asked_run_and_downloaded_over_http() {
         json_req("POST", &format!("{base}/jobs"), &ayse, ask.clone()),
     )
     .await;
-    assert_eq!(status, StatusCode::CREATED, "{}", String::from_utf8_lossy(&body));
+    assert_eq!(
+        status,
+        StatusCode::CREATED,
+        "{}",
+        String::from_utf8_lossy(&body)
+    );
     let job: ServerJob = serde_json::from_slice(&body).unwrap();
     assert_eq!(job.state, ServerJobState::Queued);
-    let (_, _, body) = send(&router, json_req("POST", &format!("{base}/jobs"), &ayse, ask)).await;
-    assert_eq!(serde_json::from_slice::<ServerJob>(&body).unwrap().id, job.id);
+    let (_, _, body) = send(
+        &router,
+        json_req("POST", &format!("{base}/jobs"), &ayse, ask),
+    )
+    .await;
+    assert_eq!(
+        serde_json::from_slice::<ServerJob>(&body).unwrap().id,
+        job.id
+    );
     let bad = serde_json::json!({ "kind": "yok", "requestId": "istek-2" });
-    let (status, _, _) = send(&router, json_req("POST", &format!("{base}/jobs"), &ayse, bad)).await;
+    let (status, _, _) = send(
+        &router,
+        json_req("POST", &format!("{base}/jobs"), &ayse, bad),
+    )
+    .await;
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
 
-    jobs::work_once(&db.app, &store, uuid::Uuid::now_v7(), std::time::Duration::from_secs(30))
-        .await
-        .unwrap()
-        .expect("a job ran");
+    jobs::work_once(
+        &db.app,
+        &store,
+        uuid::Uuid::now_v7(),
+        std::time::Duration::from_secs(30),
+        &Default::default(),
+    )
+    .await
+    .unwrap()
+    .expect("a job ran");
     let one = format!("{base}/jobs/{}", job.id);
     let (_, _, body) = send(&router, get(&one, &ayse)).await;
     let done: ServerJob = serde_json::from_slice(&body).unwrap();
@@ -79,21 +106,65 @@ async fn a_job_is_asked_run_and_downloaded_over_http() {
     let artifact = done.artifact.unwrap();
     let (status, headers, body) = send(&router, get(&format!("{one}/artifact"), &ayse)).await;
     assert_eq!(status, StatusCode::OK);
-    let digest: String = Sha256::digest(&body).iter().map(|b| format!("{b:02x}")).collect();
+    let digest: String = Sha256::digest(&body)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
     assert_eq!(digest, artifact.sha256);
     assert_eq!(kentos_kcad::decode(&body).unwrap().name, "Ada 3");
-    assert_eq!(headers["x-kentos-revision"].to_str().unwrap(), done.base_revision);
+    assert_eq!(
+        headers["x-kentos-revision"].to_str().unwrap(),
+        done.base_revision
+    );
+    // A download cut short goes on from where it stopped (`Range: bytes=N-`): the rest comes with 206, the same
+    // entity tag, and the two parts make the file; a start past the end is refused.
+    let cut = body.len() / 3;
+    let mut ranged = get(&format!("{one}/artifact"), &ayse);
+    ranged.headers_mut().insert(
+        axum::http::header::RANGE,
+        format!("bytes={cut}-").parse().unwrap(),
+    );
+    let (status, part_headers, rest) = send(&router, ranged).await;
+    assert_eq!(status, StatusCode::PARTIAL_CONTENT);
+    assert_eq!(part_headers["etag"], headers["etag"]);
+    assert_eq!(
+        part_headers["content-range"].to_str().unwrap(),
+        format!("bytes {cut}-{}/{}", body.len() - 1, body.len())
+    );
+    assert_eq!([&body[..cut], &rest[..]].concat(), body);
+    let mut past = get(&format!("{one}/artifact"), &ayse);
+    past.headers_mut().insert(
+        axum::http::header::RANGE,
+        format!("bytes={}-", body.len()).parse().unwrap(),
+    );
+    let (status, _, _) = send(&router, past).await;
+    assert_eq!(status, StatusCode::RANGE_NOT_SATISFIABLE);
     let (_, _, body) = send(&router, get(&format!("{base}/jobs"), &ayse)).await;
-    assert_eq!(serde_json::from_slice::<ServerJobList>(&body).unwrap().jobs.len(), 1);
+    assert_eq!(
+        serde_json::from_slice::<ServerJobList>(&body)
+            .unwrap()
+            .jobs
+            .len(),
+        1
+    );
 
     // A queued job cancelled; its file is not there to download.
     let ask = serde_json::json!({ "kind": "project.export", "requestId": "istek-3" });
-    let (_, _, body) = send(&router, json_req("POST", &format!("{base}/jobs"), &ayse, ask)).await;
+    let (_, _, body) = send(
+        &router,
+        json_req("POST", &format!("{base}/jobs"), &ayse, ask),
+    )
+    .await;
     let queued: ServerJob = serde_json::from_slice(&body).unwrap();
     let path = format!("{base}/jobs/{}", queued.id);
     let (status, _, body) = send(
         &router,
-        json_req("POST", &format!("{path}/cancel"), &ayse, serde_json::json!({})),
+        json_req(
+            "POST",
+            &format!("{path}/cancel"),
+            &ayse,
+            serde_json::json!({}),
+        ),
     )
     .await;
     assert_eq!(status, StatusCode::OK, "{}", String::from_utf8_lossy(&body));
@@ -107,10 +178,17 @@ async fn a_job_is_asked_run_and_downloaded_over_http() {
     // Someone of another organisation finds nothing, as for no project.
     let missing = not_found_body(
         &router,
-        get(&format!("/v1/tenants/{tenant}/projects/{}", uuid::Uuid::now_v7()), &can),
+        get(
+            &format!("/v1/tenants/{tenant}/projects/{}", uuid::Uuid::now_v7()),
+            &can,
+        ),
     )
     .await;
-    for uri in [format!("{base}/jobs"), one.clone(), format!("{one}/artifact")] {
+    for uri in [
+        format!("{base}/jobs"),
+        one.clone(),
+        format!("{one}/artifact"),
+    ] {
         assert_eq!(not_found_body(&router, get(&uri, &can)).await, missing);
     }
     db.close().await;

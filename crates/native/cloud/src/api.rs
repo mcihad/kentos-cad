@@ -22,7 +22,8 @@ use kentos_contracts::{
     ApiError, AuthConfig, BlockList, CatalogSort, CatalogView, CommandEnvelope, EventPage,
     FeaturePage, FileRevisions, FileUpload, FileUploadBegin, Health, LoginRequest, Me,
     ProjectAccessList, ProjectCheckpoints, ProjectCreate, ProjectDetails, ProjectInfo,
-    ProjectInvitations, ProjectPage, ProjectType, ShareCandidates,
+    ProjectInvitations, ProjectPage, ProjectType, ServerJob, ServerJobCreate, ServerJobList,
+    ShareCandidates,
 };
 use reqwest::header::{self, HeaderMap};
 use reqwest::{Method, RequestBuilder, Response, Url};
@@ -857,6 +858,75 @@ impl Cloud {
     ) -> impl Future<Output = Result<Download, ApiFailure>> + Send + 'static {
         self.call(move |inner| async move {
             let url = inner.project_url(tenant, project, &format!("/checkpoints/{checkpoint}"))?;
+            inner.download(url, progress, true).await
+        })
+    }
+
+    /// A project's server jobs, newest first (`GET …/jobs`, docs/adr/0542, 0547).
+    pub fn server_jobs(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+    ) -> impl Future<Output = Result<ServerJobList, ApiFailure>> + Send + 'static {
+        self.get(self.inner.project_url(tenant, project, "/jobs"))
+    }
+
+    /// One server job (`GET …/jobs/{job}`).
+    pub fn server_job(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+        job: Uuid,
+    ) -> impl Future<Output = Result<ServerJob, ApiFailure>> + Send + 'static {
+        self.get(
+            self.inner
+                .project_url(tenant, project, &format!("/jobs/{job}")),
+        )
+    }
+
+    /// Asks the server for a job (`POST …/jobs`): the same request id sent again gives the same job, so a request
+    /// whose answer was lost is sent again with its id and never makes a second job.
+    pub fn create_server_job(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+        asked: ServerJobCreate,
+    ) -> impl Future<Output = Result<ServerJob, ApiFailure>> + Send + 'static {
+        self.call(move |inner| async move {
+            let url = inner.project_url(tenant, project, "/jobs")?;
+            let b = Inner::json_body(inner.request(Method::POST, url, TIMEOUT), &asked)?;
+            inner.json(b, TIMEOUT).await
+        })
+    }
+
+    /// Stops a job (`POST …/jobs/{job}/cancel`): a queued one at once, a running one at its worker's next beat.
+    pub fn cancel_server_job(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+        job: Uuid,
+    ) -> impl Future<Output = Result<ServerJob, ApiFailure>> + Send + 'static {
+        self.call(move |inner| async move {
+            let url = inner.project_url(tenant, project, &format!("/jobs/{job}/cancel"))?;
+            let b = Inner::json_body(
+                inner.request(Method::POST, url, TIMEOUT),
+                &serde_json::json!({}),
+            )?;
+            inner.json(b, TIMEOUT).await
+        })
+    }
+
+    /// A succeeded export's file (`GET …/jobs/{job}/artifact`), checked against its SHA-256. It never changes, so a
+    /// download cut short goes on from where it stopped (`Range`, docs/adr/0045, 0547).
+    pub fn server_job_artifact(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+        job: Uuid,
+        progress: Option<Progress>,
+    ) -> impl Future<Output = Result<Download, ApiFailure>> + Send + 'static {
+        self.call(move |inner| async move {
+            let url = inner.project_url(tenant, project, &format!("/jobs/{job}/artifact"))?;
             inner.download(url, progress, true).await
         })
     }

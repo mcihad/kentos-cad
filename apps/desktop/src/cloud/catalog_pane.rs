@@ -118,7 +118,12 @@ impl App {
             };
             body = body.push(
                 column![
-                    row![tab(tabs[0], Tab::Info), tab(tabs[1], Tab::History)].spacing(2),
+                    row![
+                        tab(tabs[0], Tab::Info),
+                        tab(tabs[1], Tab::History),
+                        tab("Sunucu işleri", Tab::Jobs)
+                    ]
+                    .spacing(2),
                     horizontal_divider(),
                 ]
                 .spacing(0),
@@ -126,6 +131,10 @@ impl App {
         }
         if plan.tabs.is_some() && c.tab == Tab::History {
             for part in self.history_tab(p) {
+                body = body.push(part);
+            }
+        } else if plan.tabs.is_some() && c.tab == Tab::Jobs {
+            for part in self.jobs_tab(p) {
                 body = body.push(part);
             }
         } else {

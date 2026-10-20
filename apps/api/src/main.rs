@@ -65,7 +65,7 @@ async fn prune_events(db: Db, keep: Duration) {
 const CLEAN_FIRST: Duration = Duration::from_secs(120);
 const CLEAN_EVERY: Duration = Duration::from_secs(3600);
 
-async fn clean_store(db: Db, blobs: kentos_application::blobs::Blobs) {
+async fn clean_store(db: Db, blobs: kentos_application::blobs::Blobs, job_retention: Duration) {
     let mut every =
         tokio::time::interval_at(tokio::time::Instant::now() + CLEAN_FIRST, CLEAN_EVERY);
     every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
@@ -86,8 +86,23 @@ async fn clean_store(db: Db, blobs: kentos_application::blobs::Blobs) {
                 tracing::warn!(error = ?e, "dosya deposu temizlenemedi; bir sonraki turda yeniden denenecek")
             }
         }
+        // Finished server jobs and their artifacts past the retention (docs/adr/0547).
+        match kentos_application::job_upkeep::expire(&db, &blobs, job_retention, JOB_EXPIRE_BATCH).await {
+            Ok(done) if done != Default::default() => tracing::info!(
+                is = done.jobs,
+                sonuc_dosyasi = done.objects,
+                "süresi dolan sunucu işleri silindi"
+            ),
+            Ok(_) => {}
+            Err(e) => {
+                tracing::warn!(error = ?e, "eski sunucu işleri silinemedi; bir sonraki turda yeniden denenecek")
+            }
+        }
     }
 }
+
+/// Finished jobs removed at a time by the retention sweep.
+const JOB_EXPIRE_BATCH: i32 = 200;
 
 /// Projects whose time in the trash is over are removed for good (docs/adr/0028) a
 /// minute and a half after the start, then every hour, this many at a time.
@@ -175,8 +190,8 @@ async fn serve(config: Config) -> Result<(), String> {
     if let Some(db) = &database {
         tokio::spawn(prune_events(db.clone(), config.event_retention));
         tokio::spawn(purge_trash(db.clone()));
-        tokio::spawn(clean_store(db.clone(), blobs.clone()));
-        spawn_workers(db, &blobs, config.workers);
+        tokio::spawn(clean_store(db.clone(), blobs.clone(), config.job_retention));
+        spawn_workers(db, &blobs, config.workers, config.job_limits);
     }
     let state = AppState {
         config: Arc::new(config),
@@ -202,7 +217,12 @@ const WORKER_LEASE: Duration = Duration::from_secs(60);
 const WORKER_IDLE: Duration = Duration::from_secs(2);
 
 /// Server-job workers (docs/adr/0542): each claims, runs and finishes one job at a time.
-fn spawn_workers(db: &Db, blobs: &kentos_application::blobs::Blobs, count: u32) -> Vec<tokio::task::JoinHandle<()>> {
+fn spawn_workers(
+    db: &Db,
+    blobs: &kentos_application::blobs::Blobs,
+    count: u32,
+    limits: kentos_application::jobs::JobLimits,
+) -> Vec<tokio::task::JoinHandle<()>> {
     (0..count)
         .map(|_| {
             let owner = uuid::Uuid::now_v7();
@@ -212,6 +232,7 @@ fn spawn_workers(db: &Db, blobs: &kentos_application::blobs::Blobs, count: u32) 
                 owner,
                 WORKER_LEASE,
                 WORKER_IDLE,
+                limits,
                 Arc::new(std::sync::atomic::AtomicBool::new(false)),
                 move |done| match done {
                     Ok(w) => tracing::info!(worker = %owner, job = %w.job, state = ?w.state, "sunucu işi bitti"),
@@ -235,7 +256,7 @@ async fn worker(config: Config) -> Result<(), String> {
         return Err("Veritabanının şeması bu sürümün değil: `kentosd migrate` çalıştırın.".into());
     }
     let blobs = kentos_application::blobs::Blobs::new(&config.blob_dir);
-    let handles = spawn_workers(&db, &blobs, config.workers.max(1));
+    let handles = spawn_workers(&db, &blobs, config.workers.max(1), config.job_limits);
     println!("KentOS sunucu işleri: {} çalışan", handles.len());
     shutdown().await;
     Ok(())
