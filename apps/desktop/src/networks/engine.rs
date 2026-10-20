@@ -34,7 +34,7 @@ pub enum Job {
     Build {
         network: String,
         name: String,
-        rules: Rules,
+        rules: Box<Rules>,
         edges: Vec<EdgeIn>,
         junctions: Vec<JunctionIn>,
         turns: Vec<TurnIn>,
@@ -94,7 +94,7 @@ fn run(jobs: mpsc::Receiver<Job>) {
                 done,
             } => {
                 let t0 = Instant::now();
-                let (graph, report) = Graph::build_with(rules, &edges, &junctions, &turns);
+                let (graph, report) = Graph::build_with(*rules, &edges, &junctions, &turns);
                 let session = NetworkSession::new(graph, report, skipped);
                 let built = Built {
                     network: network.clone(),

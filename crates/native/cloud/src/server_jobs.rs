@@ -8,7 +8,8 @@
 use std::time::Duration;
 
 use kentos_contracts::{
-    CheckpointCreate, PROJECT_CHECKPOINT_JOB, PROJECT_EXPORT_JOB, ProjectExportInput,
+    CheckpointCreate, PROJECT_CHECKPOINT_JOB, PROJECT_EXPORT_JOB, PROJECT_PROCESSING_JOB,
+    ProcessingJobInput, ProcessingJobMode, ProcessingJobResult, ProjectExportInput,
     ProjectPermission, ProjectState, ProjectStorage, ServerJob, ServerJobCreate, ServerJobState,
 };
 use uuid::Uuid;
@@ -51,9 +52,32 @@ pub fn checkpoint_request(request_id: &str, name: &str, note: Option<&str>) -> S
     }
 }
 
+/// The request for an İşlemler tool run as a job on the server (docs/adr/0559): `input` names the tool, its values, the
+/// objects and the box as `cad.processing.run` takes them, and says whether the result goes to the project or to a file.
+pub fn processing_request(request_id: &str, input: &ProcessingJobInput) -> ServerJobCreate {
+    ServerJobCreate {
+        kind: PROJECT_PROCESSING_JOB.to_owned(),
+        input: serde_json::to_value(input).unwrap_or_default(),
+        request_id: request_id.to_owned(),
+        timeout_seconds: None,
+    }
+}
+
 /// What a job is, in a row's first line.
 pub fn kind_label(job: &ServerJob) -> String {
     match job.kind.as_str() {
+        PROJECT_PROCESSING_JOB => {
+            let name = job.input["label"]
+                .as_str()
+                .filter(|l| !l.trim().is_empty())
+                .or_else(|| job.input["tool"].as_str())
+                .unwrap_or_default();
+            if job.input["mode"].as_str() == Some("sink") {
+                format!("İşlem (dosyaya): {name}")
+            } else {
+                format!("İşlem: {name}")
+            }
+        }
         PROJECT_EXPORT_JOB => "Projeyi dışa aktar (.kcad)".to_owned(),
         PROJECT_CHECKPOINT_JOB => {
             let name = job.input["name"].as_str().unwrap_or_default();
@@ -78,11 +102,15 @@ pub fn state_label(state: ServerJobState) -> &'static str {
     }
 }
 
-/// How far a running job is, as “%40”; none while it waits or after it ended.
+/// How far a running job is, as “%40”, with the words its worker says (“%40 · Araç çalışıyor”) when it said some
+/// (docs/adr/0559 §3); none while it waits or after it ended.
 pub fn progress_text(job: &ServerJob) -> Option<String> {
     (job.state == ServerJobState::Running).then(|| {
         let percent = (job.progress.clamp(0.0, 1.0) * 100.0).round();
-        format!("%{percent:.0}")
+        match job.progress_text.as_deref().map(str::trim) {
+            Some(words) if !words.is_empty() => format!("%{percent:.0} · {words}"),
+            _ => format!("%{percent:.0}"),
+        }
     })
 }
 
@@ -106,6 +134,15 @@ pub fn failure_text(job: &ServerJob) -> Option<String> {
         }
         "too_large" => {
             " Sunucu yöneticisi dosya boyu sınırını yükseltmedikçe bu proje dışa aktarılamaz."
+        }
+        // `cpu_limit`, `memory_limit`, `memory_estimate`, `unsupported_change` and `too_many_changes` come with their
+        // own advice in the server's message (docs/adr/0559); the words here add to the ones that do not.
+        "tool_failed" => " Araç çalıştı ve durdu; projeye hiçbir şey yazılmadı. Değerleri ve seçimi gözden geçirip yeniden isteyin.",
+        "tool_unavailable" => {
+            " Sunucu bu aracı çalıştıramıyor; aracı bilgisayarınızda çalıştırın ya da sunucu yöneticisine bildirin."
+        }
+        "crashed" => {
+            " Aracı çalıştıran işlem beklenmedik biçimde sonlandı; projeye hiçbir şey yazılmadı. Sürerse sunucu yöneticisine bildirin."
         }
         _ => "",
     };
@@ -150,6 +187,32 @@ pub fn why_not_export(
     }
     if !permissions.contains(&ProjectPermission::Download) {
         return Some(missing(ProjectPermission::Download, "indirme"));
+    }
+    None
+}
+
+/// Why the account may not run a tool on the server here (`project.jobs.run`, which the editor's role holds with
+/// the right to write objects; a database project that is not in the trash), or none (docs/adr/0559 §5). The server
+/// decides; this only keeps a button honest.
+pub fn why_not_processing(
+    permissions: &[ProjectPermission],
+    storage: ProjectStorage,
+    state: ProjectState,
+) -> Option<String> {
+    if state == ProjectState::Trashed {
+        return Some("Çöp kutusundaki projede iş istenmez.".to_owned());
+    }
+    if state == ProjectState::Archived {
+        return Some("Arşivdeki projede iş istenmez; önce arşivden çıkarın.".to_owned());
+    }
+    if storage == ProjectStorage::File {
+        return Some(
+            "Dosya olarak saklanan projede araçlar bu bilgisayarda çalışır; sunucuda çalıştırmak için projeyi veritabanı projesine çevirin."
+                .to_owned(),
+        );
+    }
+    if !permissions.contains(&ProjectPermission::JobsRun) {
+        return Some(missing(ProjectPermission::JobsRun, "sunucu işi isteme"));
     }
     None
 }
@@ -199,8 +262,14 @@ pub fn why_not_download(job: &ServerJob, permissions: &[ProjectPermission]) -> O
 /// The file name a job's download is offered under: the server's, without its `.kcad` (the save window adds it).
 pub fn download_name(job: &ServerJob) -> String {
     let name = job.artifact.as_ref().map_or("proje", |a| a.name.as_str());
-    let base = name.strip_suffix(".kcad").unwrap_or(name);
-    let revision = job.result.as_ref().and_then(|r| r["revision"].as_str());
+    let base = name
+        .strip_suffix(".kcad")
+        .or_else(|| name.strip_suffix(".gpkg"))
+        .unwrap_or(name);
+    let revision = job
+        .result
+        .as_ref()
+        .and_then(|r| r["revision"].as_str().or_else(|| r["baseRevision"].as_str()));
     match revision {
         Some(r) => format!("{base} (veri revizyonu {r})"),
         None => base.to_owned(),
@@ -211,6 +280,9 @@ pub fn download_name(job: &ServerJob) -> String {
 pub fn result_text(job: &ServerJob) -> Option<String> {
     if job.state != ServerJobState::Succeeded {
         return None;
+    }
+    if job.kind == PROJECT_PROCESSING_JOB {
+        return processing_text(job);
     }
     if let Some(a) = &job.artifact {
         let bytes: f64 = a.size.parse().unwrap_or(0.0);
@@ -229,6 +301,55 @@ pub fn result_text(job: &ServerJob) -> Option<String> {
         let name = r["checkpoint"]["name"].as_str()?;
         Some(format!("“{name}” kontrol noktası oluşturuldu"))
     })
+}
+
+/// The line under a succeeded processing job (docs/adr/0559 §2): what the tool said, what it wrote and where, and what it
+/// took.
+fn processing_text(job: &ServerJob) -> Option<String> {
+    let result: ProcessingJobResult = serde_json::from_value(job.result.clone()?).ok()?;
+    let mut parts: Vec<String> = Vec::new();
+    if !result.summary.trim().is_empty() {
+        parts.push(result.summary.trim().to_owned());
+    }
+    match result.mode {
+        ProcessingJobMode::Commit => {
+            let mut counts = Vec::new();
+            for (n, word) in [
+                (result.added, "eklendi"),
+                (result.changed, "değişti"),
+                (result.removed, "silindi"),
+            ] {
+                if n > 0 {
+                    counts.push(format!("{n} nesne {word}"));
+                }
+            }
+            if result.metadata {
+                counts.push("katmanlar ya da ayarlar güncellendi".to_owned());
+            }
+            if counts.is_empty() {
+                counts.push("projede değişen bir şey olmadı".to_owned());
+            }
+            parts.push(counts.join(", "));
+            if let Some(r) = &result.revision {
+                parts.push(format!("veri revizyonu {r}"));
+            }
+        }
+        ProcessingJobMode::Sink => {
+            if let Some(a) = &job.artifact {
+                let bytes: f64 = a.size.parse().unwrap_or(0.0);
+                parts.push(format!("{} · {} satır", size_text(bytes), result.added));
+            }
+            parts.push("projeye yazılmadı".to_owned());
+        }
+    }
+    if result.usage.cpu_seconds > 0.0 || result.usage.peak_memory_mb > 0.0 {
+        parts.push(format!(
+            "işlemci {} sn, bellek {} MB",
+            format!("{:.1}", result.usage.cpu_seconds).replace('.', ","),
+            result.usage.peak_memory_mb.round()
+        ));
+    }
+    Some(parts.join(" · "))
 }
 
 /// “1,6 KB”, “3,2 MB”: a size the way the rest of the catalog says it (decimal comma, 1 024 steps).
@@ -262,6 +383,7 @@ mod tests {
             base_revision: "3".to_owned(),
             state,
             progress: 0.4,
+            progress_text: None,
             attempts: 1,
             max_attempts: 3,
             timeout_seconds: 600,
@@ -307,6 +429,135 @@ mod tests {
         j.input = json!({ "name": "Teslim" });
         assert_eq!(kind_label(&j), "Kontrol noktası: Teslim");
         assert_eq!(state_label(ServerJobState::Cancelled), "Durduruldu");
+    }
+
+    #[test]
+    fn a_processing_request_is_the_tools_run_as_the_command_takes_it() {
+        let input = ProcessingJobInput {
+            tool: "geometry.buffer".into(),
+            label: Some("Tampon".into()),
+            selection: vec!["0199aaaa-0000-7000-8000-000000000001".into()],
+            mode: ProcessingJobMode::Sink,
+            ..ProcessingJobInput::default()
+        };
+        let r = processing_request("desktop-1", &input);
+        assert_eq!(r.kind, "project.processing");
+        assert_eq!(r.request_id, "desktop-1");
+        assert_eq!(
+            r.input,
+            json!({ "tool": "geometry.buffer", "label": "Tampon", "selection": ["0199aaaa-0000-7000-8000-000000000001"], "mode": "sink" })
+        );
+        let back: ProcessingJobInput = serde_json::from_value(r.input).unwrap();
+        assert_eq!(back, input);
+    }
+
+    #[test]
+    fn a_processing_job_is_worded_by_its_tool_its_progress_and_its_result() {
+        let mut j = job(ServerJobState::Running);
+        j.kind = PROJECT_PROCESSING_JOB.to_owned();
+        j.input = json!({ "tool": "geometry.buffer", "label": "Tampon" });
+        assert_eq!(kind_label(&j), "İşlem: Tampon");
+        j.input = json!({ "tool": "geometry.buffer", "mode": "sink" });
+        assert_eq!(kind_label(&j), "İşlem (dosyaya): geometry.buffer");
+        assert_eq!(progress_text(&j).as_deref(), Some("%40"));
+        j.progress_text = Some("Araç çalışıyor: Tampon".into());
+        assert_eq!(
+            progress_text(&j).as_deref(),
+            Some("%40 · Araç çalışıyor: Tampon")
+        );
+        j.progress_text = Some("  ".into());
+        assert_eq!(progress_text(&j).as_deref(), Some("%40"));
+        // A succeeded one in the project.
+        j.state = ServerJobState::Succeeded;
+        j.input = json!({ "tool": "geometry.buffer", "label": "Tampon" });
+        j.result = Some(json!({
+            "tool": "geometry.buffer", "mode": "commit", "baseRevision": "3", "revision": "4",
+            "summary": "12 tampon yapıldı", "added": 12, "changed": 0, "removed": 0, "metadata": true,
+            "usage": { "cpuSeconds": 1.25, "peakMemoryMb": 240.4 }
+        }));
+        assert_eq!(
+            result_text(&j).as_deref(),
+            Some("12 tampon yapıldı · 12 nesne eklendi, katmanlar ya da ayarlar güncellendi · veri revizyonu 4 · işlemci 1,2 sn, bellek 240 MB")
+        );
+        // A succeeded one to a file.
+        j.input = json!({ "tool": "geometry.buffer", "mode": "sink" });
+        j.artifact = Some(ServerJobArtifact {
+            size: "20480".into(),
+            sha256: "0".repeat(64),
+            name: "Ada 3 - Tampon.gpkg".into(),
+        });
+        j.result = Some(json!({
+            "tool": "geometry.buffer", "mode": "sink", "baseRevision": "3", "summary": "5 tampon",
+            "added": 5, "changed": 0, "removed": 0, "usage": { "cpuSeconds": 0.0, "peakMemoryMb": 0.0 }
+        }));
+        assert_eq!(
+            result_text(&j).as_deref(),
+            Some("5 tampon · 20,0 KB · 5 satır · projeye yazılmadı")
+        );
+        assert_eq!(download_name(&j), "Ada 3 - Tampon (veri revizyonu 3)");
+        // A tool that changed nothing says so.
+        j.artifact = None;
+        j.result = Some(json!({
+            "tool": "x", "mode": "commit", "baseRevision": "3", "revision": "4", "summary": "",
+            "added": 0, "changed": 0, "removed": 0, "usage": { "cpuSeconds": 0.0, "peakMemoryMb": 0.0 }
+        }));
+        assert_eq!(
+            result_text(&j).as_deref(),
+            Some("projede değişen bir şey olmadı · veri revizyonu 4")
+        );
+    }
+
+    #[test]
+    fn the_processing_codes_have_an_advice_and_a_button_says_why_it_may_not() {
+        let mut j = job(ServerJobState::Failed);
+        for code in ["tool_failed", "tool_unavailable", "crashed"] {
+            j.error = Some(ServerJobError {
+                code: code.into(),
+                message: "Söz.".into(),
+            });
+            let text = failure_text(&j).unwrap();
+            assert!(text.starts_with("Söz. ") && text.len() > 30, "{code}: {text}");
+        }
+        // The codes whose message says what to do are the server's words alone.
+        for code in [
+            "cpu_limit",
+            "memory_limit",
+            "memory_estimate",
+            "unsupported_change",
+            "too_many_changes",
+        ] {
+            j.error = Some(ServerJobError {
+                code: code.into(),
+                message: "Söz.".into(),
+            });
+            assert_eq!(failure_text(&j).as_deref(), Some("Söz."), "{code}");
+        }
+        use ProjectPermission::*;
+        let db = ProjectStorage::Database;
+        assert_eq!(
+            why_not_processing(&[Read, FeatureWrite, JobsRun], db, ProjectState::Active),
+            None
+        );
+        assert!(
+            why_not_processing(&[Read, Download], db, ProjectState::Active)
+                .unwrap()
+                .contains("project.jobs.run")
+        );
+        assert!(
+            why_not_processing(&[JobsRun], ProjectStorage::File, ProjectState::Active)
+                .unwrap()
+                .contains("Dosya olarak")
+        );
+        assert!(
+            why_not_processing(&[JobsRun], db, ProjectState::Trashed)
+                .unwrap()
+                .contains("Çöp")
+        );
+        assert!(
+            why_not_processing(&[JobsRun], db, ProjectState::Archived)
+                .unwrap()
+                .contains("Arşiv")
+        );
     }
 
     #[test]

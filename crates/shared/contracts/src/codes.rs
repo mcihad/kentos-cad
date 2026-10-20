@@ -507,6 +507,12 @@ codes! {
     INVALID_NETWORK = "invalid_network", Failed, false, "Ağ ya da onunla projenin ağları kurallarına uymuyor.";
     /// `remove` of a network the project does not have.
     UNKNOWN_NETWORK = "unknown_network", Failed, false, "Projede bu kimlikte ağ yok.";
+    /// A subnetworks command on a network that defines none (docs/adr/0557).
+    NO_SUBNETWORKS = "no_subnetworks", Failed, false, "Ağın alt ağları tanımlı değil; Ağlar penceresinde Alt ağlar bölümünü yazın.";
+    /// A subnetworks command on a network with no source in the drawing (docs/adr/0557).
+    NO_CONTROLLERS = "no_controllers", Failed, false, "Ağın çizimde Kaynak düğümü yok; alt ağ denetleyicisi bulunamadı.";
+    /// A layer left as it is by Alt ağları güncelle: locked, or typed without the attribute's field (docs/adr/0557).
+    SUBNETWORK_LAYER_SKIPPED = "subnetwork_layer_skipped", Warning, false, "Bir katmanın nesnelerine alt ağ adı yazılmadı (kilitli ya da özniteliğin alanı yok).";
     /// A warning: a network or a locator names a layer the drawing does not have.
     UNKNOWN_LAYER = "unknown_layer", Warning, false, "Tanım çizimde olmayan bir katmanı adlıyor.";
     /// `set` without a locator.

@@ -65,6 +65,21 @@ def periods_of(text):
     return out
 
 
+def device_of(row):
+    """A device row as typed: `yg: Yüksek gerilim; ag` (an id, its name after a colon) and `yg, ag; yg, c` (the paths)."""
+    terminals = []
+    for t in (x.strip() for x in row["terminals"].split(";")):
+        if not t:
+            continue
+        if ":" in t:
+            i, n = t.split(":", 1)
+            terminals.append({"id": i.strip(), "name": n.strip()})
+        else:
+            terminals.append({"id": t, "name": t})
+    paths = [[v.strip() for v in p.split(",") if v.strip()] for p in row["paths"].split(";")]
+    return {"layer": row["layer"], "terminals": terminals, "paths": [p for p in paths if p]}
+
+
 def def_of(form, unit):
     """The network a form writes, or the form's own words."""
     name = form["name"].strip()
@@ -114,6 +129,18 @@ def def_of(form, unit):
         levels = {"start": start, "end": end, **({"inside": inside} if inside else {})}
     elif start or end or inside:
         return {"problem": f"{who} seviyesi için başlangıç ve bitiş alanı birlikte yazılır."}
+    # Terminals and subnetworks (docs/adr/0557): a device's terminals as `id: name; id`, its paths as `a, b; a, c`.
+    t_start, t_end = form.get("terminalStart", "").strip(), form.get("terminalEnd", "").strip()
+    devices = form.get("devices", [])
+    terminals = None
+    if t_start and t_end:
+        terminals = {"start": t_start, "end": t_end, "devices": [device_of(d) for d in devices]}
+    elif t_start or t_end or devices:
+        return {"problem": f"{who} terminalleri için başlangıç ve bitiş alanı birlikte yazılır."}
+    subnetworks = None
+    if form.get("subnetReach"):
+        subnetworks = {"attribute": form.get("subnetAttribute", "").strip() or "Alt ağ", "reach": form["subnetReach"],
+                       **({"name": form["subnetName"].strip()} if form.get("subnetName", "").strip() else {})}
 
     d = {"id": form["id"], "name": name, "kind": form["kind"], "edges": [{"layer": e["layer"], **opt("filter", e["filter"])} for e in form["edges"]]}
     if form["junctions"]:
@@ -132,6 +159,10 @@ def def_of(form, unit):
         d["turns"] = turns
     if levels is not None:
         d["levels"] = levels
+    if terminals is not None:
+        d["terminals"] = terminals
+    if subnetworks is not None:
+        d["subnetworks"] = subnetworks
     return d
 
 
@@ -186,6 +217,17 @@ def cases():
     add("dönüş gecikmesi sayı değil", form(uTurns="allowed", left="çok"))
     add("seviyeler: üç alan", form(levelStart=" z_bas ", levelEnd="z_son", levelInside="z_orta"))
     add("seviyenin yalnız başlangıcı", form(levelStart="z_bas"))
+    # Terminals and subnetworks (docs/adr/0557).
+    water = dict(id="ag-2", name="İçme suyu", kind="utility", direction="digitized",
+                 junctions=[{"layer": "vana", "role": "valve", "filter": "", "closed": ""}, {"layer": "depo", "role": "source", "filter": "", "closed": ""}])
+    add("terminaller: kimlik ve ad, yollar; boşluklar kırpılır", form(**water, terminalStart=" uc_bas ", terminalEnd="uc_son",
+        devices=[{"layer": "vana", "terminals": " giris: Giriş ; cikis :Çıkış ;", "paths": " giris , cikis ;; "}]))
+    add("terminaller: yalnız kimlik adı da olur", form(**water, terminalStart="uc_bas", terminalEnd="uc_son",
+        devices=[{"layer": "vana", "terminals": "a; b; c", "paths": "a, b; b, c"}]))
+    add("terminaller: yalnız başlangıç alanı", form(**water, terminalStart="uc_bas"))
+    add("terminaller: cihaz var, alanlar yok", form(**water, devices=[{"layer": "vana", "terminals": "a; b", "paths": "a, b"}]))
+    add("alt ağlar: akış aşağı, adı alanı, öznitelik kırpılır", form(**water, subnetReach="downstream", subnetName=" Ad ", subnetAttribute=" Alt ağ "))
+    add("alt ağlar: öznitelik boşsa Alt ağ, adı alanı boşsa yok", form(**water, subnetReach="connected"))
     return out
 
 

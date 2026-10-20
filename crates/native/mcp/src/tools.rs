@@ -595,6 +595,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.service"
             // Its remove takes a network's definition away (docs/adr/0209 §11).
             | "cad.network.define"
+            // It overwrites the attribute's values and takes them away from what no subnetwork reaches (docs/adr/0557 §2).
+            | "cad.subnetworks.update"
             // Its remove takes address data's definition away (docs/adr/0229 §14).
             | "cad.addresses.define"
             // Without a time it takes a layer's away; apply removes a scenario's
@@ -704,7 +706,7 @@ fn command_tool(c: &Value) -> Value {
         "inputSchema": schema,
         // They write nothing: the points, the curves, the snaps and the selections are their answers (docs/adr/0270,
         // 0289, 0272, 0275).
-        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate" | "cad.sources.describe" | "cad.records.page" | "cad.crs.transform" | "cad.stac.search" | "cad.labels.report" | "cad.profiles.check" | "cad.profiles.list"), destructive),
+        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate" | "cad.sources.describe" | "cad.records.page" | "cad.crs.transform" | "cad.stac.search" | "cad.labels.report" | "cad.profiles.check" | "cad.profiles.list" | "cad.subnetworks.find"), destructive),
     })
 }
 

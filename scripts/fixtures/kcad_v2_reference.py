@@ -1036,6 +1036,30 @@ def network_levels(l_):
     return cmap(fields(l_, {"start": (text, True), "end": (text, True), "inside": (text, False)}, "seviyeler"))
 
 
+# Schema 93 (docs/adr/0557): a network's terminals (the edge fields, the devices with their terminals and paths) and
+# subnetworks (the name field, the attribute written, the way a controller reaches).
+SUBNETWORK_REACHES = ("downstream", "connected")
+
+
+def device_terminal(t):
+    return cmap(fields(t, {"id": (text, True), "name": (text, True)}, "terminal"))
+
+
+def terminal_device(d):
+    table = {"layer": (text, True), "terminals": (nonempty(device_terminal), True), "paths": (nonempty(nonempty(text)), True)}
+    return cmap(fields(d, table, "cihaz"))
+
+
+def network_terminals(t):
+    table = {"start": (text, True), "end": (text, True), "devices": (nonempty(terminal_device), True)}
+    return cmap(fields(t, table, "terminaller"))
+
+
+def network_subnetworks(s_):
+    table = {"name": (text, False), "attribute": (text, True), "reach": (enum(SUBNETWORK_REACHES), True)}
+    return cmap(fields(s_, table, "alt ağlar"))
+
+
 def network(n):
     table = {
         "id": (text, True),
@@ -1050,6 +1074,8 @@ def network(n):
         "closed": (text, False),
         "turns": (network_turns, False),
         "levels": (network_levels, False),
+        "terminals": (network_terminals, False),
+        "subnetworks": (network_subnetworks, False),
     }
     return cmap(fields(n, table, f"ağ {n.get('id')}"))
 
@@ -2141,6 +2167,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 93 (docs/adr/0557): a network's terminals or subnetworks.
+    if any("terminals" in n or "subnetworks" in n for n in (settings or {}).get("networks", [])):
+        return 93
     # Schema 92 (docs/adr/0553 §1): a base's field records.
     if any("fields" in b for b in (settings or {}).get("sourceBases", [])):
         return 92
@@ -2696,7 +2725,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-93.kcad"] = container(root(cmap(parts), version=uint(93)))
+    files["schema-version-94.kcad"] = container(root(cmap(parts), version=uint(94)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3593,6 +3622,30 @@ def broken(minimal_content, minimal_file):
     files["network-periods-on-field-cost.kcad"] = networked(
         [net(costs=array([cost(name="Ücret", kind="field", periods=array([period(420, 570, factor=f64(0.5))]))]))], schema=87)
 
+    # A network's terminals and subnetworks are schema 93's (docs/adr/0557): in schema 92 unknown fields; every rule of
+    # the contract's broken one at a time.
+    device = lambda **d: cmap({"layer": text("vana"), "terminals": array([cmap({"id": text("giris"), "name": text("Giriş")}), cmap({"id": text("cikis"), "name": text("Çıkış")})]),  # noqa: E731
+                               "paths": array([array([text("giris"), text("cikis")])]), **d})
+    terminalled = lambda dev=None, **t: cmap({"start": text("uc_bas"), "end": text("uc_son"), "devices": array([dev or device()]), **t})  # noqa: E731
+    on_valve = lambda **extra: net(kind=text("utility"), junctions=array([cmap({"layer": text("vana"), "role": text("valve")}), cmap({"layer": text("depo"), "role": text("source")})]), **extra)  # noqa: E731
+    subnet = lambda **x: cmap({"attribute": text("Alt ağ"), "reach": text("downstream"), **x})  # noqa: E731
+    files["network-terminals-in-schema-92.kcad"] = networked([on_valve(terminals=terminalled())], schema=92)
+    files["network-subnetworks-in-schema-92.kcad"] = networked([on_valve(subnetworks=subnet())], schema=92)
+    files["network-terminals-same-field.kcad"] = networked([on_valve(terminals=terminalled(end=text("uc_bas")))], schema=93)
+    files["network-terminals-no-devices.kcad"] = networked([on_valve(terminals=cmap({"start": text("uc_bas"), "end": text("uc_son"), "devices": array([])}))], schema=93)
+    files["network-terminals-layer-not-junction.kcad"] = networked([on_valve(terminals=terminalled(device(layer=text("yok"))))], schema=93)
+    files["network-terminals-one-terminal.kcad"] = networked([on_valve(terminals=terminalled(device(terminals=array([cmap({"id": text("giris"), "name": text("Giriş")})]))))], schema=93)
+    files["network-terminals-bad-id.kcad"] = networked([on_valve(terminals=terminalled(device(terminals=array([cmap({"id": text("Giriş"), "name": text("Giriş")}), cmap({"id": text("cikis"), "name": text("Çıkış")})]))))], schema=93)
+    files["network-terminals-twice.kcad"] = networked([on_valve(terminals=terminalled(device(terminals=array([cmap({"id": text("giris"), "name": text("Giriş")}), cmap({"id": text("cikis"), "name": text("GİRİŞ")})]))))], schema=93)
+    files["network-terminals-no-paths.kcad"] = networked([on_valve(terminals=terminalled(device(paths=array([]))))], schema=93)
+    files["network-terminals-path-short.kcad"] = networked([on_valve(terminals=terminalled(device(paths=array([array([text("giris")])]))))], schema=93)
+    files["network-terminals-path-unknown.kcad"] = networked([on_valve(terminals=terminalled(device(paths=array([array([text("giris"), text("yok")])]))))], schema=93)
+    files["network-terminals-unknown-field.kcad"] = networked([on_valve(terminals=terminalled(slow=text("?")))], schema=93)
+    files["network-subnetworks-no-source.kcad"] = networked([net(kind=text("utility"), junctions=array([cmap({"layer": text("vana"), "role": text("valve")})]), subnetworks=subnet())], schema=93)
+    files["network-subnetworks-attribute-blank.kcad"] = networked([on_valve(subnetworks=subnet(attribute=text(" ")))], schema=93)
+    files["network-subnetworks-unknown-reach.kcad"] = networked([on_valve(subnetworks=subnet(reach=text("upstream")))], schema=93)
+    files["network-subnetworks-over-a-read-field.kcad"] = networked([on_valve(subnetworks=subnet(name=text("Ad"), attribute=text("Ad")))], schema=93)
+
     # The project's address data is schema 42's (docs/adr/0229 §2): in schema 41 an unknown field; every rule of the
     # contract's `address_locators_problem` broken one at a time; an empty list, an empty area list and a field's empty
     # name refused as such.
@@ -4060,6 +4113,7 @@ def build():
     out["services.kcad"] = container(document(load("services.json")))
     out["networks.kcad"] = container(document(load("networks.json")))
     out["network-turns.kcad"] = container(document(load("network-turns.json")))
+    out["network-terminals.kcad"] = container(document(load("network-terminals.json")))
     out["scenarios.kcad"] = container(document(load("scenarios.json")))
     out["filters.kcad"] = container(document(load("filters.json")))
     out["labels.kcad"] = container(document(load("labels.json")))

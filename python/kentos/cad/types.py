@@ -3916,6 +3916,20 @@ StyleEditOperationName = Literal["create", "update", "rename", "remove", "export
 """The names of :class:`StyleEditOperation`, for a plain string."""
 
 
+class SubnetworkReach(_StrEnum):
+    """Which way a subnetwork reaches from its controller (docs/adr/0557 §2).
+
+    - ``downstream``: Akış aşağı: the way the edges' directions lead.
+    - ``connected``: Bağlı: along every connection, any way.
+    """
+    DOWNSTREAM = "downstream"
+    CONNECTED = "connected"
+
+
+SubnetworkReachName = Literal["downstream", "connected"]
+"""The names of :class:`SubnetworkReach`, for a plain string."""
+
+
 class SyncDirection(_StrEnum):
     """Which way a sync goes.
 
@@ -12454,6 +12468,26 @@ class DerivationTable(_Model):
             tolerance=float(data["tolerance"]),
             max_deviation=float(data["maxDeviation"]),
             layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeviceTerminal(_Model):
+    """A terminal: its id (lower-case letters, digits and hyphens) and its name (what the tools say)."""
+    id: str
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeviceTerminal:
+        return cls(
+            id=data["id"],
+            name=data["name"],
         )
 
 
@@ -28681,6 +28715,10 @@ class NetworkDef(_Model):
         junctions: The point layers whose points are junctions, sources or valves.
         levels: Seviyeler (docs/adr/0521 §3): which ends and insides of the edges connect, by their level fields; none: every
             one at one level.
+        subnetworks: Alt ağlar (docs/adr/0557 §2): the parts the sources feed, found by `cad.subnetworks.find` and written into an
+            attribute by `cad.subnetworks.update`. None: the network has no subnetworks.
+        terminals: Terminaller (docs/adr/0557 §1): the ends of a device (a valve's in and out, a transformer's two sides) and which
+            of them connect through it; a trace goes through a device only along those paths. None: a device is a point.
         turns: Dönüşler (docs/adr/0521 §2): forbidden turns, U-turns and turn delays; none: every turn free.
     """
     id: str
@@ -28694,6 +28732,8 @@ class NetworkDef(_Model):
     costs: list[NetworkCost] | Unset = UNSET
     junctions: list[JunctionLayer] | Unset = UNSET
     levels: NetworkLevels | None | Unset = UNSET
+    subnetworks: NetworkSubnetworks | None | Unset = UNSET
+    terminals: NetworkTerminals | None | Unset = UNSET
     turns: NetworkTurns | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -28713,6 +28753,10 @@ class NetworkDef(_Model):
             out["junctions"] = [e0.to_json() for e0 in self.junctions]
         if self.levels is not UNSET:
             out["levels"] = None if self.levels is None else self.levels.to_json()
+        if self.subnetworks is not UNSET:
+            out["subnetworks"] = None if self.subnetworks is None else self.subnetworks.to_json()
+        if self.terminals is not UNSET:
+            out["terminals"] = None if self.terminals is None else self.terminals.to_json()
         if self.turns is not UNSET:
             out["turns"] = None if self.turns is None else self.turns.to_json()
         return out
@@ -28731,6 +28775,8 @@ class NetworkDef(_Model):
             costs=[NetworkCost.from_json(e0) for e0 in data["costs"]] if "costs" in data else UNSET,
             junctions=[JunctionLayer.from_json(e0) for e0 in data["junctions"]] if "junctions" in data else UNSET,
             levels=UNSET if "levels" not in data else None if data["levels"] is None else NetworkLevels.from_json(data["levels"]),
+            subnetworks=UNSET if "subnetworks" not in data else None if data["subnetworks"] is None else NetworkSubnetworks.from_json(data["subnetworks"]),
+            terminals=UNSET if "terminals" not in data else None if data["terminals"] is None else NetworkTerminals.from_json(data["terminals"]),
             turns=UNSET if "turns" not in data else None if data["turns"] is None else NetworkTurns.from_json(data["turns"]),
         )
 
@@ -28883,6 +28929,65 @@ class NetworkPeriod(_Model):
             to=data["to"],
             factor=UNSET if "factor" not in data else None if data["factor"] is None else float(data["factor"]),
             field=data.get("field", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkSubnetworks(_Model):
+    """A network's subnetworks (docs/adr/0557 §2): its sources are the subnetwork controllers; a subnetwork is what a
+    controller reaches (not past another controller, a closed junction or a closed edge).
+    Attributes:
+        attribute: The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined
+            with `; ` where it is in more than one; taken away where it is in none.
+        name: The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.
+    """
+    attribute: str
+    reach: SubnetworkReach | SubnetworkReachName
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["attribute"] = self.attribute
+        out["reach"] = _enum_out(self.reach)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkSubnetworks:
+        return cls(
+            attribute=data["attribute"],
+            reach=_enum_in(SubnetworkReach, data["reach"]),
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkTerminals(_Model):
+    """The terminals of a network's devices (docs/adr/0557 §1): the edge fields naming the terminal an edge's start and
+    its end are attached to, and the devices.
+    Attributes:
+        start: The edge attribute whose value (a terminal's id or name) is the terminal its start is attached to.
+        end: The same for its end.
+        devices: The devices: 1–16, each a junction layer of the network.
+    """
+    start: str
+    end: str
+    devices: list[TerminalDevice]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["start"] = self.start
+        out["end"] = self.end
+        out["devices"] = [e0.to_json() for e0 in self.devices]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkTerminals:
+        return cls(
+            start=data["start"],
+            end=data["end"],
+            devices=[TerminalDevice.from_json(e0) for e0 in data["devices"]],
         )
 
 
@@ -42732,6 +42837,249 @@ class SubRef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class Subnetwork(_Model):
+    """A subnetwork: one name, the controllers that carry it (the same name is one subnetwork), and what they reach.
+    Attributes:
+        controllers: The controllers' persistent ids, in the drawing's order.
+        edges: Edge objects reached, and junction objects reached (the controllers included). Unit: count.
+        junctions: Unit: count.
+        length: The length of the network's pieces reached. Unit: length.
+        unverified: Connection problems of the network's check (near misses, crossings, …) that touch what it reached: a subnetwork
+            over them is not one to rely on (docs/adr/0525 §2). Unit: count.
+        members: With `members`: the objects' persistent ids (edges, then junctions), at most 1000.
+    """
+    name: str
+    controllers: list[str]
+    edges: int
+    junctions: int
+    length: float
+    unverified: int
+    members: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["controllers"] = list(self.controllers)
+        out["edges"] = self.edges
+        out["junctions"] = self.junctions
+        out["length"] = float(self.length)
+        out["unverified"] = self.unverified
+        if self.members is not UNSET:
+            out["members"] = list(self.members)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Subnetwork:
+        return cls(
+            name=data["name"],
+            controllers=list(data["controllers"]),
+            edges=data["edges"],
+            junctions=data["junctions"],
+            length=float(data["length"]),
+            unverified=data["unverified"],
+            members=list(data["members"]) if "members" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SubnetworkObjects(_Model):
+    """A group of the network's objects: how many, and the first persistent ids (at most 1000).
+    Attributes:
+        count: Unit: count.
+    """
+    count: int
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["count"] = self.count
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SubnetworkObjects:
+        return cls(
+            count=data["count"],
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SubnetworkStale(_Model):
+    """What the attribute holds that the subnetworks do not say: an object's stored value against the one the network's
+    subnetworks give it.
+    Attributes:
+        changed: The object has a value that is not its subnetworks' names (another name, or one of several).
+        missing: The object is in a subnetwork and has no value.
+        left_over: The object is in no subnetwork and has a value.
+    """
+    changed: SubnetworkObjects
+    missing: SubnetworkObjects
+    left_over: SubnetworkObjects
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed.to_json()
+        out["missing"] = self.missing.to_json()
+        out["leftOver"] = self.left_over.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SubnetworkStale:
+        return cls(
+            changed=SubnetworkObjects.from_json(data["changed"]),
+            missing=SubnetworkObjects.from_json(data["missing"]),
+            left_over=SubnetworkObjects.from_json(data["leftOver"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SubnetworksFind(_Model):
+    """Input of `cad.subnetworks.find` v1.
+
+    Refusals (`CommandError.code`): `unknown_network` (the project has no network of that id), `no_subnetworks` (the
+    network defines no subnetworks), `no_controllers` (it has no source in the drawing).
+    Attributes:
+        network: The network's id.
+        members: Also name each subnetwork's objects (their persistent ids, at most 1000 each).
+    """
+    network: str
+    members: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["network"] = self.network
+        if self.members is not UNSET:
+            out["members"] = self.members
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SubnetworksFind:
+        return cls(
+            network=data["network"],
+            members=data.get("members", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SubnetworksFound(_Model):
+    """Input's answer: the network's subnetworks and what the attribute says of them.
+    Attributes:
+        network: The network's id.
+        controllers: Controllers in the drawing: the network's source junctions. Unit: count.
+        subnetworks: The subnetworks in the order their first controller comes in the drawing.
+        orphans: Objects of the network no controller reaches.
+        shared: Objects two or more controllers of different names reach (they hold both names).
+        stale: The attribute against what the subnetworks say. All empty: it is up to date.
+    """
+    network: str
+    attribute: str
+    reach: SubnetworkReach | SubnetworkReachName
+    controllers: int
+    subnetworks: list[Subnetwork]
+    orphans: SubnetworkObjects
+    shared: SubnetworkObjects
+    stale: SubnetworkStale
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["network"] = self.network
+        out["attribute"] = self.attribute
+        out["reach"] = _enum_out(self.reach)
+        out["controllers"] = self.controllers
+        out["subnetworks"] = [e0.to_json() for e0 in self.subnetworks]
+        out["orphans"] = self.orphans.to_json()
+        out["shared"] = self.shared.to_json()
+        out["stale"] = self.stale.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SubnetworksFound:
+        return cls(
+            network=data["network"],
+            attribute=data["attribute"],
+            reach=_enum_in(SubnetworkReach, data["reach"]),
+            controllers=data["controllers"],
+            subnetworks=[Subnetwork.from_json(e0) for e0 in data["subnetworks"]],
+            orphans=SubnetworkObjects.from_json(data["orphans"]),
+            shared=SubnetworkObjects.from_json(data["shared"]),
+            stale=SubnetworkStale.from_json(data["stale"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SubnetworksUpdate(_Model):
+    """Input of `cad.subnetworks.update` v1: writes the network's attribute for its subnetworks (what
+    `cad.subnetworks.find` reports) on every object of the network, in one undo step “Alt ağları güncelle”.
+
+    Refusals, in order: `unknown_network`, `no_subnetworks`, `no_controllers`; then `invalid_revision` and
+    `revision_conflict` (status `conflict`). Layers locked, or typed without the attribute's field, are left as they
+    are and said (`subnetwork_layer_skipped`); a value the attribute's field refuses is left and said
+    (`values_skipped`). With `plan`, nothing is written.
+    Attributes:
+        network: The network's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    network: str
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["network"] = self.network
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SubnetworksUpdate:
+        return cls(
+            network=data["network"],
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SubnetworksUpdated(_Model):
+    """What `cad.subnetworks.update` wrote, or with `plan` would write.
+    Attributes:
+        found: What `cad.subnetworks.find` says before the write (its `stale` says what the write changes); its `revision` is
+            the output's.
+        written: Objects whose value is written, and objects left as they are (locked layer, a typed layer without the field, a
+            value its field refuses). Unit: count.
+        skipped: Unit: count.
+        cleared: Unit: count.
+    """
+    found: SubnetworksFound
+    written: int
+    skipped: int
+    cleared: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["found"] = self.found.to_json()
+        out["written"] = self.written
+        out["skipped"] = self.skipped
+        out["cleared"] = self.cleared
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SubnetworksUpdated:
+        return cls(
+            found=SubnetworksFound.from_json(data["found"]),
+            written=data["written"],
+            skipped=data["skipped"],
+            cleared=data["cleared"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class Subtype(_Model):
     """One subtype: a code of the subtype field's list, its label, and what it narrows.
     Attributes:
@@ -43885,6 +44233,36 @@ class TemplatesApply(_Model):
             name=data["name"],
             expected_revision=data.get("expectedRevision", UNSET),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerminalDevice(_Model):
+    """A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals
+    goes on through the device only to a terminal on a path with it; an edge that names none (or one the device does
+    not have) passes to every terminal and the trace is said to be unverified.
+    Attributes:
+        layer: A junction layer of the network (its id).
+        terminals: 2–8 terminals.
+        paths: 1–16 paths: each the ids of two or more terminals connected to one another through the device.
+    """
+    layer: str
+    terminals: list[DeviceTerminal]
+    paths: list[list[str]]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["terminals"] = [e0.to_json() for e0 in self.terminals]
+        out["paths"] = [list(e0) for e0 in self.paths]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerminalDevice:
+        return cls(
+            layer=data["layer"],
+            terminals=[DeviceTerminal.from_json(e0) for e0 in data["terminals"]],
+            paths=[list(e0) for e0 in data["paths"]],
         )
 
 
@@ -58247,6 +58625,7 @@ __all__ = [
     "DetachViewMarksOperation",
     "DetachXrefsOperation",
     "DeviationExplodeDensity",
+    "DeviceTerminal",
     "DiameterConstraintRule",
     "DiameterDimensionMeasure",
     "DigitizedNetworkDirection",
@@ -58911,6 +59290,8 @@ __all__ = [
     "NetworkLayer",
     "NetworkLevels",
     "NetworkPeriod",
+    "NetworkSubnetworks",
+    "NetworkTerminals",
     "NetworkTurns",
     "NetworkUTurns",
     "NetworkUTurnsName",
@@ -59516,6 +59897,15 @@ __all__ = [
     "StylesImpact",
     "SubPlace",
     "SubRef",
+    "Subnetwork",
+    "SubnetworkObjects",
+    "SubnetworkReach",
+    "SubnetworkReachName",
+    "SubnetworkStale",
+    "SubnetworksFind",
+    "SubnetworksFound",
+    "SubnetworksUpdate",
+    "SubnetworksUpdated",
     "Subtype",
     "SubtypeField",
     "SurveySettings",
@@ -59568,6 +59958,7 @@ __all__ = [
     "TemplatesApply",
     "TenantKind",
     "TenantKindName",
+    "TerminalDevice",
     "TextAlign",
     "TextAlignName",
     "TextColumns",

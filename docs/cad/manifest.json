@@ -4133,6 +4133,23 @@
    "tests": 1
   },
   {
+   "id": "network.subnetworks",
+   "kind": "command",
+   "title": "Alt ağlar…",
+   "level": "semantic",
+   "via": [
+    "cad.subnetworks.find",
+    "cad.subnetworks.update"
+   ],
+   "operation": null,
+   "python": "kentos.cad.subnetworks.find, kentos.cad.subnetworks.update",
+   "mcp": "cad.subnetworks.find, cad.subnetworks.update",
+   "note": "Alt ağlar cad.subnetworks.find'ın cevabı, Güncelle'nin önizlemesi cad.subnetworks.update'in planı (ADR 0557).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "point.editor",
    "kind": "command",
    "title": "Nokta editörü",

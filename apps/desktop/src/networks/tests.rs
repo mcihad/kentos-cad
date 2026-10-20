@@ -160,6 +160,11 @@ fn screens() {
         "serit",
         "donusler",
         "iz-abone",
+        "terminaller",
+        "terminal-iz",
+        "alt-aglar",
+        "alt-aglar-guncel",
+        "alt-aglar-serit",
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
@@ -170,10 +175,11 @@ fn screens() {
                 {
                     continue;
                 }
-                let mut app = if name == "iz-abone" {
-                    subscribers_app()
-                } else {
-                    app()
+                let mut app = match name {
+                    "iz-abone" => subscribers_app(),
+                    "terminaller" | "terminal-iz" | "alt-aglar" | "alt-aglar-guncel"
+                    | "alt-aglar-serit" => super::terminal_tests::electric_app(),
+                    _ => app(),
                 };
                 let _ = app
                     .settings
@@ -213,6 +219,27 @@ fn screens() {
                             kentos_geometry_core::ops::network::TraceKind::Isolation;
                         send(&mut app, Message::Run("tool.netTrace"));
                         click_at(&mut app, [150.0, 50.0]);
+                    }
+                    // docs/adr/0557: Ağlar' Terminaller and Alt ağlar sections; a trace through the transformer along its
+                    // path only (the pipe on the ort terminal stays out); Alt ağlar before and after Güncelle; the ribbon.
+                    "terminaller" => {
+                        send(&mut app, Message::Run("network.manage"));
+                    }
+                    "terminal-iz" => {
+                        send(&mut app, Message::Run("tool.netTrace"));
+                        click_at(&mut app, [50.0, 0.0]);
+                    }
+                    "alt-aglar" | "alt-aglar-guncel" => {
+                        send(&mut app, Message::Run("network.subnetworks"));
+                        if name == "alt-aglar-guncel" {
+                            send(
+                                &mut app,
+                                Message::Subnetworks(crate::subnetworks_window::Event::Update),
+                            );
+                        }
+                    }
+                    "alt-aglar-serit" => {
+                        let _ = app.update(Message::RibbonTab("analysis"));
                     }
                     "en-yakin" | "en-yakin-cizim" => {
                         send(
@@ -265,7 +292,10 @@ fn screens() {
                     // The window closed: the result in the drawing.
                     processing(&mut app, Processing::Close);
                     snapshot.settle(&mut app, App::view, &mut update);
-                } else if matches!(name, "matris" | "yollar" | "sebeke" | "donusler") {
+                } else if matches!(
+                    name,
+                    "matris" | "yollar" | "sebeke" | "donusler" | "terminaller"
+                ) {
                     // The form scrolled to its end: the table, or Denetle's answer under the definition.
                     let x = if name == "matris" {
                         width / 2.0 - 120.0
@@ -283,7 +313,11 @@ fn screens() {
                             iced::Event::Mouse(iced::mouse::Event::WheelScrolled {
                                 delta: iced::mouse::ScrollDelta::Lines {
                                     x: 0.0,
-                                    y: if name == "donusler" { -14.0 } else { -40.0 },
+                                    y: match name {
+                                        "donusler" => -14.0,
+                                        "terminaller" => -26.0,
+                                        _ => -40.0,
+                                    },
                                 },
                             }),
                         ],

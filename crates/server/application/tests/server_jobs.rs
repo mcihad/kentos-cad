@@ -82,7 +82,7 @@ async fn claim(db: &TestDb, owner: Uuid, lease_secs: i32) -> Option<(Uuid, i64)>
 }
 
 async fn beat(db: &TestDb, job: Uuid, fence: i64) -> String {
-    sqlx::query_scalar("select kentos.beat_job($1, $2, 0.5, 30)")
+    sqlx::query_scalar("select kentos.beat_job($1, $2, 0.5, 30, null)")
         .bind(job)
         .bind(fence)
         .fetch_one(&db.app.pool)

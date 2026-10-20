@@ -104,6 +104,50 @@ pub struct Rules {
     pub turns: Option<TurnRule>,
     /// The level fields: none when the definition has none; `Some(true)` when it names an inside field.
     pub levels: Option<bool>,
+    /// The devices' terminals (docs/adr/0557 §1); none: a device is a point.
+    pub terminals: Option<TerminalRules>,
+}
+
+/// A device's terminals as the rules read them: each one's id and name folded, and which connect through the device.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DeviceRule {
+    /// The junction layer's id.
+    pub layer: String,
+    /// Each terminal's id and name, folded (`caseless`).
+    pub keys: Vec<[String; 2]>,
+    /// `link[a * terminals + b]`: terminal `a` connects to `b` through the device (a path holds both, or `a == b`).
+    pub link: Vec<bool>,
+}
+
+impl DeviceRule {
+    /// How many terminals.
+    pub fn count(&self) -> usize {
+        self.keys.len()
+    }
+
+    /// The terminal an edge field's value names (its id or its name, caseless); none for no value or one the device
+    /// has not.
+    pub fn terminal(&self, value: &str) -> Option<u8> {
+        let k = caseless(value);
+        if k.is_empty() {
+            return None;
+        }
+        self.keys
+            .iter()
+            .position(|[id, name]| *id == k || *name == k)
+            .map(|i| i as u8)
+    }
+
+    /// Whether terminals `a` and `b` connect through the device.
+    pub fn connects(&self, a: u8, b: u8) -> bool {
+        self.link[a as usize * self.keys.len() + b as usize]
+    }
+}
+
+/// The definition's devices (docs/adr/0557 §1), in its order.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TerminalRules {
+    pub devices: Vec<DeviceRule>,
 }
 
 /// A text as the rules compare it: trimmed, upper and lower case the same in
@@ -144,6 +188,64 @@ fn texts(v: &Json, what: &str) -> Result<Vec<String>, String> {
             .collect(),
         _ => Err(format!("ağın {what} değerleri liste olmalı")),
     }
+}
+
+/// A terminal device of the definition's JSON (`TerminalDevice`).
+fn device_of(d: &Json) -> Result<DeviceRule, String> {
+    let layer = match d.get("layer") {
+        Json::Str(s) => s.clone(),
+        _ => return Err("ağın cihazının katmanı metin olmalı".into()),
+    };
+    let text = |v: &Json| match v {
+        Json::Str(s) => Ok(s.clone()),
+        _ => Err("ağın terminali metin olmalı".to_string()),
+    };
+    let (ids, keys): (Vec<String>, Vec<[String; 2]>) = match d.get("terminals") {
+        Json::Arr(list) => list
+            .iter()
+            .map(|t| {
+                let id = text(t.get("id"))?;
+                let name = text(t.get("name"))?;
+                Ok((id.clone(), [caseless(&id), caseless(&name)]))
+            })
+            .collect::<Result<Vec<_>, String>>()?
+            .into_iter()
+            .unzip(),
+        _ => return Err("ağın cihazının terminalleri liste olmalı".into()),
+    };
+    let n = ids.len();
+    if n == 0 || n > 255 {
+        return Err("ağın cihazının terminalleri 1–255 olmalı".into());
+    }
+    let mut link = vec![false; n * n];
+    for a in 0..n {
+        link[a * n + a] = true;
+    }
+    match d.get("paths") {
+        Json::Arr(paths) => {
+            for p in paths {
+                let Json::Arr(items) = p else {
+                    return Err("ağın cihazının yolu liste olmalı".into());
+                };
+                let at: Vec<usize> = items
+                    .iter()
+                    .map(|i| {
+                        let id = text(i)?;
+                        ids.iter()
+                            .position(|x| *x == id)
+                            .ok_or_else(|| format!("yoldaki “{id}” cihazın terminali değil"))
+                    })
+                    .collect::<Result<_, _>>()?;
+                for &a in &at {
+                    for &b in &at {
+                        link[a * n + b] = true;
+                    }
+                }
+            }
+        }
+        _ => return Err("ağın cihazının yolları liste olmalı".into()),
+    }
+    Ok(DeviceRule { layer, keys, link })
 }
 
 impl Rules {
@@ -239,6 +341,18 @@ impl Rules {
             Json::Null => None,
             l => Some(!matches!(l.get("inside"), Json::Null)),
         };
+        let terminals = match def.get("terminals") {
+            Json::Null => None,
+            t => Some(TerminalRules {
+                devices: match t.get("devices") {
+                    Json::Arr(list) => list
+                        .iter()
+                        .map(device_of)
+                        .collect::<Result<Vec<_>, _>>()?,
+                    _ => return Err("ağın terminalli cihazları liste olmalı".into()),
+                },
+            }),
+        };
         Ok(Rules {
             connect,
             tolerance,
@@ -247,7 +361,18 @@ impl Rules {
             periods,
             turns,
             levels,
+            terminals,
         })
+    }
+
+    /// The device (an index into `terminals.devices`) the junction layer `layer` is, if it is one.
+    pub fn device_of_layer(&self, layer: &str) -> Option<u32> {
+        self.terminals
+            .as_ref()?
+            .devices
+            .iter()
+            .position(|d| d.layer == layer)
+            .map(|i| i as u32)
     }
 
     /// Whether cost `c` is a time (a speed cost, minutes): turn delays are added to it.

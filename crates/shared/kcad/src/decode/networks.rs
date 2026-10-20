@@ -7,8 +7,9 @@
 
 use kentos_contracts::{
     JunctionLayer, JunctionRole, NetworkConnect, NetworkCost, NetworkCostKind, NetworkDef,
-    NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels, NetworkPeriod, NetworkTurns,
-    NetworkUTurns, TurnLayer, networks_problem,
+    DeviceTerminal, NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels, NetworkPeriod,
+    NetworkSubnetworks, NetworkTerminals, NetworkTurns, NetworkUTurns, SubnetworkReach,
+    TerminalDevice, TurnLayer, networks_problem,
 };
 
 use super::{list, map, named, required, text, unknown};
@@ -225,6 +226,84 @@ fn levels(r: &mut Reader<'_>) -> Result<NetworkLevels, KcadError> {
     })
 }
 
+/// A network's terminals (schema 93): the edge fields and the devices; every rule is checked whole with the network.
+fn terminals(r: &mut Reader<'_>) -> Result<NetworkTerminals, KcadError> {
+    let (mut start, mut end, mut devices) = (None, None, None);
+    map(r, |r, key| {
+        match key {
+            "start" => start = Some(text(r)?),
+            "end" => end = Some(text(r)?),
+            "devices" => {
+                devices = Some(list(r, |r, _| {
+                    let (mut layer, mut terms, mut paths) = (None, None, None);
+                    map(r, |r, key| {
+                        match key {
+                            "layer" => layer = Some(text(r)?),
+                            "terminals" => {
+                                terms = Some(list(r, |r, _| {
+                                    let (mut id, mut name) = (None, None);
+                                    map(r, |r, key| {
+                                        match key {
+                                            "id" => id = Some(text(r)?),
+                                            "name" => name = Some(text(r)?),
+                                            _ => return Err(unknown(r)),
+                                        }
+                                        Ok(())
+                                    })?;
+                                    Ok(DeviceTerminal {
+                                        id: required(r, id, "id")?,
+                                        name: required(r, name, "name")?,
+                                    })
+                                })?)
+                            }
+                            "paths" => {
+                                paths = Some(list(r, |r, _| texts(r, "boş yol yazılmaz"))?)
+                            }
+                            _ => return Err(unknown(r)),
+                        }
+                        Ok(())
+                    })?;
+                    Ok(TerminalDevice {
+                        layer: required(r, layer, "layer")?,
+                        terminals: required(r, terms, "terminals")?,
+                        paths: required(r, paths, "paths")?,
+                    })
+                })?)
+            }
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    Ok(NetworkTerminals {
+        start: required(r, start, "start")?,
+        end: required(r, end, "end")?,
+        devices: required(r, devices, "devices")?,
+    })
+}
+
+/// A network's subnetworks (schema 93).
+fn subnetworks(r: &mut Reader<'_>) -> Result<NetworkSubnetworks, KcadError> {
+    let reaches = [
+        ("downstream", SubnetworkReach::Downstream),
+        ("connected", SubnetworkReach::Connected),
+    ];
+    let (mut name, mut attribute, mut reach) = (None, None, None);
+    map(r, |r, key| {
+        match key {
+            "name" => name = Some(text(r)?),
+            "attribute" => attribute = Some(text(r)?),
+            "reach" => reach = Some(named(r, &reaches)?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    Ok(NetworkSubnetworks {
+        name,
+        attribute: required(r, attribute, "attribute")?,
+        reach: required(r, reach, "reach")?,
+    })
+}
+
 fn costs(r: &mut Reader<'_>, turned: bool) -> Result<Vec<NetworkCost>, KcadError> {
     let at = r.position();
     let kinds = [
@@ -269,7 +348,11 @@ fn costs(r: &mut Reader<'_>, turned: bool) -> Result<Vec<NetworkCost>, KcadError
 }
 
 /// The project's networks, checked whole; an empty list is not written.
-pub(super) fn networks(r: &mut Reader<'_>, turned: bool) -> Result<Vec<NetworkDef>, KcadError> {
+pub(super) fn networks(
+    r: &mut Reader<'_>,
+    turned: bool,
+    termed: bool,
+) -> Result<Vec<NetworkDef>, KcadError> {
     let at = r.position();
     let kinds = [
         ("road", NetworkKind::Road),
@@ -284,6 +367,7 @@ pub(super) fn networks(r: &mut Reader<'_>, turned: bool) -> Result<Vec<NetworkDe
         let (mut connect, mut tolerance, mut dir) = (None, None, None);
         let (mut junction_layers, mut cost_list, mut closed) = (Vec::new(), Vec::new(), None);
         let (mut turn_rules, mut level_fields) = (None, None);
+        let (mut terminal_rules, mut subnet_rules) = (None, None);
         map(r, |r, key| {
             match key {
                 "id" => id = Some(text(r)?),
@@ -298,6 +382,8 @@ pub(super) fn networks(r: &mut Reader<'_>, turned: bool) -> Result<Vec<NetworkDe
                 "closed" => closed = Some(text(r)?),
                 "turns" if turned => turn_rules = Some(turns(r)?),
                 "levels" if turned => level_fields = Some(levels(r)?),
+                "terminals" if termed => terminal_rules = Some(terminals(r)?),
+                "subnetworks" if termed => subnet_rules = Some(subnetworks(r)?),
                 _ => return Err(unknown(r)),
             }
             Ok(())
@@ -315,6 +401,8 @@ pub(super) fn networks(r: &mut Reader<'_>, turned: bool) -> Result<Vec<NetworkDe
             closed,
             turns: turn_rules,
             levels: level_fields,
+            terminals: terminal_rules,
+            subnetworks: subnet_rules,
         })
     })?;
     if all.is_empty() {

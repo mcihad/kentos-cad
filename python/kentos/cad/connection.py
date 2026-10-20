@@ -16,7 +16,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -257,6 +257,58 @@ class ProjectRef:
         answer: dict[str, Any] = self.connection._request("POST", self._jobs(), body)
         return answer
 
+    def processing_job(
+        self,
+        tool: str,
+        *,
+        parameters: Mapping[str, Any] | None = None,
+        selection: Sequence[str] | None = None,
+        view: Sequence[float] | None = None,
+        mode: str = "commit",
+        expected_revision: str | None = None,
+        label: str | None = None,
+        cpu_seconds: int | None = None,
+        memory_mb: int | None = None,
+        request_id: str | None = None,
+        timeout_seconds: int | None = None,
+    ) -> dict[str, Any]:
+        """Asks the server to run an İşlemler tool on the project (``project.processing``; docs/adr/0559): the same
+        run ``cad.processing.run`` makes (the tool's id, its ``parameters`` by name, the ``selection`` as persistent
+        ids, the ``view`` box as east/north minimum then maximum), but a worker on the server computes it, the project
+        at one revision, under a CPU and memory budget. A table is given as ``{"name": …, "rows": …}``; a local file
+        path is refused.
+
+        ``mode="commit"`` writes what the tool made, changed or removed to the project in one commit, only if the
+        project is still at the revision the tool read (``expected_revision`` pins it); ``mode="sink"`` leaves the
+        project as it is and keeps the objects the tool made as a GeoPackage, ``job_artifact`` fetches it.
+        ``cpu_seconds`` and ``memory_mb`` ask for less than the server's budget, never more. The same ``request_id``
+        sent again gives the same job. The job's ``progress`` and ``progressText`` say how far a running one is; its
+        ``result`` holds the tool's summary, the counts, the new revision and what it took."""
+        input_: dict[str, Any] = {"tool": tool, "mode": mode}
+        if label:
+            input_["label"] = label
+        if parameters:
+            input_["parameters"] = dict(parameters)
+        if selection:
+            input_["selection"] = list(selection)
+        if view is not None:
+            input_["view"] = list(view)
+        if expected_revision is not None:
+            input_["expectedRevision"] = expected_revision
+        if cpu_seconds is not None:
+            input_["cpuSeconds"] = cpu_seconds
+        if memory_mb is not None:
+            input_["memoryMb"] = memory_mb
+        body: dict[str, Any] = {
+            "kind": "project.processing",
+            "input": input_,
+            "requestId": request_id or str(uuid.uuid4()),
+        }
+        if timeout_seconds is not None:
+            body["timeoutSeconds"] = timeout_seconds
+        answer: dict[str, Any] = self.connection._request("POST", self._jobs(), body)
+        return answer
+
     def jobs(self) -> list[dict[str, Any]]:
         """The project's server jobs, newest first."""
         answer: dict[str, Any] = self.connection._request("GET", self._jobs())
@@ -287,7 +339,8 @@ class ProjectRef:
             time.sleep(every)
 
     def job_artifact(self, job: str) -> bytes:
-        """A succeeded export's file; ``Document.from_bytes`` opens it. A server that limits an organisation's jobs
+        """A succeeded job's file: an export's ``.kcad`` (``Document.from_bytes`` opens it) or a processing job's
+        GeoPackage (``mode="sink"``). A server that limits an organisation's jobs
         answers a request past the limit with ``ServerError`` (code ``quota_exceeded``, ``retryable``)."""
         return self.connection._bytes(f"{self._jobs()}/{urllib.parse.quote(job, safe='')}/artifact")
 

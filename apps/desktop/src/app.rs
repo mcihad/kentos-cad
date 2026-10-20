@@ -180,6 +180,8 @@ pub enum Dialog {
     DrawingStandard,
     /// Veri profili (data_profile.rs, docs/adr/0541); the window is `App::data_profile`.
     DataProfile,
+    /// Alt ağlar (subnetworks_window.rs, docs/adr/0557); the window is `App::subnetworks_window`.
+    Subnetworks,
     /// Kaynak durumu (source_status.rs, docs/adr/0543); the window is `App::source_status`.
     SourceStatus,
     /// Çizgi tipleri (line_types_window.rs, docs/adr/0313 §7); the window is `App::line_types_window`.
@@ -493,6 +495,8 @@ pub enum Message {
     DrawingStandard(crate::drawing_standard::Event),
     /// Veri profili's window (data_profile.rs, docs/adr/0541).
     DataProfile(crate::data_profile::Event),
+    /// Alt ağlar's window (subnetworks_window.rs, docs/adr/0557).
+    Subnetworks(crate::subnetworks_window::Event),
     /// Kaynak durumu's window (source_status.rs, docs/adr/0543).
     SourceStatus(crate::source_status::Event),
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
@@ -959,6 +963,8 @@ pub struct App {
     pub(crate) drawing_standard: Option<crate::drawing_standard::Window>,
     /// Veri profili's window (data_profile.rs, docs/adr/0541).
     pub(crate) data_profile: Option<crate::data_profile::Window>,
+    /// Alt ağlar's window (subnetworks_window.rs, docs/adr/0557).
+    pub(crate) subnetworks_window: Option<crate::subnetworks_window::Window>,
     /// Kaynak durumu's window (source_status.rs, docs/adr/0543).
     pub(crate) source_status: Option<crate::source_status::Window>,
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
@@ -1334,6 +1340,7 @@ impl App {
             layer_translate: None,
             drawing_standard: None,
             data_profile: None,
+            subnetworks_window: None,
             source_status: None,
             line_types_window: None,
             parameters_window: None,
@@ -1909,6 +1916,7 @@ impl App {
             Message::LayerTranslate(event) => return self.layer_translate_event(event),
             Message::DrawingStandard(event) => return self.drawing_standard_event(event),
             Message::DataProfile(event) => return self.data_profile_event(event),
+            Message::Subnetworks(event) => return self.subnetworks_event(event),
             Message::SourceStatus(event) => return self.source_status_event(event),
             Message::LineTypes(event) => return self.line_types_event(event),
             Message::Parameters(event) => return self.parameters_event(event),
@@ -2838,6 +2846,7 @@ impl App {
             // Standardı denetle and Standardı uygula: one window (docs/adr/0312 §7).
             "standards.check" | "standards.apply" => self.open_drawing_standard(),
             "profile.window" => self.open_data_profile(),
+            "network.subnetworks" => self.open_subnetworks(),
             // Çizgi tipleri (docs/adr/0313 §7).
             "lineTypes.manage" => self.open_line_types(),
             "hatchPatterns.manage" => self.open_hatch_patterns(),

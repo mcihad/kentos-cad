@@ -14,6 +14,11 @@
 //!   request past it is refused with `quota_exceeded`), an artifact past `artifact_max` fails its job (`too_large`), an
 //!   artifact that cannot be written fails it with `storage` and leaves no object, and `expire` removes finished jobs
 //!   (and their artifacts) older than the retention.
+//! - **Processing (docs/adr/0559):** `project.processing` runs an İşlemler tool through the host's [`Processor`] (the
+//!   tools are not the server's) on the project as of a revision. The worker writes its progress and words at its
+//!   beats; the tool has a CPU and memory budget. A result to commit is committed in the job's finish transaction,
+//!   with the project required to be at the revision the tool read, so a lost lease or a conflict leaves nothing
+//!   written; a result to a file is staged like an export's.
 //! - **Seeing:** the project's users list and read its jobs; the asker or `project.edit` cancels one; `project.download`
 //!   downloads a succeeded export.
 
@@ -22,12 +27,15 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use kentos_contracts::{
-    CheckpointCreate, CommandEnvelope, PROJECT_CHECKPOINT_CREATE,
-    PROJECT_CHECKPOINT_CREATE_VERSION, PROJECT_CHECKPOINT_JOB, PROJECT_EXPORT_JOB,
-    ProjectExportInput, ProjectPermission, ProjectStorage, SERVER_JOB_ARTIFACT_MAX_DEFAULT,
-    SERVER_JOB_KINDS, SERVER_JOB_LIST_MAX, SERVER_JOB_TENANT_ACTIVE_DEFAULT,
-    SERVER_JOB_TIMEOUT_DEFAULT, SERVER_JOB_TIMEOUT_MAX, ServerJob, ServerJobArtifact,
-    ServerJobCreate, ServerJobError, ServerJobList, ServerJobState, SignInMethod,
+    CheckpointCreate, CommandEnvelope, PROJECT_CHANGES, PROJECT_CHANGES_VERSION,
+    PROJECT_CHECKPOINT_CREATE, PROJECT_CHECKPOINT_CREATE_VERSION, PROJECT_CHECKPOINT_JOB,
+    PROJECT_EXPORT_JOB, PROJECT_META_KEY, PROJECT_PROCESSING_JOB, ProcessingJobInput,
+    ProcessingJobMode, ProcessingJobResult, ProjectExportInput, ProjectPermission,
+    ProjectStorage, SERVER_JOB_ARTIFACT_MAX_DEFAULT, SERVER_JOB_CPU_DEFAULT_SECONDS,
+    SERVER_JOB_KINDS, SERVER_JOB_LIST_MAX, SERVER_JOB_MEMORY_DEFAULT_MB,
+    SERVER_JOB_TENANT_ACTIVE_DEFAULT, SERVER_JOB_TIMEOUT_DEFAULT, SERVER_JOB_TIMEOUT_MAX,
+    ServerJob, ServerJobArtifact, ServerJobCreate, ServerJobError, ServerJobList, ServerJobState,
+    SignInMethod,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -37,6 +45,9 @@ use uuid::Uuid;
 use crate::access::ProjectAccess;
 use crate::blobs::{Blobs, WriteError};
 use crate::error::{AppError, AppResult};
+use crate::processing_job::{
+    Delta, JobProgress, ProcessHooks, ProcessingTask, Processor, budget_of, check_input,
+};
 use crate::projects::{rfc3339, storage_of};
 
 /// What the server lets jobs take (docs/adr/0547): the server sets them (`KENTOS_JOB_LIMIT`,
@@ -47,6 +58,10 @@ pub struct JobLimits {
     pub tenant_active: u32,
     /// The biggest artifact a job may stage, in bytes.
     pub artifact_max: u64,
+    /// What one `project.processing` job may take (docs/adr/0559 §4): CPU seconds of the process the tool runs in,
+    /// and its resident memory in megabytes. A request may ask for less, never for more.
+    pub cpu_seconds: u32,
+    pub memory_mb: u32,
 }
 
 impl Default for JobLimits {
@@ -54,6 +69,8 @@ impl Default for JobLimits {
         Self {
             tenant_active: SERVER_JOB_TENANT_ACTIVE_DEFAULT,
             artifact_max: SERVER_JOB_ARTIFACT_MAX_DEFAULT,
+            cpu_seconds: SERVER_JOB_CPU_DEFAULT_SECONDS,
+            memory_mb: SERVER_JOB_MEMORY_DEFAULT_MB,
         }
     }
 }
@@ -73,6 +90,7 @@ struct JobRow {
     max_attempts: i32,
     timeout_seconds: i32,
     progress: f32,
+    progress_text: Option<String>,
     created_by: Uuid,
     created_at: OffsetDateTime,
     started_at: Option<OffsetDateTime>,
@@ -84,7 +102,7 @@ struct JobRow {
     error_message: Option<String>,
 }
 
-const JOB_SELECT: &str = "select id, project_id, kind, input, input_sha256, base_revision, state, cancel_requested, attempts, max_attempts, timeout_seconds, progress, created_by, created_at, started_at, finished_at, result, artifact_size, artifact_sha256, error_code, error_message
+const JOB_SELECT: &str = "select id, project_id, kind, input, input_sha256, base_revision, state, cancel_requested, attempts, max_attempts, timeout_seconds, progress, progress_text, created_by, created_at, started_at, finished_at, result, artifact_size, artifact_sha256, error_code, error_message
    from kentos.server_job where tenant_id = $1 and project_id = $2";
 
 fn view(row: JobRow, project_name: &str) -> ServerJob {
@@ -101,6 +119,7 @@ fn view(row: JobRow, project_name: &str) -> ServerJob {
         max_attempts,
         timeout_seconds,
         progress,
+        progress_text,
         created_by,
         created_at,
         started_at,
@@ -116,7 +135,7 @@ fn view(row: JobRow, project_name: &str) -> ServerJob {
         (Some(size), Some(sha256)) => Some(ServerJobArtifact {
             size: size.to_string(),
             sha256,
-            name: format!("{project_name}.kcad"),
+            name: artifact_name(&kind, &input, project_name),
         }),
         _ => None,
     };
@@ -132,6 +151,7 @@ fn view(row: JobRow, project_name: &str) -> ServerJob {
         attempts: u32::try_from(attempts).unwrap_or(0),
         max_attempts: u32::try_from(max_attempts).unwrap_or(0),
         timeout_seconds: u32::try_from(timeout_seconds).unwrap_or(0),
+        progress_text,
         cancel_requested,
         created_by: created_by.to_string(),
         created_at: rfc3339(created_at),
@@ -144,6 +164,31 @@ fn view(row: JobRow, project_name: &str) -> ServerJob {
             message: error_message.unwrap_or_default(),
         }),
     }
+}
+
+/// The file name a job's artifact is downloaded under: the project's name and `.kcad` for an export; the project's
+/// name, the tool's name and `.gpkg` for a processing job's file (docs/adr/0559 §2).
+fn artifact_name(kind: &str, input: &Value, project: &str) -> String {
+    if kind != PROJECT_PROCESSING_JOB {
+        return format!("{project}.kcad");
+    }
+    let tool = input["label"]
+        .as_str()
+        .filter(|l| !l.trim().is_empty())
+        .or_else(|| input["tool"].as_str())
+        .unwrap_or("islem");
+    let clean = |text: &str| -> String {
+        text.chars()
+            .map(|c| {
+                if c.is_control() || matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') {
+                    '-'
+                } else {
+                    c
+                }
+            })
+            .collect()
+    };
+    format!("{} - {}.gpkg", clean(project), clean(tool))
 }
 
 fn job_not_found() -> AppError {
@@ -204,6 +249,19 @@ fn checked_input(kind: &str, input: &Value) -> AppResult<Value> {
             }
             Ok(input.clone())
         }
+        PROJECT_PROCESSING_JOB => {
+            let parsed: ProcessingJobInput =
+                serde_json::from_value(input.clone()).map_err(|e| {
+                    AppError::invalid_at(
+                        "input",
+                        format!("project.processing'in girdisi okunamadı: {e}"),
+                    )
+                })?;
+            if let Some((path, message)) = check_input(&parsed) {
+                return Err(AppError::invalid_at(path, message));
+            }
+            Ok(input.clone())
+        }
         other => Err(AppError::invalid_at(
             "kind",
             format!(
@@ -246,6 +304,19 @@ pub async fn create(
         access.writable()?;
         access.require(ProjectPermission::FeatureWrite)?;
     }
+    if asked.kind == PROJECT_PROCESSING_JOB {
+        let parsed: ProcessingJobInput = serde_json::from_value(input.clone()).unwrap_or_default();
+        match parsed.mode {
+            // The result is written to the project: as `project.changes` asks, the right to write objects (and to
+            // edit the project's layers, asked again at the commit when the result carries them).
+            ProcessingJobMode::Commit => {
+                access.writable()?;
+                access.require(ProjectPermission::FeatureWrite)?;
+            }
+            // The result is a file of the project's data: as an export's.
+            ProcessingJobMode::Sink => access.require(ProjectPermission::Download)?,
+        }
+    }
     let digest = sha256_hex(serde_json::to_string(&input).unwrap_or_default().as_bytes());
     let mut tx = db.scoped(access.scope()).await?;
     let (storage, revision): (String, i64) = sqlx::query_as(
@@ -259,6 +330,12 @@ pub async fn create(
     if asked.kind == PROJECT_EXPORT_JOB && storage_of(&storage) == ProjectStorage::File {
         return Err(AppError::invalid(format!(
             "“{}” projesi dosya olarak saklanıyor; .kcad dosyası zaten onun revizyonlarıdır.",
+            access.name
+        )));
+    }
+    if asked.kind == PROJECT_PROCESSING_JOB && storage_of(&storage) == ProjectStorage::File {
+        return Err(AppError::invalid(format!(
+            "“{}” projesi dosya olarak saklanıyor; araçlar sunucuda yalnız veritabanı projesinde çalışır. Projeyi bilgisayarınızda açıp aracı orada çalıştırın.",
             access.name
         )));
     }
@@ -448,6 +525,8 @@ enum Outcome {
         /// What the result was cut by (docs/adr/0550 §5): the stamp of the caller's reach it was built
         /// for; the finish asks it again and refuses a result the caller no longer may take.
         reach: Option<String>,
+        /// The result a `project.processing` job commits in its finish (docs/adr/0559 §2).
+        commit: Option<Box<Staged>>,
     },
     Failed {
         code: &'static str,
@@ -455,6 +534,28 @@ enum Outcome {
     },
     /// Asked to stop, or the lease lost: no finish.
     Stopped,
+}
+
+/// What a processing job commits: the delta and the data revision the tool read, which the project must still be at.
+struct Staged {
+    delta: Delta,
+    revision: i64,
+}
+
+/// The code of a failed run as a job's error code.
+fn static_code(code: &str) -> &'static str {
+    match code {
+        "tool_failed" => "tool_failed",
+        "tool_unavailable" => "tool_unavailable",
+        "cpu_limit" => "cpu_limit",
+        "memory_limit" => "memory_limit",
+        "memory_estimate" => "memory_estimate",
+        "unsupported_change" => "unsupported_change",
+        "too_many_changes" => "too_many_changes",
+        "invalid" => "invalid",
+        "crashed" => "crashed",
+        _ => "failed",
+    }
 }
 
 fn failed_of(e: &AppError) -> (&'static str, String) {
@@ -472,7 +573,8 @@ fn failed_of(e: &AppError) -> (&'static str, String) {
     (code, e.to_string())
 }
 
-/// Claims one job of `kinds` for `owner` and runs it to its end; none when the queue is empty.
+/// Claims one job for `owner` and runs it to its end; none when the queue is empty. A worker with no processor does
+/// not claim `project.processing` jobs.
 pub async fn work_once(
     db: &kentos_postgres::Db,
     blobs: &Blobs,
@@ -480,7 +582,19 @@ pub async fn work_once(
     lease: Duration,
     limits: &JobLimits,
 ) -> AppResult<Option<Worked>> {
-    work_once_between(db, blobs, owner, lease, limits, || async {}).await
+    work_once_with(db, blobs, owner, lease, limits, None).await
+}
+
+/// [`work_once`] for a worker whose host runs İşlemler's tools (`processor`, docs/adr/0559 §3).
+pub async fn work_once_with(
+    db: &kentos_postgres::Db,
+    blobs: &Blobs,
+    owner: Uuid,
+    lease: Duration,
+    limits: &JobLimits,
+    processor: Option<Arc<dyn Processor>>,
+) -> AppResult<Option<Worked>> {
+    work_once_between_with(db, blobs, owner, lease, limits, processor, || async {}).await
 }
 
 /// [`work_once`] with something done between the run and its finish: what a test does to the project
@@ -498,10 +612,32 @@ where
     F: FnOnce() -> Fut,
     Fut: std::future::Future<Output = ()>,
 {
+    work_once_between_with(db, blobs, owner, lease, limits, None, between).await
+}
+
+/// [`work_once_between`] for a worker with a processor.
+#[doc(hidden)]
+pub async fn work_once_between_with<F, Fut>(
+    db: &kentos_postgres::Db,
+    blobs: &Blobs,
+    owner: Uuid,
+    lease: Duration,
+    limits: &JobLimits,
+    processor: Option<Arc<dyn Processor>>,
+    between: F,
+) -> AppResult<Option<Worked>>
+where
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = ()>,
+{
     /// `claim_job`'s row: tenant, project, job, kind, input, base revision, asker, fence, attempts.
     type Claimed = (Uuid, Uuid, Uuid, String, Value, i64, Uuid, i64, i32);
     let secs = i32::try_from(lease.as_secs().clamp(1, 3600)).unwrap_or(30);
-    let kinds: Vec<String> = SERVER_JOB_KINDS.iter().map(|k| (*k).to_owned()).collect();
+    let kinds: Vec<String> = SERVER_JOB_KINDS
+        .iter()
+        .filter(|k| processor.is_some() || **k != PROJECT_PROCESSING_JOB)
+        .map(|k| (*k).to_owned())
+        .collect();
     let row: Option<Claimed> = sqlx::query_as(
         "select tenant_id, project_id, id, kind, input, base_revision, created_by, fence, attempts from kentos.claim_job($1, $2, $3)",
     )
@@ -522,20 +658,31 @@ where
         created_by,
         fence,
     };
-    // The beat: the lease renewed every third of it; a cancel or a lost lease stops the run.
+    // The beat: the lease renewed every third of it (at least every two seconds, so the progress the run says is
+    // read soon); a cancel or a lost lease stops the run.
     let stop = Arc::new(AtomicBool::new(false));
+    let progress = Arc::new(JobProgress::default());
     let beat = {
         let db = db.clone();
         let stop = stop.clone();
+        let progress = progress.clone();
         tokio::spawn(async move {
-            let every = Duration::from_millis((lease.as_millis() / 3).clamp(200, 60_000) as u64);
+            let every = Duration::from_millis(
+                (lease.as_millis() / 3).clamp(100, 2_000) as u64,
+            );
             loop {
                 tokio::time::sleep(every).await;
+                let (fraction, said) = match progress.get() {
+                    Some((f, t)) => (Some(f), Some(t)),
+                    None => (None, None),
+                };
                 let answer: Result<String, _> =
-                    sqlx::query_scalar("select kentos.beat_job($1, $2, null, $3)")
+                    sqlx::query_scalar("select kentos.beat_job($1, $2, $3, $4, $5)")
                         .bind(id)
                         .bind(fence)
+                        .bind(fraction)
                         .bind(secs)
+                        .bind(said)
                         .fetch_one(&db.pool)
                         .await;
                 if !matches!(answer.as_deref(), Ok("run")) {
@@ -545,7 +692,16 @@ where
             }
         })
     };
-    let outcome = run(db, blobs, &claim, &stop, limits).await;
+    let outcome = run(
+        db,
+        blobs,
+        &claim,
+        &stop,
+        limits,
+        processor.as_ref(),
+        &progress,
+    )
+    .await;
     beat.abort();
     between().await;
     let state = finish(db, blobs, &claim, outcome).await?;
@@ -557,8 +713,10 @@ async fn run(
     db: &kentos_postgres::Db,
     blobs: &Blobs,
     claim: &Claim,
-    stop: &AtomicBool,
+    stop: &Arc<AtomicBool>,
     limits: &JobLimits,
+    processor: Option<&Arc<dyn Processor>>,
+    progress: &Arc<JobProgress>,
 ) -> Outcome {
     let access = match actor_access(db, claim).await {
         Ok(a) => a,
@@ -570,6 +728,12 @@ async fn run(
     match claim.kind.as_str() {
         PROJECT_EXPORT_JOB => export(db, blobs, claim, &access, stop, limits).await,
         PROJECT_CHECKPOINT_JOB => checkpoint(db, blobs, claim, &access, stop).await,
+        PROJECT_PROCESSING_JOB => {
+            processing(
+                db, blobs, claim, &access, stop, limits, processor, progress,
+            )
+            .await
+        }
         other => Outcome::Failed {
             code: "invalid",
             message: format!("“{other}” bu sunucunun bilmediği bir iş."),
@@ -623,20 +787,48 @@ async fn export(
     if stop.load(Ordering::SeqCst) {
         return Outcome::Stopped;
     }
-    let size = snap.bytes.len();
+    let (key, size) = match stage(blobs, claim, &snap.bytes, &snap.sha256, limits, "Projenin dosyası").await
+    {
+        Ok(staged) => staged,
+        Err(failed) => return failed,
+    };
+    Outcome::Done {
+        result: json!({
+            "revision": snap.revision.to_string(),
+            "objects": snap.objects,
+            "eventCursor": snap.event_cursor.to_string(),
+        }),
+        artifact: Some((key, size, snap.sha256)),
+        reach: snap.reach,
+        commit: None,
+    }
+}
+
+/// Writes `bytes` to the object store as the job's artifact (docs/adr/0547 §2): past the server's limit the job fails
+/// with `too_large`, a file that cannot be written fails it with `storage` and leaves no object. `what` names the file
+/// in the message.
+async fn stage(
+    blobs: &Blobs,
+    claim: &Claim,
+    bytes: &[u8],
+    sha256: &str,
+    limits: &JobLimits,
+    what: &str,
+) -> Result<(String, i64), Outcome> {
+    let size = bytes.len();
     if size as u64 > limits.artifact_max {
-        return Outcome::Failed {
+        return Err(Outcome::Failed {
             code: "too_large",
             message: format!(
-                "Projenin dosyası {size} bayt; sunucunun bir işe verdiği sınır {} bayt. Sunucu yöneticisine başvurun.",
+                "{what} {size} bayt; sunucunun bir işe verdiği sınır {} bayt. Sunucu yöneticisine başvurun.",
                 limits.artifact_max
             ),
-        };
+        });
     }
-    let key = Blobs::job_key(claim.tenant, claim.project, claim.id, &snap.sha256);
+    let key = Blobs::job_key(claim.tenant, claim.project, claim.id, sha256);
     let written = async {
         let mut w = blobs.create(&key, size as u64).await?;
-        w.write(&snap.bytes).await.map_err(|e| match e {
+        w.write(bytes).await.map_err(|e| match e {
             WriteError::Io(e) => e,
             other => std::io::Error::other(format!("{other:?}")),
         })?;
@@ -645,19 +837,174 @@ async fn export(
     .await;
     if let Err(e) = written {
         let _ = blobs.remove(&key).await;
-        return Outcome::Failed {
+        return Err(Outcome::Failed {
             code: "storage",
             message: format!("Sonuç nesne deposuna yazılamadı: {e}"),
-        };
+        });
     }
-    Outcome::Done {
-        result: json!({
-            "revision": snap.revision.to_string(),
-            "objects": snap.objects,
-            "eventCursor": snap.event_cursor.to_string(),
-        }),
-        artifact: Some((key, i64::try_from(size).unwrap_or(i64::MAX), snap.sha256)),
-        reach: snap.reach,
+    Ok((key, i64::try_from(size).unwrap_or(i64::MAX)))
+}
+
+/// `project.processing`: the project read at one revision, the tool run by the host's processor under its budget, the
+/// result a delta to commit in the finish or a GeoPackage staged as the artifact (docs/adr/0559).
+#[allow(clippy::too_many_arguments)]
+async fn processing(
+    db: &kentos_postgres::Db,
+    blobs: &Blobs,
+    claim: &Claim,
+    access: &ProjectAccess,
+    stop: &Arc<AtomicBool>,
+    limits: &JobLimits,
+    processor: Option<&Arc<dyn Processor>>,
+    progress: &Arc<JobProgress>,
+) -> Outcome {
+    let failed = |code: &'static str, message: String| Outcome::Failed { code, message };
+    let Some(processor) = processor else {
+        return failed(
+            "tool_unavailable",
+            "Bu sunucu işçisi İşlemler araçlarını çalıştıramıyor.".into(),
+        );
+    };
+    let input: ProcessingJobInput = match serde_json::from_value(claim.input.clone()) {
+        Ok(i) => i,
+        Err(e) => return failed("invalid", format!("İşin girdisi okunamadı: {e}")),
+    };
+    let rights = access
+        .live()
+        .and_then(|()| access.require(ProjectPermission::JobsRun))
+        .and_then(|()| match input.mode {
+            ProcessingJobMode::Commit => access
+                .writable()
+                .and_then(|()| access.require(ProjectPermission::FeatureWrite)),
+            ProcessingJobMode::Sink => access.require(ProjectPermission::Download),
+        });
+    if let Err(e) = rights {
+        let (code, message) = failed_of(&e);
+        return Outcome::Failed { code, message };
+    }
+    progress.set(0.01, "Proje okunuyor");
+    let snap = match crate::snapshot::take(db, access, crate::snapshot::Take::Cut).await {
+        Ok(s) => s,
+        Err(e) => {
+            let (code, message) = failed_of(&e);
+            return Outcome::Failed { code, message };
+        }
+    };
+    if let Some(expected) = input.expected_revision.as_deref()
+        && expected != snap.revision.to_string()
+    {
+        return failed(
+            "revision_conflict",
+            format!(
+                "Proje {expected}. revizyonda değil ({}); araç çalıştırılmadı. İşi şimdiki revizyonla yeniden isteyin.",
+                snap.revision
+            ),
+        );
+    }
+    // A copy cut by the forms' marks is not the project: what a tool computes on it must not be written back.
+    if input.mode == ProcessingJobMode::Commit && snap.cut {
+        return failed(
+            "forbidden",
+            "Formların gizlediği alanlar var ve onları görme yetkiniz yok; bu kopya üzerinde hesaplanan sonuç projeye yazılırsa o alanlar bozulur. Sonucu dosyaya (sink) yazdırın.".into(),
+        );
+    }
+    let budget = budget_of(&input, limits);
+    let need = kentos_contracts::processing_memory_estimate(snap.bytes.len() as u64);
+    if need > budget.memory_bytes {
+        return failed(
+            "memory_estimate",
+            format!(
+                "Projenin dosyası {} bayt; aracın bunun için yaklaşık {} MB belleğe ihtiyacı olur, bu işin bellek bütçesi {} MB. İşe daha büyük bir memoryMb vermeyi deneyin (sunucunun sınırını aşamaz) ya da sunucu yöneticisine başvurun.",
+                snap.bytes.len(),
+                need / (1024 * 1024),
+                budget.memory_bytes / (1024 * 1024)
+            ),
+        );
+    }
+    if stop.load(Ordering::SeqCst) {
+        return Outcome::Stopped;
+    }
+    progress.set(0.04, "Araç hazırlanıyor");
+    let task = ProcessingTask {
+        job: claim.id,
+        snapshot: snap.bytes,
+        input: input.clone(),
+        budget,
+    };
+    let hooks = ProcessHooks {
+        progress: progress.clone(),
+        stop: stop.clone(),
+    };
+    let processor = processor.clone();
+    let ran = tokio::task::spawn_blocking(move || processor.process(&task, &hooks)).await;
+    let processed = match ran {
+        Ok(Ok(p)) => p,
+        Ok(Err(f)) if f.code == "stopped" => return Outcome::Stopped,
+        Ok(Err(f)) => return failed(static_code(&f.code), f.message),
+        Err(e) => {
+            return failed("crashed", format!("Aracın çalışması yarıda kaldı: {e}"));
+        }
+    };
+    if stop.load(Ordering::SeqCst) {
+        return Outcome::Stopped;
+    }
+    let mut result = ProcessingJobResult {
+        tool: input.tool.clone(),
+        mode: input.mode,
+        base_revision: snap.revision.to_string(),
+        revision: None,
+        summary: processed.summary.clone(),
+        added: 0,
+        changed: 0,
+        removed: 0,
+        metadata: false,
+        notes: processed.notes.clone(),
+        usage: processed.usage.clone(),
+    };
+    match input.mode {
+        ProcessingJobMode::Commit => {
+            let Some(delta) = processed.delta else {
+                return failed(
+                    "failed",
+                    "İşçi aracın sonucunu vermedi; hiçbir şey yazılmadı.".into(),
+                );
+            };
+            result.added = delta.added;
+            result.changed = delta.changed;
+            result.removed = delta.removed;
+            result.metadata = delta.project.is_some();
+            progress.set(0.95, "Sonuç projeye yazılıyor");
+            Outcome::Done {
+                result: serde_json::to_value(&result).unwrap_or(Value::Null),
+                artifact: None,
+                reach: snap.reach,
+                commit: Some(Box::new(Staged {
+                    delta,
+                    revision: snap.revision,
+                })),
+            }
+        }
+        ProcessingJobMode::Sink => {
+            let Some(bytes) = processed.sink else {
+                return failed(
+                    "failed",
+                    "İşçi sonuç dosyasını vermedi; hiçbir şey yazılmadı.".into(),
+                );
+            };
+            result.added = processed.sink_rows;
+            progress.set(0.95, "Sonuç dosyası saklanıyor");
+            let sha256 = sha256_hex(&bytes);
+            let (key, size) = match stage(blobs, claim, &bytes, &sha256, limits, "Sonuç dosyası").await {
+                Ok(staged) => staged,
+                Err(failed) => return failed,
+            };
+            Outcome::Done {
+                result: serde_json::to_value(&result).unwrap_or(Value::Null),
+                artifact: Some((key, size, sha256)),
+                reach: snap.reach,
+                commit: None,
+            }
+        }
     }
 }
 
@@ -695,6 +1042,7 @@ async fn checkpoint(
             result: serde_json::to_value(&change).unwrap_or(Value::Null),
             artifact: None,
             reach: None,
+            commit: None,
         },
         Err(e) => {
             let (code, message) = failed_of(&e);
@@ -733,7 +1081,9 @@ async fn finish(
             result,
             artifact,
             reach,
+            commit,
         } => {
+            let mut result = result;
             let (key, size, sha256) = match artifact {
                 Some((k, s, h)) => (Some(k), Some(s), Some(h)),
                 None => (None, None, None),
@@ -762,7 +1112,7 @@ async fn finish(
                     .live()
                     .and_then(|()| a.require(ProjectPermission::JobsRun))
                     .and_then(|()| {
-                        if claim.kind == PROJECT_EXPORT_JOB {
+                        if claim.kind == PROJECT_EXPORT_JOB || key.is_some() {
                             a.require(ProjectPermission::Download)
                         } else {
                             Ok(())
@@ -800,6 +1150,26 @@ async fn finish(
                     .await;
                 }
             }
+            // A processing job's result is committed here, in the transaction that finishes the job: the project must
+            // still be at the revision the tool read, the caller's rights are asked again under the project's lock,
+            // and a finish that does not pass (a lost lease) takes the commit back with it (docs/adr/0559 §2).
+            if let Some(staged) = &commit {
+                match commit_staged(&mut tx, &a, claim, staged).await {
+                    Ok(revision) => result["revision"] = Value::String(revision),
+                    Err(e) => {
+                        drop(tx);
+                        remove(&key).await;
+                        let (code, message) = failed_of(&e);
+                        return Box::pin(finish(
+                            db,
+                            blobs,
+                            claim,
+                            Outcome::Failed { code, message },
+                        ))
+                        .await;
+                    }
+                }
+            }
             let passed: bool = sqlx::query_scalar(
                 "select kentos.finish_job($1, $2, true, $3, $4, $5, $6, null, null)",
             )
@@ -811,15 +1181,70 @@ async fn finish(
             .bind(&sha256)
             .fetch_one(&mut *tx)
             .await?;
-            tx.commit().await?;
-            if passed {
-                Ok(ServerJobState::Succeeded)
-            } else {
+            // A finish that did not pass takes everything of this transaction back, a commit included.
+            if !passed {
+                drop(tx);
                 remove(&key).await;
-                Ok(ServerJobState::Running)
+                return Ok(ServerJobState::Running);
             }
+            tx.commit().await?;
+            Ok(ServerJobState::Succeeded)
         }
     }
+}
+
+/// The commit of a processing job's delta inside the finish transaction: the versions of the objects it changes or
+/// removes and of the project's metadata as the transaction sees them, expected, and the project required to be at the
+/// revision the tool read, so the delta is the tool's on exactly the project it read.
+async fn commit_staged(
+    tx: &mut sqlx::Transaction<'static, sqlx::Postgres>,
+    access: &ProjectAccess,
+    claim: &Claim,
+    staged: &Staged,
+) -> AppResult<String> {
+    let mut expected: std::collections::BTreeMap<String, String> = Default::default();
+    let ids: Vec<Uuid> = staged
+        .delta
+        .guarded()
+        .iter()
+        .filter_map(|id| Uuid::parse_str(id).ok())
+        .collect();
+    if !ids.is_empty() {
+        let rows: Vec<(Uuid, i64)> = sqlx::query_as(
+            "select id, version from kentos.feature where tenant_id = $1 and project_id = $2 and id = any($3)",
+        )
+        .bind(access.tenant)
+        .bind(access.project)
+        .bind(&ids)
+        .fetch_all(&mut **tx)
+        .await?;
+        for (id, version) in rows {
+            expected.insert(id.to_string(), version.to_string());
+        }
+    }
+    if staged.delta.project.is_some() {
+        let meta: i64 = sqlx::query_scalar(
+            "select meta_version from kentos.project where tenant_id = $1 and id = $2",
+        )
+        .bind(access.tenant)
+        .bind(access.project)
+        .fetch_one(&mut **tx)
+        .await?;
+        expected.insert(PROJECT_META_KEY.to_owned(), meta.to_string());
+    }
+    let envelope = CommandEnvelope {
+        command_name: PROJECT_CHANGES.into(),
+        version: PROJECT_CHANGES_VERSION,
+        tenant_id: claim.tenant.to_string(),
+        project_id: claim.project.to_string(),
+        request_id: format!("job-{}", claim.id),
+        idempotency_key: format!("job-{}", claim.id),
+        expected_versions: expected,
+        input: serde_json::to_value(staged.delta.changes()).unwrap_or(Value::Null),
+    };
+    let done =
+        crate::changes::commit_in(tx, access, envelope, Some(staged.revision)).await?;
+    Ok(done.data_revision)
 }
 
 /// Runs jobs until `stop` is set: one after another while there are any, then waiting `idle` between looks; `said`
@@ -832,11 +1257,12 @@ pub async fn run_worker(
     lease: Duration,
     idle: Duration,
     limits: JobLimits,
+    processor: Option<Arc<dyn Processor>>,
     stop: Arc<AtomicBool>,
     said: impl Fn(AppResult<Worked>),
 ) {
     while !stop.load(Ordering::SeqCst) {
-        match work_once(&db, &blobs, owner, lease, &limits).await {
+        match work_once_with(&db, &blobs, owner, lease, &limits, processor.clone()).await {
             Ok(Some(w)) => said(Ok(w)),
             Ok(None) => tokio::time::sleep(idle).await,
             Err(e) => {

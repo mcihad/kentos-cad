@@ -108,6 +108,7 @@ mod tests {
             closed: false,
             levels: [None, None, None],
             periods: Vec::new(),
+            terminals: [None, None],
         }];
         let g = Graph::build(rules, &edges, &[]).0;
         let at = |x: f64| g.locate(Vec2::new(x, 1.0), 5.0).expect("near");

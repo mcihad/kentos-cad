@@ -34,6 +34,8 @@ pub enum ProblemKind {
     Unread,
     /// A turn line not on two pieces meeting at a node (docs/adr/0521 §2).
     Turn,
+    /// An edge end at a device that names none of its terminals, or an edge running through a device (docs/adr/0557 §1).
+    Terminal,
 }
 
 /// A problem: its kind, where, the edges' or junctions' ids and its measure (a gap, a part's length).
@@ -262,6 +264,15 @@ pub fn check(g: &Graph, report: &BuildReport) -> Checked {
             cost: None,
         });
     }
+    for &(id, at) in &report.unterminated {
+        problems.push(Problem {
+            kind: ProblemKind::Terminal,
+            at,
+            ids: vec![id],
+            value: None,
+            cost: None,
+        });
+    }
     let mut counts: Vec<(ProblemKind, usize)> = Vec::new();
     for p in &problems {
         match counts.iter_mut().find(|(k, _)| *k == p.kind) {
@@ -303,6 +314,7 @@ mod tests {
             closed: false,
             levels: [None, None, None],
             periods: Vec::new(),
+            terminals: [None, None],
         }
     }
 
@@ -328,6 +340,7 @@ mod tests {
             role: Role::Valve,
             closed: false,
             level: None,
+            device: None,
         }];
         let (g, report) = Graph::build(rules, &edges, &valve);
         let c = check(&g, &report);

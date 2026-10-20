@@ -26,6 +26,7 @@ use std::collections::HashMap;
 
 use super::clock::Clock;
 use super::rules::{Connect, Dir, Rules};
+use super::terminals::{NO_DEVICE, NO_TERMINAL, Terminals};
 use super::turns::{Level, TurnIn, TurnTable, heading, level_value};
 use crate::geom::arrangement::{edge_box, edge_len, reverse_edge, sub_edge};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
@@ -49,6 +50,8 @@ pub struct EdgeIn {
     pub levels: [Option<String>; 3],
     /// Its time profiles' field values: `periods[c - 1][k]` for cost `c`'s period `k` (docs/adr/0521 §4).
     pub periods: Vec<Vec<Option<String>>>,
+    /// Its terminal fields' values: the terminal its start and its end are attached to (docs/adr/0557 §1).
+    pub terminals: [Option<String>; 2],
 }
 
 impl EdgeIn {
@@ -70,6 +73,7 @@ impl EdgeIn {
             closed,
             levels: [None, None, None],
             periods: Vec::new(),
+            terminals: [None, None],
         }
     }
 }
@@ -92,6 +96,8 @@ pub struct JunctionIn {
     pub closed: bool,
     /// Its level field's value; none: every level (docs/adr/0521 §3).
     pub level: Option<String>,
+    /// Its device: an index into the rules' `terminals.devices`; none: a point (docs/adr/0557 §1).
+    pub device: Option<u32>,
 }
 
 /// A piece: between two nodes along one edge, from `s0` to `s1` (metres
@@ -155,6 +161,9 @@ pub struct BuildReport {
     pub unread_other: Vec<(f64, Vec2)>,
     /// Turn lines not on two pieces meeting at a node: their ids and their first points.
     pub unplaced: Vec<(f64, Vec2)>,
+    /// Edge ends at a device that name none of its terminals, and edges running through a device instead of ending at
+    /// it (docs/adr/0557 §1): the edge's id and the device's place.
+    pub unterminated: Vec<(f64, Vec2)>,
 }
 
 /// A place on the network: a piece and the metres along it from its start.
@@ -194,6 +203,8 @@ pub struct Graph {
     pub turns: Option<TurnTable>,
     /// Each cost's time profile (none for most), `clocks[c]`.
     pub clocks: Vec<Option<Clock>>,
+    /// The devices' terminals at the nodes and arcs, when the definition has devices (docs/adr/0557 §1).
+    pub terms: Option<Terminals>,
 }
 
 /// A cut along an edge: where (metres from its start), the point and its order among all cuts.
@@ -619,9 +630,19 @@ impl Graph {
         }
         let mut kinds = vec![NodeKind::default(); nodes.len()];
         let mut junction_meta = Vec::with_capacity(junctions.len());
+        let mut node_device = vec![NO_DEVICE; nodes.len()];
         for (j, jn) in junctions.iter().enumerate() {
             let node = attached[j].then(|| node_of[first_junction + j]);
             if let Some(n) = node {
+                if let Some(d) = jn.device
+                    && rules
+                        .terminals
+                        .as_ref()
+                        .is_some_and(|t| (d as usize) < t.devices.len())
+                    && node_device[n as usize] == NO_DEVICE
+                {
+                    node_device[n as usize] = d;
+                }
                 let k = &mut kinds[n as usize];
                 match jn.role {
                     Role::Source => k.source = true,
@@ -788,6 +809,43 @@ impl Graph {
             }
         }
         let arc_head = pieces.iter().flat_map(|p| [p.to, p.from]).collect();
+        // The devices' terminals (docs/adr/0557 §1): the terminal at each arc's tail, from the edge's start and end
+        // fields; an edge running through a device, or an end naming none of its terminals, is said.
+        let terms = rules.terminals.as_ref().map(|tr| {
+            let mut arc_terminal = vec![NO_TERMINAL; pieces.len() * 2];
+            for (k, p) in pieces.iter().enumerate() {
+                let e = &edges[p.edge as usize];
+                let ends = [
+                    (0, p.from, p.s0 == 0.0, &e.terminals[0]),
+                    (1, p.to, p.s1 == lengths[p.edge as usize], &e.terminals[1]),
+                ];
+                for (side, node, at_end, value) in ends {
+                    let d = node_device[node as usize];
+                    if d == NO_DEVICE {
+                        continue;
+                    }
+                    let place = nodes[node as usize];
+                    let named = at_end
+                        .then(|| {
+                            value
+                                .as_deref()
+                                .and_then(|v| tr.devices[d as usize].terminal(v))
+                        })
+                        .flatten();
+                    match named {
+                        Some(t) => arc_terminal[k * 2 + side] = t,
+                        None => report.unterminated.push((e.id, place)),
+                    }
+                }
+            }
+            report.unterminated.sort_by(|a, b| {
+                a.0.total_cmp(&b.0)
+                    .then(a.1.x.total_cmp(&b.1.x))
+                    .then(a.1.y.total_cmp(&b.1.y))
+            });
+            report.unterminated.dedup();
+            Terminals::new(&rules, node_device.clone(), arc_terminal)
+        });
         let mut g = Graph {
             rules,
             nodes,
@@ -807,6 +865,7 @@ impl Graph {
             tree,
             turns: None,
             clocks,
+            terms,
         };
         if g.rules.turns.is_some() {
             g.turns = Some(g.turn_table(turns, &mut report));
@@ -914,6 +973,23 @@ impl Graph {
             b.piece * 2 + 1
         };
         Some((u64::from(in_arc) << 32) | u64::from(out_arc))
+    }
+
+    /// Whether a way that arrived at `node` by terminal `from` (`NO_TERMINAL`: by none) may leave along arc `arc`
+    /// (docs/adr/0557 §1): always in a network without devices.
+    pub fn passes(&self, node: u32, from: u8, arc: u32) -> bool {
+        match &self.terms {
+            None => true,
+            Some(t) => t.passes(&self.rules, node, from, t.arc_terminal[arc as usize]),
+        }
+    }
+
+    /// The terminal by which a way along arc `arc` arrives at its head.
+    pub fn arrives(&self, arc: u32) -> u8 {
+        match &self.terms {
+            None => NO_TERMINAL,
+            Some(t) => t.arc_terminal[(arc ^ 1) as usize],
+        }
     }
 
     /// What turning at `node` from arc `in_arc` to arc `out_arc` adds to cost `c`; none when it is forbidden. Every
@@ -1107,6 +1183,7 @@ mod tests {
             closed: false,
             levels: [None, None, None],
             periods: Vec::new(),
+            terminals: [None, None],
         }
     }
 

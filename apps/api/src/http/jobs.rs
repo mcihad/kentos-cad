@@ -1,5 +1,5 @@
 //! The routes of durable server jobs (docs/adr/0542): asking for one, listing and reading a project's jobs, cancelling
-//! one and downloading a succeeded export's file. The server's workers run them (`kentosd serve` beside the API, or
+//! one and downloading a succeeded job's file (an export's `.kcad`, a processing job's GeoPackage, docs/adr/0559). The server's workers run them (`kentosd serve` beside the API, or
 //! `kentosd worker` alone).
 
 use axum::Json;
@@ -103,7 +103,7 @@ pub async fn artifact(
         let revision = job
             .result
             .as_ref()
-            .and_then(|r| r["revision"].as_str())
+            .and_then(|r| r["revision"].as_str().or_else(|| r["baseRevision"].as_str()))
             .unwrap_or_default()
             .to_owned();
         let size: u64 = artifact.size.parse().unwrap_or(0);

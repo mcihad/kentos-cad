@@ -958,6 +958,22 @@ const ENTRIES: &[Entry] = &[
         warnings: &["unknown_layer"],
         targets: none,
     },
+    // Alt ağlar (docs/adr/0557 §2).
+    Entry {
+        id: "cad.subnetworks.find",
+        refusals: &[&["unknown_network", "no_subnetworks", "no_controllers"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.subnetworks.update",
+        refusals: &[
+            &["unknown_network", "no_subnetworks", "no_controllers"],
+            REVISION,
+        ],
+        warnings: &["subnetwork_layer_skipped", "values_skipped"],
+        targets: none,
+    },
     Entry {
         id: "cad.annotations.scales",
         refusals: &[

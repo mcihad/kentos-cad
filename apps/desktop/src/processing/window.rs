@@ -66,6 +66,8 @@ impl App {
             format: &format,
             color: &color,
         };
+        let server = self.server_place();
+        let at_server = self.processing_at_server();
         let body = row![
             scrollable(form(window, &env))
                 .id(FORM)
@@ -73,7 +75,7 @@ impl App {
                 .width(Fill)
                 .height(Fill),
             container(
-                scrollable(side(window, &self.processing))
+                scrollable(side(window, &self.processing, &server))
                     .direction(style::field::body_scrollbar())
                     .height(Fill)
             )
@@ -87,7 +89,7 @@ impl App {
             Dialog::new(window.tool.label.clone())
                 .push(body)
                 .push(horizontal_divider())
-                .push(footer(window))
+                .push(footer(window, at_server))
                 .width(WIDTH)
                 .max_height(HEIGHT),
             ev(Event::Close),
@@ -375,7 +377,11 @@ fn field_row<'a>(
 
 /// The right-hand panel: the category, what the tool does, its help (a
 /// model's steps), the preview, where it runs and its command-line names.
-fn side<'a>(window: &'a ToolDialog, processing: &'a Processing) -> Element<'a, Message> {
+fn side<'a>(
+    window: &'a ToolDialog,
+    processing: &'a Processing,
+    server: &plan::ServerPlace,
+) -> Element<'a, Message> {
     let tool = &window.tool;
     let registry = &processing.registry;
     let model = tool
@@ -490,7 +496,7 @@ fn side<'a>(window: &'a ToolDialog, processing: &'a Processing) -> Element<'a, M
     // for these inputs now, then each place the tool names; places this
     // program does not have are coming.
     let (options, hint, current) = plan::targets_view(
-        &window.targets(registry),
+        &window.targets(registry, server),
         Choice::read(processing.memory.target(&tool.id)),
     );
     let mut targets =
@@ -509,6 +515,21 @@ fn side<'a>(window: &'a ToolDialog, processing: &'a Processing) -> Element<'a, M
         }
     }
     out = out.push(column![side_title("Nerede çalışır"), targets].spacing(8));
+    // On the server the result goes to the project, or to a file the job keeps (docs/adr/0559 §5).
+    if current == Some(Choice::At(kentos_processing::Target::Server)) {
+        let result = RadioGroup::new(window.server_sink, |sink: bool| ev(Event::ServerSink(sink)))
+            .option(
+                false,
+                "Sonucu projeye yaz",
+                "tek adımda; proje araç çalışırken değişirse hiçbir şey yazılmaz",
+            )
+            .option(
+                true,
+                "Sonucu dosyaya yaz (GeoPackage)",
+                "proje değişmez; bitince Sunucu işleri'nden indirilir",
+            );
+        out = out.push(column![side_title("Sonuç"), result].spacing(8));
+    }
     if !tool.aliases.is_empty() {
         let mut names = Row::new().spacing(6);
         for a in &tool.aliases {
@@ -532,8 +553,8 @@ fn side_title<'a>(text: &'a str) -> Element<'a, Message> {
 
 /// Varsayılanlar, the status line (how the run goes or ended, or what to
 /// fix), Kapat or Durdur, and Çalıştır: the web's plan (plan.rs).
-fn footer<'a>(window: &'a ToolDialog) -> Element<'a, Message> {
-    let buttons = plan::footer_of(&window.status);
+fn footer<'a>(window: &'a ToolDialog, at_server: bool) -> Element<'a, Message> {
+    let buttons = plan::footer_at(&window.status, at_server);
     let line = window.line();
     let reset = button(label::body("Varsayılanlar"))
         .padding([5, 10])
@@ -580,6 +601,7 @@ fn footer<'a>(window: &'a ToolDialog) -> Element<'a, Message> {
             Action::Zoom => small("Seçime yakınlaştır", Event::Results),
             Action::Select => small("Sonuçları seç", Event::Results),
             Action::Undo => small("Geri al", Event::Undo),
+            Action::Jobs => small("Sunucu işleri", Event::ServerJobs),
         });
     }
     let close = button(label::body(buttons.close))

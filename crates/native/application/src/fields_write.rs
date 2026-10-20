@@ -211,18 +211,18 @@ fn calculate(
 type Attrs = BTreeMap<String, String>;
 
 /// An object written: its slot, its new attributes, the label that follows (none: the label stays).
-type Write = (Slot, Attrs, Option<Option<String>>);
+pub(crate) type Write = (Slot, Attrs, Option<Option<String>>);
 
 /// An object that changes: its slot, id, attributes before and after.
 type Changed = (Slot, String, Attrs, Attrs);
 
 /// What a write would do: the objects' new attributes (only those that change), the counts, the problems.
-struct Planned {
-    writes: Vec<Write>,
-    out: FieldsWritten,
+pub(crate) struct Planned {
+    pub(crate) writes: Vec<Write>,
+    pub(crate) out: FieldsWritten,
 }
 
-fn run(doc: &Document, input: &FieldsWrite) -> Result<Planned, Stop> {
+pub(crate) fn run(doc: &Document, input: &FieldsWrite) -> Result<Planned, Stop> {
     let layer = input.layer.as_str();
     let node = doc.layers().get(layer).ok_or_else(|| {
         refuse(

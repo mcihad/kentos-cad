@@ -80,6 +80,7 @@ fn build(scene: &Value) -> (Graph, kentos_geometry_core::ops::network::BuildRepo
                 closed: e["closed"].as_bool().unwrap_or(false),
                 levels: [None, None, None],
                 periods: Vec::new(),
+                terminals: [None, None],
             }
         })
         .collect();
@@ -97,6 +98,7 @@ fn build(scene: &Value) -> (Graph, kentos_geometry_core::ops::network::BuildRepo
             },
             closed: j["closed"].as_bool().unwrap_or(false),
             level: None,
+            device: None,
         })
         .collect();
     Graph::build(rules, &edges, &junctions)
@@ -427,6 +429,7 @@ fn the_analyses_give_what_the_independent_reference_gives() {
                             ProblemKind::Short => "short",
                             ProblemKind::Unread => "unread",
                             ProblemKind::Turn => "turn",
+                            ProblemKind::Terminal => "terminal",
                         };
                         assert_eq!(kind, w["kind"].as_str().expect("a kind"), "{title}");
                         near(p.at.x, num(&w["at"][0]), &title);
@@ -527,6 +530,7 @@ fn timing() {
             closed: r() < 0.01,
             levels: [None, None, None],
             periods: Vec::new(),
+            terminals: [None, None],
         });
     };
     for i in 0..N {

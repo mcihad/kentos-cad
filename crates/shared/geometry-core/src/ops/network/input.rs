@@ -24,6 +24,8 @@ pub struct EdgeValues {
     pub levels: [Option<String>; 3],
     /// Its costs' periods' field values, `periods[c - 1][k]` (docs/adr/0521 §4).
     pub periods: Vec<Vec<Option<String>>>,
+    /// Its terminal fields' values: the terminal its start and its end are attached to (docs/adr/0557 §1).
+    pub terminals: [Option<String>; 2],
 }
 
 /// What the app gave for a junction object: its layer's role, whether its closed expression holds and its level
@@ -33,6 +35,8 @@ pub struct JunctionValues {
     pub role: Role,
     pub closed: bool,
     pub level: Option<String>,
+    /// Its device: an index into the rules' `terminals.devices` (docs/adr/0557 §1).
+    pub device: Option<u32>,
 }
 
 /// What the app gave for a turn layer's object (docs/adr/0521 §2): whether its layer reads a delay field and the
@@ -152,6 +156,7 @@ pub fn from_store(
                         closed: v.closed,
                         levels: v.levels.clone(),
                         periods: v.periods.clone(),
+                        terminals: v.terminals.clone(),
                     });
                 }
             }
@@ -168,6 +173,7 @@ pub fn from_store(
                 role: v.role,
                 closed: v.closed,
                 level: v.level.clone(),
+                device: v.device,
             })),
             None => skipped.push((*id, kind_of(&item.shape))),
         }

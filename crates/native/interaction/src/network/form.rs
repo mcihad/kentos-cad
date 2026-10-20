@@ -8,11 +8,16 @@
 //! (scripts/fixtures/network_form_cases.py). Turns, levels and a speed cost's
 //! time profile (docs/adr/0521): the delays in seconds, a profile as
 //! `07:00-09:30 0,5; 17:00-19:00 hiz_aksam` (a factor or a speed field).
+//! Terminals and subnetworks (docs/adr/0557): a device's terminals as
+//! `yg: Yüksek gerilim; ag: Alçak gerilim` (an id, and its name when it has
+//! one), its paths as `yg, ag; yg, c` (the ids of each path), the edge fields
+//! naming the terminals, and the subnetworks' name field, attribute and reach.
 
 use kentos_commands::{
-    JunctionLayer, JunctionRole, NETWORK_TOLERANCE, NetworkConnect, NetworkCost, NetworkCostKind,
-    NetworkDef, NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels, NetworkPeriod,
-    NetworkTurns, NetworkUTurns, TurnLayer, clock_text,
+    DeviceTerminal, JunctionLayer, JunctionRole, NETWORK_TOLERANCE, NetworkConnect, NetworkCost,
+    NetworkCostKind, NetworkDef, NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels,
+    NetworkPeriod, NetworkSubnetworks, NetworkTerminals, NetworkTurns, NetworkUTurns,
+    SubnetworkReach, TerminalDevice, TurnLayer, clock_text,
 };
 use kentos_geometry_core::tools::point_text::js_trim;
 
@@ -47,6 +52,16 @@ pub struct TurnRow {
     pub layer: String,
     pub filter: String,
     pub field: String,
+}
+
+/// A device's row (docs/adr/0557 §1): a junction layer, its terminals and the paths through it, as typed.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DeviceRow {
+    pub layer: String,
+    /// `yg: Yüksek gerilim; ag: Alçak gerilim`: each terminal's id and, after a colon, its name (none: the id).
+    pub terminals: String,
+    /// `yg, ag; yg, c`: each path's terminal ids, split at commas, the paths at semicolons.
+    pub paths: String,
 }
 
 /// Yön as the form offers it.
@@ -84,7 +99,20 @@ pub struct NetworkForm {
     pub level_start: String,
     pub level_end: String,
     pub level_inside: String,
+    /// Terminaller (docs/adr/0557 §1): the edge fields naming the terminals of an edge's start and end (both empty:
+    /// none) and the devices.
+    pub terminal_start: String,
+    pub terminal_end: String,
+    pub devices: Vec<DeviceRow>,
+    /// Alt ağlar (docs/adr/0557 §2): none, no subnetworks; the controller's name field (empty: its label), the
+    /// attribute written.
+    pub subnet_reach: Option<SubnetworkReach>,
+    pub subnet_name: String,
+    pub subnet_attribute: String,
 }
+
+/// The attribute the subnetworks' names are written to when none is typed.
+pub const DEFAULT_SUBNET_ATTRIBUTE: &str = "Alt ağ";
 
 /// A speed cost's default speed when none is typed, km/sa.
 pub const DEFAULT_SPEED: f64 = 50.0;
@@ -181,6 +209,62 @@ pub fn periods_text(periods: &[NetworkPeriod]) -> String {
             };
             format!("{}-{} {what}", clock_text(p.from), clock_text(p.to))
         })
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
+/// A device's terminals as typed: split at semicolons, each `id: name` (or just the id, which is then its name too).
+pub fn terminals_of(text: &str) -> Vec<DeviceTerminal> {
+    text.split(';')
+        .map(js_trim)
+        .filter(|t| !t.is_empty())
+        .map(|t| match t.split_once(':') {
+            Some((id, name)) => DeviceTerminal {
+                id: js_trim(id).to_owned(),
+                name: js_trim(name).to_owned(),
+            },
+            None => DeviceTerminal {
+                id: t.to_owned(),
+                name: t.to_owned(),
+            },
+        })
+        .collect()
+}
+
+/// A device's terminals as the form shows them (`id: name`, just the id where the name is the id).
+pub fn terminals_text(terminals: &[DeviceTerminal]) -> String {
+    terminals
+        .iter()
+        .map(|t| {
+            if t.name == t.id {
+                t.id.clone()
+            } else {
+                format!("{}: {}", t.id, t.name)
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
+/// A device's paths as typed: the paths split at semicolons, each one's terminals at commas.
+pub fn paths_of(text: &str) -> Vec<Vec<String>> {
+    text.split(';')
+        .map(|p| {
+            p.split(',')
+                .map(js_trim)
+                .filter(|v| !v.is_empty())
+                .map(str::to_owned)
+                .collect::<Vec<_>>()
+        })
+        .filter(|p| !p.is_empty())
+        .collect()
+}
+
+/// A device's paths as the form shows them.
+pub fn paths_text(paths: &[Vec<String>]) -> String {
+    paths
+        .iter()
+        .map(|p| p.join(", "))
         .collect::<Vec<_>>()
         .join("; ")
 }
@@ -308,6 +392,37 @@ pub fn form_of(def: &NetworkDef, from_metres: impl Fn(f64) -> f64) -> NetworkFor
             .as_ref()
             .and_then(|l| l.inside.clone())
             .unwrap_or_default(),
+        terminal_start: def
+            .terminals
+            .as_ref()
+            .map(|t| t.start.clone())
+            .unwrap_or_default(),
+        terminal_end: def
+            .terminals
+            .as_ref()
+            .map(|t| t.end.clone())
+            .unwrap_or_default(),
+        devices: def
+            .terminals
+            .iter()
+            .flat_map(|t| &t.devices)
+            .map(|d| DeviceRow {
+                layer: d.layer.clone(),
+                terminals: terminals_text(&d.terminals),
+                paths: paths_text(&d.paths),
+            })
+            .collect(),
+        subnet_reach: def.subnetworks.as_ref().map(|s| s.reach),
+        subnet_name: def
+            .subnetworks
+            .as_ref()
+            .and_then(|s| s.name.clone())
+            .unwrap_or_default(),
+        subnet_attribute: def
+            .subnetworks
+            .as_ref()
+            .map(|s| s.attribute.clone())
+            .unwrap_or_default(),
     }
 }
 
@@ -371,6 +486,12 @@ pub fn new_form(
         level_start: String::new(),
         level_end: String::new(),
         level_inside: String::new(),
+        terminal_start: String::new(),
+        terminal_end: String::new(),
+        devices: Vec::new(),
+        subnet_reach: None,
+        subnet_name: String::new(),
+        subnet_attribute: String::new(),
     }
 }
 
@@ -493,6 +614,33 @@ pub fn def_of(form: &NetworkForm, to_metres: impl Fn(f64) -> f64) -> Result<Netw
             ));
         }
     };
+    let terminals = match (opt(&form.terminal_start), opt(&form.terminal_end)) {
+        (None, None) if form.devices.is_empty() => None,
+        (Some(start), Some(end)) => Some(NetworkTerminals {
+            start,
+            end,
+            devices: form
+                .devices
+                .iter()
+                .map(|d| TerminalDevice {
+                    layer: d.layer.clone(),
+                    terminals: terminals_of(&d.terminals),
+                    paths: paths_of(&d.paths),
+                })
+                .collect(),
+        }),
+        _ => {
+            return Err(format!(
+                "{who} terminalleri için başlangıç ve bitiş alanı birlikte yazılır."
+            ));
+        }
+    };
+    let subnetworks = form.subnet_reach.map(|reach| NetworkSubnetworks {
+        name: opt(&form.subnet_name),
+        attribute: opt(&form.subnet_attribute)
+            .unwrap_or_else(|| DEFAULT_SUBNET_ATTRIBUTE.to_owned()),
+        reach,
+    });
     let def = NetworkDef {
         id: form.id.clone(),
         name,
@@ -531,6 +679,8 @@ pub fn def_of(form: &NetworkForm, to_metres: impl Fn(f64) -> f64) -> Result<Netw
         closed: opt(&form.closed),
         turns,
         levels,
+        terminals,
+        subnetworks,
     };
     match def.problem() {
         Some(wrong) => Err(sentence(&wrong)),
@@ -689,6 +839,19 @@ mod tests {
             level_start: text(v, "levelStart"),
             level_end: text(v, "levelEnd"),
             level_inside: text(v, "levelInside"),
+            terminal_start: text(v, "terminalStart"),
+            terminal_end: text(v, "terminalEnd"),
+            devices: list("devices")
+                .iter()
+                .map(|d| DeviceRow {
+                    layer: text(d, "layer"),
+                    terminals: text(d, "terminals"),
+                    paths: text(d, "paths"),
+                })
+                .collect(),
+            subnet_reach: (!v["subnetReach"].is_null()).then(|| enum_of(&v["subnetReach"])),
+            subnet_name: text(v, "subnetName"),
+            subnet_attribute: text(v, "subnetAttribute"),
         }
     }
 

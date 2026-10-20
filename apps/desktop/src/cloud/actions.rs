@@ -103,6 +103,8 @@ pub enum Settle {
     ),
     /// An export job of the open project, asked once its edits went (catalog_jobs.rs).
     Job(Box<kentos_commands::ProjectSummary>),
+    /// An İşlemler tool run as a job on the server, asked once the open project's edits went (processing/server.rs).
+    ProcessingJob(Box<kentos_commands::ProcessingJobInput>),
     /// The open project in the other storage mode, once its edits went (catalog_forms.rs).
     Convert(
         Box<(
@@ -114,7 +116,7 @@ pub enum Settle {
 
 /// A failed request as a sentence: the server's words, or what to do when it
 /// gave none (the web's `reason`).
-pub(super) fn reason(failure: &ApiFailure) -> String {
+pub(crate) fn reason(failure: &ApiFailure) -> String {
     match failure.code.as_str() {
         "conflict" => {
             return "Proje bilgileri bu arada başka biri tarafından değiştirildi. Listeyi yenileyip yeniden deneyin.".to_owned();
@@ -304,7 +306,7 @@ impl App {
     }
 
     /// What waits goes now (the web's `flush`); `settled` says when it went.
-    pub(super) fn flush(&mut self) -> Task<Message> {
+    pub(crate) fn flush(&mut self) -> Task<Message> {
         // The autosave looks at the drawing first: a name just given differs now.
         self.live_observe(Instant::now());
         let Some(live) = self.cloud.live.as_mut() else {
@@ -360,6 +362,7 @@ impl App {
                 self.checkpoint_send(&p, input)
             }
             Some(Settle::Job(p)) => self.jobs_send_export(&p),
+            Some(Settle::ProcessingJob(input)) => self.processing_job_send(*input),
             Some(Settle::Metadata(what)) => self.metadata_renamed(*what, sent),
             Some(Settle::Convert(what)) => {
                 let (p, input) = *what;

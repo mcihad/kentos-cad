@@ -41,6 +41,7 @@ mod measure;
 mod navigation;
 mod network;
 mod network_adjust;
+mod network_terminals;
 mod network_turns;
 mod numeric;
 mod offset_notes;

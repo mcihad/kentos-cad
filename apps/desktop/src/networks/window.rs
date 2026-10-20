@@ -3,7 +3,7 @@
 //! definition on the right: its name and kind, edge layers with their
 //! filters, junction layers with their roles, filters and closed expressions,
 //! how ends meet and the tolerance, the direction, the costs and the closed
-//! edges. Denetle builds the network as the window says it and lists its
+//! edges, the devices' terminals and the subnetworks (docs/adr/0557). Denetle builds the network as the window says it and lists its
 //! counts and problems; a problem's row selects its objects, marks it in the
 //! drawing and goes there. The first thing wrong is said under the form and
 //! Kaydet waits; Kaydet writes each changed network through
@@ -13,12 +13,13 @@ use iced::widget::{Column, Space, button, column, container, row, scrollable, te
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     JunctionRole, NetworkConnect, NetworkCostKind, NetworkDef, NetworkDefine,
-    NetworkDefineOperation, NetworkKind, NetworkUTurns, networks_problem, next_network_id,
+    NetworkDefineOperation, NetworkKind, NetworkUTurns, SubnetworkReach, networks_problem,
+    next_network_id,
 };
 use kentos_geometry_core::ops::network::{Checked, ProblemKind};
 use kentos_interaction::network::form::{
-    CostRow, DIRECTION_DEFAULTS, DirectionKind, EdgeRow, JunctionRow, NetworkForm, TurnRow, def_of,
-    form_expressions, form_of, new_form, retyped,
+    CostRow, DIRECTION_DEFAULTS, DeviceRow, DirectionKind, EdgeRow, JunctionRow, NetworkForm,
+    TurnRow, def_of, form_expressions, form_of, new_form, retyped,
 };
 use kentos_interaction::network::{Answer, NetworkAsk, NetworkQuestion, NetworkReply};
 use kentos_interaction::{Format, Level, ViewChange};
@@ -73,6 +74,12 @@ const U_TURNS: [(Option<NetworkUTurns>, &str); 4] = [
     (Some(NetworkUTurns::DeadEnds), "Geri dönüş yalnız çıkmazda"),
     (Some(NetworkUTurns::Never), "Geri dönüş yok"),
 ];
+/// Alt ağlar' first choice is none (no subnetworks), then the ways a controller reaches (docs/adr/0557 §2).
+const REACHES: [(Option<SubnetworkReach>, &str); 3] = [
+    (None, "Alt ağ yok"),
+    (Some(SubnetworkReach::Downstream), "Akış aşağı"),
+    (Some(SubnetworkReach::Connected), "Bağlı (her yön)"),
+];
 const COST_KINDS: [(NetworkCostKind, &str); 2] = [
     (NetworkCostKind::Speed, "Süre (hızdan)"),
     (NetworkCostKind::Field, "Alandan"),
@@ -88,6 +95,7 @@ pub fn problem_label(k: ProblemKind) -> &'static str {
         ProblemKind::Short => "Sıfır uzunluklu parça",
         ProblemKind::Unread => "Okunamayan değer",
         ProblemKind::Turn => "Bağlanmayan dönüş",
+        ProblemKind::Terminal => "Terminalsiz uç",
     }
 }
 
@@ -179,6 +187,18 @@ pub enum Event {
     TurnRemove(usize),
     /// A level field as typed: start, end, inside.
     LevelField(usize, String),
+    /// The edge field naming an end's terminal (docs/adr/0557 §1): start, end.
+    TerminalField(usize, String),
+    DeviceAdd,
+    DeviceRemove(usize),
+    /// A device's layer: its row and the index among the network's junction layers.
+    DeviceLayer(usize, usize),
+    DeviceTerminals(usize, String),
+    DevicePaths(usize, String),
+    /// The way subnetworks reach (a choice of `REACHES`), the controller's name field and the attribute written.
+    SubnetReach(usize),
+    SubnetName(String),
+    SubnetAttribute(String),
     Builder(Field),
     Check,
     Problem(usize),
@@ -1062,6 +1082,116 @@ impl App {
         if f.level_start.trim().is_empty() && f.level_end.trim().is_empty() {
             form = form.push(label::muted("Seviye yok: aynı yerde buluşan bütün kenarlar bağlanır. Köprü ve tünel için kenarın uçlarının seviye alanlarını yazın."));
         }
+        // Terminals (docs/adr/0557 §1).
+        let junction_layers: Vec<String> = {
+            let mut seen: Vec<String> = Vec::new();
+            for j in &f.junctions {
+                if !j.layer.is_empty() && !seen.contains(&j.layer) {
+                    seen.push(j.layer.clone());
+                }
+            }
+            seen
+        };
+        form = form.push(head(
+            "Terminaller",
+            Some(small(
+                "plus",
+                "Cihaz ekle",
+                (f.devices.len() < kentos_commands::NETWORK_DEVICE_LIMIT
+                    && !junction_layers.is_empty())
+                .then(|| msg(Event::DeviceAdd)),
+            )),
+        ));
+        let mut ends = row![].spacing(6).align_y(Center);
+        for (slot, (hint, typed)) in [
+            ("başlangıç ucunun terminal alanı", &f.terminal_start),
+            ("bitiş ucunun terminal alanı", &f.terminal_end),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            ends = ends.push(
+                container(input(
+                    hint,
+                    typed,
+                    Box::new(move |t| Event::TerminalField(slot, t)),
+                ))
+                .width(Length::FillPortion(1)),
+            );
+        }
+        form = form.push(labelled("Alanlar", ends.into()));
+        for (i, d) in f.devices.iter().enumerate() {
+            let names: Vec<String> = junction_layers
+                .iter()
+                .map(|id| {
+                    layers
+                        .iter()
+                        .find(|(l, _)| l == id)
+                        .map_or_else(|| id.clone(), |(_, path)| path.clone())
+                })
+                .collect();
+            let mut choices: Vec<Choice> = names.iter().map(|n| Choice::new(n.clone())).collect();
+            let mut at = junction_layers.iter().position(|id| *id == d.layer);
+            if at.is_none() && !d.layer.is_empty() {
+                choices.push(Choice::new(format!("(düğüm katmanı değil: {})", d.layer)));
+                at = Some(choices.len() - 1);
+            }
+            form = form.push(
+                row![
+                    container(Select::new(choices, at, move |k| msg(Event::DeviceLayer(i, k))))
+                        .width(Length::FillPortion(2)),
+                    container(input(
+                        "terminaller: yg: Yüksek gerilim; ag: Alçak gerilim",
+                        &d.terminals,
+                        Box::new(move |t| Event::DeviceTerminals(i, t))
+                    ))
+                    .width(Length::FillPortion(3)),
+                    container(input(
+                        "yollar: yg, ag; yg, c",
+                        &d.paths,
+                        Box::new(move |t| Event::DevicePaths(i, t))
+                    ))
+                    .width(Length::FillPortion(2)),
+                    remove(msg(Event::DeviceRemove(i))),
+                ]
+                .spacing(6)
+                .align_y(Center),
+            );
+        }
+        if f.devices.is_empty() {
+            form = form.push(label::muted("Cihaz yok: izleme her düğümden her yöne geçer. Vana ya da trafo gibi cihazın terminallerini ve aralarındaki yolları yazın; kenarın ucu hangi terminale bağlıysa o alana yazılır."));
+        }
+        // Subnetworks (docs/adr/0557 §2).
+        form = form.push(head("Alt ağlar", None));
+        form = form.push(labelled(
+            "Ulaşım",
+            Select::new(
+                REACHES.iter().map(|(_, n)| Choice::new(*n)),
+                REACHES.iter().position(|(r, _)| *r == f.subnet_reach),
+                |k| msg(Event::SubnetReach(k)),
+            )
+            .into(),
+        ));
+        if f.subnet_reach.is_some() {
+            form = form.push(labelled(
+                "Ad alanı",
+                input(
+                    "boş: kaynağın etiketi, yoksa Ad",
+                    &f.subnet_name,
+                    Box::new(Event::SubnetName),
+                ),
+            ));
+            form = form.push(labelled(
+                "Öznitelik",
+                input(
+                    "alt ağ adlarının yazıldığı alan (boş: Alt ağ)",
+                    &f.subnet_attribute,
+                    Box::new(Event::SubnetAttribute),
+                ),
+            ));
+        } else {
+            form = form.push(label::muted("Alt ağ yok: Kaynak düğümleri denetleyici sayılmaz. Alt ağ, bir denetleyicinin ağın kurallarıyla ulaştığı yerdir; adları Alt ağları güncelle bir özniteliğe yazar."));
+        }
         // Closed edges.
         form = form.push(head("Kapalı kenarlar", None));
         form = form.push(labelled(
@@ -1236,6 +1366,8 @@ fn def_shell(id: &str) -> NetworkDef {
         closed: None,
         turns: None,
         levels: None,
+        terminals: None,
+        subnetworks: None,
     }
 }
 
@@ -1424,6 +1556,62 @@ fn edit(f: &mut NetworkForm, e: Event, layers: &[(String, String)]) {
             1 => f.level_end = t,
             _ => f.level_inside = t,
         },
+        Event::TerminalField(slot, t) => match slot {
+            0 => f.terminal_start = t,
+            _ => f.terminal_end = t,
+        },
+        Event::DeviceAdd => {
+            let layer = f
+                .junctions
+                .iter()
+                .map(|j| j.layer.clone())
+                .find(|l| !l.is_empty() && !f.devices.iter().any(|d| d.layer == *l))
+                .or_else(|| f.junctions.first().map(|j| j.layer.clone()))
+                .unwrap_or_default();
+            f.devices.push(DeviceRow {
+                layer,
+                terminals: "giris: Giriş; cikis: Çıkış".into(),
+                paths: "giris, cikis".into(),
+            });
+            if f.terminal_start.trim().is_empty() && f.terminal_end.trim().is_empty() {
+                f.terminal_start = "uc_bas".into();
+                f.terminal_end = "uc_son".into();
+            }
+        }
+        Event::DeviceRemove(i) if i < f.devices.len() => {
+            f.devices.remove(i);
+        }
+        Event::DeviceLayer(i, k) => {
+            let mut seen: Vec<String> = Vec::new();
+            for j in &f.junctions {
+                if !j.layer.is_empty() && !seen.contains(&j.layer) {
+                    seen.push(j.layer.clone());
+                }
+            }
+            if let (Some(d), Some(id)) = (f.devices.get_mut(i), seen.get(k)) {
+                d.layer = id.clone();
+            }
+        }
+        Event::DeviceTerminals(i, t) => {
+            if let Some(d) = f.devices.get_mut(i) {
+                d.terminals = t;
+            }
+        }
+        Event::DevicePaths(i, t) => {
+            if let Some(d) = f.devices.get_mut(i) {
+                d.paths = t;
+            }
+        }
+        Event::SubnetReach(k) => {
+            if let Some(&(r, _)) = REACHES.get(k) {
+                f.subnet_reach = r;
+                if r.is_some() && f.subnet_attribute.trim().is_empty() {
+                    f.subnet_attribute = kentos_interaction::network::form::DEFAULT_SUBNET_ATTRIBUTE.into();
+                }
+            }
+        }
+        Event::SubnetName(t) => f.subnet_name = t,
+        Event::SubnetAttribute(t) => f.subnet_attribute = t,
         _ => {}
     }
 }

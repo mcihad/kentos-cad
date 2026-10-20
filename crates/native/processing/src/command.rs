@@ -38,6 +38,15 @@ use crate::types::{Defaults, OutputKind, ParamKind, Tool, Values};
 /// What a run's record says about where it ran (docs/adr/0529 §2).
 static HOST: OnceLock<&'static str> = OnceLock::new();
 
+/// Set by a host that is not its user's machine (the server's job process, docs/adr/0559 §3): no run reads or writes a
+/// file of the host's, whatever the drawing links to.
+static FILES_FORBIDDEN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// From now on the runs of this process read no local file: a raster tool refuses, saying the host gives it no files.
+pub fn forbid_local_files() {
+    FILES_FORBIDDEN.store(true, std::sync::atomic::Ordering::Relaxed);
+}
+
 /// Registers İşlemler's built-in tools as the processing commands' (the first registration stays); the record says
 /// `headless`: Python, MCP, the agent's connection and the shared cases' runner.
 pub fn register() {
@@ -673,6 +682,21 @@ impl ToolHost for Tools {
             warnings,
         ))
     }
+
+    fn network(
+        &self,
+        doc: &Document,
+        id: &str,
+    ) -> Result<
+        (
+            kentos_commands::NetworkDef,
+            kentos_geometry_core::ops::network::NetworkSession,
+        ),
+        String,
+    > {
+        let built = crate::network::from_document(doc, id)?;
+        Ok((built.def, built.session))
+    }
 }
 
 /// The most rows one batch takes (docs/adr/0529 §1).
@@ -1033,8 +1057,12 @@ fn run_on(
     };
     let mut log = Vec::new();
     // The raster tools read and write files where there is no window too (docs/adr/0515).
-    let files = crate::local_files::LocalFiles::of(host.doc, folder);
-    let mut runner = Runner::with_files(std::sync::Arc::new(files));
+    let mut runner = if FILES_FORBIDDEN.load(std::sync::atomic::Ordering::Relaxed) {
+        Runner::new()
+    } else {
+        let files = crate::local_files::LocalFiles::of(host.doc, folder);
+        Runner::with_files(std::sync::Arc::new(files))
+    };
     if let Some(stop) = stop {
         runner = runner.with_stop(stop);
     }

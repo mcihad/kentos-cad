@@ -29,6 +29,8 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.addresses.define.json` | `cad.addresses.define` v1 (ADR 0229: adres verisinin tanımı; masaüstünün) | 22 |
 | `v1/cad.layers.service.json` | `cad.layers.service` v1 (ADR 0208 §15: servis katmanı ve veri kaynağı; masaüstünün) | 38 |
 | `v1/cad.network.define.json` | `cad.network.define` v1 (ADR 0209 §11: projenin ağları; masaüstünün) | 21 |
+| `v1/cad.subnetworks.find.json` | `cad.subnetworks.find` v1 (ADR 0557 §3: ağın alt ağları, yetim, paylaşılan ve eski nesneler; masaüstünün) | 26 |
+| `v1/cad.subnetworks.update.json` | `cad.subnetworks.update` v1 (ADR 0557 §3: alt ağ adlarını özniteliğe tek adımda yazar; masaüstünün) | 23 |
 | `v1/cad.layers.time.json` | `cad.layers.time` v1 (ADR 0210 §11: katmanın zaman ayarı; masaüstünün) | 29 |
 | `v1/cad.scenarios.edit.json` | `cad.scenarios.edit` v1 (ADR 0210 §11: senaryolar; masaüstünün) | 39 |
 | `v1/cad.layers.filter.json` | `cad.layers.filter` v1 (ADR 0211 §5: katman süzgeci; masaüstünün) | 30 |
