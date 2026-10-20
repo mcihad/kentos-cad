@@ -19,6 +19,8 @@ mod edit;
 mod entries;
 mod fixtures;
 mod forms_timing;
+mod gml;
+mod gml_timing;
 mod info_templates;
 mod layers_find_cmd;
 mod lengthen;

@@ -5,7 +5,7 @@
 //! desktop or in the browser's formats worker (docs/adr/0009). The readers'
 //! independent references (Python's expat) count the same depth.
 
-use roxmltree::Document;
+pub use roxmltree::{Document, Node};
 
 /// The deepest element a document may hold (the root is level 1).
 pub const DEPTH: usize = 256;

@@ -76,10 +76,15 @@ pub mod processing_tools;
 pub mod source_places;
 pub mod csv_table;
 pub mod fgb_table;
+pub mod gml_read;
+pub mod gml_table;
+pub mod gml_write;
+pub mod xyz_table;
 pub mod gis_derivation;
 pub mod gis_derive;
 pub mod file_import_csv;
 pub mod file_import_fgb;
+pub mod file_import_gml;
 pub mod shapefile;
 pub mod sld;
 pub mod sources;
@@ -1076,6 +1081,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::FILE_IMPORT_FGB,
         kentos_commands::FILE_IMPORT_FGB_VERSION,
+    ),
+    // A GML's features into the drawing ([`file_import_gml`], docs/adr/0545).
+    (
+        kentos_commands::FILE_IMPORT_GML,
+        kentos_commands::FILE_IMPORT_GML_VERSION,
     ),
     // A derived GIS dataset against the drawing ([`gis_derivation`], docs/adr/0530).
     (
