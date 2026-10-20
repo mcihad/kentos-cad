@@ -43,6 +43,8 @@ pub(crate) mod people {
     pub(crate) const SHARE_FAILED: &str = "Paylaşılamadı";
     pub(crate) const CHANGE_FAILED: &str = "Rol değiştirilemedi";
     pub(crate) const REVOKE_FAILED: &str = "Erişim kaldırılamadı";
+    /// What taking access away, or lowering a role, does not undo (docs/adr/0550 §6).
+    pub(crate) const COPIES: &str = "Erişimi kaldırmak ya da rolü düşürmek, kişinin daha önce indirdiği kopyaları ve ekranında gördüklerini geri almaz; formların “örneklerde gizle” dediği alanlar yalnız sunucunun verdiği kopyalara girmez.";
     pub(crate) const GUEST_ROLE: &str = "Misafirin rolü davetle verilir. Değiştirmek için erişimini kaldırıp yeni rolle yeniden davet edin.";
 
     pub(crate) fn remove_label(name: &str) -> String {

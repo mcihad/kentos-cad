@@ -622,9 +622,16 @@ pub async fn list(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
     .fetch_all(&mut *tx)
     .await?;
     tx.commit().await?;
+    let mut revisions: Vec<FileRevision> = rows.into_iter().map(revision_of).collect();
+    // A Veri girişi is not told how many objects the whole project held (docs/adr/0550 §2).
+    if access.through_forms() {
+        for r in &mut revisions {
+            r.objects = None;
+        }
+    }
     Ok(FileRevisions {
         current: (current > 0).then(|| current.to_string()),
-        revisions: rows.into_iter().map(revision_of).collect(),
+        revisions,
     })
 }
 
@@ -672,6 +679,8 @@ pub async fn download(
     let mut tx = db.scoped(access.scope()).await?;
     let (storage, _, _) = file_state(&mut tx, access).await?;
     needs_file(storage, &access.name)?;
+    // A stored revision cannot be cut (docs/adr/0550 §3).
+    crate::projects::require_whole_copy(&mut tx, access).await?;
     let row: Option<RevisionRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "{REVISION_SELECT} and r.revision = $3"
     )))

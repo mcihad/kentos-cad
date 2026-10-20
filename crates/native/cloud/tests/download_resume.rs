@@ -77,12 +77,11 @@ async fn a_cut_revision_download_goes_on_with_a_range() {
     );
 }
 
+/// What a server answers to a request head.
+type Answer = Box<dyn Fn(&str) -> Vec<u8> + Send>;
+
 /// A one-answer-per-connection server: for each request head it gets, the response its function gives (as bytes).
-async fn serve(
-    listener: TcpListener,
-    answers: Vec<Box<dyn Fn(&str) -> Vec<u8> + Send>>,
-    heads: Arc<Mutex<Vec<String>>>,
-) {
+async fn serve(listener: TcpListener, answers: Vec<Answer>, heads: Arc<Mutex<Vec<String>>>) {
     for answer in answers {
         let (mut s, _) = listener.accept().await.unwrap();
         let h = head(&mut s).await;
@@ -121,7 +120,6 @@ async fn a_cut_job_artifact_goes_on_with_a_range_and_the_job_routes_are_the_serv
         vec![
             Box::new(move |_| json(&lj)),
             Box::new({
-                let json = json;
                 let jj = jj.clone();
                 move |_| json(&jj)
             }),

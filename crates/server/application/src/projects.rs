@@ -14,12 +14,11 @@
 //! Opening a project (its first page of objects) and creating one mark it in
 //! the person's recently used projects (docs/adr/0028).
 
-use std::collections::{BTreeMap, BTreeSet};
-
 use kentos_contracts::{
     FeaturePage, FeatureRecord, LayerNode, LayerNodeType, ProjectCreate, ProjectInfo,
     ProjectStorage,
 };
+use kentos_forms::reach::{Caller, Reach};
 use kentos_postgres::Scope;
 use serde_json::Value;
 use sqlx::{Postgres, Transaction};
@@ -685,40 +684,36 @@ pub(crate) fn record(
     })
 }
 
-/// What a Veri girişi reads (docs/adr/0411 §6, docs/adr/0539): the fields its forms show on each
-/// layer with a published form, and the records their scopes reach.
+/// What a caller reads of the records, from the one resolver (docs/adr/0411 §6, 0539, 0550): the
+/// fields its forms show and mark, the records they reach.
 pub(crate) struct Reading {
-    pub shown: BTreeMap<String, BTreeSet<String>>,
-    scopes: kentos_forms::scope::Scopes,
+    pub reach: Reach,
     tree: Vec<LayerNode>,
 }
 
 impl Reading {
-    /// Whether any layer is narrowed by a scope.
+    /// Whether any layer's records are narrowed for the caller.
     pub fn narrows(&self) -> bool {
-        self.scopes.narrows()
+        self.reach.narrows_rows()
     }
 
-    /// The layers a scope narrows.
+    /// The layers whose records are narrowed: a scope's, or a layer whose forms are all withdrawn.
     pub fn scoped_layers(&self) -> Vec<String> {
-        self.scopes.scoped_layers()
+        self.reach.limited_layers()
     }
 
     /// Whether a stored object is within reach.
     pub fn sees(&self, r: &FeatureRecord) -> bool {
-        crate::form_guard::in_scope(&self.scopes, &self.tree, &r.entity, &r.id)
+        crate::form_guard::in_reach(&self.reach, &self.tree, &r.entity, &r.id)
     }
 }
 
-/// How `access` reads the objects: through its forms for a Veri girişi; none for anyone else, who
-/// reads everything.
-pub(crate) async fn reading_for(
+/// The reach of `access` over the project's records, for any caller (docs/adr/0550): its class from its
+/// permissions, its forms, layers and `@` values from the project as it is now.
+pub(crate) async fn reading_of(
     tx: &mut Transaction<'static, Postgres>,
     access: &ProjectAccess,
-) -> AppResult<Option<Reading>> {
-    if !access.through_forms() {
-        return Ok(None);
-    }
+) -> AppResult<Reading> {
     let (name, settings, layers): (String, Value, Value) = sqlx::query_as(
         "select name, settings, layers from kentos.project where tenant_id = $1 and id = $2",
     )
@@ -731,11 +726,69 @@ pub(crate) async fn reading_for(
     let tree: Vec<LayerNode> = serde_json::from_value(layers)
         .map_err(|e| AppError::invalid(format!("Proje katmanları okunamadı: {e}")))?;
     let variables = crate::form_guard::variables_for(&name, &settings, &access.actor);
-    Ok(Some(Reading {
-        shown: crate::form_guard::shown_fields(&settings, &tree),
-        scopes: crate::form_guard::scopes_of(&settings, &tree, &variables),
-        tree,
-    }))
+    let reach = crate::form_guard::reach_with(&settings, &tree, &variables, caller_of(access));
+    Ok(Reading { reach, tree })
+}
+
+/// The class of caller a project role is for the resolver (docs/adr/0550 §1): a Veri girişi reads
+/// through forms alone; whoever designs forms takes whole copies; anyone else reads every record.
+pub(crate) fn caller_of(access: &ProjectAccess) -> Caller {
+    Caller {
+        through_forms: access.through_forms(),
+        designs: access.allows(kentos_contracts::ProjectPermission::FormsDesign),
+    }
+}
+
+/// A copy that is stored as it was written (a file project's revision, a checkpoint, what a duplicate, a
+/// restore or a conversion starts from) cannot be cut: whoever may not take every field gets none of
+/// them (docs/adr/0550 §3). Fine while no form marks a field `redact`, and for whoever designs forms.
+pub(crate) async fn require_whole_copy(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+) -> AppResult<()> {
+    if reading_of(tx, access).await?.reach.whole_copy_ok() {
+        return Ok(());
+    }
+    Err(AppError::forbidden(
+        "Bu projede formların “örneklerde gizle” dediği alanlar var; olduğu gibi saklanan bir kopya (dosya revizyonu, kontrol noktası, çoğaltma, geri yükleme, dönüştürme) yalnız form tasarlayanlara verilir. Güncel hâlini .kcad olarak indirin: gizli alanlar kesilmiş gelir.",
+    ))
+}
+
+/// How `access` reads the objects when forms narrow it: a Veri girişi's reading; none for anyone else,
+/// who reads every record and every field.
+pub(crate) async fn reading_for(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+) -> AppResult<Option<Reading>> {
+    if !access.through_forms() {
+        return Ok(None);
+    }
+    Ok(Some(reading_of(tx, access).await?))
+}
+
+/// The ids of the records of the narrowed layers a Veri girişi reaches: the others' are all of them.
+pub(crate) async fn reached_ids(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+    reading: &Reading,
+) -> AppResult<Vec<Uuid>> {
+    let scoped = reading.scoped_layers();
+    let rows: Vec<FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "select {FEATURE_COLUMNS} from kentos.feature where tenant_id = $1 and project_id = $2 and layer_id = any($3)"
+    )))
+    .bind(access.tenant)
+    .bind(access.project)
+    .bind(&scoped)
+    .fetch_all(&mut **tx)
+    .await?;
+    let mut seen = Vec::new();
+    for row in rows {
+        let r = record(row)?;
+        if reading.sees(&r) {
+            seen.push(Uuid::parse_str(&r.id).expect("stored ids are UUIDs"));
+        }
+    }
+    Ok(seen)
 }
 
 /// How many objects a narrowed Veri girişi reads: the unscoped layers' counted, the scoped ones'
@@ -754,42 +807,22 @@ async fn reached_count(
     .bind(&scoped)
     .fetch_one(&mut **tx)
     .await?;
-    let rows: Vec<FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
-        "select {FEATURE_COLUMNS} from kentos.feature where tenant_id = $1 and project_id = $2 and layer_id = any($3)"
-    )))
-    .bind(access.tenant)
-    .bind(access.project)
-    .bind(&scoped)
-    .fetch_all(&mut **tx)
-    .await?;
-    let mut seen = 0i64;
-    for row in rows {
-        if reading.sees(&record(row)?) {
-            seen += 1;
-        }
-    }
-    Ok(others + seen)
-}
-
-/// The fields a Veri girişi reads on each layer with a published form (docs/adr/0411 §6); none for
-/// anyone else, who reads everything.
-pub(crate) async fn shown_fields_for(
-    tx: &mut Transaction<'static, Postgres>,
-    access: &ProjectAccess,
-) -> AppResult<Option<BTreeMap<String, BTreeSet<String>>>> {
-    Ok(reading_for(tx, access).await?.map(|r| r.shown))
+    Ok(others + reached_ids(tx, access, reading).await?.len() as i64)
 }
 
 /// `records` as `access` reads them: a Veri girişi's through its forms (docs/adr/0411 §6), the records
-/// out of its forms' scopes left out as if they were not there (docs/adr/0539).
-pub(crate) fn as_read(records: Vec<FeatureRecord>, reading: Option<&Reading>) -> Vec<FeatureRecord> {
+/// out of its forms' reach left out as if they were not there (docs/adr/0539, 0550).
+pub(crate) fn as_read(
+    records: Vec<FeatureRecord>,
+    reading: Option<&Reading>,
+) -> Vec<FeatureRecord> {
     match reading {
         None => records,
         Some(reading) => records
             .into_iter()
             .filter(|r| reading.sees(r))
             .map(|mut r| {
-                r.entity = crate::form_guard::projected(r.entity, &reading.shown);
+                r.entity = crate::form_guard::projected(r.entity, &reading.reach);
                 r
             })
             .collect(),

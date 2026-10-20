@@ -416,7 +416,7 @@ async fn an_organisation_has_a_cap_on_its_jobs_even_asked_at_once() {
     assert!(matches!(refused, AppError::Quota(_)));
     assert_eq!(refused.code(), "quota_exceeded");
     assert!(refused.to_string().contains("(2)"), "{refused}");
-    assert_eq!(refused.retry().0, true);
+    assert!(refused.retry().0);
     // A retried request gets its job back whatever the load.
     assert_eq!(make(&db, &owner, "a", &cap).await.unwrap().id, one.id);
     // Another organisation has its own count.

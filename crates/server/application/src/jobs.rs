@@ -445,6 +445,9 @@ enum Outcome {
     Done {
         result: Value,
         artifact: Option<(String, i64, String)>,
+        /// What the result was cut by (docs/adr/0550 §5): the stamp of the caller's reach it was built
+        /// for; the finish asks it again and refuses a result the caller no longer may take.
+        reach: Option<String>,
     },
     Failed {
         code: &'static str,
@@ -477,6 +480,24 @@ pub async fn work_once(
     lease: Duration,
     limits: &JobLimits,
 ) -> AppResult<Option<Worked>> {
+    work_once_between(db, blobs, owner, lease, limits, || async {}).await
+}
+
+/// [`work_once`] with something done between the run and its finish: what a test does to the project
+/// while a job runs (a grant taken away, a field marked), the moment the finish asks everything again.
+#[doc(hidden)]
+pub async fn work_once_between<F, Fut>(
+    db: &kentos_postgres::Db,
+    blobs: &Blobs,
+    owner: Uuid,
+    lease: Duration,
+    limits: &JobLimits,
+    between: F,
+) -> AppResult<Option<Worked>>
+where
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = ()>,
+{
     /// `claim_job`'s row: tenant, project, job, kind, input, base revision, asker, fence, attempts.
     type Claimed = (Uuid, Uuid, Uuid, String, Value, i64, Uuid, i64, i32);
     let secs = i32::try_from(lease.as_secs().clamp(1, 3600)).unwrap_or(30);
@@ -526,6 +547,7 @@ pub async fn work_once(
     };
     let outcome = run(db, blobs, &claim, &stop, limits).await;
     beat.abort();
+    between().await;
     let state = finish(db, blobs, &claim, outcome).await?;
     Ok(Some(Worked { job: id, state }))
 }
@@ -580,7 +602,7 @@ async fn export(
         return Outcome::Failed { code, message };
     }
     let input: ProjectExportInput = serde_json::from_value(claim.input.clone()).unwrap_or_default();
-    let snap = match crate::snapshot::take(db, access).await {
+    let snap = match crate::snapshot::take(db, access, crate::snapshot::Take::Cut).await {
         Ok(s) => s,
         Err(e) => {
             let (code, message) = failed_of(&e);
@@ -635,6 +657,7 @@ async fn export(
             "eventCursor": snap.event_cursor.to_string(),
         }),
         artifact: Some((key, i64::try_from(size).unwrap_or(i64::MAX), snap.sha256)),
+        reach: snap.reach,
     }
 }
 
@@ -671,6 +694,7 @@ async fn checkpoint(
         Ok(change) => Outcome::Done {
             result: serde_json::to_value(&change).unwrap_or(Value::Null),
             artifact: None,
+            reach: None,
         },
         Err(e) => {
             let (code, message) = failed_of(&e);
@@ -705,7 +729,11 @@ async fn finish(
                 ServerJobState::Running
             })
         }
-        Outcome::Done { result, artifact } => {
+        Outcome::Done {
+            result,
+            artifact,
+            reach,
+        } => {
             let (key, size, sha256) = match artifact {
                 Some((k, s, h)) => (Some(k), Some(s), Some(h)),
                 None => (None, None, None),
@@ -729,21 +757,48 @@ async fn finish(
                 }
             };
             let mut tx = db.scoped(access.scope()).await?;
-            let again = crate::access::recheck(&mut tx, &access)
-                .await
-                .and_then(|a| {
-                    a.live()?;
-                    a.require(ProjectPermission::JobsRun)?;
-                    if claim.kind == PROJECT_EXPORT_JOB {
-                        a.require(ProjectPermission::Download)?;
-                    }
-                    Ok(())
-                });
-            if let Err(e) = again {
-                drop(tx);
-                remove(&key).await;
-                let (code, message) = failed_of(&e);
-                return Box::pin(finish(db, blobs, claim, Outcome::Failed { code, message })).await;
+            let again = match crate::access::recheck(&mut tx, &access).await {
+                Ok(a) => a
+                    .live()
+                    .and_then(|()| a.require(ProjectPermission::JobsRun))
+                    .and_then(|()| {
+                        if claim.kind == PROJECT_EXPORT_JOB {
+                            a.require(ProjectPermission::Download)
+                        } else {
+                            Ok(())
+                        }
+                    })
+                    .map(|()| a),
+                Err(e) => Err(e),
+            };
+            let a = match again {
+                Ok(a) => a,
+                Err(e) => {
+                    drop(tx);
+                    remove(&key).await;
+                    let (code, message) = failed_of(&e);
+                    return Box::pin(finish(db, blobs, claim, Outcome::Failed { code, message }))
+                        .await;
+                }
+            };
+            // The reach asked again too: a result cut for the caller as they were is not theirs once the
+            // forms' marks or their right to design them changed while the job ran.
+            if let Some(stamp) = &reach {
+                let now = crate::projects::reading_of(&mut tx, &a).await?;
+                if now.reach.stamp() != *stamp {
+                    drop(tx);
+                    remove(&key).await;
+                    return Box::pin(finish(
+                        db,
+                        blobs,
+                        claim,
+                        Outcome::Failed {
+                            code: "reach_changed",
+                            message: "Formların gizlediği alanlar ya da form tasarlama yetkiniz iş sürerken değişti; verilen kopya artık sizin görebileceğiniz kopya değil, bu yüzden verilmedi.".into(),
+                        },
+                    ))
+                    .await;
+                }
             }
             let passed: bool = sqlx::query_scalar(
                 "select kentos.finish_job($1, $2, true, $3, $4, $5, $6, null, null)",
@@ -769,6 +824,7 @@ async fn finish(
 
 /// Runs jobs until `stop` is set: one after another while there are any, then waiting `idle` between looks; `said`
 /// hears what each claim ended in (the caller logs it).
+#[allow(clippy::too_many_arguments)]
 pub async fn run_worker(
     db: kentos_postgres::Db,
     blobs: Blobs,

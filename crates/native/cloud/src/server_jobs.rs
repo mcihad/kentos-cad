@@ -97,6 +97,9 @@ pub fn failure_text(job: &ServerJob) -> Option<String> {
             " İşi çalıştıran sunucu işçisi birkaç kez kayboldu; işi yeniden isteyin, sürerse sunucu yöneticisine bildirin."
         }
         "revision_conflict" => " Proje, işin istendiği andan sonra değişti; işi yeniden isteyin.",
+        "reach_changed" => {
+            " Formların gizlediği alanlar ya da yetkiniz iş sürerken değişti; işi yeniden isteyin."
+        }
         "forbidden" => " Yetkiniz kaldırılmış ya da değişmiş olabilir; proje sahibine başvurun.",
         "storage" => {
             " Sunucunun dosya deposuna yazılamadı (yer ya da yetki); sunucu yöneticisine bildirin."

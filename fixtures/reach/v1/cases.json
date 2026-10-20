@@ -1,0 +1,4702 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "no forms: everyone reads and takes out everything",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "a live form shows its fields; a marked one stays on screen and does not leave",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            },
+            {
+              "field": "Malik",
+              "redact": true
+            }
+          ],
+          "published": true,
+          "withdrawn": false
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "hidden",
+              "Kat": "hidden",
+              "Malik": "redacted",
+              "Not": "hidden",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Malik": "Ayşe",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "redacted",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "redacted",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "an unmarked live form: a Veri girişi reads its fields only, the others are whole",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            },
+            {
+              "field": "Kat",
+              "redact": false
+            }
+          ],
+          "published": true,
+          "withdrawn": false
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "hidden",
+              "Kat": "open",
+              "Malik": "hidden",
+              "Not": "hidden",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "a scope by e-mail reaches the caller's records; a layer no form binds is free",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            },
+            {
+              "field": "Kat",
+              "redact": false
+            }
+          ],
+          "published": true,
+          "withdrawn": false,
+          "scope": "Sorumlu = @kullanici_eposta"
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "hidden",
+              "Kat": "open",
+              "Malik": "hidden",
+              "Not": "hidden",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": false,
+              "readable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [
+            "bina"
+          ],
+          "narrowsRows": true,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "two live forms: either one's scope reaches",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            }
+          ],
+          "published": true,
+          "withdrawn": false,
+          "scope": "Kat > 5"
+        },
+        {
+          "id": "f2",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Kat",
+              "redact": false
+            }
+          ],
+          "published": true,
+          "withdrawn": false,
+          "scope": "Sorumlu = @kullanici_eposta"
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "hidden",
+              "Kat": "open",
+              "Malik": "hidden",
+              "Not": "hidden",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [
+            "bina"
+          ],
+          "narrowsRows": true,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "a live form without a scope reaches every record even beside a scoped one",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            }
+          ],
+          "published": true,
+          "withdrawn": false,
+          "scope": "Kat > 5"
+        },
+        {
+          "id": "f2",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Kat",
+              "redact": false
+            }
+          ],
+          "published": true,
+          "withdrawn": false
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "hidden",
+              "Kat": "open",
+              "Malik": "hidden",
+              "Not": "hidden",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "a scope that names no field of the layer reaches nothing",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            }
+          ],
+          "published": true,
+          "withdrawn": false,
+          "scope": "Yok = 1"
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "hidden",
+              "Kat": "hidden",
+              "Malik": "hidden",
+              "Not": "hidden",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": false,
+              "readable": {
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": false,
+              "readable": {
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [
+            "bina"
+          ],
+          "narrowsRows": true,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "a scope by a literal",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            }
+          ],
+          "published": true,
+          "withdrawn": false,
+          "scope": "Malik = 'Veli'"
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "hidden",
+              "Kat": "hidden",
+              "Malik": "hidden",
+              "Not": "hidden",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": false,
+              "readable": {
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [
+            "bina"
+          ],
+          "narrowsRows": true,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "every form withdrawn: the layer is closed to a Veri girişi, whatever its scope was",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            },
+            {
+              "field": "Malik",
+              "redact": true
+            }
+          ],
+          "published": true,
+          "withdrawn": true,
+          "scope": "Kat > 5"
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "hidden",
+              "Kat": "hidden",
+              "Malik": "hidden",
+              "Not": "hidden",
+              "Sorumlu": "hidden"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": false,
+              "readable": {},
+              "exportable": {},
+              "copy": {}
+            },
+            {
+              "sees": false,
+              "readable": {},
+              "exportable": {},
+              "copy": {}
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [
+            "bina"
+          ],
+          "narrowsRows": true,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "redacted",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "redacted",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "a withdrawn form beside a live one: the live one binds",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            }
+          ],
+          "published": true,
+          "withdrawn": true
+        },
+        {
+          "id": "f2",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Kat",
+              "redact": false
+            }
+          ],
+          "published": true,
+          "withdrawn": false,
+          "scope": "Kat > 5"
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "hidden",
+              "Kat": "open",
+              "Malik": "hidden",
+              "Not": "hidden",
+              "Sorumlu": "hidden"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": false,
+              "readable": {
+                "Kat": "3"
+              },
+              "exportable": {
+                "Kat": "3"
+              },
+              "copy": {
+                "Kat": "3"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7"
+              },
+              "exportable": {
+                "Kat": "7"
+              },
+              "copy": {
+                "Kat": "7"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [
+            "bina"
+          ],
+          "narrowsRows": true,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "a form never published binds nothing but its marks count",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            }
+          ],
+          "published": false,
+          "withdrawn": false,
+          "scope": "Kat > 99",
+          "draftItems": [
+            {
+              "field": "Malik",
+              "redact": true
+            }
+          ]
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "redacted",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "redacted",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "redacted",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "a mark in the draft only counts too",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            }
+          ],
+          "published": true,
+          "withdrawn": false,
+          "draftItems": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            },
+            {
+              "field": "Kat",
+              "redact": true
+            }
+          ]
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "hidden",
+              "Kat": "hidden",
+              "Malik": "hidden",
+              "Not": "hidden",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "redacted",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "redacted",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "an item names a layer field by its stable id; the attribute is stored under the name",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "id": "malik-1",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "malik-1",
+              "redact": true
+            },
+            {
+              "field": "Kat",
+              "redact": false
+            }
+          ],
+          "published": true,
+          "withdrawn": false
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "hidden",
+              "Kat": "open",
+              "Malik": "redacted",
+              "Not": "hidden",
+              "Sorumlu": "hidden"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "3",
+                "Malik": "Ayşe"
+              },
+              "exportable": {
+                "Kat": "3"
+              },
+              "copy": {
+                "Kat": "3"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli"
+              },
+              "exportable": {
+                "Kat": "7"
+              },
+              "copy": {
+                "Kat": "7"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "redacted",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "redacted",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "a later release replaces the earlier one's shown fields and marks",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            },
+            {
+              "field": "Malik",
+              "redact": true
+            }
+          ],
+          "published": true,
+          "withdrawn": false,
+          "laterItems": [
+            {
+              "field": "Kat",
+              "redact": false
+            },
+            {
+              "field": "Not",
+              "redact": true
+            }
+          ]
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "hidden",
+              "Kat": "open",
+              "Malik": "hidden",
+              "Not": "redacted",
+              "Sorumlu": "hidden"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "3",
+                "Not": "n"
+              },
+              "exportable": {
+                "Kat": "3"
+              },
+              "copy": {
+                "Kat": "3"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7"
+              },
+              "exportable": {
+                "Kat": "7"
+              },
+              "copy": {
+                "Kat": "7"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "redacted",
+              "Not": "redacted",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "redacted",
+              "Not": "redacted",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Sorumlu": "ali@k.test"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Sorumlu": "ayse@k.test"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "two layers with their own forms and marks",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": true
+            }
+          ],
+          "published": true,
+          "withdrawn": false,
+          "scope": "Kat > 5"
+        },
+        {
+          "id": "f2",
+          "layer": "yol",
+          "items": [
+            {
+              "field": "Kod",
+              "redact": true
+            }
+          ],
+          "published": true,
+          "withdrawn": false
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ali@k.test",
+            "Malik": "Ayşe",
+            "Kat": "3",
+            "Not": "n",
+            "Ek": "x"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "ayse@k.test",
+            "Malik": "Veli",
+            "Kat": "7"
+          }
+        },
+        {
+          "layer": "yol",
+          "attrs": {
+            "Ad": "D-100",
+            "Kod": "k"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Ek": "hidden",
+              "Kat": "hidden",
+              "Malik": "hidden",
+              "Not": "hidden",
+              "Sorumlu": "redacted"
+            },
+            "yol": {
+              "Ad": "hidden",
+              "Kod": "redacted"
+            }
+          },
+          "rows": [
+            {
+              "sees": false,
+              "readable": {
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {},
+              "copy": {}
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {},
+              "copy": {}
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kod": "k"
+              },
+              "exportable": {},
+              "copy": {}
+            }
+          ],
+          "limited": [
+            "bina"
+          ],
+          "narrowsRows": true,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "redacted"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "redacted"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100"
+              },
+              "copy": {
+                "Ad": "D-100"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": false
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Ek": "open",
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "redacted"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "redacted"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              },
+              "exportable": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n"
+              },
+              "copy": {
+                "Ek": "x",
+                "Kat": "3",
+                "Malik": "Ayşe",
+                "Not": "n",
+                "Sorumlu": "ali@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              },
+              "exportable": {
+                "Kat": "7",
+                "Malik": "Veli"
+              },
+              "copy": {
+                "Kat": "7",
+                "Malik": "Veli",
+                "Sorumlu": "ayse@k.test"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Ad": "D-100",
+                "Kod": "k"
+              },
+              "exportable": {
+                "Ad": "D-100"
+              },
+              "copy": {
+                "Ad": "D-100",
+                "Kod": "k"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": true,
+          "wholeCopyOk": true
+        }
+      }
+    },
+    {
+      "name": "a record whose scope field is empty is not reached",
+      "email": "ali@k.test",
+      "fields": {
+        "bina": [
+          {
+            "name": "Sorumlu",
+            "kind": "text"
+          },
+          {
+            "name": "Malik",
+            "kind": "text"
+          },
+          {
+            "name": "Kat",
+            "kind": "integer"
+          },
+          {
+            "name": "Not",
+            "kind": "text"
+          }
+        ],
+        "yol": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      },
+      "forms": [
+        {
+          "id": "f1",
+          "layer": "bina",
+          "items": [
+            {
+              "field": "Sorumlu",
+              "redact": false
+            }
+          ],
+          "published": true,
+          "withdrawn": false,
+          "scope": "Kat > 1"
+        }
+      ],
+      "rows": [
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "a"
+          }
+        },
+        {
+          "layer": "bina",
+          "attrs": {
+            "Sorumlu": "b",
+            "Kat": "2"
+          }
+        }
+      ],
+      "expect": {
+        "through_forms": {
+          "levels": {
+            "bina": {
+              "Kat": "hidden",
+              "Malik": "hidden",
+              "Not": "hidden",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": false,
+              "readable": {
+                "Sorumlu": "a"
+              },
+              "exportable": {
+                "Sorumlu": "a"
+              },
+              "copy": {
+                "Sorumlu": "a"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Sorumlu": "b"
+              },
+              "exportable": {
+                "Sorumlu": "b"
+              },
+              "copy": {
+                "Sorumlu": "b"
+              }
+            }
+          ],
+          "limited": [
+            "bina"
+          ],
+          "narrowsRows": true,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "reader": {
+          "levels": {
+            "bina": {
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Sorumlu": "a"
+              },
+              "exportable": {
+                "Sorumlu": "a"
+              },
+              "copy": {
+                "Sorumlu": "a"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "2",
+                "Sorumlu": "b"
+              },
+              "exportable": {
+                "Kat": "2",
+                "Sorumlu": "b"
+              },
+              "copy": {
+                "Kat": "2",
+                "Sorumlu": "b"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        },
+        "whole": {
+          "levels": {
+            "bina": {
+              "Kat": "open",
+              "Malik": "open",
+              "Not": "open",
+              "Sorumlu": "open"
+            },
+            "yol": {
+              "Ad": "open",
+              "Kod": "open"
+            }
+          },
+          "rows": [
+            {
+              "sees": true,
+              "readable": {
+                "Sorumlu": "a"
+              },
+              "exportable": {
+                "Sorumlu": "a"
+              },
+              "copy": {
+                "Sorumlu": "a"
+              }
+            },
+            {
+              "sees": true,
+              "readable": {
+                "Kat": "2",
+                "Sorumlu": "b"
+              },
+              "exportable": {
+                "Kat": "2",
+                "Sorumlu": "b"
+              },
+              "copy": {
+                "Kat": "2",
+                "Sorumlu": "b"
+              }
+            }
+          ],
+          "limited": [],
+          "narrowsRows": false,
+          "hasRedacted": false,
+          "wholeCopyOk": true
+        }
+      }
+    }
+  ]
+}

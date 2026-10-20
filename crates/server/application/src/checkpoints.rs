@@ -207,7 +207,7 @@ pub async fn create(
                 ));
             }
             // Taken before the lock: writers never wait for a snapshot.
-            let snap = snapshot::take(db, access).await?;
+            let snap = snapshot::take(db, access, snapshot::Take::Whole).await?;
             let id = Uuid::now_v7();
             let key = Blobs::checkpoint_key(access.tenant, access.project, id, &snap.sha256);
             let size = snap.bytes.len();
@@ -504,9 +504,14 @@ pub async fn list(
     .fetch_all(&mut *tx)
     .await?;
     tx.commit().await?;
-    Ok(ProjectCheckpoints {
-        checkpoints: rows.iter().map(checkpoint_of).collect(),
-    })
+    let mut checkpoints: Vec<Checkpoint> = rows.iter().map(checkpoint_of).collect();
+    // A Veri girişi is not told how many objects the whole project held (docs/adr/0550 §2).
+    if access.through_forms() {
+        for c in &mut checkpoints {
+            c.objects = None;
+        }
+    }
+    Ok(ProjectCheckpoints { checkpoints })
 }
 
 /// One checkpoint and its file (`project.history` and `project.download`):
@@ -521,6 +526,8 @@ pub async fn download(
     access.require(ProjectPermission::History)?;
     access.require(ProjectPermission::Download)?;
     let mut tx = db.scoped(access.scope()).await?;
+    // A stored checkpoint cannot be cut (docs/adr/0550 §3).
+    crate::projects::require_whole_copy(&mut tx, access).await?;
     let row: CheckpointRow = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "{CHECKPOINT_SELECT} and c.id = $3"
     )))

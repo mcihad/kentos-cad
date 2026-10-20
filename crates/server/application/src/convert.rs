@@ -70,6 +70,7 @@ async fn write(
         return Err(gone(&now.name));
     }
     now.require(ProjectPermission::Download)?;
+    crate::projects::require_whole_copy(tx, &now).await?;
     importing::create_from_drawing(tx, &now, envelope, text, drawing)
         .await
         .map(Done::New)
@@ -105,6 +106,7 @@ pub async fn convert(
     access.require(ProjectPermission::Download)?;
     let text = idempotency::request_text(&envelope);
     let mut tx = db.scoped(access.scope()).await?;
+    crate::projects::require_whole_copy(&mut tx, access).await?;
     let storage: String =
         sqlx::query_scalar("select storage from kentos.project where tenant_id = $1 and id = $2")
             .bind(access.tenant)
@@ -170,7 +172,7 @@ pub async fn convert(
         }
         // A database project's snapshot of one moment as a file project's revision 1.
         ProjectStorage::File => {
-            let snap = snapshot::take(db, access).await?;
+            let snap = snapshot::take(db, access, snapshot::Take::Whole).await?;
             let key = Blobs::revision_key(target, id, 1, &snap.sha256);
             let size = i64::try_from(snap.bytes.len()).unwrap_or(i64::MAX);
             let mut writer = blobs.create(&key, snap.bytes.len() as u64).await?;
