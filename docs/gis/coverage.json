@@ -12203,6 +12203,58 @@
    "kinds": []
   },
   {
+   "id": "cad.meshes.describe",
+   "title": "Meshin bilgisi",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 24,
+   "files": [
+    "fixtures/commands/v1/cad.meshes.describe.json"
+   ],
+   "options": [],
+   "kinds": [
+    {
+     "kind": "raster",
+     "covered": true
+    }
+   ]
+  },
+  {
+   "id": "cad.meshes.query",
+   "title": "Mesh sor",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 40,
+   "files": [
+    "fixtures/commands/v1/cad.meshes.query.json"
+   ],
+   "options": [
+    {
+     "key": "series",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": [
+    {
+     "kind": "raster",
+     "covered": true
+    }
+   ]
+  },
+  {
    "id": "cad.network.define",
    "title": "Ağ tanımı",
    "effect": "document",
@@ -12683,13 +12735,42 @@
     "mcp": true,
     "server": false
    },
-   "cases": 31,
+   "cases": 42,
    "files": [
     "fixtures/commands/v1/cad.pointclouds.describe.json"
    ],
    "options": [
     {
      "key": "classes",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": [
+    {
+     "kind": "pointcloud",
+     "covered": true
+    }
+   ]
+  },
+  {
+   "id": "cad.pointclouds.profile",
+   "title": "Nokta bulutu profili",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 40,
+   "files": [
+    "fixtures/commands/v1/cad.pointclouds.profile.json"
+   ],
+   "options": [
+    {
+     "key": "points",
      "value": true,
      "covered": true
     }
@@ -12715,6 +12796,29 @@
    "cases": 25,
    "files": [
     "fixtures/commands/v1/cad.pointclouds.query.json"
+   ],
+   "options": [],
+   "kinds": [
+    {
+     "kind": "pointcloud",
+     "covered": true
+    }
+   ]
+  },
+  {
+   "id": "cad.pointclouds.region",
+   "title": "Nokta bulutu alan istatistiği",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 40,
+   "files": [
+    "fixtures/commands/v1/cad.pointclouds.region.json"
    ],
    "options": [],
    "kinds": [
@@ -17708,6 +17812,33 @@
    "kinds": []
   },
   {
+   "id": "file.export.gml",
+   "title": "GML dışa aktar",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 0,
+   "files": [],
+   "options": [
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "schema",
+     "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "file.export.gpkg",
    "title": "GeoPackage dışa aktar",
    "effect": "query",
@@ -17800,6 +17931,73 @@
     {
      "key": "overwrite",
      "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "file.export.xyz",
+   "title": "XYZ dışa aktar",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 0,
+   "files": [],
+   "options": [
+    {
+     "key": "header",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "separator",
+     "value": "comma",
+     "covered": false
+    },
+    {
+     "key": "separator",
+     "value": "semicolon",
+     "covered": false
+    },
+    {
+     "key": "separator",
+     "value": "space",
+     "covered": false
+    },
+    {
+     "key": "separator",
+     "value": "tab",
+     "covered": false
+    },
+    {
+     "key": "vertices",
+     "value": "all",
+     "covered": false
+    },
+    {
+     "key": "vertices",
+     "value": "points",
+     "covered": false
+    },
+    {
+     "key": "withoutZ",
+     "value": "skip",
+     "covered": false
+    },
+    {
+     "key": "withoutZ",
+     "value": "zero",
      "covered": false
     }
    ],
@@ -17981,6 +18179,30 @@
    "cases": 23,
    "files": [
     "fixtures/commands/v1/file.import.fgb.json"
+   ],
+   "options": [
+    {
+     "key": "reproject",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "file.import.gml",
+   "title": "GML içe aktar",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 36,
+   "files": [
+    "fixtures/commands/v1/file.import.gml.json"
    ],
    "options": [
     {
