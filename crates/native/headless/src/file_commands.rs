@@ -782,6 +782,16 @@ pub fn export_qml(
     Ok((output, warnings))
 }
 
+/// The layers' looks written as a MapLibre style, as `file.export.maplibre` writes it (docs/adr/0560).
+pub fn export_maplibre(
+    doc: &Document,
+    input: &kentos_commands::ExportMaplibre,
+) -> Result<(kentos_commands::MaplibreExported, Vec<CommandWarning>), Refused> {
+    let made = crate::maplibre_export::make(doc, input)?;
+    crate::maplibre_export::write(&made)?;
+    Ok((made.output, made.warnings))
+}
+
 /// The GeoPackage written whole, as `file.export.gpkg` writes it (docs/adr/0502).
 pub fn export_gpkg(
     doc: &Document,
@@ -1219,6 +1229,48 @@ fn run_typed(
             }
         });
     }
+    if command == kentos_commands::FILE_EXPORT_MAPLIBRE {
+        let typed: kentos_commands::ExportMaplibre = serde_json::from_value(input).map_err(|e| {
+            format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
+        })?;
+        let made = match crate::maplibre_export::make(doc, &typed) {
+            Err(refused) => return Ok((CommandResult::Failed { error: *refused }, None)),
+            Ok(made) => made,
+        };
+        let value = serde_json::to_value(&made.output).unwrap_or(Value::Null);
+        return Ok(match op {
+            CallOp::Validate => (
+                CommandResult::Completed {
+                    output: Value::Null,
+                    warnings: Vec::new(),
+                },
+                None,
+            ),
+            CallOp::Plan => (
+                CommandResult::Completed {
+                    output: value,
+                    warnings: made.warnings,
+                },
+                None,
+            ),
+            CallOp::Execute => {
+                if let Err(refused) = crate::maplibre_export::write(&made) {
+                    return Ok((CommandResult::Failed { error: *refused }, None));
+                }
+                (
+                    CommandResult::Completed {
+                        output: value,
+                        warnings: made.warnings,
+                    },
+                    Some(FileEffect {
+                        path: made.output.path.clone(),
+                        bytes: made.output.bytes,
+                        sha256: made.output.sha256.clone(),
+                    }),
+                )
+            }
+        });
+    }
     if command == kentos_commands::FILE_EXPORT_QML {
         let typed: kentos_commands::ExportQml = serde_json::from_value(input).map_err(|e| {
             format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
@@ -1362,6 +1414,7 @@ fn version_of(command: &str) -> u32 {
         FILE_EXPORT_SHP => FILE_EXPORT_SHP_VERSION,
         FILE_EXPORT_SLD => FILE_EXPORT_SLD_VERSION,
         kentos_commands::FILE_EXPORT_QML => kentos_commands::FILE_EXPORT_QML_VERSION,
+        kentos_commands::FILE_EXPORT_MAPLIBRE => kentos_commands::FILE_EXPORT_MAPLIBRE_VERSION,
         FILE_EXPORT_CSV => FILE_EXPORT_CSV_VERSION,
         kentos_commands::FILE_EXPORT_FGB => kentos_commands::FILE_EXPORT_FGB_VERSION,
         kentos_commands::FILE_EXPORT_GML => kentos_commands::FILE_EXPORT_GML_VERSION,
@@ -1420,6 +1473,11 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
         FILE_EXPORT_SLD => serde_json::from_value::<kentos_commands::ExportSld>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        kentos_commands::FILE_EXPORT_MAPLIBRE => {
+            serde_json::from_value::<kentos_commands::ExportMaplibre>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
         kentos_commands::FILE_EXPORT_QML => serde_json::from_value::<kentos_commands::ExportQml>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),

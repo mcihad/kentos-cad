@@ -206,7 +206,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 37] = [
+pub const COMMANDS: [&str; 39] = [
     "file.export.atlas",
     "file.import.dxf",
     "file.import.ncz",
@@ -244,6 +244,8 @@ pub const COMMANDS: [&str; 37] = [
     "source.link",
     "source.postgis",
     "file.package",
+    "file.export.maplibre",
+    "file.import.maplibre",
 ];
 
 fn message(event: Event) -> Message {
@@ -283,6 +285,9 @@ impl App {
             "source.link" => self.gpkg_pick(true),
             "source.postgis" => self.postgis_open(),
             "file.package" => self.package_pick(),
+            // The visible layers as one MapLibre style, and a style's looks into every layer it is for (docs/adr/0560).
+            "file.export.maplibre" => self.maplibre_export_ask(None),
+            "file.import.maplibre" => self.maplibre_import_ask(None),
             "file.export.gpkg" => self.gpkg_save(),
             "file.export.shp" => self.shp_export_open(),
             "file.export.csv" => self.csv_export_open(),

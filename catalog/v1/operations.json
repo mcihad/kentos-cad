@@ -1966,6 +1966,20 @@
       ],
       "note": "Pencere komutun planını gösterir, İçe aktar komutla tek adımda alır (ADR 0545)."
     },
+    "file.export.maplibre": {
+      "level": "semantic",
+      "via": [
+        "file.export.maplibre"
+      ],
+      "note": "Dosya yolu sorulur, komut görünen bütün katmanları tek stil olarak ve her katmanın GeoJSON'unu yanına yazar; sourceUrl ve glyphs komutta (ADR 0560)."
+    },
+    "file.import.maplibre": {
+      "level": "semantic",
+      "via": [
+        "file.import.maplibre"
+      ],
+      "note": "Dosya yolu sorulur, komut stilin hazırlandığı her katmanın görünüşünü tek adımda alır (ADR 0560)."
+    },
     "file.export.xyz": {
       "level": "semantic",
       "via": [

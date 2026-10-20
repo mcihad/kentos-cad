@@ -1,0 +1,84 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "parsel/etiket",
+   "type": "symbol",
+   "source": "s",
+   "layout": {
+    "text-field": "{ad}"
+   }
+  },
+  {
+   "id": "parsel/yukseklik",
+   "type": "fill-extrusion",
+   "source": "s",
+   "paint": {
+    "fill-extrusion-height": 10
+   }
+  },
+  {
+   "id": "parsel/egri",
+   "type": "fill",
+   "source": "s",
+   "paint": {
+    "fill-color": "#abcdef",
+    "fill-pattern": "desen",
+    "fill-opacity": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     10,
+     0.2,
+     18,
+     1
+    ],
+    "fill-translate": [
+     1,
+     2
+    ]
+   }
+  },
+  {
+   "id": "parsel/durum",
+   "type": "fill",
+   "source": "s",
+   "paint": {
+    "fill-color": [
+     "case",
+     [
+      "has",
+      "alan"
+     ],
+     "#ff0000",
+     "#00ff00"
+    ]
+   }
+  },
+  {
+   "id": "parsel/suzgec",
+   "type": "fill",
+   "source": "s",
+   "filter": [
+    "==",
+    [
+     "get",
+     "a"
+    ],
+    [
+     "get",
+     "b"
+    ]
+   ],
+   "paint": {
+    "fill-color": "#123456"
+   }
+  }
+ ]
+}

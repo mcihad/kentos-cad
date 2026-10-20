@@ -217,6 +217,8 @@ pub(crate) const TITLES: [(&str, &str); 208] = [
     ("file.import.sld", "SLD'den görünüş al"),
     ("file.export.qml", "Görünüşü QML olarak dışa aktar"),
     ("file.import.qml", "QML'den görünüş al"),
+    ("file.export.maplibre", "Görünüşü MapLibre stili olarak dışa aktar"),
+    ("file.import.maplibre", "MapLibre stilinden görünüş al"),
     ("file.export.dxf", "DXF dışa aktar"),
     ("file.export.block", "Bloğu dosyaya yaz"),
     ("file.export.pdf", "PDF olarak yazdır"),

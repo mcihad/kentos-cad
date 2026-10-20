@@ -1,0 +1,437 @@
+{
+  "layers": [
+    {
+      "id": "import-egri-yol/1",
+      "layout": {
+        "line-cap": "butt",
+        "line-join": "miter"
+      },
+      "metadata": {
+        "kentos:class": "egri_yol",
+        "kentos:layer": "import-egri-yol",
+        "kentos:symbol": "line"
+      },
+      "paint": {
+        "line-color": "#111111",
+        "line-opacity": 1,
+        "line-width": 0.6803
+      },
+      "source": "import-egri-yol",
+      "type": "line"
+    },
+    {
+      "id": "import-egri/1",
+      "layout": {
+        "line-cap": "butt",
+        "line-join": "miter"
+      },
+      "metadata": {
+        "kentos:class": "egri",
+        "kentos:layer": "import-egri",
+        "kentos:symbol": "fill"
+      },
+      "paint": {
+        "line-color": "#111111",
+        "line-opacity": 1,
+        "line-width": 0.6803
+      },
+      "source": "import-egri",
+      "type": "line"
+    },
+    {
+      "id": "import-nokta/1",
+      "metadata": {
+        "kentos:class": "nokta",
+        "kentos:layer": "import-nokta",
+        "kentos:symbol": "marker"
+      },
+      "paint": {
+        "circle-color": "#ff0000",
+        "circle-opacity": 1,
+        "circle-radius": 5.6693,
+        "circle-stroke-color": "#000000",
+        "circle-stroke-opacity": 1,
+        "circle-stroke-width": 1.1339
+      },
+      "source": "import-nokta",
+      "type": "circle"
+    },
+    {
+      "id": "import-nokta/2",
+      "metadata": {
+        "kentos:class": "nokta",
+        "kentos:layer": "import-nokta",
+        "kentos:symbol": "marker"
+      },
+      "paint": {
+        "circle-color": "#00ff00",
+        "circle-opacity": 1,
+        "circle-radius": 3.7795,
+        "circle-stroke-color": "#000000",
+        "circle-stroke-opacity": 0,
+        "circle-stroke-width": 0
+      },
+      "source": "import-nokta",
+      "type": "circle"
+    },
+    {
+      "id": "import-yol/1",
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "metadata": {
+        "kentos:class": "yol",
+        "kentos:layer": "import-yol",
+        "kentos:symbol": "line"
+      },
+      "paint": {
+        "line-color": "#3366cc",
+        "line-dasharray": [
+          3.75,
+          1.875
+        ],
+        "line-opacity": 0.8,
+        "line-width": 3.0236
+      },
+      "source": "import-yol",
+      "type": "line"
+    },
+    {
+      "id": "import-yol/2",
+      "layout": {
+        "line-cap": "butt",
+        "line-join": "miter"
+      },
+      "metadata": {
+        "kentos:class": "yol",
+        "kentos:layer": "import-yol",
+        "kentos:symbol": "line"
+      },
+      "paint": {
+        "line-color": "#ffffff",
+        "line-opacity": 0.8,
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            2
+          ],
+          [
+            "zoom"
+          ],
+          0,
+          0.00002555207919273305,
+          24,
+          428.69275186558804
+        ]
+      },
+      "source": "import-yol",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "tapulu"
+        ],
+        [
+          "==",
+          [
+            "to-number",
+            [
+              "get",
+              "tapulu"
+            ]
+          ],
+          1
+        ]
+      ],
+      "id": "import-parsel/1",
+      "metadata": {
+        "kentos:class": "Tapulu",
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "paint": {
+        "fill-color": "#1b9e77",
+        "fill-opacity": 1
+      },
+      "source": "import-parsel",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "tapulu"
+        ],
+        [
+          "==",
+          [
+            "to-number",
+            [
+              "get",
+              "tapulu"
+            ]
+          ],
+          1
+        ]
+      ],
+      "id": "import-parsel/2",
+      "layout": {
+        "line-cap": "butt",
+        "line-join": "miter"
+      },
+      "metadata": {
+        "kentos:class": "Tapulu",
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "paint": {
+        "line-color": "#222222",
+        "line-opacity": 1,
+        "line-width": 1.5118
+      },
+      "source": "import-parsel",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "tapulu"
+        ],
+        [
+          "==",
+          [
+            "to-number",
+            [
+              "get",
+              "tapulu"
+            ]
+          ],
+          1
+        ],
+        [
+          "has",
+          "alan"
+        ],
+        [
+          ">",
+          [
+            "to-number",
+            [
+              "get",
+              "alan"
+            ]
+          ],
+          1000
+        ],
+        [
+          "has",
+          "ada"
+        ],
+        [
+          "!=",
+          [
+            "to-string",
+            [
+              "get",
+              "ada"
+            ]
+          ],
+          "B"
+        ]
+      ],
+      "id": "import-parsel/3",
+      "maxzoom": 19.09270105,
+      "metadata": {
+        "kentos:class": "Büyük",
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "minzoom": 14.77077296,
+      "paint": {
+        "fill-color": "#d95f02",
+        "fill-opacity": 1
+      },
+      "source": "import-parsel",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "tapulu"
+        ],
+        [
+          "==",
+          [
+            "to-number",
+            [
+              "get",
+              "tapulu"
+            ]
+          ],
+          1
+        ],
+        [
+          "has",
+          "alan"
+        ],
+        [
+          ">",
+          [
+            "to-number",
+            [
+              "get",
+              "alan"
+            ]
+          ],
+          1000
+        ],
+        [
+          "has",
+          "ada"
+        ],
+        [
+          "!=",
+          [
+            "to-string",
+            [
+              "get",
+              "ada"
+            ]
+          ],
+          "B"
+        ]
+      ],
+      "id": "import-parsel/4",
+      "layout": {
+        "line-cap": "butt",
+        "line-join": "miter"
+      },
+      "maxzoom": 19.09270105,
+      "metadata": {
+        "kentos:class": "Büyük",
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "minzoom": 14.77077296,
+      "paint": {
+        "line-color": "#222222",
+        "line-opacity": 1,
+        "line-width": 1.5118
+      },
+      "source": "import-parsel",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "!",
+        [
+          "all",
+          [
+            "has",
+            "tapulu"
+          ],
+          [
+            "==",
+            [
+              "to-number",
+              [
+                "get",
+                "tapulu"
+              ]
+            ],
+            1
+          ]
+        ]
+      ],
+      "id": "import-parsel/5",
+      "metadata": {
+        "kentos:class": "Diğer",
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "paint": {
+        "fill-color": "#7570b3",
+        "fill-opacity": 1
+      },
+      "source": "import-parsel",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "!",
+        [
+          "all",
+          [
+            "has",
+            "tapulu"
+          ],
+          [
+            "==",
+            [
+              "to-number",
+              [
+                "get",
+                "tapulu"
+              ]
+            ],
+            1
+          ]
+        ]
+      ],
+      "id": "import-parsel/6",
+      "layout": {
+        "line-cap": "butt",
+        "line-join": "miter"
+      },
+      "metadata": {
+        "kentos:class": "Diğer",
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "paint": {
+        "line-color": "#222222",
+        "line-opacity": 1,
+        "line-width": 1.5118
+      },
+      "source": "import-parsel",
+      "type": "line"
+    }
+  ],
+  "metadata": {
+    "kentos:format": "kentos-maplibre/1"
+  },
+  "name": "Ada 101",
+  "sources": {
+    "import-egri": {
+      "data": "kentos-cok.import-egri.geojson",
+      "type": "geojson"
+    },
+    "import-egri-yol": {
+      "data": "kentos-cok.import-egri-yol.geojson",
+      "type": "geojson"
+    },
+    "import-nokta": {
+      "data": "kentos-cok.import-nokta.geojson",
+      "type": "geojson"
+    },
+    "import-parsel": {
+      "data": "kentos-cok.import-parsel.geojson",
+      "type": "geojson"
+    },
+    "import-yol": {
+      "data": "kentos-cok.import-yol.geojson",
+      "type": "geojson"
+    }
+  },
+  "version": 8
+}

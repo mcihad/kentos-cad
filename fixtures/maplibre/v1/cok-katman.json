@@ -1,0 +1,55 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "arka-plan",
+   "type": "background",
+   "paint": {
+    "background-color": "#ffffff"
+   }
+  },
+  {
+   "id": "p-dolgu",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "#e5d8bd"
+   }
+  },
+  {
+   "id": "yol-cizgi",
+   "type": "line",
+   "source-layer": "Yol",
+   "paint": {
+    "line-color": "#888888",
+    "line-width": 2
+   }
+  },
+  {
+   "id": "durak/1",
+   "type": "circle",
+   "source": "s",
+   "paint": {
+    "circle-radius": 5,
+    "circle-color": "#ff5500"
+   }
+  },
+  {
+   "id": "imar-alan",
+   "type": "fill",
+   "paint": {
+    "fill-color": "#abd9e9"
+   }
+  },
+  {
+   "id": "okyanus",
+   "type": "fill",
+   "source-layer": "okyanus",
+   "paint": {
+    "fill-color": "#0000ff"
+   }
+  }
+ ]
+}

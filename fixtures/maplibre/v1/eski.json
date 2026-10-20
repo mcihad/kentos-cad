@@ -1,0 +1,141 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "e1",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "parsel",
+   "filter": [
+    "all",
+    [
+     "==",
+     "ada",
+     "A"
+    ],
+    [
+     "has",
+     "alan"
+    ]
+   ],
+   "paint": {
+    "fill-color": "#111111"
+   }
+  },
+  {
+   "id": "e2",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "parsel",
+   "filter": [
+    "in",
+    "kullanim",
+    "Konut",
+    "Ticaret"
+   ],
+   "paint": {
+    "fill-color": "#222222"
+   }
+  },
+  {
+   "id": "e3",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "parsel",
+   "filter": [
+    "!has",
+    "tapu"
+   ],
+   "paint": {
+    "fill-color": "#333333"
+   }
+  },
+  {
+   "id": "e4",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "parsel",
+   "filter": [
+    "!in",
+    "ada",
+    "A",
+    "B"
+   ],
+   "paint": {
+    "fill-color": "#444444"
+   }
+  },
+  {
+   "id": "e5",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "parsel",
+   "filter": [
+    "all",
+    [
+     ">=",
+     [
+      "to-number",
+      [
+       "get",
+       "kat"
+      ]
+     ],
+     2
+    ],
+    [
+     "<=",
+     [
+      "to-number",
+      [
+       "get",
+       "kat"
+      ]
+     ],
+     4
+    ],
+    [
+     "has",
+     "kat"
+    ]
+   ],
+   "paint": {
+    "fill-color": "#555555"
+   }
+  },
+  {
+   "id": "e6",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "parsel",
+   "filter": [
+    "all",
+    [
+     "has",
+     "ad"
+    ],
+    [
+     "==",
+     [
+      "slice",
+      [
+       "to-string",
+       [
+        "get",
+        "ad"
+       ]
+      ],
+      0,
+      2
+     ],
+     "Ba"
+    ]
+   ],
+   "paint": {
+    "fill-color": "#666666"
+   }
+  }
+ ]
+}

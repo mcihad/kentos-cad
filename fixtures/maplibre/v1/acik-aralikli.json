@@ -1,0 +1,30 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "acik",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": [
+     "step",
+     [
+      "to-number",
+      [
+       "get",
+       "alan"
+      ]
+     ],
+     "#fee5d9",
+     500,
+     "#fcae91",
+     1000,
+     "#de2d26"
+    ]
+   }
+  }
+ ]
+}

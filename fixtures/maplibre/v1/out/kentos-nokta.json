@@ -1,0 +1,51 @@
+{
+  "layers": [
+    {
+      "id": "import-nokta/1",
+      "metadata": {
+        "kentos:class": "nokta",
+        "kentos:layer": "import-nokta",
+        "kentos:symbol": "marker"
+      },
+      "paint": {
+        "circle-color": "#ff0000",
+        "circle-opacity": 1,
+        "circle-radius": 5.6693,
+        "circle-stroke-color": "#000000",
+        "circle-stroke-opacity": 1,
+        "circle-stroke-width": 1.1339
+      },
+      "source": "import-nokta",
+      "type": "circle"
+    },
+    {
+      "id": "import-nokta/2",
+      "metadata": {
+        "kentos:class": "nokta",
+        "kentos:layer": "import-nokta",
+        "kentos:symbol": "marker"
+      },
+      "paint": {
+        "circle-color": "#00ff00",
+        "circle-opacity": 1,
+        "circle-radius": 3.7795,
+        "circle-stroke-color": "#000000",
+        "circle-stroke-opacity": 0,
+        "circle-stroke-width": 0
+      },
+      "source": "import-nokta",
+      "type": "circle"
+    }
+  ],
+  "metadata": {
+    "kentos:format": "kentos-maplibre/1"
+  },
+  "name": "nokta",
+  "sources": {
+    "import-nokta": {
+      "data": "kentos-nokta.geojson",
+      "type": "geojson"
+    }
+  },
+  "version": 8
+}

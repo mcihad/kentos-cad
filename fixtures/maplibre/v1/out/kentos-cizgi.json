@@ -1,0 +1,70 @@
+{
+  "layers": [
+    {
+      "id": "import-yol/1",
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "metadata": {
+        "kentos:class": "yol",
+        "kentos:layer": "import-yol",
+        "kentos:symbol": "line"
+      },
+      "paint": {
+        "line-color": "#3366cc",
+        "line-dasharray": [
+          3.75,
+          1.875
+        ],
+        "line-opacity": 0.8,
+        "line-width": 3.0236
+      },
+      "source": "import-yol",
+      "type": "line"
+    },
+    {
+      "id": "import-yol/2",
+      "layout": {
+        "line-cap": "butt",
+        "line-join": "miter"
+      },
+      "metadata": {
+        "kentos:class": "yol",
+        "kentos:layer": "import-yol",
+        "kentos:symbol": "line"
+      },
+      "paint": {
+        "line-color": "#ffffff",
+        "line-opacity": 0.8,
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            2
+          ],
+          [
+            "zoom"
+          ],
+          0,
+          0.00002555207919273305,
+          24,
+          428.69275186558804
+        ]
+      },
+      "source": "import-yol",
+      "type": "line"
+    }
+  ],
+  "metadata": {
+    "kentos:format": "kentos-maplibre/1"
+  },
+  "name": "yol",
+  "sources": {
+    "import-yol": {
+      "data": "kentos-cizgi.geojson",
+      "type": "geojson"
+    }
+  },
+  "version": 8
+}

@@ -3115,6 +3115,22 @@
    "tests": 1
   },
   {
+   "id": "file.export.maplibre",
+   "kind": "command",
+   "title": "MapLibre stili dışa aktar…",
+   "level": "semantic",
+   "via": [
+    "file.export.maplibre"
+   ],
+   "operation": null,
+   "python": "Connection: file.export.maplibre",
+   "mcp": "file.export.maplibre",
+   "note": "Dosya yolu sorulur, komut görünen bütün katmanları tek stil olarak ve her katmanın GeoJSON'unu yanına yazar; sourceUrl ve glyphs komutta (ADR 0560).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.export.ncn",
    "kind": "command",
    "title": "Koordinat listesi (NCN, TXT, CSV)…",
@@ -3295,6 +3311,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "file.import.maplibre",
+   "kind": "command",
+   "title": "MapLibre stilinden görünüş al…",
+   "level": "semantic",
+   "via": [
+    "file.import.maplibre"
+   ],
+   "operation": null,
+   "python": "Connection: file.import.maplibre",
+   "mcp": "file.import.maplibre",
+   "note": "Dosya yolu sorulur, komut stilin hazırlandığı her katmanın görünüşünü tek adımda alır (ADR 0560).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "file.import.ncn",

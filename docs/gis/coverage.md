@@ -5,10 +5,10 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 
 ## Ürün komutları
 
-- 229 komut; masaüstü 208, başsız 229, Python 229, MCP 208, sunucu 21.
-- Seçenekler: 3654 hücre, 1215 tanesi bir durumda deneniyor (2439 açık).
+- 231 komut; masaüstü 210, başsız 231, Python 231, MCP 210, sunucu 21.
+- Seçenekler: 3657 hücre, 1215 tanesi bir durumda deneniyor (2442 açık).
 - Veri türleri (hedef türler): 182 hücre, 124 tanesi bir durumda deneniyor (58 açık).
-- Ortak komut durumu olmayan: 35; 21 sunucu komutu (sunucunun veritabanı testlerinde), 14 dosya komutu (başsız testlerde ve biçim başvurularında: file.export.atlas, file.export.block, file.export.csv, file.export.dxf, file.export.fgb, file.export.gis, file.export.gml, file.export.gpkg, file.export.pdf, file.export.qml, file.export.shp, file.export.sld, file.export.xyz, file.package).
+- Ortak komut durumu olmayan: 36; 21 sunucu komutu (sunucunun veritabanı testlerinde), 15 dosya komutu (başsız testlerde ve biçim başvurularında: file.export.atlas, file.export.block, file.export.csv, file.export.dxf, file.export.fgb, file.export.gis, file.export.gml, file.export.gpkg, file.export.maplibre, file.export.pdf, file.export.qml, file.export.shp, file.export.sld, file.export.xyz, file.package).
 
 ### Açık hücreler
 
@@ -120,6 +120,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | `file.export.gis` | annotations="skip", annotations="table", overwrite=true | — |
 | `file.export.gml` | overwrite=true, schema=true | — |
 | `file.export.gpkg` | overwrite=true | — |
+| `file.export.maplibre` | overwrite=true, sourceKind="geojson", sourceKind="vector" | — |
 | `file.export.pdf` | overwrite=true | — |
 | `file.export.qml` | overwrite=true | — |
 | `file.export.shp` | encoding="utf-8", encoding="windows-1254", overwrite=true | — |

@@ -1,0 +1,85 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "r1",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "#abc"
+   }
+  },
+  {
+   "id": "r2",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "rgb(255, 128, 0)"
+   }
+  },
+  {
+   "id": "r3",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "rgba(0,128,0,0.5)"
+   }
+  },
+  {
+   "id": "r4",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "hsl(240, 100%, 50%)"
+   }
+  },
+  {
+   "id": "r5",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "hsla(0, 0%, 50%, 0.25)"
+   }
+  },
+  {
+   "id": "r6",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "red"
+   }
+  },
+  {
+   "id": "r7",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "transparent"
+   }
+  },
+  {
+   "id": "r8",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": [
+     "rgba",
+     10,
+     20,
+     30,
+     0.5
+    ]
+   }
+  },
+  {
+   "id": "r9",
+   "type": "fill",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": "#11223344"
+   }
+  }
+ ]
+}

@@ -1,0 +1,19 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "parsel/etiket",
+   "type": "symbol",
+   "source": "s",
+   "layout": {
+    "text-field": "{ad}"
+   }
+  },
+  {
+   "id": "parsel/arka",
+   "type": "background"
+  }
+ ]
+}

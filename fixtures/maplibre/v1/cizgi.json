@@ -1,0 +1,55 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "yol-1",
+   "type": "line",
+   "source": "s",
+   "source-layer": "yol",
+   "filter": [
+    "==",
+    "$type",
+    "LineString"
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#3366cc",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      2
+     ],
+     [
+      "zoom"
+     ],
+     0,
+     6.388019798183263e-05,
+     24,
+     1071.7318796639702
+    ],
+    "line-dasharray": [
+     2,
+     1
+    ],
+    "line-opacity": 0.8
+   }
+  },
+  {
+   "id": "yol-2",
+   "type": "line",
+   "source": "s",
+   "source-layer": "yol",
+   "paint": {
+    "line-color": "#ffffff",
+    "line-width": 3,
+    "line-opacity": 0.8
+   }
+  }
+ ]
+}

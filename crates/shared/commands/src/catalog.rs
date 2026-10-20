@@ -8364,6 +8364,68 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // The layers' looks as a MapLibre GL style, out and in (docs/adr/0560).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_MAPLIBRE.into(),
+            version: crate::FILE_EXPORT_MAPLIBRE_VERSION,
+            title: "Görünüşü MapLibre stili olarak dışa aktar".into(),
+            summary: "Bir katmanın (layer) ya da görünen bütün katmanların görünüşünü MapLibre GL stili (sürüm 8) olarak path'e (.json) yazar; MapLibre GL JS, MapLibre Native, Maputnik ve QGIS'in vektör karo stili açar. \
+                      Her katmanın nesneleri sourceUrl verilmezse WGS 84 GeoJSON olarak stilin yanına yazılır (tek katmanda <ad>.geojson, birden çokta <ad>.<katman kimliği>.geojson) ve stilin kaynağı o dosyadır; sourceUrl verilirse kaynak o adrestir (vektör karo ya da GeoJSON adresi), katman adı source-layer olur. \
+                      Katmanlar alan, çizgi ve daire (circle) katmanlarına yazılır: tek simge sabit değerlerle, kategorili görünüş `match` ile, aralıklı görünüş `step` ile (sınıflar aynı yapıdaysa her simge katmanı için tek stil katmanı, değilse sınıf başına katman ve süzgeç), kurallar MapLibre'nin ifade süzgeciyle (iç içe kurallar üst kuralın süzgeciyle, ELSE öncekilerin değili, ölçek aralıkları yakınlaştırma düzeyi olarak); etiketler yazı (symbol) katmanı olarak, metin şablonu `concat` ile. \
+                      Birimler: mm 96 dpi'de CSS pikseline çevrilir (1 mm = 96/25,4 px), piksel kalır, metre ekvatordaki ölçüyle yakınlaştırmayla büyüyen piksel olur; simgenin ve katmanın saydamlığı katılır, katman görünürlüğü yalnız görünen katmanları seçer. \
+                      Daire dışındaki işaret şekilleri, tarama, degrade, desen ve resim dolgusu, işaretli çizgi, SVG ve yazı işareti, veriye göre değer, efektler ve etiketin çağrı çizgisi, zemini, gölgesi gibi ayarları MapLibre'de yoktur; export_losses ile söylenir. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["maplibreout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportMaplibre>(),
+            output: schema::<crate::MaplibreExported>(),
+            plan: Some(schema::<crate::MaplibreExported>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsel katmanı, GeoJSON'u yanında".into(),
+                    input: json!({ "path": "/veri/parsel.json", "layer": "parsel", "overwrite": true }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Görünen katmanlar, kendi vektör karolarına".into(),
+                    input: json!({ "path": "/veri/harita.json", "sourceUrl": "https://karo.example.org/{z}/{x}/{y}.pbf" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_MAPLIBRE.into(),
+            version: crate::FILE_IMPORT_MAPLIBRE_VERSION,
+            title: "MapLibre stilinden görünüş al".into(),
+            summary: "path'teki (ya da text'teki) MapLibre GL stilinin (sürüm 8) fill, line ve circle katmanlarının görünüşünü katmanların işleyicisi yapar, hepsi tek geri alma adımı (Katman stili). Stil katmanı KentOS katmanınındır: metadata kentos:layer katmanın kimliğiyse (KentOS'un yazdığı stil), yoksa source-layer ya da id katmanın kimliği ya da adıysa, from verilmişse source-layer ya da id from ise. layer verilirse o katmanın, verilmezse stilin katmanı olduğu her katmanın. \
+                      Bir alanın `match`i kategorili, `step`i aralıklı, süzgeçli katmanlar kurallı işleyici, hiçbiri yoksa tek simge olur; süzgeç (ifade ve eski biçim: ==, !=, <, in, has, all, any, !, match) KentOS'un ifadesine çevrilir; geometri türü süzgeci hangi simgenin olduğunu söyler; pikseller piksel, yakınlaştırmayla büyüyen metre genişlikleri metre olur; yakınlaştırma düzeyleri ölçek aralığı olur. \
+                      Etiket (symbol) katmanları, başka katman türleri, yakınlaştırmaya göre eğriler, case ve başka ifadeler, çevrilemeyen süzgeç, desen ve kaydırma gibi özellikler alınmaz, import_losses ile söylenir. Katman aynı görünüşteyse adım yazılmaz (changed false). plan dosyayı okur, hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["maplibrein".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportMaplibre>(),
+            output: schema::<crate::MaplibreImported>(),
+            plan: Some(schema::<crate::MaplibreImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "KentOS'un yazdığı stil, bütün katmanlar".into(),
+                input: json!({ "path": "/veri/harita.json" }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::FILE_EXPORT_DXF.into(),
             version: crate::FILE_EXPORT_DXF_VERSION,
@@ -9300,6 +9362,12 @@ mod tests {
                     }
                     crate::FILE_IMPORT_QML => {
                         serde_json::from_value::<crate::ImportQml>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_MAPLIBRE => {
+                        serde_json::from_value::<crate::ExportMaplibre>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_IMPORT_MAPLIBRE => {
+                        serde_json::from_value::<crate::ImportMaplibre>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_PACKAGE => {
                         serde_json::from_value::<crate::PackageProject>(e.input.clone()).map(|_| ())

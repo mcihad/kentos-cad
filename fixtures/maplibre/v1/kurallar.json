@@ -1,0 +1,80 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "k1",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "parsel",
+   "filter": [
+    "==",
+    [
+     "get",
+     "kullanim"
+    ],
+    "Konut"
+   ],
+   "paint": {
+    "fill-color": "#1b9e77"
+   }
+  },
+  {
+   "id": "k2",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "parsel",
+   "filter": [
+    "all",
+    [
+     ">",
+     [
+      "get",
+      "alan"
+     ],
+     1000
+    ],
+    [
+     "!=",
+     [
+      "get",
+      "ada"
+     ],
+     "B"
+    ]
+   ],
+   "minzoom": 14,
+   "maxzoom": 19,
+   "paint": {
+    "fill-color": "#d95f02"
+   }
+  },
+  {
+   "id": "k3",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "parsel",
+   "filter": [
+    "!",
+    [
+     "in",
+     [
+      "get",
+      "kullanim"
+     ],
+     [
+      "literal",
+      [
+       "Konut",
+       "Ticaret"
+      ]
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#7570b3"
+   }
+  }
+ ]
+}

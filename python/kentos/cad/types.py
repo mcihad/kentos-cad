@@ -2402,6 +2402,20 @@ LossKindName = Literal["kept", "cleared"]
 """The names of :class:`LossKind`, for a plain string."""
 
 
+class MaplibreSourceKind(_StrEnum):
+    """What kind of source `sourceUrl` names.
+
+    - ``geojson``: A GeoJSON file at the URL (`type: geojson`, `data`).
+    - ``vector``: Vector tiles: a URL with `{z}/{x}/{y}` is the tile template (`tiles`), any other a TileJSON (`url`); each
+    """
+    GEOJSON = "geojson"
+    VECTOR = "vector"
+
+
+MaplibreSourceKindName = Literal["geojson", "vector"]
+"""The names of :class:`MaplibreSourceKind`, for a plain string."""
+
+
 class MatchProperty(_StrEnum):
     """A property Özellik kopyala gives (AutoCAD's MATCHPROP settings).
 
@@ -17277,6 +17291,57 @@ class ExportGpkg(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportMaplibre(_Model):
+    """Input of `file.export.maplibre` v1: the look of `layer` (or of every visible layer, the one drawn last on top,
+    when `layer` is not given) as a MapLibre style at `path`, a `.json`. Without `sourceUrl` each layer's objects
+    are written as a WGS 84 GeoJSON beside the style (`<name>.geojson` for one layer, `<name>.<layer id>.geojson`
+    for several) and the style's source names that file; a project with no coordinate system cannot be written so
+    and `sourceUrl` is asked for. Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`,
+    `not_a_layer`, `no_system`, `nothing_to_export` (no class or rule MapLibre's layers here can draw),
+    `file_unwritable`. Warnings: `export_losses`.
+    Attributes:
+        path: An absolute path ending `.json`.
+        glyphs: The glyph server's URL for the labels' fonts (`{fontstack}` and `{range}` in it); absent, MapLibre's demo
+            server. Only a style with labels has it.
+        layer: The layer's id; absent, the visible layers.
+        overwrite: Write over files that are there.
+        source_kind: What the URL is; absent, vector tiles when it has `{z}` or ends `.pbf` or `.mvt`, else GeoJSON.
+        source_url: The source's URL, instead of GeoJSON files written beside the style.
+    """
+    path: str
+    glyphs: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    overwrite: bool = False
+    source_kind: MaplibreSourceKind | MaplibreSourceKindName | None | Unset = UNSET
+    source_url: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.glyphs is not UNSET:
+            out["glyphs"] = self.glyphs
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        out["overwrite"] = self.overwrite
+        if self.source_kind is not UNSET:
+            out["sourceKind"] = None if self.source_kind is None else _enum_out(self.source_kind)
+        if self.source_url is not UNSET:
+            out["sourceUrl"] = self.source_url
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportMaplibre:
+        return cls(
+            path=data["path"],
+            glyphs=data.get("glyphs", UNSET),
+            layer=data.get("layer", UNSET),
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+            source_kind=UNSET if "sourceKind" not in data else None if data["sourceKind"] is None else _enum_in(MaplibreSourceKind, data["sourceKind"]),
+            source_url=data.get("sourceUrl", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportPdf(_Model):
     """Input of `file.export.pdf` v1. Refusals: `invalid_file_path`,
     `file_exists`, `no_sheets` (the project has no sheet), `unknown_sheet`
@@ -22553,6 +22618,55 @@ class ImportGpkg(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImportMaplibre(_Model):
+    """Input of `file.import.maplibre` v1: the look of the style at `path` (or its `text`) made the renderer of the
+    layers it is for, one undo step “Katman stili”. A style layer is for a KentOS layer when its `metadata`
+    `kentos:layer` is the layer's id (a style KentOS wrote), else its `source-layer` or its `id` is the layer's id
+    or name, else, when `from` is given, its `source-layer` or `id` is `from`. With `layer` the one layer's;
+    without, every layer the style has layers for. MapLibre's `match` over a field becomes a categorized
+    renderer, `step` a graduated one, filters rules, and a style with none a single symbol; sizes stay in pixels and
+    widths that grow with the zoom as metres. Refusals, in order: `invalid_input` (neither or both of `path` and
+    `text`), `file_unreadable`, `invalid_maplibre`, `layer_not_found`, `not_a_layer`, `service_layer`,
+    `style_layer_not_found`, `revision_conflict`. Warnings: `import_losses`.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        from_: The style's `source-layer` or layer `id` to take for `layer`, when the style does not name it.
+        layer: The layer's id; absent, every layer the style is for.
+        path: An absolute path to a `.json`.
+        text: The style itself, instead of a path.
+    """
+    expected_revision: str | None | Unset = UNSET
+    from_: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.text is not UNSET:
+            out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportMaplibre:
+        return cls(
+            expected_revision=data.get("expectedRevision", UNSET),
+            from_=data.get("from", UNSET),
+            layer=data.get("layer", UNSET),
+            path=data.get("path", UNSET),
+            text=data.get("text", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImportPdf(_Model):
     """Input of `file.import.pdf` v1. Refusals (`CommandError.code`), in order: `invalid_file_path`, `invalid_scale`,
     `invalid_tolerance`, `invalid_pdf_region`, `file_not_found`, `import_unreadable` (not a PDF, encrypted or broken),
@@ -27776,6 +27890,158 @@ class LostPin(_Model):
         return cls(
             uid=data["uid"],
             reason=_enum_in(PinLoss, data["reason"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MaplibreData(_Model):
+    """A GeoJSON file `file.export.maplibre` wrote (or with `plan` would write) beside the style.
+    Attributes:
+        features: Objects written. Unit: count.
+        bytes: Unit: bytes.
+    """
+    layer: str
+    path: str
+    features: int
+    bytes: int
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["path"] = self.path
+        out["features"] = self.features
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MaplibreData:
+        return cls(
+            layer=data["layer"],
+            path=data["path"],
+            features=data["features"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MaplibreExported(_Model):
+    """What `file.export.maplibre` wrote (or with `plan` would write).
+    Attributes:
+        layers: The ids of the layers written, the bottom one first.
+        style_layers: The style's layers. Unit: count.
+        rules: Classes and rules written. Unit: count.
+        bytes: Unit: bytes.
+        data: The GeoJSON files written beside the style.
+        lost: What the style could not say, a sentence each.
+    """
+    path: str
+    layers: list[str]
+    style_layers: int
+    rules: int
+    bytes: int
+    sha256: str
+    data: list[MaplibreData] | Unset = UNSET
+    lost: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["layers"] = list(self.layers)
+        out["styleLayers"] = self.style_layers
+        out["rules"] = self.rules
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        if self.data is not UNSET:
+            out["data"] = [e0.to_json() for e0 in self.data]
+        if self.lost is not UNSET:
+            out["lost"] = list(self.lost)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MaplibreExported:
+        return cls(
+            path=data["path"],
+            layers=list(data["layers"]),
+            style_layers=data["styleLayers"],
+            rules=data["rules"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            data=[MaplibreData.from_json(e0) for e0 in data["data"]] if "data" in data else UNSET,
+            lost=list(data["lost"]) if "lost" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MaplibreImported(_Model):
+    """What `file.import.maplibre` made of the layers' looks.
+    Attributes:
+        changed: Whether any layer's look changed (an undo step was written).
+        revision: The document's revision after the write, as decimal text.
+        lost: What KentOS could not take, a sentence each.
+    """
+    layers: list[MaplibreLayerImported]
+    changed: bool
+    revision: str
+    lost: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        if self.lost is not UNSET:
+            out["lost"] = list(self.lost)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MaplibreImported:
+        return cls(
+            layers=[MaplibreLayerImported.from_json(e0) for e0 in data["layers"]],
+            changed=data["changed"],
+            revision=data["revision"],
+            lost=list(data["lost"]) if "lost" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MaplibreLayerImported(_Model):
+    """One layer's look `file.import.maplibre` made.
+    Attributes:
+        from_: The style layers taken, by their ids.
+        kind: The renderer's type: `single`, `categorized`, `graduated` or `rules`.
+        rules: Classes and rules taken. Unit: count.
+        renderer: The renderer as the layer now has it.
+        changed: Whether the layer's look changed.
+    """
+    layer: str
+    from_: list[str]
+    kind: str
+    rules: int
+    renderer: Any
+    changed: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["from"] = list(self.from_)
+        out["kind"] = self.kind
+        out["rules"] = self.rules
+        out["renderer"] = self.renderer
+        out["changed"] = self.changed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MaplibreLayerImported:
+        return cls(
+            layer=data["layer"],
+            from_=list(data["from"]),
+            kind=data["kind"],
+            rules=data["rules"],
+            renderer=data["renderer"],
+            changed=data["changed"],
         )
 
 
@@ -58788,6 +59054,7 @@ __all__ = [
     "ExportGis",
     "ExportGml",
     "ExportGpkg",
+    "ExportMaplibre",
     "ExportPdf",
     "ExportQml",
     "ExportReport",
@@ -59012,6 +59279,7 @@ __all__ = [
     "ImportFgb",
     "ImportGml",
     "ImportGpkg",
+    "ImportMaplibre",
     "ImportPdf",
     "ImportQml",
     "ImportSld",
@@ -59226,6 +59494,12 @@ __all__ = [
     "LossKindName",
     "LostPin",
     "MapValuesMigrationStep",
+    "MaplibreData",
+    "MaplibreExported",
+    "MaplibreImported",
+    "MaplibreLayerImported",
+    "MaplibreSourceKind",
+    "MaplibreSourceKindName",
     "MappingClass",
     "MappingCode",
     "MappingCodes",
