@@ -3999,7 +3999,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 161,
+   "cases": 164,
    "files": [
     "fixtures/commands/v1/cad.arrays.edit.json",
     "fixtures/commands/v1/cad.columns.create.json",
@@ -10342,7 +10342,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 46,
+   "cases": 53,
    "files": [
     "fixtures/commands/v1/cad.labels.pin.json",
     "fixtures/commands/v1/cad.sources.edit.json",
@@ -10373,9 +10373,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 32,
+   "cases": 35,
    "files": [
-    "fixtures/commands/v1/cad.labels.report.json"
+    "fixtures/commands/v1/cad.labels.report.json",
+    "fixtures/commands/v1/cad.sources.edit.json"
    ],
    "options": [],
    "kinds": []
@@ -13122,7 +13123,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 191,
+   "cases": 194,
    "files": [
     "fixtures/commands/v1/cad.gis.derivation.json",
     "fixtures/commands/v1/cad.polygon.create.contingents.json",
@@ -13132,6 +13133,7 @@
     "fixtures/commands/v1/cad.polygon.create.rules.json",
     "fixtures/commands/v1/cad.polygon.create.subtypes.json",
     "fixtures/commands/v1/cad.sources.reconcile.json",
+    "fixtures/commands/v1/cad.sources.sync.json",
     "fixtures/commands/v1/cad.sources.sync.together.json"
    ],
    "options": [
@@ -15495,7 +15497,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 436,
+   "cases": 446,
    "files": [
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
@@ -15625,7 +15627,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 73,
+   "cases": 76,
    "files": [
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
@@ -19896,6 +19898,11 @@
      "covered": false
     },
     {
+     "key": "hidden",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "ink",
      "value": "fg",
      "covered": false
@@ -22139,6 +22146,11 @@
     },
     {
      "key": "frozen",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "hidden",
      "value": true,
      "covered": false
     },

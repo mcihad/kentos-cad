@@ -1275,6 +1275,12 @@ codes! {
     LABEL_PINS_LOST = "label_pins_lost", Warning, false, "Okuma, etiket iğnesi olan nesneleri katmandan çıkardı ya da iğnelerini koruyamadı; nesneleri sonuçta.";
     /// Label pins followed their key to another row (docs/adr/0533 §1).
     LABEL_PINS_MOVED = "label_pins_moved", Warning, false, "Etiket iğneleri anahtar değerinin yeni satırına taşındı.";
+    /// Label pins of objects whose row left the part were parked in the binding (docs/adr/0578 §3).
+    LABEL_PINS_PARKED = "label_pins_parked", Warning, false, "Alanın dışına çıkan satırların etiket iğneleri bağda park edildi; satır alana girince nesnesine geri verilir.";
+    /// Parked label pins went back to their row (docs/adr/0578 §3).
+    LABEL_PINS_RESTORED = "label_pins_restored", Warning, false, "Park edilmiş etiket iğneleri alana giren satırın nesnesine geri verildi.";
+    /// The band round a part could not be read (docs/adr/0578 §1).
+    BAND_UNREAD = "band_unread", Warning, false, "Parçanın çevresindeki komşular okunamadı (dosya yok ya da son eşleşmeden sonra değişmiş); etiketler yalnız parçanın nesnelerine göre yerleşti.";
     /// The table repeats the layer's key (docs/adr/0533 §1).
     KEY_NOT_UNIQUE = "key_not_unique", Warning, false, "Tablo katmanın anahtar değerini birden çok satırda tekrarlıyor; o satırların iğneleri anahtarla izlenmedi.";
     /// A window that is not one (docs/adr/0533 §6).

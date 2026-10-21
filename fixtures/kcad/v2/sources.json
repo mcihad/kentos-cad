@@ -21,6 +21,21 @@
     "digest": "4b1d0c6e2f8a7d3c5e9b1a2f4c6e8d0b2a4c6e8f0a1b3c5d7e9f1a2b4c6d8e0f",
     "srid": 5256,
     "extent": [487000.0, 4420000.0, 487100.0, 4420100.0],
+    "key": "ada",
+    "parked": [
+     {
+      "uid": "0192f5a3-4444-7000-8000-000000000007",
+      "key": "Işık",
+      "pins": [
+       { "at": { "x": -3.0, "y": 4.0 }, "rotation": 10.0 },
+       { "class": "ad", "hidden": true }
+      ]
+     },
+     {
+      "uid": "0192f5a3-4444-7000-8000-000000000008",
+      "pins": [{ "at": { "x": 1.0, "y": 2.0 } }]
+     }
+    ],
     "writable": true,
     "relative": "veri/kadastro.gpkg"
    },

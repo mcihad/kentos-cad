@@ -9,8 +9,8 @@
 use std::collections::HashMap;
 
 use kentos_commands::{
-    CommandResult, LabelCounts, LabelsReport, LabelsReported, LayerLabelReport, LayerNode,
-    LayerNodeType,
+    CommandResult, CommandWarning, LabelCounts, LabelsReport, LabelsReported, LayerLabelReport,
+    LayerNode, LayerNodeType, ParkedInfo,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geometry::Bounds;
@@ -130,9 +130,70 @@ fn check(doc: &Document, input: &LabelsReport) -> Result<Asked, Stop> {
     Ok(Asked { window, scale })
 }
 
-/// The store of `doc` with what the label engine reads: the layers' labelling, the objects' texts and pins.
-fn label_store(doc: &Document) -> Store {
+/// What the band round a layer's part gave (docs/adr/0578 §1): the band, and how many rows held room, or why none
+/// could be read.
+pub(crate) struct Band {
+    pub layer: String,
+    pub area: [f64; 4],
+    pub rows: Result<u32, String>,
+}
+
+/// A band a host has read already (the desktop keeps the ones it draws with): the report takes its rows as they are
+/// and reads no file, so it can run on the interface's thread.
+#[derive(Clone, Debug)]
+pub struct GivenBand {
+    pub layer: String,
+    pub area: [f64; 4],
+    pub rows: Result<Vec<kentos_geometry_core::entity::Shape>, String>,
+}
+
+/// The store of `doc` with what the label engine reads: the layers' labelling, the objects' texts and pins. The rows
+/// round each bound layer's part that the layer holds no object for hold room as obstacles (docs/adr/0578 §1): the
+/// `given` bands when a host has them, else read from the files; what each band gave is the second answer.
+pub(crate) fn label_store(doc: &Document, given: Option<&[GivenBand]>) -> (Store, Vec<Band>) {
     let mut store = crate::geometry_store::store_of(doc);
+    let mut noted: Vec<Band> = Vec::new();
+    for link in &doc.settings().sources {
+        let (area, rows) = match given {
+            Some(list) => {
+                let Some(b) = list.iter().find(|b| b.layer == link.layer) else {
+                    if let Some(extent) = link.extent {
+                        noted.push(Band {
+                            layer: link.layer.clone(),
+                            area: crate::sources::band_of(&extent),
+                            rows: Err("henüz okunmadı".into()),
+                        });
+                    }
+                    continue;
+                };
+                (b.area, b.rows.clone())
+            }
+            None => {
+                let Some((area, read)) = crate::sources::band_objects(doc, link) else {
+                    continue;
+                };
+                (
+                    area,
+                    read.map(|entities| {
+                        entities
+                            .iter()
+                            .map(|e| crate::geometry_store::record(e).3)
+                            .collect()
+                    }),
+                )
+            }
+        };
+        let rows = rows.map(|shapes: Vec<kentos_geometry_core::entity::Shape>| {
+            let n = shapes.len() as u32;
+            store.set_ghosts(&link.layer, shapes);
+            n
+        });
+        noted.push(Band {
+            layer: link.layer.clone(),
+            area,
+            rows,
+        });
+    }
     // The kinds' own label styles hold where a layer has none.
     let _ = store.set_label_defaults_json(&label_defaults_json());
     let leaves: Vec<&LayerNode> = doc
@@ -188,7 +249,7 @@ fn label_store(doc: &Document) -> Store {
             );
         }
     }
-    store
+    (store, noted)
 }
 
 fn counts(labels: &[&AuditedLabel]) -> LabelCounts {
@@ -204,19 +265,27 @@ fn counts(labels: &[&AuditedLabel]) -> LabelCounts {
     }
 }
 
-/// The report; the same answer as [`execute`].
-fn report(doc: &Document, input: &LabelsReport) -> Result<LabelsReported, Stop> {
+/// The report, and the warnings it comes with; the same answer as [`execute`].
+fn report(
+    doc: &Document,
+    input: &LabelsReport,
+    given: Option<&[GivenBand]>,
+) -> Result<(LabelsReported, Vec<CommandWarning>), Stop> {
     let asked = check(doc, input)?;
-    let store = label_store(doc);
+    let (store, bands) = label_store(doc, given);
+    let mut warnings: Vec<CommandWarning> = Vec::new();
     let window = asked.window.or_else(|| store.extent(None));
     let Some(window) = window else {
-        return Ok(LabelsReported {
-            window: [0.0; 4],
-            px_per_metre: asked.scale,
-            totals: LabelCounts::default(),
-            layers: Vec::new(),
-            revision: doc.revision().to_string(),
-        });
+        return Ok((
+            LabelsReported {
+                window: [0.0; 4],
+                px_per_metre: asked.scale,
+                totals: LabelCounts::default(),
+                layers: Vec::new(),
+                revision: doc.revision().to_string(),
+            },
+            warnings,
+        ));
     };
     // The drawing's extent of one point (or a line along an axis) is no window: it takes a little room.
     let window = if window.max_x > window.min_x && window.max_y > window.min_y {
@@ -280,6 +349,20 @@ fn report(doc: &Document, input: &LabelsReport) -> Result<LabelsReported, Stop> 
             None => by_layer.push((at, vec![l])),
         }
     }
+    // A bound layer with a part, or one that parks pins, is listed with no label in the window too: its band and its
+    // parked pins are the report's matter (docs/adr/0578 §1, §3).
+    for link in &doc.settings().sources {
+        if (link.parked.is_empty() && link.extent.is_none())
+            || wanted.as_ref().is_some_and(|w| !w.contains(link.layer.as_str()))
+        {
+            continue;
+        }
+        if let Some(at) = leaves.iter().position(|n| n.id == link.layer)
+            && !by_layer.iter().any(|(i, _)| *i == at)
+        {
+            by_layer.push((at, Vec::new()));
+        }
+    }
     by_layer.sort_by_key(|(i, _)| *i);
     let every: Vec<&AuditedLabel> = by_layer
         .iter()
@@ -291,6 +374,7 @@ fn report(doc: &Document, input: &LabelsReport) -> Result<LabelsReported, Stop> 
             let node = leaves[i];
             let link = doc.settings().sources.iter().find(|s| s.layer == node.id);
             let part = link.and_then(|s| s.extent);
+            let band = bands.iter().find(|b| b.layer == node.id);
             LayerLabelReport {
                 layer: node.id.clone(),
                 counts: counts(&list),
@@ -302,16 +386,46 @@ fn report(doc: &Document, input: &LabelsReport) -> Result<LabelsReported, Stop> 
                         || window.max_x > e[2]
                         || window.max_y > e[3]
                 }),
+                band: band.map(|b| b.area),
+                neighbours: band.and_then(|b| b.rows.as_ref().ok().copied()),
+                parked: link
+                    .map(|s| {
+                        s.parked
+                            .iter()
+                            .map(|p| ParkedInfo {
+                                uid: p.uid.clone(),
+                                key: p.key.clone(),
+                                pins: p.pins.len() as u32,
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default(),
             }
         })
         .collect();
-    Ok(LabelsReported {
-        window: [window.min_x, window.min_y, window.max_x, window.max_y],
-        px_per_metre: asked.scale,
-        totals: counts(&every),
-        layers,
-        revision: doc.revision().to_string(),
-    })
+    for b in &bands {
+        let listed = wanted.as_ref().is_none_or(|w| w.contains(b.layer.as_str()));
+        if let (true, Err(why)) = (listed, &b.rows) {
+            warnings.push(CommandWarning {
+                code: codes::BAND_UNREAD.into(),
+                message: format!(
+                    "{}: parçanın çevresindeki komşular okunamadı ({why}); etiketler yalnız parçanın nesnelerine göre yerleşti.",
+                    b.layer
+                ),
+                path: Some("layers".into()),
+            });
+        }
+    }
+    Ok((
+        LabelsReported {
+            window: [window.min_x, window.min_y, window.max_x, window.max_y],
+            px_per_metre: asked.scale,
+            totals: counts(&every),
+            layers,
+            revision: doc.revision().to_string(),
+        },
+        warnings,
+    ))
 }
 
 /// Checks `input`.
@@ -338,12 +452,21 @@ pub fn execute(
     answer(cx.doc, &input)
 }
 
+/// The counts, the bands a host has read already taken as they are (no file is read).
+pub fn execute_with(
+    cx: &mut ExecutionContext<'_>,
+    input: LabelsReport,
+    given: &[GivenBand],
+) -> CommandResult<LabelsReported> {
+    match report(cx.doc, &input, Some(given)) {
+        Ok((output, warnings)) => CommandResult::Completed { output, warnings },
+        Err(stop) => stop.into(),
+    }
+}
+
 fn answer(doc: &Document, input: &LabelsReport) -> CommandResult<LabelsReported> {
-    match report(doc, input) {
-        Ok(output) => CommandResult::Completed {
-            output,
-            warnings: Vec::new(),
-        },
+    match report(doc, input, None) {
+        Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
     }
 }

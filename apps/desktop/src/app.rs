@@ -460,6 +460,8 @@ pub enum Message {
     LayoutSave,
     /// The NTv2 grids the project names, looked for in the device's library (grids.rs).
     GridsLooked(Vec<crate::grids::Looked>),
+    /// The rows round a bound layer's part, read on a thread of their own (band_ghosts.rs, docs/adr/0578 §1).
+    BandRead(crate::band_ghosts::Read),
     /// The window's new size: the kept sizes are shown within it.
     WindowResized(iced::Size),
     /// The layer tree's rows and their menu (layering.rs).
@@ -856,6 +858,8 @@ pub struct App {
     pub(crate) layout: crate::layout::Keeper,
     /// The device's NTv2 grid library and the grids looked for (grids.rs, docs/adr/0168 §4).
     pub(crate) grids: crate::grids::Grids,
+    /// The rows round the bound layers' parts, asked for and arrived (band_ghosts.rs, docs/adr/0578 §1).
+    pub(crate) bands: crate::band_ghosts::Bands,
     pub(crate) window_size: iced::Size,
     pub command_input: String,
     pub command_expanded: bool,
@@ -1289,6 +1293,7 @@ impl App {
             follow: crate::message_log::Follow::default(),
             layout: crate::layout::Keeper::memory(),
             grids: crate::grids::Grids::default(),
+            bands: crate::band_ghosts::Bands::default(),
             window_size: iced::Size::new(1440.0, 900.0),
             command_input: String::new(),
             command_expanded: false,
@@ -1667,6 +1672,8 @@ impl App {
             self.follow_tracking(),
             // The grids the project's datum choices name, read into the core (grids.rs).
             self.follow_grids(),
+            // The rows round a bound layer's part, the obstacles of its labels at the part's edge (band_ghosts.rs).
+            self.follow_bands(),
             // The drawing's new calls join Komut geçmişi before the log is followed (history/).
             {
                 self.follow_history();
@@ -1845,6 +1852,7 @@ impl App {
             Message::LogScrolled(viewport) => self.log_scrolled(viewport),
             Message::LayoutSave => self.layout.write(Instant::now(), false),
             Message::GridsLooked(looked) => self.grids_looked(looked),
+            Message::BandRead(read) => self.band_read(read),
             Message::WindowResized(size) => self.window_resized(size),
             // The next frame draws them; the bottom panel shows the pyramids' progress.
             Message::RastersReady => {}

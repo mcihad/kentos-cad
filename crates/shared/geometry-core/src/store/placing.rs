@@ -791,21 +791,7 @@ impl Store {
             if !(point || obstacle.is_some() || line) || !self.view_shown(it.id) {
                 continue;
             }
-            let point_px = layer.map_or(0.0, |l| l.point);
-            // Every point's symbol keeps labels off it a little.
-            if let Shape::Point { p, parts, .. } = &it.shape {
-                let r = js_max(point_px / 2.0, SYMBOL_MIN);
-                for q in std::iter::once(*p).chain(parts.iter().flatten().map(|q| q.p)) {
-                    obstacles.push(Obstacle {
-                        owner: it.id,
-                        weight: None,
-                        shape: Ob::Circle(page.px(q), r),
-                    });
-                }
-            }
-            if let Some((w, boundary)) = obstacle {
-                self.obstacle_of(it, w, boundary, page, point_px, &mut obstacles);
-            }
+            self.room_of(it, page, &mut obstacles);
             if line
                 && let Some(labels) = self.labelling.objects.get(&it.id.to_bits())
                 && labels.z.is_finite()
@@ -820,6 +806,12 @@ impl Store {
                 for w in path.windows(2) {
                     c.add(w[0], w[1], labels.z, it.id);
                 }
+            }
+        }
+        // The part's neighbours hold room too (docs/adr/0578 §1): no unit, no contour, no time or filter.
+        for g in &self.ghosts {
+            if self.flags(g).visible && super::rtree::overlaps(&g.bounds, &query) {
+                self.room_of(g, page, &mut obstacles);
             }
         }
         for it in &items {
@@ -1292,6 +1284,34 @@ fn path_units<'s>(
 }
 
 impl Store {
+    /// What an object holds of the room labels keep off: every point's symbol, and the whole object when its layer
+    /// is an obstacle layer.
+    fn room_of(&self, it: &Item, page: Page, out: &mut Vec<Obstacle>) {
+        let layer = self
+            .labelling
+            .layers
+            .get(it.layer as usize)
+            .and_then(Option::as_ref);
+        let obstacle = layer
+            .and_then(|l| l.labelling.as_ref())
+            .and_then(|l| l.obstacle);
+        let point_px = layer.map_or(0.0, |l| l.point);
+        // Every point's symbol keeps labels off it a little.
+        if let Shape::Point { p, parts, .. } = &it.shape {
+            let r = js_max(point_px / 2.0, SYMBOL_MIN);
+            for q in std::iter::once(*p).chain(parts.iter().flatten().map(|q| q.p)) {
+                out.push(Obstacle {
+                    owner: it.id,
+                    weight: None,
+                    shape: Ob::Circle(page.px(q), r),
+                });
+            }
+        }
+        if let Some((w, boundary)) = obstacle {
+            self.obstacle_of(it, w, boundary, page, point_px, out);
+        }
+    }
+
     /// An obstacle layer's object as obstacles: its points, its lines' segments, an area's edges and inside.
     fn obstacle_of(
         &self,

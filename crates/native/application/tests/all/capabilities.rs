@@ -349,6 +349,21 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     ),
     (
         "cad.sources.edit",
+        "label_pins_lost",
+        "alanın değişmesinde iğne yalnız park yeri dolunca (100 000 nesne) ya da satırın kimliği başka bir kayıt olunca kaybolur; ortak durumların dosyası sabit ve katman değişmişken alan değişmez; aynı kod cad.sources.sync'in durumlarında ve sources.rs'in geçici kopya testlerinde verilir (ADR 0578 §3)",
+    ),
+    (
+        "cad.sources.sync",
+        "label_pins_parked",
+        "okumada iğnenin park edilmesi, nesnenin satırının alanın dışına çıkmasını (dosyanın yazılması) ister; ortak durumlar dosyaya yazmaz: kural cad.sources.edit'in alan durumlarında, dosyanın yazılmasıyla olanı sources.rs'in geçici kopya testinde sınanır (ADR 0578 §3)",
+    ),
+    (
+        "cad.sources.sync",
+        "label_pins_restored",
+        "okumada park edilmiş iğnenin geri verilmesi, satırın alana girmesini (dosyanın yazılmasını) ister; ortak durumlar dosyaya yazmaz: kural cad.sources.edit'in alan durumlarında, geçici kopyada sources.rs'te sınanır (ADR 0578 §3)",
+    ),
+    (
+        "cad.sources.edit",
         "label_pins_moved",
         "pinin başka satıra anahtarıyla taşınması kaynağın yeniden yazılmasını ister (satır kimlikleri değişir); ortak durumlar dosyaya yazmaz, geçici kopyada sources.rs sınar (ADR 0533 §1)",
     ),

@@ -11492,7 +11492,13 @@
           500090.0,
           4400040.0
          ],
-         "partial": true
+         "partial": true,
+         "band": [
+          499982.5,
+          4399982.5,
+          500097.5,
+          4400047.5
+         ]
         },
         {
          "layer": "yol",
@@ -11545,7 +11551,13 @@
        ],
        "revision": "$current"
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "band_unread",
+        "message": "parsel: parçanın çevresindeki komşular okunamadı (dosya katmanın son eşleştiği sürümden farklı); etiketler yalnız parçanın nesnelerine göre yerleşti.",
+        "path": "layers"
+       }
+      ]
      },
      "expect": {
       "ids": [
@@ -12317,6 +12329,12 @@
           4399990.0,
           500090.0,
           4400040.0
+         ],
+         "band": [
+          499982.5,
+          4399982.5,
+          500097.5,
+          4400047.5
          ]
         },
         {
@@ -12334,7 +12352,13 @@
        ],
        "revision": "$current"
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "band_unread",
+        "message": "parsel: parçanın çevresindeki komşular okunamadı (dosya katmanın son eşleştiği sürümden farklı); etiketler yalnız parçanın nesnelerine göre yerleşti.",
+        "path": "layers"
+       }
+      ]
      },
      "expect": {
       "ids": [

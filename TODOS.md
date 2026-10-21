@@ -315,6 +315,10 @@ Liste:
 - [ ] `CBS-18` etiket iğneleri ve yerleşimin kararlılığı (ADR 0533, 19 Ekim): web'de gerekenler: etiket motorunun `Prior`'u web'in
   görünümünde (WASM'da önceki yerleşim), `cad.labels.report`'un işleyicisi ve Etiketler penceresinde Denetle; bağlı katman web'e gelince
   `SourceLink.key`, `Key` ve `Extent` işlemleri.
+- [ ] `CBS-18` parçalı katmanda etiket iğneleri ve engeller (ADR 0578, 21 Ekim): web'de gerekenler: bağlı katman web'e gelince
+  `Store::set_ghosts`'un WASM bağlayıcısı (parçanın bandındaki satırlar engel olarak; `sources::band_of`'un kuralı), `ops::pin_match`'in
+  WASM çağrısı, `SourceLink.parked`'ın okunması ve yazılması, `SyncedPins.parked` ve `restored`, `PinMove.by` ve `distance`,
+  `cad.labels.report`'un `band`, `neighbours` ve `parked`'ı; üretilen TS türleri güncel.
 - [ ] `CBS-24` hata kipi, tablo çıktısı ve kayıtlı adım (ADR 0551, 20 Ekim): web'de `cad.processing.batch`'in `onError`'ı, `failed`,
   `sink.tables`, `sinkReport`'un `output`'u ve komutların kayıtlı adım olması yok (web'in işlem çalıştırıcısı toplu çalıştırmayı
   bilmiyor; üretilen TS türleri güncel).
@@ -2307,8 +2311,17 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   yazılan tabloda izler, taşınan ve kaybolan iğneler nedeniyle söylenir (`label_pins_moved`, `label_pins_lost`, `key_not_unique`;
   `Extent` ve `Key` işlemleri), motor önceki yerleşimi tercih eder (`Prior`; 24 kaydırmada 73 → 0 kayma), önbellek kaynağın sürümünü
   sayar, ekran ve PDF aynı `label_layout`, salt okunur `cad.labels.report` ve Etiketler'de Denetle; yüklü parçanın sınırı söylenir. Kalan:
-  bağ ayarının geri alınması, alanın dışındaki iğnenin parkı, anahtarsız yeniden yazım, anahtar alanının arayüzü, Denetle'nin pafta ölçeği
-  arayüzü. — **19 Ekim, [ADR 0533](docs/adr/0533-label-pins-bound-layers-and-stability.md).**
+  bağ ayarının geri alınması, anahtar alanının arayüzü, Denetle'nin pafta ölçeği arayüzü (alanın dışındaki iğnenin parkı, anahtarsız yeniden
+  yazım ve parçanın dışındaki engeller [ADR 0578](docs/adr/0578-label-pins-and-obstacles-of-parts.md)'de). —
+  **19 Ekim, [ADR 0533](docs/adr/0533-label-pins-bound-layers-and-stability.md).**
+- [ ] `CBS-18` parçalı katmanda etiket iğneleri ve engeller (dilim): parçanın bandındaki (alan, kısa kenarının %15'i kadar büyütülmüş)
+  satırlar aynı dosya sürümünden okunur ve etiketlere yalnız engel olur (`Store::set_ghosts`; nesne değil: çizilmez, etiketlenmez,
+  seçilmez; masaüstünde ayrı iş parçacığında, Denetle okumadan çizimin bandını kullanır, başsız rapor kendisi okur: `band`, `neighbours`,
+  `band_unread`); anahtarsız bağda yeniden yazılan tablonun iğneleri aynı geometriye ya da 0,05 m içindeki en yakın aynı türden satıra
+  taşınır, eşit adaylarda verilmez (`ops::pin_match`, `PinMove.by`, `PinLoss::Ambiguous`); alanın dışına çıkan nesnenin iğnesi bağda park
+  edilir (`SourceLink.parked`, şema değişmez), satır alana girince geri verilir (`label_pins_parked`, `label_pins_restored`); raporda
+  listelenir. Kalan: PostGIS parçası, başka ölçekli açıklama kopyasında ve başsız kitap PDF'inde bant, bandın zamanla süzgeçle ilişkisi,
+  büyük dosyada bant süresi. — **21 Ekim, [ADR 0578](docs/adr/0578-label-pins-and-obstacles-of-parts.md).**
 - [ ] `CBS-24` hata kipi, tablo çıktısı ve kayıtlı adım (dilim): `onError` `stop` / `continue` (duran satır kendi kayıt noktasına geri
   alınır), satır içinde durdurma (`BatchFlow::stop_flag`, `Runner::with_stop`), `sink.tables`, iş parçacıklı katman özeti, `cad.processing.run`
   ve `.batch` kayıtlı adım; kayıt `.kcad`'e yazılmaz; Toplu çalıştır'da Hata olursa. Kalan: sağlayıcıdan akan girdi, artımlı katman özeti,

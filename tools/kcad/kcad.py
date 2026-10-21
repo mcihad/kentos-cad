@@ -5078,6 +5078,17 @@ class _Schema:
                 self.fail("bad_value", "alan sınırı 4 sayılık dizi olmalı")
             return [self.at(i, self.float, v) for i, v in enumerate(x)]
 
+        def at(x):
+            return self.fields({"x": (self.float, True), "y": (self.float, True)})(x)
+
+        def pins(x):
+            # docs/adr/0578 §3: the pins of an object whose row is outside the part, as an object's own are.
+            return self.array(self.fields({"at": (at, False), "class": (self.text, False), "hidden": (self.bool, False),
+                                           "rotation": (self.float, False)}))(x)
+
+        def parked(x):
+            return self.array(self.fields({"uid": (self.text, True), "key": (self.text, False), "pins": (pins, True)}))(x)
+
         source = self.fields({
             "id": (self.text, True),
             "kind": (kind, True),
@@ -5090,6 +5101,7 @@ class _Schema:
             "srid": (self.uint(32), False),
             "extent": (box, False),
             "key": (self.text, False),
+            "parked": (parked, False),
             "writable": (self.bool, True),
         })
         lst = self.array(source)(v)
@@ -5103,6 +5115,22 @@ class _Schema:
             if "key" in s and (not s["key"].strip() or len(s["key"]) > 128 or _control(s["key"])):
                 # docs/adr/0533 §1: a column's name, the key that ties a row to its object across rewrites.
                 self.fail("bad_value", "anahtar alanının adı boş, çok uzun ya da denetim karakteri taşıyor")
+            if "parked" in s:
+                # docs/adr/0578 §3: at most 100 000 objects, each once with a lasting id and pins, a key value not empty.
+                if len(s["parked"]) > 100000:
+                    self.fail("bad_value", "en çok 100 000 nesnenin iğneleri park edilir")
+                seen_uids = set()
+                for p in s["parked"]:
+                    if not p["uid"].strip() or p["uid"] in seen_uids:
+                        self.fail("bad_value", "park edilen iğnenin nesne kimliği boş ya da iki kez geçiyor")
+                    seen_uids.add(p["uid"])
+                    if not p["pins"]:
+                        self.fail("bad_value", "park edilen nesnenin iğnesi yok")
+                    if "key" in p and not p["key"]:
+                        self.fail("bad_value", "park edilen nesnenin anahtar değeri boş")
+                    bad = pins_problem(p["pins"])
+                    if bad:
+                        self.fail("bad_value", bad)
             if s["kind"] == "geopackage" and "extent" in s:
                 # docs/adr/0510: the area of a part's working copy, finite, its minimum below its maximum.
                 e = s["extent"]

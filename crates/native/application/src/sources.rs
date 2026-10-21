@@ -13,11 +13,14 @@ use std::path::Path;
 
 use kentos_commands::{
     CommandResult, CommandWarning, ImportGpkg, ImportedLayer, LabelPin, LayerNodeType, LostPin,
-    MAX_SOURCES, PinLoss, PinMove, SourceCapabilities, SourceColumn, SourceKind, SourceLink,
+    MAX_PARKED, MAX_SOURCES, ParkedPin, PinLoss, PinMatch, PinMove, SourceCapabilities, SourceColumn, SourceKind, SourceLink,
     SourceNext, SourceState, SourceTable, SourcesDescribe, SourcesDescribed, SourcesEdit, SourcesEditOp,
     SourcesEdited, SourcesSync, SourcesSynced, SyncDirection, SyncTopology, SyncedPins,
 };
 use kentos_domain::{Document, Slot, Uuid};
+use kentos_geometry_core::entity::{entity_bounds, entity_vertices};
+use kentos_geometry_core::geometry::is_empty_bounds;
+use kentos_geometry_core::ops::pin_match::{self, Found};
 use kentos_geopackage::{self as gpkg, DataType, Edits, GeoPackage, Geometry, Query, Value};
 use serde_json::json;
 
@@ -49,7 +52,11 @@ struct Mover {
 /// The move between the project and a table of `srid`: none in the same system or for a table that declares none;
 /// why not, when one of the systems has no transform.
 fn mover_for(doc: &Document, srid: Option<u32>) -> Result<Option<Mover>, String> {
-    let settings = doc.settings();
+    mover_in(doc.settings(), srid)
+}
+
+/// [`mover_for`] from the project's settings alone.
+fn mover_in(settings: &kentos_commands::ProjectSettings, srid: Option<u32>) -> Result<Option<Mover>, String> {
     let Some(srid) = srid.filter(|&s| s != settings.srid) else {
         return Ok(None);
     };
@@ -826,17 +833,49 @@ fn key_check<'a>(
     Ok(())
 }
 
-/// What a read does to the label pins of a bound layer's objects (docs/adr/0533 §1): the objects holding pins as
-/// they are in the drawing, against the table's rows as read (`objects`). An object whose row is there stays as it
+/// What a read does to the label pins of a bound layer's objects (docs/adr/0533 §1, 0578): the objects holding pins
+/// as they are in the drawing, against the table's rows as read (`objects`). An object whose row is there stays as it
 /// is. With a key, a row id that is another record now (the key's value differs) or whose row is gone leaves its
-/// pins to the row of the old value when the table has exactly one; otherwise they are lost, and said (deleted,
-/// outside the area, another record, or the row of the key has pins of its own).
+/// pins to the row of the old value when the table has exactly one; without a key, a row gone is looked for by its
+/// geometry and then the nearest feature of the same kind (`pin_match`, §2). An object whose row is in the table but
+/// outside the part's area is parked, not lost: its pins stay in the link (§3), and go back to the object when the
+/// row comes into the area again. What cannot be kept is lost, and said.
 struct PinPlan {
-    /// The pins an object holds after the read, where they are not its own: set on a row they followed to, emptied
-    /// on one that is another record now.
+    /// The pins an object holds after the read, where they are not its own: set on a row they followed to or were
+    /// given back to, emptied on one that is another record now.
     set: HashMap<Uuid, Vec<LabelPin>>,
+    /// The link's parked pins after the read.
+    parked: Vec<ParkedPin>,
     report: Option<SyncedPins>,
     warnings: Vec<CommandWarning>,
+}
+
+/// A feature as the pin matching sees it; none for an object with no geometry (a record), which no pin follows.
+fn match_feature(e: &kentos_commands::Entity) -> Option<pin_match::Feature> {
+    let (_, _, _, shape) = crate::geometry_store::record(e);
+    let b = entity_bounds(&shape);
+    if is_empty_bounds(&b) {
+        return None;
+    }
+    let mut bits: Vec<u64> = entity_vertices(&shape)
+        .iter()
+        .flat_map(|v| [v.x.to_bits(), v.y.to_bits()])
+        .collect();
+    bits.extend([b.min_x, b.min_y, b.max_x, b.max_y].map(f64::to_bits));
+    Some(pin_match::Feature {
+        kind: e.kind().to_owned(),
+        bits,
+        middle: [(b.min_x + b.max_x) / 2.0, (b.min_y + b.max_y) / 2.0],
+    })
+}
+
+/// One pin move, as `follow_pins` collects them.
+struct Move {
+    from: Uuid,
+    to: Uuid,
+    key: Option<String>,
+    by: PinMatch,
+    distance: Option<f64>,
 }
 
 fn follow_pins(
@@ -851,10 +890,11 @@ fn follow_pins(
         .collect();
     let mut plan = PinPlan {
         set: HashMap::new(),
+        parked: link.parked.clone(),
         report: None,
         warnings: Vec::new(),
     };
-    if bearers.is_empty() {
+    if bearers.is_empty() && link.parked.is_empty() {
         return plan;
     }
     let key = link.key.as_deref();
@@ -875,8 +915,11 @@ fn follow_pins(
     }
     let repeated = by_key.values().any(|l| l.len() > 1);
     let mut kept = 0u32;
-    let mut moves: Vec<(Uuid, Uuid, String)> = Vec::new();
+    let mut moves: Vec<Move> = Vec::new();
     let mut lost: Vec<(Uuid, PinLoss)> = Vec::new();
+    // The objects whose row is outside the area now, and (without a key) whose row is gone.
+    let mut parks: Vec<(Uuid, Option<String>)> = Vec::new();
+    let mut orphans: Vec<Uuid> = Vec::new();
     for (uid, old) in &bearers {
         let old_value = value_of(old);
         let here = new.get(uid);
@@ -896,42 +939,160 @@ fn follow_pins(
             .map(|(v, l)| (l[0], v.clone()))
             .filter(|(t, _)| t != uid);
         match target {
-            Some((to, v)) => moves.push((*uid, to, v)),
-            None => lost.push((
-                *uid,
-                if here.is_some() {
-                    PinLoss::Rebound
-                } else if outside.contains_key(uid) {
-                    PinLoss::Outside
-                } else {
-                    PinLoss::Deleted
-                },
-            )),
+            Some((to, v)) => moves.push(Move {
+                from: *uid,
+                to,
+                key: Some(v),
+                by: PinMatch::Key,
+                distance: None,
+            }),
+            None if here.is_some() => lost.push((*uid, PinLoss::Rebound)),
+            None if outside.contains_key(uid) => parks.push((*uid, old_value)),
+            None if key.is_none() => orphans.push(*uid),
+            None => lost.push((*uid, PinLoss::Deleted)),
+        }
+    }
+    // Without a key, the pins of an object whose row is gone follow its geometry, or the nearest feature of its kind
+    // (docs/adr/0578 §2), to a row the layer has no object for.
+    if !orphans.is_empty() {
+        let present: HashSet<Uuid> = doc
+            .by_layer_with_uids(&link.layer)
+            .map(|(u, _)| u)
+            .collect();
+        let fresh: Vec<(Uuid, pin_match::Feature)> = objects
+            .iter()
+            .filter(|(u, _)| !present.contains(u))
+            .filter_map(|(u, e)| match_feature(e).map(|f| (*u, f)))
+            .collect();
+        let olds: Vec<(Uuid, pin_match::Feature)> = orphans
+            .iter()
+            .filter_map(|u| {
+                bearers
+                    .iter()
+                    .find(|(b, _)| b == u)
+                    .and_then(|(_, e)| match_feature(e))
+                    .map(|f| (*u, f))
+            })
+            .collect();
+        for u in &orphans {
+            if !olds.iter().any(|(o, _)| o == u) {
+                lost.push((*u, PinLoss::Deleted));
+            }
+        }
+        let found = pin_match::match_pins(
+            &olds.iter().map(|(_, f)| f.clone()).collect::<Vec<_>>(),
+            &fresh.iter().map(|(_, f)| f.clone()).collect::<Vec<_>>(),
+            pin_match::TOLERANCE,
+        );
+        for ((from, _), f) in olds.iter().zip(found) {
+            match f {
+                Found::Geometry(j) => moves.push(Move {
+                    from: *from,
+                    to: fresh[j].0,
+                    key: None,
+                    by: PinMatch::Geometry,
+                    distance: None,
+                }),
+                Found::Nearest(j, d) => moves.push(Move {
+                    from: *from,
+                    to: fresh[j].0,
+                    key: None,
+                    by: PinMatch::Nearest,
+                    distance: Some(d),
+                }),
+                Found::Ambiguous => lost.push((*from, PinLoss::Ambiguous)),
+                Found::None => lost.push((*from, PinLoss::Deleted)),
+            }
         }
     }
     let bearer_pins: HashMap<Uuid, &Vec<LabelPin>> = bearers
         .iter()
         .map(|(u, e)| (*u, &e.base().label_pins))
         .collect();
-    let leaving: HashSet<Uuid> = moves.iter().map(|(f, ..)| *f).collect();
-    let mut moved = Vec::new();
-    for (from, to, v) in moves {
+    let leaving: HashSet<Uuid> = moves
+        .iter()
+        .map(|m| m.from)
+        .chain(parks.iter().map(|(u, _)| *u))
+        .collect();
+    let mut moved: Vec<PinMove> = Vec::new();
+    for m in moves {
         // The row of the key keeps its own pins when it is not itself leaving.
-        let taken = bearer_pins.contains_key(&to) && !leaving.contains(&to);
+        let taken = bearer_pins.contains_key(&m.to) && !leaving.contains(&m.to);
         if taken {
-            lost.push((from, PinLoss::Taken));
+            lost.push((m.from, PinLoss::Taken));
         } else {
-            plan.set.insert(to, bearer_pins[&from].clone());
+            plan.set.insert(m.to, bearer_pins[&m.from].clone());
             moved.push(PinMove {
-                from: from.to_string(),
-                to: to.to_string(),
-                key: v,
+                from: m.from.to_string(),
+                to: m.to.to_string(),
+                key: m.key,
+                by: m.by,
+                distance: m.distance,
             });
         }
     }
+    // The pins parked before: back to a row that came into the area (by its id, else by its key's value), kept while
+    // the row is still outside, lost with a row that is gone.
+    let reparked: HashSet<Uuid> = parks.iter().map(|(u, _)| *u).collect();
+    let mut carried: Vec<ParkedPin> = Vec::new();
+    let mut restored: Vec<Uuid> = Vec::new();
+    for p in &link.parked {
+        let Ok(puid) = Uuid::parse_str(&p.uid) else {
+            continue;
+        };
+        // The object came back (an undo) and left again: the new parking replaces the old.
+        if reparked.contains(&puid) {
+            continue;
+        }
+        let to = if new.contains_key(&puid) {
+            Some(puid)
+        } else {
+            p.key
+                .as_ref()
+                .filter(|_| key.is_some())
+                .and_then(|k| by_key.get(k))
+                .filter(|l| l.len() == 1)
+                .map(|l| l[0])
+        };
+        match to {
+            Some(t) => {
+                let holds = bearer_pins.get(&t).filter(|_| !leaving.contains(&t));
+                if let Some(have) = holds {
+                    // The object holds these very pins already (an undo brought it back): nothing to say.
+                    if **have != p.pins {
+                        lost.push((puid, PinLoss::Taken));
+                    }
+                } else if plan.set.get(&t).is_some_and(|v| !v.is_empty()) {
+                    lost.push((puid, PinLoss::Taken));
+                } else {
+                    plan.set.insert(t, p.pins.clone());
+                    restored.push(t);
+                }
+            }
+            None if outside.contains_key(&puid) => carried.push(p.clone()),
+            None => lost.push((puid, PinLoss::Deleted)),
+        }
+    }
+    // A layer parks only so many: the rest are lost as outside.
+    let room = MAX_PARKED.saturating_sub(carried.len());
+    let mut parked_now: Vec<Uuid> = Vec::new();
+    for (uid, value) in parks {
+        if parked_now.len() >= room {
+            lost.push((uid, PinLoss::Outside));
+            continue;
+        }
+        carried.push(ParkedPin {
+            uid: uid.to_string(),
+            key: value,
+            pins: bearer_pins[&uid].clone(),
+        });
+        parked_now.push(uid);
+    }
+    carried.sort_by(|a, b| a.uid.cmp(&b.uid));
+    plan.parked = carried;
     // What an object that stays in the layer as another record holds is emptied, where nothing moved onto it.
     for uid in leaving.iter().chain(lost.iter().map(|(u, _)| u)) {
-        if new.contains_key(uid) {
+        if new.contains_key(uid) && !restored.contains(uid) {
             plan.set.entry(*uid).or_default();
         }
     }
@@ -944,17 +1105,25 @@ fn follow_pins(
         })
         .collect();
     lost.sort_by(|a, b| a.uid.cmp(&b.uid));
+    let mut parked_uids: Vec<String> = parked_now.iter().map(Uuid::to_string).collect();
+    parked_uids.sort();
+    let mut restored_uids: Vec<String> = restored.iter().map(Uuid::to_string).collect();
+    restored_uids.sort();
     if !lost.is_empty() {
         let count = |r: PinLoss| lost.iter().filter(|l| l.reason == r).count();
         let mut parts = Vec::new();
         for (r, what) in [
             (PinLoss::Deleted, "satırı tabloda yok"),
-            (PinLoss::Outside, "satırı katmanın alanının dışında"),
+            (PinLoss::Outside, "satırı katmanın alanının dışında (park yeri dolu)"),
             (
                 PinLoss::Rebound,
                 "satır kimliği artık başka bir kayıt (anahtar değeri değişmiş)",
             ),
             (PinLoss::Taken, "anahtarının satırında zaten iğneler var"),
+            (
+                PinLoss::Ambiguous,
+                "satırı belirsiz (aynı geometride ya da aynı uzaklıkta birden çok satır)",
+            ),
         ] {
             if count(r) > 0 {
                 parts.push(format!("{} nesnenin {what}", count(r)));
@@ -970,14 +1139,52 @@ fn follow_pins(
             path: Some("layer".into()),
         });
     }
-    if !moved.is_empty() {
+    let by_key_moves = moved.iter().filter(|m| m.by == PinMatch::Key).count();
+    if by_key_moves > 0 {
         plan.warnings.push(CommandWarning {
             code: codes::LABEL_PINS_MOVED.into(),
             message: format!(
                 "{}: {} nesnenin etiket iğneleri “{}” anahtarının yeni satırına taşındı.",
                 link.table,
-                moved.len(),
+                by_key_moves,
                 key.unwrap_or_default()
+            ),
+            path: Some("layer".into()),
+        });
+    }
+    let (geometry, nearest) = (
+        moved.iter().filter(|m| m.by == PinMatch::Geometry).count(),
+        moved.iter().filter(|m| m.by == PinMatch::Nearest).count(),
+    );
+    if geometry + nearest > 0 {
+        plan.warnings.push(CommandWarning {
+            code: codes::LABEL_PINS_MOVED.into(),
+            message: format!(
+                "{}: {} nesnenin etiket iğneleri anahtarsız eşlemeyle yeni satırlarına taşındı ({geometry} aynı geometri, {nearest} en yakın satır, en çok 0,05 m).",
+                link.table,
+                geometry + nearest
+            ),
+            path: Some("layer".into()),
+        });
+    }
+    if !parked_uids.is_empty() {
+        plan.warnings.push(CommandWarning {
+            code: codes::LABEL_PINS_PARKED.into(),
+            message: format!(
+                "{}: {} nesnenin etiket iğneleri satırı alanın dışında kaldığı için park edildi; satır alana girince geri verilir.",
+                link.table,
+                parked_uids.len()
+            ),
+            path: Some("layer".into()),
+        });
+    }
+    if !restored_uids.is_empty() {
+        plan.warnings.push(CommandWarning {
+            code: codes::LABEL_PINS_RESTORED.into(),
+            message: format!(
+                "{}: {} nesnenin park edilmiş etiket iğneleri geri verildi.",
+                link.table,
+                restored_uids.len()
             ),
             path: Some("layer".into()),
         });
@@ -993,8 +1200,96 @@ fn follow_pins(
             path: Some("layer".into()),
         });
     }
-    plan.report = Some(SyncedPins { kept, moved, lost });
+    plan.report = Some(SyncedPins {
+        kept,
+        moved,
+        lost,
+        parked: parked_uids,
+        restored: restored_uids,
+    });
     plan
+}
+
+/// How wide the band round a part is, as a share of the part's shorter side (docs/adr/0578 §1).
+pub const BAND: f64 = 0.15;
+
+/// The band round a part: the area grown on every side by [`BAND`] of its shorter side (a share, with no clamp: the
+/// rule has no unit).
+pub fn band_of(extent: &[f64; 4]) -> [f64; 4] {
+    let width = BAND * (extent[2] - extent[0]).min(extent[3] - extent[1]);
+    [
+        extent[0] - width,
+        extent[1] - width,
+        extent[2] + width,
+        extent[3] + width,
+    ]
+}
+
+/// What reading the band round a bound layer's part needs, taken from the drawing so the read can run on a thread of its
+/// own: the binding, the project's settings (the move into its system) and the lasting ids the layer holds.
+pub struct BandJob {
+    link: SourceLink,
+    settings: kentos_commands::ProjectSettings,
+    held: HashSet<Uuid>,
+}
+
+/// The band job of a bound layer with a part in a file; none for any other layer.
+pub fn band_job(doc: &Document, link: &SourceLink) -> Option<BandJob> {
+    link.extent?;
+    if link.kind != SourceKind::Geopackage {
+        return None;
+    }
+    Some(BandJob {
+        link: link.clone(),
+        settings: doc.settings().clone(),
+        held: doc
+            .by_layer_with_uids(&link.layer)
+            .map(|(u, _)| u)
+            .collect(),
+    })
+}
+
+impl BandJob {
+    /// The band: the part grown by [`BAND`] of its shorter side.
+    pub fn area(&self) -> [f64; 4] {
+        band_of(&self.link.extent.unwrap_or_default())
+    }
+
+    /// The rows of the band that the layer holds no object for, as the same version of the table the layer matches
+    /// reads them (docs/adr/0578 §1): the label engine takes them as obstacles only. Why they could not be read when
+    /// the file is gone or is not the version the layer matches.
+    pub fn read(&self) -> BandRows {
+        let link = &self.link;
+        let Origin::File(path) = origin_of(link) else {
+            return Err("kaynak bir dosya değil".into());
+        };
+        if !path.is_file() {
+            return Err(format!("“{}” dosyası yok", path.display()));
+        }
+        let mover = mover_in(&self.settings, link.srid)?;
+        let table_area = table_area(Some(self.area()), mover.as_ref())
+            .map_err(|()| "bant tablonun sistemine çevrilemedi".to_owned())?;
+        let stored = load(path, &link.table, table_area)?;
+        if stored.sha256 != link.revision {
+            return Err("dosya katmanın son eşleştiği sürümden farklı".into());
+        }
+        Ok(stored
+            .in_project(mover.as_ref())
+            .into_iter()
+            .filter(|(u, _)| !self.held.contains(u))
+            .map(|(_, e)| e)
+            .collect())
+    }
+}
+
+/// The rows a band read gave, or why it could not.
+pub type BandRows = Result<Vec<kentos_commands::Entity>, String>;
+
+/// [`band_job`] and its read at once: the band, and the rows or why none could be read; none for a layer without a
+/// part.
+pub fn band_objects(doc: &Document, link: &SourceLink) -> Option<([f64; 4], BandRows)> {
+    let job = band_job(doc, link)?;
+    Some((job.area(), job.read()))
 }
 
 fn set_link(doc: &mut Document, link: Option<SourceLink>, remove: Option<&str>) {
@@ -1508,6 +1803,7 @@ fn link_table(
         srid,
         extent,
         key: key.map(str::to_owned),
+        parked: Vec::new(),
         writable,
     };
     set_link(doc, Some(link.clone()), None);
@@ -2338,6 +2634,8 @@ fn sync_run(
             .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "layer"))?;
             link.revision = stored.sha256;
             link.digest = layer_digest(doc, &link.layer);
+            // The pins of rows outside the part wait in the binding (docs/adr/0578 §3).
+            link.parked = pins.parked.clone();
             set_link(doc, Some(link.clone()), None);
             base::take(doc, &link, None);
             Ok((
