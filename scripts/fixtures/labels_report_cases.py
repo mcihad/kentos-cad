@@ -262,10 +262,12 @@ def report(d, inp):
     out_layers = []
     for n in rows:
         c = counts(lambda r, n=n: layer_of[r["id"]] == n["id"] and in_scope(r))
-        if not any(c[k] for k in ("placed", "unplaced", "hidden")):
+        src = next((s for s in d["settings"].get("sources", []) if s["layer"] == n["id"]), None)
+        # A bound layer with a part, or one that parks pins, is listed with no label too (docs/adr/0578).
+        extra = src is not None and ("extent" in src or src.get("parked")) and (wanted is None or n["id"] in wanted)
+        if not any(c[k] for k in ("placed", "unplaced", "hidden")) and not extra:
             continue
         row = {"layer": n["id"], "counts": c}
-        src = next((s for s in d["settings"].get("sources", []) if s["layer"] == n["id"]), None)
         if src is not None:
             row["source"] = src["id"]
             if "extent" in src:
@@ -273,9 +275,34 @@ def report(d, inp):
                 row["part"] = e
                 if window[0] < e[0] or window[1] < e[1] or window[2] > e[2] or window[3] > e[3]:
                     row["partial"] = True
+                row["band"] = band_of(e)
         out_layers.append(row)
     return {"window": [float(v) for v in window], "pxPerMetre": scale, "totals": counts(in_scope), "layers": out_layers,
             "revision": "$current"}
+
+
+BAND = 0.15
+
+
+def band_of(e):
+    """The band round a part: its area grown by 15 % of its shorter side on every side (docs/adr/0578 §1)."""
+    w = BAND * min(e[2] - e[0], e[3] - e[1])
+    return [e[0] - w, e[1] - w, e[2] + w, e[3] + w]
+
+
+def band_warnings(d, inp):
+    """The warnings of the report: a part's band that could not be read. The cases' bindings carry a revision the file
+    does not have, so the file is not the version the layer matches."""
+    wanted = set(inp["layers"]) if inp.get("layers") is not None else None
+    out = []
+    for src in d["settings"].get("sources", []):
+        if "extent" not in src or (wanted is not None and src["layer"] not in wanted):
+            continue
+        out.append({"code": "band_unread",
+                    "message": f"{src['layer']}: parçanın çevresindeki komşular okunamadı (dosya katmanın son eşleştiği "
+                               "sürümden farklı); etiketler yalnız parçanın nesnelerine göre yerleşti.",
+                    "path": "layers"})
+    return out
 
 
 def zero():
@@ -284,8 +311,8 @@ def zero():
 
 # ── The cases ─────────────────────────────────────────────────────────────
 
-def completed(output):
-    return {"status": "completed", "output": output, "warnings": []}
+def completed(output, warnings=()):
+    return {"status": "completed", "output": output, "warnings": list(warnings)}
 
 
 def failed(code, message, path):
@@ -298,7 +325,7 @@ def same_for(d):
 
 def ok(name, inp, d=None, op="execute"):
     d = d if d is not None else doc()
-    c = {"name": name, "steps": [{"op": op, "input": inp, "result": completed(report(d, inp)), "expect": same_for(d)}]}
+    c = {"name": name, "steps": [{"op": op, "input": inp, "result": completed(report(d, inp), band_warnings(d, inp)), "expect": same_for(d)}]}
     if d is not None:
         c["setup"] = d
     return c

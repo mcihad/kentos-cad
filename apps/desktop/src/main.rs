@@ -54,6 +54,9 @@ mod attribute_table;
 mod attribute_values;
 #[cfg(test)]
 mod audit_scenes;
+mod band_ghosts;
+#[cfg(test)]
+mod band_scenes;
 #[cfg(test)]
 mod block_attr_scenes;
 mod block_attributes;

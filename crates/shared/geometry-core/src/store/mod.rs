@@ -286,6 +286,10 @@ pub struct Store {
     /// What the label engine reads (docs/adr/0212 §3.1): the layers' labelling, the kinds' defaults, the
     /// objects' texts and pins.
     labelling: placing::Labels,
+    /// Obstacle-only neighbours (`set_ghosts`, docs/adr/0578 §1): objects of a bound layer's table just outside the
+    /// part the drawing holds. They hold room for the labels near the part's edge as the layer's own objects do, are
+    /// never drawn, picked, snapped to or labelled, and have ids no object has (below zero).
+    ghosts: Vec<Item>,
 }
 
 /// An object read from the document's JSON: its id, layer, label and geometry.
@@ -351,6 +355,48 @@ impl Store {
         }
         self.maybe_rebuild();
         n
+    }
+
+    /// The neighbours of a layer's part that only hold room for labels (docs/adr/0578 §1): replaces the layer's
+    /// earlier ones; none takes them away. The layer's labelling decides, as for its own objects, which of them are
+    /// obstacles (its points, and its objects when it is an obstacle layer).
+    pub fn set_ghosts(&mut self, layer_id: &str, shapes: impl IntoIterator<Item = Shape>) {
+        let layer = self.layer_index(layer_id);
+        self.ghosts.retain(|g| g.layer != layer);
+        for shape in shapes {
+            let (expanded, bounds) = self.expansion(&shape);
+            let veiled = expanded.as_deref().and_then(|x| self.veil(x));
+            self.ghosts.push(Item {
+                id: 0.0,
+                shape,
+                layer,
+                bounds,
+                label: false,
+                expanded,
+                veiled,
+                order: 0,
+            });
+        }
+        // Their ids come from their place in the list: no object has a negative one.
+        for (i, g) in self.ghosts.iter_mut().enumerate() {
+            g.id = -(i as f64) - 1.0;
+        }
+    }
+
+    /// Takes every obstacle-only neighbour away (a drawing closed or another opened).
+    pub fn clear_ghosts(&mut self) {
+        self.ghosts.clear();
+    }
+
+    /// How many obstacle-only neighbours the store holds, of `layer_id` or of every layer.
+    pub fn ghost_count(&self, layer_id: Option<&str>) -> usize {
+        match layer_id {
+            None => self.ghosts.len(),
+            Some(id) => self
+                .layer_ids
+                .get(id)
+                .map_or(0, |l| self.ghosts.iter().filter(|g| g.layer == *l).count()),
+        }
     }
 
     /// Adds or replaces one object. The tree is not built again here: a host

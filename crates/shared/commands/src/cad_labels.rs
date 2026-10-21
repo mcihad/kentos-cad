@@ -206,6 +206,11 @@ pub const CAD_LABELS_REPORT_VERSION: u32 = 1;
 /// paper scale over 1:1 000 000), `invalid_window` (not four finite numbers with the minimum below the maximum, or
 /// a window with more than 100 million pixels), `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer
 /// drawn from a service has no labels of its own).
+///
+/// A bound layer that holds a part of its table (docs/adr/0510) is reported with its `band` and the rows of it that
+/// held room for the labels near the part's edge without being the layer's objects (`neighbours`, docs/adr/0578 §1),
+/// and with the label pins parked in its binding (`parked`, §3); a band that cannot be read (the file is gone, or
+/// is not the version the layer matches) is the warning `band_unread`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -288,6 +293,37 @@ pub struct LayerLabelReport {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub partial: bool,
+    /// The band round a part where the table's rows hold room for the labels near its edge without being the layer's
+    /// objects (docs/adr/0578 §1): the part's area grown by 15 % of its shorter side. Absent without a part.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub band: Option<[f64; 4]>,
+    /// How many rows of the band held room. Absent when the band could not be read (the file changed or is gone:
+    /// the warning `band_unread`) or without a part.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub neighbours: Option<u32>,
+    /// The label pins parked in the layer's binding: their object's row is outside the part (docs/adr/0578 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ParkedInfo>>", optional))]
+    pub parked: Vec<ParkedInfo>,
+}
+
+/// Pins parked for one object: its lasting id, the key's value, how many pins.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ParkedInfo {
+    pub uid: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub key: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub pins: u32,
 }
 
 /// Output of `cad.labels.report` v1, and its plan.

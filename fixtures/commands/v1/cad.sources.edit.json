@@ -4713,24 +4713,34 @@
          4419990.0,
          487050.0,
          4420030.0
+        ],
+        "parked": [
+         {
+          "uid": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+          "pins": [
+           {
+            "at": {
+             "x": -3.0,
+             "y": 4.0
+            }
+           }
+          ]
+         }
         ]
        },
        "objects": 0,
        "pins": {
         "kept": 1,
-        "lost": [
-         {
-          "uid": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
-          "reason": "outside"
-         }
+        "parked": [
+         "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3"
         ]
        },
        "revision": "$current"
       },
       "warnings": [
        {
-        "code": "label_pins_lost",
-        "message": "parsel: etiket iğneleri korunamadı (1 nesnenin satırı katmanın alanının dışında); okumayı geri alırsanız dönerler.",
+        "code": "label_pins_parked",
+        "message": "parsel: 1 nesnenin etiket iğneleri satırı alanın dışında kaldığı için park edildi; satır alana girince geri verilir.",
         "path": "layer"
        }
       ]
@@ -4772,6 +4782,19 @@
           4419990.0,
           487050.0,
           4420030.0
+         ],
+         "parked": [
+          {
+           "uid": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+           "pins": [
+            {
+             "at": {
+              "x": -3.0,
+              "y": 4.0
+             }
+            }
+           ]
+          }
          ]
         }
        ]
@@ -4805,6 +4828,19 @@
           4419990.0,
           487050.0,
           4420030.0
+         ],
+         "parked": [
+          {
+           "uid": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+           "pins": [
+            {
+             "at": {
+              "x": -3.0,
+              "y": 4.0
+             }
+            }
+           ]
+          }
          ]
         }
        ]
@@ -6079,24 +6115,34 @@
          4419990.0,
          487050.0,
          4420030.0
+        ],
+        "parked": [
+         {
+          "uid": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+          "pins": [
+           {
+            "at": {
+             "x": -3.0,
+             "y": 4.0
+            }
+           }
+          ]
+         }
         ]
        },
        "objects": 0,
        "pins": {
         "kept": 1,
-        "lost": [
-         {
-          "uid": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
-          "reason": "outside"
-         }
+        "parked": [
+         "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3"
         ]
        },
        "revision": "$current"
       },
       "warnings": [
        {
-        "code": "label_pins_lost",
-        "message": "parsel: etiket iğneleri korunamadı (1 nesnenin satırı katmanın alanının dışında); okumayı geri alırsanız dönerler.",
+        "code": "label_pins_parked",
+        "message": "parsel: 1 nesnenin etiket iğneleri satırı alanın dışında kaldığı için park edildi; satır alana girince geri verilir.",
         "path": "layer"
        }
       ]
@@ -6125,6 +6171,1292 @@
        ]
       }
      }
+    }
+   ]
+  },
+  {
+   "name": "park edilen iğne alan genişleyince nesnesine geri verilir (restored)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "pins": [
+       {
+        "uid": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+        "pin": {
+         "at": {
+          "x": 1.0,
+          "y": 2.0
+         },
+         "rotation": 10.0
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.labels.pin"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "pins": [
+       {
+        "uid": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+        "pin": {
+         "at": {
+          "x": -3.0,
+          "y": 4.0
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.labels.pin"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "extent",
+       "id": "kaynak-1",
+       "extent": [
+        486990.0,
+        4419990.0,
+        487050.0,
+        4420030.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "extent": [
+         486990.0,
+         4419990.0,
+         487050.0,
+         4420030.0
+        ],
+        "parked": [
+         {
+          "uid": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+          "pins": [
+           {
+            "at": {
+             "x": -3.0,
+             "y": 4.0
+            }
+           }
+          ]
+         }
+        ]
+       },
+       "objects": 0,
+       "pins": {
+        "kept": 1,
+        "parked": [
+         "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3"
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "label_pins_parked",
+        "message": "parsel: 1 nesnenin etiket iğneleri satırı alanın dışında kaldığı için park edildi; satır alana girince geri verilir.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "extent": [
+          486990.0,
+          4419990.0,
+          487050.0,
+          4420030.0
+         ],
+         "parked": [
+          {
+           "uid": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+           "pins": [
+            {
+             "at": {
+              "x": -3.0,
+              "y": 4.0
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "extent",
+       "id": "kaynak-1"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "pins": {
+        "kept": 1,
+        "restored": [
+         "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3"
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "label_pins_restored",
+        "message": "parsel: 1 nesnenin park edilmiş etiket iğneleri geri verildi.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       5,
+       6
+      ],
+      "fields": {
+       "5": {
+        "labelPins": [
+         {
+          "at": {
+           "x": -3.0,
+           "y": 4.0
+          }
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "park edilen iğneler Denetle'nin raporunda listelenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "pins": [
+       {
+        "uid": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+        "pin": {
+         "at": {
+          "x": 1.0,
+          "y": 2.0
+         },
+         "rotation": 10.0
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.labels.pin"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "pins": [
+       {
+        "uid": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+        "pin": {
+         "at": {
+          "x": -3.0,
+          "y": 4.0
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.labels.pin"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "extent",
+       "id": "kaynak-1",
+       "extent": [
+        486990.0,
+        4419990.0,
+        487050.0,
+        4420030.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "extent": [
+         486990.0,
+         4419990.0,
+         487050.0,
+         4420030.0
+        ],
+        "parked": [
+         {
+          "uid": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+          "pins": [
+           {
+            "at": {
+             "x": -3.0,
+             "y": 4.0
+            }
+           }
+          ]
+         }
+        ]
+       },
+       "objects": 0,
+       "pins": {
+        "kept": 1,
+        "parked": [
+         "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3"
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "label_pins_parked",
+        "message": "parsel: 1 nesnenin etiket iğneleri satırı alanın dışında kaldığı için park edildi; satır alana girince geri verilir.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "extent": [
+          486990.0,
+          4419990.0,
+          487050.0,
+          4420030.0
+         ],
+         "parked": [
+          {
+           "uid": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+           "pins": [
+            {
+             "at": {
+              "x": -3.0,
+              "y": 4.0
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "pxPerMetre": 4.0,
+      "window": [
+       486980.0,
+       4419980.0,
+       487110.0,
+       4420040.0
+      ],
+      "layers": [
+       "import-parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "window": [
+        486980.0,
+        4419980.0,
+        487110.0,
+        4420040.0
+       ],
+       "pxPerMetre": 4.0,
+       "layers": [
+        {
+         "layer": "import-parsel",
+         "counts": {
+          "placed": 0,
+          "unplaced": 0,
+          "hidden": 0,
+          "pinned": 0,
+          "forced": 0,
+          "collisions": 0,
+          "repeats": 0
+         },
+         "source": "kaynak-1",
+         "part": [
+          486990.0,
+          4419990.0,
+          487050.0,
+          4420030.0
+         ],
+         "band": [
+          486984.0,
+          4419984.0,
+          487056.0,
+          4420036.0
+         ],
+         "neighbours": 0,
+         "partial": true,
+         "parked": [
+          {
+           "uid": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+           "pins": 1
+          }
+         ]
+        }
+       ],
+       "revision": "$current",
+       "totals": {
+        "placed": 0,
+        "unplaced": 0,
+        "hidden": 0,
+        "pinned": 0,
+        "forced": 0,
+        "collisions": 0,
+        "repeats": 0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.labels.report"
+    }
+   ]
+  },
+  {
+   "name": "parçanın çevresindeki satırlar: bant ve katmanın nesnesi olmayan komşular sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel",
+       "extent": [
+        486990.0,
+        4419990.0,
+        487098.0,
+        4420006.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "extent": [
+         486990.0,
+         4419990.0,
+         487098.0,
+         4420006.0
+        ],
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "extent": [
+          486990.0,
+          4419990.0,
+          487098.0,
+          4420006.0
+         ],
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "pxPerMetre": 4.0,
+      "window": [
+       486980.0,
+       4419980.0,
+       487110.0,
+       4420020.0
+      ],
+      "layers": [
+       "import-parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "window": [
+        486980.0,
+        4419980.0,
+        487110.0,
+        4420020.0
+       ],
+       "pxPerMetre": 4.0,
+       "layers": [
+        {
+         "layer": "import-parsel",
+         "counts": {
+          "placed": 0,
+          "unplaced": 0,
+          "hidden": 0,
+          "pinned": 0,
+          "forced": 0,
+          "collisions": 0,
+          "repeats": 0
+         },
+         "source": "kaynak-1",
+         "part": [
+          486990.0,
+          4419990.0,
+          487098.0,
+          4420006.0
+         ],
+         "band": [
+          486987.6,
+          4419987.6,
+          487100.4,
+          4420008.4
+         ],
+         "neighbours": 1,
+         "partial": true
+        }
+       ],
+       "revision": "$current",
+       "totals": {
+        "placed": 0,
+        "unplaced": 0,
+        "hidden": 0,
+        "pinned": 0,
+        "forced": 0,
+        "collisions": 0,
+        "repeats": 0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.labels.report"
+    }
+   ]
+  },
+  {
+   "name": "parçası olmayan katmanın raporunda bant yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "pxPerMetre": 4.0,
+      "window": [
+       486980.0,
+       4419980.0,
+       487110.0,
+       4420040.0
+      ],
+      "layers": [
+       "import-parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "window": [
+        486980.0,
+        4419980.0,
+        487110.0,
+        4420040.0
+       ],
+       "pxPerMetre": 4.0,
+       "layers": [],
+       "revision": "$current",
+       "totals": {
+        "placed": 0,
+        "unplaced": 0,
+        "hidden": 0,
+        "pinned": 0,
+        "forced": 0,
+        "collisions": 0,
+        "repeats": 0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.labels.report"
     }
    ]
   }

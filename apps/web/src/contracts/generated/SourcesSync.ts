@@ -8,8 +8,11 @@ import type { SyncTopology } from "./SyncTopology";
  * `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
  * the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
  * for stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep
- * their pins), `label_pins_moved` (pins that followed their key to another row), `key_not_unique` (a read whose
- * table repeats the layer's key: the pins of those rows are not followed).
+ * their pins), `label_pins_moved` (pins that followed their key, or without a key their geometry or nearest feature
+ * of the same kind within 0,05 m, to another row; docs/adr/0578 §2), `label_pins_parked` (pins of objects whose row
+ * is outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given
+ * back to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the
+ * pins of those rows are not followed).
  *
  * `with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in
  * together or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,

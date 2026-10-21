@@ -770,6 +770,24 @@ impl Spatial {
         }
     }
 
+    /// The rows round a bound layer's part that only hold room for the labels near its edge (docs/adr/0578 §1); none
+    /// takes them away. The labels are placed again against them.
+    pub fn set_ghosts(&mut self, layer: &str, shapes: Vec<Shape>) {
+        self.store.set_ghosts(layer, shapes);
+        *self.prior.borrow_mut() = Default::default();
+    }
+
+    /// Takes every layer's obstacle-only neighbours away (another drawing).
+    pub fn clear_all_ghosts(&mut self) {
+        self.store.clear_ghosts();
+        *self.prior.borrow_mut() = Default::default();
+    }
+
+    /// How many obstacle-only neighbours the layer has in the store.
+    pub fn ghost_count(&self, layer: &str) -> usize {
+        self.store.ghost_count(Some(layer))
+    }
+
     /// The active view's theme.
     pub fn theme(&self) -> Option<&kentos_commands::LayerState> {
         self.theme.as_ref()

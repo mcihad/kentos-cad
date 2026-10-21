@@ -11,6 +11,11 @@
  * paper scale over 1:1 000 000), `invalid_window` (not four finite numbers with the minimum below the maximum, or
  * a window with more than 100 million pixels), `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer
  * drawn from a service has no labels of its own).
+ *
+ * A bound layer that holds a part of its table (docs/adr/0510) is reported with its `band` and the rows of it that
+ * held room for the labels near the part's edge without being the layer's objects (`neighbours`, docs/adr/0578 §1),
+ * and with the label pins parked in its binding (`parked`, §3); a band that cannot be read (the file is gone, or
+ * is not the version the layer matches) is the warning `band_unread`.
  */
 export type LabelsReport = { 
 /**

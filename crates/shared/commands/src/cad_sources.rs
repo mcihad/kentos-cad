@@ -293,8 +293,8 @@ pub enum SourcesEditOp {
 /// `source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area
 /// that is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is
 /// not a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the
-/// layer's own edits). Warnings: `label_pins_lost`, `label_pins_moved` (an area change that took objects with label
-/// pins out of the layer).
+/// layer's own edits). Warnings: `label_pins_lost`, `label_pins_moved`, `label_pins_parked`,
+/// `label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -343,6 +343,31 @@ pub enum PinLoss {
     Rebound,
     /// The row it would follow already has pins of its own.
     Taken,
+    /// Without a key: more than one row has the object's geometry, or two are equally near it, or two objects chose
+    /// one row (docs/adr/0578 §2): a pin is never given to a row on a guess.
+    Ambiguous,
+}
+
+/// What tied a pin's old object to its new row (docs/adr/0578 §2).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum PinMatch {
+    /// The key's value.
+    #[default]
+    Key,
+    /// Without a key: the one row of the same kind with the very same coordinates.
+    Geometry,
+    /// Without a key: the nearest row of the same kind within the tolerance (`distance`).
+    Nearest,
+}
+
+impl PinMatch {
+    pub fn is_key(&self) -> bool {
+        *self == PinMatch::Key
+    }
 }
 
 /// A label pin followed from one object to the row of the same key (docs/adr/0533 §1).
@@ -354,8 +379,19 @@ pub enum PinLoss {
 pub struct PinMove {
     pub from: String,
     pub to: String,
-    /// The key's value that tied them.
-    pub key: String,
+    /// The key's value that tied them; absent when no key did.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub key: Option<String>,
+    /// How they were tied: the key (absent, as before docs/adr/0578), the very same geometry, or the nearest row.
+    #[serde(default, skip_serializing_if = "PinMatch::is_key")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<PinMatch>", optional))]
+    pub by: PinMatch,
+    /// The distance between the two features' middles, metres, when `by` is `nearest`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub distance: Option<f64>,
 }
 
 /// The pins of an object a reload took out of the layer, or could not keep.
@@ -387,6 +423,14 @@ pub struct SyncedPins {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LostPin>>", optional))]
     pub lost: Vec<LostPin>,
+    /// The objects whose pins were parked in the link now: their row is outside the part (docs/adr/0578 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub parked: Vec<String>,
+    /// The objects that got their parked pins back: their row is in the part again.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub restored: Vec<String>,
 }
 
 /// Which way a sync goes.
@@ -421,8 +465,11 @@ pub enum SyncTopology {
 /// `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
 /// the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
 /// for stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep
-/// their pins), `label_pins_moved` (pins that followed their key to another row), `key_not_unique` (a read whose
-/// table repeats the layer's key: the pins of those rows are not followed).
+/// their pins), `label_pins_moved` (pins that followed their key, or without a key their geometry or nearest feature
+/// of the same kind within 0,05 m, to another row; docs/adr/0578 §2), `label_pins_parked` (pins of objects whose row
+/// is outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given
+/// back to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the
+/// pins of those rows are not followed).
 ///
 /// `with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in
 /// together or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,

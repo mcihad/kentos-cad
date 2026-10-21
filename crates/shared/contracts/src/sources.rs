@@ -70,8 +70,59 @@ pub struct SourceLink {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub key: Option<String>,
+    /// The label pins of objects that left the part (docs/adr/0578 §3): the object's row is in the table but outside
+    /// `extent` (it was moved out, or the part was narrowed), so the layer holds no object for its pins. They are kept
+    /// here with the row's lasting id and its key's value, not drawn, and go back to the object when the row comes
+    /// into the part again; a row gone from the table takes its parked pins with it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ParkedPin>>", optional))]
+    pub parked: Vec<ParkedPin>,
     /// Whether the table can be written: a feature or attribute table of a file KentOS may write.
     pub writable: bool,
+}
+
+/// The most label pins a bound layer parks, objects counted.
+pub const MAX_PARKED: usize = 100_000;
+
+/// The pins of a row outside the part (docs/adr/0578 §3).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ParkedPin {
+    /// The object's lasting id (the row's).
+    pub uid: String,
+    /// The key's value of the row when the link has a key and the row had a value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub key: Option<String>,
+    /// The pins, as the object held them.
+    pub pins: Vec<crate::LabelPin>,
+}
+
+/// What is wrong with a link's parked pins, if anything: at most [`MAX_PARKED`], each object once with a lasting id
+/// and at least one pin, a key value not empty.
+pub fn parked_problem(list: &[ParkedPin]) -> Option<String> {
+    if list.len() > MAX_PARKED {
+        return Some(format!("en çok {MAX_PARKED} nesnenin iğneleri park edilir"));
+    }
+    let mut seen = std::collections::BTreeSet::new();
+    for p in list {
+        if p.uid.trim().is_empty() || !seen.insert(p.uid.as_str()) {
+            return Some(format!(
+                "park edilen iğnenin nesne kimliği boş ya da iki kez geçiyor (“{}”)",
+                p.uid
+            ));
+        }
+        if p.pins.is_empty() {
+            return Some(format!("“{}” nesnesinin park edilen iğnesi yok", p.uid));
+        }
+        if p.key.as_deref().is_some_and(|k| k.is_empty()) {
+            return Some(format!("“{}” nesnesinin anahtar değeri boş", p.uid));
+        }
+    }
+    None
 }
 
 /// Why an area is not one: four finite numbers, the minimum below the maximum on both axes.
@@ -115,6 +166,9 @@ pub fn sources_problem(list: &[SourceLink], layer_ids: &[&str]) -> Option<String
             && let Some(why) = key_problem(k)
         {
             return Some(format!("{at}: anahtar alanı {why}"));
+        }
+        if let Some(why) = parked_problem(&s.parked) {
+            return Some(format!("{at}: {why}"));
         }
         match s.kind {
             SourceKind::Geopackage => {

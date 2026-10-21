@@ -804,21 +804,25 @@ def sync_cases():
 KEY = "ada"
 PIN_A = {"at": {"x": 1.0, "y": 2.0}, "rotation": 10.0}
 PIN_B = {"at": {"x": -3.0, "y": 4.0}}
-LOST_WORDS = [("deleted", "satırı tabloda yok"), ("outside", "satırı katmanın alanının dışında"),
+LOST_WORDS = [("deleted", "satırı tabloda yok"), ("outside", "satırı katmanın alanının dışında (park yeri dolu)"),
               ("rebound", "satır kimliği artık başka bir kayıt (anahtar değeri değişmiş)"),
-              ("taken", "anahtarının satırında zaten iğneler var")]
+              ("taken", "anahtarının satırında zaten iğneler var"),
+              ("ambiguous", "satırı belirsiz (aynı geometride ya da aynı uzaklıkta birden çok satır)")]
 
 
-def pins_after(bearers, rows, key, outside=()):
-    """What a reload does to the pins of a layer's objects, by the rule of the ADR (§1). `bearers`: the objects that
-    hold pins, as {uid, value (the key's value they hold now, None without), pins}; `rows`: the table's rows as read, by
-    uid, each its key's value (None when it has none); `key`: the binding's key or None; `outside`: uids of rows the
-    layer's area leaves out. Returns the report and which pins each object holds after (the objects named only)."""
+def pins_after(bearers, rows, key, outside=(), parked_before=(), fresh=None):
+    """What a reload does to the pins of a layer's objects, by the rule of the ADRs (0533 §1, 0578). `bearers`: the
+    objects that hold pins, as {uid, value (the key's value they hold now, None without), pins, feature (kind, coords,
+    middle: for the keyless match, optional)}; `rows`: the table's rows as read, by uid, each its key's value (None when
+    it has none); `key`: the binding's key or None; `outside`: uids of rows the layer's area leaves out; `parked_before`:
+    the link's parked pins, as {uid, key, pins}; `fresh`: the rows the layer has no object for, uid -> feature, the rows
+    a keyless object's pins may be matched to. Returns the report, which pins each object holds after (the objects
+    named only), and the link's parked pins after."""
     by_value = {}
     for uid, value in rows.items():
         if key and value:
             by_value.setdefault(value, []).append(uid)
-    kept, moves, lost = 0, [], []
+    kept, moves, lost, parks, orphans = 0, [], [], [], []
     for b in bearers:
         here = b["uid"] in rows
         if here and (not key or b["value"] is None or rows[b["uid"]] == b["value"]):
@@ -826,30 +830,92 @@ def pins_after(bearers, rows, key, outside=()):
             continue
         target = by_value.get(b["value"]) if b["value"] is not None else None
         if target and len(target) == 1 and target[0] != b["uid"]:
-            moves.append((b, target[0]))
+            moves.append((b, target[0], {"key": b["value"]}))
+        elif here:
+            lost.append((b["uid"], "rebound"))
+        elif b["uid"] in outside:
+            parks.append(b)
+        elif not key:
+            orphans.append(b)
         else:
-            reason = "rebound" if here else ("outside" if b["uid"] in outside else "deleted")
-            lost.append((b["uid"], reason))
-    leaving = {b["uid"] for b, _ in moves}
-    staying = {b["uid"] for b in bearers} - leaving
+            lost.append((b["uid"], "deleted"))
+    # Without a key: the geometry, then the nearest feature of the kind (docs/adr/0578 §2).
+    if orphans:
+        import pin_match_cases as pm
+        olds = [b for b in orphans if b.get("feature")]
+        for b in orphans:
+            if b not in olds:
+                lost.append((b["uid"], "deleted"))
+        fresh_items = sorted((fresh or {}).items())
+        found = pm.match([b["feature"] for b in olds], [f for _, f in fresh_items])
+        for b, f in zip(olds, found):
+            if f["found"] == "geometry":
+                moves.append((b, fresh_items[f["to"]][0], {"by": "geometry"}))
+            elif f["found"] == "nearest":
+                moves.append((b, fresh_items[f["to"]][0], {"by": "nearest", "distance": f["distance"]}))
+            elif f["found"] == "ambiguous":
+                lost.append((b["uid"], "ambiguous"))
+            else:
+                lost.append((b["uid"], "deleted"))
+    leaving = {b["uid"] for b, _, _ in moves} | {b["uid"] for b in parks}
+    holders = {b["uid"]: b for b in bearers}
     moved, after = [], {}
-    for b, to in moves:
-        if to in staying and to in {x["uid"] for x in bearers}:
+    for b, to, how in moves:
+        if to in holders and to not in leaving:
             lost.append((b["uid"], "taken"))
         else:
             after[to] = b["pins"]
-            moved.append({"from": b["uid"], "to": to, "key": b["value"]})
+            m = {"from": b["uid"], "to": to, **({"key": how["key"]} if "key" in how else {})}
+            if "by" in how:
+                m["by"] = how["by"]
+            if "distance" in how:
+                m["distance"] = how["distance"]
+            moved.append(m)
+    # The parked before: back to a row in the area, kept while outside, lost with a gone row.
+    carried, restored = [], []
+    reparked = {b["uid"] for b in parks}
+    for p in parked_before:
+        if p["uid"] in reparked:
+            continue
+        if p["uid"] in rows:
+            to = p["uid"]
+        else:
+            t = by_value.get(p.get("key")) if (key and p.get("key") is not None) else None
+            to = t[0] if t and len(t) == 1 else None
+        if to is not None:
+            have = holders.get(to)
+            if have is not None and to not in leaving:
+                if have["pins"] != p["pins"]:
+                    lost.append((p["uid"], "taken"))
+            elif after.get(to):
+                lost.append((p["uid"], "taken"))
+            else:
+                after[to] = p["pins"]
+                restored.append(to)
+        elif p["uid"] in outside:
+            carried.append(p)
+        else:
+            lost.append((p["uid"], "deleted"))
+    parked_now = []
+    for b in parks:
+        carried.append({"uid": b["uid"], **({"key": b["value"]} if key and b["value"] is not None else {}),
+                        "pins": b["pins"]})
+        parked_now.append(b["uid"])
     for uid in list(leaving) + [u for u, _ in lost]:
-        if uid in rows:
+        if uid in rows and uid not in restored:
             after.setdefault(uid, [])
     moved.sort(key=lambda m: m["from"])
     lost.sort()
-    return {"kept": kept, **({"moved": moved} if moved else {}),
-            **({"lost": [{"uid": u, "reason": r} for u, r in lost]} if lost else {})}, after
+    carried.sort(key=lambda p: p["uid"])
+    report = {"kept": kept, **({"moved": moved} if moved else {}),
+              **({"lost": [{"uid": u, "reason": r} for u, r in lost]} if lost else {}),
+              **({"parked": sorted(parked_now)} if parked_now else {}),
+              **({"restored": sorted(restored)} if restored else {})}
+    return report, after, carried
 
 
 def pin_warnings(table, key, report):
-    """The warnings a pins report comes with: lost pins, moved pins."""
+    """The warnings a pins report comes with: lost pins, moved pins, parked and restored ones."""
     out = []
     lost = report.get("lost", [])
     if lost:
@@ -859,9 +925,26 @@ def pin_warnings(table, key, report):
                     "message": f"{table}: etiket iğneleri korunamadı ({'; '.join(parts)}); okumayı geri alırsanız dönerler.",
                     "path": "layer"})
     moved = report.get("moved", [])
-    if moved:
+    by_key = [m for m in moved if m.get("by", "key") == "key"]
+    if by_key:
         out.append({"code": "label_pins_moved",
-                    "message": f"{table}: {len(moved)} nesnenin etiket iğneleri “{key}” anahtarının yeni satırına taşındı.",
+                    "message": f"{table}: {len(by_key)} nesnenin etiket iğneleri “{key}” anahtarının yeni satırına taşındı.",
+                    "path": "layer"})
+    geometry = sum(1 for m in moved if m.get("by") == "geometry")
+    nearest = sum(1 for m in moved if m.get("by") == "nearest")
+    if geometry + nearest:
+        out.append({"code": "label_pins_moved",
+                    "message": f"{table}: {geometry + nearest} nesnenin etiket iğneleri anahtarsız eşlemeyle yeni satırlarına "
+                               f"taşındı ({geometry} aynı geometri, {nearest} en yakın satır, en çok 0,05 m).",
+                    "path": "layer"})
+    if report.get("parked"):
+        out.append({"code": "label_pins_parked",
+                    "message": f"{table}: {len(report['parked'])} nesnenin etiket iğneleri satırı alanın dışında kaldığı için "
+                               "park edildi; satır alana girince geri verilir.",
+                    "path": "layer"})
+    if report.get("restored"):
+        out.append({"code": "label_pins_restored",
+                    "message": f"{table}: {len(report['restored'])} nesnenin park edilmiş etiket iğneleri geri verildi.",
                     "path": "layer"})
     return out
 
@@ -902,8 +985,8 @@ def pin_edit_cases():
     outside_uids = {r["uid"] for r in parsel if r["fid"] not in inside}
     bearers = [{"uid": keep_row["uid"], "value": keep_row["attrs"].get(KEY), "pins": [PIN_A]},
                {"uid": out_row["uid"], "value": out_row["attrs"].get(KEY), "pins": [PIN_B]}]
-    report, _ = pins_after(bearers, rows_in, None, outside_uids)
-    narrowed = {**b, "extent": AREA}
+    report, _, parked_after = pins_after(bearers, rows_in, None, outside_uids)
+    narrowed = {**b, "extent": AREA, **({"parked": parked_after} if parked_after else {})}
     gone_slots = [slot_of[r["fid"]] for r in parsel if r["fid"] not in inside]
     remaining = [1] + [slot_of[r["fid"]] for r in parsel if r["fid"] in inside]
     extent_out = {"link": narrowed, "objects": 0, "pins": report, "revision": "$current"}
@@ -992,7 +1075,135 @@ def pin_edit_cases():
                   done(extent_out, pin_warnings("parsel", None, report)),
                   {"ids": [1, 2, 3, 4], "revision": "same", "settings": {"sources": [b]}}, op="plan")),
     ]
+    cs += parked_cases(parsel, inside, keep_row, out_row, s_link, b, narrowed, slot_of)
     return cs
+
+
+# ── Parking, the band round a part and the report (docs/adr/0578) ──────────
+
+import pin_match_cases as pm  # noqa: E402
+
+BAND = 0.15
+WIDE = [486980.0, 4419980.0, 487110.0, 4420040.0]
+
+
+def band_of(e):
+    """The band round a part: its area grown by 15 % of its shorter side on every side (docs/adr/0578 §1)."""
+    w = BAND * min(e[2] - e[0], e[3] - e[1])
+    return [e[0] - w, e[1] - w, e[2] + w, e[3] + w]
+
+
+def report_step(extent, parked=(), window=WIDE, layer="import-parsel"):
+    """`cad.labels.report` over the bound layer: no label of its own (the layer has no labelling), so what it says is
+    the part, the band, the rows the band holds that the layer has no object for, and the pins parked in the binding."""
+    band = band_of(extent)
+    held = in_area(Q, "parsel", extent)
+    neighbours = len(in_area(Q, "parsel", band) - held)
+    row = {"layer": layer, "counts": {k: 0 for k in ("placed", "unplaced", "hidden", "pinned", "forced", "collisions",
+                                                      "repeats")},
+           "source": "kaynak-1", "part": extent, "band": band, "neighbours": neighbours}
+    if window[0] < extent[0] or window[1] < extent[1] or window[2] > extent[2] or window[3] > extent[3]:
+        row["partial"] = True
+    if parked:
+        row["parked"] = [{"uid": p["uid"], **({"key": p["key"]} if "key" in p else {}), "pins": len(p["pins"])}
+                         for p in parked]
+    out = {"window": window, "pxPerMetre": 4.0, "layers": [row], "revision": "$current",
+           "totals": {k: 0 for k in ("placed", "unplaced", "hidden", "pinned", "forced", "collisions", "repeats")}}
+    return step({"pxPerMetre": 4.0, "window": window, "layers": [layer]}, done(out), {"revision": "same"},
+                command="cad.labels.report")
+
+
+AREA3 = [486990.0, 4419990.0, 487098.0, 4420006.0]
+
+
+def parked_cases(parsel, inside, keep_row, out_row, s_link, b, narrowed, slot_of):
+    rows_all = {r["uid"]: None for r in parsel}
+    rows_in = {r["uid"]: None for r in parsel if r["fid"] in inside}
+    outside_uids = {r["uid"] for r in parsel if r["fid"] not in inside}
+    bearers = [{"uid": keep_row["uid"], "value": None, "pins": [PIN_A]},
+               {"uid": out_row["uid"], "value": None, "pins": [PIN_B]}]
+    report, _, parked = pins_after(bearers, rows_in, None, outside_uids)
+    assert report["parked"] == [out_row["uid"]] and parked[0]["pins"] == [PIN_B]
+    narrow_step = step({"edit": {"kind": "extent", "id": "kaynak-1", "extent": AREA}},
+                       done({"link": narrowed, "objects": 0, "pins": report, "revision": "$current"},
+                            pin_warnings("parsel", None, report)),
+                       {"ids": [1, *[slot_of[r["fid"]] for r in parsel if r["fid"] in inside]],
+                        "revision": "changed", "canUndo": True, "settings": {"sources": [narrowed]}})
+    # Widened again: the row comes back with its pins.
+    keep_only = [bearers[0]]
+    report2, after2, parked2 = pins_after(keep_only, rows_all, None, (), parked_before=parked)
+    assert report2["restored"] == [out_row["uid"]] and not parked2 and after2[out_row["uid"]] == [PIN_B]
+    widened_b = {k: v for k, v in b.items()}
+    added = len(parsel) - len(inside)
+    # The rows that come back take slots after the last the layer has had (docs/adr/0578 §3).
+    first_new = 1 + len(parsel) + 1
+    new_slots = {r["fid"]: first_new + i for i, r in enumerate([r for r in parsel if r["fid"] not in inside])}
+    widen_step = step({"edit": {"kind": "extent", "id": "kaynak-1"}},
+                      done({"link": widened_b, "objects": added, "pins": report2, "revision": "$current"},
+                           pin_warnings("parsel", None, report2)),
+                      {"ids": [1, *[slot_of[r["fid"]] for r in parsel if r["fid"] in inside], *new_slots.values()],
+                       "fields": {str(new_slots[out_row["fid"]]): {"labelPins": [PIN_B]}},
+                       "revision": "changed", "canUndo": True, "settings": {"sources": [widened_b]}})
+    a3_link, a3b, _ = area_link_step("parsel", AREA3, cmd="cad.sources.edit")
+    return [
+        case("park edilen iğne alan genişleyince nesnesine geri verilir (restored)", s_link,
+             pin_of(keep_row["uid"], PIN_A), pin_of(out_row["uid"], PIN_B), narrow_step, widen_step),
+        case("park edilen iğneler Denetle'nin raporunda listelenir", s_link,
+             pin_of(keep_row["uid"], PIN_A), pin_of(out_row["uid"], PIN_B), narrow_step,
+             report_step(AREA, parked)),
+        case("parçanın çevresindeki satırlar: bant ve katmanın nesnesi olmayan komşular sayılır", a3_link,
+             report_step(AREA3, window=[486980.0, 4419980.0, 487110.0, 4420020.0])),
+        case("parçası olmayan katmanın raporunda bant yok", s_link,
+             step({"pxPerMetre": 4.0, "window": WIDE, "layers": ["import-parsel"]},
+                  done({"window": WIDE, "pxPerMetre": 4.0, "layers": [], "revision": "$current",
+                        "totals": {k: 0 for k in ("placed", "unplaced", "hidden", "pinned", "forced", "collisions",
+                                                  "repeats")}}),
+                  {"revision": "same"}, command="cad.labels.report")),
+    ]
+
+
+def ring_of(row):
+    return row["geometry"]["pts"]
+
+
+def fallback_cases(parsel):
+    """Without a key, a pin whose object has no row is looked for among the rows the layer has no object for (docs/adr/0578
+    §2). The whole table is bound; the polygon of the second row is deleted from the layer and drawn again by hand (another
+    uid, as a table written again by another program gives its rows), with a pin; reading the table brings the row back
+    and the pin follows it, by the geometry or by the nearest feature, or is lost."""
+    row1, row2, row3 = parsel
+    s_link, b, ids = link_step("parsel", cmd="cad.sources.edit")
+    slot_of = {r["fid"]: 2 + i for i, r in enumerate(parsel)}
+    rows_all = {r["uid"]: None for r in parsel}
+    r = {"layer": "import-parsel", "direction": "read", "discard": True}
+
+    def feature_of(ring):
+        return pm.feature("polygon", [v for p in ring for v in (p["x"], p["y"])])
+
+    def shifted(ring, dx):
+        return [{"x": p["x"] + dx, "y": p["y"]} for p in ring]
+
+    def rewrite(name, ring):
+        bearer = {"uid": "$uid:yeni", "value": None, "pins": [PIN_A], "feature": feature_of(ring)}
+        report, after, _ = pins_after([bearer], rows_all, None, (), fresh={row2["uid"]: feature_of(ring_of(row2))})
+        # The layer: slot 1, the rows' 2 to 4, the polygon drawn by hand 5; the read takes it away and brings row 2 back.
+        back = 6
+        ids_after = [1, slot_of[row1["fid"]], slot_of[row3["fid"]], back]
+        fields = {str(back): {"labelPins": after[row2["uid"]]}} if row2["uid"] in after else {}
+        return case(name, s_link,
+                    other("cad.entities.delete", {"uids": [row2["uid"]]}),
+                    other("cad.polygon.create", {"layerId": "import-parsel", "pts": ring}),
+                    {"op": "captureUid", "id": 5, "as": "yeni"},
+                    pin_of("$uid:yeni", PIN_A),
+                    step(r, done(synced(added=1, removed=1, pins=report), pin_warnings("parsel", None, report)),
+                         {"ids": ids_after, "fields": fields, "revision": "changed", "canUndo": True}))
+
+    ring2 = ring_of(row2)
+    return [
+        rewrite("anahtarsız: iğne, aynı geometrili satırın nesnesine taşınır (geometry)", ring2),
+        rewrite("anahtarsız: iğne, 3 cm'e yakın aynı türden satıra taşınır (nearest)", shifted(ring2, 0.03125)),
+        rewrite("anahtarsız: 0,05 m'den uzak satır eşleşmez, iğne kaybolur (deleted)", shifted(ring2, 0.5)),
+    ]
 
 
 def pin_sync_cases():
@@ -1024,7 +1235,7 @@ def pin_sync_cases():
                          {"ids": [1, 2, 3, 4], "revision": "changed", "canUndo": True})))
     # The key: two objects that swapped records (the table was written again with other row ids).
     swap = [{"uid": ua, "value": kb, "pins": [PIN_A]}, {"uid": ub, "value": ka, "pins": [PIN_B]}]
-    report, after = pins_after(swap, rows, KEY)
+    report, after, _ = pins_after(swap, rows, KEY)
     assert len(report["moved"]) == 2 and "lost" not in report
     swapped = [k_link, pin_of(ua, PIN_A), pin_of(ub, PIN_B), set_ada(ua, kb), set_ada(ub, ka)]
     out.append(case("anahtarla: satırı değişen nesnelerin iğneleri anahtarın yeni satırına taşınır", *swapped,
@@ -1038,7 +1249,7 @@ def pin_sync_cases():
                           "canUndo": True})))
     # The old value is nowhere in the table: the pin is the old record's, which is gone.
     lone = [{"uid": ua, "value": "Eski Mahalle", "pins": [PIN_A]}]
-    report, after = pins_after(lone, rows, KEY)
+    report, after, _ = pins_after(lone, rows, KEY)
     assert report["lost"][0]["reason"] == "rebound"
     out.append(case("anahtarla: eski değerin satırı yoksa iğne kaybolur (rebound), nesnenin iğnesi boşalır",
                     k_link, pin_of(ua, PIN_A), set_ada(ua, "Eski Mahalle"),
@@ -1046,7 +1257,7 @@ def pin_sync_cases():
                          {"fields": {**pins_of(2, None)}, "revision": "changed", "canUndo": True})))
     # The row of the key has pins of its own: its pins are kept, the others' are lost.
     taken = [{"uid": ua, "value": kb, "pins": [PIN_A]}, {"uid": ub, "value": kb, "pins": [PIN_B]}]
-    report, after = pins_after(taken, rows, KEY)
+    report, after, _ = pins_after(taken, rows, KEY)
     assert report["lost"] == [{"uid": ua, "reason": "taken"}] and report["kept"] == 1
     out.append(case("anahtarla: anahtarın satırında iğne varsa o korunur, öbürü kaybolur (taken)",
                     k_link, pin_of(ua, PIN_A), pin_of(ub, PIN_B), set_ada(ua, kb),
@@ -1066,10 +1277,11 @@ def pin_sync_cases():
                     {"op": "undo", "returns": "Kaynaktan oku: parsel",
                      "expect": {"fields": {**pins_of(2, [PIN_A]), **pins_of(3, [PIN_B])}}}))
     # The plan says it too.
-    report, _ = pins_after(swap, rows, KEY)
+    report, _, _ = pins_after(swap, rows, KEY)
     out.append(case("plan iğnelerin ne olacağını söyler, yazmaz", *swapped,
                     step(r, done(synced(modified=2, pins=report), pin_warnings("parsel", KEY, report)),
                          {"fields": {**pins_of(2, [PIN_A]), **pins_of(3, [PIN_B])}, "revision": "same"}, op="plan")))
+    out += fallback_cases(parsel)
     return out
 
 

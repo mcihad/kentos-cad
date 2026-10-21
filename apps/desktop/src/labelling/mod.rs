@@ -103,7 +103,7 @@ pub struct Window {
     /// The abbreviation dictionary's editor (Sığdırma › Sözlük).
     dictionary: text_editor::Content,
     /// What the summary says, each line with its kind, and whether Kaydet may write.
-    lines: Vec<(Kind, String)>,
+    pub(crate) lines: Vec<(Kind, String)>,
     ready: bool,
 }
 
@@ -539,7 +539,9 @@ impl App {
             window: Some([view.min_x, view.min_y, view.max_x, view.max_y]),
             layers: Some(vec![w.layer.clone()]),
         };
-        match labels_report::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+        // The bands round the parts are the ones the drawing is drawn with: no file is read on this thread.
+        let bands = self.bands.given(&doc.model);
+        match labels_report::execute_with(&mut ExecutionContext::new(&mut doc.model), input, &bands) {
             CommandResult::Completed { output, .. } => {
                 let t = &output.totals;
                 let mut lines = vec![(
@@ -567,8 +569,35 @@ impl App {
                 if output.layers.iter().any(|l| l.partial) {
                     lines.push((
                         Kind::Info,
-                        "Katman bağlı tablonun yalnız yüklenen parçasını tutuyor: etiketleri ve engelleri o parçanınkidir.".to_owned(),
+                        "Katman bağlı tablonun yalnız yüklenen parçasını tutuyor: etiketleri o parçanınkidir.".to_owned(),
                     ));
+                }
+                // The part's neighbours and the pins parked in the binding (docs/adr/0578).
+                for l in &output.layers {
+                    match (l.band, l.neighbours) {
+                        (Some(_), Some(n)) => lines.push((
+                            Kind::Info,
+                            format!(
+                                "Parçanın çevresindeki {n} satır engel olarak yer tutuyor (nesne değiller; çizilmez, etiketlenmez)."
+                            ),
+                        )),
+                        (Some(_), None) => lines.push((
+                            Kind::Warn,
+                            "Parçanın çevresindeki komşular okunamadı ya da henüz okunuyor: kenardaki etiketler yalnız parçanın nesnelerine göre yerleşir."
+                                .to_owned(),
+                        )),
+                        _ => {}
+                    }
+                    if !l.parked.is_empty() {
+                        let pins: u32 = l.parked.iter().map(|p| p.pins).sum();
+                        lines.push((
+                            Kind::Info,
+                            format!(
+                                "{} nesnenin {pins} etiket iğnesi park edilmiş: satırları parçanın dışında; alana girince geri verilir.",
+                                l.parked.len()
+                            ),
+                        ));
+                    }
                 }
                 lines
             }

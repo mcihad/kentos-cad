@@ -3,4 +3,4 @@
 /**
  * Why a label pin went with no object to hold it (docs/adr/0533 §1).
  */
-export type PinLoss = "deleted" | "outside" | "rebound" | "taken";
+export type PinLoss = "deleted" | "outside" | "rebound" | "taken" | "ambiguous";

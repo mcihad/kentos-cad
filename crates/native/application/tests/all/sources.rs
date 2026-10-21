@@ -288,6 +288,7 @@ fn a_project_keeps_at_most_a_thousand_bound_layers() {
             srid: None,
             key: None,
             extent: None,
+            parked: Vec::new(),
             writable: true,
         })
         .collect();
@@ -540,7 +541,35 @@ fn wide_values_keep_their_meaning_through_a_bound_layer() {
 /// Another program writes the parcels again: the first two rows are deleted and inserted anew (other row ids, other
 /// lasting ids, the same values), and `extra` more rows repeat the first's values.
 fn rewrite(file: &std::path::Path, extra: usize) {
-    use kentos_geopackage::{Edits, GeoPackage, NewRow, Query};
+    rewrite_nudged(file, extra, 0.0);
+}
+
+/// `rewrite`, the two rows' polygons written `dx` metres east of where they were (the extra rows' as they were).
+fn rewrite_nudged(file: &std::path::Path, extra: usize, dx: f64) {
+    use kentos_geopackage::{Coord, Curve, Edits, GeoPackage, Geometry, NewRow, Query};
+    let nudge = |g: &Geometry| -> Geometry {
+        let shift = |c: &Curve| match c {
+            Curve::Line(p) => Curve::Line(
+                p.iter()
+                    .map(|q| Coord {
+                        x: q.x + dx,
+                        ..*q
+                    })
+                    .collect(),
+            ),
+            other => other.clone(),
+        };
+        match g {
+            Geometry::Polygon(rings) => Geometry::Polygon(rings.iter().map(shift).collect()),
+            Geometry::MultiPolygon(parts) => Geometry::MultiPolygon(
+                parts
+                    .iter()
+                    .map(|rings| rings.iter().map(shift).collect())
+                    .collect(),
+            ),
+            other => other.clone(),
+        }
+    };
     let mut gp = GeoPackage::open(file, true).expect("opens");
     let layer = gp
         .layers()
@@ -560,9 +589,13 @@ fn rewrite(file: &std::path::Path, extra: usize) {
     let mut edits = Edits::default();
     for (i, r) in rows.iter().take(2).enumerate() {
         edits.delete.push(r.fid);
+        let mut row = copy(r);
+        if let Some(g) = &row.geometry {
+            row.geometry = Some(nudge(g));
+        }
         edits.insert.push((
             format!("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d77{i:02}"),
-            copy(r),
+            row,
         ));
     }
     for k in 0..extra {
@@ -642,16 +675,66 @@ fn pins_follow_their_key_when_the_table_is_written_again() {
     let _ = std::fs::remove_file(&tmp);
 }
 
-/// Without a key those pins belong to rows that are gone: lost, and said.
+/// Without a key, the rows written again with the very same geometry take the pins (docs/adr/0578 §2): moved by
+/// `geometry`, said once.
 #[test]
-fn pins_of_rows_a_rewritten_table_lacks_are_said_without_a_key() {
+fn pins_follow_the_same_geometry_of_a_rewritten_table_without_a_key() {
     let (mut d, tmp) = pinned_parcels("nokey", None);
     rewrite(&tmp, 0);
+    let read = read_again(&mut d);
+    let out = ok(&read);
+    assert_eq!(out["pins"]["moved"].as_array().map(Vec::len), Some(2), "{read}");
+    assert!(out["pins"]["moved"].as_array().expect("moved").iter().all(|m| m["by"] == "geometry"
+        && m.get("key").is_none()), "{read}");
+    assert!(out["pins"].get("lost").is_none(), "{read}");
+    assert_eq!(warning_codes(&read), ["label_pins_moved"], "{read}");
+    assert_eq!(pins_of(&d, "Çağlayan"), json!([{ "at": { "x": 1.0, "y": 2.0 } }]));
+    assert_eq!(pins_of(&d, "Işık-Ğüşöç"), json!([{ "at": { "x": 2.0, "y": 2.0 } }]));
+    let _ = std::fs::remove_file(&tmp);
+}
+
+/// A table written again with the polygons 3 cm east: the nearest feature of the same kind within the tolerance
+/// takes the pins (`nearest`, with the distance).
+#[test]
+fn pins_follow_the_nearest_feature_within_the_tolerance_without_a_key() {
+    let (mut d, tmp) = pinned_parcels("near", None);
+    rewrite_nudged(&tmp, 0, 0.03125);
+    let read = read_again(&mut d);
+    let out = ok(&read);
+    let moved = out["pins"]["moved"].as_array().expect("moved");
+    assert_eq!(moved.len(), 2, "{read}");
+    assert!(moved.iter().all(|m| m["by"] == "nearest" && m["distance"] == 0.03125), "{read}");
+    assert_eq!(warning_codes(&read), ["label_pins_moved"], "{read}");
+    assert_eq!(pins_of(&d, "Çağlayan"), json!([{ "at": { "x": 1.0, "y": 2.0 } }]));
+    let _ = std::fs::remove_file(&tmp);
+}
+
+/// Half a metre away is no match: the pins are lost, and said (deleted).
+#[test]
+fn pins_of_rows_a_rewritten_table_lacks_are_said_without_a_key() {
+    let (mut d, tmp) = pinned_parcels("far", None);
+    rewrite_nudged(&tmp, 0, 0.5);
     let read = read_again(&mut d);
     let out = ok(&read);
     assert_eq!(out["pins"]["lost"].as_array().map(Vec::len), Some(2), "{read}");
     assert_eq!(out["pins"]["lost"][0]["reason"], "deleted", "{read}");
     assert_eq!(warning_codes(&read), ["label_pins_lost"], "{read}");
+    assert_eq!(pins_of(&d, "Çağlayan"), json!([]));
+    let _ = std::fs::remove_file(&tmp);
+}
+
+/// A row written twice has two rows of the very geometry: the pins are never given on a guess (ambiguous); the other
+/// parcel's follow.
+#[test]
+fn pins_are_not_given_to_one_of_two_equal_rows() {
+    let (mut d, tmp) = pinned_parcels("twice", None);
+    rewrite(&tmp, 1);
+    let read = read_again(&mut d);
+    let out = ok(&read);
+    assert_eq!(out["pins"]["lost"].as_array().map(Vec::len), Some(1), "{read}");
+    assert_eq!(out["pins"]["lost"][0]["reason"], "ambiguous", "{read}");
+    assert_eq!(out["pins"]["moved"].as_array().map(Vec::len), Some(1), "{read}");
+    assert_eq!(pins_of(&d, "Işık-Ğüşöç"), json!([{ "at": { "x": 2.0, "y": 2.0 } }]));
     assert_eq!(pins_of(&d, "Çağlayan"), json!([]));
     let _ = std::fs::remove_file(&tmp);
 }
@@ -754,5 +837,78 @@ fn a_part_writes_its_neighbours_outside_the_area() {
     if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
         std::fs::copy(&tmp, dir().join("kentos-komsu.gpkg")).expect("copied");
     }
+    let _ = std::fs::remove_file(&tmp);
+}
+
+// docs/adr/0578 §3: an object that leaves the part (moved out by hand and written) has its row outside the area on the
+// next read; its pins are parked in the binding, listed by `cad.labels.report`, and given back to the row when the area
+// takes it again.
+#[test]
+fn pins_of_an_object_that_left_the_part_are_parked_and_given_back() {
+    let tmp = std::env::temp_dir().join(format!("kentos-park-{}.gpkg", std::process::id()));
+    std::fs::copy(dir().join("qgis.gpkg"), &tmp).expect("copied");
+    let mut d = doc();
+    ok(&run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": tmp.display().to_string(), "table": "parsel",
+                          "extent": [486990.0, 4419990.0, 487050.0, 4420030.0] } }),
+    ));
+    let link = link_of(&d);
+    let uid = d
+        .by_layer_with_uids(&link.layer)
+        .next()
+        .map(|(u, _)| u.to_string())
+        .expect("the parcel in the area");
+    ok(&run(
+        &mut d,
+        "cad.labels.pin",
+        CallOp::Execute,
+        json!({ "pins": [{ "uid": uid, "pin": { "at": { "x": 1.0, "y": 2.0 } } }] }),
+    ));
+    ok(&run(
+        &mut d,
+        "cad.entities.transform",
+        CallOp::Execute,
+        json!({ "uids": [uid], "transform": { "kind": "move", "dx": 500.0, "dy": 0.0 } }),
+    ));
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": link.layer, "direction": "write" }),
+    ));
+    // The table's row is outside the area now: the read takes the object out and parks its pins.
+    let read = read_again(&mut d);
+    let out = ok(&read);
+    assert_eq!(out["pins"]["parked"], json!([uid]), "{read}");
+    assert!(out["pins"].get("lost").is_none(), "{read}");
+    assert_eq!(warning_codes(&read), ["label_pins_parked"], "{read}");
+    let parked = &link_of(&d).parked;
+    assert_eq!(parked.len(), 1);
+    assert_eq!((parked[0].uid.as_str(), parked[0].pins.len()), (uid.as_str(), 1));
+    // The report lists them.
+    let report = run(
+        &mut d,
+        "cad.labels.report",
+        CallOp::Execute,
+        json!({ "pxPerMetre": 4.0, "window": [486000.0, 4419000.0, 488000.0, 4421000.0] }),
+    );
+    let layer = &ok(&report)["layers"][0];
+    assert_eq!(layer["parked"], json!([{ "uid": uid, "pins": 1 }]), "{report}");
+    assert_eq!(layer["neighbours"], 0, "the band holds no other row: {report}");
+    // The area takes every row: the object comes back with its pins, the binding parks nothing.
+    let widened = run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "extent", "id": link.id } }),
+    );
+    let out = ok(&widened);
+    assert_eq!(out["pins"]["restored"], json!([uid]), "{widened}");
+    assert_eq!(warning_codes(&widened), ["label_pins_restored"], "{widened}");
+    assert!(link_of(&d).parked.is_empty());
+    assert_eq!(pins_of(&d, "Çağlayan"), json!([{ "at": { "x": 1.0, "y": 2.0 } }]));
     let _ = std::fs::remove_file(&tmp);
 }

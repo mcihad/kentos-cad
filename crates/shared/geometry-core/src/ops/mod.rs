@@ -47,6 +47,7 @@ pub mod order;
 pub mod overkill;
 pub mod parts;
 pub mod path;
+pub mod pin_match;
 pub mod point_editor;
 pub mod polygonize;
 pub mod proximity;

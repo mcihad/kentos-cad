@@ -7,4 +7,12 @@ import type { PinMove } from "./PinMove";
  * objects kept theirs, which followed their key to another row, which could not be kept. A layer with no pins
  * has none of this.
  */
-export type SyncedPins = { kept: number, moved?: Array<PinMove>, lost?: Array<LostPin>, };
+export type SyncedPins = { kept: number, moved?: Array<PinMove>, lost?: Array<LostPin>, 
+/**
+ * The objects whose pins were parked in the link now: their row is outside the part (docs/adr/0578 §3).
+ */
+parked?: Array<string>, 
+/**
+ * The objects that got their parked pins back: their row is in the part again.
+ */
+restored?: Array<string>, };

@@ -2365,7 +2365,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.labels.report",
         refusals: &[&["invalid_scale", "invalid_window", "layer_not_found", "not_a_layer", "service_layer"]],
-        warnings: &[],
+        warnings: &["band_unread"],
         targets: none,
     },
     Entry {
@@ -2975,7 +2975,7 @@ const ENTRIES: &[Entry] = &[
             &["crs_mismatch", "entity_exists", "source_bound", "source_differs", "source_not_found", "source_changed", "too_many_sources", "invalid_extent", "invalid_key", "derived_dataset"],
             &["pending_changes"],
         ],
-        warnings: &["crs_undeclared", "import_losses", "label_pins_lost", "label_pins_moved", "key_not_unique"],
+        warnings: &["crs_undeclared", "import_losses", "label_pins_lost", "label_pins_moved", "label_pins_parked", "label_pins_restored", "key_not_unique"],
         targets: none,
     },
     Entry {
@@ -3037,7 +3037,7 @@ const ENTRIES: &[Entry] = &[
             // docs/adr/0532 §1: layers written together, and the mapped relations' rows.
             &["invalid_input", "transaction_split", "relation_dangling"],
         ],
-        warnings: &["export_losses", "neighbours_left", "label_pins_lost", "label_pins_moved", "key_not_unique", "relation_unmapped"],
+        warnings: &["export_losses", "neighbours_left", "label_pins_lost", "label_pins_moved", "label_pins_parked", "label_pins_restored", "key_not_unique", "relation_unmapped"],
         targets: none,
     },
     Entry {

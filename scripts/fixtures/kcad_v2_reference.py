@@ -4405,6 +4405,11 @@ def build():
     # A part's area (docs/adr/0510): its minimum below its maximum; a database's table has none yet.
     out["broken/sources-extent-reversed.kcad"] = sources_broken(lambda s: s[0].update(extent=[487100.0, 4420000.0, 487000.0, 4420100.0]))
     out["broken/sources-database-extent.kcad"] = sources_broken(lambda s: s[2].update(extent=[0.0, 0.0, 1.0, 1.0]))
+    # Pins parked for the rows outside a part (docs/adr/0578 §3): each object once, with pins and a key value.
+    out["broken/sources-parked-twice.kcad"] = sources_broken(
+        lambda s: s[0]["parked"].append(dict(s[0]["parked"][0])))
+    out["broken/sources-parked-no-pins.kcad"] = sources_broken(lambda s: s[0]["parked"][1].update(pins=[]))
+    out["broken/sources-parked-empty-key.kcad"] = sources_broken(lambda s: s[0]["parked"][0].update(key=""))
     out["broken/sources-password.kcad"] = sources_broken(
         lambda s: s[2].update(path="postgresql://cbs:gizli@veri.belediye.local:5432/kent"))
     # The walls (docs/adr/0339 §4): schema 75's; in schema 74 an unknown kind; each field's one way of writing, a path,
