@@ -2,17 +2,97 @@
 //! mean distance to the nearest other place against a random pattern's
 //! expected one over the same area; the ratio, z and p. With a Monte Carlo
 //! test (docs/adr/0566 §1) as many places are thrown into the same box again
-//! and again, the edge falling on both alike.
+//! and again, the edge falling on both alike. The study area may be given as
+//! area objects instead (docs/adr/0574 §1): their union, holes out, is the
+//! region the density, the places and the thrown points are taken in.
 
 use super::inference::{self, GENERATOR, Profile, RULE, TIE, folded_p, moments, sim_z};
 use super::kdtree::{KdTree, dist2};
-use super::{Number, Pattern, Placed, StatsRun, Table, p_value, text, unplaced_note};
+use super::{Number, Pattern, Placed, StatsRun, Table, p_value, place, text, unplaced_note};
 use crate::entity::Shape;
+use crate::geom::arrangement::Area;
+use crate::ops::geoprocess::{Class, areas_measure, class_of, union_all};
+use crate::ops::sampling::inside::Inside;
 use crate::ops::sampling::random::Sequence;
+use crate::ops::sampling::scatter::DRAWS;
 use crate::vec2::Vec2;
 
 /// The most simulated places a run throws (simulations × objects).
 pub const MOST_SIMULATED: usize = 50_000_000;
+
+/// The most candidates a study area's run draws, from its simulations, objects and the box's share the area fills.
+pub const MOST_THROWN: f64 = 5e8;
+
+/// The most vertices a study area's rings have in all.
+pub const MOST_VERTICES: usize = 1_000_000;
+
+/// The region a run takes the density and the simulated places in (docs/adr/0574 §1).
+#[derive(Clone, Copy)]
+pub enum Window<'a> {
+    /// The places' box, or the box scaled to an area in m² (docs/adr/0566 §1).
+    Box(Option<f64>),
+    /// The union of the areas of these objects.
+    Areas(&'a [Shape]),
+}
+
+/// A study area: its region to ask, its net area, what it is made of and its canonical lines for the profile.
+struct Study {
+    inside: Inside,
+    area: f64,
+    parts: usize,
+    holes: usize,
+    skipped: usize,
+    lines: String,
+}
+
+/// The study area of the objects' areas (docs/adr/0574 §1).
+fn study_of(shapes: &[Shape]) -> Result<Study, String> {
+    use std::fmt::Write;
+    let mut areas: Vec<Area> = Vec::new();
+    let mut skipped = 0usize;
+    for s in shapes {
+        match class_of(s) {
+            Class::Areas(v) if !v.is_empty() => areas.extend(v),
+            _ => skipped += 1,
+        }
+    }
+    if areas.is_empty() {
+        return Err(
+            "Çalışma alanı olarak verilen nesnelerde alan yok; bir alan çizin ya da seçin.".into(),
+        );
+    }
+    let vertices: usize = areas
+        .iter()
+        .map(|a| a.outer.pts.len() + a.holes.iter().map(|h| h.pts.len()).sum::<usize>())
+        .sum();
+    if vertices > MOST_VERTICES {
+        return Err(format!(
+            "Çalışma alanının halkalarında {vertices} köşe var; en çok {MOST_VERTICES} köşe alınır."
+        ));
+    }
+    let mut lines = String::new();
+    for (k, a) in areas.iter().enumerate() {
+        for (r, ring) in std::iter::once(&a.outer).chain(a.holes.iter()).enumerate() {
+            for p in &ring.pts {
+                let _ = writeln!(lines, "a{k}.{r}	{}	{}", text(p.x, 6), text(p.y, 6));
+            }
+        }
+    }
+    let union = union_all(&areas);
+    let area = areas_measure(&union);
+    let inside = Inside::new(&union).filter(|_| area > 0.0);
+    let Some(inside) = inside else {
+        return Err("Çalışma alanının alanı sıfır.".into());
+    };
+    Ok(Study {
+        inside,
+        area,
+        parts: areas.len(),
+        holes: areas.iter().map(|a| a.holes.len()).sum(),
+        skipped,
+        lines,
+    })
+}
 
 /// A Monte Carlo test's simulations (0: none) and seed.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -123,18 +203,53 @@ pub fn nearest_with(
     area: Option<f64>,
     sim: Simulation,
 ) -> Result<StatsRun, String> {
-    let placed = Placed::of(shapes, |_| true);
+    nearest_in(shapes, Window::Box(area), sim)
+}
+
+/// The index over `window`: the places' box, a box of a given area, or the study area of area objects (docs/adr/0574 §1).
+pub fn nearest_in(
+    shapes: &[Shape],
+    window: Window<'_>,
+    sim: Simulation,
+) -> Result<StatsRun, String> {
+    let study = match window {
+        Window::Areas(objects) => Some(study_of(objects)?),
+        Window::Box(_) => None,
+    };
+    let area = match window {
+        Window::Box(a) => a,
+        Window::Areas(_) => None,
+    };
+    let mut near = Vec::new();
+    let placed = Placed::of(shapes, |i| match &study {
+        None => true,
+        Some(st) => place(&shapes[i]).is_some_and(|p| st.inside.holds(p, &mut near)),
+    });
     let mut run = StatsRun::default();
     run.warn_if(placed.unplaced, unplaced_note);
     let n = placed.pts.len();
-    if n < 2 {
-        return Err(format!(
-            "En yakın komşu en az iki nesne ister; {n} nesnenin yeri var."
-        ));
+    let outside = shapes.len() - placed.unplaced - n;
+    if let Some(st) = &study {
+        run.warn_if(outside, |k| {
+            format!("{k} nesnenin yeri çalışma alanının dışında; alınmadı.")
+        });
+        run.warn_if(st.skipped, |k| {
+            format!("{k} çalışma alanı nesnesinde alan yok; alınmadı.")
+        });
     }
-    let a = match area {
-        Some(a) => a,
-        None => {
+    if n < 2 {
+        return Err(if study.is_some() {
+            format!(
+                "En yakın komşu çalışma alanında en az iki nesne ister; {n} nesnenin yeri alanın içinde."
+            )
+        } else {
+            format!("En yakın komşu en az iki nesne ister; {n} nesnenin yeri var.")
+        });
+    }
+    let a = match (&study, area) {
+        (Some(st), _) => st.area,
+        (None, Some(a)) => a,
+        (None, None) => {
             let (_, w, h) = box_of(&placed.pts);
             w * h
         }
@@ -161,6 +276,13 @@ pub fn nearest_with(
         row("p", text(p, 6)),
         row("Alan (m²)", text(a, 2)),
     ];
+    if let Some(st) = &study {
+        rows.push(row(
+            "Çalışma alanı",
+            format!("{} alan, {} delik", st.parts, st.holes),
+        ));
+        rows.push(row("Alanın dışında kalan nesne", outside.to_string()));
+    }
     run.numbers = vec![
         Number {
             name: "ratio",
@@ -192,7 +314,29 @@ pub fn nearest_with(
         return Ok(run);
     }
     // The Monte Carlo test (§1): the same count thrown into the box, point by point, x then y.
-    let (lo, w, h, words) = region(&placed.pts, area);
+    // With a study area the box is the region's own (absolute) and a candidate must fall in or on it (docs/adr/0574 §1).
+    let (lo, w, h, words) = match &study {
+        None => region(&placed.pts, area),
+        Some(st) => {
+            let b = st.inside.bounds;
+            (
+                Vec2::new(b.min_x, b.min_y),
+                b.max_x - b.min_x,
+                b.max_y - b.min_y,
+                "Çalışma alanı nesnesi",
+            )
+        }
+    };
+    if study.is_some() {
+        let share = a / (w * h);
+        if sim.count as f64 * n as f64 / share > MOST_THROWN {
+            return Err(format!(
+                "Çalışma alanı kutusunun yalnız %{} kadarını kaplıyor; {} benzetim × {n} nesne en çok {MOST_THROWN:.0} aday çeker. Benzetim sayısını azaltın.",
+                text(share * 100.0, 3),
+                sim.count
+            ));
+        }
+    }
     let bound = (w * w + h * h).sqrt();
     let mut seq = Sequence::new(sim.seed);
     let mut thrown = vec![Vec2::new(0.0, 0.0); n];
@@ -200,9 +344,28 @@ pub fn nearest_with(
     let mut larger = 0usize;
     for _ in 0..sim.count {
         for q in thrown.iter_mut() {
-            let x = lo.x + seq.unit() * w;
-            let y = lo.y + seq.unit() * h;
-            *q = Vec2::new(x, y);
+            let Some(st) = &study else {
+                let x = lo.x + seq.unit() * w;
+                let y = lo.y + seq.unit() * h;
+                *q = Vec2::new(x, y);
+                continue;
+            };
+            let mut found = None;
+            for _ in 0..DRAWS {
+                let u = seq.unit();
+                let v = seq.unit();
+                let p = Vec2::new(lo.x + u * w, lo.y + v * h);
+                if st.inside.holds(p, &mut near) {
+                    found = Some(p);
+                    break;
+                }
+            }
+            let Some(p) = found else {
+                return Err(format!(
+                    "Çalışma alanında {DRAWS} adayda bir nokta düşmedi: alan kutusunun çok küçük bir parçası."
+                ));
+            };
+            *q = Vec2::new(p.x - placed.origin.x, p.y - placed.origin.y);
         }
         let m = mean_nearest(&thrown);
         if m >= observed - TIE * bound {
@@ -263,13 +426,87 @@ pub fn nearest_with(
     profile.push(
         "region",
         "Benzetim alanı",
-        format!("{words}, {} m²", text(w * h, 2)),
+        format!(
+            "{words}, {} m²",
+            text(if study.is_some() { a } else { w * h }, 2)
+        ),
     );
     profile.push("objects", "Nesne sayısı", n.to_string());
     for &i in &placed.index {
         let at = super::place(&shapes[i]).unwrap_or_default();
         place_line(&mut profile.inputs, i, at.x, at.y);
     }
+    if let Some(st) = &study {
+        profile.inputs.push_str(&st.lines);
+    }
     run.profile = Some(profile);
     Ok(run)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::geom::arrangement::Ring;
+
+    fn square(x0: f64, y0: f64, x1: f64, y1: f64) -> Vec<Vec2> {
+        vec![
+            Vec2::new(x0, y0),
+            Vec2::new(x1, y0),
+            Vec2::new(x1, y1),
+            Vec2::new(x0, y1),
+        ]
+    }
+
+    fn dot(x: f64, y: f64) -> Shape {
+        Shape::Point {
+            p: Vec2::new(x, y),
+            z: None,
+            parts: None,
+        }
+    }
+
+    #[test]
+    fn a_study_area_takes_its_net_area_and_leaves_the_hole_out() {
+        let area = Shape::Polygon {
+            pts: square(0.0, 0.0, 100.0, 100.0),
+            bulges: None,
+            holes: Some(vec![Ring {
+                pts: square(30.0, 30.0, 70.0, 70.0),
+                bulges: None,
+            }]),
+            parts: None,
+        };
+        let places = [
+            dot(10.0, 10.0),
+            dot(90.0, 10.0),
+            dot(10.0, 90.0),
+            dot(50.0, 50.0),  // in the hole
+            dot(150.0, 50.0), // beyond the ring
+        ];
+        let run = nearest_in(
+            &places,
+            Window::Areas(std::slice::from_ref(&area)),
+            Simulation::default(),
+        )
+        .expect("a run");
+        let rows = run.table.expect("a table").rows;
+        let row = |k: &str| rows.iter().find(|r| r[0] == k).map(|r| r[1].clone());
+        assert_eq!(row("Alan (m²)").as_deref(), Some("8400.00"));
+        assert_eq!(row("Nesne sayısı").as_deref(), Some("3"));
+        assert_eq!(row("Alanın dışında kalan nesne").as_deref(), Some("2"));
+        assert_eq!(row("Çalışma alanı").as_deref(), Some("1 alan, 1 delik"));
+        assert_eq!(run.warnings.len(), 1);
+    }
+
+    #[test]
+    fn objects_that_are_no_areas_are_no_study_area() {
+        let places = [dot(0.0, 0.0), dot(1.0, 1.0)];
+        let err = nearest_in(
+            &places,
+            Window::Areas(&[dot(5.0, 5.0)]),
+            Simulation::default(),
+        )
+        .expect_err("a refusal");
+        assert!(err.contains("alan yok"), "{err}");
+    }
 }

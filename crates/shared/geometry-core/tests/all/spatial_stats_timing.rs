@@ -211,3 +211,71 @@ fn spatial_stability_timing() {
     });
     println!("  {}", r.summary);
 }
+
+/// The measures of docs/adr/0574: En yakın komşu over a study area (a 360-sided ring of 4.9 km radius with a 120-sided
+/// pond of 1.5 km: about 6 800 of 10 000 points inside) with 999 random patterns, and DBSCAN's sweep of 10 000 points
+/// over 42 cells, with and without 10 bootstrap resamples a cell.
+///
+/// ```text
+/// cargo test --release -p kentos-geometry-core --test all spatial_study_timing -- --ignored --nocapture --test-threads=1
+/// ```
+#[test]
+#[ignore = "timing, release build"]
+fn spatial_study_timing() {
+    use kentos_geometry_core::geom::arrangement::Ring;
+    use kentos_geometry_core::ops::spatial_stats::nearest::{Simulation, Window, nearest_in};
+    use kentos_geometry_core::ops::spatial_stats::stability::{Scheme, Stability};
+    use kentos_geometry_core::ops::spatial_stats::sweep::{Grid, dbscan_sweep};
+    let (shapes, _) = scene(10_000);
+    let ring = |sides: usize, radius: f64, clockwise: bool| -> Vec<Vec2> {
+        (0..sides)
+            .map(|k| {
+                let a = std::f64::consts::TAU * k as f64 / sides as f64;
+                let a = if clockwise { -a } else { a };
+                Vec2::new(505_000.0 + radius * cos(a), 4_405_000.0 + radius * sin(a))
+            })
+            .collect()
+    };
+    let area = Shape::Polygon {
+        pts: ring(360, 4_900.0, false),
+        bulges: None,
+        holes: Some(vec![Ring {
+            pts: ring(120, 1_500.0, true),
+            bulges: None,
+        }]),
+        parts: None,
+    };
+    let study = [area];
+    let r = time("En yakın komşu, çalışma alanı, 10 000 nokta, 999 desen", 8.0, || {
+        nearest_in(
+            &shapes,
+            Window::Areas(&study),
+            Simulation {
+                count: 999,
+                seed: 1,
+            },
+        )
+        .expect("ran")
+    });
+    println!("  {}", r.summary);
+    let grid = Grid {
+        first: 3,
+        last: 8,
+        step: 1,
+        radii: None,
+        steps: 7,
+    };
+    let r = time("DBSCAN taraması, 10 000 nokta, 42 hücre", 1.0, || {
+        dbscan_sweep(&shapes, grid, false, Stability::NONE).expect("ran")
+    });
+    println!("  {}", r.summary);
+    let boot = Stability {
+        scheme: Scheme::Bootstrap,
+        resamples: 10,
+        seed: 1,
+    };
+    let r = time("DBSCAN taraması, 10 000 nokta, 42 hücre, 10 bootstrap", 6.0, || {
+        dbscan_sweep(&shapes, grid, false, boot).expect("ran")
+    });
+    println!("  {}", r.summary);
+}

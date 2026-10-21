@@ -10,13 +10,16 @@ use kentos_geometry_core::ops::spatial_stats::centers::{CenterInput, CenterKind,
 use kentos_geometry_core::ops::spatial_stats::clusters::{dbscan_with, k_means_with};
 use kentos_geometry_core::ops::spatial_stats::inference::{Correction, Inference};
 use kentos_geometry_core::ops::spatial_stats::local::{hot_spots_with, local_morans};
-use kentos_geometry_core::ops::spatial_stats::nearest::{Simulation, nearest_with};
+use kentos_geometry_core::ops::spatial_stats::nearest::{Simulation, Window, nearest_in};
 use kentos_geometry_core::ops::spatial_stats::stability::{Scheme, Stability};
+use kentos_geometry_core::ops::spatial_stats::sweep::{Grid, dbscan_sweep};
 use kentos_geometry_core::ops::spatial_stats::weights::Concept;
 use serde_json::{Value, json};
 
 use super::{GEOGRAPHIC, geographic, result_of, scope_of, tested_result_of};
-use crate::builtin::geometry::{GEO_KINDS, features_param, geo_scopes, layer_param, shapes};
+use crate::builtin::geometry::{
+    AREA_KINDS, GEO_KINDS, features_param, geo_scopes, layer_param, shapes,
+};
 use crate::builtin::queries::attr;
 use crate::types::{
     EnumOption, Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Resolved, RunContext,
@@ -211,6 +214,14 @@ fn correction_param() -> ParamDef {
     )
     .default_value(json!("none"))
     .describe("Çok sayıda nesne sınandığında rastlantıyla anlamlı çıkanları ayıklar; sınıf düzeltilmiş p'den.")
+}
+
+fn study_chosen(v: &Values) -> bool {
+    v.get("region").and_then(Value::as_str) == Some("areas")
+}
+
+fn box_chosen(v: &Values) -> bool {
+    !study_chosen(v)
 }
 
 fn simulating(v: &Values) -> bool {
@@ -640,6 +651,7 @@ pub fn nearest_neighbor() -> Tool {
         [
             "Gözlenen ortalama en yakın komşu uzaklığı aynı alanda rastgele dağılmış aynı sayıda nesnenin beklenen uzaklığıyla (0,5 / √(n / A)) karşılaştırılır (Clark ve Evans 1954). Oran 1’den küçük ve z eksiyse kümelenme, büyük ve artıysa dağınıklık vardır; p 0,05’ten küçükse desen anlamlıdır.",
             "Alan boş bırakılırsa nesnelerin yerlerini çevreleyen kutunun alanıdır; sonuç alana duyarlıdır, çalışma alanını biliyorsanız yazın. Çizim değişmez.",
+            "Çalışma alanı “Alan nesneleri” seçilirse çalışma alanı bir ya da birkaç alan nesnesidir (delikli ve çok parçalı olabilir): bölge bütün alanlarının birleşimidir, Alan onun net alanıdır (delikler çıkar) ve Alan yok sayılır. Yeri bölgenin dışında (deliklerde de) kalan nesneler alınmaz ve söylenir; bölgenin sınırı içeridir. Monte Carlo'da noktalar bölgenin kutusuna atılır, bölgede olmayan aday atılır ve yenisi çekilir; kenar etkisi gözlenene de benzetime de bölgenin kendi sınırından girer.",
             "Çıkarım Monte Carlo ise aynı kutuya (Alan yazılmışsa merkezi ve oranı korunarak o alana ölçeklenmiş kutuya) aynı sayıda nokta tohumdan gelen sırayla rastgele atılır ve her desenin ortalama en yakın komşu uzaklığı bulunur. Kenara yakın noktaların komşusu uzakta olduğundan Clark ve Evans'ın z'si küçük alanlarda dağınıklığa kayar; benzetimde kenar etkisi gözlenene de rastgele desene de aynı girer. p gözlenen kadar uç desenlerin payıdır, z gözlenenin benzetimlerin ortalamasından standart sapma cinsinden uzaklığıdır; deney profili tohumu, benzetim sayısını, alanı ve girdinin SHA-256 özetini yazar.",
         ]
         .join("\n\n"),
@@ -647,11 +659,34 @@ pub fn nearest_neighbor() -> Tool {
         &["ENYAKINKOMSU", "NEARESTNEIGHBOR"],
         vec![
             input("Deseni sınanacak noktalar, çizgiler ve alanlar."),
+            ParamDef::new(
+                "region",
+                "Çalışma alanı",
+                ParamKind::Choice {
+                    options: vec![
+                        EnumOption::new("box", "Kutu")
+                            .hint("Yerlerin kutusu ya da yazılan Alan"),
+                        EnumOption::new("areas", "Alan nesneleri")
+                            .hint("Bir ya da birkaç alan nesnesinin birleşimi; delikler dışarıda"),
+                    ],
+                },
+            )
+            .default_value(json!("box"))
+            .describe("Yoğunluğun ve benzetimin hangi bölgede alınacağı."),
+            features_param(
+                "studyArea",
+                "Çalışma alanı nesneleri",
+                &AREA_KINDS,
+                geo_scopes(),
+                "Çalışma alanını veren alanlar; birleşimleri bölgedir, delikleri bölgeden çıkar.",
+            )
+            .shown_when(study_chosen),
             number("area", "Alan", Some(0.001), None, false, "m²")
                 .optional()
                 .default_value(Value::Null)
                 .placeholder("Kutudan")
-                .describe("Çalışma alanı; boş bırakılırsa yerlerin kutusunun alanı."),
+                .describe("Çalışma alanı; boş bırakılırsa yerlerin kutusunun alanı.")
+                .shown_when(box_chosen),
         ]
         .into_iter()
         .chain(simulation_params())
@@ -677,7 +712,14 @@ pub fn nearest_neighbor() -> Tool {
                 seed: seed_of(v.number("seed").unwrap_or(1.0)),
             };
             let scope = scope_of(v, ctx);
-            match nearest_with(&shape_list(v), v.number("area"), sim) {
+            // A study area of area objects replaces the box and the typed area (docs/adr/0574 §1).
+            let study = shapes(&v.features("studyArea").entities);
+            let window = if study_chosen(&v.values) {
+                Window::Areas(&study)
+            } else {
+                Window::Box(v.number("area"))
+            };
+            match nearest_in(&shape_list(v), window, sim) {
                 Ok(run) if sim.count > 0 => {
                     tested_result_of(run, f, &v.features("input").entities, None, &scope)
                 }
@@ -929,6 +971,96 @@ pub fn dbscan_tool() -> Tool {
             let scope = scope_of(v, ctx);
             match dbscan_with(&shape_list(v), radius, min_points, v.flag("borderNoise"), stability) {
                 Ok(run) => clustered(run, v, f, &scope),
+                Err(why) => RunResult::refused(why),
+            }
+        },
+    )
+}
+
+/// DBSCAN parametre taraması (docs/adr/0574 §2).
+pub fn dbscan_sweep_tool() -> Tool {
+    tool(
+        "stats.dbscanSweep",
+        "DBSCAN parametre taraması",
+        "statsDbscanSweep",
+        "DBSCAN'ı bir yarıçap ve en az nokta ızgarasında dener: her çiftin küme sayısı, gürültüsü ve istenirse kararlılığı bir tabloda; k-uzaklık dirseğinden önerilen çift işaretli.",
+        [
+            "Her hücre DBSCAN'ın bir çalışmasıdır (Ester ve arkadaşları 1996); tabloda en az nokta sonra yarıçapla sıralıdır. Yarıçap İlk ve Son boş bırakılırsa önerilen yarıçapın yarısından iki katına kadar, Adım sayısı kadar eşit aralıklı denenir.",
+            "Öneri: en az nokta, ızgaradaki 4'e en yakın değerdir (iki boyutta boyutun iki katı, eşitlikte büyük; Schubert ve arkadaşları 2017). Yarıçap o en az nokta için sıralı k-uzaklık grafiğinin dirseğine (her nesnenin kendisi hariç (en az nokta − 1)'inci en yakın nesneye uzaklığı; dirsek, normalleştirilmiş grafiğin köşegenden en uzaklaştığı ilk yer; Satopää ve arkadaşları 2011) en yakın ızgara değeridir. Bu bir sezgidir, kanıt değil: tabloya bakıp çiftin çevresindeki hücrelerin ne dediğini okuyun.",
+            "Kararlılık sınaması seçilirse her hücrenin kümeleri nesneler tohumdan gelen sırayla yeniden örneklenerek sınanır (ADR 0566; aynı tohum her hücrede) ve tablo ortalama kararlılığı ile kararlı küme sayısını yazar; yarıçap geniş ve en az nokta küçükken kümeler tek parçaya kaynayıp kararlı görünebilir, gürültü payıyla birlikte okuyun. Çizim değişmez; seçilen çifti DBSCAN aracında çalıştırın.",
+        ]
+        .join("\n\n"),
+        &["dbscan", "parametre taraması", "k-uzaklık", "dirsek", "eps", "dbscan sweep", "k-distance", "kümeleme", "istatistik"],
+        &["DBSCANTARAMA", "DBSCANSWEEP"],
+        vec![
+            input("Kümelenecek noktalar, çizgiler ve alanlar."),
+            number("minFirst", "En az nokta: ilk", Some(1.0), Some(1000.0), true, "")
+                .default_value(json!(3))
+                .describe("Denenen en küçük 'en az nokta' (kendisi dahil)."),
+            number("minLast", "En az nokta: son", Some(1.0), Some(1000.0), true, "")
+                .default_value(json!(8))
+                .describe("Denenen en büyük 'en az nokta'; en çok 20 değer."),
+            number("minStep", "En az nokta: adım", Some(1.0), Some(1000.0), true, "")
+                .default_value(json!(1))
+                .describe("Değerler arasındaki artış."),
+            number("radiusFirst", "Yarıçap: ilk", Some(0.001), None, false, "m")
+                .optional()
+                .default_value(Value::Null)
+                .placeholder("Otomatik")
+                .describe("Denenen en küçük yarıçap; İlk ve Son boşsa önerilenin yarısı ile iki katı arası."),
+            number("radiusLast", "Yarıçap: son", Some(0.001), None, false, "m")
+                .optional()
+                .default_value(Value::Null)
+                .placeholder("Otomatik")
+                .describe("Denenen en büyük yarıçap."),
+            number("radiusSteps", "Yarıçap adım sayısı", Some(2.0), Some(50.0), true, "")
+                .default_value(json!(7))
+                .describe("İlk ile Son arasında eşit aralıklı kaç yarıçap."),
+            ParamDef::new("borderNoise", "Sınır noktaları gürültü", ParamKind::Boolean)
+                .default_value(json!(false))
+                .describe("Açıkken her hücrede yalnız çekirdekler kümelenir (DBSCAN*)."),
+        ]
+        .into_iter()
+        .chain(stability_params())
+        .collect(),
+        vec![
+            OutputDef::new("table", "Tarama tablosu", OutputKind::Table),
+            OutputDef::new("cells", "Hücre sayısı", OutputKind::Number),
+            OutputDef::new("suggestedRadius", "Önerilen yarıçap", OutputKind::Number),
+            OutputDef::new("suggestedMinPoints", "Önerilen en az nokta", OutputKind::Number),
+            OutputDef::new("kneeRadius", "k-uzaklık dirseği", OutputKind::Number),
+            OutputDef::new("clusters", "Önerilenin küme sayısı", OutputKind::Number),
+            OutputDef::new("noiseShare", "Önerilenin gürültü payı (%)", OutputKind::Number),
+            OutputDef::new("profile", "Deney profili", OutputKind::Table),
+            OutputDef::new("experiment", "Deney profili (JSON)", OutputKind::Text),
+        ],
+        |v, ctx, f| {
+            if geographic(ctx) {
+                return RunResult::refused(GEOGRAPHIC.into());
+            }
+            let radii = match (v.number("radiusFirst"), v.number("radiusLast")) {
+                (Some(a), Some(b)) => Some((a, b)),
+                (None, None) => None,
+                _ => {
+                    return RunResult::refused(
+                        "Yarıçap: İlk ve Son birlikte yazılır ya da ikisi de boş bırakılır (otomatik aralık).".into(),
+                    );
+                }
+            };
+            let grid = Grid {
+                first: v.number("minFirst").unwrap_or(3.0).max(1.0) as usize,
+                last: v.number("minLast").unwrap_or(8.0).max(1.0) as usize,
+                step: v.number("minStep").unwrap_or(1.0).max(1.0) as usize,
+                radii,
+                steps: v.number("radiusSteps").unwrap_or(7.0).max(0.0) as usize,
+            };
+            let scope = scope_of(v, ctx);
+            let stability = stability_of(v);
+            match dbscan_sweep(&shape_list(v), grid, v.flag("borderNoise"), stability) {
+                Ok(run) if run.profile.is_some() => {
+                    tested_result_of(run, f, &v.features("input").entities, None, &scope)
+                }
+                Ok(run) => result_of(run, f, &v.features("input").entities, None),
                 Err(why) => RunResult::refused(why),
             }
         },

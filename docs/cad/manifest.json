@@ -6144,6 +6144,20 @@
    "tests": 0
   },
   {
+   "id": "processing.run.stats.dbscanSweep",
+   "kind": "command",
+   "title": "DBSCAN parametre taraması…",
+   "level": "processing",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "processing.run.stats.directionalDistribution",
    "kind": "command",
    "title": "Yön dağılımı…",

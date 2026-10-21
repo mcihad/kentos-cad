@@ -109,17 +109,35 @@ for j in range(5):
             text = "bilinmiyor"
         PARSEL.append(({**e, "attrs": {"Ada": str(100 + j), "Parsel": str(i + 1), "Değer": text}}, p))
 
+# Çalışma alanı (docs/adr/0574 §1): a mahalle's border as two objects. The first has a hole round the first group's middle and a
+# second part; the second object overlaps that part. Axis-parallel rectangles, so the union's area is exact.
+def study_ring(*xy):
+    return {"pts": [ref.jp(ref.P(x, y)) for x, y in zip(xy[::2], xy[1::2])]}
+
+
+STUDY = [
+    {"kind": "polygon", "attrs": {"Ad": "Merkez ve doğu"},
+     "pts": study_ring(-20, -20, 90, -20, 90, 70, -20, 70)["pts"],
+     "holes": [study_ring(10, 20, 10, 40, 30, 40, 30, 20)],
+     "parts": [study_ring(100, 15, 145, 15, 145, 65, 100, 65)]},
+    {"kind": "polygon", "attrs": {"Ad": "Doğu uzantısı"}, "pts": study_ring(130, 30, 160, 30, 160, 70, 130, 70)["pts"]},
+]
+
 ENTITIES = []
 for lid, objs in (("kaza", KAZA), ("parsel", PARSEL)):
     for e, _ in objs:
         ENTITIES.append({"kind": e["kind"], "id": len(ENTITIES) + 1, "layerId": lid, "attrs": e["attrs"],
                          **{k2: v for k2, v in e.items() if k2 not in ("kind", "attrs")}})
-IDS = {lid: [x["id"] for x in ENTITIES if x["layerId"] == lid] for lid in ("kaza", "parsel")}
+for e in STUDY:
+    ENTITIES.append({"kind": e["kind"], "id": len(ENTITIES) + 1, "layerId": "calisma", "attrs": e["attrs"],
+                     **{k2: v for k2, v in e.items() if k2 not in ("kind", "attrs")}})
+IDS = {lid: [x["id"] for x in ENTITIES if x["layerId"] == lid] for lid in ("kaza", "parsel", "calisma")}
 
 SETTINGS = {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000,
             "workspace": "gis", "drawingFont": "barlow"}
 LAYERS = [layer("cizim", "Çizim", style("fg")), layer("kaza", "Kazalar", style("#E5484D", point={"symbol": "ring", "size": 5})),
-          layer("parsel", "Parseller", style("#3E63DD", 0.35, fill="#3E63DD1F"))]
+          layer("parsel", "Parseller", style("#3E63DD", 0.35, fill="#3E63DD1F")),
+          layer("calisma", "Çalışma alanı", style("#2F9E44", 0.35, fill="#2F9E4414"))]
 
 
 def document(name, settings, entities):
@@ -273,7 +291,8 @@ def defaults():
         "stats.standardDistance": {**center("Standart uzaklık"), "deviations": "1"},
         "stats.directionalDistribution": {**center("Yön dağılımı"), "deviations": "1"},
         # Çıkarım, Benzetim sayısı and Tohum; Kararlılık sınaması, Tekrar sayısı and Tohum: docs/adr/0566.
-        "stats.nearestNeighbor": {"input": here, "area": None, "inference": "analytic", "simulations": 999, "seed": 1},
+        "stats.nearestNeighbor": {"input": here, "region": "box", "studyArea": here, "area": None, "inference": "analytic", "simulations": 999,
+                                  "seed": 1},
         # Çıkarım, Permütasyon sayısı, Tohum and Çoklu test düzeltmesi: docs/adr/0520 (spatial_inference_cases.py).
         "stats.moransI": {"input": here, "valueField": "", "concept": "band", "band": None, "neighbors": 8, "standardize": True,
                           "inference": "analytic", "permutations": 999, "seed": 1},
@@ -281,6 +300,9 @@ def defaults():
                           "permutations": 999, "seed": 1, "correction": "none", "layer": {"newName": "Sıcak noktalar"}},
         "stats.dbscan": {"input": here, "radius": 50, "minPoints": 5, "borderNoise": False, "stability": "none", "resamples": 100, "seed": 1,
                          "layer": {"newName": "Kümeler (DBSCAN)"}},
+        # DBSCAN parametre taraması (docs/adr/0574 §2): Kararlılık sınaması, Tekrar sayısı and Tohum as DBSCAN's.
+        "stats.dbscanSweep": {"input": here, "minFirst": 3, "minLast": 8, "minStep": 1, "radiusFirst": None, "radiusLast": None,
+                              "radiusSteps": 7, "borderNoise": False, "stability": "none", "resamples": 100, "seed": 1},
         "stats.kMeans": {"input": here, "clusters": 5, "stability": "none", "resamples": 100, "seed": 1,
                          "layer": {"newName": "Kümeler (k-ortalamalar)"}},
     }

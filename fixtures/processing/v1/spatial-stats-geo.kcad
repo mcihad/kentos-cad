@@ -63,6 +63,21 @@
     "fill": "#3E63DD1F"
    },
    "children": []
+  },
+  {
+   "id": "calisma",
+   "name": "Çalışma alanı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#2F9E44",
+    "lineType": "continuous",
+    "lineWeight": 0.35,
+    "fill": "#2F9E4414"
+   },
+   "children": []
   }
  ],
  "activeLayer": "cizim",

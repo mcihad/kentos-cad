@@ -9,7 +9,9 @@ use serde_json::json;
 
 use super::RunStatus;
 use crate::app::App;
-use crate::stats_scenes::{clusters, ellipses, hot, moran, open_stats, window};
+use crate::stats_scenes::{
+    clusters, ellipses, hot, moran, open_stats, study, sweep, sweep_tested, window,
+};
 
 fn run(app: &mut App) -> RunStatus {
     super::surface_tests::run(app)
@@ -206,4 +208,82 @@ fn the_accidents_clusters_are_numbered() {
     // The window keeps its values for the next run.
     let w = app.processing.dialog.as_ref().expect("the window");
     assert_eq!(w.values["radius"], json!(30));
+}
+
+/// En yakın komşu over a study area (docs/adr/0574 §1): the neighbourhood's border has a pond and a corner cut away,
+/// so the region's area is less than its box, the places in the pond and the corner are left out and said, and the
+/// drawing is not touched.
+#[test]
+fn the_study_area_is_the_borders_net_area_and_leaves_places_out() {
+    let mut app = district();
+    window(&mut app, "processing.run.stats.nearestNeighbor", &study());
+    let table = match run(&mut app) {
+        RunStatus::Ok {
+            text, undo, table, ..
+        } => {
+            assert!(!undo);
+            assert!(text.contains("benzetim z"), "{text}");
+            table.expect("the table")
+        }
+        s => panic!("{s:?}"),
+    };
+    let get = |label: &str| {
+        table
+            .rows
+            .iter()
+            .find(|r| r[0] == label)
+            .map(|r| r[1].clone())
+            .unwrap_or_else(|| panic!("{label}"))
+    };
+    // 1 260 × 960 less the corner 430 × 330 and the pond 200 × 180.
+    assert_eq!(get("Alan (m²)"), "1031700.00");
+    assert_eq!(get("Çalışma alanı"), "1 alan, 1 delik");
+    assert_eq!(get("Benzetim alanı"), "Çalışma alanı nesnesi");
+    let outside: usize = get("Alanın dışında kalan nesne").parse().expect("a count");
+    let kept: usize = get("Nesne sayısı").parse().expect("a count");
+    assert!(outside > 0 && kept + outside == 155, "{kept} + {outside}");
+}
+
+/// DBSCAN parametre taraması (docs/adr/0574 §2): 42 cells over the automatic range, one of them marked, the table under
+/// the window; with resamples two more columns and the experiment profile.
+#[test]
+fn the_sweep_marks_one_pair_and_adds_stability_columns() {
+    let mut app = district();
+    window(&mut app, "processing.run.stats.dbscanSweep", &sweep());
+    match run(&mut app) {
+        RunStatus::Ok {
+            text, undo, table, ..
+        } => {
+            assert!(!undo);
+            assert!(
+                text.starts_with("42 çift denendi; önerilen: yarıçap "),
+                "{text}"
+            );
+            let t = table.expect("the table");
+            assert_eq!(t.rows.len(), 42);
+            assert_eq!(t.columns.last().map(String::as_str), Some("Önerilen"));
+            let marked: Vec<_> = t
+                .rows
+                .iter()
+                .filter(|r| r.last().is_some_and(|c| !c.is_empty()))
+                .collect();
+            assert_eq!(marked.len(), 1);
+            assert_eq!(marked[0][0], "4");
+        }
+        s => panic!("{s:?}"),
+    }
+    let mut app = district();
+    window(
+        &mut app,
+        "processing.run.stats.dbscanSweep",
+        &sweep_tested(),
+    );
+    match run(&mut app) {
+        RunStatus::Ok { table, .. } => {
+            let t = table.expect("the table");
+            assert_eq!(t.columns.len(), 8);
+            assert_eq!(t.columns[5], "Ortalama kararlılık");
+        }
+        s => panic!("{s:?}"),
+    }
 }

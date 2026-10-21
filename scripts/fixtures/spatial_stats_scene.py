@@ -93,6 +93,10 @@ def drawing():
         accident(400 + 7 * rng.gauss(), 60 + rng.unit() * 780, "Bisiklet")
     for _ in range(14):
         accident(rng.unit() * COLS * DX, rng.unit() * ROWS * DY, "Araç")
+    # The neighbourhood's border (docs/adr/0574): the district less its north-west corner, with a pond: a study area with a hole.
+    add({"kind": "polygon", "pts": [P(-30, -30), P(COLS * DX + 30, -30), P(COLS * DX + 30, ROWS * DY + 30), P(400, ROWS * DY + 30),
+                                    P(400, 600), P(-30, 600)],
+         "holes": [{"pts": [P(150, 120), P(150, 300), P(350, 300), P(350, 120)]}]}, "sinir", {"Ad": "Mahalle sınırı"})
     return {
         "format": "kentos.document",
         "version": 1,
@@ -102,7 +106,8 @@ def drawing():
         "origin": {"x": E, "y": N},
         "layers": [layer("kaza", "Kazalar", style("#4C6EF5", point={"symbol": "ring", "size": 5})),
                    layer("ada", "Yapı adaları", style("#868E96", 0.25, fill="#868E9614")),
-                   layer("yol", "Yollar", style("#ADB5BD", 0.5))],
+                   layer("yol", "Yollar", style("#ADB5BD", 0.5)),
+                   layer("sinir", "Mahalle sınırı", style("#2F9E44", 0.6, fill="#2F9E4414"))],
         "activeLayer": "kaza",
         "entities": entities,
         "styles": {"items": [], "categories": []},
