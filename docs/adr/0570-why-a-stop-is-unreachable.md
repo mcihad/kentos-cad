@@ -2,11 +2,13 @@
 
 - **Durum:** kabul edildi (2026-10-21). `plan/gis.md` CBS-26'nın dördüncü dilimi: “erişilemeyen durak/çiftin nedeni source ID ile
   verilsin; OD matrisinde erişilemeyen çiftler sıfır maliyet sayılmamalı”.
+- **Değişiklik:** §1'in gevşek yolu ADR 0575'le en az kapatanlı yol oldu (önce en az kapatan, sonra en kısa); söz “yolu açmak için en az
+  kalkması gerekenler”.
 - **Bağlam belgesi:** ADR 0209 (ağ analizi, rota, maliyet matrisi, en yakın tesis), 0521 (dönüşler, saat), 0557 (terminaller),
   0567 (profiller, tarihli kapanma), 0568 (gün ve saatle kapanma).
 - **Web:** ertelendi (ADR 0228). Web'de gerekenler TODOS.md §0.2'de.
 - **Sonraya kalan:**
-  - En küçük kesim: bugün tek bir yol üzerindeki kapatanlar söylenir; iki ayrı yolu birden kapatanların en küçük kümesi değil.
+  - En küçük kesim: ADR 0575'te yapıldı.
   - “Başka” durumunun ayrıntısı: dönüş yasağının, kapalı düğümün ya da cihazın hangisi olduğu söylenmez.
   - Hizmet alanında ulaşılamayan kenarların nedeni.
 

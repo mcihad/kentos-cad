@@ -429,7 +429,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `Clock::week`, pencerede sıfır hız, öbür maliyetler sorunun anında; `NetworkSession::set_time`; Ağlar'da Gün ve saat; bağımsız başvuru
   `network_timed_closures_cases.py`); 0570 ulaşılamayanın nedeni (her kenarın açık olduğu en kısa yolu kapatan kenarlar nesneleri ve
   nedenleriyle, engeller, kopuk ağ; `ops::network::blocked`, `Refusal::Unreachable`'ın nedeni, `NetworkSession::blocked_between`;
-  Maliyet matrisi ve En yakın tesis söyler; bağımsız başvuru `network_blocked_cases.py`); 0521 ağın dönüşleri, seviyeleri ve zaman profili (`turns`: geri dönüş kuralı, kavşak gecikmeleri,
+  Maliyet matrisi ve En yakın tesis söyler; bağımsız başvuru `network_blocked_cases.py`); 0575 ulaşılamayanda en az kapatan (en az kapatanı olan, eşitlikte en kısa yol; yaylar üzerinde sözlük sıralı Dijkstra, kenar bir kez; söz “yolu açmak için en az kalkması gerekenler”); 0521 ağın dönüşleri, seviyeleri ve zaman profili (`turns`: geri dönüş kuralı, kavşak gecikmeleri,
   dönüş katmanları; `levels`: köprü ve tünel; hızla maliyetin `periods`'ı, ilk giren ilk çıkar; `.kcad` şema 87,
   `Graph::build_with`, `NetworkSession.time`, `ops::network::{turns, clock}`; Ağlar penceresi, araçlarda Saat (Z), İşlemler'de
   Kalkış saati, Python `Network.time`); 0519 düşey sistem ve epok (projenin `heights`'i ve `coordinateEpoch`'u,

@@ -7,13 +7,14 @@ by the closed edges' expression, the direction field's closed value, one way, a 
 closure, a closure's hours, an empty value of a field cost; one chain with a barrier, one place where the shortest
 way is closed and a longer one is one way the other way. The questions: a route between two corners for a cost, a
 profile, a day and a time; whether there is a way, and if not, why: the places on parts that do not meet, or the
-shortest way by length with nothing closed and, in its order, each edge the question's cost cannot travel the way it
-goes (its object and reason, an edge once) and each barrier on it. Written to fixtures/network/v1/blocked.json; the
+way, every edge both ways and nothing closed, that the fewest blockers shut (the shortest of those) and, in its order, each edge the question's cost cannot travel the way it
+goes (its object and reason, an edge once) and each barrier on it: on the way that the fewest of them shut, the
+shortest of those (docs/adr/0575). Written to fixtures/network/v1/blocked.json; the
 geometry core (crates/shared/geometry-core/tests/all/network_access.rs) must give the same.
 
 The ADR's reasons, in this order: the closed edges' expression; the profile, the day, the hour (only a cost without a
 clock, at the question's moment); the direction field's closed value; one way the other way; no value of the cost.
-Every relaxed shortest way is checked to be the only one.
+Every best way is checked to be the only one.
 
     python3 scripts/fixtures/network_blocked_cases.py [--check]
 """
@@ -75,6 +76,12 @@ EDGES = [
     ((0, 5), (0, 6), {"ucret": "5"}, False),
     ((0, 6), (1, 6), {"ucret": "5"}, False),
     ((1, 5), (1, 6), {"ucret": "5", "yon": "FT"}, False),
+    # The fewest blockers (docs/adr/0575): the straight way has two closed edges, the way round one.
+    ((0, 8), (1, 8), {"ucret": "5"}, True),
+    ((1, 8), (2, 8), {"ucret": "5"}, True),
+    ((0, 8), (0, 10), {"ucret": "5"}, False),
+    ((0, 10), (2, 10), {"ucret": "5", "yon": "N"}, False),
+    ((2, 10), (2, 8), {"ucret": "5"}, False),
 ]
 BARRIER = ((1, 3), (2, 3), 0.4)  # the barrier's edge by its corners and the share of the way along it
 
@@ -189,6 +196,38 @@ def shortest(a, b, usable):
     return list(reversed(steps)), count[b] == 1
 
 
+def fewest(a, b, cost_of):
+    """The way from corner a to b that the fewest blockers shut, the shortest of those (docs/adr/0575): every edge
+    both ways, `cost_of(k, forward)` the blockers stepping on edge k adds; its steps and whether it is the only best;
+    None when the corners do not meet."""
+    adj = {}
+    for k, e in enumerate(EDGES):
+        adj.setdefault(e[0], []).append((e[1], k, True))
+        adj.setdefault(e[1], []).append((e[0], k, False))
+    best, came, count = {a: (0, 0.0)}, {a: None}, {a: 1}
+    heap, done = [(0, 0.0, a)], set()
+    while heap:
+        n_cut, d, n = heapq.heappop(heap)
+        if n in done:
+            continue
+        done.add(n)
+        for m, k, fw in adj.get(n, []):
+            nd = (n_cut + cost_of(k, fw), d + length(EDGES[k]))
+            if m not in best or nd[0] < best[m][0] or (nd[0] == best[m][0] and nd[1] < best[m][1] - 1e-9):
+                best[m], came[m], count[m] = nd, (n, k, fw), count[n]
+                heapq.heappush(heap, (nd[0], nd[1], m))
+            elif nd[0] == best[m][0] and abs(nd[1] - best[m][1]) <= 1e-9:
+                count[m] += count[n]
+    if b not in best:
+        return None, True
+    steps, n = [], b
+    while came[n] is not None:
+        p, k, fw = came[n]
+        steps.append((k, fw))
+        n = p
+    return list(reversed(steps)), count[b] == 1
+
+
 QUESTIONS = [
     # (name, from, to, cost, profile, day, time, barrier)
     ("ifade-ve-yon-alani", (0, 0), (3, 0), 0, False, None, None, False),
@@ -205,6 +244,7 @@ QUESTIONS = [
     ("kopuk", (0, 0), (2, 3), 0, False, None, None, False),
     ("kisa-yol-kapali", (0, 5), (1, 5), 0, False, None, None, False),
     ("kisa-yol-ters", (1, 5), (0, 5), 0, False, None, None, False),
+    ("en-az-kapatan", (0, 8), (2, 8), 0, False, None, None, False),
 ]
 
 
@@ -233,8 +273,12 @@ def build():
             case["reachable"] = True
             cases.append(case)
             continue
-        steps, only = shortest(a, b, lambda e, fw: True)
-        assert only, f"{name}: more than one shortest way"
+        def cut(k, fw):
+            n = 1 if blocker(EDGES[k], fw, profile, day, time, cost) else 0
+            return n + (1 if with_barrier and k == barrier_edge else 0)
+
+        steps, only = fewest(a, b, cut)
+        assert only, f"{name}: more than one best way"
         if steps is None:
             case["blocked"] = {"kind": "apart"}
         else:

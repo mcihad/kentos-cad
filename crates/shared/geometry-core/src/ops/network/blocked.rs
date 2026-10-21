@@ -1,6 +1,7 @@
-//! Why two places of a network have no way between them (docs/adr/0570):
-//! the shortest way by length that every edge would give, both ways and
-//! with nothing closed, and what on it shuts the question out: each edge
+//! Why two places of a network have no way between them (docs/adr/0570,
+//! 0575): the way, every edge both ways and nothing closed, that the fewest
+//! blockers shut (the shortest by length of those), and what on it shuts the
+//! question out: each edge
 //! the question's cost cannot travel the way it goes, with the reason the
 //! edge says (the closed edges' expression, the direction field's closed
 //! value, one way the other way, the vehicle's profile, the day, the hour,
@@ -86,7 +87,7 @@ impl Blocked {
         match self {
             Blocked::Apart => "duraklar ağın birbirine bağlanmayan parçalarında".into(),
             Blocked::Other => {
-                "en kısa yolun kenarları açık; yolu bir dönüş yasağı, kapalı düğüm ya da cihazın terminal yolları kesiyor"
+                "en az kapatanı olan yolun kenarları açık; yolu bir dönüş yasağı, kapalı düğüm ya da cihazın terminal yolları kesiyor"
                     .into()
             }
             Blocked::By(list) => {
@@ -100,7 +101,7 @@ impl Blocked {
                     .collect();
                 let more = list.len().saturating_sub(SAID);
                 let tail = if more > 0 { format!(" ve {more} tane daha") } else { String::new() };
-                format!("en kısa yolu kapatanlar: {}{tail}", said.join(", "))
+                format!("yolu açmak için en az kalkması gerekenler: {}{tail}", said.join(", "))
             }
         }
     }
@@ -114,7 +115,11 @@ impl Blocked {
                 let edges: Vec<String> = list
                     .iter()
                     .filter_map(|b| match *b {
-                        Blocker::Edge(id, why) => Some(format!(r#"{{"id":{},"why":"{}"}}"#, show_id(id), why.name())),
+                        Blocker::Edge(id, why) => Some(format!(
+                            r#"{{"id":{},"why":"{}"}}"#,
+                            show_id(id),
+                            why.name()
+                        )),
                         Blocker::Barrier(_) => None,
                     })
                     .collect();
@@ -139,15 +144,18 @@ fn show_id(id: f64) -> String {
     crate::api::json::to_string(&id)
 }
 
-/// A node of the relaxed search and its length so far (the least first; on a tie the lower node).
+/// An arc of the search with its blockers and length so far (the fewest blockers first, then the shortest; on a tie
+/// the lower arc).
 #[derive(Clone, Copy, PartialEq)]
-struct Item(f64, u32);
+struct Item(u32, f64, u32);
 
 impl Eq for Item {}
 
 impl Ord for Item {
     fn cmp(&self, o: &Self) -> Ordering {
-        o.0.total_cmp(&self.0).then_with(|| o.1.cmp(&self.1))
+        o.0.cmp(&self.0)
+            .then_with(|| o.1.total_cmp(&self.1))
+            .then_with(|| o.2.cmp(&self.2))
     }
 }
 
@@ -160,7 +168,7 @@ impl PartialOrd for Item {
 /// Why `a` and `b` have no way with cost `c` (`barriers` the question's): see the module.
 pub fn blocked(g: &Graph, a: &Location, b: &Location, c: usize, barriers: &[Location]) -> Blocked {
     // The way as spans: (piece, metres along it set off at, metres arrived at).
-    let spans: Vec<(u32, f64, f64)> = match relaxed(g, a, b) {
+    let spans: Vec<(u32, f64, f64)> = match fewest(g, a, b, c, barriers) {
         Some(s) => s,
         None => return Blocked::Apart,
     };
@@ -172,10 +180,20 @@ pub fn blocked(g: &Graph, a: &Location, b: &Location, c: usize, barriers: &[Loca
             .iter()
             .enumerate()
             .filter(|(_, l)| l.piece == p && lo <= l.offset && l.offset <= hi)
-            .map(|(i, l)| (if forward { l.offset - lo } else { hi - l.offset }, i))
+            .map(|(i, l)| {
+                (
+                    if forward {
+                        l.offset - lo
+                    } else {
+                        hi - l.offset
+                    },
+                    i,
+                )
+            })
             .collect();
         cut.sort_by(|x, y| x.0.total_cmp(&y.0).then(x.1.cmp(&y.1)));
-        if g.cost(p, c, forward).is_infinite() {
+        // A stop at a piece's end goes nothing of it: its closing does not shut the way.
+        if s1 != s0 && g.cost(p, c, forward).is_infinite() {
             let e = g.pieces[p as usize].edge as usize;
             let meta = &g.edges[e];
             let why = if meta.closed {
@@ -190,7 +208,10 @@ pub fn blocked(g: &Graph, a: &Location, b: &Location, c: usize, barriers: &[Loca
                     Closing::Open => Why::Cost,
                 }
             };
-            if !list.iter().any(|b| matches!(b, Blocker::Edge(id, _) if *id == meta.id)) {
+            if !list
+                .iter()
+                .any(|b| matches!(b, Blocker::Edge(id, _) if *id == meta.id))
+            {
                 list.push(Blocker::Edge(meta.id, why));
             }
         }
@@ -200,65 +221,144 @@ pub fn blocked(g: &Graph, a: &Location, b: &Location, c: usize, barriers: &[Loca
             }
         }
     }
-    if list.is_empty() { Blocked::Other } else { Blocked::By(list) }
+    if list.is_empty() {
+        Blocked::Other
+    } else {
+        Blocked::By(list)
+    }
 }
 
-/// The shortest way from `a` to `b` by length, every piece both ways and no node closed: its spans; none when they
-/// do not meet.
-fn relaxed(g: &Graph, a: &Location, b: &Location) -> Option<Vec<(u32, f64, f64)>> {
+/// A span of a way: the piece, metres along it set off at, metres arrived at.
+type Span = (u32, f64, f64);
+
+/// The best way's end so far: its blockers, its length, the arc it arrived by (none: along `a`'s piece) and its last span.
+type Best = (u32, f64, Option<u32>, Span);
+
+/// The way from `a` to `b`, every piece both ways and no node closed, that the fewest blockers shut, the shortest by
+/// length of those (docs/adr/0575): its spans; none when they do not meet. The search is over arcs (a piece the way
+/// it is gone), so that the pieces of one edge gone one after another count its closing once; each barrier on a piece
+/// gone counts once.
+fn fewest(
+    g: &Graph,
+    a: &Location,
+    b: &Location,
+    c: usize,
+    barriers: &[Location],
+) -> Option<Vec<Span>> {
+    let shut = |arc: u32| g.cost(arc / 2, c, arc.is_multiple_of(2)).is_infinite();
+    let edge = |arc: u32| g.pieces[(arc / 2) as usize].edge;
+    // The barriers on piece `p` between `lo` and `hi` metres along it.
+    let on = |p: u32, lo: f64, hi: f64| -> u32 {
+        barriers
+            .iter()
+            .filter(|l| l.piece == p && lo <= l.offset && l.offset <= hi)
+            .count() as u32
+    };
+    // The blockers stepping on `arc` after `prev` adds: its edge's closing unless `prev` was another piece of that
+    // edge, closed too, or nothing of the piece is gone (a stop at its end); and the barriers on the part of its piece
+    // gone (`lo`..`hi`).
+    let step = |prev: Option<u32>, arc: u32, lo: f64, hi: f64| -> u32 {
+        let counted_before = |p: u32| p / 2 != arc / 2 && edge(p) == edge(arc) && shut(p);
+        let closing = hi > lo && shut(arc) && !prev.is_some_and(counted_before);
+        u32::from(closing) + on(arc / 2, lo, hi)
+    };
+    let pa = g.pieces[a.piece as usize];
+    let pb = g.pieces[b.piece as usize];
+    // On one piece the way along it is a candidate too.
+    let mut best: Option<Best> = None;
+    let mut offer = |k: u32, d: f64, last: Option<u32>, span: Span| {
+        let better = match &best {
+            None => true,
+            Some((bk, bd, ..)) => k < *bk || (k == *bk && d < *bd),
+        };
+        if better {
+            best = Some((k, d, last, span));
+        }
+    };
     if a.piece == b.piece {
-        return Some(vec![(a.piece, a.offset, b.offset)]);
+        let forward = b.offset >= a.offset;
+        let arc = a.piece * 2 + u32::from(!forward);
+        let (lo, hi) = if forward {
+            (a.offset, b.offset)
+        } else {
+            (b.offset, a.offset)
+        };
+        offer(
+            step(None, arc, lo, hi),
+            hi - lo,
+            None,
+            (a.piece, a.offset, b.offset),
+        );
     }
-    let n = g.nodes.len();
-    let mut dist = vec![f64::INFINITY; n];
-    // How each node was reached: the arc (`piece * 2` the way it is drawn, `+ 1` against it); none for a seed.
-    let mut came: Vec<Option<u32>> = vec![None; n];
+    let arcs = g.pieces.len() * 2;
+    let mut label = vec![(u32::MAX, f64::INFINITY); arcs];
+    let mut came: Vec<Option<u32>> = vec![None; arcs];
     let mut heap = BinaryHeap::new();
-    let pa = &g.pieces[a.piece as usize];
-    for (node, d) in [(pa.from, a.offset), (pa.to, pa.len - a.offset)] {
-        if d < dist[node as usize] {
-            dist[node as usize] = d;
-            heap.push(Item(d, node));
+    // The first arcs: from `a` along its piece to either end.
+    for (arc, lo, hi, d) in [
+        (a.piece * 2, a.offset, pa.len, pa.len - a.offset),
+        (a.piece * 2 + 1, 0.0, a.offset, a.offset),
+    ] {
+        let k = step(None, arc, lo, hi);
+        if (k, d) < label[arc as usize] {
+            label[arc as usize] = (k, d);
+            heap.push(Item(k, d, arc));
         }
     }
-    let pb = g.pieces[b.piece as usize];
-    let (end_from, end_to) = (pb.from, pb.to);
-    while let Some(Item(d, node)) = heap.pop() {
-        if d > dist[node as usize] {
+    while let Some(Item(k, d, arc)) = heap.pop() {
+        if (k, d) > label[arc as usize] {
             continue;
         }
-        for &arc in g.at_node(node) {
-            let p = (arc / 2) as usize;
-            let head = g.arc_head[arc as usize];
-            let nd = d + g.pieces[p].len;
-            if nd < dist[head as usize] {
-                dist[head as usize] = nd;
-                came[head as usize] = Some(arc);
-                heap.push(Item(nd, head));
+        let head = g.arc_head[arc as usize];
+        // The way ends on `b`'s piece from the node it reached.
+        if head == pb.from || head == pb.to {
+            let forward = head == pb.from;
+            let end = b.piece * 2 + u32::from(!forward);
+            let (lo, hi, len) = if forward {
+                (0.0, b.offset, b.offset)
+            } else {
+                (b.offset, pb.len, pb.len - b.offset)
+            };
+            let span = (b.piece, if forward { 0.0 } else { pb.len }, b.offset);
+            offer(k + step(Some(arc), end, lo, hi), d + len, Some(arc), span);
+        }
+        for &next in g.at_node(head) {
+            let p = g.pieces[(next / 2) as usize];
+            let nk = k + step(Some(arc), next, 0.0, p.len);
+            let nd = d + p.len;
+            if (nk, nd) < label[next as usize] {
+                label[next as usize] = (nk, nd);
+                came[next as usize] = Some(arc);
+                heap.push(Item(nk, nd, next));
             }
         }
     }
-    let via_from = dist[end_from as usize] + b.offset;
-    let via_to = dist[end_to as usize] + (pb.len - b.offset);
-    if !via_from.is_finite() && !via_to.is_finite() {
-        return None;
-    }
-    let (last, end_span) = if via_from <= via_to {
-        (end_from, (b.piece, 0.0, b.offset))
-    } else {
-        (end_to, (b.piece, pb.len, b.offset))
+    let (_, _, last, end_span) = best?;
+    let Some(last) = last else {
+        return Some(vec![end_span]);
     };
     let mut spans = vec![end_span];
-    let mut node = last;
-    while let Some(arc) = came[node as usize] {
+    let mut arc = last;
+    loop {
         let p = arc / 2;
         let piece = &g.pieces[p as usize];
-        let forward = arc % 2 == 0;
-        spans.push(if forward { (p, 0.0, piece.len) } else { (p, piece.len, 0.0) });
-        node = if forward { piece.from } else { piece.to };
+        let forward = arc.is_multiple_of(2);
+        match came[arc as usize] {
+            Some(prev) => {
+                spans.push(if forward {
+                    (p, 0.0, piece.len)
+                } else {
+                    (p, piece.len, 0.0)
+                });
+                arc = prev;
+            }
+            None => {
+                // The first arc: from `a` to the end of its piece.
+                spans.push((a.piece, a.offset, if forward { pa.len } else { 0.0 }));
+                break;
+            }
+        }
     }
-    // The first span: from `a` to the node the way left the piece by.
-    spans.push(if node == pa.from { (a.piece, a.offset, 0.0) } else { (a.piece, a.offset, pa.len) });
     spans.reverse();
     Some(spans)
 }

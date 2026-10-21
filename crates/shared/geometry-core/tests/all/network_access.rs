@@ -167,7 +167,7 @@ fn weekdays_and_hours_give_what_the_independent_reference_gives() {
 }
 
 /// Why two stops have no way (docs/adr/0570) against fixtures/network/v1/blocked.json
-/// (`scripts/fixtures/network_blocked_cases.py`: a plain Dijkstra by length with nothing closed, each edge's reason
+/// (`scripts/fixtures/network_blocked_cases.py`: a plain Dijkstra by fewest blockers then length (docs/adr/0575), each edge's reason
 /// from the ADR's rules, no KentOS code): whether a way exists, and if not the refusal's `blocked` exactly.
 #[test]
 fn an_unreachable_stop_says_what_shuts_the_way_as_the_independent_reference() {
@@ -180,7 +180,7 @@ fn an_unreachable_stop_says_what_shuts_the_way_as_the_independent_reference() {
     assert_eq!(file["format"], "kentos.network-blocked");
     let mut s = session(&file);
     let cases = file["cases"].as_array().expect("cases");
-    assert_eq!(cases.len(), 14);
+    assert_eq!(cases.len(), 15);
     for c in cases {
         let name = c["name"].as_str().expect("a name");
         s.set_access(c["profile"].as_str(), c["day"].as_str())

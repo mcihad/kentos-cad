@@ -69,7 +69,7 @@ class BlockedTest(unittest.TestCase):
                 self.assertIn("birbirine bağlanmayan parçalarında", words, name)
                 continue
             said = [f"kenar {x['id']} ({WHY[x['why']]})" for x in b["edges"]] + [f"{i + 1}. engel" for i in b["barriers"]]
-            self.assertIn("en kısa yolu kapatanlar: " + ", ".join(said), words, name)
+            self.assertIn("yolu açmak için en az kalkması gerekenler: " + ", ".join(said), words, name)
 
 
 if __name__ == "__main__":

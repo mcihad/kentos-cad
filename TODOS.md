@@ -342,6 +342,8 @@ Liste:
 - [ ] `CBS-29` raster oturtmanın kaydı (ADR 0518, 19 Ekim): web'de gerekenler: `cad.rasters.georef`'in işleyicisi (WASM'da
   `rasters_georef`'in planı ve yeniden örneklemesi), Raster oturt penceresinde Denetim ve Ad sütunları, hedeflerin sistemi, kayıttan
   açılış, `.points` alışverişi; `.kcad` şema 88'in TS kodeği ve sütunların rasterinin 5. seçeneği; TS türleri üretildi.
+- [ ] `CBS-26` ulaşılamayanda en az kapatan (ADR 0575, 21 Ekim): web'de gerekenler: ağın işçisinin reddi aynı çekirdekten geldiğinden
+  WASM yeniden derlenince değişir; `model/networkAnswers.ts`'in sözü “yolu açmak için en az kalkması gerekenler”.
 - [ ] `CBS-26` ulaşılamayanın nedeni (ADR 0570, 21 Ekim): web'de gerekenler: ağın işçisinde reddin `blocked`'ı ve
   `NetworkSession.blocked_between` (WASM bağlayıcısı), `model/networkAnswers.ts`'in ret sözü nedeniyle, İşlemler'in Maliyet matrisi ve En
   yakın tesis sözleri.
@@ -2356,6 +2358,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilk çıkar); `.kcad` şema 87; Ağlar penceresi, araçlarda Saat (Z), İşlemler'de Kalkış saati, Python `Network.time`. Kalan: araç
   profilleri, tarih aralıklı kapanma, Dönüş çiz aracı, dış yönlendirici, bağlı katmanın revizyonu. —
   **19 Ekim, [ADR 0521](docs/adr/0521-turns-levels-and-time-profiles.md).**
+- [ ] `CBS-26` ulaşılamayanda en az kapatan (dilim): yolu olmayan iki yer için en az kapatanı olan, eşitlikte en kısa yol (`blocked.rs`'in
+  `fewest`'i: yaylar üzerinde sözlük sıralı Dijkstra; bir kenarın ardışık parçaları kapanmayı bir kez sayar, parçanın ucundaki durak onu
+  saymaz, engel bir kapatan); söz “yolu açmak için en az kalkması gerekenler”; başvuru `network_blocked_cases.py`'nin `fewest`'i ve yeni
+  `en-az-kapatan` sorusu. Kalan: Başka'nın ayrıntısı, hizmet alanı. — **21 Ekim,
+  [ADR 0575](docs/adr/0575-fewest-blockers.md).**
 - [ ] `CBS-26` ulaşılamayanın nedeni (dilim): yolu olmayan iki yer için her kenarın açık olduğu ağda uzunlukça en kısa yol ve onu
   kapatan kenarlar nesneleri ve nedenleriyle (ifade, profil, gün, saat, yön alanı, tek yön, maliyet değeri yok) ve engeller; yol yoksa
   kopuk ağ, kapatan yoksa dönüş, düğüm ya da cihaz (`ops::network::blocked`, `Refusal::Unreachable`'ın nedeni, JSON'un `blocked`'ı,
