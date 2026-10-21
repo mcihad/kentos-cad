@@ -29,6 +29,13 @@ def drawing() -> cad.Document:
             attrs["kapali"] = "evet"
         entities.append({"kind": "polyline", "id": int(e["id"]), "layerId": "yol", "attrs": attrs,
                          "pts": [{"x": x, "y": y} for x, y in e["pts"]]})
+    # The junctions and the forbidden turns (docs/adr/0577) on the layers the definition names.
+    for j in FILE["junctions"]:
+        entities.append({"kind": "point", "id": int(j["id"]), "layerId": "dugum", "attrs": dict(j["attrs"]),
+                         "p": {"x": j["p"][0], "y": j["p"][1]}})
+    for t in FILE["turns"]:
+        entities.append({"kind": "polyline", "id": int(t["id"]), "layerId": "donus", "attrs": {},
+                         "pts": [{"x": x, "y": y} for x, y in t["pts"]]})
     doc = {
         "format": "kentos.document",
         "version": 1,
@@ -37,7 +44,7 @@ def drawing() -> cad.Document:
                      "workspace": "gis", "drawingFont": "barlow",
                      "networks": [{**FILE["definition"], "closed": "kapali = 'evet'"}]},
         "origin": {"x": 600000, "y": 4300000},
-        "layers": [layer("yol", "Yol"), layer("diger", "Diğer")],
+        "layers": [layer("yol", "Yol"), layer("dugum", "Düğüm"), layer("donus", "Dönüş"), layer("diger", "Diğer")],
         "activeLayer": "diger",
         "entities": entities,
         "styles": {"items": [], "categories": []},
@@ -68,7 +75,9 @@ class BlockedTest(unittest.TestCase):
             if b["kind"] == "apart":
                 self.assertIn("birbirine bağlanmayan parçalarında", words, name)
                 continue
-            said = [f"kenar {x['id']} ({WHY[x['why']]})" for x in b["edges"]] + [f"{i + 1}. engel" for i in b["barriers"]]
+            said = ([f"kenar {x['id']} ({WHY[x['why']]})" for x in b["edges"]] + [f"{i + 1}. engel" for i in b["barriers"]]
+                    + [f"düğüm {x['id']} (kapalı)" for x in b.get("junctions", [])]
+                    + [f"kenar {x['from']} → kenar {x['to']} dönüşü (yasak)" for x in b.get("turns", [])])
             self.assertIn("yolu açmak için en az kalkması gerekenler: " + ", ".join(said), words, name)
 
 

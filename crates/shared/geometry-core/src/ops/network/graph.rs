@@ -1032,7 +1032,7 @@ impl Graph {
 
     /// Whether a way arriving at `node` along `in_arc` may leave along `out_arc` through the node's device
     /// (docs/adr/0562 §1): only along a terminal path; always at a point and in a network without devices.
-    fn crosses(&self, node: u32, in_arc: u32, out_arc: u32) -> bool {
+    pub(super) fn crosses(&self, node: u32, in_arc: u32, out_arc: u32) -> bool {
         match &self.terms {
             None => true,
             // A virtual node (a stop inside an edge, a barrier) is no device.

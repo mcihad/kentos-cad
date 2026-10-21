@@ -342,6 +342,8 @@ Liste:
 - [ ] `CBS-29` raster oturtmanın kaydı (ADR 0518, 19 Ekim): web'de gerekenler: `cad.rasters.georef`'in işleyicisi (WASM'da
   `rasters_georef`'in planı ve yeniden örneklemesi), Raster oturt penceresinde Denetim ve Ad sütunları, hedeflerin sistemi, kayıttan
   açılış, `.points` alışverişi; `.kcad` şema 88'in TS kodeği ve sütunların rasterinin 5. seçeneği; TS türleri üretildi.
+- [ ] `CBS-26` ulaşılamayanda düğüm, dönüş ve cihaz (ADR 0577, 21 Ekim): web'de gerekenler: çekirdekten gelen reddin `junctions` ve
+  `turns`'ü `model/networkAnswers.ts`'in sözünde; WASM yeniden derlenince arama aynı.
 - [ ] `CBS-26` ulaşılamayanda en az kapatan (ADR 0575, 21 Ekim): web'de gerekenler: ağın işçisinin reddi aynı çekirdekten geldiğinden
   WASM yeniden derlenince değişir; `model/networkAnswers.ts`'in sözü “yolu açmak için en az kalkması gerekenler”.
 - [ ] `CBS-26` ulaşılamayanın nedeni (ADR 0570, 21 Ekim): web'de gerekenler: ağın işçisinde reddin `blocked`'ı ve
@@ -2363,6 +2365,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilk çıkar); `.kcad` şema 87; Ağlar penceresi, araçlarda Saat (Z), İşlemler'de Kalkış saati, Python `Network.time`. Kalan: araç
   profilleri, tarih aralıklı kapanma, Dönüş çiz aracı, dış yönlendirici, bağlı katmanın revizyonu. —
   **19 Ekim, [ADR 0521](docs/adr/0521-turns-levels-and-time-profiles.md).**
+- [ ] `CBS-26` ulaşılamayanda düğüm, dönüş ve cihaz (dilim): en az kapatanlı yolun araması düğüm geçişini de sayar (kapalı düğüm,
+  `Graph::turn`'ün yasakladığı dönüş, cihazın birleştirmediği terminaller); söz ve JSON'un `junctions`'ı ve `turns`'ü; başvurunun
+  (köşe, gelinen kenar) araması, `kapali-dugum`, `yasak-donus`, `izinli-donus` soruları. Kalan: hizmet alanı, seviye, cihazın ortak
+  durumu. — **21 Ekim, [ADR 0577](docs/adr/0577-node-blockers.md).**
 - [ ] `CBS-26` ulaşılamayanda en az kapatan (dilim): yolu olmayan iki yer için en az kapatanı olan, eşitlikte en kısa yol (`blocked.rs`'in
   `fewest`'i: yaylar üzerinde sözlük sıralı Dijkstra; bir kenarın ardışık parçaları kapanmayı bir kez sayar, parçanın ucundaki durak onu
   saymaz, engel bir kapatan); söz “yolu açmak için en az kalkması gerekenler”; başvuru `network_blocked_cases.py`'nin `fewest`'i ve yeni

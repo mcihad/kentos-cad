@@ -372,6 +372,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
   *Kısmen (21 Ekim 2026; [ADR 0575](../docs/adr/0575-fewest-blockers.md)): ulaşılamayanda en küçük kesim: söylenen kapatanlar en az kapatanı olan (eşitlikte en kısa) yolunkiler; bir kenar bir kez, engeller de sayılır; tek kapanmayla açılan dolanma iki kapalı kenarlı kısa yolun önüne geçer. Kalan: yedi günden uzun yolculuk, Başka'nın ayrıntısı, hizmet alanında ulaşılamayanın nedeni, dış yönlendirici, bağlı katmanın revizyonu.*
 
+  *Kısmen (21 Ekim 2026; [ADR 0577](../docs/adr/0577-node-blockers.md)): ulaşılamayanda düğüm de kapatan: kapalı düğüm, yasak dönüş ve cihazın birleştirmediği terminaller en az kapatanlı yolda sayılır ve nesneleriyle söylenir (“düğüm 100 (kapalı)”, “kenar 23 → kenar 25 dönüşü (yasak)”). Kalan: yedi günden uzun yolculuk, hizmet alanında ulaşılamayanın nedeni, seviyenin kesmesi, dış yönlendirici, bağlı katmanın revizyonu.*
+
   **Mevcut:** En kısa rota, duraklar, OD matrisi, en yakın tesis, servis alanı, yön/maliyet ve kapalı hat temeli var [K12]. İlk hedef bunların gerçek yol verisinde güvenilir kullanılabilmesidir.
 
   **Yapılacak kalan iş:** Mevcut rota/OD/tesis/servis alanı, tek yön, maliyet ve kapalı hat araçlarını yeniden geliştirme. Yeni kapsam; dönüş yasağı/cezası, köprü-tünel seviye ayrımı, profil ve zamana bağlı kapanma/maliyettir. Harici dataset revision'ı değişince graph/maliyet cache'i yenilensin; erişilemeyen durak/çiftin nedeni source ID ile verilsin. Kaynak maliyet birimini mevcut ağ sözleşmesinden taşı; yol parçaları ile tampon servis polygon'unu aynı çıktı sayma. Bölgesel ölçek gerektirirse Valhalla türü açık adapter ölçülerek seçilir. [D04]

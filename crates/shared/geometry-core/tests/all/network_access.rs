@@ -10,7 +10,7 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::geom::bulge::bulge_path_edges;
 use kentos_geometry_core::ops::network::{
-    EdgeIn, Graph, NetworkSession, Refusal, Reorder, Rules,
+    EdgeIn, Graph, JunctionIn, NetworkSession, Refusal, Reorder, Role, Rules, TurnIn,
 };
 use serde_json::Value;
 
@@ -50,7 +50,12 @@ fn session(file: &Value) -> NetworkSession {
         .expect("edges")
         .iter()
         .map(|e| {
-            let pts: Vec<Vec2> = e["pts"].as_array().expect("points").iter().map(point).collect();
+            let pts: Vec<Vec2> = e["pts"]
+                .as_array()
+                .expect("points")
+                .iter()
+                .map(point)
+                .collect();
             let mut edge = EdgeIn::new(
                 num(&e["id"]),
                 0,
@@ -68,7 +73,41 @@ fn session(file: &Value) -> NetworkSession {
             edge
         })
         .collect();
-    let (graph, report) = Graph::build(rules, &edges, &[]);
+    // The junctions (closed by their attribute) and the turn lines (forbidden: the layer has no field) (docs/adr/0577).
+    let junctions: Vec<JunctionIn> = file["junctions"]
+        .as_array()
+        .map(|js| {
+            js.iter()
+                .map(|j| JunctionIn {
+                    id: num(&j["id"]),
+                    p: point(&j["p"]),
+                    role: Role::Junction,
+                    closed: j["attrs"]["kapali"].as_str() == Some("evet"),
+                    level: None,
+                    device: None,
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    let turns: Vec<TurnIn> = file["turns"]
+        .as_array()
+        .map(|ts| {
+            ts.iter()
+                .map(|t| TurnIn {
+                    id: num(&t["id"]),
+                    pts: t["pts"]
+                        .as_array()
+                        .expect("points")
+                        .iter()
+                        .map(point)
+                        .collect(),
+                    field: false,
+                    value: None,
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    let (graph, report) = Graph::build_with(rules, &edges, &junctions, &turns);
     NetworkSession::new(graph, report, Vec::new())
 }
 
@@ -85,8 +124,16 @@ fn profiles_and_closures_give_what_the_independent_reference_gives() {
             let varied = s
                 .set_access(c["profile"].as_str(), c["day"].as_str())
                 .unwrap_or_else(|e| panic!("{name}: {e}"));
-            assert_eq!(varied.by_profile as u64, c["byProfile"].as_u64().unwrap(), "{name}");
-            assert_eq!(varied.by_date as u64, c["byDate"].as_u64().unwrap(), "{name}");
+            assert_eq!(
+                varied.by_profile as u64,
+                c["byProfile"].as_u64().unwrap(),
+                "{name}"
+            );
+            assert_eq!(
+                varied.by_date as u64,
+                c["byDate"].as_u64().unwrap(),
+                "{name}"
+            );
             let unread: Vec<f64> = c["unread"].as_array().unwrap().iter().map(num).collect();
             assert_eq!(varied.unread, unread, "{name}");
             let stops = [point(&c["from"]), point(&c["to"])];
@@ -114,9 +161,13 @@ fn profiles_and_closures_give_what_the_independent_reference_gives() {
 fn no_access_is_the_network_as_defined() {
     let file = fixture();
     let mut s = session(&file);
-    let stops = [point(&file["cases"][1]["from"]), point(&file["cases"][1]["to"])];
+    let stops = [
+        point(&file["cases"][1]["from"]),
+        point(&file["cases"][1]["to"]),
+    ];
     let before = s.route(&stops, &[], 1.0, 1, Reorder::None).expect("a way");
-    s.set_access(Some("Yaya"), Some("2026-11-03")).expect("an access");
+    s.set_access(Some("Yaya"), Some("2026-11-03"))
+        .expect("an access");
     let varied = s.route(&stops, &[], 1.0, 1, Reorder::None).expect("a way");
     assert!(varied.cost > before.cost);
     s.set_access(None, None).expect("none");
@@ -146,9 +197,21 @@ fn weekdays_and_hours_give_what_the_independent_reference_gives() {
             s.set_access(None, c["day"].as_str())
                 .unwrap_or_else(|e| panic!("{name}: {e}"));
             let varied = s.set_time(c["time"].as_f64());
-            assert_eq!(varied.by_date as u64, c["byDate"].as_u64().unwrap(), "{name}");
-            assert_eq!(varied.by_hours as u64, c["byHours"].as_u64().unwrap(), "{name}");
-            assert_eq!(varied.hours_unasked, c["hoursUnasked"].as_bool().unwrap(), "{name}");
+            assert_eq!(
+                varied.by_date as u64,
+                c["byDate"].as_u64().unwrap(),
+                "{name}"
+            );
+            assert_eq!(
+                varied.by_hours as u64,
+                c["byHours"].as_u64().unwrap(),
+                "{name}"
+            );
+            assert_eq!(
+                varied.hours_unasked,
+                c["hoursUnasked"].as_bool().unwrap(),
+                "{name}"
+            );
             let unread: Vec<f64> = c["unread"].as_array().unwrap().iter().map(num).collect();
             assert_eq!(varied.unread, unread, "{name}");
             let stops = [point(&c["from"]), point(&c["to"])];
@@ -180,14 +243,19 @@ fn an_unreachable_stop_says_what_shuts_the_way_as_the_independent_reference() {
     assert_eq!(file["format"], "kentos.network-blocked");
     let mut s = session(&file);
     let cases = file["cases"].as_array().expect("cases");
-    assert_eq!(cases.len(), 15);
+    assert_eq!(cases.len(), 18);
     for c in cases {
         let name = c["name"].as_str().expect("a name");
         s.set_access(c["profile"].as_str(), c["day"].as_str())
             .unwrap_or_else(|e| panic!("{name}: {e}"));
         s.set_time(c["time"].as_f64());
         let stops = [point(&c["from"]), point(&c["to"])];
-        let barriers: Vec<Vec2> = c["barriers"].as_array().unwrap().iter().map(point).collect();
+        let barriers: Vec<Vec2> = c["barriers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(point)
+            .collect();
         let cost = c["cost"].as_u64().unwrap() as usize;
         let got = s.route(&stops, &barriers, 1.0, cost, Reorder::None);
         if c["reachable"].as_bool() == Some(true) {
@@ -200,7 +268,11 @@ fn an_unreachable_stop_says_what_shuts_the_way_as_the_independent_reference() {
         let json: Value = serde_json::from_str(&why.json()).expect("JSON");
         assert_eq!(json, c["blocked"], "{name}: {}", why.words());
         if barriers.is_empty() {
-            assert_eq!(s.blocked_between(stops[0], stops[1], 1.0, cost), Some(why), "{name}");
+            assert_eq!(
+                s.blocked_between(stops[0], stops[1], 1.0, cost),
+                Some(why),
+                "{name}"
+            );
         }
     }
 }

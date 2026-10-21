@@ -44,6 +44,10 @@ DEFINITION = {
               {"name": "Ücret", "kind": "field", "field": "ucret", "unit": "TL"}],
     "profiles": [{"name": "Kamyon", "limits": [{"field": "agirlik", "value": 18.0}]}],
     "closures": {"from": "kapanis_bas", "to": "kapanis_son", "hours": "kapanis_saat"},
+    # A closed junction and a forbidden turn shut a way at a node (docs/adr/0577); no U-turn anywhere, so that a
+    # forbidden turn is not gone round by turning back at a dead end.
+    "junctions": [{"layer": "dugum", "role": "junction", "closed": "kapali = 'evet'"}],
+    "turns": {"uTurns": "never", "layers": [{"layer": "donus"}]},
 }
 FORWARD, BACKWARD, CLOSED = {"ft"}, {"tf"}, {"n"}
 
@@ -82,8 +86,21 @@ EDGES = [
     ((0, 8), (0, 10), {"ucret": "5"}, False),
     ((0, 10), (2, 10), {"ucret": "5", "yon": "N"}, False),
     ((2, 10), (2, 8), {"ucret": "5"}, False),
+    # A closed junction in the middle of an open chain (docs/adr/0577).
+    ((0, 12), (1, 12), {"ucret": "5"}, False),
+    ((1, 12), (2, 12), {"ucret": "5"}, False),
+    # A T whose turn from its stem's west arm north is forbidden.
+    ((0, 14), (1, 14), {"ucret": "5"}, False),
+    ((1, 14), (2, 14), {"ucret": "5"}, False),
+    ((1, 14), (1, 15), {"ucret": "5"}, False),
 ]
-BARRIER = ((1, 3), (2, 3), 0.4)  # the barrier's edge by its corners and the share of the way along it
+# Junctions: their corner and whether they are closed.
+JUNCTIONS = [((1, 12), True)]
+# Forbidden turns: from the edge between the first two corners to the edge between the last two, through the middle.
+TURNS = [((0, 14), (1, 14), (1, 15))]
+BARRIER = ((1, 3), (2, 3), 0.4)
+JUNCTION_ID = 100  # the junctions' object ids, from 100
+TURN_ID = 200  # the turn lines' object ids, from 200  # the barrier's edge by its corners and the share of the way along it
 
 
 def fold(s):
@@ -196,36 +213,77 @@ def shortest(a, b, usable):
     return list(reversed(steps)), count[b] == 1
 
 
+def edge_between(p, q):
+    return next(k for k, e in enumerate(EDGES) if {e[0], e[1]} == {p, q})
+
+
+def node_cost(n, came, k):
+    """What passing corner n from edge `came` onto edge `k` adds (docs/adr/0577): a closed junction, else a U-turn
+    (never allowed) or a forbidden turn; nothing at the first corner."""
+    if came is None:
+        return 0, None
+    if any(c == n and closed for c, closed in JUNCTIONS):
+        return 1, ("junction", n)
+    if came == k:
+        return 1, ("turn", came, k)
+    for a, m, b in TURNS:
+        if m == n and edge_between(a, m) == came and edge_between(m, b) == k:
+            return 1, ("turn", came, k)
+    return 0, None
+
+
+def hops(a, steps):
+    """The nodes a way passes: (corner, edge arrived by, edge left by) for each step, the first arrived by none."""
+    out, here, came_by = [], a, None
+    for k, fw in steps:
+        out.append((here, came_by, k))
+        here = EDGES[k][1] if fw else EDGES[k][0]
+        came_by = k
+    return out
+
+
 def fewest(a, b, cost_of):
-    """The way from corner a to b that the fewest blockers shut, the shortest of those (docs/adr/0575): every edge
-    both ways, `cost_of(k, forward)` the blockers stepping on edge k adds; its steps and whether it is the only best;
-    None when the corners do not meet."""
+    """The way from corner a to b that the fewest blockers shut, the shortest of those (docs/adr/0575, 0577): every
+    edge both ways, `cost_of(k, forward)` the blockers stepping on edge k adds, each node passed what `node_cost` adds.
+    The search's states are (corner, edge arrived by). Its steps and whether it is the only best; None when the corners
+    do not meet."""
     adj = {}
     for k, e in enumerate(EDGES):
         adj.setdefault(e[0], []).append((e[1], k, True))
         adj.setdefault(e[1], []).append((e[0], k, False))
-    best, came, count = {a: (0, 0.0)}, {a: None}, {a: 1}
-    heap, done = [(0, 0.0, a)], set()
+    start = (a, None)
+    best, came, count = {start: (0, 0.0)}, {start: None}, {start: 1}
+    heap, done = [(0, 0.0, 0, start)], set()
+    order = {}
     while heap:
-        n_cut, d, n = heapq.heappop(heap)
-        if n in done:
+        n_cut, d, _, st = heapq.heappop(heap)
+        if st in done:
             continue
-        done.add(n)
+        done.add(st)
+        n, via = st
         for m, k, fw in adj.get(n, []):
-            nd = (n_cut + cost_of(k, fw), d + length(EDGES[k]))
-            if m not in best or nd[0] < best[m][0] or (nd[0] == best[m][0] and nd[1] < best[m][1] - 1e-9):
-                best[m], came[m], count[m] = nd, (n, k, fw), count[n]
-                heapq.heappush(heap, (nd[0], nd[1], m))
-            elif nd[0] == best[m][0] and abs(nd[1] - best[m][1]) <= 1e-9:
-                count[m] += count[n]
-    if b not in best:
+            extra, _ = node_cost(n, via, k)
+            nd = (n_cut + extra + cost_of(k, fw), d + length(EDGES[k]))
+            to = (m, k)
+            if to not in best or nd[0] < best[to][0] or (nd[0] == best[to][0] and nd[1] < best[to][1] - 1e-9):
+                best[to], came[to], count[to] = nd, (st, k, fw), count[st]
+                order.setdefault(to, len(order) + 1)
+                heapq.heappush(heap, (nd[0], nd[1], order[to], to))
+            elif nd[0] == best[to][0] and abs(nd[1] - best[to][1]) <= 1e-9:
+                count[to] += count[st]
+    ends = [st for st in best if st[0] == b]
+    if not ends:
         return None, True
-    steps, n = [], b
-    while came[n] is not None:
-        p, k, fw = came[n]
+    top = min(best[st] for st in ends)
+    tops = [st for st in ends if best[st][0] == top[0] and abs(best[st][1] - top[1]) <= 1e-9]
+    st = tops[0]
+    only = len(tops) == 1 and count[st] == 1
+    steps = []
+    while came[st] is not None:
+        p, k, fw = came[st]
         steps.append((k, fw))
-        n = p
-    return list(reversed(steps)), count[b] == 1
+        st = p
+    return list(reversed(steps)), only
 
 
 QUESTIONS = [
@@ -245,6 +303,9 @@ QUESTIONS = [
     ("kisa-yol-kapali", (0, 5), (1, 5), 0, False, None, None, False),
     ("kisa-yol-ters", (1, 5), (0, 5), 0, False, None, None, False),
     ("en-az-kapatan", (0, 8), (2, 8), 0, False, None, None, False),
+    ("kapali-dugum", (0, 12), (2, 12), 0, False, None, None, False),
+    ("yasak-donus", (0, 14), (1, 15), 0, False, None, None, False),
+    ("izinli-donus", (2, 14), (1, 15), 0, False, None, None, False),
 ]
 
 
@@ -265,7 +326,18 @@ def build():
                 return False
             return blocker(e, fw, profile, day, time, cost) is None
 
+        def cut(k, fw):
+            n = 1 if blocker(EDGES[k], fw, profile, day, time, cost) else 0
+            return n + (1 if with_barrier and k == barrier_edge else 0)
+
+        # A way exists when a way no blocker shuts exists: the closed edges, barriers, closed junctions and turns.
         found, _ = shortest(a, b, open_)
+        clear, _ = fewest(a, b, cut)
+        if clear is not None:
+            free = sum(cut(k, fw) for k, fw in clear) + sum(
+                node_cost(*hop)[0] for hop in hops(a, clear))
+            if free > 0:
+                found = None
         case = {"name": name, "from": list(corner(*a)), "to": list(corner(*b)), "cost": cost,
                 "profile": "Kamyon" if profile else None, "day": day_text, "time": time,
                 "barriers": [barrier_at] if with_barrier else []}
@@ -273,26 +345,45 @@ def build():
             case["reachable"] = True
             cases.append(case)
             continue
-        def cut(k, fw):
-            n = 1 if blocker(EDGES[k], fw, profile, day, time, cost) else 0
-            return n + (1 if with_barrier and k == barrier_edge else 0)
-
         steps, only = fewest(a, b, cut)
         assert only, f"{name}: more than one best way"
         if steps is None:
             case["blocked"] = {"kind": "apart"}
         else:
-            edges_out, barriers_out = [], []
+            edges_out, barriers_out, junctions_out, turns_out = [], [], [], []
+            here, came_by = a, None
             for k, fw in steps:
+                _, at = node_cost(here, came_by, k)
+                if at and at[0] == "junction":
+                    jid = JUNCTION_ID + [c for c, _ in JUNCTIONS].index(at[1])
+                    junctions_out.append({"id": jid, "why": "closed"})
+                elif at:
+                    turns_out.append({"from": at[1] + 1, "to": at[2] + 1})
+                here = EDGES[k][1] if fw else EDGES[k][0]
+                came_by = k
                 why = blocker(EDGES[k], fw, profile, day, time, cost)
                 if why and all(x["id"] != k + 1 for x in edges_out):
                     edges_out.append({"id": k + 1, "why": why})
                 if with_barrier and k == barrier_edge and 0 not in barriers_out:
                     barriers_out.append(0)
-            case["blocked"] = ({"kind": "by", "edges": edges_out, "barriers": barriers_out}
-                               if edges_out or barriers_out else {"kind": "other"})
+            by = {"kind": "by", "edges": edges_out, "barriers": barriers_out}
+            if junctions_out:
+                by["junctions"] = junctions_out
+            if turns_out:
+                by["turns"] = turns_out
+            case["blocked"] = by if edges_out or barriers_out or junctions_out or turns_out else {"kind": "other"}
         cases.append(case)
-    return {"format": "kentos.network-blocked", "version": 1, "definition": DEFINITION, "edges": edges, "cases": cases}
+    junctions = [{"id": JUNCTION_ID + i, "p": list(corner(*c)), "attrs": {"kapali": "evet"} if closed else {}}
+                 for i, (c, closed) in enumerate(JUNCTIONS)]
+
+    def toward(p, q, share=0.5):
+        (px, py), (qx, qy) = corner(*p), corner(*q)
+        return [px + (qx - px) * share, py + (qy - py) * share]
+
+    turns = [{"id": TURN_ID + i, "pts": [toward(m, a), list(corner(*m)), toward(m, b)]}
+             for i, (a, m, b) in enumerate(TURNS)]
+    return {"format": "kentos.network-blocked", "version": 1, "definition": DEFINITION, "edges": edges,
+            "junctions": junctions, "turns": turns, "cases": cases}
 
 
 def main():

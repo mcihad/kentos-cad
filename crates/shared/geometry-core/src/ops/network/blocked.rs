@@ -5,10 +5,12 @@
 //! the question's cost cannot travel the way it goes, with the reason the
 //! edge says (the closed edges' expression, the direction field's closed
 //! value, one way the other way, the vehicle's profile, the day, the hour,
-//! no value of the cost), and each barrier on it. No such way: the places are
-//! on parts of the network that do not meet. A way whose every edge is open:
-//! a turn, a closed junction or a device's terminal paths cut it. The
-//! independent reference is `scripts/fixtures/network_blocked_cases.py`.
+//! no value of the cost), each barrier on it, and each node it passes that
+//! shuts it (docs/adr/0577): a closed junction, a forbidden turn (a turn
+//! layer's line, a U-turn the rules forbid), a device whose terminal paths do
+//! not join the two edges. No such way: the places are on parts of the
+//! network that do not meet. The independent reference is
+//! `scripts/fixtures/network_blocked_cases.py`.
 
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
@@ -61,11 +63,15 @@ impl Why {
     }
 }
 
-/// What shuts a way: an edge (its object) and why, or a barrier (its index among the question's).
+/// What shuts a way: an edge (its object) and why, a barrier (its index among the question's), a closed junction (its
+/// object), a forbidden turn (from the edge, to the edge) or a device (its junction, from the edge, to the edge).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Blocker {
     Edge(f64, Why),
     Barrier(usize),
+    Junction(f64),
+    Turn(f64, f64),
+    Device(f64, f64, f64),
 }
 
 /// Why two places have no way between them.
@@ -75,7 +81,8 @@ pub enum Blocked {
     Apart,
     /// The shortest way with nothing closed is shut by these, in its order (an edge once).
     By(Vec<Blocker>),
-    /// Every edge and barrier of that way is open: a turn, a closed junction or a device cuts it.
+    /// Every edge, barrier and node of that way is open: something the search does not see cuts it (a level, a
+    /// stop on no piece).
     Other,
 }
 
@@ -87,7 +94,7 @@ impl Blocked {
         match self {
             Blocked::Apart => "duraklar ağın birbirine bağlanmayan parçalarında".into(),
             Blocked::Other => {
-                "en az kapatanı olan yolun kenarları açık; yolu bir dönüş yasağı, kapalı düğüm ya da cihazın terminal yolları kesiyor"
+                "en az kapatanı olan yolun kenarları, engelleri ve düğümleri açık; yolu bir seviye ya da ağın dışında kalan durak kesiyor"
                     .into()
             }
             Blocked::By(list) => {
@@ -97,6 +104,16 @@ impl Blocked {
                     .map(|b| match *b {
                         Blocker::Edge(id, why) => format!("kenar {} ({})", show_id(id), why.words()),
                         Blocker::Barrier(i) => format!("{}. engel", i + 1),
+                        Blocker::Junction(id) => format!("düğüm {} (kapalı)", show_id(id)),
+                        Blocker::Turn(from, to) => {
+                            format!("kenar {} → kenar {} dönüşü (yasak)", show_id(from), show_id(to))
+                        }
+                        Blocker::Device(id, from, to) => format!(
+                            "düğüm {} (cihaz kenar {} → kenar {} geçirmiyor)",
+                            show_id(id),
+                            show_id(from),
+                            show_id(to)
+                        ),
                     })
                     .collect();
                 let more = list.len().saturating_sub(SAID);
@@ -120,21 +137,56 @@ impl Blocked {
                             show_id(id),
                             why.name()
                         )),
-                        Blocker::Barrier(_) => None,
+                        _ => None,
                     })
                     .collect();
                 let barriers: Vec<String> = list
                     .iter()
                     .filter_map(|b| match *b {
                         Blocker::Barrier(i) => Some(i.to_string()),
-                        Blocker::Edge(..) => None,
+                        _ => None,
                     })
                     .collect();
-                format!(
-                    r#"{{"kind":"by","edges":[{}],"barriers":[{}]}}"#,
+                let junctions: Vec<String> = list
+                    .iter()
+                    .filter_map(|b| match *b {
+                        Blocker::Junction(id) => {
+                            Some(format!(r#"{{"id":{},"why":"closed"}}"#, show_id(id)))
+                        }
+                        Blocker::Device(id, from, to) => Some(format!(
+                            r#"{{"id":{},"why":"device","from":{},"to":{}}}"#,
+                            show_id(id),
+                            show_id(from),
+                            show_id(to)
+                        )),
+                        _ => None,
+                    })
+                    .collect();
+                let turns: Vec<String> = list
+                    .iter()
+                    .filter_map(|b| match *b {
+                        Blocker::Turn(from, to) => Some(format!(
+                            r#"{{"from":{},"to":{}}}"#,
+                            show_id(from),
+                            show_id(to)
+                        )),
+                        _ => None,
+                    })
+                    .collect();
+                // The junctions and turns only when there are some (the ADR 0570 answers stay as they were).
+                let mut out = format!(
+                    r#"{{"kind":"by","edges":[{}],"barriers":[{}]"#,
                     edges.join(","),
                     barriers.join(",")
-                )
+                );
+                if !junctions.is_empty() {
+                    out.push_str(&format!(r#","junctions":[{}]"#, junctions.join(",")));
+                }
+                if !turns.is_empty() {
+                    out.push_str(&format!(r#","turns":[{}]"#, turns.join(",")));
+                }
+                out.push('}');
+                out
             }
         }
     }
@@ -167,13 +219,24 @@ impl PartialOrd for Item {
 
 /// Why `a` and `b` have no way with cost `c` (`barriers` the question's): see the module.
 pub fn blocked(g: &Graph, a: &Location, b: &Location, c: usize, barriers: &[Location]) -> Blocked {
-    // The way as spans: (piece, metres along it set off at, metres arrived at).
-    let spans: Vec<(u32, f64, f64)> = match fewest(g, a, b, c, barriers) {
+    // The way as legs: its spans (piece, metres along it set off at, metres arrived at) and the arcs they go along.
+    let legs: Vec<(Span, u32)> = match fewest(g, a, b, c, barriers) {
         Some(s) => s,
         None => return Blocked::Apart,
     };
     let mut list: Vec<Blocker> = Vec::new();
-    for &(p, s0, s1) in &spans {
+    for (i, &((p, s0, s1), arc)) in legs.iter().enumerate() {
+        // The node passed before this leg, when both legs go something.
+        if i > 0 {
+            let ((_, q0, q1), prev) = legs[i - 1];
+            if q0 != q1
+                && s0 != s1
+                && let Some(b) = node_blocker(g, prev, arc, c)
+                && !list.contains(&b)
+            {
+                list.push(b);
+            }
+        }
         let forward = s1 >= s0;
         let (lo, hi) = if forward { (s0, s1) } else { (s1, s0) };
         let mut cut: Vec<(f64, usize)> = barriers
@@ -228,11 +291,37 @@ pub fn blocked(g: &Graph, a: &Location, b: &Location, c: usize, barriers: &[Loca
     }
 }
 
+/// What shuts the way at the node between arcs `prev` and `next` (docs/adr/0577): a closed junction, a device whose
+/// terminal paths do not join them, or a forbidden turn; none when the way passes.
+fn node_blocker(g: &Graph, prev: u32, next: u32, c: usize) -> Option<Blocker> {
+    let node = g.arc_head[prev as usize];
+    let edge_id = |arc: u32| g.edges[g.pieces[(arc / 2) as usize].edge as usize].id;
+    let junction = || {
+        g.junctions
+            .iter()
+            .find(|j| j.node == Some(node))
+            .map(|j| j.id)
+    };
+    if g.kinds.get(node as usize).is_some_and(|k| k.closed) {
+        return junction().map(Blocker::Junction);
+    }
+    if g.turn(prev, next, node, c).is_some() {
+        return None;
+    }
+    if !g.crosses(node, prev, next)
+        && let Some(id) = junction()
+    {
+        return Some(Blocker::Device(id, edge_id(prev), edge_id(next)));
+    }
+    Some(Blocker::Turn(edge_id(prev), edge_id(next)))
+}
+
 /// A span of a way: the piece, metres along it set off at, metres arrived at.
 type Span = (u32, f64, f64);
 
-/// The best way's end so far: its blockers, its length, the arc it arrived by (none: along `a`'s piece) and its last span.
-type Best = (u32, f64, Option<u32>, Span);
+/// The best way's end so far: its blockers, its length, the arc it arrived by (none: along `a`'s piece), its last span
+/// and the arc that span goes along.
+type Best = (u32, f64, Option<u32>, Span, u32);
 
 /// The way from `a` to `b`, every piece both ways and no node closed, that the fewest blockers shut, the shortest by
 /// length of those (docs/adr/0575): its spans; none when they do not meet. The search is over arcs (a piece the way
@@ -244,7 +333,7 @@ fn fewest(
     b: &Location,
     c: usize,
     barriers: &[Location],
-) -> Option<Vec<Span>> {
+) -> Option<Vec<(Span, u32)>> {
     let shut = |arc: u32| g.cost(arc / 2, c, arc.is_multiple_of(2)).is_infinite();
     let edge = |arc: u32| g.pieces[(arc / 2) as usize].edge;
     // The barriers on piece `p` between `lo` and `hi` metres along it.
@@ -262,17 +351,24 @@ fn fewest(
         let closing = hi > lo && shut(arc) && !prev.is_some_and(counted_before);
         u32::from(closing) + on(arc / 2, lo, hi)
     };
+    // Passing the node from `prev` onto `next` (docs/adr/0577): a closed junction, a forbidden turn or a device that
+    // does not join them shut the way once.
+    let pass = |prev: u32, next: u32| -> u32 {
+        let node = g.arc_head[prev as usize];
+        let closed = g.kinds.get(node as usize).is_some_and(|k| k.closed);
+        u32::from(closed || g.turn(prev, next, node, c).is_none())
+    };
     let pa = g.pieces[a.piece as usize];
     let pb = g.pieces[b.piece as usize];
     // On one piece the way along it is a candidate too.
     let mut best: Option<Best> = None;
-    let mut offer = |k: u32, d: f64, last: Option<u32>, span: Span| {
+    let mut offer = |k: u32, d: f64, last: Option<u32>, span: Span, arc: u32| {
         let better = match &best {
             None => true,
             Some((bk, bd, ..)) => k < *bk || (k == *bk && d < *bd),
         };
         if better {
-            best = Some((k, d, last, span));
+            best = Some((k, d, last, span, arc));
         }
     };
     if a.piece == b.piece {
@@ -288,6 +384,7 @@ fn fewest(
             hi - lo,
             None,
             (a.piece, a.offset, b.offset),
+            arc,
         );
     }
     let arcs = g.pieces.len() * 2;
@@ -310,6 +407,8 @@ fn fewest(
             continue;
         }
         let head = g.arc_head[arc as usize];
+        // Whether this arc went something: a stop at a node passes it by no turn.
+        let went = came[arc as usize].is_some() || d > 0.0;
         // The way ends on `b`'s piece from the node it reached.
         if head == pb.from || head == pb.to {
             let forward = head == pb.from;
@@ -320,11 +419,19 @@ fn fewest(
                 (b.offset, pb.len, pb.len - b.offset)
             };
             let span = (b.piece, if forward { 0.0 } else { pb.len }, b.offset);
-            offer(k + step(Some(arc), end, lo, hi), d + len, Some(arc), span);
+            let at = if went && len > 0.0 { pass(arc, end) } else { 0 };
+            offer(
+                k + at + step(Some(arc), end, lo, hi),
+                d + len,
+                Some(arc),
+                span,
+                end,
+            );
         }
         for &next in g.at_node(head) {
             let p = g.pieces[(next / 2) as usize];
-            let nk = k + step(Some(arc), next, 0.0, p.len);
+            let at = if went { pass(arc, next) } else { 0 };
+            let nk = k + at + step(Some(arc), next, 0.0, p.len);
             let nd = d + p.len;
             if (nk, nd) < label[next as usize] {
                 label[next as usize] = (nk, nd);
@@ -333,11 +440,11 @@ fn fewest(
             }
         }
     }
-    let (_, _, last, end_span) = best?;
+    let (_, _, last, end_span, end_arc) = best?;
     let Some(last) = last else {
-        return Some(vec![end_span]);
+        return Some(vec![(end_span, end_arc)]);
     };
-    let mut spans = vec![end_span];
+    let mut spans = vec![(end_span, end_arc)];
     let mut arc = last;
     loop {
         let p = arc / 2;
@@ -345,16 +452,17 @@ fn fewest(
         let forward = arc.is_multiple_of(2);
         match came[arc as usize] {
             Some(prev) => {
-                spans.push(if forward {
+                let span = if forward {
                     (p, 0.0, piece.len)
                 } else {
                     (p, piece.len, 0.0)
-                });
+                };
+                spans.push((span, arc));
                 arc = prev;
             }
             None => {
                 // The first arc: from `a` to the end of its piece.
-                spans.push((a.piece, a.offset, if forward { pa.len } else { 0.0 }));
+                spans.push(((a.piece, a.offset, if forward { pa.len } else { 0.0 }), arc));
                 break;
             }
         }

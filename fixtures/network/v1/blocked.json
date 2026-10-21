@@ -54,6 +54,21 @@
    "from": "kapanis_bas",
    "to": "kapanis_son",
    "hours": "kapanis_saat"
+  },
+  "junctions": [
+   {
+    "layer": "dugum",
+    "role": "junction",
+    "closed": "kapali = 'evet'"
+   }
+  ],
+  "turns": {
+   "uTurns": "never",
+   "layers": [
+    {
+     "layer": "donus"
+    }
+   ]
   }
  },
  "edges": [
@@ -386,6 +401,117 @@
    "attrs": {
     "ucret": "5"
    }
+  },
+  {
+   "id": 21,
+   "pts": [
+    [
+     600001.59,
+     4301200.94
+    ],
+    [
+     600100.0,
+     4301202.35
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   }
+  },
+  {
+   "id": 22,
+   "pts": [
+    [
+     600100.0,
+     4301202.35
+    ],
+    [
+     600203.18,
+     4301207.05
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   }
+  },
+  {
+   "id": 23,
+   "pts": [
+    [
+     600001.06,
+     4301405.64
+    ],
+    [
+     600103.71,
+     4301407.99
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   }
+  },
+  {
+   "id": 24,
+   "pts": [
+    [
+     600103.71,
+     4301407.99
+    ],
+    [
+     600201.06,
+     4301402.82
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   }
+  },
+  {
+   "id": 25,
+   "pts": [
+    [
+     600103.71,
+     4301407.99
+    ],
+    [
+     600105.3,
+     4301507.05
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   }
+  }
+ ],
+ "junctions": [
+  {
+   "id": 100,
+   "p": [
+    600100.0,
+    4301202.35
+   ],
+   "attrs": {
+    "kapali": "evet"
+   }
+  }
+ ],
+ "turns": [
+  {
+   "id": 200,
+   "pts": [
+    [
+     600052.385,
+     4301406.8149999995
+    ],
+    [
+     600103.71,
+     4301407.99
+    ],
+    [
+     600104.505,
+     4301457.52
+    ]
+   ]
   }
  ],
  "cases": [
@@ -740,6 +866,77 @@
     ],
     "barriers": []
    }
+  },
+  {
+   "name": "kapali-dugum",
+   "from": [
+    600001.59,
+    4301200.94
+   ],
+   "to": [
+    600203.18,
+    4301207.05
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "blocked": {
+    "kind": "by",
+    "edges": [],
+    "barriers": [],
+    "junctions": [
+     {
+      "id": 100,
+      "why": "closed"
+     }
+    ]
+   }
+  },
+  {
+   "name": "yasak-donus",
+   "from": [
+    600001.06,
+    4301405.64
+   ],
+   "to": [
+    600105.3,
+    4301507.05
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "blocked": {
+    "kind": "by",
+    "edges": [],
+    "barriers": [],
+    "turns": [
+     {
+      "from": 23,
+      "to": 25
+     }
+    ]
+   }
+  },
+  {
+   "name": "izinli-donus",
+   "from": [
+    600201.06,
+    4301402.82
+   ],
+   "to": [
+    600105.3,
+    4301507.05
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "reachable": true
   }
  ]
 }
