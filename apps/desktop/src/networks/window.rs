@@ -86,6 +86,11 @@ const KEEPS: [(bool, &str); 2] = [
     (false, "Elle: Alt ağları güncelle yazar"),
     (true, "Güncel tut: her yazma yeniden yazar"),
 ];
+/// Whether a vehicle profile goes against one-way edges (docs/adr/0567 §1).
+const WAYS: [(bool, &str); 2] = [
+    (false, "Tek yönlü kenara uyar"),
+    (true, "İki yöne gider (yaya)"),
+];
 const COST_KINDS: [(NetworkCostKind, &str); 2] = [
     (NetworkCostKind::Speed, "Süre (hızdan)"),
     (NetworkCostKind::Field, "Alandan"),
@@ -215,6 +220,14 @@ pub enum Event {
     SubnetAttribute(String),
     /// Keep the names current (a choice of `KEEPS`).
     SubnetKeep(usize),
+    /// Araç profilleri (docs/adr/0567 §1): a row added or removed; a row's name, limits, forbidding values or top
+    /// speed as typed (slots 0–3); whether it goes both ways (a choice of `WAYS`).
+    ProfileAdd,
+    ProfileRemove(usize),
+    ProfileText(usize, usize, String),
+    ProfileWays(usize, usize),
+    /// A closure's first and last day field (docs/adr/0567 §2).
+    ClosureField(usize, String),
     Builder(Field),
     Check,
     Problem(usize),
@@ -478,6 +491,8 @@ impl App {
             def: Some(def),
             question: NetworkQuestion::Check,
             at: None,
+            profile: None,
+            day: None,
         })
     }
 
@@ -1236,6 +1251,82 @@ impl App {
         } else {
             form = form.push(label::muted("Alt ağ yok: Kaynak düğümleri denetleyici sayılmaz. Alt ağ, bir denetleyicinin ağın kurallarıyla ulaştığı yerdir; adları Alt ağları güncelle bir özniteliğe yazar."));
         }
+        // Vehicle profiles and dated closures (docs/adr/0567).
+        form = form.push(head(
+            "Araç profilleri",
+            Some(small(
+                "plus",
+                "Profil ekle",
+                (f.profiles.len() < kentos_commands::NETWORK_PROFILE_LIMIT)
+                    .then(|| msg(Event::ProfileAdd)),
+            )),
+        ));
+        for (i, p) in f.profiles.iter().enumerate() {
+            form = form.push(
+                row![
+                    container(input(
+                        "ad: Kamyon",
+                        &p.name,
+                        Box::new(move |t| Event::ProfileText(i, 0, t))
+                    ))
+                    .width(Length::FillPortion(2)),
+                    container(input(
+                        "sınırlar: agirlik 18; yukseklik 4",
+                        &p.limits,
+                        Box::new(move |t| Event::ProfileText(i, 1, t))
+                    ))
+                    .width(Length::FillPortion(3)),
+                    container(input(
+                        "yasaklar: tur = yaya, bisiklet",
+                        &p.forbidden,
+                        Box::new(move |t| Event::ProfileText(i, 2, t))
+                    ))
+                    .width(Length::FillPortion(3)),
+                    remove(msg(Event::ProfileRemove(i))),
+                ]
+                .spacing(6)
+                .align_y(Center),
+            );
+            form = form.push(
+                row![
+                    container(input(
+                        "en yüksek hız, km/sa (boş: kenarınki)",
+                        &p.top_speed,
+                        Box::new(move |t| Event::ProfileText(i, 3, t))
+                    ))
+                    .width(Length::FillPortion(2)),
+                    container(Select::new(
+                        WAYS.iter().map(|(_, n)| Choice::new(*n)),
+                        WAYS.iter().position(|(w, _)| *w == p.both_ways),
+                        move |k| msg(Event::ProfileWays(i, k)),
+                    ))
+                    .width(Length::FillPortion(3)),
+                ]
+                .spacing(6)
+                .align_y(Center),
+            );
+        }
+        if f.profiles.is_empty() {
+            form = form.push(label::muted("Profil yok: her araç her kenardan aynı hızla geçer. Kamyon ya da yaya gibi bir profilin kenar alanlarındaki sınırlarını (ağırlık, yükseklik), yasakladığı değerleri ve en yüksek hızını yazın; araçlar ve İşlemler profili adıyla seçer."));
+        }
+        let mut days = row![].spacing(6).align_y(Center);
+        for (slot, (hint, typed)) in [
+            ("ilk günün alanı: kapanis_bas", &f.closure_from),
+            ("son günün alanı: kapanis_son", &f.closure_to),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            days = days.push(
+                container(input(
+                    hint,
+                    typed,
+                    Box::new(move |t| Event::ClosureField(slot, t)),
+                ))
+                .width(Length::FillPortion(1)),
+            );
+        }
+        form = form.push(labelled("Tarihli kapanma", days.into()));
         // Closed edges.
         form = form.push(head("Kapalı kenarlar", None));
         form = form.push(labelled(
@@ -1412,6 +1503,8 @@ fn def_shell(id: &str) -> NetworkDef {
         levels: None,
         terminals: None,
         subnetworks: None,
+        profiles: Vec::new(),
+        closures: None,
     }
 }
 
@@ -1671,6 +1764,36 @@ fn edit(f: &mut NetworkForm, e: Event, layers: &[(String, String)]) {
                 f.subnet_keep = keep;
             }
         }
+        Event::ProfileAdd => {
+            let n = f.profiles.len() + 1;
+            f.profiles.push(kentos_interaction::network::form::ProfileRow {
+                name: format!("Profil {n}"),
+                limits: String::new(),
+                forbidden: String::new(),
+                top_speed: String::new(),
+                both_ways: false,
+            });
+        }
+        Event::ProfileRemove(i) if i < f.profiles.len() => {
+            f.profiles.remove(i);
+        }
+        Event::ProfileText(i, slot, t) => {
+            if let Some(p) = f.profiles.get_mut(i) {
+                match slot {
+                    0 => p.name = t,
+                    1 => p.limits = t,
+                    2 => p.forbidden = t,
+                    _ => p.top_speed = t,
+                }
+            }
+        }
+        Event::ProfileWays(i, k) => {
+            if let (Some(p), Some(&(w, _))) = (f.profiles.get_mut(i), WAYS.get(k)) {
+                p.both_ways = w;
+            }
+        }
+        Event::ClosureField(0, t) => f.closure_from = t,
+        Event::ClosureField(_, t) => f.closure_to = t,
         Event::SubnetName(t) => f.subnet_name = t,
         Event::SubnetAttribute(t) => f.subnet_attribute = t,
         _ => {}

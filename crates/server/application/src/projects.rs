@@ -1138,6 +1138,8 @@ mod tests {
             levels: None,
             terminals: None,
             subnetworks: None,
+            profiles: Vec::new(),
+            closures: None,
         };
         const AT: &str = "settings.networks";
         assert!(check_networks(&[], AT).is_ok());

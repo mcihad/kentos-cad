@@ -6,7 +6,8 @@
   referans), 0100 (ifade dili), 0265 (yeni şemanın kuralı).
 - **Web:** ertelendi (ADR 0228). Web'de gerekenler TODOS.md §0.2'de.
 - **Sonraya kalan:**
-  - araç profilleri (yaya, kamyon: ağırlık, yükseklik ve genişlik sınırları) ve zamana bağlı kapanmanın tarih aralığı
+  - araç profilleri (yaya, kamyon: ağırlık, yükseklik ve genişlik sınırları) ve zamana bağlı kapanmanın tarih aralığı (yapıldı:
+    [ADR 0567](0567-vehicle-profiles-and-dated-closures.md))
     (bugün profil her günü aynıdır);
   - dönüş katmanının çizimde kurulması (Dönüş çiz aracı); bugün dönüş, gelinen kenardan düğümün üstünden gidilen kenara
     çizilen çizgidir;

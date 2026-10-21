@@ -327,6 +327,10 @@ Liste:
 - [ ] `CBS-29` raster oturtmanın kaydı (ADR 0518, 19 Ekim): web'de gerekenler: `cad.rasters.georef`'in işleyicisi (WASM'da
   `rasters_georef`'in planı ve yeniden örneklemesi), Raster oturt penceresinde Denetim ve Ad sütunları, hedeflerin sistemi, kayıttan
   açılış, `.points` alışverişi; `.kcad` şema 88'in TS kodeği ve sütunların rasterinin 5. seçeneği; TS türleri üretildi.
+- [ ] `CBS-26` araç profilleri ve tarihli kapanmalar (ADR 0567, 21 Ekim): web'de gerekenler: ağın işçisinde `EdgeIn.facts` ve
+  `NetworkSession.set_access_json` (WASM bağlayıcısı), `model/networkInput.ts`'in profil ve kapanma alanlarının değerleri, Ağlar
+  penceresinde Araç profilleri ve Tarihli kapanma (`model/networkForm.ts`, ortak `form.json`), araçlarda Profil (P) ve Tarih (T),
+  İşlemler'in Araç profili ve Tarih'i; `.kcad` şema 95'in TS kodeği; TS türleri üretildi.
 - [ ] `CBS-26` dönüşler, seviyeler ve zaman profili (ADR 0521, 19 Ekim): web'de gerekenler: ağın işçisinde `Graph::build_with`'in
   dönüş girdisi ve `NetworkSession.time` (WASM bağlayıcısı), `model/networkInput.ts`'in seviye, dönem ve dönüş katmanı değerleri,
   Ağlar penceresinde Dönüşler, Seviyeler ve Zaman profili (`model/networkForm.ts`), araçlarda Saat (Z), İşlemler'in Kalkış saati;
@@ -2312,6 +2316,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilk çıkar); `.kcad` şema 87; Ağlar penceresi, araçlarda Saat (Z), İşlemler'de Kalkış saati, Python `Network.time`. Kalan: araç
   profilleri, tarih aralıklı kapanma, Dönüş çiz aracı, dış yönlendirici, bağlı katmanın revizyonu. —
   **19 Ekim, [ADR 0521](docs/adr/0521-turns-levels-and-time-profiles.md).**
+- [ ] `CBS-26` araç profilleri ve tarihli kapanmalar (dilim): ağın `profiles`'ı (kenar alanlarına sınırlar: alan değerin altındaysa
+  kapalı; yasaklanan değerler; en yüksek hız, zaman profilinin basamakları da; iki yön) ve `closures`'ı (kapanmanın ilk ve son gün
+  alanı, ikisi de dahil, boşu açık uçlu); `.kcad` şema 95; graf bir kez kurulur, soru maliyetleri değiştirir (`Graph::vary`,
+  `NetworkSession::set_access`); Ağlar'da Araç profilleri ve Tarihli kapanma, En kısa yol ve Hizmet alanı'nda Profil (P) ve Tarih (T),
+  İşlemler'de Araç profili ve Tarih, Python `Network.profile`, `.date`, `.closed`. Kalan: haftanın günü ve saat aralıklı kapanma,
+  profilin dönüş kuralları, Dönüş çiz aracı, dış yönlendirici, bağlı katmanın revizyonu. —
+  **21 Ekim, [ADR 0567](docs/adr/0567-vehicle-profiles-and-dated-closures.md).**
 - [ ] `CBS-14` artımlı topoloji denetimi (dilim): bulgunun kalıcı anahtarı (kural, nesnelerin kimlikleri, yerin tolerans
   hücresi), denetimin çizimin durumuna bağlanması, `incremental::recheck` (değişenler ve komşuları, en yakına uzaklık ölçen
   kuralların erimi ve bağlantıları, boşluk kuralında kümeler ve adaları; tam denetimle aynı, rastgele düzenlemelerle sınanır),

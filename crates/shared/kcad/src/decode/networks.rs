@@ -3,12 +3,13 @@
 //! contract's rules (`networks_problem`), as the writers check them; an
 //! empty list is refused (a writer leaves it out). Schema 87 (docs/adr/0521)
 //! adds a network's `turns` and `levels` and a speed cost's `periods`; an
-//! older file holding them is refused.
+//! older file holding them is refused. Schema 95 (docs/adr/0567) adds a
+//! network's vehicle `profiles` and dated `closures`.
 
 use kentos_contracts::{
     DeviceTerminal, JunctionLayer, JunctionRole, NetworkConnect, NetworkCost, NetworkCostKind,
-    NetworkDef, NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels, NetworkPeriod,
-    NetworkSubnetworks, NetworkTerminals, NetworkTurns, NetworkUTurns, SubnetworkReach,
+    NetworkClosures, NetworkDef, NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels, NetworkPeriod,
+    NetworkProfile, NetworkSubnetworks, ProfileForbid, ProfileLimit, NetworkTerminals, NetworkTurns, NetworkUTurns, SubnetworkReach,
     TerminalConfig, TerminalDevice, TurnLayer, networks_problem,
 };
 
@@ -388,12 +389,111 @@ fn costs(r: &mut Reader<'_>, turned: bool) -> Result<Vec<NetworkCost>, KcadError
     Ok(all)
 }
 
+/// A network's vehicle profiles (schema 95, docs/adr/0567 §1); an empty list is not written.
+fn profiles(r: &mut Reader<'_>) -> Result<Vec<NetworkProfile>, KcadError> {
+    let at = r.position();
+    let all = list(r, |r, _| {
+        let (mut name, mut limits, mut forbidden) = (None, Vec::new(), Vec::new());
+        let (mut top_speed, mut both_ways) = (None, false);
+        map(r, |r, key| {
+            match key {
+                "name" => name = Some(text(r)?),
+                "limits" => {
+                    let at = r.position();
+                    limits = list(r, |r, _| {
+                        let (mut field, mut value) = (None, None);
+                        map(r, |r, key| {
+                            match key {
+                                "field" => field = Some(text(r)?),
+                                "value" => value = Some(r.float()?),
+                                _ => return Err(unknown(r)),
+                            }
+                            Ok(())
+                        })?;
+                        Ok(ProfileLimit {
+                            field: required(r, field, "field")?,
+                            value: required(r, value, "value")?,
+                        })
+                    })?;
+                    if limits.is_empty() {
+                        return Err(r.fail_at(Code::BadValue, at, "boş sınır listesi yazılmaz"));
+                    }
+                }
+                "forbidden" => {
+                    let at = r.position();
+                    forbidden = list(r, |r, _| {
+                        let (mut field, mut values) = (None, None);
+                        map(r, |r, key| {
+                            match key {
+                                "field" => field = Some(text(r)?),
+                                "values" => values = Some(texts(r, "boş değer listesi yazılmaz")?),
+                                _ => return Err(unknown(r)),
+                            }
+                            Ok(())
+                        })?;
+                        Ok(ProfileForbid {
+                            field: required(r, field, "field")?,
+                            values: required(r, values, "values")?,
+                        })
+                    })?;
+                    if forbidden.is_empty() {
+                        return Err(r.fail_at(Code::BadValue, at, "boş yasak listesi yazılmaz"));
+                    }
+                }
+                "topSpeed" => top_speed = Some(r.float()?),
+                "bothWays" => {
+                    let at = r.position();
+                    if !r.bool()? {
+                        return Err(r.fail_at(
+                            Code::BadValue,
+                            at,
+                            "bothWays false yazılmaz; alan yoksa araç tek yönlü kenara uyar",
+                        ));
+                    }
+                    both_ways = true;
+                }
+                _ => return Err(unknown(r)),
+            }
+            Ok(())
+        })?;
+        Ok(NetworkProfile {
+            name: required(r, name, "name")?,
+            limits,
+            forbidden,
+            top_speed,
+            both_ways,
+        })
+    })?;
+    if all.is_empty() {
+        return Err(r.fail_at(Code::BadValue, at, "boş araç profili listesi yazılmaz"));
+    }
+    Ok(all)
+}
+
+/// A network's dated closures (schema 95, docs/adr/0567 §2).
+fn closures(r: &mut Reader<'_>) -> Result<NetworkClosures, KcadError> {
+    let (mut from, mut to) = (None, None);
+    map(r, |r, key| {
+        match key {
+            "from" => from = Some(text(r)?),
+            "to" => to = Some(text(r)?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    Ok(NetworkClosures {
+        from: required(r, from, "from")?,
+        to: required(r, to, "to")?,
+    })
+}
+
 /// The project's networks, checked whole; an empty list is not written.
 pub(super) fn networks(
     r: &mut Reader<'_>,
     turned: bool,
     termed: bool,
     kept: bool,
+    profiled: bool,
 ) -> Result<Vec<NetworkDef>, KcadError> {
     let at = r.position();
     let kinds = [
@@ -410,6 +510,7 @@ pub(super) fn networks(
         let (mut junction_layers, mut cost_list, mut closed) = (Vec::new(), Vec::new(), None);
         let (mut turn_rules, mut level_fields) = (None, None);
         let (mut terminal_rules, mut subnet_rules) = (None, None);
+        let (mut profile_list, mut closure_fields) = (Vec::new(), None);
         map(r, |r, key| {
             match key {
                 "id" => id = Some(text(r)?),
@@ -426,6 +527,8 @@ pub(super) fn networks(
                 "levels" if turned => level_fields = Some(levels(r)?),
                 "terminals" if termed => terminal_rules = Some(terminals(r, kept)?),
                 "subnetworks" if termed => subnet_rules = Some(subnetworks(r, kept)?),
+                "profiles" if profiled => profile_list = profiles(r)?,
+                "closures" if profiled => closure_fields = Some(closures(r)?),
                 _ => return Err(unknown(r)),
             }
             Ok(())
@@ -445,6 +548,8 @@ pub(super) fn networks(
             levels: level_fields,
             terminals: terminal_rules,
             subnetworks: subnet_rules,
+            profiles: profile_list,
+            closures: closure_fields,
         })
     })?;
     if all.is_empty() {

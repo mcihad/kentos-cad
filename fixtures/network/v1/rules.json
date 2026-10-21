@@ -8888,6 +8888,1493 @@
         },
         "tolerance": 0.005
       }
+    },
+    {
+      "name": "araç profilleri",
+      "problem": null,
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "Kamyon",
+            "topSpeed": 60.0
+          },
+          {
+            "bothWays": true,
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "otoyol"
+                ]
+              }
+            ],
+            "name": "Yaya",
+            "topSpeed": 5.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profili: yalnız adı",
+      "problem": null,
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "name": "Otobüs"
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "9 araç profili",
+      "problem": "“Yollar” ağının araç profili çok; en çok 8 olmalı",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "name": "P0"
+          },
+          {
+            "name": "P1"
+          },
+          {
+            "name": "P2"
+          },
+          {
+            "name": "P3"
+          },
+          {
+            "name": "P4"
+          },
+          {
+            "name": "P5"
+          },
+          {
+            "name": "P6"
+          },
+          {
+            "name": "P7"
+          },
+          {
+            "name": "P8"
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profilinin adı boş",
+      "problem": "“Yollar” ağının 1. araç profilinin adı boş, kırpılmamış ya da 40 karakterden uzun",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "",
+            "topSpeed": 60.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profilinin adı kırpılmamış",
+      "problem": "“Yollar” ağının 1. araç profilinin adı boş, kırpılmamış ya da 40 karakterden uzun",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "Kamyon ",
+            "topSpeed": 60.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profilinin adı 41 karakter",
+      "problem": "“Yollar” ağının 1. araç profilinin adı boş, kırpılmamış ya da 40 karakterden uzun",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "topSpeed": 60.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profili Türkçe harfle iki kez",
+      "problem": "“Yollar” ağının “ışık” araç profili iki kez var",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "IŞIK",
+            "topSpeed": 60.0
+          },
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "ışık",
+            "topSpeed": 60.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profili: I ile ı başka",
+      "problem": null,
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "ILIK",
+            "topSpeed": 60.0
+          },
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "ilik",
+            "topSpeed": 60.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profilinde 9 sınır",
+      "problem": "“Yollar” ağının “Kamyon” araç profilinin sınırı ya da yasağı çok; en çok 8'er olmalı",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "s0",
+                "value": 1.0
+              },
+              {
+                "field": "s1",
+                "value": 1.0
+              },
+              {
+                "field": "s2",
+                "value": 1.0
+              },
+              {
+                "field": "s3",
+                "value": 1.0
+              },
+              {
+                "field": "s4",
+                "value": 1.0
+              },
+              {
+                "field": "s5",
+                "value": 1.0
+              },
+              {
+                "field": "s6",
+                "value": 1.0
+              },
+              {
+                "field": "s7",
+                "value": 1.0
+              },
+              {
+                "field": "s8",
+                "value": 1.0
+              }
+            ],
+            "name": "Kamyon",
+            "topSpeed": 60.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profilinin sınır alanı boş",
+      "problem": "“Yollar” ağının “Kamyon” araç profilinin sınır alanı boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "",
+                "value": 1.0
+              }
+            ],
+            "name": "Kamyon",
+            "topSpeed": 60.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profilinin sınırı sıfır",
+      "problem": "“Yollar” ağının “Kamyon” araç profilinin “agirlik” sınırı sıfırdan büyük bir sayı olmalı",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 0.0
+              }
+            ],
+            "name": "Kamyon",
+            "topSpeed": 60.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profilinin yasak alanı kırpılmamış",
+      "problem": "“Yollar” ağının “Kamyon” araç profilinin yasak alanı boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur ",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "Kamyon",
+            "topSpeed": 60.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profilinin yasağında 17 değer",
+      "problem": "“Yollar” ağının “Kamyon” araç profilinin “tur” yasağının 1–16 değeri olmalı",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "v0",
+                  "v1",
+                  "v2",
+                  "v3",
+                  "v4",
+                  "v5",
+                  "v6",
+                  "v7",
+                  "v8",
+                  "v9",
+                  "v10",
+                  "v11",
+                  "v12",
+                  "v13",
+                  "v14",
+                  "v15",
+                  "v16"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "Kamyon",
+            "topSpeed": 60.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profilinin yasak değeri boş",
+      "problem": "“Yollar” ağının “Kamyon” araç profilinin “tur” yasağının bir değeri boş, kırpılmamış ya da 40 karakterden uzun",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  ""
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "Kamyon",
+            "topSpeed": 60.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profilinin yasak değeri 41 karakter",
+      "problem": "“Yollar” ağının “Kamyon” araç profilinin “tur” yasağının bir değeri boş, kırpılmamış ya da 40 karakterden uzun",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "Kamyon",
+            "topSpeed": 60.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profilinin hızı 300",
+      "problem": null,
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "Kamyon",
+            "topSpeed": 300.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "araç profilinin hızı 301",
+      "problem": "“Yollar” ağının “Kamyon” araç profilinin en yüksek hızı 0 ile 300 km/sa arasında olmalı",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "Kamyon",
+            "topSpeed": 301.0
+          }
+        ],
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "tarihli kapanma",
+      "problem": null,
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "closures": {
+          "from": "kapanis_bas",
+          "to": "kapanis_son"
+        },
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "tarihli kapanma: alanlar aynı",
+      "problem": "“Yollar” ağının tarihli kapanmasının ilk ve son gün alanı aynı; iki ayrı alan olmalı",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "closures": {
+          "from": "kapanis",
+          "to": "kapanis"
+        },
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "tarihli kapanma: alan boş",
+      "problem": "“Yollar” ağının tarihli kapanmasının gün alanı boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "closures": {
+          "from": "",
+          "to": "kapanis_son"
+        },
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "alt ağ özniteliği profilin sınır alanıyla aynı",
+      "problem": "“İçme suyu” ağının alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar; başka bir ad seçin",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "profiles": [
+          {
+            "forbidden": [
+              {
+                "field": "tur",
+                "values": [
+                  "yaya"
+                ]
+              }
+            ],
+            "limits": [
+              {
+                "field": "agirlik",
+                "value": 18.0
+              }
+            ],
+            "name": "Kamyon",
+            "topSpeed": 60.0
+          }
+        ],
+        "subnetworks": {
+          "attribute": "agirlik",
+          "name": "Ad",
+          "reach": "downstream"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "alt ağ özniteliği kapanmanın alanıyla aynı",
+      "problem": "“İçme suyu” ağının alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar; başka bir ad seçin",
+      "value": {
+        "closures": {
+          "from": "kapanis_bas",
+          "to": "kapanis_son"
+        },
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "subnetworks": {
+          "attribute": "kapanis_son",
+          "name": "Ad",
+          "reach": "downstream"
+        },
+        "tolerance": 0.005
+      }
     }
   ],
   "note": "The rules of a project's networks (docs/adr/0209 §2), each case with the contract's words; null where the value is one. scripts/fixtures/network_rules_cases.py writes the values from the ADR and checks the verdicts with tools/kcad/kcad.py's own copy of the rules; Rust (crates/shared/contracts/tests/all/network_rules.rs, KENTOS_WRITE_NETWORK_RULES=1 writes the words) and TypeScript (apps/web/src/model/networkRules.test.ts) give the same words.",

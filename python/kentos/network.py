@@ -264,7 +264,7 @@ class Network:
     not take (expressions that did not compile); :attr:`counts` the nodes,
     pieces, length and the objects not taken."""
 
-    __slots__ = ("_native", "_time", "costs", "counts", "definition", "problems")
+    __slots__ = ("_date", "_native", "_profile", "_time", "closed", "costs", "counts", "definition", "problems")
 
     def __init__(self, doc: Document, network: str) -> None:
         session = doc._session
@@ -280,6 +280,38 @@ class Network:
         self.counts: dict[str, Any] = s["counts"]
         self.problems: list[str] = s["problems"]
         self._time: str | None = None
+        self._profile: str | None = None
+        self._date: str | None = None
+        #: What the profile and the date closed (docs/adr/0567): ``byProfile`` and ``byDate`` edges, and the edge
+        #: objects whose limit or closure value could not be read (``unread``).
+        self.closed: dict[str, Any] = {"byProfile": 0, "byDate": 0, "unread": []}
+
+    def _access(self, profile: str | None, date: str | None) -> None:
+        a = json.loads(self._native.set_access(profile, date))
+        if "error" in a:
+            raise NetworkError(a["error"])
+        self._profile, self._date = profile, date
+        self.closed = a
+
+    @property
+    def profile(self) -> str | None:
+        """Araç profili (docs/adr/0567 §1): the vehicle the questions are for, by the name of one of the network's
+        profiles; ``None``, no profile. Edges its limits or forbidding values close are not travelled, its top speed
+        caps the speeds, a both-ways profile goes against one-way edges."""
+        return self._profile
+
+    @profile.setter
+    def profile(self, value: str | None) -> None:
+        self._access(None if value is None or not str(value).strip() else str(value).strip(), self._date)
+
+    @property
+    def date(self) -> str | None:
+        """Tarih (docs/adr/0567 §2): the day the questions are for, ``"2026-11-03"``; ``None``, no closure applied."""
+        return self._date
+
+    @date.setter
+    def date(self, value: str | None) -> None:
+        self._access(self._profile, None if value is None or not str(value).strip() else str(value).strip())
 
     @property
     def time(self) -> str | None:

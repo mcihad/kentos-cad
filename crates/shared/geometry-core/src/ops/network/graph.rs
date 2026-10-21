@@ -24,6 +24,7 @@
 
 use std::collections::HashMap;
 
+use super::access::{Access, Closing, Varied};
 use super::clock::Clock;
 use super::rules::{Connect, Dir, Rules};
 use super::terminals::{NO_DEVICE, NO_TERMINAL, Terminals};
@@ -52,6 +53,8 @@ pub struct EdgeIn {
     pub periods: Vec<Vec<Option<String>>>,
     /// Its terminal fields' values: the terminal its start and its end are attached to (docs/adr/0557 §1).
     pub terminals: [Option<String>; 2],
+    /// Its profiles' and closures' field values, `facts[i]` of the rules' `access.facts[i]` (docs/adr/0567).
+    pub facts: Vec<Option<String>>,
 }
 
 impl EdgeIn {
@@ -74,6 +77,7 @@ impl EdgeIn {
             levels: [None, None, None],
             periods: Vec::new(),
             terminals: [None, None],
+            facts: Vec::new(),
         }
     }
 }
@@ -205,6 +209,13 @@ pub struct Graph {
     pub clocks: Vec<Option<Clock>>,
     /// The devices' terminals at the nodes and arcs, when the definition has devices (docs/adr/0557 §1).
     pub terms: Option<Terminals>,
+    /// Each edge's profiles' and closures' values, when the definition has some (docs/adr/0567).
+    facts: Vec<Vec<Option<String>>>,
+    /// The costs and clocks as defined, kept while the graph is varied for a question's access.
+    base: Option<(Vec<f64>, Vec<f64>, Vec<Option<Clock>>)>,
+    /// The access the costs are for, and what varying them for it closed.
+    access: Access,
+    varied: Varied,
 }
 
 /// A cut along an edge: where (metres from its start), the point and its order among all cuts.
@@ -846,6 +857,7 @@ impl Graph {
             report.unterminated.dedup();
             Terminals::new(&rules, node_device.clone(), arc_terminal)
         });
+        let rules_access_empty = rules.access.is_empty();
         let mut g = Graph {
             rules,
             nodes,
@@ -866,6 +878,14 @@ impl Graph {
             turns: None,
             clocks,
             terms,
+            facts: if rules_access_empty {
+                Vec::new()
+            } else {
+                edges.iter().map(|e| e.facts.clone()).collect()
+            },
+            base: None,
+            access: Access::default(),
+            varied: Varied::default(),
         };
         if g.rules.turns.is_some() {
             g.turns = Some(g.turn_table(turns, &mut report));
@@ -1067,6 +1087,90 @@ impl Graph {
         &self.adj[self.adj_start[n as usize] as usize..self.adj_start[n as usize + 1] as usize]
     }
 
+    /// The access the costs are for (docs/adr/0567).
+    pub fn access(&self) -> Access {
+        self.access
+    }
+
+    /// Varies the costs for `access` (docs/adr/0567): its profile's closed edges and the day's closed edges not
+    /// travelled, its top speed capping every speed cost, a both-ways profile against one-way edges; what it closed.
+    /// The pieces, the nodes and the turns stay; the same access again is free, none the network as defined.
+    pub fn vary(&mut self, access: Access) -> &Varied {
+        if access == self.access {
+            return &self.varied;
+        }
+        let base = self
+            .base
+            .take()
+            .unwrap_or_else(|| (self.fw.clone(), self.bw.clone(), self.clocks.clone()));
+        self.vary_from(access, &base);
+        self.base = Some(base);
+        &self.varied
+    }
+
+    fn vary_from(&mut self, access: Access, (fw0, bw0, clocks0): &(Vec<f64>, Vec<f64>, Vec<Option<Clock>>)) {
+        self.access = access;
+        self.varied = Varied::default();
+        if access.is_none() {
+            self.fw.clone_from(fw0);
+            self.bw.clone_from(bw0);
+            self.clocks.clone_from(clocks0);
+            return;
+        }
+        let rules = &self.rules.access;
+        let profile = access.profile.and_then(|i| rules.profiles.get(i));
+        let (top, both) = profile.map_or((None, false), |p| (p.top_speed, p.both_ways));
+        let mut closing = vec![Closing::Open; self.edges.len()];
+        for (i, c) in closing.iter_mut().enumerate() {
+            let mut unread = false;
+            let facts = self.facts.get(i).map_or(&[][..], Vec::as_slice);
+            *c = rules.closing(&access, facts, &mut unread);
+            match *c {
+                Closing::Profile => self.varied.by_profile += 1,
+                Closing::Date => self.varied.by_date += 1,
+                Closing::Open => {}
+            }
+            let id = self.edges[i].id;
+            if unread && self.varied.unread.last() != Some(&id) {
+                self.varied.unread.push(id);
+            }
+        }
+        let n = self.costs;
+        for (k, p) in self.pieces.iter().enumerate() {
+            let e = p.edge as usize;
+            let meta = &self.edges[e];
+            for c in 0..n {
+                let at = k * n + c;
+                let (mut f, mut b) = (fw0[at], bw0[at]);
+                if closing[e] != Closing::Open {
+                    f = f64::INFINITY;
+                    b = f64::INFINITY;
+                } else {
+                    if both && !meta.closed && meta.dir != Dir::Closed {
+                        let any = if f.is_finite() { f } else { b };
+                        (f, b) = (any, any);
+                    }
+                    if let Some(kmh) = top
+                        && self.rules.is_time(c)
+                    {
+                        // Minutes at the top speed: 60 over the metres an hour.
+                        let least = p.len * 60.0 / (kmh * 1000.0);
+                        f = if f < least { least } else { f };
+                        b = if b < least { least } else { b };
+                    }
+                }
+                self.fw[at] = f;
+                self.bw[at] = b;
+            }
+        }
+        for (c, clock) in self.clocks.iter_mut().enumerate() {
+            *clock = match (&clocks0[c], top) {
+                (Some(k), Some(kmh)) => Some(k.capped(kmh)),
+                (k, _) => k.clone(),
+            };
+        }
+    }
+
     /// Piece `p`'s cost `c` travelled the way it is drawn (`forward`) or against it.
     pub fn cost(&self, p: u32, c: usize, forward: bool) -> f64 {
         let k = p as usize * self.costs + c;
@@ -1209,6 +1313,7 @@ mod tests {
             levels: [None, None, None],
             periods: Vec::new(),
             terminals: [None, None],
+            facts: Vec::new(),
         }
     }
 

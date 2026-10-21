@@ -67,6 +67,9 @@ pub struct NetworkAsk {
     /// The time of day the question sets off at, minutes (Saat, docs/adr/0521 §4); read by a cost with a time
     /// profile.
     pub at: Option<f64>,
+    /// The vehicle profile's name and the day (`YYYY-MM-DD`) the question is for (docs/adr/0567); none, neither.
+    pub profile: Option<String>,
+    pub day: Option<String>,
 }
 
 /// A network's answer.

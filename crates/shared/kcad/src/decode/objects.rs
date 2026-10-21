@@ -250,6 +250,7 @@ pub(super) struct Features {
     /// Schema 93: a network's terminals and subnetworks (docs/adr/0557).
     pub(super) network_terminals: bool,
     pub(super) network_configs: bool,
+    pub(super) network_profiles: bool,
     /// Schema 88: a raster's georeference record (docs/adr/0518 §1).
     pub(super) georef: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
@@ -408,6 +409,7 @@ impl Features {
             network_turns: schema >= crate::SCHEMA_WITH_NETWORK_TURNS,
             network_terminals: schema >= crate::SCHEMA_WITH_NETWORK_TERMINALS,
             network_configs: schema >= crate::SCHEMA_WITH_NETWORK_CONFIGS,
+            network_profiles: schema >= crate::SCHEMA_WITH_NETWORK_PROFILES,
             georef: schema >= crate::SCHEMA_WITH_GEOREF,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,

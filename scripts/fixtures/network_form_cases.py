@@ -97,6 +97,29 @@ def configs_of(text):
     return out
 
 
+def limits_of(text):
+    """A profile's limits as typed: `agirlik 18; yukseklik 4,0` (docs/adr/0567 §1); the limits or the words."""
+    out = []
+    for n, part in enumerate([p.strip() for p in text.split(";") if p.strip()], 1):
+        m = re.fullmatch(r"(.*\S)\s+(\S+)", part)
+        v = decimal(m.group(2)) if m else None
+        if v is None:
+            return f"{n}. sınır “agirlik 18” gibi yazılır: alan ve değer."
+        out.append({"field": m.group(1).strip(), "value": v})
+    return out
+
+
+def forbidden_of(text):
+    """A profile's forbidding fields as typed: `tur = yaya, bisiklet; sinif = otoyol`; the list or the words."""
+    out = []
+    for n, part in enumerate([p.strip() for p in text.split(";") if p.strip()], 1):
+        if "=" not in part:
+            return f"{n}. yasak “tur = yaya, bisiklet” gibi yazılır."
+        field, values = part.split("=", 1)
+        out.append({"field": field.strip(), "values": [v.strip() for v in values.split(",") if v.strip()]})
+    return out
+
+
 def device_of(row):
     """A device row as typed: its terminals and paths, the attribute that names a point's configuration and the configurations."""
     d = {"layer": row["layer"], "terminals": terminals_of(row["terminals"]), "paths": paths_of(row["paths"])}
@@ -171,6 +194,30 @@ def def_of(form, unit):
                        **({"name": form["subnetName"].strip()} if form.get("subnetName", "").strip() else {}),
                        **({"keepCurrent": True} if form.get("subnetKeep") else {})}
 
+    # Vehicle profiles and dated closures (docs/adr/0567).
+    profiles = []
+    for p in form.get("profiles", []):
+        pname = p["name"].strip()
+        whose = f"{who} “{pname}” profilinin"
+        top = p.get("topSpeed", "").strip()
+        speed = decimal(top) if top else None
+        if top and speed is None:
+            return {"problem": f"{whose} en yüksek hızı bir sayı olmalı (km/sa)."}
+        limits = limits_of(p.get("limits", ""))
+        if isinstance(limits, str):
+            return {"problem": f"{whose} sınırları: {limits}"}
+        forbidden = forbidden_of(p.get("forbidden", ""))
+        if isinstance(forbidden, str):
+            return {"problem": f"{whose} yasakları: {forbidden}"}
+        profiles.append({"name": pname, **({"limits": limits} if limits else {}), **({"forbidden": forbidden} if forbidden else {}),
+                         **({"topSpeed": speed} if speed is not None else {}), **({"bothWays": True} if p.get("bothWays") else {})})
+    c_from, c_to = form.get("closureFrom", "").strip(), form.get("closureTo", "").strip()
+    closures = None
+    if c_from and c_to:
+        closures = {"from": c_from, "to": c_to}
+    elif c_from or c_to:
+        return {"problem": f"{who} kapanmaları için ilk ve son gün alanı birlikte yazılır."}
+
     d = {"id": form["id"], "name": name, "kind": form["kind"], "edges": [{"layer": e["layer"], **opt("filter", e["filter"])} for e in form["edges"]]}
     if form["junctions"]:
         d["junctions"] = [{"layer": j["layer"], "role": j["role"], **opt("filter", j["filter"]), **opt("closed", j["closed"])} for j in form["junctions"]]
@@ -192,6 +239,10 @@ def def_of(form, unit):
         d["terminals"] = terminals
     if subnetworks is not None:
         d["subnetworks"] = subnetworks
+    if profiles:
+        d["profiles"] = profiles
+    if closures is not None:
+        d["closures"] = closures
     return d
 
 
@@ -266,6 +317,18 @@ def cases():
                   "configs": " üç yollu=a: A;b: B;c: C|a,b,c || trafo = yg: Yüksek gerilim; ag: Alçak gerilim | yg, ag ||"}]))
     add("alt ağlar: güncel tut", form(**water, subnetReach="downstream", subnetKeep=True))
     add("alt ağlar: güncel tut, ulaşım yokken yazılmaz", form(**water, subnetKeep=True))
+    # Vehicle profiles and dated closures (docs/adr/0567).
+    truck = {"name": " Kamyon ", "limits": " agirlik 18; yukseklik 4,0 ;", "forbidden": " tur = yaya , bisiklet ; sinif= otoyol", "topSpeed": "60", "bothWays": False}
+    add("araç profilleri: sınırlar, yasaklar, hız; boşluklar kırpılır",
+        form(costs=[dict(SURE)], profiles=[truck, {"name": "Yaya", "limits": "", "forbidden": "tur = otoyol", "topSpeed": "5", "bothWays": True}]))
+    add("araç profili: yalnız adı", form(profiles=[{"name": "Otobüs", "limits": "", "forbidden": "", "topSpeed": "", "bothWays": False}]))
+    add("araç profili: alan adında boşluk", form(profiles=[{"name": "Tır", "limits": "dingil yuku 11,5", "forbidden": "", "topSpeed": "", "bothWays": False}]))
+    add("araç profili: sınırın değeri yok", form(profiles=[{**truck, "limits": "agirlik"}]))
+    add("araç profili: sınırın değeri sayı değil", form(profiles=[{**truck, "limits": "agirlik ağır"}]))
+    add("araç profili: yasakta eşittir yok", form(profiles=[{**truck, "forbidden": "tur yaya"}]))
+    add("araç profili: hız sayı değil", form(profiles=[{**truck, "topSpeed": "hızlı"}]))
+    add("tarihli kapanma: iki alan", form(closureFrom=" kapanis_bas ", closureTo="kapanis_son"))
+    add("tarihli kapanma: yalnız ilk gün", form(closureFrom="kapanis_bas"))
     return out
 
 

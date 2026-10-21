@@ -1,0 +1,120 @@
+//! Vehicle profiles and dated closures (docs/adr/0567) against fixtures/network/v1/access.json
+//! (`scripts/fixtures/network_access_cases.py`: the ADR's rules in Python, no KentOS code, a plain Dijkstra over the
+//! grid's corners): what each question's access closed and could not read exactly, the cheapest way's cost and its
+//! length and minutes within 1e-9 (of their size above 1), and the refusals' words.
+
+// Test harness code, not the core: the std float methods are fine here.
+#![allow(clippy::disallowed_methods)]
+
+use kentos_geometry_core::Vec2;
+use kentos_geometry_core::api::json::Json;
+use kentos_geometry_core::geom::bulge::bulge_path_edges;
+use kentos_geometry_core::ops::network::{
+    EdgeIn, Graph, NetworkSession, Refusal, Reorder, Rules,
+};
+use serde_json::Value;
+
+fn fixture() -> Value {
+    let path = format!(
+        "{}/../../../fixtures/network/v1/access.json",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let file: Value =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("the fixture")).expect("JSON");
+    assert_eq!(file["format"], "kentos.network-access");
+    assert_eq!(file["version"], 1);
+    file
+}
+
+fn num(v: &Value) -> f64 {
+    v.as_f64().expect("a number")
+}
+
+fn near(a: f64, b: f64, what: &str) {
+    assert!(
+        (a - b).abs() <= 1e-9 * b.abs().max(1.0),
+        "{what}: {a} ≠ {b}"
+    );
+}
+
+fn point(v: &Value) -> Vec2 {
+    Vec2::new(num(&v[0]), num(&v[1]))
+}
+
+fn session(file: &Value) -> NetworkSession {
+    let rules = Rules::from_json(&Json::parse(&file["definition"].to_string()).expect("JSON"))
+        .expect("rules");
+    let attr = |e: &Value, f: &str| e["attrs"][f].as_str().map(str::to_owned);
+    let edges: Vec<EdgeIn> = file["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|e| {
+            let pts: Vec<Vec2> = e["pts"].as_array().expect("points").iter().map(point).collect();
+            let mut edge = EdgeIn::new(
+                num(&e["id"]),
+                0,
+                bulge_path_edges(&pts, None, false),
+                attr(e, "yon"),
+                vec![attr(e, "hiz")],
+                e["closed"].as_bool().unwrap_or(false),
+            );
+            edge.facts = rules.access.facts.iter().map(|f| attr(e, f)).collect();
+            edge
+        })
+        .collect();
+    let (graph, report) = Graph::build(rules, &edges, &[]);
+    NetworkSession::new(graph, report, Vec::new())
+}
+
+#[test]
+fn profiles_and_closures_give_what_the_independent_reference_gives() {
+    let file = fixture();
+    let mut s = session(&file);
+    let cases = file["cases"].as_array().expect("cases");
+    assert_eq!(cases.len(), 26);
+    // Twice through: an access asked again, and one after another, gives the same.
+    for round in 0..2 {
+        for c in cases {
+            let name = c["name"].as_str().expect("a name");
+            let varied = s
+                .set_access(c["profile"].as_str(), c["day"].as_str())
+                .unwrap_or_else(|e| panic!("{name}: {e}"));
+            assert_eq!(varied.by_profile as u64, c["byProfile"].as_u64().unwrap(), "{name}");
+            assert_eq!(varied.by_date as u64, c["byDate"].as_u64().unwrap(), "{name}");
+            let unread: Vec<f64> = c["unread"].as_array().unwrap().iter().map(num).collect();
+            assert_eq!(varied.unread, unread, "{name}");
+            let stops = [point(&c["from"]), point(&c["to"])];
+            let cost = c["cost"].as_u64().unwrap() as usize;
+            let got = s.route(&stops, &[], 1.0, cost, Reorder::None);
+            if c["unreachable"].as_bool() == Some(true) {
+                assert_eq!(got.err(), Some(Refusal::Unreachable(0, 1)), "{name}");
+                continue;
+            }
+            let r = got.unwrap_or_else(|e| panic!("{name} ({round}): {e:?}"));
+            near(r.cost, num(&c["total"]), name);
+            near(r.totals[0].expect("a length"), num(&c["totals"][0]), name);
+            near(r.totals[1].expect("minutes"), num(&c["totals"][1]), name);
+        }
+    }
+    for r in file["refusals"].as_array().expect("refusals") {
+        let e = s
+            .set_access(r["profile"].as_str(), r["day"].as_str())
+            .expect_err("a refusal");
+        assert_eq!(e, r["error"].as_str().unwrap());
+    }
+}
+
+#[test]
+fn no_access_is_the_network_as_defined() {
+    let file = fixture();
+    let mut s = session(&file);
+    let stops = [point(&file["cases"][1]["from"]), point(&file["cases"][1]["to"])];
+    let before = s.route(&stops, &[], 1.0, 1, Reorder::None).expect("a way");
+    s.set_access(Some("Yaya"), Some("2026-11-03")).expect("an access");
+    let varied = s.route(&stops, &[], 1.0, 1, Reorder::None).expect("a way");
+    assert!(varied.cost > before.cost);
+    s.set_access(None, None).expect("none");
+    let after = s.route(&stops, &[], 1.0, 1, Reorder::None).expect("a way");
+    assert_eq!(after, before);
+}

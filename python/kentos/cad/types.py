@@ -29278,6 +29278,28 @@ class NamedView(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NetworkClosures(_Model):
+    """The edge fields of a closure's first and last day (docs/adr/0567 §2): `YYYY-MM-DD`, both days in; an empty first
+    day closes from always, an empty last day until ever, both empty not at all.
+    """
+    from_: str
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkClosures:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NetworkCost(_Model):
     """A cost besides the length (docs/adr/0209 §2).
     Attributes:
@@ -29328,10 +29350,14 @@ class NetworkDef(_Model):
         edges: The line layers whose lines, paths and arcs are the edges, in this order.
         tolerance: Metres, within [`NETWORK_TOLERANCES`]. Unit: length.
         closed: An expression: the edges it holds for are out of service, travelled by nothing.
+        closures: Tarihli kapanmalar (docs/adr/0567 §2): the edge fields of the first and the last day an edge is closed; a
+            question with a date passes none closed that day. None: no edge is closed by date.
         costs: The costs besides the length, in the order the tools offer them.
         junctions: The point layers whose points are junctions, sources or valves.
         levels: Seviyeler (docs/adr/0521 §3): which ends and insides of the edges connect, by their level fields; none: every
             one at one level.
+        profiles: Araç profilleri (docs/adr/0567 §1): what a vehicle may travel (its weight, height, width against the edges'
+            limits; the edges its kind may not) and how fast; a question names one. None: every vehicle the same.
         subnetworks: Alt ağlar (docs/adr/0557 §2): the parts the sources feed, found by `cad.subnetworks.find` and written into an
             attribute by `cad.subnetworks.update`. None: the network has no subnetworks.
         terminals: Terminaller (docs/adr/0557 §1): the ends of a device (a valve's in and out, a transformer's two sides) and which
@@ -29346,9 +29372,11 @@ class NetworkDef(_Model):
     tolerance: float
     direction: NetworkDirection
     closed: str | None | Unset = UNSET
+    closures: NetworkClosures | None | Unset = UNSET
     costs: list[NetworkCost] | Unset = UNSET
     junctions: list[JunctionLayer] | Unset = UNSET
     levels: NetworkLevels | None | Unset = UNSET
+    profiles: list[NetworkProfile] | Unset = UNSET
     subnetworks: NetworkSubnetworks | None | Unset = UNSET
     terminals: NetworkTerminals | None | Unset = UNSET
     turns: NetworkTurns | None | Unset = UNSET
@@ -29364,12 +29392,16 @@ class NetworkDef(_Model):
         out["direction"] = self.direction.to_json()
         if self.closed is not UNSET:
             out["closed"] = self.closed
+        if self.closures is not UNSET:
+            out["closures"] = None if self.closures is None else self.closures.to_json()
         if self.costs is not UNSET:
             out["costs"] = [e0.to_json() for e0 in self.costs]
         if self.junctions is not UNSET:
             out["junctions"] = [e0.to_json() for e0 in self.junctions]
         if self.levels is not UNSET:
             out["levels"] = None if self.levels is None else self.levels.to_json()
+        if self.profiles is not UNSET:
+            out["profiles"] = [e0.to_json() for e0 in self.profiles]
         if self.subnetworks is not UNSET:
             out["subnetworks"] = None if self.subnetworks is None else self.subnetworks.to_json()
         if self.terminals is not UNSET:
@@ -29389,9 +29421,11 @@ class NetworkDef(_Model):
             tolerance=float(data["tolerance"]),
             direction=NetworkDirection.from_json(data["direction"]),
             closed=data.get("closed", UNSET),
+            closures=UNSET if "closures" not in data else None if data["closures"] is None else NetworkClosures.from_json(data["closures"]),
             costs=[NetworkCost.from_json(e0) for e0 in data["costs"]] if "costs" in data else UNSET,
             junctions=[JunctionLayer.from_json(e0) for e0 in data["junctions"]] if "junctions" in data else UNSET,
             levels=UNSET if "levels" not in data else None if data["levels"] is None else NetworkLevels.from_json(data["levels"]),
+            profiles=[NetworkProfile.from_json(e0) for e0 in data["profiles"]] if "profiles" in data else UNSET,
             subnetworks=UNSET if "subnetworks" not in data else None if data["subnetworks"] is None else NetworkSubnetworks.from_json(data["subnetworks"]),
             terminals=UNSET if "terminals" not in data else None if data["terminals"] is None else NetworkTerminals.from_json(data["terminals"]),
             turns=UNSET if "turns" not in data else None if data["turns"] is None else NetworkTurns.from_json(data["turns"]),
@@ -29546,6 +29580,46 @@ class NetworkPeriod(_Model):
             to=data["to"],
             factor=UNSET if "factor" not in data else None if data["factor"] is None else float(data["factor"]),
             field=data.get("field", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkProfile(_Model):
+    """A vehicle profile (docs/adr/0567 §1): its name, its limits (an edge is closed to it where the edge's field is
+    below its value), what forbids an edge to it (a field's values), its top speed and whether it goes against one-way
+    edges (a pedestrian).
+    Attributes:
+        name: Trimmed, at most 40 characters; one of its kind in the network, Turkish case aside.
+        both_ways: Whether the vehicle goes both ways on one-way edges (closed edges stay closed).
+        top_speed: The highest speed (km/h) the vehicle goes on any edge: a speed cost's edges slower; none: the edges' own. Unit: km/h.
+    """
+    name: str
+    both_ways: bool | Unset = UNSET
+    forbidden: list[ProfileForbid] | Unset = UNSET
+    limits: list[ProfileLimit] | Unset = UNSET
+    top_speed: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.both_ways is not UNSET:
+            out["bothWays"] = self.both_ways
+        if self.forbidden is not UNSET:
+            out["forbidden"] = [e0.to_json() for e0 in self.forbidden]
+        if self.limits is not UNSET:
+            out["limits"] = [e0.to_json() for e0 in self.limits]
+        if self.top_speed is not UNSET:
+            out["topSpeed"] = None if self.top_speed is None else float(self.top_speed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkProfile:
+        return cls(
+            name=data["name"],
+            both_ways=data.get("bothWays", UNSET),
+            forbidden=[ProfileForbid.from_json(e0) for e0 in data["forbidden"]] if "forbidden" in data else UNSET,
+            limits=[ProfileLimit.from_json(e0) for e0 in data["limits"]] if "limits" in data else UNSET,
+            top_speed=UNSET if "topSpeed" not in data else None if data["topSpeed"] is None else float(data["topSpeed"]),
         )
 
 
@@ -33988,6 +34062,26 @@ class ProfileFinding(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfileForbid(_Model):
+    """What forbids an edge to a profile: the edge field's values (Turkish case aside)."""
+    field: str
+    values: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["values"] = list(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileForbid:
+        return cls(
+            field=data["field"],
+            values=list(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfileImported(_Model):
     """Output (and plan) of `cad.profiles.import` v1.
     Attributes:
@@ -34038,6 +34132,30 @@ class ProfileImported(_Model):
             replaced=data["replaced"],
             bytes=data["bytes"],
             previous_release=data.get("previousRelease", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileLimit(_Model):
+    """A profile's limit: the vehicle's value (tonnes, metres …) against the edge field's: closed where the field reads
+    a number below it; an empty field, no limit.
+    Attributes:
+        value: Unit: 1.
+    """
+    field: str
+    value: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["value"] = float(self.value)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileLimit:
+        return cls(
+            field=data["field"],
+            value=float(data["value"]),
         )
 
 
@@ -59953,6 +60071,7 @@ __all__ = [
     "NamedUcs",
     "NamedUcsTo",
     "NamedView",
+    "NetworkClosures",
     "NetworkConnect",
     "NetworkConnectName",
     "NetworkCost",
@@ -59969,6 +60088,7 @@ __all__ = [
     "NetworkLayer",
     "NetworkLevels",
     "NetworkPeriod",
+    "NetworkProfile",
     "NetworkSubnetworks",
     "NetworkTerminals",
     "NetworkTurns",
@@ -60167,9 +60287,11 @@ __all__ = [
     "ProfileFinding",
     "ProfileFindingKind",
     "ProfileFindingKindName",
+    "ProfileForbid",
     "ProfileGeometry",
     "ProfileGeometryName",
     "ProfileImported",
+    "ProfileLimit",
     "ProfileListed",
     "ProfileMapping",
     "ProfileMigration",

@@ -331,6 +331,8 @@ SCHEMA_WITH_SOURCE_FIELD_BASES = 92
 SCHEMA_WITH_NETWORK_TERMINALS = 93
 # Schema 94: schema 93 and a network device's `by` and `configs` and the subnetworks' `keepCurrent` (docs/adr/0562).
 SCHEMA_WITH_NETWORK_CONFIGS = 94
+# Schema 95: schema 94 and a network's vehicle `profiles` and dated `closures` (docs/adr/0567).
+SCHEMA_WITH_NETWORK_PROFILES = 95
 # The most bytes a base's field records take decoded, and the most vertex hashes a record keeps.
 MAX_FIELD_BASE_BYTES = 8 * 1024 * 1024
 MAX_BASE_VERTICES = 128
@@ -574,7 +576,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1018,11 +1020,55 @@ def network_problem(n):
         p = terminals_problem(n, tm, bad_field)
         if p:
             return p
+    p = profiles_problem(n.get("profiles", []), bad_field)
+    if p:
+        return p
+    cl = n.get("closures")
+    if cl is not None:
+        if bad_field(cl["from"]) or bad_field(cl["to"]):
+            return "Kapanmanın tarih alanı boş, kırpılmamış ya da çok uzun."
+        if cl["from"] == cl["to"]:
+            return "Kapanmanın ilk ve son gününün alanı aynı."
     sn = n.get("subnetworks")
     if sn is not None:
         p = subnetworks_problem(n, sn, bad_field)
         if p:
             return p
+    return None
+
+
+def profiles_problem(profiles, bad_field):
+    """A network's vehicle profiles (docs/adr/0567 §1; kentos_contracts::network::NetworkDef::profiles_problem): at most
+    8, each named once (Turkish case aside), at most 8 limits and 8 forbidding fields, a limit's value above zero, a
+    forbidding field's 1–16 trimmed values, a top speed in (0, 300] km/h."""
+    if len(profiles) > 8:
+        return "En çok 8 araç profili olur."
+    seen = []
+    for p in profiles:
+        name = p["name"]
+        if not name.strip() or name.strip() != name or len(name) > 40:
+            return "Araç profilinin adı boş, kırpılmamış ya da çok uzun."
+        key = network_caseless(name)
+        if key in seen:
+            return "Araç profili iki kez var."
+        seen.append(key)
+        limits, forbidden = p.get("limits", []), p.get("forbidden", [])
+        if len(limits) > 8 or len(forbidden) > 8:
+            return "Araç profilinin sınırı ya da yasağı çok."
+        for l_ in limits:
+            if bad_field(l_["field"]):
+                return "Araç profilinin sınır alanı bozuk."
+            if not (math.isfinite(l_["value"]) and l_["value"] > 0):
+                return "Araç profilinin sınırı sıfırdan büyük olmalı."
+        for f in forbidden:
+            if bad_field(f["field"]):
+                return "Araç profilinin yasak alanı bozuk."
+            vs = f["values"]
+            if not 1 <= len(vs) <= 16 or any(not v.strip() or v.strip() != v or len(v) > 40 for v in vs):
+                return "Araç profilinin yasak değerleri bozuk."
+        t = p.get("topSpeed")
+        if t is not None and not (math.isfinite(t) and 0 < t <= 300):
+            return "Araç profilinin en yüksek hızı 0 ile 300 km/sa arasında olmalı."
     return None
 
 
@@ -1132,6 +1178,10 @@ def subnetworks_problem(n, s, bad_field):
     d = n["direction"]
     if d["kind"] == "field":
         reads.append(d["field"])
+    for p in n.get("profiles", []):
+        reads += [l_["field"] for l_ in p.get("limits", [])] + [f["field"] for f in p.get("forbidden", [])]
+    if "closures" in n:
+        reads += [n["closures"]["from"], n["closures"]["to"]]
     if s["attribute"] in reads:
         return "Alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar."
     return None
@@ -2935,6 +2985,7 @@ class _Schema:
         self.source_field_bases = version >= SCHEMA_WITH_SOURCE_FIELD_BASES
         self.network_terminals = version >= SCHEMA_WITH_NETWORK_TERMINALS
         self.network_configs = version >= SCHEMA_WITH_NETWORK_CONFIGS
+        self.network_profiles = version >= SCHEMA_WITH_NETWORK_PROFILES
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -4396,6 +4447,14 @@ class _Schema:
         subnetworks = self.fields({"name": (self.text, False), "attribute": (self.text, True),
                                    "reach": (self.enum(SUBNETWORK_REACHES), True),
                                    **({"keepCurrent": (self.true_only, False)} if self.network_configs else {})})
+        limit = self.fields({"field": (self.text, True), "value": (self.float, True)})
+        forbid = self.fields({"field": (self.text, True),
+                              "values": (lambda x: self.nonempty_texts(x), True)})
+        profile = self.fields({"name": (self.text, True),
+                               "limits": (nonempty(limit, "boş sınır listesi yazılmaz"), False),
+                               "forbidden": (nonempty(forbid, "boş yasak listesi yazılmaz"), False),
+                               "topSpeed": (self.float, False), "bothWays": (self.true_only, False)})
+        closures = self.fields({"from": (self.text, True), "to": (self.text, True)})
         network = self.fields(
             {
                 "id": (self.text, True),
@@ -4410,6 +4469,8 @@ class _Schema:
                 "closed": (self.text, False),
                 **({"turns": (turns, False), "levels": (levels, False)} if turned else {}),
                 **({"terminals": (terminals, False), "subnetworks": (subnetworks, False)} if self.network_terminals else {}),
+                **({"profiles": (nonempty(profile, "boş araç profili listesi yazılmaz"), False),
+                    "closures": (closures, False)} if self.network_profiles else {}),
             }
         )
         all_ = self.array(network)(v)

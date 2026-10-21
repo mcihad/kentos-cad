@@ -60,6 +60,8 @@ struct Seen {
     list: Vec<kentos_commands::NetworkDef>,
     reorder: Option<Reorder>,
     time: Option<u32>,
+    profile: String,
+    day: Option<i64>,
 }
 
 #[derive(Default)]
@@ -95,6 +97,8 @@ impl NetRoute {
             list: Base::list(cx).to_vec(),
             reorder: Some(cx.memory.network_reorder),
             time: cx.memory.network_time,
+            profile: cx.memory.network_profile.as_str().to_owned(),
+            day: cx.memory.network_day,
         };
     }
 
@@ -329,7 +333,12 @@ impl Tool for NetRoute {
         };
         let prompt = prompt.option_with("Sıra", "S", reorder_name(self.seen_reorder()));
         let prompt = match &self.seen.def {
-            Some(n) => Base::time_option(prompt, n, self.seen.time),
+            Some(n) => Base::access_options(
+                Base::time_option(prompt, n, self.seen.time),
+                n,
+                &self.seen.profile,
+                self.seen.day,
+            ),
             None => prompt,
         };
         if self.route.is_some() {

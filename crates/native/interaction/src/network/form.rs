@@ -12,11 +12,14 @@
 //! `yg: Yüksek gerilim; ag: Alçak gerilim` (an id, and its name when it has
 //! one), its paths as `yg, ag; yg, c` (the ids of each path), the edge fields
 //! naming the terminals, and the subnetworks' name field, attribute and reach.
+//! Vehicle profiles (docs/adr/0567): limits as `agirlik 18; yukseklik 4`,
+//! forbidding values as `tur = yaya, bisiklet`, a top speed and both ways;
+//! the closures' first and last day fields.
 
 use kentos_commands::{
     DeviceTerminal, JunctionLayer, JunctionRole, NETWORK_TOLERANCE, NetworkConnect, NetworkCost,
     NetworkCostKind, NetworkDef, NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels,
-    NetworkPeriod, NetworkSubnetworks, NetworkTerminals, NetworkTurns, NetworkUTurns,
+    NetworkClosures, NetworkPeriod, NetworkProfile, ProfileForbid, ProfileLimit, NetworkSubnetworks, NetworkTerminals, NetworkTurns, NetworkUTurns,
     SubnetworkReach, TerminalConfig, TerminalDevice, TurnLayer, clock_text,
 };
 use kentos_geometry_core::tools::point_text::js_trim;
@@ -69,6 +72,19 @@ pub struct DeviceRow {
     pub configs: String,
 }
 
+/// A vehicle profile's row (docs/adr/0567 §1), as typed.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ProfileRow {
+    pub name: String,
+    /// `agirlik 18; yukseklik 4,0`: each limit's edge field and the vehicle's value, the limits split at semicolons.
+    pub limits: String,
+    /// `tur = yaya, bisiklet; sinif = otoyol`: each forbidding field and its values, split at semicolons.
+    pub forbidden: String,
+    /// km/sa; empty: the edges' own speeds.
+    pub top_speed: String,
+    pub both_ways: bool,
+}
+
 /// Yön as the form offers it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DirectionKind {
@@ -116,6 +132,11 @@ pub struct NetworkForm {
     pub subnet_attribute: String,
     /// Güncel tut (docs/adr/0562 §3): the attribute is rewritten by every write that touches the network.
     pub subnet_keep: bool,
+    /// Araç profilleri (docs/adr/0567 §1).
+    pub profiles: Vec<ProfileRow>,
+    /// Tarihli kapanmalar (docs/adr/0567 §2): the edge fields of a closure's first and last day; both empty, none.
+    pub closure_from: String,
+    pub closure_to: String,
 }
 
 /// The attribute the subnetworks' names are written to when none is typed.
@@ -310,6 +331,63 @@ pub fn configs_text(configs: &[TerminalConfig]) -> String {
         .join(" || ")
 }
 
+/// A profile's limits as typed: split at semicolons, each an edge field then the vehicle's value (the last word).
+pub fn limits_of(text: &str) -> Result<Vec<ProfileLimit>, String> {
+    let mut out = Vec::new();
+    for (i, part) in text.split(';').map(js_trim).filter(|p| !p.is_empty()).enumerate() {
+        let read = part
+            .rsplit_once(char::is_whitespace)
+            .and_then(|(f, v)| Some((js_trim(f), decimal(v)?)))
+            .filter(|(f, _)| !f.is_empty());
+        let Some((field, value)) = read else {
+            return Err(format!("{}. sınır “agirlik 18” gibi yazılır: alan ve değer.", i + 1));
+        };
+        out.push(ProfileLimit {
+            field: field.to_owned(),
+            value,
+        });
+    }
+    Ok(out)
+}
+
+/// A profile's limits as the form shows them.
+pub fn limits_text(limits: &[ProfileLimit]) -> String {
+    limits
+        .iter()
+        .map(|l| format!("{} {}", l.field, shown(l.value).replace('.', ",")))
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
+/// A profile's forbidding fields as typed: split at semicolons, each `field = values` (the values at commas).
+pub fn forbidden_of(text: &str) -> Result<Vec<ProfileForbid>, String> {
+    let mut out = Vec::new();
+    for (i, part) in text.split(';').map(js_trim).filter(|p| !p.is_empty()).enumerate() {
+        let Some((field, values)) = part.split_once('=') else {
+            return Err(format!("{}. yasak “tur = yaya, bisiklet” gibi yazılır.", i + 1));
+        };
+        out.push(ProfileForbid {
+            field: js_trim(field).to_owned(),
+            values: values
+                .split(',')
+                .map(js_trim)
+                .filter(|v| !v.is_empty())
+                .map(str::to_owned)
+                .collect(),
+        });
+    }
+    Ok(out)
+}
+
+/// A profile's forbidding fields as the form shows them.
+pub fn forbidden_text(forbidden: &[ProfileForbid]) -> String {
+    forbidden
+        .iter()
+        .map(|f| format!("{} = {}", f.field, f.values.join(", ")))
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
 /// A delay as the form shows it: empty for none.
 fn delay_text(d: f64) -> String {
     if d == 0.0 { String::new() } else { shown(d) }
@@ -467,6 +545,27 @@ pub fn form_of(def: &NetworkDef, from_metres: impl Fn(f64) -> f64) -> NetworkFor
             .map(|s| s.attribute.clone())
             .unwrap_or_default(),
         subnet_keep: def.subnetworks.as_ref().is_some_and(|s| s.keep_current),
+        profiles: def
+            .profiles
+            .iter()
+            .map(|p| ProfileRow {
+                name: p.name.clone(),
+                limits: limits_text(&p.limits),
+                forbidden: forbidden_text(&p.forbidden),
+                top_speed: p.top_speed.map(shown).unwrap_or_default(),
+                both_ways: p.both_ways,
+            })
+            .collect(),
+        closure_from: def
+            .closures
+            .as_ref()
+            .map(|c| c.from.clone())
+            .unwrap_or_default(),
+        closure_to: def
+            .closures
+            .as_ref()
+            .map(|c| c.to.clone())
+            .unwrap_or_default(),
     }
 }
 
@@ -537,6 +636,9 @@ pub fn new_form(
         subnet_name: String::new(),
         subnet_attribute: String::new(),
         subnet_keep: false,
+        profiles: Vec::new(),
+        closure_from: String::new(),
+        closure_to: String::new(),
     }
 }
 
@@ -689,6 +791,33 @@ pub fn def_of(form: &NetworkForm, to_metres: impl Fn(f64) -> f64) -> Result<Netw
         reach,
         keep_current: form.subnet_keep,
     });
+    let mut profiles = Vec::new();
+    for p in &form.profiles {
+        let pname = js_trim(&p.name).to_owned();
+        let whose = format!("{who} “{pname}” profilinin");
+        let top = js_trim(&p.top_speed);
+        let top_speed = if top.is_empty() {
+            None
+        } else {
+            Some(decimal(top).ok_or_else(|| format!("{whose} en yüksek hızı bir sayı olmalı (km/sa)."))?)
+        };
+        profiles.push(NetworkProfile {
+            limits: limits_of(&p.limits).map_err(|e| format!("{whose} sınırları: {e}"))?,
+            forbidden: forbidden_of(&p.forbidden).map_err(|e| format!("{whose} yasakları: {e}"))?,
+            name: pname,
+            top_speed,
+            both_ways: p.both_ways,
+        });
+    }
+    let closures = match (opt(&form.closure_from), opt(&form.closure_to)) {
+        (None, None) => None,
+        (Some(from), Some(to)) => Some(NetworkClosures { from, to }),
+        _ => {
+            return Err(format!(
+                "{who} kapanmaları için ilk ve son gün alanı birlikte yazılır."
+            ));
+        }
+    };
     let def = NetworkDef {
         id: form.id.clone(),
         name,
@@ -729,6 +858,8 @@ pub fn def_of(form: &NetworkForm, to_metres: impl Fn(f64) -> f64) -> Result<Netw
         levels,
         terminals,
         subnetworks,
+        profiles,
+        closures,
     };
     match def.problem() {
         Some(wrong) => Err(sentence(&wrong)),
@@ -903,6 +1034,18 @@ mod tests {
             subnet_name: text(v, "subnetName"),
             subnet_attribute: text(v, "subnetAttribute"),
             subnet_keep: v["subnetKeep"].as_bool().unwrap_or(false),
+            profiles: list("profiles")
+                .iter()
+                .map(|p| ProfileRow {
+                    name: text(p, "name"),
+                    limits: text(p, "limits"),
+                    forbidden: text(p, "forbidden"),
+                    top_speed: text(p, "topSpeed"),
+                    both_ways: p["bothWays"].as_bool().unwrap_or(false),
+                })
+                .collect(),
+            closure_from: text(v, "closureFrom"),
+            closure_to: text(v, "closureTo"),
         }
     }
 

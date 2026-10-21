@@ -38,6 +38,21 @@ pub fn time_text(t: Option<u32>) -> String {
     t.map_or_else(|| "her saat".to_owned(), kentos_commands::clock_text)
 }
 
+/// Araç profili as the prompt says it.
+pub fn profile_text(p: &str) -> String {
+    if p.is_empty() { "yok".to_owned() } else { p.to_owned() }
+}
+
+/// A day as `YYYY-MM-DD` (days since 1970-01-01).
+pub fn day_text(day: i64) -> String {
+    kentos_geometry_core::ops::network::access::date_text(day)
+}
+
+/// Tarih as the prompt says it.
+pub fn date_label(day: Option<i64>) -> String {
+    day.map_or_else(|| "tarih yok".to_owned(), day_text)
+}
+
 /// The command that opens Ağlar.
 pub const MANAGE: &str = "network.manage";
 
@@ -65,6 +80,8 @@ pub struct Base {
     next_ticket: u64,
     /// Tickets of points being found, with what each becomes.
     finding: Vec<(u64, PointKind)>,
+    /// The day Tarih was last given, for T to turn on again.
+    last_day: Option<i64>,
 }
 
 impl Base {
@@ -149,6 +166,8 @@ impl Base {
                 def: None,
                 question,
                 at: cx.memory.network_time.map(f64::from),
+                profile: Some(cx.memory.network_profile.as_str().to_owned()).filter(|p| !p.is_empty()),
+                day: cx.memory.network_day.map(day_text),
             })));
         ticket
     }
@@ -259,6 +278,32 @@ impl Base {
                 cx.view_changes.push(ViewChange::Command(MANAGE));
                 Some(Changed::Show)
             }
+            "P" if costs => {
+                let n = Self::network(cx, prefers)?;
+                let names: Vec<&str> = std::iter::once("")
+                    .chain(n.profiles.iter().map(|p| p.name.as_str()))
+                    .collect();
+                if names.len() < 2 {
+                    return None;
+                }
+                let now = cx.memory.network_profile.as_str();
+                let at = names.iter().position(|p| *p == now).unwrap_or(0);
+                cx.memory.network_profile = Name::new(names[(at + 1) % names.len()]).unwrap_or(Name::EMPTY);
+                Some(Changed::Ask)
+            }
+            "T" if costs => {
+                // Tarih: off, or the day it was last given (a day is typed in the value field).
+                let n = Self::network(cx, prefers)?;
+                n.closures.as_ref()?;
+                cx.memory.network_day = match cx.memory.network_day {
+                    Some(_) => None,
+                    None => Some(self.last_day?),
+                };
+                if let Some(d) = cx.memory.network_day {
+                    self.last_day = Some(d);
+                }
+                Some(Changed::Ask)
+            }
             "Z" if costs => {
                 let at = TIMES
                     .iter()
@@ -268,6 +313,25 @@ impl Base {
                 Some(Changed::Ask)
             }
             _ => None,
+        }
+    }
+
+    /// Araç profili on a network with profiles, Tarih on one with dated closures (docs/adr/0567): their options.
+    pub fn access_options(
+        prompt: crate::prompt::Prompt,
+        n: &NetworkDef,
+        profile: &str,
+        day: Option<i64>,
+    ) -> crate::prompt::Prompt {
+        let prompt = if n.profiles.is_empty() {
+            prompt
+        } else {
+            prompt.option_with("Profil", "P", profile_text(profile))
+        };
+        if n.closures.is_some() {
+            prompt.option_with("Tarih", "T", date_label(day))
+        } else {
+            prompt
         }
     }
 
@@ -317,6 +381,15 @@ impl Base {
                 out
             }
             "Z" if costs => TIMES.iter().map(|t| choice(time_text(*t), false)).collect(),
+            "P" if costs => network
+                .map(|n| {
+                    std::iter::once(profile_text(""))
+                        .chain(n.profiles.iter().map(|p| p.name.clone()))
+                        .map(|p| choice(p, false))
+                        .collect()
+                })
+                .unwrap_or_default(),
+            "T" if costs => vec![choice(date_label(None), false)],
             "M" if costs => network
                 .map(|n| {
                     Self::cost_names(n)
@@ -357,6 +430,29 @@ impl Base {
                     return None;
                 }
                 cx.memory.network_cost = Name::new(t).unwrap_or(Name::EMPTY);
+                Some(Changed::Ask)
+            }
+            // Profil: one of the network's profiles by its name, or none.
+            "P" if costs => {
+                let n = Self::network(cx, prefers)?;
+                cx.memory.network_profile = if t == profile_text("") || t.is_empty() {
+                    Name::EMPTY
+                } else {
+                    let p = n.profile(t)?;
+                    Name::new(&p.name)?
+                };
+                Some(Changed::Ask)
+            }
+            // Tarih: a day typed (2026-11-03) or none.
+            "T" if costs => {
+                cx.memory.network_day = if t == date_label(None) || t.is_empty() {
+                    None
+                } else {
+                    Some(kentos_geometry_core::ops::network::day_of(t)?)
+                };
+                if cx.memory.network_day.is_some() {
+                    self.last_day = cx.memory.network_day;
+                }
                 Some(Changed::Ask)
             }
             // Saat: a time typed (07:30, 7.30, 7) or every hour alike.

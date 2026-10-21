@@ -1800,6 +1800,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || recorded(&n.children)
         })
     }
+    // Schema 95 (docs/adr/0567): a network's vehicle profiles or dated closures.
+    if doc
+        .settings
+        .networks
+        .iter()
+        .any(|n| !n.profiles.is_empty() || n.closures.is_some())
+    {
+        return crate::SCHEMA_WITH_NETWORK_PROFILES;
+    }
     // Schema 94 (docs/adr/0562): a device's configurations, the subnetworks' keepCurrent.
     if doc.settings.networks.iter().any(|n| {
         n.terminals

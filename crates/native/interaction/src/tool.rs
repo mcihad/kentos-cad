@@ -887,6 +887,10 @@ pub struct Memory {
     pub network_reorder: kentos_geometry_core::ops::network::Reorder,
     /// Saat (docs/adr/0521 §4): the time of day the network tools ask at, minutes; none, every hour alike.
     pub network_time: Option<u32>,
+    /// Araç profili and Tarih (docs/adr/0567): the vehicle (a profile's name; empty, none) and the day (days since
+    /// 1970-01-01) the network tools ask for.
+    pub network_profile: Name,
+    pub network_day: Option<i64>,
     pub network_breaks: [Values; 3],
     pub network_toward: bool,
     pub network_rings: bool,
@@ -1215,6 +1219,8 @@ impl Default for Memory {
             network_cost: Name::EMPTY,
             network_reorder: kentos_geometry_core::ops::network::Reorder::None,
             network_time: None,
+            network_profile: Name::EMPTY,
+            network_day: None,
             network_breaks: [Values::default(); 3],
             network_toward: false,
             network_rings: false,

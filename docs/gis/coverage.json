@@ -12271,11 +12271,16 @@
     "mcp": true,
     "server": false
    },
-   "cases": 38,
+   "cases": 45,
    "files": [
     "fixtures/commands/v1/cad.network.define.json"
    ],
    "options": [
+    {
+     "key": "bothWays",
+     "value": true,
+     "covered": true
+    },
     {
      "key": "connect",
      "value": "ends",
@@ -19518,6 +19523,11 @@
      "covered": false
     },
     {
+     "key": "bothWays",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "caps",
      "value": "closed",
      "covered": false
@@ -21751,6 +21761,11 @@
     },
     {
      "key": "bold",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "bothWays",
      "value": true,
      "covered": false
     },
@@ -27731,6 +27746,21 @@
      "key": "borderNoise",
      "value": false,
      "covered": true
+    },
+    {
+     "key": "stability",
+     "value": "none",
+     "covered": true
+    },
+    {
+     "key": "stability",
+     "value": "bootstrap",
+     "covered": true
+    },
+    {
+     "key": "stability",
+     "value": "subset",
+     "covered": true
     }
    ]
   },
@@ -27805,7 +27835,23 @@
    "title": "k-ortalamalar kümeleme",
    "cases": 5,
    "command": 5,
-   "options": []
+   "options": [
+    {
+     "key": "stability",
+     "value": "none",
+     "covered": true
+    },
+    {
+     "key": "stability",
+     "value": "bootstrap",
+     "covered": true
+    },
+    {
+     "key": "stability",
+     "value": "subset",
+     "covered": false
+    }
+   ]
   },
   {
    "id": "stats.localMoran",
@@ -27932,7 +27978,18 @@
    "title": "En yakın komşu",
    "cases": 6,
    "command": 6,
-   "options": []
+   "options": [
+    {
+     "key": "inference",
+     "value": "analytic",
+     "covered": true
+    },
+    {
+     "key": "inference",
+     "value": "simulation",
+     "covered": true
+    }
+   ]
   },
   {
    "id": "stats.standardDistance",

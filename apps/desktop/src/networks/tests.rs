@@ -167,6 +167,8 @@ fn screens() {
         "alt-aglar-serit",
         "yapilandirma",
         "guncel-tut",
+        "profiller",
+        "profil-yol",
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
@@ -260,6 +262,30 @@ fn screens() {
                         window(&mut app, Event::SubnetReach(1));
                         window(&mut app, Event::SubnetKeep(1));
                     }
+                    // docs/adr/0567: Ağlar's Araç profilleri and Tarihli kapanma; a route for Kamyon, Atatürk Caddesi
+                    // forbidden to it, the way around.
+                    "profiller" | "profil-yol" => {
+                        send(&mut app, Message::Run("network.manage"));
+                        window(&mut app, Event::ProfileAdd);
+                        window(&mut app, Event::ProfileText(0, 0, "Kamyon".into()));
+                        window(&mut app, Event::ProfileText(0, 1, "agirlik 18; yukseklik 4".into()));
+                        window(&mut app, Event::ProfileText(0, 2, "Ad = Atatürk Caddesi".into()));
+                        window(&mut app, Event::ProfileText(0, 3, "40".into()));
+                        window(&mut app, Event::ProfileAdd);
+                        window(&mut app, Event::ProfileText(1, 0, "Yaya".into()));
+                        window(&mut app, Event::ProfileText(1, 3, "5".into()));
+                        window(&mut app, Event::ProfileWays(1, 1));
+                        window(&mut app, Event::ClosureField(0, "kapanis_bas".into()));
+                        window(&mut app, Event::ClosureField(1, "kapanis_son".into()));
+                        if name == "profil-yol" {
+                            window(&mut app, Event::Save);
+                            app.memory.network_profile =
+                                kentos_interaction::Name::new("Kamyon").expect("a name");
+                            send(&mut app, Message::Run("tool.netRoute"));
+                            click_at(&mut app, [-180.0, 0.0]);
+                            click_at(&mut app, [180.0, 0.0]);
+                        }
+                    }
                     // A pipe drawn at the valve of a network that keeps its names current: Alt ağlar finds nothing stale.
                     "guncel-tut" => {
                         send(&mut app, Message::Run("network.manage"));
@@ -324,7 +350,7 @@ fn screens() {
                     snapshot.settle(&mut app, App::view, &mut update);
                 } else if matches!(
                     name,
-                    "matris" | "yollar" | "sebeke" | "donusler" | "terminaller" | "yapilandirma"
+                    "matris" | "yollar" | "sebeke" | "donusler" | "terminaller" | "yapilandirma" | "profiller"
                 ) {
                     // The form scrolled to its end: the table, or Denetle's answer under the definition.
                     let x = if name == "matris" {
@@ -346,6 +372,7 @@ fn screens() {
                                     y: match name {
                                         "donusler" => -14.0,
                                         "terminaller" | "yapilandirma" => -26.0,
+                                        "profiller" => -34.0,
                                         _ => -40.0,
                                     },
                                 },

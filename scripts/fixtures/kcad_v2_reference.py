@@ -1070,6 +1070,17 @@ def network_subnetworks(s_):
     return cmap(fields(s_, table, "alt ağlar"))
 
 
+def network_profile(p):
+    table = {
+        "name": (text, True),
+        "limits": (nonempty(lambda l_: cmap(fields(l_, {"field": (text, True), "value": (finite, True)}, "sınır"))), False),
+        "forbidden": (nonempty(lambda f: cmap(fields(f, {"field": (text, True), "values": (nonempty(text), True)}, "yasak"))), False),
+        "topSpeed": (finite, False),
+        "bothWays": (only_true, False),
+    }
+    return cmap(fields(p, table, "araç profili"))
+
+
 def network(n):
     table = {
         "id": (text, True),
@@ -1086,6 +1097,9 @@ def network(n):
         "levels": (network_levels, False),
         "terminals": (network_terminals, False),
         "subnetworks": (network_subnetworks, False),
+        # Schema 95 (docs/adr/0567): vehicle profiles and dated closures.
+        "profiles": (nonempty(network_profile), False),
+        "closures": (lambda c: cmap(fields(c, {"from": (text, True), "to": (text, True)}, "kapanmalar")), False),
     }
     return cmap(fields(n, table, f"ağ {n.get('id')}"))
 
@@ -2177,6 +2191,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 95 (docs/adr/0567): a network's vehicle profiles or dated closures.
+    if any("profiles" in n or "closures" in n for n in (settings or {}).get("networks", [])):
+        return 95
     # Schema 94 (docs/adr/0562): a device's configurations, the subnetworks' keepCurrent.
     if any(any("by" in d or "configs" in d for d in n.get("terminals", {}).get("devices", []))
            or n.get("subnetworks", {}).get("keepCurrent") for n in (settings or {}).get("networks", [])):
@@ -2739,7 +2756,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-95.kcad"] = container(root(cmap(parts), version=uint(95)))
+    files["schema-version-96.kcad"] = container(root(cmap(parts), version=uint(96)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3678,6 +3695,29 @@ def broken(minimal_content, minimal_file):
     files["network-configs-by-over-subnetworks.kcad"] = networked([on_valve(terminals=configured(), subnetworks=subnet(attribute=text("tip")))], schema=94)
     files["network-keep-current-false.kcad"] = networked([on_valve(subnetworks=subnet(keepCurrent=boolean(False)))], schema=94)
 
+    # A network's vehicle profiles and dated closures are schema 95's (docs/adr/0567): in schema 94 unknown fields;
+    # every rule of the contract's `profiles_problem` and the closures' broken one at a time.
+    limit = lambda field="agirlik", value=7.5: cmap({"field": text(field), "value": f64(value)})  # noqa: E731
+    forbid = lambda field="tur", *values: cmap({"field": text(field), "values": array([text(v) for v in (values or ("yaya",))])})  # noqa: E731
+    profile = lambda name="Kamyon", **x: cmap({"name": text(name), **x})  # noqa: E731
+    profiled = lambda *ps, **x: net(profiles=array(list(ps) or [profile(limits=array([limit()]))]), **x)  # noqa: E731
+    dated = lambda frm="kapanis_bas", to="kapanis_son": net(closures=cmap({"from": text(frm), "to": text(to)}))  # noqa: E731
+    files["network-profiles-in-schema-94.kcad"] = networked([profiled()], schema=94)
+    files["network-closures-in-schema-94.kcad"] = networked([dated()], schema=94)
+    files["network-profiles-empty.kcad"] = networked([net(profiles=array([]))], schema=95)
+    files["network-profiles-twice.kcad"] = networked([profiled(profile(), profile(name="KAMYON"))], schema=95)
+    files["network-profiles-name-blank.kcad"] = networked([profiled(profile(name=" "))], schema=95)
+    files["network-profiles-too-many.kcad"] = networked([profiled(*[profile(name=f"P{i}") for i in range(9)])], schema=95)
+    files["network-profiles-limit-zero.kcad"] = networked([profiled(profile(limits=array([limit(value=0.0)])))], schema=95)
+    files["network-profiles-limits-empty.kcad"] = networked([profiled(profile(limits=array([])))], schema=95)
+    files["network-profiles-forbid-no-values.kcad"] = networked([profiled(profile(forbidden=array([cmap({"field": text("tur"), "values": array([])})])))], schema=95)
+    files["network-profiles-forbid-untrimmed.kcad"] = networked([profiled(profile(forbidden=array([forbid("tur", " yaya")])))], schema=95)
+    files["network-profiles-top-speed.kcad"] = networked([profiled(profile(topSpeed=f64(400.0)))], schema=95)
+    files["network-profiles-both-ways-false.kcad"] = networked([profiled(profile(bothWays=boolean(False)))], schema=95)
+    files["network-profiles-unknown-field.kcad"] = networked([profiled(profile(slow=text("?")))], schema=95)
+    files["network-closures-same-field.kcad"] = networked([dated("kapanis", "kapanis")], schema=95)
+    files["network-closures-blank.kcad"] = networked([dated(" ", "kapanis_son")], schema=95)
+
     # The project's address data is schema 42's (docs/adr/0229 §2): in schema 41 an unknown field; every rule of the
     # contract's `address_locators_problem` broken one at a time; an empty list, an empty area list and a field's empty
     # name refused as such.
@@ -4147,6 +4187,7 @@ def build():
     out["network-turns.kcad"] = container(document(load("network-turns.json")))
     out["network-terminals.kcad"] = container(document(load("network-terminals.json")))
     out["network-configs.kcad"] = container(document(load("network-configs.json")))
+    out["network-profiles.kcad"] = container(document(load("network-profiles.json")))
     out["scenarios.kcad"] = container(document(load("scenarios.json")))
     out["filters.kcad"] = container(document(load("filters.json")))
     out["labels.kcad"] = container(document(load("labels.json")))

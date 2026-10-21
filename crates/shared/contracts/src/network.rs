@@ -60,6 +60,14 @@ pub const NETWORK_PATH_LIMIT: usize = 16;
 /// The most configurations a device has besides its own terminals (docs/adr/0562 §2).
 pub const NETWORK_CONFIG_LIMIT: usize = 16;
 
+/// The most vehicle profiles a network has, and limits and forbidding fields a profile (docs/adr/0567 §1).
+pub const NETWORK_PROFILE_LIMIT: usize = 8;
+pub const NETWORK_PROFILE_RULE_LIMIT: usize = 8;
+/// A profile's name's most characters.
+pub const NETWORK_PROFILE_NAME_LENGTH: usize = 40;
+/// A profile's highest top speed (km/h).
+pub const NETWORK_TOP_SPEED_LIMIT: f64 = 300.0;
+
 /// The longest id, name, value, field name, unit and expression (characters).
 const ID_LENGTH: usize = 40;
 const NAME_LENGTH: usize = 80;
@@ -118,6 +126,79 @@ pub struct NetworkDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub subnetworks: Option<NetworkSubnetworks>,
+    /// Araç profilleri (docs/adr/0567 §1): what a vehicle may travel (its weight, height, width against the edges'
+    /// limits; the edges its kind may not) and how fast; a question names one. None: every vehicle the same.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<NetworkProfile>>", optional))]
+    pub profiles: Vec<NetworkProfile>,
+    /// Tarihli kapanmalar (docs/adr/0567 §2): the edge fields of the first and the last day an edge is closed; a
+    /// question with a date passes none closed that day. None: no edge is closed by date.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub closures: Option<NetworkClosures>,
+}
+
+/// A vehicle profile (docs/adr/0567 §1): its name, its limits (an edge is closed to it where the edge's field is
+/// below its value), what forbids an edge to it (a field's values), its top speed and whether it goes against one-way
+/// edges (a pedestrian).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkProfile {
+    /// Trimmed, at most 40 characters; one of its kind in the network, Turkish case aside.
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileLimit>>", optional))]
+    pub limits: Vec<ProfileLimit>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileForbid>>", optional))]
+    pub forbidden: Vec<ProfileForbid>,
+    /// The highest speed (km/h) the vehicle goes on any edge: a speed cost's edges slower; none: the edges' own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
+    pub top_speed: Option<f64>,
+    /// Whether the vehicle goes both ways on one-way edges (closed edges stay closed).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub both_ways: bool,
+}
+
+/// A profile's limit: the vehicle's value (tonnes, metres …) against the edge field's: closed where the field reads
+/// a number below it; an empty field, no limit.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfileLimit {
+    pub field: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub value: f64,
+}
+
+/// What forbids an edge to a profile: the edge field's values (Turkish case aside).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfileForbid {
+    pub field: String,
+    pub values: Vec<String>,
+}
+
+/// The edge fields of a closure's first and last day (docs/adr/0567 §2): `YYYY-MM-DD`, both days in; an empty first
+/// day closes from always, an empty last day until ever, both empty not at all.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkClosures {
+    pub from: String,
+    pub to: String,
 }
 
 /// The terminals of a network's devices (docs/adr/0557 §1): the edge fields naming the terminal an edge's start and
@@ -722,12 +803,106 @@ impl NetworkDef {
         {
             return Some(at(&p));
         }
+        if let Some(p) = self.profiles_problem() {
+            return Some(at(&p));
+        }
+        if let Some(c) = &self.closures {
+            if field_bad(&c.from) || field_bad(&c.to) {
+                return Some(at("tarihli kapanmasının gün alanı boş, kırpılmamış ya da çok uzun"));
+            }
+            if c.from == c.to {
+                return Some(at("tarihli kapanmasının ilk ve son gün alanı aynı; iki ayrı alan olmalı"));
+            }
+        }
         if let Some(s) = &self.subnetworks
             && let Some(p) = self.subnetworks_problem(s)
         {
             return Some(at(&p));
         }
         None
+    }
+
+    /// What is wrong with the vehicle profiles (docs/adr/0567 §1), in words that continue “ağının …”.
+    fn profiles_problem(&self) -> Option<String> {
+        if self.profiles.len() > NETWORK_PROFILE_LIMIT {
+            return Some(format!(
+                "araç profili çok; en çok {NETWORK_PROFILE_LIMIT} olmalı"
+            ));
+        }
+        let mut seen: Vec<String> = Vec::new();
+        for (i, p) in self.profiles.iter().enumerate() {
+            let n = i + 1;
+            let name = p.name.trim();
+            if name.is_empty() || name != p.name || chars(name) > NETWORK_PROFILE_NAME_LENGTH {
+                return Some(format!(
+                    "{n}. araç profilinin adı boş, kırpılmamış ya da {NETWORK_PROFILE_NAME_LENGTH} karakterden uzun"
+                ));
+            }
+            let key = network_caseless(name);
+            if seen.contains(&key) {
+                return Some(format!("“{name}” araç profili iki kez var"));
+            }
+            seen.push(key);
+            if p.limits.len() > NETWORK_PROFILE_RULE_LIMIT
+                || p.forbidden.len() > NETWORK_PROFILE_RULE_LIMIT
+            {
+                return Some(format!(
+                    "“{name}” araç profilinin sınırı ya da yasağı çok; en çok {NETWORK_PROFILE_RULE_LIMIT}'er olmalı"
+                ));
+            }
+            for l in &p.limits {
+                if field_bad(&l.field) {
+                    return Some(format!(
+                        "“{name}” araç profilinin sınır alanı boş, kırpılmamış ya da çok uzun"
+                    ));
+                }
+                if !(l.value.is_finite() && l.value > 0.0) {
+                    return Some(format!(
+                        "“{name}” araç profilinin “{}” sınırı sıfırdan büyük bir sayı olmalı",
+                        l.field
+                    ));
+                }
+            }
+            for f in &p.forbidden {
+                if field_bad(&f.field) {
+                    return Some(format!(
+                        "“{name}” araç profilinin yasak alanı boş, kırpılmamış ya da çok uzun"
+                    ));
+                }
+                if f.values.is_empty() || f.values.len() > NETWORK_VALUE_LIMIT {
+                    return Some(format!(
+                        "“{name}” araç profilinin “{}” yasağının 1–{NETWORK_VALUE_LIMIT} değeri olmalı",
+                        f.field
+                    ));
+                }
+                if f.values.iter().any(|v| {
+                    let t = v.trim();
+                    t.is_empty() || t != v || chars(t) > VALUE_LENGTH
+                }) {
+                    return Some(format!(
+                        "“{name}” araç profilinin “{}” yasağının bir değeri boş, kırpılmamış ya da {VALUE_LENGTH} karakterden uzun",
+                        f.field
+                    ));
+                }
+            }
+            if p
+                .top_speed
+                .is_some_and(|v| !(v.is_finite() && v > 0.0 && v <= NETWORK_TOP_SPEED_LIMIT))
+            {
+                return Some(format!(
+                    "“{name}” araç profilinin en yüksek hızı 0 ile {NETWORK_TOP_SPEED_LIMIT} km/sa arasında olmalı"
+                ));
+            }
+        }
+        None
+    }
+
+    /// The profile named `name` (Turkish case aside).
+    pub fn profile(&self, name: &str) -> Option<&NetworkProfile> {
+        let key = network_caseless(name);
+        self.profiles
+            .iter()
+            .find(|p| network_caseless(&p.name) == key)
     }
 
     /// What is wrong with the terminals (docs/adr/0557 §1), in words that continue “ağının …”.
@@ -844,6 +1019,17 @@ impl NetworkDef {
                 NetworkDirection::Field { field, .. } => Some(field.as_str()),
                 _ => None,
             })
+            .chain(self.profiles.iter().flat_map(|p| {
+                p.limits
+                    .iter()
+                    .map(|l| l.field.as_str())
+                    .chain(p.forbidden.iter().map(|f| f.field.as_str()))
+            }))
+            .chain(
+                self.closures
+                    .iter()
+                    .flat_map(|c| [c.from.as_str(), c.to.as_str()]),
+            )
             .collect();
         reads
             .contains(&s.attribute.as_str())
@@ -1112,6 +1298,8 @@ mod tests {
             levels: None,
             terminals: None,
             subnetworks: None,
+            profiles: Vec::new(),
+            closures: None,
         }
     }
 
@@ -1331,4 +1519,54 @@ mod tests {
         assert_eq!(network_caseless(" IŞIK "), "ışık");
         assert_eq!(network_caseless("İleri"), "ileri");
     }
+
+    #[test]
+    fn profiles_and_closures_keep_their_rules() {
+        let kamyon = || NetworkProfile {
+            name: "Kamyon".into(),
+            limits: vec![ProfileLimit {
+                field: "agirlik".into(),
+                value: 18.0,
+            }],
+            forbidden: vec![ProfileForbid {
+                field: "tur".into(),
+                values: vec!["yaya".into()],
+            }],
+            top_speed: Some(60.0),
+            both_ways: false,
+        };
+        let with = |profiles: Vec<NetworkProfile>, closures: Option<NetworkClosures>| NetworkDef {
+            profiles,
+            closures,
+            ..road()
+        };
+        assert_eq!(with(vec![kamyon()], None).problem(), None);
+        let twice = NetworkProfile {
+            name: "KAMYON".into(),
+            ..kamyon()
+        };
+        assert!(with(vec![kamyon(), twice], None).problem().unwrap().contains("iki kez"));
+        let slow = NetworkProfile {
+            top_speed: Some(0.0),
+            ..kamyon()
+        };
+        assert!(with(vec![slow], None).problem().unwrap().contains("en yüksek hızı"));
+        let blank = NetworkProfile {
+            forbidden: vec![ProfileForbid {
+                field: "tur".into(),
+                values: vec![" yaya".into()],
+            }],
+            ..kamyon()
+        };
+        assert!(with(vec![blank], None).problem().unwrap().contains("kırpılmamış"));
+        let same = NetworkClosures {
+            from: "k".into(),
+            to: "k".into(),
+        };
+        assert!(with(Vec::new(), Some(same)).problem().unwrap().contains("aynı"));
+        let def = with(vec![kamyon()], None);
+        assert_eq!(def.profile("kamyon").map(|p| p.name.as_str()), Some("Kamyon"));
+        assert!(def.profile("Yaya").is_none());
+    }
+
 }

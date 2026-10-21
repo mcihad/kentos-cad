@@ -86,6 +86,13 @@ impl PyNetwork {
         self.inner.time = minutes;
     }
 
+    /// Araç profili and Tarih (docs/adr/0567): the vehicle (a profile's name) and the day (`YYYY-MM-DD`) the questions
+    /// are for; `None`, neither. `{byProfile, byDate, unread}` or `{error}`.
+    #[pyo3(signature = (profile=None, day=None))]
+    fn set_access(&mut self, profile: Option<&str>, day: Option<&str>) -> String {
+        self.inner.set_access_json(profile, day)
+    }
+
     /// The place nearest `(x, y)` within `reach`: `{piece, offset, x, y, d}` or `null`.
     fn locate(&self, x: f64, y: f64, reach: f64) -> String {
         self.inner.locate_json(x, y, reach)

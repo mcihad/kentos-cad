@@ -26,6 +26,8 @@ pub struct EdgeValues {
     pub periods: Vec<Vec<Option<String>>>,
     /// Its terminal fields' values: the terminal its start and its end are attached to (docs/adr/0557 §1).
     pub terminals: [Option<String>; 2],
+    /// Its profiles' and closures' field values, in the rules' `access.facts` order (docs/adr/0567).
+    pub facts: Vec<Option<String>>,
 }
 
 /// What the app gave for a junction object: its layer's role, whether its closed expression holds and its level
@@ -157,6 +159,7 @@ pub fn from_store(
                         levels: v.levels.clone(),
                         periods: v.periods.clone(),
                         terminals: v.terminals.clone(),
+                        facts: v.facts.clone(),
                     });
                 }
             }

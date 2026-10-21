@@ -3,11 +3,12 @@
 //! (`networks_problem`), as the readers check them, each map's keys sorted
 //! as RFC 8949 sorts them. An optional field is written only when it has a
 //! value, a list only when it is not empty. Schema 87 (docs/adr/0521) adds a
-//! network's `turns` and `levels` and a speed cost's `periods`.
+//! network's `turns` and `levels` and a speed cost's `periods`. Schema 95
+//! (docs/adr/0567) a network's vehicle `profiles` and dated `closures`.
 
 use kentos_contracts::{
     DeviceTerminal, JunctionRole, NetworkConnect, NetworkCostKind, NetworkDef, NetworkDirection,
-    NetworkKind, NetworkLevels, NetworkPeriod, NetworkSubnetworks, NetworkTerminals, NetworkTurns,
+    NetworkClosures, NetworkKind, NetworkLevels, NetworkProfile, NetworkPeriod, NetworkSubnetworks, NetworkTerminals, NetworkTurns,
     NetworkUTurns, SubnetworkReach, TerminalConfig, TerminalDevice, TurnLayer, networks_problem,
 };
 
@@ -36,6 +37,10 @@ enum V<'d> {
     Configs(&'d [TerminalConfig]),
     True,
     Subnetworks(&'d NetworkSubnetworks),
+    Profiles(&'d [NetworkProfile]),
+    Closures(&'d NetworkClosures),
+    Limits(&'d NetworkProfile),
+    Forbidden(&'d NetworkProfile),
 }
 
 fn u_turns_name(u: NetworkUTurns) -> &'static str {
@@ -235,6 +240,50 @@ impl<'d> Encoder<'d> {
                 self.close();
                 Ok(())
             }
+            V::Profiles(list) => {
+                self.open(list.len(), false)?;
+                for (i, p) in list.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| {
+                        let mut f = vec![("name", V::Text(&p.name))];
+                        if !p.limits.is_empty() {
+                            f.push(("limits", V::Limits(p)));
+                        }
+                        if !p.forbidden.is_empty() {
+                            f.push(("forbidden", V::Forbidden(p)));
+                        }
+                        if let Some(x) = p.top_speed {
+                            f.push(("topSpeed", V::Float(x)));
+                        }
+                        if p.both_ways {
+                            f.push(("bothWays", V::True));
+                        }
+                        e.network_map(f)
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
+            V::Limits(p) => {
+                self.open(p.limits.len(), false)?;
+                for (i, l) in p.limits.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| {
+                        e.network_map(vec![("field", V::Text(&l.field)), ("value", V::Float(l.value))])
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
+            V::Forbidden(p) => {
+                self.open(p.forbidden.len(), false)?;
+                for (i, l) in p.forbidden.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| {
+                        e.network_map(vec![("field", V::Text(&l.field)), ("values", V::Texts(&l.values))])
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
+            V::Closures(c) => self.network_map(vec![("from", V::Text(&c.from)), ("to", V::Text(&c.to))]),
             V::Texts(list) => {
                 self.open(list.len(), false)?;
                 for (i, t) in list.iter().enumerate() {
@@ -365,6 +414,12 @@ impl<'d> Encoder<'d> {
                 }
                 if let Some(s) = &n.subnetworks {
                     f.push(("subnetworks", V::Subnetworks(s)));
+                }
+                if !n.profiles.is_empty() {
+                    f.push(("profiles", V::Profiles(&n.profiles)));
+                }
+                if let Some(c) = &n.closures {
+                    f.push(("closures", V::Closures(c)));
                 }
                 e.network_map(f)
             })?;

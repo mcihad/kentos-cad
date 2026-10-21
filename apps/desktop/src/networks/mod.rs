@@ -145,6 +145,8 @@ impl App {
             ticket,
             question: ask.question,
             at: ask.at,
+            profile: ask.profile,
+            day: ask.day,
             done,
         });
         let answer = Task::perform(wait, move |r| {

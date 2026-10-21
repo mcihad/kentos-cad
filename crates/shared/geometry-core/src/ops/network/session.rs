@@ -7,6 +7,7 @@
 //! network is said by its index. The way to the cursor is numbers, not JSON:
 //! it is asked on every pointer move.
 
+use super::access::{Access, Varied, day_of};
 use super::area::{AreaQuery, service_lines, service_polygons};
 use super::check::{Checked, ProblemKind, check};
 use super::closest::{Nearest, nearest};
@@ -435,6 +436,10 @@ impl NetworkSession {
                             _ => Vec::new(),
                         },
                         terminals: [text(item(item(v, 5), 0)), text(item(item(v, 5), 1))],
+                        facts: match item(v, 6) {
+                            Json::Arr(list) => list.iter().map(text).collect(),
+                            _ => Vec::new(),
+                        },
                     },
                 )
             })
@@ -469,6 +474,50 @@ impl NetworkSession {
         let (e, j, skipped) = from_store(store, &edge_list, &junction_list);
         let (graph, report) = Graph::build(rules, &e, &j);
         Ok(NetworkSession::new(graph, report, skipped))
+    }
+
+    /// Sets the vehicle and the day the questions are for (docs/adr/0567): `profile` by its name (none: no profile),
+    /// `day` as `YYYY-MM-DD` (none: no day, no closure applied). An unknown profile or an unreadable day is refused;
+    /// what the access closed is answered.
+    pub fn set_access(&mut self, profile: Option<&str>, day: Option<&str>) -> Result<Varied, String> {
+        let rules = &self.graph.rules.access;
+        let profile = match profile.map(str::trim).filter(|p| !p.is_empty()) {
+            None => None,
+            Some(name) => Some(rules.profile(name).ok_or_else(|| {
+                if rules.profiles.is_empty() {
+                    format!("Ağın araç profili yok; “{name}” profili kullanılamaz.")
+                } else {
+                    let names: Vec<&str> = rules.profiles.iter().map(|p| p.name.as_str()).collect();
+                    format!("Ağda “{name}” araç profili yok; profiller: {}.", names.join(", "))
+                }
+            })?),
+        };
+        let day = match day.map(str::trim).filter(|d| !d.is_empty()) {
+            None => None,
+            Some(t) => Some(
+                day_of(t).ok_or_else(|| format!("Tarih “{t}” okunamadı; 2026-11-03 gibi yazın."))?,
+            ),
+        };
+        let access = Access { profile, day };
+        if access != self.graph.access()
+            && let Some(t) = self.tree.take()
+        {
+            self.searcher.recycle(t);
+        }
+        Ok(self.graph.vary(access).clone())
+    }
+
+    /// `set_access` as JSON: `{byProfile, byDate, unread}` or `{error}`.
+    pub fn set_access_json(&mut self, profile: Option<&str>, day: Option<&str>) -> String {
+        match self.set_access(profile, day) {
+            Ok(v) => format!(
+                r#"{{"byProfile":{},"byDate":{},"unread":{}}}"#,
+                v.by_profile,
+                v.by_date,
+                json::to_string(v.unread.as_slice())
+            ),
+            Err(e) => format!(r#"{{"error":{}}}"#, json::to_string(&e)),
+        }
     }
 
     /// Where the network is near each point within `reach`; a refusal names the first point that finds none.

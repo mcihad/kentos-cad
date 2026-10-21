@@ -131,6 +131,12 @@ pub fn network_input(def: &NetworkDef, src: &Source<'_>) -> NetworkInput {
         _ => None,
     };
     let levels = def.levels.as_ref();
+    // The profiles' and closures' fields (docs/adr/0567), in the rules' order.
+    let facts: Vec<String> = if def.profiles.is_empty() && def.closures.is_none() {
+        Vec::new()
+    } else {
+        rules_of(def).map(|r| r.access.facts).unwrap_or_default()
+    };
     let level_of = |e: &Entity, f: Option<&String>| f.and_then(|f| value(e, f));
     let edges = edges
         .iter()
@@ -161,6 +167,7 @@ pub fn network_input(def: &NetworkDef, src: &Source<'_>) -> NetworkInput {
                         def.terminals.as_ref().and_then(|t| value(e, &t.start)),
                         def.terminals.as_ref().and_then(|t| value(e, &t.end)),
                     ],
+                    facts: facts.iter().map(|f| value(e, f)).collect(),
                 },
             )
         })

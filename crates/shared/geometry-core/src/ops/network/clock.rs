@@ -80,6 +80,27 @@ impl Clock {
         clock
     }
 
+    /// The clock of a vehicle whose top speed is `kmh` (docs/adr/0567 §1): every step's speed at most it.
+    pub fn capped(&self, kmh: f64) -> Clock {
+        let top = kmh * 1000.0 / 60.0;
+        let mut clock = Clock {
+            start: Vec::with_capacity(self.start.len()),
+            steps: Vec::with_capacity(self.steps.len()),
+        };
+        for e in 0..self.start.len().saturating_sub(1) {
+            clock.start.push(clock.steps.len() as u32);
+            let mut day: Vec<(f64, f64)> = self
+                .day_of(e as u32)
+                .iter()
+                .map(|&(t, s)| (t, if s > top { top } else { s }))
+                .collect();
+            day.dedup_by(|b, a| b.1 == a.1);
+            clock.steps.extend(day);
+        }
+        clock.start.push(clock.steps.len() as u32);
+        clock
+    }
+
     fn day_of(&self, edge: u32) -> &[(f64, f64)] {
         let e = edge as usize;
         &self.steps[self.start[e] as usize..self.start[e + 1] as usize]

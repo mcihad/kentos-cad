@@ -270,6 +270,7 @@ mod tests {
             levels: [None, None, None],
             periods: Vec::new(),
             terminals: [None, None],
+            facts: Vec::new(),
         }
     }
 

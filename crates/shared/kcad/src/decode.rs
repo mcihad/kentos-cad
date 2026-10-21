@@ -855,7 +855,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "topology" if has.topology => topology = Some(topology_settings(r)?),
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
             "connections" if has.services => connections = services::connections(r)?,
-            "networks" if has.networks => networks = networks::networks(r, has.network_turns, has.network_terminals, has.network_configs)?,
+            "networks" if has.networks => networks = networks::networks(r, has.network_turns, has.network_terminals, has.network_configs, has.network_profiles)?,
             "variables" if has.variables => variables = variables::variables(r)?,
             "addressLocators" if has.addresses => {
                 address_locators = addresses::address_locators(r)?

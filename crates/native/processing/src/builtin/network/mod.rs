@@ -97,6 +97,40 @@ pub fn time_param() -> ParamDef {
     )
 }
 
+/// Araç profili (docs/adr/0567 §1): the vehicle the questions are for, by its name in the network's definition.
+pub fn profile_param() -> ParamDef {
+    ParamDef::new(
+        "profile",
+        "Araç profili",
+        ParamKind::Text {
+            placeholder: Some("ör. Kamyon".into()),
+            max_length: Some(40),
+            allow_empty: true,
+        },
+    )
+    .optional()
+    .advanced()
+    .describe(
+        "Ağın Araç profillerinden birinin adı: sınırlarına uymayan ve yasakladığı kenarlardan geçilmez, hızı en yüksek hızıyla sınırlanır; boş: profil yok.",
+    )
+}
+
+/// Tarih (docs/adr/0567 §2): the day the questions are for; the edges closed that day are not travelled.
+pub fn date_param() -> ParamDef {
+    ParamDef::new(
+        "date",
+        "Tarih",
+        ParamKind::Text {
+            placeholder: Some("ör. 2026-11-03".into()),
+            max_length: Some(10),
+            allow_empty: true,
+        },
+    )
+    .optional()
+    .advanced()
+    .describe("Tarihli kapanmaları olan ağda o gün kapalı kenarlardan geçilmez; boş: kapanmalar uygulanmaz.")
+}
+
 /// Builds the run's network; says what building said (expressions that did not compile, objects not taken).
 pub fn run_network(
     v: &Resolved<'_>,
@@ -119,6 +153,38 @@ pub fn run_network(
         problems,
     } = from_document(ctx.doc, id)?;
     session.time = time.map(f64::from);
+    let text_of = |key: &str| v.values.get(key).and_then(Value::as_str).map(js_trim).filter(|t| !t.is_empty());
+    let (profile, date) = (text_of("profile"), text_of("date"));
+    if date.is_some() && def.closures.is_none() {
+        feedback.warn(format!(
+            "{}: ağın tarihli kapanması yok; tarih maliyeti değiştirmez.",
+            def.name
+        ));
+    }
+    let varied = session.set_access(profile, date)?;
+    if varied.by_profile > 0 {
+        feedback.info(format!(
+            "{}: “{}” profili {} kenara giremez.",
+            def.name,
+            profile.unwrap_or_default(),
+            varied.by_profile
+        ));
+    }
+    if varied.by_date > 0 {
+        feedback.info(format!(
+            "{}: {} kenar {} tarihinde kapalı.",
+            def.name,
+            varied.by_date,
+            date.unwrap_or_default()
+        ));
+    }
+    if !varied.unread.is_empty() {
+        feedback.warn(format!(
+            "{}: {} kenarın sınır ya da kapanma değeri okunamadı; o değer kenarı kapatmadı.",
+            def.name,
+            varied.unread.len()
+        ));
+    }
     if time.is_some() && !def.timed() {
         feedback.warn(format!(
             "{}: ağın zaman profili yok; kalkış saati maliyeti değiştirmez.",

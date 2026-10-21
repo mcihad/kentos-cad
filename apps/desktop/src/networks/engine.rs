@@ -47,6 +47,9 @@ pub enum Job {
         ticket: u64,
         /// Saat: the time the question sets off at, minutes (docs/adr/0521 §4).
         at: Option<f64>,
+        /// Araç profili and Tarih (docs/adr/0567): the vehicle's name and the day the question is for.
+        profile: Option<String>,
+        day: Option<String>,
         question: NetworkQuestion,
         done: oneshot::Sender<NetworkReply>,
     },
@@ -112,13 +115,18 @@ fn run(jobs: mpsc::Receiver<Job>) {
                 network,
                 ticket,
                 at,
+                profile,
+                day,
                 question,
                 done,
             } => {
                 let answer = match nets.get_mut(&network) {
                     Some(session) => {
                         session.time = at;
-                        answer(session, question)
+                        match session.set_access(profile.as_deref(), day.as_deref()) {
+                            Ok(_) => answer(session, question),
+                            Err(why) => Answer::Failed(why),
+                        }
                     }
                     None => Answer::Failed("Ağ kurulmadan soruldu.".into()),
                 };

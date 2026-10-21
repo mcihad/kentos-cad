@@ -6,6 +6,7 @@
 //! the definition's expressions and give the objects' paths and raw values;
 //! everything else is here, the same on every platform.
 
+pub mod access;
 pub mod area;
 pub mod check;
 pub mod clock;
@@ -21,6 +22,7 @@ pub mod subnetworks;
 pub mod terminals;
 pub mod turns;
 
+pub use access::{Access, AccessRules, Closing, Varied, day_of};
 pub use check::{Checked, Problem, ProblemKind};
 pub use graph::{BuildReport, EdgeIn, Graph, JunctionIn, Location, Role};
 pub use route::Reorder;

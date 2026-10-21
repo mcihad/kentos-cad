@@ -90,6 +90,7 @@ fn build(scene: &Value) -> (Graph, kentos_geometry_core::ops::network::BuildRepo
                         .collect()
                 }),
                 terminals: [None, None],
+                facts: Vec::new(),
             }
         })
         .collect();
@@ -415,6 +416,7 @@ fn timing() {
             levels: [None, None, None],
             periods: vec![vec![Some(morning)]],
             terminals: [None, None],
+            facts: Vec::new(),
         });
     };
     for i in 0..N {

@@ -101,6 +101,11 @@ def config(value="üç yollu", **over):
             "paths": [["a", "b", "c"]], **over}
 
 
+def truck(**over):
+    """A truck profile (docs/adr/0567 §1)."""
+    return {"name": "Kamyon", "limits": [{"field": "agirlik", "value": 18.0}], "forbidden": [{"field": "tur", "values": ["yaya"]}], "topSpeed": 60.0, **over}
+
+
 def configured(*configs, **over):
     """A device chosen by the attribute `tip` among `configs` (docs/adr/0562 §2)."""
     return terminals(device(by="tip", configs=list(configs) or [config()], **over))
@@ -272,6 +277,29 @@ NETWORKS = [
     ("alt ağlar: güncel tut", changed(water(), set_("subnetworks", subnets(keepCurrent=True)))),
     ("alt ağlar: güncel tut, terminaller ve yapılandırmalarla", changed(water(), lambda n: (set_("terminals", configured())(n), set_("subnetworks", subnets(keepCurrent=True))(n)))),
     ("alt ağ özniteliği yapılandırmayı seçen alanla aynı", changed(water(), lambda n: (set_("terminals", configured())(n), set_("subnetworks", subnets(attribute="tip"))(n)))),
+    # Vehicle profiles and dated closures (docs/adr/0567).
+    ("araç profilleri", changed(road(), set_("profiles", [truck(), {"name": "Yaya", "forbidden": [{"field": "tur", "values": ["otoyol"]}], "topSpeed": 5.0, "bothWays": True}]))),
+    ("araç profili: yalnız adı", changed(road(), set_("profiles", [{"name": "Otobüs"}]))),
+    ("9 araç profili", changed(road(), set_("profiles", [{"name": f"P{i}"} for i in range(9)]))),
+    ("araç profilinin adı boş", changed(road(), set_("profiles", [truck(name="")]))),
+    ("araç profilinin adı kırpılmamış", changed(road(), set_("profiles", [truck(name="Kamyon ")]))),
+    ("araç profilinin adı 41 karakter", changed(road(), set_("profiles", [truck(name="K" * 41)]))),
+    ("araç profili Türkçe harfle iki kez", changed(road(), set_("profiles", [truck(name="IŞIK"), truck(name="ışık")]))),
+    ("araç profili: I ile ı başka", changed(road(), set_("profiles", [truck(name="ILIK"), truck(name="ilik")]))),
+    ("araç profilinde 9 sınır", changed(road(), set_("profiles", [truck(limits=[{"field": f"s{i}", "value": 1.0} for i in range(9)])]))),
+    ("araç profilinin sınır alanı boş", changed(road(), set_("profiles", [truck(limits=[{"field": "", "value": 1.0}])]))),
+    ("araç profilinin sınırı sıfır", changed(road(), set_("profiles", [truck(limits=[{"field": "agirlik", "value": 0.0}])]))),
+    ("araç profilinin yasak alanı kırpılmamış", changed(road(), set_("profiles", [truck(forbidden=[{"field": "tur ", "values": ["yaya"]}])]))),
+    ("araç profilinin yasağında 17 değer", changed(road(), set_("profiles", [truck(forbidden=[{"field": "tur", "values": [f"v{i}" for i in range(17)]}])]))),
+    ("araç profilinin yasak değeri boş", changed(road(), set_("profiles", [truck(forbidden=[{"field": "tur", "values": [""]}])]))),
+    ("araç profilinin yasak değeri 41 karakter", changed(road(), set_("profiles", [truck(forbidden=[{"field": "tur", "values": ["v" * 41]}])]))),
+    ("araç profilinin hızı 300", changed(road(), set_("profiles", [truck(topSpeed=300.0)]))),
+    ("araç profilinin hızı 301", changed(road(), set_("profiles", [truck(topSpeed=301.0)]))),
+    ("tarihli kapanma", changed(road(), set_("closures", {"from": "kapanis_bas", "to": "kapanis_son"}))),
+    ("tarihli kapanma: alanlar aynı", changed(road(), set_("closures", {"from": "kapanis", "to": "kapanis"}))),
+    ("tarihli kapanma: alan boş", changed(road(), set_("closures", {"from": "", "to": "kapanis_son"}))),
+    ("alt ağ özniteliği profilin sınır alanıyla aynı", changed(water(), lambda n: (set_("profiles", [truck()])(n), set_("subnetworks", subnets(attribute="agirlik"))(n)))),
+    ("alt ağ özniteliği kapanmanın alanıyla aynı", changed(water(), lambda n: (set_("closures", {"from": "kapanis_bas", "to": "kapanis_son"})(n), set_("subnetworks", subnets(attribute="kapanis_son"))(n)))),
 ]
 
 

@@ -4,6 +4,7 @@
 //! fields' values. The host evaluates the definition's expressions and
 //! gives the raw values; how they read is here, the same on every platform.
 
+use super::access::AccessRules;
 use crate::api::json::Json;
 use crate::ops::statistics::read_number;
 
@@ -106,6 +107,8 @@ pub struct Rules {
     pub levels: Option<bool>,
     /// The devices' terminals (docs/adr/0557 §1); none: a device is a point.
     pub terminals: Option<TerminalRules>,
+    /// The vehicle profiles and dated closures (docs/adr/0567); empty: every question the same network.
+    pub access: AccessRules,
 }
 
 /// A device's terminals as the rules read them: each one's id and name folded, and which connect through the device.
@@ -399,6 +402,7 @@ impl Rules {
             turns,
             levels,
             terminals,
+            access: AccessRules::from_json(def)?,
         })
     }
 

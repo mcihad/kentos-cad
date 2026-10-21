@@ -185,6 +185,19 @@ def cases():
                   "yapılandırma değeri boş", "yapılandırmada tek terminal", "yapılandırmada yolda olmayan terminal", "alt ağ özniteliği yapılandırmayı seçen alanla aynı"):
         value, words = rule_words(title)
         out.append(refused(f"kuralına uymayan ağ: {title}", {"operation": "set", "network": value}, "invalid_network", words, "network"))
+    # Docs/adr/0567: vehicle profiles and dated closures.
+    profiled = {**ROADS,
+                "profiles": [{"name": "Kamyon", "limits": [{"field": "agirlik", "value": 18.0}], "forbidden": [{"field": "tur", "values": ["yaya", "bisiklet"]}], "topSpeed": 60.0},
+                             {"name": "Yaya", "topSpeed": 5.0, "bothWays": True}],
+                "closures": {"from": "kapanis_bas", "to": "kapanis_son"}}
+    out.append({
+        "name": "Değiştir: araç profilleri ve tarihli kapanma",
+        "steps": [step("execute", {"operation": "set", "network": profiled}, completed({"networks": [profiled], "revision": "$current"}), {**WRITTEN, "networks": [profiled]})],
+    })
+    for title in ("araç profili Türkçe harfle iki kez", "araç profilinin hızı 301", "araç profilinin sınırı sıfır", "9 araç profili",
+                  "tarihli kapanma: alanlar aynı", "alt ağ özniteliği profilin sınır alanıyla aynı"):
+        value, words = rule_words(title)
+        out.append(refused(f"kuralına uymayan ağ: {title}", {"operation": "set", "network": value}, "invalid_network", words, "network"))
     out.append(refused("ağsız yazma", {"operation": "set"}, "no_network", "Yazılacak ağ (network) verilmedi; ağın tanımını verin.", "network"))
     out.append(refused("kimliksiz silme", {"operation": "remove"}, "no_id", "Silinecek ağın kimliğini (id) verin.", "id"))
     out.append(refused("boş kimlikle silme", {"operation": "remove", "id": ""}, "no_id", "Silinecek ağın kimliğini (id) verin.", "id"))
