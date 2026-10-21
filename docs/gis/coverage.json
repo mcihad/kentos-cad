@@ -19043,7 +19043,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 34,
+   "cases": 36,
    "files": [
     "fixtures/commands/v1/file.import.maplibre.json"
    ],
@@ -19105,7 +19105,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 30,
+   "cases": 38,
    "files": [
     "fixtures/commands/v1/file.import.qml.json"
    ],
@@ -19147,7 +19147,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 25,
+   "cases": 31,
    "files": [
     "fixtures/commands/v1/file.import.sld.json"
    ],
