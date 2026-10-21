@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Permütasyon çıkarımı, çoklu test düzeltmesi ve deney profili (docs/adr/0520): İşlemler's cases of Moran I, Sıcak nokta
 (Gi*) and Yerel Moran with permutations, FDR and Bonferroni, written from the ADR without KentOS code and without
-packages beyond Python's own (fractions, decimal, hashlib).
+packages beyond Python's own (fractions, decimal, hashlib). En yakın komşu's Monte Carlo test and DBSCAN's and k-means'
+stability (docs/adr/0566) are spatial_stability_cases.py's, written into the same file.
 
     python3 scripts/fixtures/spatial_inference_cases.py          # fixtures/processing/v1/spatial-inference.json'u yazar
     python3 scripts/fixtures/spatial_inference_cases.py --check  # hiçbir şey yazmaz; karşılaştırır
@@ -827,7 +828,35 @@ def cases():
     out.append({"id": "lisa-few-permutations", "title": "Yerel Moran, 5 permütasyon: alan en az 9 ister", "document": "spatial-stats.kcad",
                 "run": {"tool": "stats.localMoran"}, "values": {"input": LAY("parsel"), "valueField": "Değer", "permutations": 5},
                 "expect": {"status": "invalid", "issues": [{"param": "permutations", "message": "“Permütasyon sayısı” en az 9 olmalı."}]}})
+    # En yakın komşu's Monte Carlo test and the clusters' stability (docs/adr/0566).
+    import spatial_stability_cases
+    out += spatial_stability_cases.cases(stability_case)
     return out
+
+
+def stability_case(cid, title, tool, values, run, selection=None):
+    """A case of docs/adr/0566 (spatial_stability_cases.py): En yakın komşu's simulation, the clusters' stability."""
+    if "invalid" in run:
+        exp = {"status": "invalid", "issues": run["invalid"]}
+    elif tool == "stats.nearestNeighbor":
+        exp = {"status": "ok", "summary": run["summary"], "undo": None, "log": log_of(run),
+               "outputs": {"table": run["table"], "profile": run["profile"]["table"], "experiment": run["profile"]["experiment"],
+                           "pSimulation": run["pSimulation"]}}
+    else:
+        # The clusters' layer as ADR 0238's cases write it (spatial_stats_processing_cases.py).
+        lname, undo, of = (("Kümeler (DBSCAN)", "DBSCAN kümeleme", "dbscan") if tool == "stats.dbscan"
+                           else ("Kümeler (k-ortalamalar)", "k-ortalamalar kümeleme", "kmeans"))
+        stats = json.loads((DIR / "spatial-stats.json").read_text("utf-8"))
+        layer = next(c for c in stats["cases"] if c["id"] == of)["expect"]["layers"][0]
+        added_ = added(run, "kaza", lname)
+        exp = {"status": "ok", "summary": run["summary"], "undo": undo, "log": log_of(run),
+               "layers": [layer], "layerAbove": {layer_id(lname): "kaza"}, "added": added_,
+               "outputs": {"count": len(added_), "table": run["table"], "profile": run["profile"]["table"],
+                           "experiment": run["profile"]["experiment"], "clusters": run["clusters"], "stable": run["stable"]}}
+    c = {"id": cid, "title": title, "document": "spatial-stats.kcad", "run": {"tool": tool}, "values": values, "expect": exp}
+    if selection is not None:
+        c["selection"] = selection
+    return c
 
 
 def defaults():
@@ -876,6 +905,8 @@ def self_checks():
 
 def main():
     self_checks()
+    import spatial_stability_cases
+    spatial_stability_cases.self_checks()
     text = json.dumps(build(), ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv[1:]:
         if not OUT.exists() or OUT.read_text("utf-8") != text:

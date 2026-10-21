@@ -200,12 +200,23 @@ pub fn tested_result_of(
     let profile = run.profile.take();
     if let Some(p) = &profile {
         let digest = kentos_commands::encoding::sha256_hex(p.inputs.as_bytes());
+        // The count the profile holds by its own noun: permutations (docs/adr/0520), random patterns or
+        // resamples (docs/adr/0566 §3).
+        let count = if let Some(r) = p.get("simulations") {
+            format!("{r} rastgele desen")
+        } else if let Some(r) = p.get("resamples") {
+            format!("{r} tekrar")
+        } else {
+            format!(
+                "{} permütasyon, düzeltme {}",
+                p.get("permutations").unwrap_or(""),
+                p.get("correction").unwrap_or("")
+            )
+        };
         run.infos.push(format!(
-            "Deney profili ({}): tohum {}, {} permütasyon, düzeltme {}; girdi özeti {}….",
+            "Deney profili ({}): tohum {}, {count}; girdi özeti {}….",
             p.get("rule").unwrap_or(""),
             p.get("seed").unwrap_or(""),
-            p.get("permutations").unwrap_or(""),
-            p.get("correction").unwrap_or(""),
             &digest[..12]
         ));
         let mut rows: Vec<Vec<String>> = p

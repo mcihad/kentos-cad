@@ -7,10 +7,11 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::sampling::random::seed_of;
 use kentos_geometry_core::ops::spatial_stats::autocorrelation::{Neighbourhood, morans_i_with};
 use kentos_geometry_core::ops::spatial_stats::centers::{CenterInput, CenterKind, centers};
-use kentos_geometry_core::ops::spatial_stats::clusters::{dbscan, k_means};
+use kentos_geometry_core::ops::spatial_stats::clusters::{dbscan_with, k_means_with};
 use kentos_geometry_core::ops::spatial_stats::inference::{Correction, Inference};
 use kentos_geometry_core::ops::spatial_stats::local::{hot_spots_with, local_morans};
-use kentos_geometry_core::ops::spatial_stats::nearest::nearest;
+use kentos_geometry_core::ops::spatial_stats::nearest::{Simulation, nearest_with};
+use kentos_geometry_core::ops::spatial_stats::stability::{Scheme, Stability};
 use kentos_geometry_core::ops::spatial_stats::weights::Concept;
 use serde_json::{Value, json};
 
@@ -210,6 +211,106 @@ fn correction_param() -> ParamDef {
     )
     .default_value(json!("none"))
     .describe("Çok sayıda nesne sınandığında rastlantıyla anlamlı çıkanları ayıklar; sınıf düzeltilmiş p'den.")
+}
+
+fn simulating(v: &Values) -> bool {
+    v.get("inference").and_then(Value::as_str) == Some("simulation")
+}
+
+fn resampling(v: &Values) -> bool {
+    matches!(
+        v.get("stability").and_then(Value::as_str),
+        Some("bootstrap" | "subset")
+    )
+}
+
+/// En yakın komşu's Çıkarım (docs/adr/0566 §1): Clark and Evans' normal z, or a Monte Carlo test.
+fn simulation_params() -> Vec<ParamDef> {
+    vec![
+        ParamDef::new(
+            "inference",
+            "Çıkarım",
+            ParamKind::Choice {
+                options: vec![
+                    EnumOption::new("analytic", "Normal dağılım")
+                        .hint("Clark ve Evans'ın z'si; sınırsız düzlemi varsayar"),
+                    EnumOption::new("simulation", "Monte Carlo")
+                        .hint("Aynı alana aynı sayıda nokta rastgele atılır; kenar etkisi ikisine de girer"),
+                ],
+            },
+        )
+        .default_value(json!("analytic"))
+        .describe("p değerinin nasıl bulunacağı; Monte Carlo kenar etkisinden arınmıştır."),
+        number(
+            "simulations",
+            "Benzetim sayısı",
+            Some(9.0),
+            Some(99_999.0),
+            true,
+            "",
+        )
+        .default_value(json!(999))
+        .describe("p'nin en küçüğü 1 / (sayı + 1): 999 benzetimle 0,001.")
+        .shown_when(simulating),
+        number("seed", "Tohum", Some(0.0), None, true, "")
+            .default_value(json!(1))
+            .describe("Aynı tohum aynı rastgele desenleri, dolayısıyla aynı p'yi verir.")
+            .shown_when(simulating),
+    ]
+}
+
+/// Kararlılık sınaması (docs/adr/0566 §2): Hennig's resampling of the clusters.
+fn stability_params() -> Vec<ParamDef> {
+    vec![
+        ParamDef::new(
+            "stability",
+            "Kararlılık sınaması",
+            ParamKind::Choice {
+                options: vec![
+                    EnumOption::new("none", "Yok"),
+                    EnumOption::new("bootstrap", "Bootstrap")
+                        .hint("Nesneler yerine koyarak yeniden çekilir ve yeniden kümelenir"),
+                    EnumOption::new("subset", "Alt örnek")
+                        .hint("Nesnelerin yarısı yerine koymadan çekilir ve yeniden kümelenir"),
+                ],
+            },
+        )
+        .default_value(json!("none"))
+        .describe("Her kümenin yeniden örneklemede ne kadar korunduğu: tekrarlarda en benzer kümeyle Jaccard benzerliğinin ortalaması (Hennig 2007)."),
+        number("resamples", "Tekrar sayısı", Some(10.0), Some(999.0), true, "")
+            .default_value(json!(100))
+            .describe("Yeniden örnekleme sayısı; çok tekrar kararlılığı daha kesin bulur.")
+            .shown_when(resampling),
+        number("seed", "Tohum", Some(0.0), None, true, "")
+            .default_value(json!(1))
+            .describe("Aynı tohum aynı örnekleri, dolayısıyla aynı kararlılıkları verir.")
+            .shown_when(resampling),
+    ]
+}
+
+/// The stability test the values ask for.
+fn stability_of(v: &Resolved<'_>) -> Stability {
+    match Scheme::from_key(v.text("stability")) {
+        Some(scheme) => Stability {
+            scheme,
+            resamples: v.number("resamples").unwrap_or(100.0).max(0.0) as usize,
+            seed: seed_of(v.number("seed").unwrap_or(1.0)),
+        },
+        None => Stability::NONE,
+    }
+}
+
+/// A clustering tool's outputs, the stability's too.
+fn cluster_outputs() -> Vec<OutputDef> {
+    vec![
+        OutputDef::new("members", "Nesneler", OutputKind::Features),
+        OutputDef::new("count", "Nesne sayısı", OutputKind::Number),
+        OutputDef::new("clusters", "Küme sayısı", OutputKind::Number),
+        OutputDef::new("table", "Kümelerin kararlılığı", OutputKind::Table),
+        OutputDef::new("stable", "Kararlı küme sayısı", OutputKind::Number),
+        OutputDef::new("profile", "Deney profili", OutputKind::Table),
+        OutputDef::new("experiment", "Deney profili (JSON)", OutputKind::Text),
+    ]
 }
 
 /// The inference the values ask for; `always`: the permutations whatever Çıkarım says (Yerel Moran).
@@ -539,6 +640,7 @@ pub fn nearest_neighbor() -> Tool {
         [
             "Gözlenen ortalama en yakın komşu uzaklığı aynı alanda rastgele dağılmış aynı sayıda nesnenin beklenen uzaklığıyla (0,5 / √(n / A)) karşılaştırılır (Clark ve Evans 1954). Oran 1’den küçük ve z eksiyse kümelenme, büyük ve artıysa dağınıklık vardır; p 0,05’ten küçükse desen anlamlıdır.",
             "Alan boş bırakılırsa nesnelerin yerlerini çevreleyen kutunun alanıdır; sonuç alana duyarlıdır, çalışma alanını biliyorsanız yazın. Çizim değişmez.",
+            "Çıkarım Monte Carlo ise aynı kutuya (Alan yazılmışsa merkezi ve oranı korunarak o alana ölçeklenmiş kutuya) aynı sayıda nokta tohumdan gelen sırayla rastgele atılır ve her desenin ortalama en yakın komşu uzaklığı bulunur. Kenara yakın noktaların komşusu uzakta olduğundan Clark ve Evans'ın z'si küçük alanlarda dağınıklığa kayar; benzetimde kenar etkisi gözlenene de rastgele desene de aynı girer. p gözlenen kadar uç desenlerin payıdır, z gözlenenin benzetimlerin ortalamasından standart sapma cinsinden uzaklığıdır; deney profili tohumu, benzetim sayısını, alanı ve girdinin SHA-256 özetini yazar.",
         ]
         .join("\n\n"),
         &["en yakın komşu", "kümelenme", "nearest neighbor", "average nearest neighbor", "clark evans", "desen", "istatistik"],
@@ -550,13 +652,35 @@ pub fn nearest_neighbor() -> Tool {
                 .default_value(Value::Null)
                 .placeholder("Kutudan")
                 .describe("Çalışma alanı; boş bırakılırsa yerlerin kutusunun alanı."),
-        ],
-        table_outputs("ratio", "En yakın komşu oranı"),
+        ]
+        .into_iter()
+        .chain(simulation_params())
+        .collect(),
+        {
+            let mut out = table_outputs("ratio", "En yakın komşu oranı");
+            out.push(OutputDef::new("zSimulation", "Benzetim z", OutputKind::Number));
+            out.push(OutputDef::new("pSimulation", "Benzetim p", OutputKind::Number));
+            out.push(OutputDef::new("profile", "Deney profili", OutputKind::Table));
+            out.push(OutputDef::new("experiment", "Deney profili (JSON)", OutputKind::Text));
+            out
+        },
         |v, ctx, f| {
             if geographic(ctx) {
                 return RunResult::refused(GEOGRAPHIC.into());
             }
-            match nearest(&shape_list(v), v.number("area")) {
+            let sim = Simulation {
+                count: if v.text("inference") == "simulation" {
+                    v.number("simulations").unwrap_or(999.0).max(0.0) as usize
+                } else {
+                    0
+                },
+                seed: seed_of(v.number("seed").unwrap_or(1.0)),
+            };
+            let scope = scope_of(v, ctx);
+            match nearest_with(&shape_list(v), v.number("area"), sim) {
+                Ok(run) if sim.count > 0 => {
+                    tested_result_of(run, f, &v.features("input").entities, None, &scope)
+                }
                 Ok(run) => result_of(run, f, &v.features("input").entities, None),
                 Err(why) => RunResult::refused(why),
             }
@@ -773,6 +897,7 @@ pub fn dbscan_tool() -> Tool {
         [
             "Yarıçap içinde (kendisi dahil) en az nokta kadar nesnesi olan nesne çekirdektir; birbirine yarıçaptan yakın çekirdekler ve onlara yakın nesneler bir kümedir (Ester ve arkadaşları 1996). Nesneler çizimdeki sırasıyla gezilir; iki kümeye yakın sınır nesnesi ilk ulaşan kümeye girer.",
             "Sınır noktaları gürültü açıkken (DBSCAN*) yalnız çekirdekler kümelenir. Gürültünün küme numarası 0’dır.",
+            "Kararlılık sınaması nesneleri tohumdan gelen sırayla yeniden örnekler (Bootstrap: yerine koyarak; Alt örnek: yarısı, yerine koymadan) ve her örneği aynı parametrelerle yeniden kümeler. Her kümenin kararlılığı, örnekte en çok benzediği yeni kümeyle Jaccard benzerliğinin tekrarlar boyunca ortalamasıdır (Hennig 2007): 0,85 ve üstü çok kararlı, 0,75 ve üstü kararlı, 0,6'nın altı güvenilmez. Kopyalar Kararlılık ve Kararlılık sınıfını, tablo her kümenin yeniden bulunma ve çözülme sayılarını yazar.",
         ]
         .join("\n\n"),
         &["dbscan", "kümeleme", "yoğunluk", "density based clustering", "cluster", "gürültü", "istatistik"],
@@ -788,21 +913,22 @@ pub fn dbscan_tool() -> Tool {
             ParamDef::new("borderNoise", "Sınır noktaları gürültü", ParamKind::Boolean)
                 .default_value(json!(false))
                 .describe("Açıkken yalnız çekirdekler kümelenir (DBSCAN*)."),
-            cluster_layer("Kümeler (DBSCAN)"),
-        ],
-        vec![
-            OutputDef::new("members", "Nesneler", OutputKind::Features),
-            OutputDef::new("count", "Nesne sayısı", OutputKind::Number),
-            OutputDef::new("clusters", "Küme sayısı", OutputKind::Number),
-        ],
+        ]
+        .into_iter()
+        .chain(stability_params())
+        .chain([cluster_layer("Kümeler (DBSCAN)")])
+        .collect(),
+        cluster_outputs(),
         |v, ctx, f| {
             if geographic(ctx) {
                 return RunResult::refused(GEOGRAPHIC.into());
             }
             let radius = v.number("radius").unwrap_or(50.0);
             let min_points = v.number("minPoints").unwrap_or(5.0).max(1.0) as usize;
-            match dbscan(&shape_list(v), radius, min_points, v.flag("borderNoise")) {
-                Ok(run) => result_of(run, f, &v.features("input").entities, Some(&v.layer("layer").id)),
+            let stability = stability_of(v);
+            let scope = scope_of(v, ctx);
+            match dbscan_with(&shape_list(v), radius, min_points, v.flag("borderNoise"), stability) {
+                Ok(run) => clustered(run, v, f, &scope),
                 Err(why) => RunResult::refused(why),
             }
         },
@@ -818,6 +944,7 @@ pub fn k_means_tool() -> Tool {
         [
             "Başlangıç merkezleri kendiliğinden ve hep aynı seçilir: ilki ortalama merkeze en yakın nesne, sonrakiler seçilmiş merkezlere en uzak nesneler. Ardından her nesne en yakın merkeze atanır ve merkezler üyelerinin ortalaması olur; atamalar değişmeyene dek (en çok 500 kez) sürer (Lloyd).",
             "Farklı yer sayısı küme sayısından azsa çalışmaz.",
+            "Kararlılık sınaması nesneleri tohumdan gelen sırayla yeniden örnekler (Bootstrap: yerine koyarak; Alt örnek: yarısı, yerine koymadan) ve her örneği aynı k ile yeniden kümeler. Her kümenin kararlılığı, örnekte en çok benzediği yeni kümeyle Jaccard benzerliğinin tekrarlar boyunca ortalamasıdır (Hennig 2007): 0,85 ve üstü çok kararlı, 0,75 ve üstü kararlı, 0,6'nın altı güvenilmez. Kararsız kümeler çoğu kez k'nin veriye uymadığını gösterir.",
         ]
         .join("\n\n"),
         &["k-ortalamalar", "k means", "kmeans", "kümeleme", "cluster", "gruplama", "istatistik"],
@@ -827,22 +954,39 @@ pub fn k_means_tool() -> Tool {
             number("clusters", "Küme sayısı", Some(2.0), Some(100.0), true, "")
                 .default_value(json!(5))
                 .describe("Kaç küme (k)."),
-            cluster_layer("Kümeler (k-ortalamalar)"),
-        ],
-        vec![
-            OutputDef::new("members", "Nesneler", OutputKind::Features),
-            OutputDef::new("count", "Nesne sayısı", OutputKind::Number),
-            OutputDef::new("clusters", "Küme sayısı", OutputKind::Number),
-        ],
+        ]
+        .into_iter()
+        .chain(stability_params())
+        .chain([cluster_layer("Kümeler (k-ortalamalar)")])
+        .collect(),
+        cluster_outputs(),
         |v, ctx, f| {
             if geographic(ctx) {
                 return RunResult::refused(GEOGRAPHIC.into());
             }
             let k = v.number("clusters").unwrap_or(5.0).max(2.0) as usize;
-            match k_means(&shape_list(v), k) {
-                Ok(run) => result_of(run, f, &v.features("input").entities, Some(&v.layer("layer").id)),
+            let stability = stability_of(v);
+            let scope = scope_of(v, ctx);
+            match k_means_with(&shape_list(v), k, stability) {
+                Ok(run) => clustered(run, v, f, &scope),
                 Err(why) => RunResult::refused(why),
             }
         },
     )
+}
+
+/// A clustering's result: with the stability's profile and scope when it was tested.
+fn clustered(
+    run: kentos_geometry_core::ops::spatial_stats::StatsRun,
+    v: &Resolved<'_>,
+    f: &mut dyn Feedback,
+    scope: &super::Scope,
+) -> RunResult {
+    let input = &v.features("input").entities;
+    let layer = v.layer("layer").id.clone();
+    if run.profile.is_some() {
+        tested_result_of(run, f, input, Some(&layer), scope)
+    } else {
+        result_of(run, f, input, Some(&layer))
+    }
 }

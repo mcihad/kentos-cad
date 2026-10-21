@@ -10,7 +10,7 @@
 //! and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=ist-serit,ist-elips,ist-elips-cizim,ist-moran,ist-komsu,ist-sicak-cizim,ist-dbscan-cizim,ist-moran-permutasyon,ist-sicak-fdr,ist-sicak-fdr-cizim,ist-lisa,ist-lisa-profil,ist-lisa-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=ist-serit,ist-elips,ist-elips-cizim,ist-moran,ist-komsu,ist-sicak-cizim,ist-dbscan-cizim,ist-moran-permutasyon,ist-sicak-fdr,ist-sicak-fdr-cizim,ist-lisa,ist-lisa-profil,ist-lisa-cizim,ist-komsu-benzetim,ist-kararlilik,ist-kararlilik-kortalama cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -144,6 +144,13 @@ pub(crate) fn clusters() -> Vec<(&'static str, Value)> {
     ]
 }
 
+/// DBSCAN of the accidents with 100 bootstrap resamples (docs/adr/0566 §2).
+pub(crate) fn clusters_tested() -> Vec<(&'static str, Value)> {
+    let mut v = clusters();
+    v.push(("stability", json!("bootstrap")));
+    v
+}
+
 pub(crate) fn pointed() -> Vec<Pointed> {
     vec![
         // The CBS ribbon's Analiz with Mekânsal istatistik, over the district.
@@ -275,6 +282,47 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                 ran(app, "processing.run.stats.localMoran", &lisa(), true);
             },
             view,
+        ),
+        // En yakın komşu with 999 random patterns in the places' box: the Monte Carlo rows under the window (docs/adr/0566 §1).
+        (
+            "ist-komsu-benzetim",
+            |app| {
+                opened(app);
+                ran(
+                    app,
+                    "processing.run.stats.nearestNeighbor",
+                    &[("input", layer("kaza")), ("inference", json!("simulation"))],
+                    false,
+                );
+            },
+            view_end,
+        ),
+        // DBSCAN's clusters' stability over 100 bootstrap resamples: the table under the window (docs/adr/0566 §2).
+        (
+            "ist-kararlilik",
+            |app| {
+                opened(app);
+                ran(app, "processing.run.stats.dbscan", &clusters_tested(), false);
+            },
+            view_end,
+        ),
+        // k-means with k = 6 and 100 bootstrap resamples: which of its clusters hold.
+        (
+            "ist-kararlilik-kortalama",
+            |app| {
+                opened(app);
+                ran(
+                    app,
+                    "processing.run.stats.kMeans",
+                    &[
+                        ("input", layer("kaza")),
+                        ("clusters", json!(6)),
+                        ("stability", json!("bootstrap")),
+                    ],
+                    false,
+                );
+            },
+            view_end,
         ),
     ]
 }

@@ -6,6 +6,7 @@
 use std::collections::VecDeque;
 
 use super::kdtree::{KdTree, dist2};
+use super::stability::{Notes, Stability, stability_result, stable_clusters};
 use super::weights::too_many;
 use super::{MOST_PAIRS, Number, ObjectCopy, Placed, StatsRun, pair, unplaced_note};
 use crate::entity::Shape;
@@ -46,25 +47,18 @@ fn copies(run: &mut StatsRun, placed: &Placed, labels: &[u32]) -> Vec<usize> {
     sizes
 }
 
-/// DBSCAN: core places have at least `min_points` places (themselves too)
-/// within `radius`; `border_noise`: only core places join clusters (DBSCAN\*).
-pub fn dbscan(
-    shapes: &[Shape],
+/// DBSCAN's labels of the places (0: noise), visited in their order.
+pub fn dbscan_labels(
+    pts: &[Vec2],
     radius: f64,
     min_points: usize,
     border_noise: bool,
-) -> Result<StatsRun, String> {
-    let placed = Placed::of(shapes, |_| true);
-    let mut run = StatsRun::default();
-    run.warn_if(placed.unplaced, unplaced_note);
-    let n = placed.pts.len();
-    if n == 0 {
-        return Err("Yeri bulunan nesne yok.".into());
-    }
-    let tree = KdTree::new(&placed.pts);
+) -> Result<Vec<u32>, String> {
+    let n = pts.len();
+    let tree = KdTree::new(pts);
     let mut lists: Vec<Vec<u32>> = Vec::with_capacity(n);
     let mut pairs = 0usize;
-    for &p in &placed.pts {
+    for &p in pts {
         let mut found = Vec::new();
         tree.within(p, radius, None, &mut found);
         pairs += found.len();
@@ -105,6 +99,37 @@ pub fn dbscan(
             *l = 0;
         }
     }
+    Ok(labels)
+}
+
+/// DBSCAN: core places have at least `min_points` places (themselves too)
+/// within `radius`; `border_noise`: only core places join clusters (DBSCAN\*).
+pub fn dbscan(
+    shapes: &[Shape],
+    radius: f64,
+    min_points: usize,
+    border_noise: bool,
+) -> Result<StatsRun, String> {
+    dbscan_with(shapes, radius, min_points, border_noise, Stability::NONE)
+}
+
+/// DBSCAN with its clusters' stability when `stability` asks for it (docs/adr/0566 §2).
+pub fn dbscan_with(
+    shapes: &[Shape],
+    radius: f64,
+    min_points: usize,
+    border_noise: bool,
+    stability: Stability,
+) -> Result<StatsRun, String> {
+    let placed = Placed::of(shapes, |_| true);
+    let mut run = StatsRun::default();
+    run.warn_if(placed.unplaced, unplaced_note);
+    let n = placed.pts.len();
+    if n == 0 {
+        return Err("Yeri bulunan nesne yok.".into());
+    }
+    let stability = stability.checked(n)?;
+    let labels = dbscan_labels(&placed.pts, radius, min_points, border_noise)?;
     let sizes = copies(&mut run, &placed, &labels);
     let clusters = sizes.len() - 1;
     let noise = sizes[0];
@@ -117,6 +142,22 @@ pub fn dbscan(
     } else {
         format!("{n} nesne {clusters} kümeye ayrıldı; {noise} nesne gürültü.")
     };
+    if stability.resamples > 0 {
+        let parameters = format!(
+            "Yarıçap {} m, en az {min_points} nokta{}",
+            super::text(radius, 3),
+            if border_noise {
+                ", sınır noktaları gürültü"
+            } else {
+                ""
+            }
+        );
+        let mut notes = Notes::default();
+        let found = stable_clusters(&placed, &labels, stability, |pts| {
+            dbscan_labels(pts, radius, min_points, border_noise).map(|l| (l, false, false))
+        }, &mut notes)?;
+        stability_result(&mut run, shapes, &placed, &labels, stability, &found, "DBSCAN kümeleme", parameters, notes);
+    }
     Ok(run)
 }
 
@@ -134,26 +175,10 @@ fn nearest_center(p: Vec2, centers: &[Vec2]) -> usize {
     best
 }
 
-/// k-means: farthest-first seeds from the place nearest the mean, then
-/// Lloyd's rounds until the assignments hold or `MOST_ROUNDS`.
-pub fn k_means(shapes: &[Shape], k: usize) -> Result<StatsRun, String> {
-    let placed = Placed::of(shapes, |_| true);
-    let mut run = StatsRun::default();
-    run.warn_if(placed.unplaced, unplaced_note);
-    let pts = &placed.pts;
+/// k-means' labels (1 … k) of the places: farthest-first seeds from the place nearest the mean, then Lloyd's rounds
+/// until the assignments hold or `MOST_ROUNDS`; with the rounds and whether they held. `k` at most the distinct places.
+pub fn k_means_labels(pts: &[Vec2], k: usize) -> (Vec<u32>, usize, bool) {
     let n = pts.len();
-    if n == 0 {
-        return Err("Yeri bulunan nesne yok.".into());
-    }
-    let mut distinct: Vec<(f64, f64)> = pts.iter().map(|p| (p.x, p.y)).collect();
-    distinct.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.total_cmp(&b.1)));
-    distinct.dedup();
-    if distinct.len() < k {
-        return Err(format!(
-            "Farklı yer sayısı ({}) küme sayısından ({k}) az.",
-            distinct.len()
-        ));
-    }
     let nf = n as f64;
     let (mut mx, mut my) = (0.0, 0.0);
     for p in pts {
@@ -209,12 +234,49 @@ pub fn k_means(shapes: &[Shape], k: usize) -> Result<StatsRun, String> {
             break;
         }
     }
+    (
+        labels.iter().map(|&l| l as u32 + 1).collect(),
+        rounds,
+        settled,
+    )
+}
+
+/// The count of distinct places.
+fn distinct_places(pts: &[Vec2]) -> usize {
+    let mut distinct: Vec<(f64, f64)> = pts.iter().map(|p| (p.x, p.y)).collect();
+    distinct.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.total_cmp(&b.1)));
+    distinct.dedup();
+    distinct.len()
+}
+
+/// k-means.
+pub fn k_means(shapes: &[Shape], k: usize) -> Result<StatsRun, String> {
+    k_means_with(shapes, k, Stability::NONE)
+}
+
+/// k-means with its clusters' stability when `stability` asks for it (docs/adr/0566 §2).
+pub fn k_means_with(shapes: &[Shape], k: usize, stability: Stability) -> Result<StatsRun, String> {
+    let placed = Placed::of(shapes, |_| true);
+    let mut run = StatsRun::default();
+    run.warn_if(placed.unplaced, unplaced_note);
+    let pts = &placed.pts;
+    let n = pts.len();
+    if n == 0 {
+        return Err("Yeri bulunan nesne yok.".into());
+    }
+    let distinct = distinct_places(pts);
+    if distinct < k {
+        return Err(format!(
+            "Farklı yer sayısı ({distinct}) küme sayısından ({k}) az."
+        ));
+    }
+    let stability = stability.checked(n)?;
+    let (numbered, rounds, settled) = k_means_labels(pts, k);
     if !settled {
         run.warnings.push(format!(
             "Atamalar {MOST_ROUNDS} yinelemede durulmadı; son atamalar yazıldı."
         ));
     }
-    let numbered: Vec<u32> = labels.iter().map(|&l| l as u32 + 1).collect();
     let sizes = copies(&mut run, &placed, &numbered);
     let clusters = sizes.iter().skip(1).filter(|&&s| s > 0).count();
     run.numbers = vec![Number {
@@ -222,5 +284,14 @@ pub fn k_means(shapes: &[Shape], k: usize) -> Result<StatsRun, String> {
         value: clusters as f64,
     }];
     run.summary = format!("{n} nesne {clusters} kümeye ayrıldı ({rounds} yineleme).");
+    if stability.resamples > 0 {
+        let mut notes = Notes::default();
+        let found = stable_clusters(&placed, &numbered, stability, |sample| {
+            let d = distinct_places(sample);
+            let (labels, _, held) = k_means_labels(sample, k.min(d));
+            Ok((labels, d < k, !held))
+        }, &mut notes)?;
+        stability_result(&mut run, shapes, &placed, &numbered, stability, &found, "k-ortalamalar kümeleme", format!("k = {k}"), notes);
+    }
     Ok(run)
 }

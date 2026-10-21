@@ -27719,8 +27719,8 @@
   {
    "id": "stats.dbscan",
    "title": "DBSCAN kümeleme",
-   "cases": 2,
-   "command": 2,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "borderNoise",
@@ -27803,8 +27803,8 @@
   {
    "id": "stats.kMeans",
    "title": "k-ortalamalar kümeleme",
-   "cases": 2,
-   "command": 2,
+   "cases": 5,
+   "command": 5,
    "options": []
   },
   {
@@ -27930,8 +27930,8 @@
   {
    "id": "stats.nearestNeighbor",
    "title": "En yakın komşu",
-   "cases": 2,
-   "command": 2,
+   "cases": 6,
+   "command": 6,
    "options": []
   },
   {

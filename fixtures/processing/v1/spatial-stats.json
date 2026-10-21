@@ -65,7 +65,10 @@
       "scope": "layer",
       "layerId": "cizim"
      },
-     "area": null
+     "area": null,
+     "inference": "analytic",
+     "simulations": 999,
+     "seed": 1
     },
     "stats.moransI": {
      "input": {
@@ -106,6 +109,9 @@
      "radius": 50,
      "minPoints": 5,
      "borderNoise": false,
+     "stability": "none",
+     "resamples": 100,
+     "seed": 1,
      "layer": {
       "newName": "Kümeler (DBSCAN)"
      }
@@ -116,6 +122,9 @@
       "layerId": "cizim"
      },
      "clusters": 5,
+     "stability": "none",
+     "resamples": 100,
+     "seed": 1,
      "layer": {
       "newName": "Kümeler (k-ortalamalar)"
      }

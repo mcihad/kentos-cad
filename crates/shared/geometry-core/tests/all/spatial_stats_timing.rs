@@ -171,3 +171,43 @@ fn spatial_inference_timing() {
     });
     println!("  {}", r.summary);
 }
+
+/// The measures of docs/adr/0566: En yakın komşu's Monte Carlo test of 10 000 points with 999 random patterns, the
+/// stability of DBSCAN's and k-means' clusters of 10 000 points with 100 bootstrap resamples.
+///
+/// ```text
+/// cargo test --release -p kentos-geometry-core --test all spatial_stability_timing -- --ignored --nocapture --test-threads=1
+/// ```
+#[test]
+#[ignore = "timing, release build"]
+fn spatial_stability_timing() {
+    use kentos_geometry_core::ops::spatial_stats::clusters::{dbscan_with, k_means_with};
+    use kentos_geometry_core::ops::spatial_stats::nearest::{Simulation, nearest_with};
+    use kentos_geometry_core::ops::spatial_stats::stability::{Scheme, Stability};
+    let (shapes, _) = scene(10_000);
+    let r = time("En yakın komşu, 10 000 nokta, 999 rastgele desen", 5.0, || {
+        nearest_with(
+            &shapes,
+            None,
+            Simulation {
+                count: 999,
+                seed: 1,
+            },
+        )
+        .expect("ran")
+    });
+    println!("  {}", r.summary);
+    let boot = Stability {
+        scheme: Scheme::Bootstrap,
+        resamples: 100,
+        seed: 1,
+    };
+    let r = time("DBSCAN, 10 000 nokta, 100 bootstrap tekrarı", 3.0, || {
+        dbscan_with(&shapes, 60.0, 5, false, boot).expect("ran")
+    });
+    println!("  {}", r.summary);
+    let r = time("k-ortalamalar, 10 000 nokta, k = 10, 100 bootstrap tekrarı", 3.0, || {
+        k_means_with(&shapes, 10, boot).expect("ran")
+    });
+    println!("  {}", r.summary);
+}

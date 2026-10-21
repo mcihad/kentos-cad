@@ -215,6 +215,9 @@ Liste:
 - [ ] `CBS-25` (ADR 0520, 19 Ekim): web'in Moran I ve Sıcak nokta araçlarına Çıkarım, Permütasyon sayısı, Tohum, Çoklu test
   düzeltmesi; Yerel Moran aracı (çekirdek çağrıları `statsMoranWith`, `statsHotSpotsWith`, `statsLocalMoran`); deney profili tablosu
   ve `experiment`; Analiz panelinde Yerel Moran; WASM süreleri.
+- [ ] `CBS-25` (ADR 0566, 21 Ekim): web'in En yakın komşu aracına Çıkarım (Monte Carlo), Benzetim sayısı ve Tohum; DBSCAN ve
+  k-ortalamalar'a Kararlılık sınaması, Tekrar sayısı ve Tohum, kararlılık tablosu, kopyaların Kararlılık ve Kararlılık sınıfı; çekirdeğin
+  `nearest_with`, `dbscan_with`, `k_means_with`'inin WASM çağrıları; WASM süreleri.
 - [ ] `CBS-17` SLD alışverişi (ADR 0516, 19 Ekim): web'de gerekenler: `file.export.sld` ve `file.import.sld`'nin işleyicileri
   (`sld`'nin WASM bağlayıcısı), Katmanlar'ın sağ tık menüsünde iki öğe; TS türleri üretildi.
 - [ ] `CBS-17` QML alışverişi (ADR 0555, 20 Ekim): web'de gerekenler: `file.export.qml` ve `file.import.qml`'nin işleyicileri
@@ -2397,6 +2400,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   (LISA) `stats.localMoran`; `profile` tablosu ve `experiment` JSON'u (tohum, permütasyon, komşuluk, kapsam, girdinin SHA-256'sı);
   alt küme ve alan sınırlı kaynak söylenir; bağımsız başvuru `spatial_inference_cases.py`, 13 ortak durum. — **19 Ekim,
   [ADR 0520](docs/adr/0520-permutation-and-fdr.md).**
+- [x] `CBS-25` En yakın komşu'nun benzetimi ve kümelerin kararlılığı: En yakın komşu'ya Monte Carlo sınaması (yerlerin kutusunda ya da
+  alanla ölçeklenmiş kutuda aynı sayıda rastgele nokta, kenar etkisi iki yana da girer; benzetim z ve p, deney profili); DBSCAN ve
+  k-ortalamalar'a Hennig'in clusterboot'u (Bootstrap ya da Alt örnek, kümenin en benzer yeni kümeyle Jaccard benzerliğinin ortalaması,
+  yeniden bulunma ve çözülme, sınıflar; kopyalarda Kararlılık); 9 yeni ortak durum `spatial_stability_cases.py`'den, esda, pointpats ve
+  scikit-learn ile çapraz denetim `spatial_esda_cases.py` (esda'nın ikili ağırlıklı Yerel Moran p'si tanımdan sapıyor; numpy'la).
+  Kalan: çalışma alanının alan nesnesinden verilmesi, DBSCAN'ın parametre taraması, R'ın fpc'siyle çapraz denetim. — **21 Ekim,
+  [ADR 0566](docs/adr/0566-nearest-neighbour-simulation-and-cluster-stability.md).**
 - [ ] `CBS-28` sanal mozaik (ikinci dilim): GDAL VRT okuma ve yazma (`kentos_formats::raster::vrt`), okuyucuda mozaik
   (`Reader::mosaic`, `BlockNeed.member`), `cad.rasters.mosaic` (gdalbuildvrt'nin kuralı; öncelik sıra, ince piksel, yeni tarih; `layer`
   ile raster tek adım), 38 ortak durum GDAL'la, Python, MCP, masaüstünde Sanal mozaik penceresi. Kalan: mozaiğin önizleme piramidi,

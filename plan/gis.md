@@ -358,7 +358,7 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-25 — Mevcut istatistiklere permutation/FDR ve tekrarlanabilir deney profili ekle — P1**
 
-  *Kısmen (19 Ekim 2026; [ADR 0520](../docs/adr/0520-permutation-and-fdr.md)): Moran I, Gi* ve yeni Yerel Moran'da tohumlu permütasyon, FDR ve Bonferroni, deney profili ve alt küme etiketi masaüstünde. Kalan: DBSCAN ve k-ortalamaların kararlılık sınaması, En yakın komşu'nun permütasyonu, PySAL/esda ile çapraz sınama.*
+  *Kısmen (19 Ekim 2026; [ADR 0520](../docs/adr/0520-permutation-and-fdr.md)): Moran I, Gi* ve yeni Yerel Moran'da tohumlu permütasyon, FDR ve Bonferroni, deney profili ve alt küme etiketi masaüstünde. Kalan: DBSCAN ve k-ortalamaların kararlılık sınaması, En yakın komşu'nun permütasyonu, PySAL/esda ile çapraz sınama.* *Kısmen (21 Ekim 2026; [ADR 0566](../docs/adr/0566-nearest-neighbour-simulation-and-cluster-stability.md)): En yakın komşu'da Monte Carlo sınaması (aynı alanda tohumlu rastgele desenler, kenar etkisinden arınmış p), DBSCAN ve k-ortalamalarda Hennig'in bootstrap ve alt örnek kararlılığı (kümenin Jaccard ortalaması, yeniden bulunma, çözülme), deney profiliyle; esda, pointpats ve scikit-learn ile çapraz denetim. Kalan: çalışma alanının bir alan nesnesinden verilmesi, DBSCAN'ın parametre taraması, R'ın fpc'siyle çapraz denetim.*
 
   **Mevcut:** Moran's I, Getis-Ord Gi*, en yakın komşu, merkez/dağılım, DBSCAN/k-means ve k-d tree kaynakta var [K09]. Bu çekirdeklerin bulunması bütün istatistiksel geçerlilik seçeneklerinin tamamlandığını göstermez.
 

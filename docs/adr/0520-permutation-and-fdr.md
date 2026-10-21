@@ -37,8 +37,8 @@ Araştırmada bulunanlar (19 Ekim):
 - **Yerel Moran (LISA)** (`stats.localMoran`), yeni araç: yalnız koşullu permütasyonla (GeoDa gibi; analitik yerel varyans yok),
   Çoklu test düzeltmesi, Anlamlılık düzeyi (%10, %5, %1).
 - Varsayılanlar ADR 0238'inkiler kalır (Normal dağılım, düzeltme yok): eski çalıştırmalar aynı sonucu verir.
-- **Kapsam dışı:** DBSCAN ve k-ortalamalar'ın kararlılık sınaması (yeniden örnekleme), En yakın komşu'nun permütasyonu, yerel
-  Geary, iki değişkenli Moran, uzay-zaman permütasyonları, rastgele tohum (tohum her zaman yazılır; varsayılan 1).
+- **Kapsam dışı:** DBSCAN ve k-ortalamalar'ın kararlılık sınaması (yeniden örnekleme) ve En yakın komşu'nun permütasyonu (ikisi de
+  ADR 0566'da), yerel Geary, iki değişkenli Moran, uzay-zaman permütasyonları, rastgele tohum (tohum her zaman yazılır; varsayılan 1).
 
 ### 2. Kural `kentos.spatial-inference/1`: sayılar ve çekilişler
 

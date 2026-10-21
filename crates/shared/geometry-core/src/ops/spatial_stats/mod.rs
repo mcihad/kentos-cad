@@ -4,7 +4,8 @@
 //! (`autocorrelation`, over `weights`), DBSCAN and k-means (`clusters`), the
 //! neighbours from a k-d tree (`kdtree`); permutation inference, multiple
 //! testing correction and the run's profile (`inference`, docs/adr/0520),
-//! Yerel Moran and Gi\* by conditional permutation (`local`).
+//! Yerel Moran and Gi\* by conditional permutation (`local`); the clusters'
+//! stability by resampling (`stability`, docs/adr/0566).
 //!
 //! An object's place is its `shape_centroid` (the expressions' `$merkez_y`,
 //! `$merkez_x`); places are worked as differences from the first one. Values
@@ -22,6 +23,7 @@ pub mod inference;
 pub mod kdtree;
 pub mod local;
 pub mod nearest;
+pub mod stability;
 pub mod weights;
 
 pub use calls::OPS;
