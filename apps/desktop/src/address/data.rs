@@ -892,6 +892,55 @@ impl App {
                     ),
                 ));
             }
+            // docs/adr/0579: an address code on more than one door, a street written in more than one way.
+            let more = |total: usize, shown: usize| {
+                let n = total.saturating_sub(shown);
+                if n > 0 {
+                    format!("; {n} tane daha")
+                } else {
+                    String::new()
+                }
+            };
+            if s.coded > 0 {
+                let shown: Vec<String> = s
+                    .code_repeats
+                    .iter()
+                    .take(SHOWN_REPEATS)
+                    .map(|c| format!("{}: {} kapı", c.code, c.orders.len()))
+                    .collect();
+                let tail = more(s.coded, shown.len());
+                lines.push(words::text_line(
+                    Say::Warn,
+                    format!(
+                        "Birden çok kapıda aynı adres kodu: {} ({}{tail}).",
+                        s.coded,
+                        shown.join("; ")
+                    ),
+                ));
+            }
+            if s.spelled > 0 {
+                let shown: Vec<String> = s
+                    .spellings
+                    .iter()
+                    .take(SHOWN_REPEATS)
+                    .map(|w| {
+                        w.written
+                            .iter()
+                            .map(|(t, n)| format!("“{t}” {n}"))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    })
+                    .collect();
+                let tail = more(s.spelled, shown.len());
+                lines.push(words::text_line(
+                    Say::Warn,
+                    format!(
+                        "Adı farklı yazılan yol: {} ({}{tail}).",
+                        s.spelled,
+                        shown.join("; ")
+                    ),
+                ));
+            }
         }
         lines
     }

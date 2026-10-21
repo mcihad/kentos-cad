@@ -2256,6 +2256,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &["unknown_layer"],
         targets: none,
     },
+    // Adres verisini denetle (docs/adr/0579).
+    Entry {
+        id: "cad.addresses.check",
+        refusals: &[&["invalid_limit", "no_address_data", "unknown_locator"]],
+        warnings: &[],
+        targets: none,
+    },
     Entry {
         id: "cad.layers.time",
         refusals: &[

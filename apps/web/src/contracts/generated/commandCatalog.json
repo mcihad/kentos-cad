@@ -942590,6 +942590,561 @@
       ]
     },
     {
+      "id": "cad.addresses.check",
+      "version": 1,
+      "title": "Adres verisini denetle",
+      "summary": "Projenin adres verisini (locator: kimliği; verilmezse projenin ilki) denetler; çizimi değiştirmez. Dizinin tuttuklarını sayar (kapılar, yollar, yol çizgileri, mahalleler, bölgeler), dışarıda kalanları söyler (nokta olmayan kapı, yol adı olmayan kapı, kapı numarası okunmayan kapı, çizgi olmayan yol, adsız çizgi ve bölge) ve üç listeyi verir: aynı yolda aynı kapı numarası (repeats), birden çok kapıdaki adres kodu (codes) ve kapıları yolun adını birden çok biçimde yazan yollar (spellings: her yazılış ve onu yazan kapı sayısı, en çok yazılan önce; adresin normalleştirilmesinin bulgusu). Yollar adın Türkçe katlanmış biçimi, mahalle ve ilçeyle gruplanır (“Atatürk Cad.” ile “ATATÜRK CADDESİ” bir yoldur). Her liste önce sayısını, sonra ilk kapılarına göre ilk limit tanesini (1–100, varsayılan 100) nesnelerin kalıcı kimlikleriyle verir. Retler: invalid_limit, no_address_data, unknown_locator.",
+      "aliases": [
+        "adresdenetle"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.addresses.check` v1: the address data of `locator` (else the project's first) checked; each list cut\nat `limit` (1–100, default 100).\n\nRefusals (`CommandError.code`), checked in this order: `invalid_limit`, `no_address_data` (the project defines\nnone), `unknown_locator`.",
+        "properties": {
+          "limit": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "locator": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "AddressesCheck",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AddressCodeRepeat": {
+            "description": "An address code on more than one door.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "uids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "code",
+              "uids"
+            ],
+            "type": "object"
+          },
+          "AddressRepeat": {
+            "description": "A door number one street has more than once.",
+            "properties": {
+              "door": {
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": "string"
+              },
+              "street": {
+                "type": "string"
+              },
+              "uids": {
+                "description": "The doors' objects, in the drawing's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "street",
+              "neighbourhood",
+              "door",
+              "uids"
+            ],
+            "type": "object"
+          },
+          "AddressSpelling": {
+            "description": "A street whose doors write its name in more than one way: the ways, the most written first.",
+            "properties": {
+              "district": {
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": "string"
+              },
+              "uids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "written": {
+                "items": {
+                  "$ref": "#/$defs/AddressWritten"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "neighbourhood",
+              "district",
+              "written",
+              "uids"
+            ],
+            "type": "object"
+          },
+          "AddressWritten": {
+            "description": "One way a street's name is written and how many of its doors write it.",
+            "properties": {
+              "doors": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "doors"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.addresses.check` v1, and its plan: what the address data holds, what it left out, and what in it\nrepeats or is written in more than one way (each list's count, then its first `limit`, by their first door).",
+        "properties": {
+          "areas": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "coded": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "codes": {
+            "items": {
+              "$ref": "#/$defs/AddressCodeRepeat"
+            },
+            "type": "array"
+          },
+          "doors": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "emptyStreets": {
+            "description": "Doors with no street name.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "lines": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "locator": {
+            "type": "string"
+          },
+          "neighbourhoods": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notAreas": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notDoors": {
+            "description": "Objects of the door layer that are no points.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notStreets": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "repeated": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "repeats": {
+            "items": {
+              "$ref": "#/$defs/AddressRepeat"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "spelled": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "spellings": {
+            "items": {
+              "$ref": "#/$defs/AddressSpelling"
+            },
+            "type": "array"
+          },
+          "streets": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unnamedAreas": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unnamedLines": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unreadDoors": {
+            "description": "Doors with no door number read.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "locator",
+          "doors",
+          "streets",
+          "lines",
+          "neighbourhoods",
+          "areas",
+          "notDoors",
+          "emptyStreets",
+          "unreadDoors",
+          "notStreets",
+          "unnamedLines",
+          "notAreas",
+          "unnamedAreas",
+          "repeated",
+          "repeats",
+          "coded",
+          "codes",
+          "spelled",
+          "spellings",
+          "revision"
+        ],
+        "title": "AddressesChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "AddressCodeRepeat": {
+            "description": "An address code on more than one door.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "uids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "code",
+              "uids"
+            ],
+            "type": "object"
+          },
+          "AddressRepeat": {
+            "description": "A door number one street has more than once.",
+            "properties": {
+              "door": {
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": "string"
+              },
+              "street": {
+                "type": "string"
+              },
+              "uids": {
+                "description": "The doors' objects, in the drawing's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "street",
+              "neighbourhood",
+              "door",
+              "uids"
+            ],
+            "type": "object"
+          },
+          "AddressSpelling": {
+            "description": "A street whose doors write its name in more than one way: the ways, the most written first.",
+            "properties": {
+              "district": {
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": "string"
+              },
+              "uids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "written": {
+                "items": {
+                  "$ref": "#/$defs/AddressWritten"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "neighbourhood",
+              "district",
+              "written",
+              "uids"
+            ],
+            "type": "object"
+          },
+          "AddressWritten": {
+            "description": "One way a street's name is written and how many of its doors write it.",
+            "properties": {
+              "doors": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "doors"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.addresses.check` v1, and its plan: what the address data holds, what it left out, and what in it\nrepeats or is written in more than one way (each list's count, then its first `limit`, by their first door).",
+        "properties": {
+          "areas": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "coded": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "codes": {
+            "items": {
+              "$ref": "#/$defs/AddressCodeRepeat"
+            },
+            "type": "array"
+          },
+          "doors": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "emptyStreets": {
+            "description": "Doors with no street name.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "lines": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "locator": {
+            "type": "string"
+          },
+          "neighbourhoods": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notAreas": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notDoors": {
+            "description": "Objects of the door layer that are no points.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notStreets": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "repeated": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "repeats": {
+            "items": {
+              "$ref": "#/$defs/AddressRepeat"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "spelled": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "spellings": {
+            "items": {
+              "$ref": "#/$defs/AddressSpelling"
+            },
+            "type": "array"
+          },
+          "streets": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unnamedAreas": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unnamedLines": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unreadDoors": {
+            "description": "Doors with no door number read.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "locator",
+          "doors",
+          "streets",
+          "lines",
+          "neighbourhoods",
+          "areas",
+          "notDoors",
+          "emptyStreets",
+          "unreadDoors",
+          "notStreets",
+          "unnamedLines",
+          "notAreas",
+          "unnamedAreas",
+          "repeated",
+          "repeats",
+          "coded",
+          "codes",
+          "spelled",
+          "spellings",
+          "revision"
+        ],
+        "title": "AddressesChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_limit",
+          "no_address_data",
+          "unknown_locator"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Projenin adres verisini denetle",
+          "input": {}
+        },
+        {
+          "title": "Numarataj'ı denetle, her listeden ilk 20",
+          "input": {
+            "limit": 20,
+            "locator": "adres-1"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.addresses.define",
       "version": 1,
       "title": "Adres verisi",
@@ -1066922,6 +1067477,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Projede bu kimlikte adres verisi yok."
+    },
+    {
+      "code": "no_address_data",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede adres verisi yok; önce Adres verisi penceresinde ya da cad.addresses.define ile tanımlayın."
     },
     {
       "code": "invalid_distance",

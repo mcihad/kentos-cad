@@ -10,6 +10,7 @@ from typing import Any
 from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linearref, linetypes, meshes, network, nurbs, openings, parameters, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, ucs, units, viewmarks, views, walls, xrefs
 
 COMMANDS: dict[str, Any] = {
+    "cad.addresses.check": addresses.check,
     "cad.addresses.define": addresses.define,
     "cad.annotations.scales": annotations.scales,
     "cad.arc.create": arc.create,

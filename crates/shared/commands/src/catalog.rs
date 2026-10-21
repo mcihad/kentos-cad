@@ -5199,6 +5199,43 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Adres verisini denetle (docs/adr/0579), held together by fixtures/commands/v1/cad.addresses.check.json.
+        CommandDescriptor {
+            id: crate::CAD_ADDRESSES_CHECK.into(),
+            version: crate::CAD_ADDRESSES_CHECK_VERSION,
+            title: "Adres verisini denetle".into(),
+            summary: "Projenin adres verisini (locator: kimliği; verilmezse projenin ilki) denetler; çizimi değiştirmez. \
+                      Dizinin tuttuklarını sayar (kapılar, yollar, yol çizgileri, mahalleler, bölgeler), dışarıda kalanları söyler (nokta olmayan kapı, yol adı olmayan kapı, kapı numarası okunmayan kapı, çizgi olmayan yol, adsız çizgi ve bölge) \
+                      ve üç listeyi verir: aynı yolda aynı kapı numarası (repeats), birden çok kapıdaki adres kodu (codes) ve kapıları yolun adını birden çok biçimde yazan yollar (spellings: her yazılış ve onu yazan kapı sayısı, en çok yazılan önce; adresin normalleştirilmesinin bulgusu). \
+                      Yollar adın Türkçe katlanmış biçimi, mahalle ve ilçeyle gruplanır (“Atatürk Cad.” ile “ATATÜRK CADDESİ” bir yoldur). \
+                      Her liste önce sayısını, sonra ilk kapılarına göre ilk limit tanesini (1–100, varsayılan 100) nesnelerin kalıcı kimlikleriyle verir. \
+                      Retler: invalid_limit, no_address_data, unknown_locator."
+                .into(),
+            aliases: vec!["adresdenetle".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::AddressesCheck>(),
+            output: schema::<crate::AddressesChecked>(),
+            plan: Some(schema::<crate::AddressesChecked>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Projenin adres verisini denetle".into(),
+                    input: json!({}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Numarataj'ı denetle, her listeden ilk 20".into(),
+                    input: json!({ "locator": "adres-1", "limit": 20 }),
+                    output: None,
+                },
+            ],
+        },
         // Adres verisi (docs/adr/0229 §14), held together by fixtures/commands/v1/cad.addresses.define.json.
         // The web is paused (docs/adr/0228): the desktop's host alone runs it for now.
         CommandDescriptor {
@@ -9293,6 +9330,10 @@ mod tests {
                         serde_json::from_value::<crate::AddressesDefine>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::CAD_ADDRESSES_CHECK => {
+                        serde_json::from_value::<crate::AddressesCheck>(e.input.clone())
+                            .map(|_| ())
+                    }
                     crate::CAD_LAYERS_TIME => {
                         serde_json::from_value::<crate::LayersTime>(e.input.clone()).map(|_| ())
                     }
@@ -9780,6 +9821,10 @@ mod tests {
                         }
                         crate::CAD_ADDRESSES_DEFINE => {
                             serde_json::from_value::<crate::AddressesDefined>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ADDRESSES_CHECK => {
+                            serde_json::from_value::<crate::AddressesChecked>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_LAYERS_TIME => {

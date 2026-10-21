@@ -531,6 +531,8 @@ codes! {
     INVALID_LOCATOR = "invalid_locator", Failed, false, "Adres verisi ya da onunla projeninkiler kurallarına uymuyor.";
     /// `remove` of a locator the project does not have.
     UNKNOWN_LOCATOR = "unknown_locator", Failed, false, "Projede bu kimlikte adres verisi yok.";
+    /// A check of a project that defines no address data (docs/adr/0579).
+    NO_ADDRESS_DATA = "no_address_data", Failed, false, "Projede adres verisi yok; önce Adres verisi penceresinde ya da cad.addresses.define ile tanımlayın.";
 
     // ── Offset, trim, extend, fillet, chamfer (docs/adr/0246, 0250) ─────
     /// An offset distance not above zero.

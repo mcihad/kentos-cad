@@ -6542,6 +6542,26 @@ class AccuracyReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AddressCodeRepeat(_Model):
+    """An address code on more than one door."""
+    code: str
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressCodeRepeat:
+        return cls(
+            code=data["code"],
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddressLocator(_Model):
     """A project's address data (docs/adr/0229 §2).
     Attributes:
@@ -6585,6 +6605,205 @@ class AddressLocator(_Model):
             areas=[AreaSource.from_json(e0) for e0 in data["areas"]] if "areas" in data else UNSET,
             doors=UNSET if "doors" not in data else None if data["doors"] is None else DoorSource.from_json(data["doors"]),
             streets=UNSET if "streets" not in data else None if data["streets"] is None else StreetSource.from_json(data["streets"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressRepeat(_Model):
+    """A door number one street has more than once.
+    Attributes:
+        uids: The doors' objects, in the drawing's order.
+    """
+    street: str
+    neighbourhood: str
+    door: str
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["street"] = self.street
+        out["neighbourhood"] = self.neighbourhood
+        out["door"] = self.door
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressRepeat:
+        return cls(
+            street=data["street"],
+            neighbourhood=data["neighbourhood"],
+            door=data["door"],
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressSpelling(_Model):
+    """A street whose doors write its name in more than one way: the ways, the most written first."""
+    neighbourhood: str
+    district: str
+    written: list[AddressWritten]
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["neighbourhood"] = self.neighbourhood
+        out["district"] = self.district
+        out["written"] = [e0.to_json() for e0 in self.written]
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressSpelling:
+        return cls(
+            neighbourhood=data["neighbourhood"],
+            district=data["district"],
+            written=[AddressWritten.from_json(e0) for e0 in data["written"]],
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressWritten(_Model):
+    """One way a street's name is written and how many of its doors write it.
+    Attributes:
+        doors: Unit: count.
+    """
+    text: str
+    doors: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["text"] = self.text
+        out["doors"] = self.doors
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressWritten:
+        return cls(
+            text=data["text"],
+            doors=data["doors"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressesCheck(_Model):
+    """Input of `cad.addresses.check` v1: the address data of `locator` (else the project's first) checked; each list cut
+    at `limit` (1–100, default 100).
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_limit`, `no_address_data` (the project defines
+    none), `unknown_locator`.
+    Attributes:
+        limit: Unit: count.
+    """
+    limit: int | None | Unset = UNSET
+    locator: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.locator is not UNSET:
+            out["locator"] = self.locator
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressesCheck:
+        return cls(
+            limit=data.get("limit", UNSET),
+            locator=data.get("locator", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressesChecked(_Model):
+    """Output of `cad.addresses.check` v1, and its plan: what the address data holds, what it left out, and what in it
+    repeats or is written in more than one way (each list's count, then its first `limit`, by their first door).
+    Attributes:
+        doors: Unit: count.
+        streets: Unit: count.
+        lines: Unit: count.
+        neighbourhoods: Unit: count.
+        areas: Unit: count.
+        not_doors: Objects of the door layer that are no points. Unit: count.
+        empty_streets: Doors with no street name. Unit: count.
+        unread_doors: Doors with no door number read. Unit: count.
+        not_streets: Unit: count.
+        unnamed_lines: Unit: count.
+        not_areas: Unit: count.
+        unnamed_areas: Unit: count.
+        repeated: Unit: count.
+        coded: Unit: count.
+        spelled: Unit: count.
+    """
+    locator: str
+    doors: int
+    streets: int
+    lines: int
+    neighbourhoods: int
+    areas: int
+    not_doors: int
+    empty_streets: int
+    unread_doors: int
+    not_streets: int
+    unnamed_lines: int
+    not_areas: int
+    unnamed_areas: int
+    repeated: int
+    repeats: list[AddressRepeat]
+    coded: int
+    codes: list[AddressCodeRepeat]
+    spelled: int
+    spellings: list[AddressSpelling]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["locator"] = self.locator
+        out["doors"] = self.doors
+        out["streets"] = self.streets
+        out["lines"] = self.lines
+        out["neighbourhoods"] = self.neighbourhoods
+        out["areas"] = self.areas
+        out["notDoors"] = self.not_doors
+        out["emptyStreets"] = self.empty_streets
+        out["unreadDoors"] = self.unread_doors
+        out["notStreets"] = self.not_streets
+        out["unnamedLines"] = self.unnamed_lines
+        out["notAreas"] = self.not_areas
+        out["unnamedAreas"] = self.unnamed_areas
+        out["repeated"] = self.repeated
+        out["repeats"] = [e0.to_json() for e0 in self.repeats]
+        out["coded"] = self.coded
+        out["codes"] = [e0.to_json() for e0 in self.codes]
+        out["spelled"] = self.spelled
+        out["spellings"] = [e0.to_json() for e0 in self.spellings]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressesChecked:
+        return cls(
+            locator=data["locator"],
+            doors=data["doors"],
+            streets=data["streets"],
+            lines=data["lines"],
+            neighbourhoods=data["neighbourhoods"],
+            areas=data["areas"],
+            not_doors=data["notDoors"],
+            empty_streets=data["emptyStreets"],
+            unread_doors=data["unreadDoors"],
+            not_streets=data["notStreets"],
+            unnamed_lines=data["unnamedLines"],
+            not_areas=data["notAreas"],
+            unnamed_areas=data["unnamedAreas"],
+            repeated=data["repeated"],
+            repeats=[AddressRepeat.from_json(e0) for e0 in data["repeats"]],
+            coded=data["coded"],
+            codes=[AddressCodeRepeat.from_json(e0) for e0 in data["codes"]],
+            spelled=data["spelled"],
+            spellings=[AddressSpelling.from_json(e0) for e0 in data["spellings"]],
+            revision=data["revision"],
         )
 
 
@@ -59548,7 +59767,13 @@ __all__ = [
     "AddFitCurveEdit",
     "AddIslandsHatchEdit",
     "AddParameterEdit",
+    "AddressCodeRepeat",
     "AddressLocator",
+    "AddressRepeat",
+    "AddressSpelling",
+    "AddressWritten",
+    "AddressesCheck",
+    "AddressesChecked",
     "AddressesDefine",
     "AddressesDefineOperation",
     "AddressesDefineOperationName",

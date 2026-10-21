@@ -38,6 +38,7 @@
 
 pub mod address_define;
 pub mod addresses;
+pub mod addresses_check;
 pub mod annotation_follow;
 pub mod annotations_scales;
 pub mod arc;
@@ -797,6 +798,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_SUBNETWORKS_UPDATE,
         kentos_commands::CAD_SUBNETWORKS_UPDATE_VERSION,
+    ),
+    // Adres verisini denetle ([`addresses_check`], docs/adr/0579).
+    (
+        kentos_commands::CAD_ADDRESSES_CHECK,
+        kentos_commands::CAD_ADDRESSES_CHECK_VERSION,
     ),
     // Adres verisi ([`address_define`], docs/adr/0229 §14).
     (

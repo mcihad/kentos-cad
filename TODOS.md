@@ -346,6 +346,8 @@ Liste:
 - [ ] `CBS-29` raster oturtmanın kaydı (ADR 0518, 19 Ekim): web'de gerekenler: `cad.rasters.georef`'in işleyicisi (WASM'da
   `rasters_georef`'in planı ve yeniden örneklemesi), Raster oturt penceresinde Denetim ve Ad sütunları, hedeflerin sistemi, kayıttan
   açılış, `.points` alışverişi; `.kcad` şema 88'in TS kodeği ve sütunların rasterinin 5. seçeneği; TS türleri üretildi.
+- [ ] `CBS-34` adres verisini denetle (ADR 0579, 21 Ekim): web'de gerekenler: `cad.addresses.check`'in işleyicisi (WASM'da
+  `ops::geocode::check`), web'in Adres verisi penceresi dururken yok.
 - [ ] `CBS-26` ulaşılamayanda düğüm, dönüş ve cihaz (ADR 0577, 21 Ekim): web'de gerekenler: çekirdekten gelen reddin `junctions` ve
   `turns`'ü `model/networkAnswers.ts`'in sözünde; WASM yeniden derlenince arama aynı.
 - [ ] `CBS-26` ulaşılamayanda en az kapatan (ADR 0575, 21 Ekim): web'de gerekenler: ağın işçisinin reddi aynı çekirdekten geldiğinden
@@ -2378,6 +2380,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilk çıkar); `.kcad` şema 87; Ağlar penceresi, araçlarda Saat (Z), İşlemler'de Kalkış saati, Python `Network.time`. Kalan: araç
   profilleri, tarih aralıklı kapanma, Dönüş çiz aracı, dış yönlendirici, bağlı katmanın revizyonu. —
   **19 Ekim, [ADR 0521](docs/adr/0521-turns-levels-and-time-profiles.md).**
+- [ ] `CBS-34` adres verisini denetle (dilim): `ops::geocode::check`'e yinelenen adres kodu ve yolun farklı yazılışları (en çok yazılan
+  önce); salt okunur `cad.addresses.check` (sayılar, dışarıda kalanlar, `repeats`, `codes`, `spellings`, kalıcı kimliklerle; `no_address_data`);
+  Adres verisi penceresinde iki satır; Python ve MCP; başvuru `address_check_command_cases.py` (21 durum). Kalan: yazılışları düzeltmek,
+  mahalle ve ilçe yazılışları, dış kayıtla karşılaştırma. — **21 Ekim, [ADR 0579](docs/adr/0579-address-check.md).**
 - [ ] `CBS-26` ulaşılamayanda düğüm, dönüş ve cihaz (dilim): en az kapatanlı yolun araması düğüm geçişini de sayar (kapalı düğüm,
   `Graph::turn`'ün yasakladığı dönüş, cihazın birleştirmediği terminaller); söz ve JSON'un `junctions`'ı ve `turns`'ü; başvurunun
   (köşe, gelinen kenar) araması, `kapali-dugum`, `yasak-donus`, `izinli-donus` soruları. Kalan: hizmet alanı, seviye, cihazın ortak

@@ -53,7 +53,7 @@ use kentos_native_application::{assets_check, images_edit, rasters_mosaic, raste
 use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile, relate as sources_relate, sync as sources_sync};
 use kentos_native_application::records_page;
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
+    DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, annotations_scales, arc, array, blocks_define, blocks_edit,
     circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit,
     edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick, entities_relate, crs_transform,
     entities_select, entities_trim, entities_vertex, labels_pin, labels_report, layers_compose, layers_edit,
@@ -2448,6 +2448,12 @@ impl Input for EntitiesOffset {
     }
 }
 
+impl Input for kentos_commands::AddressesCheck {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for AddressesDefine {
     /// `locator.reach` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -3359,6 +3365,9 @@ fn run_op(
             run!(subnetworks_update, kentos_commands::SubnetworksUpdate)
         }
         kentos_commands::CAD_ADDRESSES_DEFINE => run!(address_define, AddressesDefine),
+        kentos_commands::CAD_ADDRESSES_CHECK => {
+            run!(addresses_check, kentos_commands::AddressesCheck)
+        }
         kentos_commands::CAD_LAYERS_TIME => run!(layers_time, LayersTime),
         kentos_commands::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),
         kentos_commands::CAD_LAYERS_FILTER => run!(layers_filter, LayersFilter),
