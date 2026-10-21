@@ -27839,39 +27839,6 @@
    ]
   },
   {
-   "id": "stats.dbscanSweep",
-   "title": "DBSCAN parametre taraması",
-   "cases": 8,
-   "command": 8,
-   "options": [
-    {
-     "key": "borderNoise",
-     "value": true,
-     "covered": true
-    },
-    {
-     "key": "borderNoise",
-     "value": false,
-     "covered": true
-    },
-    {
-     "key": "stability",
-     "value": "none",
-     "covered": true
-    },
-    {
-     "key": "stability",
-     "value": "bootstrap",
-     "covered": true
-    },
-    {
-     "key": "stability",
-     "value": "subset",
-     "covered": true
-    }
-   ]
-  },
-  {
    "id": "stats.directionalDistribution",
    "title": "Yön dağılımı",
    "cases": 1,
@@ -28086,16 +28053,6 @@
    "cases": 12,
    "command": 12,
    "options": [
-    {
-     "key": "region",
-     "value": "box",
-     "covered": true
-    },
-    {
-     "key": "region",
-     "value": "areas",
-     "covered": true
-    },
     {
      "key": "inference",
      "value": "analytic",
