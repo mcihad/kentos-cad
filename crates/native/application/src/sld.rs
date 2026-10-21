@@ -93,13 +93,51 @@ pub fn kinds_of(doc: &Document, layer: &str) -> Kinds {
     k
 }
 
-/// A symbol of the project's library by id.
+/// A symbol of the project's library by id, its SVG markers carrying their drawings (docs/adr/0571 §3).
 pub(crate) fn library_symbol(doc: &Document, id: &str) -> Option<Value> {
-    doc.styles()
+    let mut symbol = doc
+        .styles()
         .items
         .iter()
         .find(|it| it.get("id").and_then(Value::as_str) == Some(id))
-        .and_then(|it| it.get("symbol").cloned())
+        .and_then(|it| it.get("symbol").cloned())?;
+    inline_assets(doc, &mut symbol);
+    Some(symbol)
+}
+
+/// The SVG drawing of a library asset by id.
+fn library_svg(doc: &Document, id: &str) -> Option<String> {
+    doc.styles()
+        .items
+        .iter()
+        .find(|it| {
+            it.get("kind").and_then(Value::as_str) == Some("asset")
+                && it.get("id").and_then(Value::as_str) == Some(id)
+        })
+        .and_then(|it| it.get("data").and_then(Value::as_str))
+        .map(str::to_owned)
+}
+
+/// A renderer or a symbol with each SVG marker's drawing from the project's library put in, as the style files carry
+/// it (`svgData`).
+pub(crate) fn inline_assets(doc: &Document, value: &mut Value) {
+    kentos_formats::style_extras::inline_assets(value, &|id| library_svg(doc, id));
+}
+
+/// The SVG drawings a style file carried put into the project's library when it lacks them: a library edit, never an
+/// undo step (the library keeps none).
+pub(crate) fn add_assets(doc: &mut Document, assets: &[kentos_formats::sld::StyleAsset]) {
+    let missing: Vec<Value> = assets
+        .iter()
+        .filter(|a| library_svg(doc, &a.id).is_none())
+        .map(|a| kentos_style_library::file::svg_asset(&a.name, &[], &a.svg, &a.id))
+        .collect();
+    if missing.is_empty() {
+        return;
+    }
+    let mut styles = doc.styles().clone();
+    styles.items.extend(missing);
+    doc.set_styles(styles);
 }
 
 /// The layer's look as an SLD, or why it has none.
@@ -126,11 +164,12 @@ pub fn export(
             Some("layer".into()),
         )));
     }
-    let renderer = node
+    let mut renderer = node
         .style
         .renderer
         .clone()
         .unwrap_or_else(|| simple_renderer(&node.style));
+    inline_assets(doc, &mut renderer);
     let written = sld::write(&node.name, &renderer, kinds_of(doc, layer), &|id| {
         library_symbol(doc, id)
     });
@@ -211,6 +250,10 @@ fn run(
 ) -> Result<(SldImported, Vec<CommandWarning>), Stop> {
     let read = read(input)?;
     checks::revision(cx.doc, input.expected_revision.as_deref())?;
+    if write {
+        // The SVG drawings the file carried join the project's library (a library edit, no undo step).
+        crate::sld::add_assets(cx.doc, &read.assets);
+    }
     let renderer_input = LayersRenderer {
         layer: input.layer.clone(),
         renderer: Some(read.renderer.clone()),

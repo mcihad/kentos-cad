@@ -312,6 +312,30 @@ struct Sl {
     layout: Vec<(&'static str, Value)>,
     /// A width in metres: its value is a zoom expression, which no data expression can hold.
     zoomy: bool,
+    /// What the style layer's metadata carries besides the layer and the symbol (the font a text marker names).
+    meta: Vec<(&'static str, Value)>,
+}
+
+/// A colour of a symbol layer as the style says it: its CSS colour, or, data-defined by a field, `to-color` of the
+/// field with the fixed (or black) colour as its fallback; another expression's fallback is written and said.
+fn colour_value(layer: &Value, key: &str, lost: &mut Vec<String>, what: &str) -> Option<Value> {
+    if let Some(v) = layer.get(key)
+        && let Some(e) = v.get("expr").and_then(Value::as_str)
+        && let Some(f) = field_of(e)
+    {
+        let fallback = v.get("fallback").and_then(css);
+        if fallback.is_none() {
+            lost.push(format!(
+                "{what}: “{key}” [{f}] alanının değeri; yedek renk yok, MapLibre stiline siyah yedekle yazıldı"
+            ));
+        }
+        return Some(json!([
+            "to-color",
+            ["get", f],
+            fallback.unwrap_or_else(|| "#000000".into())
+        ]));
+    }
+    fixed(layer, key, lost, what).and_then(css).map(Value::from)
 }
 
 /// The opacity of a symbol layer: its symbol's and its own.
@@ -332,7 +356,7 @@ fn opacity_of(layer: &Value, sym: f64, lost: &mut Vec<String>, what: &str) -> f6
 }
 
 fn fill_sl(layer: &Value, sym: f64, lost: &mut Vec<String>, what: &str) -> Option<Sl> {
-    let Some(color) = fixed(layer, "color", lost, what).and_then(css) else {
+    let Some(color) = colour_value(layer, "color", lost, what) else {
         lost.push(format!("{what}: dolgunun rengi CSS renklerinden değil"));
         return None;
     };
@@ -346,6 +370,7 @@ fn fill_sl(layer: &Value, sym: f64, lost: &mut Vec<String>, what: &str) -> Optio
         ],
         layout: vec![],
         zoomy: false,
+        meta: vec![],
     })
 }
 
@@ -357,7 +382,7 @@ fn line_sl(
     what: &str,
 ) -> Option<Sl> {
     let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
-    let Some(color) = fixed(layer, "color", lost, what).and_then(css) else {
+    let Some(color) = colour_value(layer, "color", lost, what) else {
         lost.push(format!("{what}: çizginin rengi CSS renklerinden değil"));
         return None;
     };
@@ -443,14 +468,115 @@ fn line_sl(
         paint,
         layout: vec![("line-cap", json!(cap)), ("line-join", json!(join))],
         zoomy: w.zoomy(),
+        meta: vec![],
+    })
+}
+
+/// A text marker as a `symbol` layer: its character as `text-field`, its size in `text-size`; the glyph server's font
+/// (Noto Sans) draws it, the font the marker names rides in the layer's metadata.
+fn text_sl(layer: &Value, sym: f64, lost: &mut Vec<String>, what: &str) -> Option<Sl> {
+    let text = match layer.get("text") {
+        Some(t) if t.get("expr").is_some() => {
+            lost.push(format!(
+                "{what}: yazı işaretinin metni bir ifadeyle (veriye göre); MapLibre stiline yedek değeri yazıldı"
+            ));
+            t.get("fallback").and_then(Value::as_str).unwrap_or("")
+        }
+        Some(t) => t.as_str().unwrap_or(""),
+        None => "",
+    };
+    if text.is_empty() {
+        lost.push(format!(
+            "{what}: yazı işaretinin metni boş; MapLibre stiline yazılmadı"
+        ));
+        return None;
+    }
+    let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
+    let size = fixed(layer, "size", lost, what)
+        .and_then(Value::as_f64)
+        .unwrap_or(2.0);
+    let bold = layer
+        .get("weight")
+        .and_then(Value::as_f64)
+        .is_some_and(|w| w >= 600.0);
+    let italic = layer.get("italic") == Some(&Value::Bool(true));
+    if bold && italic {
+        lost.push(format!(
+            "{what}: yazı işaretinin kalın ve eğik biçimi birlikte MapLibre'nin harf yığınında yok; kalın yazıldı"
+        ));
+    }
+    let font = layer.get("font").and_then(Value::as_str);
+    if let Some(f) = font {
+        lost.push(format!(
+            "{what}: yazı işaretinin “{f}” yazı tipi MapLibre'nin harf sunucusunda (Noto Sans) bulunmayabilir; simge yazı tipleri ve özel karakterler çizilmeyebilir"
+        ));
+    }
+    let opacity = opacity_of(layer, sym, lost, what);
+    let mut paint = vec![
+        (
+            "text-color",
+            colour_value(layer, "color", lost, what).unwrap_or_else(|| json!("#000000")),
+        ),
+        ("text-opacity", n(round3(opacity))),
+    ];
+    if let Some(h) = layer.get("halo").filter(|h| h.is_object())
+        && let Some(c) = h.get("color").and_then(css)
+    {
+        let w = h.get("width").and_then(Value::as_f64).unwrap_or(0.0);
+        if w > 0.0 {
+            paint.push(("text-halo-color", json!(c)));
+            paint.push(("text-halo-width", Len::of(w, unit).json()));
+        }
+    }
+    let mut layout = vec![
+        ("text-field", json!(text)),
+        (
+            "text-font",
+            json!([match (bold, italic) {
+                (true, _) => "Noto Sans Bold",
+                (false, true) => "Noto Sans Italic",
+                _ => "Noto Sans Regular",
+            }]),
+        ),
+        ("text-size", Len::of(size, unit).json()),
+        ("text-allow-overlap", json!(true)),
+        ("text-ignore-placement", json!(true)),
+    ];
+    if let Some(r) = fixed(layer, "rotation", lost, what)
+        .and_then(Value::as_f64)
+        .filter(|r| *r != 0.0)
+    {
+        // MapLibre turns the text clockwise, KentOS counter-clockwise.
+        layout.push(("text-rotate", n(round4(-r))));
+    }
+    let mut meta = Vec::new();
+    if let Some(f) = font {
+        meta.push(("kentos:font", json!(f)));
+    }
+    Some(Sl {
+        kind: "symbol",
+        symbol: "marker",
+        paint,
+        layout,
+        zoomy: false,
+        meta,
     })
 }
 
 fn marker_sl(layer: &Value, sym: f64, lost: &mut Vec<String>, what: &str) -> Option<Sl> {
     let t = layer.get("type").and_then(Value::as_str).unwrap_or("");
+    if t == "text" {
+        return text_sl(layer, sym, lost, what);
+    }
+    if t == "svg" {
+        lost.push(format!(
+            "{what}: SVG işareti MapLibre stiline yazılmadı (`icon-image` bir sprite ister, bir stil dosyası sprite taşımaz)"
+        ));
+        return None;
+    }
     if t != "shape" {
         lost.push(format!(
-            "{what}: “{t}” işareti MapLibre stiline yazılmadı (yalnız şekil işaretleri, daire olarak yazılır)"
+            "{what}: “{t}” işareti MapLibre stiline yazılmadı (şekil işaretleri daire, yazı işaretleri `symbol` katmanı olarak yazılır)"
         ));
         return None;
     }
@@ -469,8 +595,8 @@ fn marker_sl(layer: &Value, sym: f64, lost: &mut Vec<String>, what: &str) -> Opt
         .and_then(Value::as_f64)
         .unwrap_or(2.0);
     let radius = Len::of(size, unit).scaled(0.5);
-    let fill = fixed(layer, "fill", lost, what).and_then(css);
-    let stroke = fixed(layer, "stroke", lost, what).and_then(css);
+    let fill = colour_value(layer, "fill", lost, what);
+    let stroke = colour_value(layer, "stroke", lost, what);
     let stroke_width = layer
         .get("strokeWidth")
         .and_then(Value::as_f64)
@@ -496,11 +622,11 @@ fn marker_sl(layer: &Value, sym: f64, lost: &mut Vec<String>, what: &str) -> Opt
     let opacity = opacity_of(layer, sym, lost, what);
     let (circle_color, circle_opacity) = match fill {
         Some(c) => (c, opacity),
-        None => ("#000000".to_owned(), 0.0),
+        None => (json!("#000000"), 0.0),
     };
     let (stroke_color, stroke_opacity, stroke_w) = match stroke {
         Some(c) => (c, opacity, sw),
-        None => ("#000000".to_owned(), 0.0, Len::Px(0.0)),
+        None => (json!("#000000"), 0.0, Len::Px(0.0)),
     };
     Some(Sl {
         kind: "circle",
@@ -515,6 +641,7 @@ fn marker_sl(layer: &Value, sym: f64, lost: &mut Vec<String>, what: &str) -> Opt
         ],
         layout: vec![],
         zoomy: radius.zoomy() || stroke_w.zoomy(),
+        meta: vec![],
     })
 }
 
@@ -559,8 +686,10 @@ fn symbol_sls(
             (_, other) => {
                 let words = match other {
                     "hatchFill" => "tarama dolgusu",
-                    "gradientFill" => "degrade dolgu",
-                    "patternFill" => "desen dolgusu",
+                    "gradientFill" => "degrade dolgu (MapLibre'de degrade dolgu yok)",
+                    "patternFill" => {
+                        "nokta deseni dolgusu (`fill-pattern` bir sprite ister, bir stil dosyası sprite taşımaz)"
+                    }
                     "imageFill" => "resim dolgusu",
                     "markerLine" => "işaretli çizgi",
                     "geometryGenerator" => "geometri üretici",
@@ -700,6 +829,9 @@ impl Emit<'_> {
         let mut metadata = meta;
         metadata.insert("kentos:layer".into(), json!(self.layer.id));
         metadata.insert("kentos:symbol".into(), json!(sl.symbol));
+        for (k, v) in &sl.meta {
+            metadata.insert((*k).to_owned(), v.clone());
+        }
         l.insert("metadata".into(), Value::Object(metadata));
         self.layers.push(Value::Object(l));
     }
@@ -1479,7 +1611,11 @@ pub fn write(
         rules += write_renderer(&mut emit, library, &mut layer_lost);
         let before = emit.layers.len();
         label_layers(&mut emit, &mut layer_lost);
-        texts |= emit.layers.len() > before;
+        texts |= emit.layers.len() > before
+            || emit
+                .layers
+                .iter()
+                .any(|l| l.get("type") == Some(&json!("symbol")));
         zoomed |= emit.zoomed;
         if emit.layers.is_empty() {
             empty.push(layer.id.to_owned());
@@ -2096,6 +2232,8 @@ enum Prop {
     },
     /// A width in metres: the metres.
     Metres(f64),
+    /// `["to-color", ["get", f], fallback]` or `["get", f]`: a colour of the field's value, the fallback (or null).
+    Data { field: String, fallback: Value },
 }
 
 fn prop_of(v: &Value, key: &str, lost: &mut Vec<String>, what: &str) -> Option<Prop> {
@@ -2116,6 +2254,20 @@ fn prop_of(v: &Value, key: &str, lost: &mut Vec<String>, what: &str) -> Option<P
             ))))
         }
         "to-color" if a.len() == 2 && a[1].is_string() => Some(Prop::Const(a[1].clone())),
+        "to-color" if a.len() == 3 && a[2].is_string() && operand_field(&a[1]).is_some() => {
+            Some(Prop::Data {
+                field: operand_field(&a[1])?,
+                fallback: a[2].clone(),
+            })
+        }
+        "to-color" if a.len() == 2 && operand_field(&a[1]).is_some() => Some(Prop::Data {
+            field: operand_field(&a[1])?,
+            fallback: Value::Null,
+        }),
+        "get" if a.len() == 2 && key.ends_with("color") => Some(Prop::Data {
+            field: a[1].as_str()?.to_owned(),
+            fallback: Value::Null,
+        }),
         "match" if a.len() >= 5 && a.len() % 2 == 1 => {
             let field = operand_field(&a[1])?;
             let mut arms = Vec::new();
@@ -2199,6 +2351,7 @@ impl Prop {
         match self {
             Prop::Const(v) => v.clone(),
             Prop::Metres(m) => json!({ "metres": m }),
+            Prop::Data { fallback, .. } => fallback.clone(),
             Prop::Match { arms, fallback, .. } => match class {
                 Class::Value(s) => arms
                     .iter()
@@ -2243,6 +2396,17 @@ impl Raw<'_> {
         self.value(key, class)?.as_f64()
     }
 
+    /// A colour as the symbol layer's value: when the style says it of a field, that expression with the colour as
+    /// its fallback.
+    fn colour_value(&self, key: &str, colour: &str) -> Value {
+        match self.prop(key) {
+            Some(Prop::Data { field, .. }) => {
+                json!({ "expr": format!("[{field}]"), "fallback": colour })
+            }
+            _ => json!(colour),
+        }
+    }
+
     fn colour(&self, key: &str, class: &Class) -> Option<(String, f64)> {
         css_in(self.value(key, class)?.as_str()?)
     }
@@ -2261,7 +2425,11 @@ fn scale_of_zoom(z: f64) -> f64 {
     (SCALE_Z0 / libm::pow(2.0, z)).round()
 }
 
-const READ_KEYS: [&str; 17] = [
+const READ_KEYS: [&str; 21] = [
+    "text-color",
+    "text-opacity",
+    "text-halo-color",
+    "text-halo-width",
     "fill-color",
     "fill-opacity",
     "fill-outline-color",
@@ -2281,9 +2449,24 @@ const READ_KEYS: [&str; 17] = [
     "fill-sort-key",
 ];
 
+/// Whether a `symbol` layer is a text marker: a text marker the writer made, or a literal single character with no
+/// icon (any other literal text is a label).
+fn is_font_marker(l: &StyleLayer) -> bool {
+    l.kind == "symbol"
+        && l.layout.get("text-field").is_some_and(Value::is_string)
+        && !l.layout.contains_key("icon-image")
+        && !l.metadata.contains_key("kentos:label")
+        && (l.metadata.get("kentos:symbol") == Some(&json!("marker"))
+            || (!l.metadata.contains_key("kentos:symbol")
+                && l.layout
+                    .get("text-field")
+                    .and_then(Value::as_str)
+                    .is_some_and(|t| t.chars().count() == 1)))
+}
+
 fn raw_of<'a>(l: &'a StyleLayer, lost: &mut Vec<String>) -> Option<Raw<'a>> {
     let what = format!("“{}” katmanı", l.id);
-    if !matches!(l.kind.as_str(), "fill" | "line" | "circle") {
+    if !matches!(l.kind.as_str(), "fill" | "line" | "circle") && !is_font_marker(l) {
         match l.kind.as_str() {
             "symbol" => lost.push(format!(
                 "{what}: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır"
@@ -2316,6 +2499,7 @@ fn raw_of<'a>(l: &'a StyleLayer, lost: &mut Vec<String>) -> Option<Raw<'a>> {
     let colour_key = match l.kind.as_str() {
         "fill" => "fill-color",
         "line" => "line-color",
+        "symbol" => "text-color",
         _ => "circle-color",
     };
     if l.paint.contains_key(colour_key) && !paint.iter().any(|(k, _)| k == colour_key) {
@@ -2335,6 +2519,12 @@ fn raw_of<'a>(l: &'a StyleLayer, lost: &mut Vec<String>) -> Option<Raw<'a>> {
                 | "circle-sort-key"
                 | "fill-sort-key"
                 | "line-sort-key"
+                | "text-field"
+                | "text-font"
+                | "text-size"
+                | "text-rotate"
+                | "text-allow-overlap"
+                | "text-ignore-placement"
         ) {
             continue;
         }
@@ -2400,7 +2590,7 @@ fn draw(raw: &Raw<'_>, class: &Class, others_fill: bool, lost: &mut Vec<String>)
                 .clamp(0.0, 1.0);
             out.push(Drawn {
                 symbol: "fill",
-                layer: json!({ "type": "simpleFill", "color": kentos_colour(&colour, 1.0) }),
+                layer: json!({ "type": "simpleFill", "color": raw.colour_value("fill-color", &kentos_colour(&colour, 1.0)) }),
                 opacity,
             });
             if let Some(o) = raw.colour("fill-outline-color", class) {
@@ -2425,7 +2615,7 @@ fn draw(raw: &Raw<'_>, class: &Class, others_fill: bool, lost: &mut Vec<String>)
             let width = raw.length("line-width", class).unwrap_or(Len::Px(1.0));
             let (w, unit) = len_parts(width);
             let mut l = json!({
-                "type": "simpleLine", "color": kentos_colour(&colour, 1.0),
+                "type": "simpleLine", "color": raw.colour_value("line-color", &kentos_colour(&colour, 1.0)),
                 "width": w, "unit": unit,
             });
             if let Some(d) = raw.value("line-dasharray", class).and_then(|d| {
@@ -2459,6 +2649,63 @@ fn draw(raw: &Raw<'_>, class: &Class, others_fill: bool, lost: &mut Vec<String>)
                 opacity,
             });
         }
+        "symbol" => {
+            let text = raw
+                .layout
+                .get("text-field")
+                .and_then(Value::as_str)
+                .unwrap_or("");
+            let (size, unit) = match raw.layout.get("text-size") {
+                Some(v) => match prop_of(v, "text-size", lost, &what) {
+                    Some(Prop::Metres(m)) => (round4(m), "m"),
+                    Some(Prop::Const(c)) => (c.as_f64().unwrap_or(16.0), "px"),
+                    _ => (16.0, "px"),
+                },
+                None => (16.0, "px"),
+            };
+            let stack = raw
+                .layout
+                .get("text-font")
+                .and_then(Value::as_array)
+                .and_then(|f| f.first())
+                .and_then(Value::as_str)
+                .unwrap_or("");
+            let colour = raw
+                .colour("text-color", class)
+                .unwrap_or(("#000000".into(), 1.0));
+            let opacity = raw
+                .number("text-opacity", class)
+                .unwrap_or(1.0)
+                .clamp(0.0, 1.0);
+            let mut m = json!({
+                "type": "text", "text": text, "size": size, "unit": unit,
+                "color": raw.colour_value("text-color", &kentos_colour(&colour, 1.0)),
+            });
+            if let Some(f) = raw.src.metadata.get("kentos:font").and_then(Value::as_str) {
+                m["font"] = json!(f);
+            }
+            if stack.contains("Bold") {
+                m["weight"] = json!(700);
+            }
+            if stack.contains("Italic") {
+                m["italic"] = json!(true);
+            }
+            if let Some(r) = raw.layout.get("text-rotate").and_then(Value::as_f64)
+                && r != 0.0
+            {
+                m["rotation"] = json!(-r);
+            }
+            if let Some(w) = raw.number("text-halo-width", class).filter(|w| *w > 0.0)
+                && let Some(c) = raw.colour("text-halo-color", class)
+            {
+                m["halo"] = json!({ "color": kentos_colour(&c, 1.0), "width": round4(w) });
+            }
+            out.push(Drawn {
+                symbol: "marker",
+                layer: m,
+                opacity,
+            });
+        }
         _ => {
             let radius = raw.length("circle-radius", class).unwrap_or(Len::Px(5.0));
             let (r, unit) = len_parts(radius);
@@ -2483,7 +2730,7 @@ fn draw(raw: &Raw<'_>, class: &Class, others_fill: bool, lost: &mut Vec<String>)
             }) && stroke_o > 0.0;
             let mut m = json!({
                 "type": "shape", "shape": "circle", "size": round4(r * 2.0), "unit": unit,
-                "fill": if fill_o > 0.0 { json!(kentos_colour(&fill, 1.0)) } else { Value::Null },
+                "fill": if fill_o > 0.0 { raw.colour_value("circle-color", &kentos_colour(&fill, 1.0)) } else { Value::Null },
             });
             if stroke_on && let Some(s) = sw {
                 let (w, su) = len_parts(s);
@@ -2492,7 +2739,7 @@ fn draw(raw: &Raw<'_>, class: &Class, others_fill: bool, lost: &mut Vec<String>)
                         "{what}: çemberin kenar kalınlığının birimi boyununkinden başka; kalınlık alınmadı"
                     ));
                 } else {
-                    m["stroke"] = json!(kentos_colour(&stroke, 1.0));
+                    m["stroke"] = raw.colour_value("circle-stroke-color", &kentos_colour(&stroke, 1.0));
                     m["strokeWidth"] = json!(w);
                 }
             }
@@ -2853,6 +3100,7 @@ pub fn renderer_of(layers: &[&StyleLayer]) -> Result<Read, String> {
         renderer,
         lost,
         rules,
+        assets: Vec::new(),
     })
 }
 
@@ -3570,5 +3818,83 @@ mod tests {
             );
             std::fs::write(format!("{dir}/{name}.json"), w.json).expect("written");
         }
+    }
+
+    #[test]
+    fn a_colour_of_a_field_goes_out_as_to_color_and_comes_back() {
+        let r = json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
+            { "id": "f", "type": "simpleFill", "color": { "expr": "[renk]", "fallback": "#ff0000" } },
+        ] } } });
+        let w = write_one(&r, area());
+        assert!(w.lost.is_empty(), "{:?}", w.lost);
+        let style: Value = serde_json::from_str(&w.json).expect("json");
+        assert_eq!(
+            style["layers"][0]["paint"]["fill-color"],
+            json!(["to-color", ["get", "renk"], "#ff0000"])
+        );
+        let back = read_back(&w);
+        assert_eq!(
+            back.renderer["symbols"]["fill"]["layers"][0]["color"],
+            json!({ "expr": "[renk]", "fallback": "#ff0000" })
+        );
+        // No fallback: black, said.
+        let r = json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
+            { "id": "f", "type": "simpleFill", "color": { "expr": "[renk]" } },
+        ] } } });
+        assert!(
+            write_one(&r, area()).lost.iter().any(|l| l.contains("yedek renk yok")),
+            "{:?}",
+            write_one(&r, area()).lost
+        );
+    }
+
+    #[test]
+    fn a_font_marker_is_a_symbol_layer_and_a_gradient_a_pattern_and_an_svg_are_named_lost() {
+        let r = json!({ "type": "single", "symbols": {
+            "marker": { "type": "marker", "layers": [
+                { "id": "t", "type": "text", "text": "A", "font": "Arial", "size": 6, "unit": "mm", "color": "#aa0000",
+                  "weight": 700, "rotation": 30, "halo": { "color": "#ffffff", "width": 0.4 } },
+                { "id": "v", "type": "svg", "asset": "kapi", "size": 4 } ] },
+            "fill": { "type": "fill", "layers": [
+                { "id": "g", "type": "gradientFill", "color": "#ff0000", "color2": "#0000ff" },
+                { "id": "p", "type": "patternFill", "spacingX": 5, "spacingY": 5, "marker": { "type": "marker", "layers": [] } } ] } } });
+        let k = Kinds {
+            point: true,
+            line: false,
+            area: true,
+        };
+        let w = write_one(&r, k);
+        for words in ["Arial", "SVG işareti", "degrade dolgu", "fill-pattern"] {
+            assert!(w.lost.iter().any(|l| l.contains(words)), "{words}: {:?}", w.lost);
+        }
+        let style: Value = serde_json::from_str(&w.json).expect("json");
+        let sym = style["layers"]
+            .as_array()
+            .expect("layers")
+            .iter()
+            .find(|l| l["type"] == "symbol")
+            .expect("a symbol layer");
+        assert_eq!(sym["layout"]["text-field"], "A");
+        assert_eq!(sym["layout"]["text-font"], json!(["Noto Sans Bold"]));
+        assert_eq!(sym["layout"]["text-rotate"].as_f64(), Some(-30.0));
+        assert_eq!(sym["paint"]["text-halo-color"], "#ffffff");
+        assert_eq!(sym["metadata"]["kentos:font"], "Arial");
+        let back = read_back(&w);
+        let m = &back.renderer["symbols"]["marker"]["layers"][0];
+        assert_eq!(m["type"], "text");
+        assert_eq!(m["text"], "A");
+        assert_eq!(m["font"], "Arial");
+        assert_eq!(m["weight"], 700);
+        assert_eq!(m["rotation"].as_f64(), Some(30.0));
+        assert_eq!(m["color"], "#aa0000");
+        assert_eq!(m["halo"]["color"], "#ffffff");
+        // A label is no marker.
+        let text = r##"{ "version": 8, "sources": {}, "layers": [
+            { "id": "etiket", "type": "symbol", "source": "s", "layout": { "text-field": "Hastane" } },
+            { "id": "a", "type": "fill", "source": "s", "paint": { "fill-color": "#fff" } } ] }"##;
+        let style = parse(text).expect("parses");
+        let layers: Vec<&StyleLayer> = style.layers.iter().collect();
+        let read = renderer_of(&layers).expect("reads");
+        assert!(read.lost.iter().any(|l| l.contains("etiket katmanı")), "{:?}", read.lost);
     }
 }

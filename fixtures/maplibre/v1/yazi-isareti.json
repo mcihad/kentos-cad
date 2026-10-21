@@ -1,0 +1,88 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "durak/1",
+   "type": "symbol",
+   "source": "s",
+   "source-layer": "durak",
+   "metadata": {
+    "kentos:layer": "durak",
+    "kentos:symbol": "marker",
+    "kentos:font": "Arial"
+   },
+   "layout": {
+    "text-field": "A",
+    "text-size": 17,
+    "text-font": [
+     "Noto Sans Bold Italic"
+    ],
+    "text-rotate": 15,
+    "text-allow-overlap": true
+   },
+   "paint": {
+    "text-color": [
+     "to-color",
+     [
+      "get",
+      "renk"
+     ],
+     "#aa0000"
+    ],
+    "text-opacity": 0.5,
+    "text-halo-color": "#ffffff",
+    "text-halo-width": 1.5
+   }
+  },
+  {
+   "id": "durak/2",
+   "type": "symbol",
+   "source": "s",
+   "source-layer": "durak",
+   "layout": {
+    "text-field": "★",
+    "text-size": [
+     "interpolate",
+     [
+      "exponential",
+      2
+     ],
+     [
+      "zoom"
+     ],
+     0,
+     2.555207919273305e-05,
+     24,
+     428.69275186558804
+    ]
+   },
+   "paint": {
+    "text-color": "#ffcc00"
+   }
+  },
+  {
+   "id": "durak/3",
+   "type": "symbol",
+   "source": "s",
+   "source-layer": "durak",
+   "layout": {
+    "text-field": "Hastane"
+   },
+   "paint": {
+    "text-color": "#000000"
+   }
+  },
+  {
+   "id": "durak/4",
+   "type": "symbol",
+   "source": "s",
+   "source-layer": "durak",
+   "layout": {
+    "icon-image": "hastane",
+    "text-field": "H"
+   }
+  }
+ ]
+}

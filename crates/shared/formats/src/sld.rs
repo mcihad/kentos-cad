@@ -46,6 +46,15 @@ pub struct Written {
     pub rules: usize,
 }
 
+/// An SVG drawing a style file carried inside it (docs/adr/0571): the library drawing the reader's SVG markers refer
+/// to by `id`; the host adds it to the project's library.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StyleAsset {
+    pub id: String,
+    pub name: String,
+    pub svg: String,
+}
+
 /// What the reader made: KentOS's renderer, the layer's name, and what it could not take.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Read {
@@ -53,6 +62,8 @@ pub struct Read {
     pub renderer: Value,
     pub lost: Vec<String>,
     pub rules: usize,
+    /// The SVG drawings the style carried, by the ids the renderer's SVG markers have.
+    pub assets: Vec<StyleAsset>,
 }
 
 // ─── Expressions ──────────────────────────────────────────────────────────────────────────────────────
@@ -578,25 +589,83 @@ pub(crate) fn round3(v: f64) -> f64 {
     (v * 1000.0).round() / 1000.0
 }
 
-/// A fixed value of a symbol layer's property, or why not.
+/// A fixed value of a symbol layer's property, or why not (SLD's words).
 pub(crate) fn fixed<'a>(
     layer: &'a Value,
     key: &str,
     lost: &mut Vec<String>,
     what: &str,
 ) -> Option<&'a Value> {
+    fixed_for(layer, key, lost, what, "SLD'ye")
+}
+
+/// [`fixed`] with the format's dative (“QML'e”, “MapLibre'ye”) in the loss.
+pub(crate) fn fixed_for<'a>(
+    layer: &'a Value,
+    key: &str,
+    lost: &mut Vec<String>,
+    what: &str,
+    to: &str,
+) -> Option<&'a Value> {
     let v = layer.get(key)?;
     if v.is_object() && v.get("expr").is_some() {
         let fallback = v.get("fallback").filter(|f| !f.is_null());
         lost.push(match fallback {
             Some(_) => {
-                format!("{what}: “{key}” bir ifadeyle (veriye göre); SLD'ye yedek değeri yazıldı")
+                format!("{what}: “{key}” bir ifadeyle (veriye göre); {to} yedek değeri yazıldı")
             }
-            None => format!("{what}: “{key}” bir ifadeyle (veriye göre); SLD'ye yazılamadı"),
+            None => format!("{what}: “{key}” bir ifadeyle (veriye göre); {to} yazılamadı"),
         });
         return fallback;
     }
     (!v.is_null()).then_some(v)
+}
+
+/// A colour of a symbol layer as SE says it (docs/adr/0571 §5): a fixed colour and its opacity, or a field whose value
+/// is the colour (`ogc:PropertyName` in the parameter).
+pub(crate) enum Paint {
+    Fixed(String, f64),
+    Field(String),
+}
+
+/// A layer's colour at `key`: its fixed colour, or, data-defined by a field alone, that field (SE has no fallback
+/// value, and QGIS does not read a field in a colour parameter: both said); another expression is the fallback.
+pub(crate) fn paint_of(layer: &Value, key: &str, lost: &mut Vec<String>, what: &str) -> Option<Paint> {
+    if let Some(v) = layer.get(key)
+        && let Some(e) = v.get("expr").and_then(Value::as_str)
+        && let Some(f) = field_of(e)
+    {
+        let fallback = v.get("fallback").is_some_and(|f| !f.is_null());
+        lost.push(format!(
+            "{what}: “{key}” [{f}] alanının değeri (veriye göre); SLD'ye alan adı olarak yazıldı{}; QGIS SLD'deki alana bağlı rengi okumaz (gri alır), GeoServer okur",
+            if fallback { ", yedek değeri SLD'de yok" } else { "" }
+        ));
+        return Some(Paint::Field(f));
+    }
+    fixed(layer, key, lost, what)
+        .and_then(colour)
+        .map(|(rgb, a)| Paint::Fixed(rgb, a))
+}
+
+/// The SE parameters of a paint: `name` and, for a fixed translucent colour, `name-opacity`.
+pub(crate) fn paint_params(name: &str, p: &Paint) -> String {
+    match p {
+        Paint::Fixed(rgb, a) => {
+            let mut s = format!("<se:SvgParameter name=\"{name}\">{rgb}</se:SvgParameter>");
+            if *a < 1.0 {
+                let _ = write!(
+                    s,
+                    "<se:SvgParameter name=\"{name}-opacity\">{}</se:SvgParameter>",
+                    round3(*a)
+                );
+            }
+            s
+        }
+        Paint::Field(f) => format!(
+            "<se:SvgParameter name=\"{name}\"><ogc:PropertyName>{}</ogc:PropertyName></se:SvgParameter>",
+            esc(f)
+        ),
+    }
 }
 
 struct Sym {
@@ -606,28 +675,16 @@ struct Sym {
 
 fn stroke_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<(String, &'static str)> {
     let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
-    let (rgb, alpha) = fixed(layer, "color", lost, what)
-        .and_then(colour)
-        .or_else(|| {
-            lost.push(format!("{what}: çizginin rengi SLD'nin renklerinden değil"));
-            None
-        })?;
+    let paint = paint_of(layer, "color", lost, what).or_else(|| {
+        lost.push(format!("{what}: çizginin rengi SLD'nin renklerinden değil"));
+        None
+    })?;
     let width = fixed(layer, "width", lost, what)
         .and_then(Value::as_f64)
         .unwrap_or(0.0);
     let (w, uom) = size_of(width, unit);
     let mut s = String::from("<se:Stroke>");
-    let _ = write!(
-        s,
-        "<se:SvgParameter name=\"stroke\">{rgb}</se:SvgParameter>"
-    );
-    if alpha < 1.0 {
-        let _ = write!(
-            s,
-            "<se:SvgParameter name=\"stroke-opacity\">{}</se:SvgParameter>",
-            round3(alpha)
-        );
-    }
+    s.push_str(&paint_params("stroke", &paint));
     // A hairline (0) is one pixel, as KentOS draws it.
     let w = if width <= 0.0 { 1.0 } else { round3(w) };
     let uom = if width <= 0.0 { PIXEL_UOM } else { uom };
@@ -691,13 +748,146 @@ const MARKS: [(&str, &str); 7] = [
     ("x", "x"),
 ];
 
-fn marker_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<Sym> {
-    let t = layer.get("type").and_then(Value::as_str).unwrap_or("");
-    if t != "shape" {
+/// The rotation of a marker as SE says it (it turns clockwise, KentOS counter-clockwise).
+fn rotation_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> String {
+    match fixed(layer, "rotation", lost, what)
+        .and_then(Value::as_f64)
+        .filter(|r| *r != 0.0)
+    {
+        Some(r) => format!(
+            "<se:Rotation><ogc:Literal>{}</ogc:Literal></se:Rotation>",
+            num(round3(-r))
+        ),
+        None => String::new(),
+    }
+}
+
+/// An SVG marker: the drawing the host put into the layer (`svgData`), inside the SLD twice, as QGIS reads it
+/// (`base64:` in an `OnlineResource`) and as SE says it (`InlineContent`); SE has no colour of a drawing that
+/// travels: its fill and outline are said.
+fn svg_marker_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<Sym> {
+    let Some(svg) = layer.get("svgData").and_then(Value::as_str) else {
         lost.push(format!(
-            "{what}: “{t}” işareti SLD'nin işaretlerinden değil (yalnız şekil işaretleri yazılır)"
+            "{what}: SVG işaretinin çizimi kitaplıkta yok; işaret SLD'ye yazılmadı"
         ));
         return None;
+    };
+    let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
+    let size = fixed(layer, "size", lost, what)
+        .and_then(Value::as_f64)
+        .unwrap_or(2.0);
+    let (size, uom) = size_of(size, unit);
+    if layer.get("fill").is_some_and(|v| !v.is_null()) || layer.get("stroke").is_some_and(|v| !v.is_null()) {
+        lost.push(format!(
+            "{what}: SVG işaretinin dolgu ve çizgi renkleri SLD'ye yazılmadı (çizimin kendi renkleri kalır)"
+        ));
+    }
+    let b64 = crate::style_extras::b64_encode(svg.as_bytes());
+    let mut s = String::from("<se:Graphic>");
+    let _ = write!(
+        s,
+        "<se:ExternalGraphic><se:OnlineResource xlink:href=\"base64:{b64}\" xlink:type=\"simple\"/><se:Format>image/svg+xml</se:Format></se:ExternalGraphic>"
+    );
+    let _ = write!(
+        s,
+        "<se:ExternalGraphic><se:InlineContent encoding=\"base64\">{b64}</se:InlineContent><se:Format>image/svg+xml</se:Format></se:ExternalGraphic>"
+    );
+    let _ = write!(s, "<se:Size>{}</se:Size>", num(round3(size)));
+    s.push_str(&rotation_xml(layer, lost, what));
+    s.push_str("</se:Graphic>");
+    Some(Sym {
+        xml: s,
+        uom: Some(uom),
+    })
+}
+
+/// A text marker as SE's font mark (the form QGIS reads): the font by `ttf://` and the character's code as
+/// `MarkIndex`. SE's mark is one character with no bold or italic; its halo is the mark's stroke.
+fn text_marker_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<Sym> {
+    let text = match layer.get("text") {
+        Some(t) if t.get("expr").is_some() => {
+            lost.push(format!(
+                "{what}: yazı işaretinin metni bir ifadeyle (veriye göre); SLD'ye yedek değeri yazıldı"
+            ));
+            t.get("fallback").and_then(Value::as_str).unwrap_or("")
+        }
+        Some(t) => t.as_str().unwrap_or(""),
+        None => "",
+    };
+    let Some(first) = text.chars().next() else {
+        lost.push(format!(
+            "{what}: yazı işaretinin metni boş; işaret SLD'ye yazılmadı"
+        ));
+        return None;
+    };
+    if text.chars().count() > 1 {
+        lost.push(format!(
+            "{what}: SE'nin yazı işareti tek karakterdir; metnin yalnız ilk karakteri yazıldı"
+        ));
+    }
+    if layer
+        .get("weight")
+        .and_then(Value::as_f64)
+        .is_some_and(|w| w >= 600.0)
+        || layer.get("italic") == Some(&Value::Bool(true))
+    {
+        lost.push(format!(
+            "{what}: yazı işaretinin kalın ve eğik biçimi SLD'ye yazılmadı (yazı tipinin adı yazılır)"
+        ));
+    }
+    let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
+    let size = fixed(layer, "size", lost, what)
+        .and_then(Value::as_f64)
+        .unwrap_or(2.0);
+    let (size, uom) = size_of(size, unit);
+    let font = layer
+        .get("font")
+        .and_then(Value::as_str)
+        .unwrap_or("Sans Serif");
+    let mut s = String::from("<se:Graphic><se:Mark>");
+    let _ = write!(
+        s,
+        "<se:OnlineResource xlink:href=\"ttf://{}\" xlink:type=\"simple\"/><se:Format>ttf</se:Format><se:MarkIndex>{}</se:MarkIndex>",
+        esc(font),
+        first as u32
+    );
+    if let Some(p) = paint_of(layer, "color", lost, what) {
+        let _ = write!(s, "<se:Fill>{}</se:Fill>", paint_params("fill", &p));
+    }
+    if let Some(h) = layer.get("halo").filter(|h| h.is_object())
+        && let Some((rgb, a)) = h.get("color").and_then(colour)
+    {
+        let w = h.get("width").and_then(Value::as_f64).unwrap_or(0.0);
+        let w = if w <= 0.0 { 1.0 } else { round3(size_of(w, unit).0) };
+        let _ = write!(
+            s,
+            "<se:Stroke>{}<se:SvgParameter name=\"stroke-width\">{}</se:SvgParameter></se:Stroke>",
+            paint_params("stroke", &Paint::Fixed(rgb, a)),
+            num(w)
+        );
+    }
+    s.push_str("</se:Mark>");
+    let _ = write!(s, "<se:Size>{}</se:Size>", num(round3(size)));
+    s.push_str(&rotation_xml(layer, lost, what));
+    s.push_str("</se:Graphic>");
+    Some(Sym {
+        xml: s,
+        uom: Some(uom),
+    })
+}
+
+fn marker_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<Sym> {
+    let t = layer.get("type").and_then(Value::as_str).unwrap_or("");
+    match t {
+        "shape" => {}
+        "svg" => return svg_marker_xml(layer, lost, what),
+        "text" => return text_marker_xml(layer, lost, what),
+        _ => {
+            lost.push(format!(
+                "{what}: “{t}” işareti SLD'nin işaretlerinden değil (şekil, SVG ve yazı işaretleri yazılır)"
+            ));
+            return None;
+        }
     }
     let shape = layer
         .get("shape")
@@ -716,21 +906,10 @@ fn marker_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<Sym> 
     let (size, uom) = size_of(size, unit);
     let mut s = String::from("<se:Graphic><se:Mark>");
     let _ = write!(s, "<se:WellKnownName>{wkn}</se:WellKnownName>");
-    if let Some((rgb, a)) = fixed(layer, "fill", lost, what).and_then(colour) {
-        let _ = write!(
-            s,
-            "<se:Fill><se:SvgParameter name=\"fill\">{rgb}</se:SvgParameter>"
-        );
-        if a < 1.0 {
-            let _ = write!(
-                s,
-                "<se:SvgParameter name=\"fill-opacity\">{}</se:SvgParameter>",
-                round3(a)
-            );
-        }
-        s.push_str("</se:Fill>");
+    if let Some(p) = paint_of(layer, "fill", lost, what) {
+        let _ = write!(s, "<se:Fill>{}</se:Fill>", paint_params("fill", &p));
     }
-    if let Some((rgb, a)) = fixed(layer, "stroke", lost, what).and_then(colour) {
+    if let Some(p) = paint_of(layer, "stroke", lost, what) {
         let w = layer
             .get("strokeWidth")
             .and_then(Value::as_f64)
@@ -742,18 +921,8 @@ fn marker_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<Sym> 
         };
         let _ = write!(
             s,
-            "<se:Stroke><se:SvgParameter name=\"stroke\">{rgb}</se:SvgParameter>"
-        );
-        if a < 1.0 {
-            let _ = write!(
-                s,
-                "<se:SvgParameter name=\"stroke-opacity\">{}</se:SvgParameter>",
-                round3(a)
-            );
-        }
-        let _ = write!(
-            s,
-            "<se:SvgParameter name=\"stroke-width\">{}</se:SvgParameter></se:Stroke>",
+            "<se:Stroke>{}<se:SvgParameter name=\"stroke-width\">{}</se:SvgParameter></se:Stroke>",
+            paint_params("stroke", &p),
             num(w)
         );
     }
@@ -791,6 +960,55 @@ fn opacity_of(symbol: &Value) -> Option<f64> {
         .filter(|o| *o < 1.0)
 }
 
+/// A point pattern as SE's `GraphicFill`: the pattern's first marker as the graphic; SE tiles it at the graphic's own
+/// size, so the cell spacing, the shift of every second row, the rotation and the offset are said.
+fn pattern_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<Sym> {
+    let markers: Vec<&Value> = layer
+        .get("marker")
+        .and_then(|m| m.get("layers"))
+        .and_then(Value::as_array)
+        .map(|l| l.iter().collect())
+        .unwrap_or_default();
+    let Some(first) = markers.first() else {
+        lost.push(format!("{what}: işaretsiz desen SLD'ye yazılmadı"));
+        return None;
+    };
+    if markers.len() > 1 {
+        lost.push(format!(
+            "{what}: desenin yalnız ilk işareti SLD'ye yazıldı"
+        ));
+    }
+    let m = marker_xml(first, lost, what)?;
+    let present = |key: &str, none: f64| {
+        layer
+            .get(key)
+            .and_then(Value::as_f64)
+            .is_some_and(|v| v != none)
+    };
+    let mut said = vec!["hücre aralığı"];
+    if layer.get("stagger") == Some(&Value::Bool(true)) {
+        said.push("her ikinci satırın kayması");
+    }
+    if present("angle", 0.0) {
+        said.push("açısı");
+    }
+    if layer
+        .get("offset")
+        .and_then(Value::as_array)
+        .is_some_and(|o| o.iter().any(|v| v.as_f64().is_some_and(|x| x != 0.0)))
+    {
+        said.push("başlangıç kayması");
+    }
+    if present("jitter", 0.0) || present("coverage", 1.0) || present("seed", 0.0) {
+        said.push("rastgele sapması, doluluğu ve tohumu");
+    }
+    lost.push(format!(
+        "{what}: desenin {} SLD'ye yazılmadı (SE'nin GraphicFill'i işareti kendi boyunda döşer)",
+        said.join(", ")
+    ));
+    Some(m)
+}
+
 /// A symbol's symbolizers.
 fn symbolizers(symbol: &Value, kind: &str, lost: &mut Vec<String>, what: &str) -> Vec<String> {
     let mut out = Vec::new();
@@ -816,21 +1034,23 @@ fn symbolizers(symbol: &Value, kind: &str, lost: &mut Vec<String>, what: &str) -
                 if let Some(f) = pending_fill.take() {
                     out.push(format!("<se:PolygonSymbolizer>{f}</se:PolygonSymbolizer>"));
                 }
-                let Some((rgb, a)) = fixed(layer, "color", lost, what).and_then(colour) else {
+                let Some(p) = paint_of(layer, "color", lost, what) else {
                     lost.push(format!("{what}: dolgunun rengi SLD'nin renklerinden değil"));
                     continue;
                 };
-                let mut f =
-                    format!("<se:Fill><se:SvgParameter name=\"fill\">{rgb}</se:SvgParameter>");
-                if a < 1.0 {
-                    let _ = write!(
-                        f,
-                        "<se:SvgParameter name=\"fill-opacity\">{}</se:SvgParameter>",
-                        round3(a)
-                    );
+                pending_fill = Some(format!("<se:Fill>{}</se:Fill>", paint_params("fill", &p)));
+            }
+            ("fill", "patternFill") => {
+                if let Some(f) = pending_fill.take() {
+                    out.push(format!("<se:PolygonSymbolizer>{f}</se:PolygonSymbolizer>"));
                 }
-                f.push_str("</se:Fill>");
-                pending_fill = Some(f);
+                if let Some(m) = pattern_xml(layer, lost, what) {
+                    out.push(format!(
+                        "<se:PolygonSymbolizer{}><se:Fill><se:GraphicFill>{}</se:GraphicFill></se:Fill></se:PolygonSymbolizer>",
+                        uom(m.uom),
+                        m.xml
+                    ));
+                }
             }
             ("fill", "simpleLine") => {
                 let Some((s, u)) = stroke_xml(layer, lost, what) else {
@@ -889,8 +1109,8 @@ fn symbolizers(symbol: &Value, kind: &str, lost: &mut Vec<String>, what: &str) -
             (_, other) => {
                 let words = match other {
                     "hatchFill" => "tarama dolgusu",
-                    "gradientFill" => "degrade dolgu",
-                    "patternFill" => "desen dolgusu",
+                    "gradientFill" => "degrade dolgu (SE'de degrade yok)",
+                    "patternFill" => "desen dolgusu (çizgi simgesinde)",
                     "imageFill" => "resim dolgusu",
                     "markerLine" => "işaretli çizgi",
                     "geometryGenerator" => "geometri üretici",
@@ -1207,13 +1427,116 @@ fn text_of(n: Node<'_, '_>) -> String {
 }
 
 /// An SE parameter's text (`SvgParameter` or the old `CssParameter`), by name.
-fn param(n: Node<'_, '_>, name: &str) -> Option<String> {
+fn param_node<'a, 'i>(n: Node<'a, 'i>, name: &str) -> Option<Node<'a, 'i>> {
     n.children()
         .filter(|c| {
             c.is_element() && matches!(c.tag_name().name(), "SvgParameter" | "CssParameter")
         })
         .find(|c| c.attribute("name") == Some(name))
-        .map(text_of)
+}
+
+/// A parameter's literal text; none when it holds a property name or a function (see `paint`).
+fn param(n: Node<'_, '_>, name: &str) -> Option<String> {
+    let p = param_node(n, name)?;
+    if p.children().any(|c| c.is_element()) {
+        return None;
+    }
+    Some(text_of(p))
+}
+
+thread_local! {
+    /// The SVG drawings the SLD being read carried, by the ids the markers refer to.
+    static ASSETS: std::cell::RefCell<Vec<StyleAsset>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+/// A value of SE's `Literal` as KentOS's expression says it: a number as it is, text in quotes.
+fn literal_expr(t: &str) -> String {
+    match t.trim().parse::<f64>() {
+        Ok(v) if v.is_finite() => num(v),
+        _ => format!("'{}'", t.trim().replace('\'', "''")),
+    }
+}
+
+/// The expression of an SE function KentOS can say (`Recode` and `Categorize` of one field, to a `durum` chain whose
+/// values are colours), with `fallback` for the rest; none, said, for another function.
+fn function_expr(f: Node<'_, '_>, fallback: &str, lost: &mut Vec<String>, what: &str) -> Option<String> {
+    let name = f.attribute("name").unwrap_or("");
+    let args: Vec<Node<'_, '_>> = f.children().filter(|c| c.is_element()).collect();
+    let field = args
+        .first()
+        .filter(|a| a.tag_name().name() == "PropertyName")
+        .map(|a| text_of(*a));
+    let lits: Option<Vec<String>> = args
+        .iter()
+        .skip(1)
+        .map(|a| (a.tag_name().name() == "Literal").then(|| text_of(*a)))
+        .collect();
+    let (Some(field), Some(lits)) = (field, lits) else {
+        lost.push(format!(
+            "{what}: SE'nin “{name}” işlevi KentOS'un ifadesine çevrilemedi; sabit değeri alındı"
+        ));
+        return None;
+    };
+    let q = |c: &str| format!("'{}'", colour_with(c.trim(), None));
+    let mut out = String::from("durum");
+    match name {
+        "Recode" if lits.len() >= 2 && lits.len() % 2 == 0 => {
+            for pair in lits.chunks(2) {
+                let _ = write!(out, " eğer [{field}] = {} ise {}", literal_expr(&pair[0]), q(&pair[1]));
+            }
+            let _ = write!(out, " yoksa '{fallback}' son");
+        }
+        "Categorize" if lits.len() >= 3 && lits.len() % 2 == 1 => {
+            for (k, pair) in lits[1..].chunks(2).enumerate() {
+                let _ = write!(out, " eğer [{field}] < {} ise {}", literal_expr(&pair[0]), q(&lits[2 * k]));
+            }
+            let _ = write!(out, " yoksa {} son", q(lits.last().map(String::as_str).unwrap_or("")));
+        }
+        _ => {
+            lost.push(format!(
+                "{what}: SE'nin “{name}” işlevi KentOS'un ifadesine çevrilemedi; sabit değeri alındı"
+            ));
+            return None;
+        }
+    }
+    Some(out)
+}
+
+/// A colour parameter as the layer's value: the fixed colour; a field (`PropertyName`) or a `Recode` or `Categorize`
+/// of one as an expression with the fixed (or `default`) colour as its fallback.
+fn paint(
+    n: Node<'_, '_>,
+    name: &str,
+    default: Option<&str>,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<Value> {
+    let opacity = param(n, &format!("{name}-opacity")).and_then(|o| o.parse().ok());
+    let fixed = param(n, name).map(|rgb| colour_with(&rgb, opacity));
+    let Some(p) = param_node(n, name).filter(|p| p.children().any(|c| c.is_element())) else {
+        return fixed
+            .or_else(|| default.map(|d| colour_with(d, opacity)))
+            .map(Value::from);
+    };
+    let fallback = default.map(|d| colour_with(d, opacity)).unwrap_or_default();
+    let expr = p
+        .children()
+        .find(|c| c.is_element())
+        .and_then(|e| match e.tag_name().name() {
+            "PropertyName" => Some(format!("[{}]", text_of(e))),
+            "Function" => function_expr(e, &fallback, lost, what),
+            other => {
+                lost.push(format!(
+                    "{what}: “{name}” değerinin “{other}” ifadesi KentOS'ta yok; sabit değeri alındı"
+                ));
+                None
+            }
+        });
+    match expr {
+        Some(e) if fallback.is_empty() => Some(json!({ "expr": e })),
+        Some(e) => Some(json!({ "expr": e, "fallback": fallback })),
+        None => (!fallback.is_empty()).then(|| Value::from(fallback)),
+    }
 }
 
 fn read_filter(n: Node<'_, '_>, lost: &mut Vec<String>) -> Option<Filter> {
@@ -1296,9 +1619,8 @@ pub(crate) fn colour_with(rgb: &str, opacity: Option<f64>) -> String {
     }
 }
 
-fn read_stroke(s: Node<'_, '_>, uom: Option<&str>, id: &str) -> Value {
-    let rgb = param(s, "stroke").unwrap_or_else(|| "#000000".into());
-    let opacity = param(s, "stroke-opacity").and_then(|o| o.parse().ok());
+fn read_stroke(s: Node<'_, '_>, uom: Option<&str>, id: &str, lost: &mut Vec<String>) -> Value {
+    let color = paint(s, "stroke", Some("#000000"), lost, "Çizgi").unwrap_or_else(|| json!("#000000"));
     let (width, unit) = size_in(
         param(s, "stroke-width")
             .and_then(|w| w.parse().ok())
@@ -1306,7 +1628,7 @@ fn read_stroke(s: Node<'_, '_>, uom: Option<&str>, id: &str) -> Value {
         uom,
     );
     let mut l = json!({
-        "id": id, "type": "simpleLine", "color": colour_with(&rgb, opacity), "width": width, "unit": unit,
+        "id": id, "type": "simpleLine", "color": color, "width": width, "unit": unit,
     });
     if let Some(dash) = param(s, "stroke-dasharray") {
         let d: Vec<f64> = dash
@@ -1331,21 +1653,150 @@ fn read_stroke(s: Node<'_, '_>, uom: Option<&str>, id: &str) -> Value {
     l
 }
 
-fn read_fill(f: Node<'_, '_>, id: &str, lost: &mut Vec<String>) -> Option<Value> {
-    if child(f, "GraphicFill").is_some() {
-        lost.push("desenli dolgu (GraphicFill) KentOS'un dolgusuna çevrilmedi".into());
-        return None;
+fn read_fill(f: Node<'_, '_>, uom: Option<&str>, id: &str, lost: &mut Vec<String>) -> Option<Value> {
+    if let Some(g) = child(f, "GraphicFill") {
+        // SE tiles the graphic at its own size: the cell is the graphic's size.
+        let Some(marker) = child(g, "Graphic").and_then(|g| read_mark(g, uom, lost)) else {
+            lost.push("desenli dolgunun (GraphicFill) işareti KentOS'un işaretine çevrilemedi; dolgu alınmadı".into());
+            return None;
+        };
+        let size = marker.get("size").and_then(Value::as_f64).unwrap_or(6.0);
+        let unit = marker.get("unit").cloned().unwrap_or(json!("px"));
+        lost.push(
+            "desenli dolgu (GraphicFill): SE işareti kendi boyunda döşer; KentOS'un deseninin aralığı işaretin boyu alındı"
+                .into(),
+        );
+        return Some(json!({
+            "id": id, "type": "patternFill", "marker": { "type": "marker", "layers": [marker] },
+            "spacingX": size, "spacingY": size, "unit": unit,
+        }));
     }
-    let rgb = param(f, "fill").unwrap_or_else(|| "#808080".into());
-    let opacity = param(f, "fill-opacity").and_then(|o| o.parse().ok());
-    Some(json!({ "id": id, "type": "simpleFill", "color": colour_with(&rgb, opacity) }))
+    let color = paint(f, "fill", Some("#808080"), lost, "Dolgu")?;
+    Some(json!({ "id": id, "type": "simpleFill", "color": color }))
+}
+
+/// The SVG drawing of a graphic's `ExternalGraphic` (a `base64:` or data address, or inline content), as a library
+/// drawing; none (said) for another image.
+fn read_external(g: Node<'_, '_>, lost: &mut Vec<String>) -> Option<String> {
+    let mut seen = false;
+    for e in children(g, "ExternalGraphic") {
+        seen = true;
+        let format = child(e, "Format").map(text_of).unwrap_or_default();
+        let text = child(e, "OnlineResource")
+            .and_then(|o| {
+                o.attributes()
+                    .find(|a| a.name() == "href")
+                    .map(|a| a.value().to_owned())
+            })
+            .and_then(|h| {
+                h.strip_prefix("base64:")
+                    .or_else(|| h.strip_prefix("data:image/svg+xml;base64,"))
+                    .map(str::to_owned)
+            })
+            .or_else(|| child(e, "InlineContent").map(text_of));
+        let svg = text
+            .and_then(|t| crate::style_extras::b64_decode(&t))
+            .map(|b| String::from_utf8_lossy(&b).into_owned())
+            .filter(|t| crate::style_extras::looks_like_svg(t));
+        if let Some(svg) = svg {
+            let id = crate::style_extras::asset_id("sld", &svg);
+            ASSETS.with(|a| {
+                let mut a = a.borrow_mut();
+                if !a.iter().any(|x| x.id == id) {
+                    a.push(StyleAsset {
+                        id: id.clone(),
+                        name: "SLD'den gelen SVG işareti".into(),
+                        svg,
+                    });
+                }
+            });
+            return Some(id);
+        }
+        let _ = format;
+    }
+    if seen {
+        lost.push(
+            "dış resimli işaret (ExternalGraphic): çizimin içindeki bir SVG değil (dosya adresi ya da başka bir resim); KentOS çizimin içindeki SVG'yi alır, işaret alınmadı"
+                .into(),
+        );
+    }
+    None
+}
+
+/// The character a font mark names: `MarkIndex`, or the `#` part of `ttf://Font#code` (`0x41`, a number, or the
+/// character itself).
+fn font_mark(mark: Node<'_, '_>) -> Option<(String, char)> {
+    let mut font = None;
+    let mut code = None;
+    if let Some(o) = child(mark, "OnlineResource")
+        && let Some(h) = o.attributes().find(|a| a.name() == "href")
+        && let Some(f) = h.value().strip_prefix("ttf://")
+    {
+        font = Some(f.to_owned());
+    }
+    if let Some(i) = child(mark, "MarkIndex").map(text_of).and_then(|i| i.parse::<u32>().ok()) {
+        code = char::from_u32(i);
+    }
+    if let Some(w) = child(mark, "WellKnownName").map(text_of)
+        && let Some(r) = w.strip_prefix("ttf://")
+    {
+        let (f, c) = r.split_once('#').unwrap_or((r, ""));
+        font = Some(f.to_owned());
+        code = code.or_else(|| {
+            c.strip_prefix("0x")
+                .and_then(|h| u32::from_str_radix(h, 16).ok())
+                .or_else(|| c.parse::<u32>().ok())
+                .and_then(char::from_u32)
+                .or_else(|| (c.chars().count() == 1).then(|| c.chars().next()).flatten())
+        });
+    }
+    Some((font?, code?))
 }
 
 fn read_mark(g: Node<'_, '_>, uom: Option<&str>, lost: &mut Vec<String>) -> Option<Value> {
-    if child(g, "ExternalGraphic").is_some() {
-        lost.push("dış resimli işaret (ExternalGraphic) KentOS'un işaretine çevrilmedi".into());
+    let (size, unit) = size_in(
+        child(g, "Size")
+            .map(text_of)
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(6.0),
+        uom,
+    );
+    let rotation = child(g, "Rotation")
+        .map(text_of)
+        .and_then(|r| r.parse::<f64>().ok());
+    if let Some(id) = read_external(g, lost) {
+        let mut m = json!({ "id": "v", "type": "svg", "asset": id, "size": size, "unit": unit });
+        if let Some(r) = rotation {
+            m["rotation"] = json!(-r);
+        }
+        return Some(m);
     }
     let mark = child(g, "Mark")?;
+    if let Some((font, c)) = font_mark(mark) {
+        let mut m = json!({
+            "id": "t", "type": "text", "text": c.to_string(), "font": font, "size": size, "unit": unit,
+        });
+        if let Some(f) = child(mark, "Fill")
+            && let Some(c) = paint(f, "fill", None, lost, "Yazı işareti")
+        {
+            m["color"] = c;
+        }
+        if let Some(s) = child(mark, "Stroke")
+            && let Some(rgb) = param(s, "stroke")
+        {
+            let (w, _) = size_in(
+                param(s, "stroke-width").and_then(|w| w.parse().ok()).unwrap_or(1.0),
+                uom,
+            );
+            m["halo"] = json!({
+                "color": colour_with(&rgb, param(s, "stroke-opacity").and_then(|o| o.parse().ok())), "width": w,
+            });
+        }
+        if let Some(r) = rotation {
+            m["rotation"] = json!(-r);
+        }
+        return Some(m);
+    }
     let wkn = child(mark, "WellKnownName")
         .map(text_of)
         .unwrap_or_else(|| "square".into());
@@ -1356,27 +1807,14 @@ fn read_mark(g: Node<'_, '_>, uom: Option<&str>, lost: &mut Vec<String>) -> Opti
             "square".into()
         }
     };
-    let (size, unit) = size_in(
-        child(g, "Size")
-            .map(text_of)
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(6.0),
-        uom,
-    );
     let mut m = json!({ "id": "p", "type": "shape", "shape": shape, "size": size, "unit": unit, "fill": null });
-    if let Some(f) = child(mark, "Fill") {
-        let rgb = param(f, "fill").unwrap_or_else(|| "#808080".into());
-        m["fill"] = json!(colour_with(
-            &rgb,
-            param(f, "fill-opacity").and_then(|o| o.parse().ok())
-        ));
+    if let Some(f) = child(mark, "Fill")
+        && let Some(c) = paint(f, "fill", Some("#808080"), lost, "İşaret")
+    {
+        m["fill"] = c;
     }
     if let Some(s) = child(mark, "Stroke") {
-        let rgb = param(s, "stroke").unwrap_or_else(|| "#000000".into());
-        m["stroke"] = json!(colour_with(
-            &rgb,
-            param(s, "stroke-opacity").and_then(|o| o.parse().ok())
-        ));
+        m["stroke"] = paint(s, "stroke", Some("#000000"), lost, "İşaret").unwrap_or_else(|| json!("#000000"));
         let (w, _) = size_in(
             param(s, "stroke-width")
                 .and_then(|w| w.parse().ok())
@@ -1385,10 +1823,7 @@ fn read_mark(g: Node<'_, '_>, uom: Option<&str>, lost: &mut Vec<String>) -> Opti
         );
         m["strokeWidth"] = json!(w);
     }
-    if let Some(r) = child(g, "Rotation")
-        .map(text_of)
-        .and_then(|r| r.parse::<f64>().ok())
-    {
+    if let Some(r) = rotation {
         m["rotation"] = json!(-r);
     }
     Some(m)
@@ -1404,12 +1839,12 @@ fn read_symbols(rule: Node<'_, '_>, lost: &mut Vec<String>) -> Value {
         match s.tag_name().name() {
             "PolygonSymbolizer" => {
                 if let Some(f) = child(s, "Fill")
-                    .and_then(|f| read_fill(f, &format!("f{}", fill_layers.len()), lost))
+                    .and_then(|f| read_fill(f, uom, &format!("f{}", fill_layers.len()), lost))
                 {
                     fill_layers.push(f);
                 }
                 if let Some(st) = child(s, "Stroke") {
-                    fill_layers.push(read_stroke(st, uom, &format!("o{}", fill_layers.len())));
+                    fill_layers.push(read_stroke(st, uom, &format!("o{}", fill_layers.len()), lost));
                 }
                 if child(s, "Displacement").is_some() || child(s, "PerpendicularOffset").is_some() {
                     lost.push("alanın kaydırması KentOS'un dolgusuna çevrilmedi".into());
@@ -1423,7 +1858,7 @@ fn read_symbols(rule: Node<'_, '_>, lost: &mut Vec<String>) -> Value {
                         );
                         continue;
                     }
-                    let mut l = read_stroke(st, uom, &format!("l{}", line_layers.len()));
+                    let mut l = read_stroke(st, uom, &format!("l{}", line_layers.len()), lost);
                     if let Some(o) = child(s, "PerpendicularOffset")
                         .map(text_of)
                         .and_then(|o| o.parse::<f64>().ok())
@@ -1548,6 +1983,13 @@ fn as_classes(rules: &[RuleIn]) -> Option<Value> {
 /// KentOS's renderer of an SLD (or an SE `FeatureTypeStyle` alone): rules of one field's values become a categorized
 /// renderer, of one field's ranges a graduated one, one rule with no filter a single symbol, others rules.
 pub fn read(text: &str) -> Result<Read, String> {
+    ASSETS.with(|a| a.borrow_mut().clear());
+    let mut read = read_in(text)?;
+    read.assets = ASSETS.with(|a| std::mem::take(&mut *a.borrow_mut()));
+    Ok(read)
+}
+
+fn read_in(text: &str) -> Result<Read, String> {
     let doc =
         crate::xml::document(text).map_err(|_| "Dosya okunabilir bir XML değil.".to_owned())?;
     let root = doc.root_element();
@@ -1652,6 +2094,7 @@ pub fn read(text: &str) -> Result<Read, String> {
         renderer,
         lost,
         rules: count,
+        assets: Vec::new(),
     })
 }
 
@@ -1732,7 +2175,7 @@ mod tests {
     fn what_se_cannot_say_is_named() {
         let r = json!({ "type": "single", "symbols": {
             "fill": { "type": "fill", "layers": [ { "id": "h", "type": "hatchFill", "angle": 45, "spacing": 2, "width": 0.2, "color": "#000" } ] },
-            "line": { "type": "line", "layers": [ { "id": "l", "type": "simpleLine", "color": { "expr": "[renk]" }, "width": 0.3 } ] },
+            "line": { "type": "line", "layers": [ { "id": "l", "type": "simpleLine", "color": { "expr": "[a] + [b]" }, "width": 0.3 } ] },
             "marker": { "ref": "kitapta-yok" } } });
         let w = write("x", &r, Kinds::ALL, &none);
         assert!(
@@ -1752,5 +2195,92 @@ mod tests {
         );
         let r = json!({ "type": "heatmap" });
         assert!(write("x", &r, Kinds::ALL, &none).lost[0].contains("SLD'de yok"));
+    }
+
+    fn marker_set(layer: Value) -> Value {
+        json!({ "type": "single", "symbols": { "marker": { "type": "marker", "layers": [layer] } } })
+    }
+
+    fn first_marker(r: &Read) -> &Value {
+        &r.renderer["symbols"]["marker"]["layers"][0]
+    }
+
+    #[test]
+    fn an_svg_marker_goes_out_with_its_drawing_and_comes_back_as_a_library_drawing() {
+        let svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 4 4\"><circle cx=\"2\" cy=\"2\" r=\"2\"/></svg>";
+        let r = marker_set(
+            json!({ "id": "v", "type": "svg", "asset": "kapi", "svgData": svg, "size": 4, "unit": "mm", "rotation": 30 }),
+        );
+        let w = write("nokta", &r, Kinds::ALL, &none);
+        assert!(w.lost.is_empty(), "{:?}", w.lost);
+        assert!(w.xml.contains("image/svg+xml") && w.xml.contains("base64:"), "{}", w.xml);
+        let back = read(&w.xml).expect("reads");
+        let m = first_marker(&back);
+        assert_eq!(m["type"], "svg");
+        assert_eq!(m["rotation"], 30.0);
+        assert_eq!(back.assets.len(), 1);
+        assert_eq!(back.assets[0].svg, svg);
+        assert_eq!(m["asset"], back.assets[0].id);
+        // A drawing the layer does not carry cannot be written.
+        let r = marker_set(json!({ "id": "v", "type": "svg", "asset": "kapi", "size": 4 }));
+        let w = write("nokta", &r, Kinds::ALL, &none);
+        assert!(w.lost.iter().any(|l| l.contains("kitaplıkta yok")), "{:?}", w.lost);
+    }
+
+    #[test]
+    fn a_font_marker_goes_out_as_se_and_comes_back() {
+        let r = marker_set(json!({
+            "id": "t", "type": "text", "text": "A", "font": "Arial", "size": 6, "unit": "mm", "color": "#aa0000",
+            "weight": 700 }));
+        let w = write("nokta", &r, Kinds::ALL, &none);
+        assert!(w.xml.contains("ttf://Arial") && w.xml.contains("<se:MarkIndex>65</se:MarkIndex>"), "{}", w.xml);
+        assert!(w.lost.iter().any(|l| l.contains("kalın ve eğik")), "{:?}", w.lost);
+        let back = read(&w.xml).expect("reads");
+        let m = first_marker(&back);
+        assert_eq!((m["type"].as_str(), m["text"].as_str(), m["font"].as_str()), (Some("text"), Some("A"), Some("Arial")));
+        assert_eq!(m["color"], "#aa0000");
+        // SE's other way of naming it.
+        let xml = w.xml.replace(
+            "<se:OnlineResource xlink:href=\"ttf://Arial\" xlink:type=\"simple\"/><se:Format>ttf</se:Format><se:MarkIndex>65</se:MarkIndex>",
+            "<se:WellKnownName>ttf://Arial#0x41</se:WellKnownName>",
+        );
+        assert_eq!(first_marker(&read(&xml).expect("reads"))["text"], "A");
+    }
+
+    #[test]
+    fn a_point_pattern_goes_out_as_a_graphic_fill_and_the_gradient_is_named_lost() {
+        let r = json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
+            { "id": "g", "type": "gradientFill", "color": "#ff0000", "color2": "#0000ff" },
+            { "id": "p", "type": "patternFill", "spacingX": 5, "spacingY": 5, "unit": "mm", "stagger": true,
+              "marker": { "type": "marker", "layers": [ { "id": "m", "type": "shape", "shape": "circle", "size": 2, "unit": "mm", "fill": "#00ff00" } ] } } ] } } });
+        let w = write("parsel", &r, Kinds::ALL, &none);
+        assert!(w.xml.contains("<se:GraphicFill>"), "{}", w.xml);
+        assert!(w.lost.iter().any(|l| l.contains("degrade")), "{:?}", w.lost);
+        assert!(w.lost.iter().any(|l| l.contains("her ikinci satırın kayması")), "{:?}", w.lost);
+        let back = read(&w.xml).expect("reads");
+        let l = &back.renderer["symbols"]["fill"]["layers"][0];
+        assert_eq!(l["type"], "patternFill");
+        assert_eq!(l["marker"]["layers"][0]["shape"], "circle");
+        assert_eq!(l["marker"]["layers"][0]["fill"], "#00ff00");
+    }
+
+    #[test]
+    fn a_colour_of_a_field_goes_out_as_a_property_name_and_functions_come_back_as_expressions() {
+        let r = json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
+            { "id": "f", "type": "simpleFill", "color": { "expr": "[renk]", "fallback": "#ff0000" } } ] } } });
+        let w = write("parsel", &r, Kinds::ALL, &none);
+        assert!(w.xml.contains("<ogc:PropertyName>renk</ogc:PropertyName>"), "{}", w.xml);
+        assert!(w.lost.iter().any(|l| l.contains("QGIS SLD'deki alana bağlı rengi okumaz")), "{:?}", w.lost);
+        let back = read(&w.xml).expect("reads");
+        let c = &back.renderer["symbols"]["fill"]["layers"][0]["color"];
+        assert_eq!(c["expr"], "[renk]");
+        assert!(c["fallback"].is_string());
+        let xml = "<StyledLayerDescriptor xmlns=\"http://www.opengis.net/sld\" xmlns:ogc=\"http://www.opengis.net/ogc\" xmlns:se=\"http://www.opengis.net/se\"><NamedLayer><UserStyle><se:FeatureTypeStyle><se:Rule><se:PolygonSymbolizer><se:Fill><se:SvgParameter name=\"fill\"><ogc:Function name=\"Recode\"><ogc:PropertyName>tür</ogc:PropertyName><ogc:Literal>konut</ogc:Literal><ogc:Literal>#ff0000</ogc:Literal><ogc:Literal>ticaret</ogc:Literal><ogc:Literal>#0000ff</ogc:Literal></ogc:Function></se:SvgParameter></se:Fill></se:PolygonSymbolizer></se:Rule></se:FeatureTypeStyle></UserStyle></NamedLayer></StyledLayerDescriptor>";
+        let back = read(xml).expect("reads");
+        let c = &back.renderer["symbols"]["fill"]["layers"][0]["color"];
+        assert_eq!(
+            c["expr"],
+            "durum eğer [tür] = 'konut' ise '#ff0000' eğer [tür] = 'ticaret' ise '#0000ff' yoksa '#808080' son"
+        );
     }
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""QML'den görünüş al'ın ortak durumları ve QML'in QGIS 4.2 ile iki yönlü denetimi (docs/adr/0555, 0565), KentOS kodu olmadan.
+"""QML'den görünüş al'ın ortak durumları ve QML'in QGIS 4.2 ile iki yönlü denetimi (docs/adr/0555, 0565, 0571), KentOS kodu olmadan.
 
     python3 scripts/fixtures/qml_cases.py --files    # QGIS 4.2'nin QML'lerini ve elle yazılanları fixtures/qml/v1'e yazar
     python3 scripts/fixtures/qml_cases.py            # fixtures/commands/v1/file.import.qml.json'u yazar
@@ -8,8 +8,9 @@
 Okuma kuralları ADR'den, bu betikte yeniden yazılmıştır (xml.etree ile): QGIS'in tek simge, kategorili, aralıklı ve
 kurallı görünüşü KentOS'un aynı türü; basit dolgu (kenarı ayrı çizgi), basit çizgi (Qt'nin kesik desenleri ya da özel
 kesikler), basit işaret, merkez dolgusu, çizgi deseni (tarama) ve işaretli çizgi; veriye bağlı kalınlık, boy ve dönüş; renkler `r,g,b,a`'dan #rrggbb(aa); mm, nokta, inç, piksel ve harita birimi;
-kuralların süzgeci QGIS'in ifadesinden KentOS'unkine (bu betiğin kendi ayrıştırıcısıyla). Alınamayanların cümleleri de
-ADR'nin sözleridir.
+kuralların süzgeci QGIS'in ifadesinden KentOS'unkine (bu betiğin kendi ayrıştırıcısıyla); ADR 0571'den degrade (doğrusal,
+küre, silindir), nokta deseni, SVG işareti (gömülü `base64:`), yazı işareti ve renklerin veriye bağlı değerleri. Alınamayanların
+cümleleri de ADR'nin sözleridir. `--files` QGIS'in dosyalarını yeni renk ve kimliklerle yeniden yazar: var olanlar git'ten geri alınır.
 
 KentOS'un yazdığı QML'leri (`KENTOS_WRITE_QML=1 cargo test -p kentos-headless --test headless qml` yazar,
 fixtures/qml/v1/out) QGIS 4.2 `loadNamedStyle` ile açar: görünüşün türü, sınıflar, süzgeçler, renkler, kalınlıklar,
@@ -18,6 +19,7 @@ birimler ve saydamlık beklenenle denetlenir.
 
 from __future__ import annotations
 
+import base64
 import json
 import math
 import os
@@ -476,7 +478,7 @@ def dd_props(layer):
     return out
 
 
-def take_dd(layer, supported, target, lost, what):
+def take_dd(layer, supported, taken, lost, what):
     for name, q in dd_props(layer):
         found = next((s for s in supported if s[0] == name), None)
         if found is None:
@@ -486,10 +488,17 @@ def take_dd(layer, supported, target, lost, what):
         if e is None:
             lost.append(f"{what}: “{name}” değerinin “{q}” ifadesi KentOS'un ifadesine çevrilemedi; sabit değeri alındı")
             continue
-        if target is not None:
-            _, key, neg = found
-            expr = negated(e) if neg else e
-            target[key] = {"expr": expr, "fallback": target[key]} if key in target else {"expr": expr}
+        _, kind, key, neg = found
+        target = next((t for t in taken if t.get("type") == kind), None)
+        if target is None:
+            lost.append(f"{what}: QGIS'in “{name}” veriye bağlı değerinin katmanı alınmadı; değer alınmadı")
+            continue
+        expr = negated(e) if neg else e
+        target[key] = {"expr": expr, "fallback": target[key]} if target.get(key) is not None else {"expr": expr}
+
+
+def dd_names(layer):
+    return [n for n, _ in dd_props(layer)]
 
 
 def nonzero_pair(text):
@@ -502,12 +511,12 @@ def nonzero_pair(text):
     return False
 
 
-def read_line(m, ident, lost, what):
+def read_line(m, ident, lost, what, dd_color=False):
     style = m.get("line_style", "solid")
     if style == "no":
         return None
     color = colour_in(m.get("line_color", m.get("color")))
-    if color is None:
+    if color is None and not dd_color:
         return None
     lw = fnum(m.get("line_width"))
     got = size_in(0.26 if lw is None else lw, m.get("line_width_unit"))
@@ -515,7 +524,11 @@ def read_line(m, ident, lost, what):
         lost.append(f"{what}: çizginin yüzde boyu KentOS'ta yok; 0,26 mm alındı")
         got = (0.26, "mm")
     width, unit = got
-    layer = {"id": ident, "type": "simpleLine", "color": color, "width": width, "unit": unit}
+    layer = {"id": ident, "type": "simpleLine"}
+    if color is not None:
+        layer["color"] = color
+    layer["width"] = width
+    layer["unit"] = unit
     if m.get("use_custom_dash") == "1":
         raw = m.get("customdash", "")
         d = []
@@ -583,6 +596,225 @@ def read_marker(m, lost, what):
         lost.append(f"{what}: işaretin bağlantı noktası alınmadı")
     if m.get("scale_method") == "area":
         lost.append(f"{what}: işaretin alana göre ölçeklenmesi alınmadı")
+    return v
+
+
+def marker_pose(m, v, lost, what):
+    angle = fnum(m.get("angle"))
+    if angle is not None and angle != 0.0:
+        v["rotation"] = -angle
+    if nonzero_pair(m.get("offset")):
+        lost.append(f"{what}: işaretin kaydırması alınmadı")
+    if m.get("horizontal_anchor_point", "1") != "1" or m.get("vertical_anchor_point", "1") != "1":
+        lost.append(f"{what}: işaretin bağlantı noktası alınmadı")
+
+
+ASSETS = []
+
+
+def asset_id(prefix, svg):
+    h = 0xcbf29ce484222325
+    for b in svg.encode("utf-8"):
+        h ^= b
+        h = (h * 0x100000001b3) & 0xFFFFFFFFFFFFFFFF
+    return f"{prefix}-{h:016x}"
+
+
+def looks_like_svg(t):
+    head = t.lower()
+    i = head.find("<svg")
+    return i >= 0 and (len(head) == i + 4 or head[i + 4] in " \t\r\n>/")
+
+
+def read_svg_marker(m, lost, what):
+    name = m.get("name", "")
+    enc = None
+    for pre in ("base64:", "data:image/svg+xml;base64,"):
+        if name.startswith(pre):
+            enc = name[len(pre):]
+            break
+    svg = None
+    if enc is not None:
+        clean = "".join(enc.split()).replace("=", "")
+        try:
+            t = base64.b64decode(clean + "=" * (-len(clean) % 4), validate=True).decode("utf-8", "replace")
+            svg = t if looks_like_svg(t) else None
+        except Exception:
+            svg = None
+    if svg is None:
+        lost.append(f"{what}: SVG işareti “{name[:60]}” dosyasına bağlı; KentOS çizimin içindeki SVG'yi alır, dosyayı okumaz; işaret alınmadı")
+        return None
+    ident = asset_id("qml", svg)
+    if not any(a["id"] == ident for a in ASSETS):
+        ASSETS.append({"id": ident, "name": "QGIS'ten gelen SVG işareti", "svg": svg})
+    sz = fnum(m.get("size"))
+    got = size_in(2.0 if sz is None else sz, m.get("size_unit"))
+    if got is None:
+        lost.append(f"{what}: işaretin yüzde boyu KentOS'ta yok; 2 mm alındı")
+        got = (2.0, "mm")
+    size, unit = got
+    v = {"id": "v", "type": "svg", "asset": ident, "size": size, "unit": unit}
+    c = colour_in(m.get("color"))
+    if c is not None:
+        v["fill"] = c
+    c = colour_in(m.get("outline_color"))
+    if c is not None:
+        v["stroke"] = c
+    marker_pose(m, v, lost, what)
+    return v
+
+
+def read_font_marker(m, lost, what):
+    sz = fnum(m.get("size"))
+    got = size_in(2.0 if sz is None else sz, m.get("size_unit"))
+    if got is None:
+        lost.append(f"{what}: işaretin yüzde boyu KentOS'ta yok; 2 mm alındı")
+        got = (2.0, "mm")
+    size, unit = got
+    v = {"id": "t", "type": "text", "text": m.get("chr", ""), "size": size, "unit": unit}
+    if m.get("font"):
+        v["font"] = m["font"]
+    style = m.get("font_style", "").lower()
+    if "bold" in style:
+        v["weight"] = 700
+    if "italic" in style or "oblique" in style:
+        v["italic"] = True
+    c = colour_in(m.get("color"))
+    if c is not None:
+        v["color"] = c
+    ow = fnum(m.get("outline_width"))
+    c = colour_in(m.get("outline_color"))
+    if ow is not None and ow > 0 and c is not None:
+        w = size_as(ow, m.get("outline_width_unit"), unit)
+        if w is None:
+            lost.append(f"{what}: yazı işaretinin çizgi kalınlığının birimi boyununkinden başka; hale alınmadı")
+        else:
+            v["halo"] = {"color": c, "width": w}
+    marker_pose(m, v, lost, what)
+    return v
+
+
+def pair_of(m, key, default):
+    t = m.get(key)
+    if t is None:
+        return default
+    parts = [fnum(x) for x in t.split(",")]
+    if len(parts) < 2 or parts[0] is None or parts[1] is None:
+        return default
+    return (parts[0], parts[1])
+
+
+def read_gradient(layer, m, i, lost, what):
+    p1 = pair_of(m, "reference_point1", (0.5, 0.0))
+    p2 = pair_of(m, "reference_point2", (0.5, 1.0))
+    kind = m.get("type", m.get("gradient_type", "0"))
+    spread = m.get("spread", "0")
+    c1, c2 = colour_in(m.get("color")), colour_in(m.get("gradient_color2"))
+    if m.get("color_type") == "1":
+        ramp = child(layer, "colorramp")
+        r = props(ramp) if ramp is not None else m
+        a, b = colour_in(r.get("color1")), colour_in(r.get("color2"))
+        if a is not None and b is not None:
+            c1, c2 = a, b
+            if r.get("stops"):
+                lost.append(f"{what}: degradenin renk rampasının ara durakları alınmadı; ilk ve son rengi alındı")
+        else:
+            lost.append(f"{what}: degradenin renk rampası okunamadı; iki rengi alındı")
+
+    def half(a, b):
+        return a == (0.0, 0.5) and b == (0.5, 0.5)
+
+    if kind == "1":
+        shape = "spherical"
+    elif kind == "2":
+        lost.append(f"{what}: konik degrade KentOS'ta yok; doğrusal alındı")
+        shape = "linear"
+    elif spread == "1" and half(p1, p2):
+        shape = "cylinder"
+    else:
+        shape = "linear"
+    if shape != "cylinder" and spread != "0" and kind != "1":
+        lost.append(f"{what}: degradenin yansıtma ve yineleme yayılımı KentOS'ta yok (yalnız kutunun yarısıyla yansıtma silindir olur); alınmadı")
+    g = {"id": f"g{i}", "type": "gradientFill", "shape": shape}
+    k1, k2 = ("color2", "color") if shape == "spherical" else ("color", "color2")
+    if c1 is not None:
+        g[k1] = c1
+    if c2 is not None:
+        g[k2] = c2
+    takes = [("fillColor", "gradientFill", k1, False), ("color2", "gradientFill", k2, False)]
+    if shape != "spherical":
+        along = math.degrees(math.atan2(-(p2[1] - p1[1]), p2[0] - p1[0]))
+        a = fnum(m.get("angle"))
+        angle = round3((0.0 if a is None else a) + along) % 360.0
+        angle = round3(angle)
+        if angle != 0.0:
+            g["angle"] = angle
+
+        def standard(a, b):
+            return ((a, b) in [((0.0, 0.5), (1.0, 0.5)), ((1.0, 0.5), (0.0, 0.5)), ((0.5, 0.0), (0.5, 1.0)),
+                               ((0.5, 1.0), (0.5, 0.0))] or half(a, b))
+
+        if not standard(p1, p2) or angle % 90.0 != 0.0:
+            lost.append(f"{what}: degradenin uçları QGIS'te kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu")
+    if m.get("coordinate_mode") == "1":
+        lost.append(f"{what}: degradenin görünüm kutusuna göre koordinatı alınmadı (KentOS nesnenin kutusunu kullanır)")
+    if nonzero_pair(m.get("offset")):
+        lost.append(f"{what}: degradenin kaydırması alınmadı")
+    return g, takes
+
+
+def read_pattern(layer, m, i, lost, what):
+    sub = child(layer, "symbol")
+    got = read_symbol(sub, lost, what) if sub is not None else None
+    if got is None or got[0] != "marker":
+        lost.append(f"{what}: nokta deseninin işareti alınmadı")
+        return None
+    marker = got[1]
+    dx = fnum(m.get("distance_x"))
+    sx = size_in(15.0 if dx is None else dx, m.get("distance_x_unit"))
+    if sx is None:
+        lost.append(f"{what}: nokta deseninin yüzde aralığı KentOS'ta yok; desen alınmadı")
+        return None
+    spx, unit = sx
+    dy = fnum(m.get("distance_y"))
+    spy = size_as(15.0 if dy is None else dy, m.get("distance_y_unit"), unit)
+    if spy is None:
+        lost.append(f"{what}: nokta deseninin iki aralığının birimi ayrı; desen alınmadı")
+        return None
+    v = {"id": f"pt{i}", "type": "patternFill", "marker": marker, "spacingX": spx, "spacingY": spy, "unit": unit}
+
+    def shift(k):
+        x = fnum(m.get(k))
+        return x if x is not None and x != 0.0 else None
+
+    sdx, sdy = shift("displacement_x"), shift("displacement_y")
+    if sdx is not None and sdy is None:
+        d = size_as(sdx, m.get("displacement_x_unit"), unit)
+        if d is not None and abs(d - spx / 2.0) < 1e-9:
+            v["stagger"] = True
+        else:
+            lost.append(f"{what}: nokta deseninin kayması KentOS'un yarım aralık kaymasından başka; alınmadı")
+    elif sdx is None and sdy is None:
+        pass
+    else:
+        lost.append(f"{what}: nokta deseninin kayması KentOS'un yarım aralık kaymasından başka; alınmadı")
+    a = fnum(m.get("angle"))
+    if a is not None and a != 0.0:
+        v["angle"] = -a
+    ox = fnum(m.get("offset_x")) or 0.0
+    oy = fnum(m.get("offset_y")) or 0.0
+    if ox != 0.0 or oy != 0.0:
+        x = size_as(ox, m.get("offset_x_unit"), unit)
+        y = size_as(oy, m.get("offset_y_unit"), unit)
+        if x is not None and y is not None:
+            v["offset"] = [x, -y + 0.0]
+        else:
+            lost.append(f"{what}: nokta deseninin başlangıç kaymasının birimi aralığınkinden başka; alınmadı")
+    for k in ("random_deviation_x", "random_deviation_y"):
+        d = fnum(m.get(k))
+        if d is not None and d != 0.0:
+            lost.append(f"{what}: nokta deseninin rastgele sapması KentOS'un sapmasıyla aynı değil; alınmadı")
+            break
     return v
 
 
@@ -682,14 +914,20 @@ def read_symbol(s, lost, what):
     for i, layer in enumerate([c for c in s if c.tag == "layer"]):
         cls = layer.get("class", "")
         m = props(layer)
+        names = dd_names(layer)
         taken = []
         supported = []
         if key == "fill" and cls == "SimpleFill":
+            supported = [("fillColor", "simpleFill", "color", False), ("outlineColor", "simpleLine", "color", False),
+                         ("outlineWidth", "simpleLine", "width", False)]
             style = m.get("style", "solid")
             if style == "solid":
                 c = colour_in(m.get("color"))
-                if c is not None:
-                    taken.append({"id": f"f{i}", "type": "simpleFill", "color": c})
+                if c is not None or "fillColor" in names:
+                    f = {"id": f"f{i}", "type": "simpleFill"}
+                    if c is not None:
+                        f["color"] = c
+                    taken.append(f)
             elif style != "no":
                 lost.append(f"{what}: “{style}” fırça deseni KentOS'un dolgusuna çevrilmedi")
             if m.get("outline_style", "solid") != "no":
@@ -697,19 +935,37 @@ def read_symbol(s, lost, what):
                                                   ("line_width_unit", "outline_width_unit"),
                                                   ("line_style", "outline_style"), ("joinstyle", "joinstyle")]
                         if src in m}
-                got = read_line(line, f"o{i}", lost, what)
+                got = read_line(line, f"o{i}", lost, what, "outlineColor" in names)
                 if got is not None:
                     taken.append(got)
             if nonzero_pair(m.get("offset")):
                 lost.append(f"{what}: dolgunun kaydırması alınmadı")
         elif key in ("fill", "line") and cls == "SimpleLine":
-            supported = [("outlineWidth", "width", False)]
-            got = read_line(m, f"l{i}", lost, what)
+            supported = [("outlineWidth", "simpleLine", "width", False), ("outlineColor", "simpleLine", "color", False)]
+            got = read_line(m, f"l{i}", lost, what, "outlineColor" in names)
             if got is not None:
                 taken.append(got)
         elif key == "marker" and cls == "SimpleMarker":
-            supported = [("size", "size", False), ("angle", "rotation", True)]
+            supported = [("size", "shape", "size", False), ("angle", "shape", "rotation", True),
+                         ("fillColor", "shape", "fill", False), ("outlineColor", "shape", "stroke", False)]
             taken.append(read_marker(m, lost, what))
+        elif key == "marker" and cls == "SvgMarker":
+            supported = [("size", "svg", "size", False), ("angle", "svg", "rotation", True),
+                         ("fillColor", "svg", "fill", False), ("outlineColor", "svg", "stroke", False)]
+            got = read_svg_marker(m, lost, what)
+            if got is not None:
+                taken.append(got)
+        elif key == "marker" and cls == "FontMarker":
+            supported = [("size", "text", "size", False), ("angle", "text", "rotation", True),
+                         ("fillColor", "text", "color", False), ("char", "text", "text", False)]
+            taken.append(read_font_marker(m, lost, what))
+        elif key == "fill" and cls == "GradientFill":
+            g, supported = read_gradient(layer, m, i, lost, what)
+            taken.append(g)
+        elif key == "fill" and cls == "PointPatternFill":
+            got = read_pattern(layer, m, i, lost, what)
+            if got is not None:
+                taken.append(got)
         elif key == "fill" and cls == "LinePatternFill":
             got = read_hatch(layer, m, i, lost, what)
             if got is not None:
@@ -730,7 +986,7 @@ def read_symbol(s, lost, what):
                 lost.append(f"{what}: merkez işaretinin simgesi alınmadı")
         else:
             lost.append(f"{what}: QGIS'in “{cls}” simge katmanı KentOS'un katmanına çevrilmedi")
-        take_dd(layer, supported, taken[0] if taken else None, lost, what)
+        take_dd(layer, supported, taken, lost, what)
         if layer.get("enabled") == "0":
             for t in taken:
                 t["enabled"] = False
@@ -952,6 +1208,8 @@ HAND = {
 
 QGIS_STYLES = r"""
 from qgis.core import *
+from qgis.PyQt.QtCore import QPointF
+from qgis.PyQt.QtGui import QColor
 QgsApplication.setPrefixPath('{q}/MacOS', True)
 app = QgsApplication([], False); app.initQgis()
 G = '{g}'
@@ -1007,6 +1265,66 @@ ml.setSubSymbol(mk)
 ls = QgsLineSymbol.createSimple({{'line_color': '#3366cc', 'line_width': '0.6'}}); ls.appendSymbolLayer(ml)
 ls.symbolLayer(0).setDataDefinedProperty(QgsSymbolLayer.Property.StrokeWidth, QgsProperty.fromExpression('round("genislik", 1)'))
 yol.setRenderer(QgsSingleSymbolRenderer(ls)); yol.saveNamedStyle(out + 'qgis-isaretli.qml')
+# ADR 0571: gradients, point patterns, SVG and font markers, data-defined colours.
+def grad(c1, c2, **kw):
+    g = QgsGradientFillSymbolLayer(QColor(c1), QColor(c2))
+    for k, v in kw.items():
+        getattr(g, 'set' + k)(v)
+    fs = QgsFillSymbol(); fs.changeSymbolLayer(0, g)
+    return fs
+ramp = QgsGradientColorRamp(QColor('#ffffcc'), QColor('#006837'))
+dc = [QgsRendererCategory('A', grad('#ff0000', '#0000ff', ReferencePoint1=QPointF(0, 0.5), ReferencePoint2=QPointF(1, 0.5), Angle=30), 'Doğrusal 30°'),
+      QgsRendererCategory('B', grad('#ffff00', '#008000', GradientType=Qgis.GradientType.Radial), 'Dairesel'),
+      QgsRendererCategory('C', grad('#ffffff', '#000000', GradientSpread=Qgis.GradientSpread.Reflect, ReferencePoint1=QPointF(0, 0.5), ReferencePoint2=QPointF(0.5, 0.5)), 'Silindir'),
+      QgsRendererCategory('D', grad('#ff0000', '#0000ff', GradientType=Qgis.GradientType.Conical), 'Konik'),
+      QgsRendererCategory('E', grad('#ff0000', '#0000ff', ColorRamp=ramp, GradientColorType=Qgis.GradientColorSource.ColorRamp, ReferencePoint1=QPointF(0.5, 1), ReferencePoint2=QPointF(0.5, 0)), 'Renk rampası, aşağıdan yukarı')]
+parsel.setRenderer(QgsCategorizedSymbolRenderer('ada', dc)); parsel.saveNamedStyle(out + 'qgis-degrade.qml')
+def patt(marker, **kw):
+    pp = QgsPointPatternFillSymbolLayer()
+    for k, v in kw.items():
+        getattr(pp, 'set' + k)(v)
+    pp.setSubSymbol(marker)
+    fs = QgsFillSymbol(); fs.changeSymbolLayer(0, pp)
+    return fs
+dot = lambda c: QgsMarkerSymbol.createSimple({{'name': 'circle', 'color': c, 'size': '1.5', 'outline_style': 'no'}})
+pc = [QgsRendererCategory('A', patt(dot('#00aa00'), DistanceX=5, DistanceY=6), 'Izgara 5 × 6'),
+      QgsRendererCategory('B', patt(dot('#aa0000'), DistanceX=5, DistanceY=5, DisplacementX=2.5, Angle=30, OffsetX=1, OffsetY=2), 'Kaymalı, dönük, kaydırılmış'),
+      QgsRendererCategory('C', patt(dot('#0000aa'), DistanceX=5, DistanceY=5, DisplacementX=1, DisplacementY=1, MaximumRandomDeviationX=0.5), 'Başka kayma, rastgele sapma'),
+      QgsRendererCategory('D', patt(dot('#aa00aa'), DistanceX=12, DistanceY=12, DistanceXUnit=Qgis.RenderUnit.Pixels, DistanceYUnit=Qgis.RenderUnit.Pixels), 'Piksel aralığı')]
+parsel.setRenderer(QgsCategorizedSymbolRenderer('ada', pc)); parsel.saveNamedStyle(out + 'qgis-desen.qml')
+svg = 'base64:PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0IDQiPjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIyIi8+PC9zdmc+'
+sv = QgsSvgMarkerSymbolLayer(svg, 5, 20); sv.setFillColor(QColor('#ff0000')); sv.setStrokeColor(QColor('#000000')); sv.setStrokeWidth(0.3)
+sv.setDataDefinedProperty(QgsSymbolLayer.Property.Size, QgsProperty.fromField('boy'))
+ms = QgsMarkerSymbol(); ms.changeSymbolLayer(0, sv)
+sv2 = QgsSvgMarkerSymbolLayer('/usr/share/icons/yok.svg', 5, 0)
+ms2 = QgsMarkerSymbol(); ms2.changeSymbolLayer(0, sv2)
+nokta.setRenderer(QgsCategorizedSymbolRenderer('ad', [QgsRendererCategory('A', ms, 'SVG, gömülü'), QgsRendererCategory('B', ms2, 'SVG, dosya yolu')]))
+nokta.saveNamedStyle(out + 'qgis-svg.qml')
+fm = QgsFontMarkerSymbolLayer('Arial', 'A', 6, QColor('#aa0000')); fm.setStrokeColor(QColor('#ffffff')); fm.setStrokeWidth(0.4)
+fm.setAngle(15); fm.setFontStyle('Bold Italic')
+fm.setDataDefinedProperty(QgsSymbolLayer.Property.Character, QgsProperty.fromField('harf'))
+fm.setDataDefinedProperty(QgsSymbolLayer.Property.FillColor, QgsProperty.fromField('renk'))
+ms = QgsMarkerSymbol(); ms.changeSymbolLayer(0, fm)
+nokta.setRenderer(QgsSingleSymbolRenderer(ms)); nokta.saveNamedStyle(out + 'qgis-yazi.qml')
+fl = QgsFillSymbol.createSimple({{'color': '#ff0000', 'outline_color': '#000000', 'outline_width': '0.4'}})
+fl.symbolLayer(0).setDataDefinedProperty(QgsSymbolLayer.Property.FillColor, QgsProperty.fromField('renk'))
+fl.symbolLayer(0).setDataDefinedProperty(QgsSymbolLayer.Property.StrokeColor, QgsProperty.fromField('kenar'))
+parsel.setRenderer(QgsSingleSymbolRenderer(fl)); parsel.saveNamedStyle(out + 'qgis-renkler.qml')
+# One symbol each, the layers stacked: a gradient, dots over it and an outline; an SVG marker and a font marker.
+sym = QgsFillSymbol.createSimple({{'color': '#ffffff', 'outline_color': '#222222', 'outline_width': '0.4'}})
+sym.changeSymbolLayer(0, QgsGradientFillSymbolLayer(QColor('#ff7f00'), QColor('#3366cc')))
+sym.symbolLayer(0).setReferencePoint1(QPointF(0, 0.5)); sym.symbolLayer(0).setReferencePoint2(QPointF(1, 0.5)); sym.symbolLayer(0).setAngle(30)
+pt = patt(dot('#ffffff'), DistanceX=4, DistanceY=4, DisplacementX=2); sym.appendSymbolLayer(pt.symbolLayer(0).clone())
+sym.appendSymbolLayer(QgsSimpleLineSymbolLayer.create({{'line_color': '#222222', 'line_width': '0.5'}}))
+parsel.setRenderer(QgsSingleSymbolRenderer(sym)); parsel.saveNamedStyle(out + 'qgis-simgeler-alan.qml')
+sv = QgsSvgMarkerSymbolLayer(svg, 6, 0); sv.setFillColor(QColor('#e31a1c'))
+ms = QgsMarkerSymbol(); ms.changeSymbolLayer(0, sv)
+fm = QgsFontMarkerSymbolLayer('Arial', 'A', 4, QColor('#ffffff')); fm.setFontStyle('Bold')
+ms.appendSymbolLayer(fm)
+nokta.setRenderer(QgsSingleSymbolRenderer(ms)); nokta.saveNamedStyle(out + 'qgis-simgeler-nokta.qml')
+cl = QgsLineSymbol.createSimple({{'line_color': '#3366cc', 'line_width': '0.8'}})
+cl.symbolLayer(0).setDataDefinedProperty(QgsSymbolLayer.Property.StrokeColor, QgsProperty.fromExpression("\"kat\" * 2 + 1"))
+yol.setRenderer(QgsSingleSymbolRenderer(cl)); yol.saveNamedStyle(out + 'qgis-renk-ifadesi.qml')
 print('ok')
 """
 
@@ -1027,7 +1345,7 @@ def write_files() -> None:
                        timeout=300)
     if "ok" not in r.stdout:
         sys.exit(f"QGIS QML yazamadı: {r.stderr[-600:]}")
-    print(f"{len(HAND)} elle yazılmış ve 9 QGIS QML'i: {DIR}")
+    print(f"{len(HAND)} elle yazılmış ve 17 QGIS QML'i: {DIR}")
 
 
 # ─── The cases ─────────────────────────────────────────────────────────────────────────────────────────
@@ -1130,6 +1448,22 @@ def build_cases():
                 "veriye bağlı rengi söylenir", "parsel", "qgis-tarama.qml"),
         ok_case("QGIS'in işaretli çizgisi: ilk yerleşim alınır, ikincisi söylenir; işaretin veriye bağlı boyu ve dönüşü, "
                 "çevrilemeyen ifadeler söylenir", "yol", "qgis-isaretli.qml"),
+        ok_case("QGIS'in degradeleri: doğrusal 30° (kutunun batısından doğusuna), dairesel (merkez ilk renk, KentOS'ta küre), "
+                "silindir (yarım kutuyla yansıtma), konik doğrusal olur, renk rampası aşağıdan yukarı", "parsel",
+                "qgis-degrade.qml"),
+        ok_case("QGIS'in nokta desenleri: ızgara, yarım aralık kaymalı (saat yönü açı KentOS'ta eksi, y aşağı eksi), başka kayma ve "
+                "rastgele sapma söylenir, piksel aralığı", "parsel", "qgis-desen.qml"),
+        ok_case("QGIS'in SVG işaretleri: gömülü çizim kitaplığa girer, dosya yolu söylenir; veriye bağlı boy", "durak",
+                "qgis-svg.qml"),
+        ok_case("QGIS'in yazı işareti: karakter, yazı tipi, kalın eğik, kenar halesi, dönüş; veriye bağlı karakter ve renk",
+                "durak", "qgis-yazi.qml"),
+        ok_case("Katmanlar üst üste: degrade, üstünde nokta deseni ve kenar çizgisi (tek simge)", "parsel",
+                "qgis-simgeler-alan.qml"),
+        ok_case("Katmanlar üst üste: SVG işaretinin üstünde yazı işareti (tek simge)", "durak",
+                "qgis-simgeler-nokta.qml"),
+        ok_case("Veriye bağlı renkler: dolgu ve kenar alandan, KentOS'ta alanın değeri sabit rengin yerine geçer", "parsel",
+                "qgis-renkler.qml"),
+        ok_case("Alana bağlı olmayan veriye bağlı renk ifadesi söylenir", "yol", "qgis-renk-ifadesi.qml"),
         ok_case("Alınamayanlar söylenir: SVG işareti, bilinmeyen şekil, veriye bağlı boy, kaydırma, etiketler, katmanın "
                 "saydamlığı", "durak", "kayipli.qml"),
         ok_case("QGIS 2'nin prop'ları: nokta ve inç mm'ye, kapalı katman kapalı, fırça deseni söylenir", "parsel",
@@ -1225,6 +1559,20 @@ def sym(s):
             d['line'] = [round(sl.lineAngle(), 4), round(sl.distance(), 4), round(sl.offset(), 4),
                          QgsUnitTypes.encodeUnit(sl.distanceUnit())]
             d['sub'] = sym(sl.subSymbol())
+        if sl.layerType() == 'GradientFill':
+            d['grad'] = [int(sl.gradientType()), sl.color().name(), sl.color2().name(), int(sl.gradientSpread()),
+                         [sl.referencePoint1().x(), sl.referencePoint1().y()],
+                         [sl.referencePoint2().x(), sl.referencePoint2().y()], round(sl.angle(), 4)]
+        if sl.layerType() == 'PointPatternFill':
+            d['pat'] = [sl.distanceX(), sl.distanceY(), sl.displacementX(), sl.displacementY(), sl.offsetX(),
+                        sl.offsetY(), round(sl.angle(), 4), QgsUnitTypes.encodeUnit(sl.distanceXUnit())]
+            d['sub'] = sym(sl.subSymbol())
+        if sl.layerType() == 'SvgMarker':
+            d['svg'] = [sl.path()[:7], sl.path()[7:].__len__() > 40, round(sl.size(), 4), round(sl.angle(), 4),
+                        sl.fillColor().name(), sl.strokeColor().name()]
+        if sl.layerType() == 'FontMarker':
+            d['font'] = [sl.fontFamily(), sl.character(), round(sl.size(), 4), round(sl.angle(), 4), sl.fontStyle(),
+                         sl.color().name(), sl.strokeColor().name(), round(sl.strokeWidth(), 4)]
         if sl.layerType() == 'MarkerLine':
             d['marks'] = [round(sl.interval(), 4), round(sl.offsetAlongLine(), 4), int(sl.placements()),
                           sl.rotateSymbols()]
@@ -1251,6 +1599,7 @@ for name, table in {files}:
     if r.type() == 'categorizedSymbol':
         info['field'] = r.classAttribute()
         info['classes'] = [[c.value(), c.label(), sym(c.symbol())['layers'][0]['colour']] for c in r.categories()]
+        info['symbols'] = [sym(c.symbol()) for c in r.categories()]
     elif r.type() == 'graduatedSymbol':
         info['field'] = r.classAttribute()
         info['classes'] = [[g.lowerValue(), g.upperValue(), sym(g.symbol())['layers'][0]['colour']] for g in r.ranges()]
@@ -1298,6 +1647,30 @@ WANT = {
          "sub": {"opacity": 1.0, "layers": [{"class": "SimpleMarker", "enabled": True, "colour": "#ffff0000",
                                              "shape": "triangle", "size": [2.0, "MM"], "angle": 0.0,
                                              "dd": {"size": '"kat" * 2 + 1', "angle": '-("yon")'}}]}}]}}),
+    # ADR 0571: gradients (type 0 linear, 1 radial; the sphere's centre is QGIS's first colour, a cylinder reflects a
+    # half box), a point pattern (clockwise angle, y down), an embedded SVG, a font marker, data-defined colours.
+    "kentos-degrade.qml": ("parsel", {"type": "categorizedSymbol", "field": "ada", "symbols": [
+        {"opacity": 1.0, "layers": [{"class": "GradientFill", "enabled": True, "colour": "#ffff0000",
+                                     "grad": [0, "#ff0000", "#0000ff", 0, [0.0, 0.5], [1.0, 0.5], 30.0]}]},
+        {"opacity": 1.0, "layers": [{"class": "GradientFill", "enabled": True, "colour": "#ff008000",
+                                     "grad": [1, "#008000", "#ffff00", 0, [0.5, 0.5], [1.0, 1.0], 0.0]}]},
+        {"opacity": 1.0, "layers": [{"class": "GradientFill", "enabled": True, "colour": "#ffffffff",
+                                     "grad": [0, "#ffffff", "#000000", 1, [0.0, 0.5], [0.5, 0.5], 90.0]}]}]}),
+    "kentos-desen.qml": ("parsel", {"type": "singleSymbol", "symbol": {"opacity": 1.0, "layers": [
+        {"class": "PointPatternFill", "enabled": True, "colour": "#ff00aa00",
+         "pat": [5.0, 6.0, 2.5, 0.0, 1.0, -2.0, -30.0, "MM"],
+         "sub": {"opacity": 1.0, "layers": [{"class": "SimpleMarker", "enabled": True, "colour": "#ff00aa00",
+                                             "shape": "circle", "size": [1.5, "MM"], "angle": 0.0}]}}]}}),
+    "kentos-svg.qml": ("nokta", {"type": "singleSymbol", "symbol": {"opacity": 1.0, "layers": [
+        {"class": "SvgMarker", "enabled": True, "colour": "#ffff0000",
+         "svg": ["base64:", True, 5.0, 20.0, "#ff0000", "#000000"]}]}}),
+    "kentos-yazi.qml": ("nokta", {"type": "singleSymbol", "symbol": {"opacity": 1.0, "layers": [
+        {"class": "FontMarker", "enabled": True, "colour": "#ffaa0000",
+         "font": ["Arial", "A", 6.0, 15.0, "Bold Italic", "#aa0000", "#ffffff", 0.4]}]}}),
+    "kentos-renkler.qml": ("parsel", {"type": "singleSymbol", "symbol": {"opacity": 1.0, "layers": [
+        {"class": "SimpleFill", "enabled": True, "colour": "#ffff0000", "dd": {"fillColor": '"renk"'}},
+        {"class": "SimpleLine", "enabled": True, "colour": "#ff000000", "width": [0.4, "MM"], "dash": [],
+         "dd": {"outlineColor": '"kenar"'}}]}}),
     "kentos-nokta.qml": ("nokta", {"type": "singleSymbol", "symbol": {"opacity": 1.0, "layers": [
         {"class": "SimpleMarker", "enabled": True, "colour": "#ffff0000", "shape": "triangle", "size": [3.0, "MM"],
          "angle": 30.0}]}}),

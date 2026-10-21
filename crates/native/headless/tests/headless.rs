@@ -1852,7 +1852,17 @@ fn layer_looks_go_out_as_sld_and_come_back() {
             .unwrap_or_else(|| panic!("{name}"))
             .to_owned()
     };
-    let (parsel, yol, egri) = (id("parsel"), id("yol"), id("egri"));
+    let (parsel, yol, egri, nokta) = (id("parsel"), id("yol"), id("egri"), id("nokta"));
+    // An SLD with an embedded SVG marker brings its drawing into the project's library (docs/adr/0571 §3).
+    let svg = s
+        .call(json!({ "command": "file.import.sld", "input": { "layer": nokta,
+            "path": format!("{}/../../../fixtures/sld/v1/qgis-svg.sld", env!("CARGO_MANIFEST_DIR")) } }))
+        .expect("answers");
+    assert_eq!(svg["status"], "completed", "{svg}");
+    let drawing = svg["output"]["renderer"]["symbols"]["marker"]["layers"][0]["asset"]
+        .as_str()
+        .expect("an asset")
+        .to_owned();
     let fill = |c: &str| {
         json!({ "fill": { "type": "fill", "layers": [
             { "id": "f", "type": "simpleFill", "color": c },
@@ -1888,6 +1898,34 @@ fn layer_looks_go_out_as_sld_and_come_back() {
                     "width": 0.2, "color": "#000000" } ] } } }),
             "single",
         ),
+        (
+            "kentos-desen.sld",
+            parsel.clone(),
+            json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
+                { "id": "g", "type": "gradientFill", "shape": "linear", "color": "#ff0000", "color2": "#0000ff" },
+                { "id": "p", "type": "patternFill", "spacingX": 5.0, "spacingY": 6.0, "unit": "mm",
+                  "marker": { "type": "marker", "layers": [
+                    { "id": "m", "type": "shape", "shape": "circle", "size": 2.0, "unit": "mm", "fill": "#00aa00" } ] } } ] } } }),
+            "pattern",
+        ),
+        (
+            "kentos-isaretler.sld",
+            nokta.clone(),
+            json!({ "type": "single", "symbols": { "marker": { "type": "marker", "layers": [
+                { "id": "v", "type": "svg", "asset": drawing, "size": 5.0, "unit": "mm", "rotation": -20.0 },
+                { "id": "t", "type": "text", "text": "A", "font": "Arial", "size": 6.0, "unit": "mm", "color": "#aa0000",
+                  "rotation": -15.0, "halo": { "color": "#ffffff", "width": 0.4 } } ] } } }),
+            "marks",
+        ),
+        (
+            "kentos-renk.sld",
+            parsel.clone(),
+            json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
+                { "id": "f", "type": "simpleFill", "color": { "expr": "[renk]", "fallback": "#ff0000" } },
+                { "id": "o", "type": "simpleLine", "width": 0.28, "unit": "mm",
+                  "color": { "expr": "[kenar]", "fallback": "#000000" } } ] } } }),
+            "dd",
+        ),
     ];
     let dir = std::env::temp_dir().join(format!("kentos-sld-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
@@ -1915,9 +1953,19 @@ fn layer_looks_go_out_as_sld_and_come_back() {
         if *kind == "single" {
             // The data-defined colour said; the hatch is the area's, not written for a line layer.
             let lost = out["output"]["lost"].to_string();
-            assert!(lost.contains("yedek değeri yazıldı"), "{out}");
+            assert!(lost.contains("alan adı olarak yazıldı"), "{out}");
+            assert!(text.contains("<ogc:PropertyName>renk</ogc:PropertyName>"), "{text}");
             assert!(!text.contains("PolygonSymbolizer"), "{text}");
             assert_eq!(out["warnings"][0]["code"], "export_losses", "{out}");
+        } else if *kind == "pattern" {
+            let lost = out["output"]["lost"].to_string();
+            assert!(lost.contains("degrade") && lost.contains("hücre aralığı"), "{out}");
+            assert!(text.contains("<se:GraphicFill>"), "{text}");
+        } else if *kind == "dd" {
+            assert!(out["output"]["lost"].to_string().contains("QGIS SLD'deki alana bağlı rengi okumaz"), "{out}");
+        } else if *kind == "marks" {
+            assert!(out["output"].get("lost").is_none(), "{out}");
+            assert!(text.contains("image/svg+xml") && text.contains("ttf://Arial"), "{text}");
         } else {
             assert!(out["output"].get("lost").is_none(), "{out}");
         }
@@ -1927,7 +1975,30 @@ fn layer_looks_go_out_as_sld_and_come_back() {
                 "input": { "layer": egri, "path": path.display().to_string() } }))
             .expect("answers");
         assert_eq!(back["status"], "completed", "{back}");
-        assert_eq!(back["output"]["kind"], *kind, "{back}");
+        if !["pattern", "marks", "dd"].contains(kind) {
+            assert_eq!(back["output"]["kind"], *kind, "{back}");
+        }
+        let r = &back["output"]["renderer"];
+        match *kind {
+            "pattern" => {
+                let l = &r["symbols"]["fill"]["layers"];
+                assert_eq!(l[0]["type"], "patternFill", "{r}");
+                assert_eq!(l[0]["marker"]["layers"][0]["fill"], "#00aa00");
+            }
+            "marks" => {
+                let m = &r["symbols"]["marker"]["layers"];
+                assert_eq!((m[0]["type"].as_str(), m[0]["asset"].as_str()), (Some("svg"), Some(drawing.as_str())), "{r}");
+                assert_eq!(m[0]["rotation"].as_f64(), Some(-20.0));
+                assert_eq!((m[1]["type"].as_str(), m[1]["text"].as_str(), m[1]["font"].as_str()), (Some("text"), Some("A"), Some("Arial")));
+                assert_eq!(m[1]["halo"]["color"], "#ffffff");
+            }
+            "dd" => {
+                let l = &r["symbols"]["fill"]["layers"];
+                assert_eq!(l[0]["color"], json!({ "expr": "[renk]", "fallback": "#808080" }), "{r}");
+                assert_eq!(l[1]["color"], json!({ "expr": "[kenar]", "fallback": "#000000" }), "{r}");
+            }
+            _ => {}
+        }
         if *kind == "categorized" {
             assert_eq!(back["output"]["renderer"]["expr"], "[ada]");
             assert_eq!(back["output"]["renderer"]["categories"][1]["value"], "B");
@@ -1981,6 +2052,16 @@ fn layer_looks_go_out_as_qml_and_come_back() {
             .to_owned()
     };
     let (parsel, yol, nokta) = (id("parsel"), id("yol"), id("nokta"));
+    // A QML with an embedded SVG marker brings its drawing into the project's library (docs/adr/0571 §3).
+    let svg = s
+        .call(json!({ "command": "file.import.qml", "input": { "layer": nokta,
+            "path": format!("{}/../../../fixtures/qml/v1/qgis-svg.qml", env!("CARGO_MANIFEST_DIR")) } }))
+        .expect("answers");
+    assert_eq!(svg["status"], "completed", "{svg}");
+    let drawing = svg["output"]["renderer"]["categories"][0]["symbols"]["marker"]["layers"][0]["asset"]
+        .as_str()
+        .expect("an asset")
+        .to_owned();
     let fill = |c: &str| {
         json!({ "fill": { "type": "fill", "layers": [
             { "id": "f", "type": "simpleFill", "color": c },
@@ -2056,6 +2137,53 @@ fn layer_looks_go_out_as_qml_and_come_back() {
                       "rotation": { "expr": "[yon]", "fallback": 0.0 } } ] } } ] } } }),
             "single",
         ),
+        (
+            "kentos-degrade.qml",
+            parsel.clone(),
+            json!({ "type": "categorized", "expr": "[ada]", "categories": [
+                { "value": "A", "label": "Doğrusal", "symbols": { "fill": { "type": "fill", "layers": [
+                    { "id": "g", "type": "gradientFill", "shape": "linear", "color": "#ff0000", "color2": "#0000ff", "angle": 30.0 } ] } } },
+                { "value": "B", "label": "Küre", "symbols": { "fill": { "type": "fill", "layers": [
+                    { "id": "g", "type": "gradientFill", "shape": "spherical", "color": "#ffff00", "color2": "#008000" } ] } } },
+                { "value": "C", "label": "Silindir", "symbols": { "fill": { "type": "fill", "layers": [
+                    { "id": "g", "type": "gradientFill", "shape": "cylinder", "color": "#ffffff", "color2": "#000000", "angle": 90.0 } ] } } } ] }),
+            "categorized",
+        ),
+        (
+            "kentos-desen.qml",
+            parsel.clone(),
+            json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
+                { "id": "p", "type": "patternFill", "spacingX": 5.0, "spacingY": 6.0, "unit": "mm", "stagger": true,
+                  "angle": 30.0, "offset": [1.0, 2.0],
+                  "marker": { "type": "marker", "layers": [
+                    { "id": "m", "type": "shape", "shape": "circle", "size": 1.5, "unit": "mm", "fill": "#00aa00" } ] } } ] } } }),
+            "single",
+        ),
+        (
+            "kentos-svg.qml",
+            nokta.clone(),
+            json!({ "type": "single", "symbols": { "marker": { "type": "marker", "layers": [
+                { "id": "v", "type": "svg", "asset": drawing, "size": 5.0, "unit": "mm", "fill": "#ff0000",
+                  "stroke": "#000000", "rotation": -20.0 } ] } } }),
+            "single",
+        ),
+        (
+            "kentos-yazi.qml",
+            nokta.clone(),
+            json!({ "type": "single", "symbols": { "marker": { "type": "marker", "layers": [
+                { "id": "t", "type": "text", "text": "A", "font": "Arial", "size": 6.0, "unit": "mm", "weight": 700,
+                  "italic": true, "color": "#aa0000", "rotation": -15.0, "halo": { "color": "#ffffff", "width": 0.4 } } ] } } }),
+            "single",
+        ),
+        (
+            "kentos-renkler.qml",
+            parsel.clone(),
+            json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
+                { "id": "f", "type": "simpleFill", "color": { "expr": "[renk]", "fallback": "#ff0000" } },
+                { "id": "o", "type": "simpleLine", "width": 0.4, "unit": "mm",
+                  "color": { "expr": "[kenar]", "fallback": "#000000" } } ] } } }),
+            "single",
+        ),
     ];
     let dir = std::env::temp_dir().join(format!("kentos-qml-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
@@ -2084,6 +2212,8 @@ fn layer_looks_go_out_as_qml_and_come_back() {
         match *name {
             "kentos-nokta.qml" => assert!(lost.contains("gear"), "{out}"),
             "kentos-aralikli.qml" => assert!(lost.contains("alt sınırı"), "{out}"),
+            "kentos-degrade.qml" => assert!(lost.contains("açılı degradenin"), "{out}"),
+            "kentos-desen.qml" => assert!(lost.contains("desenin"), "{out}"),
             _ => assert!(out["output"].get("lost").is_none(), "{out}"),
         }
         // Read back into the same layer: the same renderer, but for the graduated bounds and the gear.
@@ -2127,6 +2257,41 @@ fn layer_looks_go_out_as_qml_and_come_back() {
                 assert_eq!(l[1]["spacing"], 2.5);
                 assert_eq!(l[1]["offset"], 0.5);
                 assert_eq!(l[2]["width"], json!({ "expr": "[alan] / 1000", "fallback": 0.5 }));
+            }
+            "kentos-degrade.qml" => {
+                let g = |i: usize| &r["categories"][i]["symbols"]["fill"]["layers"][0];
+                assert_eq!((g(0)["shape"].as_str(), g(0)["angle"].as_f64()), (Some("linear"), Some(30.0)), "{r}");
+                assert_eq!((g(0)["color"].as_str(), g(0)["color2"].as_str()), (Some("#ff0000"), Some("#0000ff")));
+                assert_eq!((g(1)["shape"].as_str(), g(1)["color"].as_str()), (Some("spherical"), Some("#ffff00")));
+                assert_eq!((g(2)["shape"].as_str(), g(2)["angle"].as_f64()), (Some("cylinder"), Some(90.0)), "{r}");
+            }
+            "kentos-desen.qml" => {
+                let p = &r["symbols"]["fill"]["layers"][0];
+                assert_eq!(p["type"], "patternFill", "{r}");
+                assert_eq!((p["spacingX"].as_f64(), p["spacingY"].as_f64()), (Some(5.0), Some(6.0)));
+                assert_eq!(p["stagger"], true);
+                assert_eq!(p["angle"].as_f64(), Some(30.0));
+                assert_eq!(p["offset"], json!([1.0, 2.0]));
+                assert_eq!(p["marker"]["layers"][0]["fill"], "#00aa00");
+            }
+            "kentos-svg.qml" => {
+                let v = &r["symbols"]["marker"]["layers"][0];
+                assert_eq!(v["type"], "svg", "{r}");
+                assert_eq!(v["asset"], drawing, "the drawing the file carried is the library's");
+                assert_eq!(v["rotation"].as_f64(), Some(-20.0));
+                assert!(text.contains("base64:"), "{text}");
+            }
+            "kentos-yazi.qml" => {
+                let t = &r["symbols"]["marker"]["layers"][0];
+                assert_eq!((t["text"].as_str(), t["font"].as_str(), t["weight"].as_u64()), (Some("A"), Some("Arial"), Some(700)));
+                assert_eq!(t["italic"], true);
+                assert_eq!(t["halo"]["color"], "#ffffff");
+                assert_eq!(t["rotation"].as_f64(), Some(-15.0));
+            }
+            "kentos-renkler.qml" => {
+                let l = &r["symbols"]["fill"]["layers"];
+                assert_eq!(l[0]["color"], json!({ "expr": "[renk]", "fallback": "#ff0000" }), "{r}");
+                assert_eq!(l[1]["color"], json!({ "expr": "[kenar]", "fallback": "#000000" }), "{r}");
             }
             "kentos-isaretli.qml" => {
                 let m = &r["symbols"]["line"]["layers"][1];
