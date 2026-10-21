@@ -597,6 +597,32 @@ impl Cores {
         closest_on_edge(&self.edges[i as usize], p).d < limit
     }
 
+    /// Whether the straight edge `a`–`b` (its piece on its left) lies on the closed buffer of one straight core and
+    /// that buffer is on its right (docs/adr/0209 §7's eki, GEO-02): both ends within the distance of the core (by
+    /// TOL) and a point just right of its middle strictly within it. A straight core's buffer is convex, so the edge
+    /// lies in it whole and both its sides are in the union: it bounds no area of it. Two neighbours' buffers that
+    /// touch along a line (half a block's distance on a grid of streets) then leave none of their touching sides in
+    /// the arrangement.
+    fn covers_outside(&self, a: Vec2, b: Vec2) -> bool {
+        let (dx, dy) = (b.x - a.x, b.y - a.y);
+        let len = js_hypot(dx, dy);
+        if len <= TOL {
+            return false;
+        }
+        let h = 10.0 * TOL;
+        let probe = Vec2::new(
+            (a.x + b.x) / 2.0 + dy / len * h,
+            (a.y + b.y) / 2.0 - dx / len * h,
+        );
+        let reach = self.r + TOL;
+        self.near(a).iter().any(|&i| {
+            matches!(self.edges[i as usize], Edge::Seg { .. })
+                && self.close(i, a, reach)
+                && self.close(i, b, reach)
+                && self.close(i, probe, self.r)
+        })
+    }
+
     /// Whether `p` is closer than `limit` to a core.
     fn within(&self, p: Vec2, limit: f64) -> bool {
         self.near(p).iter().any(|&i| self.close(i, p, limit))
@@ -633,10 +659,13 @@ pub fn overlay_buffers(pieces: &[Area], cores: &[Edge], r: f64) -> Vec<Area> {
         for e in edges {
             let near = translate_edge(&e, -o.x, -o.y);
             let inside = match near {
-                Edge::Seg { a, b } => cores
-                    .near(a)
-                    .iter()
-                    .any(|&i| cores.close(i, a, deep) && cores.close(i, b, deep)),
+                Edge::Seg { a, b } => {
+                    cores
+                        .near(a)
+                        .iter()
+                        .any(|&i| cores.close(i, a, deep) && cores.close(i, b, deep))
+                        || cores.covers_outside(a, b)
+                }
                 Edge::Arc { .. } => false,
             };
             if !inside {

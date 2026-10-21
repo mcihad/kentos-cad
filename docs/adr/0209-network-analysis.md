@@ -279,5 +279,27 @@ Sahibin önceliği performanstır (“Biliyorsun önceliğimiz performans”, 9 
   `network_timing` (aynı şehir bir çizim olarak): çizimden okuma (ifadeler ve alanlar) 35,6 ms ve kenarların yolları depodan 22,0 ms
   masaüstünde arayüzün iş parçacığında, ağın iş parçacığına geçmeden; İşlemler'in ve Python'un çizimden bütün kurması 231,8 ms.
 - **Bilinen sınırlar:** `GEO-01` (kaplamanın birleşimi, kendi sonucu değen dairelerle yeniden birleşince alanı iki kez sayar; hizmet
-  alanı her kuşağı kendi tamponlarından birleştirdiği için etkilenmez, testi yok sayılı), `GEO-02` (tam değen tamponlar); dönüş
+  alanı her kuşağı kendi tamponlarından birleştirdiği için etkilenmez, testi yok sayılı), `GEO-02` (tam değen tamponlar; 21 Ekim'de kapandı, aşağıdaki ek); dönüş
   kısıtları ve öbürleri §1'in kapsam dışısı.
+
+## Ek (21 Ekim 2026): tam değen tamponlar (`GEO-02`)
+
+50 m'lik ızgara şehirde Kenar payı 25 m iken komşu sokakların tamponları her blokta tek çizgide buluşur. Alanların süresi sakin
+makinede 350 ms ölçülüyordu (bütçe 300). Buluşan kenarlar birleşimin sınırı değildir ama düzenlemeye giriyor, kesişim adayı oluyordu.
+
+Karar: bindirmenin tampon birleşimi (`geom::overlay::overlay_buffers`) bir parçanın düz kenarını şu durumda düzenlemeye almaz: kenar
+bir düz çekirdeğin kapalı tamponunda duruyorsa (iki ucu çekirdeğe uzaklıkta, TOL payıyla) ve ortasının hemen sağı (parçanın dışı) o
+tamponun kesin içindeyse. Düz çekirdeğin tamponu dışbükeydir; kenar onda bütünüyle durur ve iki yanı da birleşimdedir, bu yüzden hiçbir
+alanı sınırlamaz.
+
+Yüzler bundan sonra da “bir çekirdeğe uzaklıktan yakın” sınamasıyla sınıflanır; bırakılan kenar yalnız iki yüzü birleştirir. Önceden
+bırakılan, başka bir çekirdeğin tamponunun derin içindeki kenarlar (TOL'den fazla) gibi.
+
+| Ölçü (`network::timing`) | Önce | Sonra | Bütçe |
+|---|---|---|---|
+| 10 dakikanın alanları, pay 25 m | 350,0 ms | 89,8 ms | 300 ms |
+| 10 dakikanın alanları, pay 50 m | 136,9 ms | 94,0 ms | 300 ms |
+| 4 dakikalık alan, pay 50 m | 49,3 ms | 26,8 ms | 300 ms |
+
+Doğrulama: bindirmenin doğruluk korpusu (`fixtures/overlay/v1`, ADR 0500), tampon ve geometri işlemlerinin durumları, ağın ortak
+durumları ve İşlemler'in bütün ortak durumları değişmeden geçer.
