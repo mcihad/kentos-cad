@@ -80,10 +80,11 @@ impl PyNetwork {
     }
 
     /// Saat (docs/adr/0521 §4): the time of day the questions set off at, minutes of the day; `None`, every hour
-    /// alike. Read by a cost with a time profile.
+    /// alike. Read by a cost with a time profile and by closures with hours (docs/adr/0568): what the access closes
+    /// then, `{byProfile, byDate, byHours, hoursUnasked, unread}`.
     #[pyo3(signature = (minutes=None))]
-    fn set_time(&mut self, minutes: Option<f64>) {
-        self.inner.time = minutes;
+    fn set_time(&mut self, minutes: Option<f64>) -> String {
+        self.inner.set_time_json(minutes)
     }
 
     /// Araç profili and Tarih (docs/adr/0567): the vehicle (a profile's name) and the day (`YYYY-MM-DD`) the questions

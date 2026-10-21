@@ -34,7 +34,7 @@ pub struct NetworkSession {
     /// Objects of the network's layers not taken: their ids and kinds.
     pub skipped: Vec<(f64, &'static str)>,
     /// The time of day the questions set off at (a reverse question's arrival), minutes; read by a cost with a time
-    /// profile (docs/adr/0521 §4).
+    /// profile (docs/adr/0521 §4) and by timed closures (docs/adr/0568): set it with `set_time` once an access is set.
     pub time: Option<f64>,
     searcher: Searcher,
     tree: Option<Tree>,
@@ -284,6 +284,18 @@ fn parse(text: &str, what: &str) -> Result<Json, String> {
 }
 
 /// Points written as `[[x, y], …]`.
+/// What varying closed, as JSON.
+fn varied_json(v: &Varied) -> String {
+    format!(
+        r#"{{"byProfile":{},"byDate":{},"byHours":{},"hoursUnasked":{},"unread":{}}}"#,
+        v.by_profile,
+        v.by_date,
+        v.by_hours,
+        v.hours_unasked,
+        json::to_string(v.unread.as_slice())
+    )
+}
+
 pub fn points_of(text: &str) -> Result<Vec<Vec2>, String> {
     match parse(text, "noktaları")? {
         Json::Arr(list) => list
@@ -498,24 +510,38 @@ impl NetworkSession {
                 day_of(t).ok_or_else(|| format!("Tarih “{t}” okunamadı; 2026-11-03 gibi yazın."))?,
             ),
         };
-        let access = Access { profile, day };
+        Ok(self.vary(profile, day))
+    }
+
+    /// Sets the time of day the questions set off at (a reverse question's arrival), minutes; with timed closures
+    /// (docs/adr/0568) the access is varied again for it. What the access closes then.
+    pub fn set_time(&mut self, minutes: Option<f64>) -> Varied {
+        self.time = minutes;
+        let a = self.graph.access();
+        self.vary(a.profile, a.day)
+    }
+
+    /// Varies the graph for the vehicle and the day, and the time when a closure has hours.
+    fn vary(&mut self, profile: Option<usize>, day: Option<i64>) -> Varied {
+        let time = self.time.filter(|_| day.is_some() && self.graph.rules.access.timed());
+        let access = Access { profile, day, time };
         if access != self.graph.access()
             && let Some(t) = self.tree.take()
         {
             self.searcher.recycle(t);
         }
-        Ok(self.graph.vary(access).clone())
+        self.graph.vary(access).clone()
     }
 
-    /// `set_access` as JSON: `{byProfile, byDate, unread}` or `{error}`.
+    /// `set_time` as JSON: `{byProfile, byDate, byHours, hoursUnasked, unread}`.
+    pub fn set_time_json(&mut self, minutes: Option<f64>) -> String {
+        varied_json(&self.set_time(minutes))
+    }
+
+    /// `set_access` as JSON: `{byProfile, byDate, byHours, hoursUnasked, unread}` or `{error}`.
     pub fn set_access_json(&mut self, profile: Option<&str>, day: Option<&str>) -> String {
         match self.set_access(profile, day) {
-            Ok(v) => format!(
-                r#"{{"byProfile":{},"byDate":{},"unread":{}}}"#,
-                v.by_profile,
-                v.by_date,
-                json::to_string(v.unread.as_slice())
-            ),
+            Ok(v) => varied_json(&v),
             Err(e) => format!(r#"{{"error":{}}}"#, json::to_string(&e)),
         }
     }

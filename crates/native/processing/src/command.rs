@@ -934,6 +934,7 @@ fn record_of(
 }
 
 /// A batch's record (docs/adr/0529 §2): its rows are the steps, the layers they read are its inputs.
+#[allow(clippy::too_many_arguments)]
 fn batch_record(
     registry: &Registry,
     input: &ProcessingBatch,

@@ -29280,15 +29280,27 @@ class NamedView(_Model):
 @dataclass(kw_only=True, slots=True)
 class NetworkClosures(_Model):
     """The edge fields of a closure's first and last day (docs/adr/0567 §2): `YYYY-MM-DD`, both days in; an empty first
-    day closes from always, an empty last day until ever, both empty not at all.
+    day closes from always, an empty last day until ever. Its weekdays and hours (docs/adr/0568): an edge closed on
+    the days its weekday field names (`Pzt-Cum`, `Cmt, Paz`, `1-5`; empty: every day) and, when its hours field holds
+    any, only in those hours (`22:00-06:00`, `07:00-09:00, 17:00-19:00`; empty: the whole day). An edge whose four
+    values are all empty is not closed.
+    Attributes:
+        days: The edge field of the weekdays an edge is closed on (docs/adr/0568 §1).
+        hours: The edge field of the hours an edge is closed in (docs/adr/0568 §1).
     """
     from_: str
     to: str
+    days: str | None | Unset = UNSET
+    hours: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["from"] = self.from_
         out["to"] = self.to
+        if self.days is not UNSET:
+            out["days"] = self.days
+        if self.hours is not UNSET:
+            out["hours"] = self.hours
         return out
 
     @classmethod
@@ -29296,6 +29308,8 @@ class NetworkClosures(_Model):
         return cls(
             from_=data["from"],
             to=data["to"],
+            days=data.get("days", UNSET),
+            hours=data.get("hours", UNSET),
         )
 
 

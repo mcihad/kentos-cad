@@ -14,7 +14,8 @@
 //! naming the terminals, and the subnetworks' name field, attribute and reach.
 //! Vehicle profiles (docs/adr/0567): limits as `agirlik 18; yukseklik 4`,
 //! forbidding values as `tur = yaya, bisiklet`, a top speed and both ways;
-//! the closures' first and last day fields.
+//! the closures' first and last day fields, and their weekdays and hours
+//! fields (docs/adr/0568).
 
 use kentos_commands::{
     DeviceTerminal, JunctionLayer, JunctionRole, NETWORK_TOLERANCE, NetworkConnect, NetworkCost,
@@ -137,6 +138,9 @@ pub struct NetworkForm {
     /// Tarihli kapanmalar (docs/adr/0567 §2): the edge fields of a closure's first and last day; both empty, none.
     pub closure_from: String,
     pub closure_to: String,
+    /// The edge fields of a closure's weekdays and hours (docs/adr/0568 §1); empty, none.
+    pub closure_days: String,
+    pub closure_hours: String,
 }
 
 /// The attribute the subnetworks' names are written to when none is typed.
@@ -566,6 +570,16 @@ pub fn form_of(def: &NetworkDef, from_metres: impl Fn(f64) -> f64) -> NetworkFor
             .as_ref()
             .map(|c| c.to.clone())
             .unwrap_or_default(),
+        closure_days: def
+            .closures
+            .as_ref()
+            .and_then(|c| c.days.clone())
+            .unwrap_or_default(),
+        closure_hours: def
+            .closures
+            .as_ref()
+            .and_then(|c| c.hours.clone())
+            .unwrap_or_default(),
     }
 }
 
@@ -639,6 +653,8 @@ pub fn new_form(
         profiles: Vec::new(),
         closure_from: String::new(),
         closure_to: String::new(),
+        closure_days: String::new(),
+        closure_hours: String::new(),
     }
 }
 
@@ -809,9 +825,15 @@ pub fn def_of(form: &NetworkForm, to_metres: impl Fn(f64) -> f64) -> Result<Netw
             both_ways: p.both_ways,
         });
     }
+    let (days, hours) = (opt(&form.closure_days), opt(&form.closure_hours));
     let closures = match (opt(&form.closure_from), opt(&form.closure_to)) {
+        (None, None) if days.is_some() || hours.is_some() => {
+            return Err(format!(
+                "{who} kapanmasının günleri ve saatleri için ilk ve son gün alanı da yazılır."
+            ));
+        }
         (None, None) => None,
-        (Some(from), Some(to)) => Some(NetworkClosures { from, to }),
+        (Some(from), Some(to)) => Some(NetworkClosures { from, to, days, hours }),
         _ => {
             return Err(format!(
                 "{who} kapanmaları için ilk ve son gün alanı birlikte yazılır."
@@ -1046,6 +1068,8 @@ mod tests {
                 .collect(),
             closure_from: text(v, "closureFrom"),
             closure_to: text(v, "closureTo"),
+            closure_days: text(v, "closureDays"),
+            closure_hours: text(v, "closureHours"),
         }
     }
 

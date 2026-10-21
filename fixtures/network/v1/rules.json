@@ -10273,6 +10273,365 @@
       }
     },
     {
+      "name": "saatli kapanma",
+      "problem": null,
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "closures": {
+          "days": "kapanis_gun",
+          "from": "kapanis_bas",
+          "hours": "kapanis_saat",
+          "to": "kapanis_son"
+        },
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "saatli kapanma: yalnız günler",
+      "problem": null,
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "closures": {
+          "days": "kapanis_gun",
+          "from": "kapanis_bas",
+          "to": "kapanis_son"
+        },
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "saatli kapanma: gün alanı boş",
+      "problem": "“Yollar” ağının kapanmasının haftanın günleri alanı boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "closures": {
+          "days": "",
+          "from": "kapanis_bas",
+          "to": "kapanis_son"
+        },
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "saatli kapanma: saat alanı kırpılmamış",
+      "problem": "“Yollar” ağının kapanmasının saat alanı boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "closures": {
+          "from": "kapanis_bas",
+          "hours": "saat ",
+          "to": "kapanis_son"
+        },
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "saatli kapanma: saat alanı ilk günle aynı",
+      "problem": "“Yollar” ağının kapanmasının iki alanı aynı; her biri ayrı bir alan olmalı",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "closures": {
+          "from": "kapanis_bas",
+          "hours": "kapanis_bas",
+          "to": "kapanis_son"
+        },
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "saatli kapanma: gün ve saat alanı aynı",
+      "problem": "“Yollar” ağının kapanmasının iki alanı aynı; her biri ayrı bir alan olmalı",
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "closures": {
+          "days": "k",
+          "from": "kapanis_bas",
+          "hours": "k",
+          "to": "kapanis_son"
+        },
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "alt ağ özniteliği kapanmanın saat alanıyla aynı",
+      "problem": "“İçme suyu” ağının alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar; başka bir ad seçin",
+      "value": {
+        "closures": {
+          "from": "kapanis_bas",
+          "hours": "saat",
+          "to": "kapanis_son"
+        },
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "subnetworks": {
+          "attribute": "saat",
+          "name": "Ad",
+          "reach": "downstream"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
       "name": "alt ağ özniteliği profilin sınır alanıyla aynı",
       "problem": "“İçme suyu” ağının alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar; başka bir ad seçin",
       "value": {

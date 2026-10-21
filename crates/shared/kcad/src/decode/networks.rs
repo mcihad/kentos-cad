@@ -470,13 +470,15 @@ fn profiles(r: &mut Reader<'_>) -> Result<Vec<NetworkProfile>, KcadError> {
     Ok(all)
 }
 
-/// A network's dated closures (schema 95, docs/adr/0567 §2).
-fn closures(r: &mut Reader<'_>) -> Result<NetworkClosures, KcadError> {
-    let (mut from, mut to) = (None, None);
+/// A network's dated closures (schema 95, docs/adr/0567 §2), their weekdays and hours (schema 96, docs/adr/0568).
+fn closures(r: &mut Reader<'_>, timed: bool) -> Result<NetworkClosures, KcadError> {
+    let (mut from, mut to, mut days, mut hours) = (None, None, None, None);
     map(r, |r, key| {
         match key {
             "from" => from = Some(text(r)?),
             "to" => to = Some(text(r)?),
+            "days" if timed => days = Some(text(r)?),
+            "hours" if timed => hours = Some(text(r)?),
             _ => return Err(unknown(r)),
         }
         Ok(())
@@ -484,6 +486,8 @@ fn closures(r: &mut Reader<'_>) -> Result<NetworkClosures, KcadError> {
     Ok(NetworkClosures {
         from: required(r, from, "from")?,
         to: required(r, to, "to")?,
+        days,
+        hours,
     })
 }
 
@@ -494,6 +498,7 @@ pub(super) fn networks(
     termed: bool,
     kept: bool,
     profiled: bool,
+    timed: bool,
 ) -> Result<Vec<NetworkDef>, KcadError> {
     let at = r.position();
     let kinds = [
@@ -528,7 +533,7 @@ pub(super) fn networks(
                 "terminals" if termed => terminal_rules = Some(terminals(r, kept)?),
                 "subnetworks" if termed => subnet_rules = Some(subnetworks(r, kept)?),
                 "profiles" if profiled => profile_list = profiles(r)?,
-                "closures" if profiled => closure_fields = Some(closures(r)?),
+                "closures" if profiled => closure_fields = Some(closures(r, timed)?),
                 _ => return Err(unknown(r)),
             }
             Ok(())

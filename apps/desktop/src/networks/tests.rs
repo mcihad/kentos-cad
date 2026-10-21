@@ -277,6 +277,9 @@ fn screens() {
                         window(&mut app, Event::ProfileWays(1, 1));
                         window(&mut app, Event::ClosureField(0, "kapanis_bas".into()));
                         window(&mut app, Event::ClosureField(1, "kapanis_son".into()));
+                        // docs/adr/0568: the closure's weekdays and hours.
+                        window(&mut app, Event::ClosureField(2, "kapanis_gun".into()));
+                        window(&mut app, Event::ClosureField(3, "kapanis_saat".into()));
                         if name == "profil-yol" {
                             window(&mut app, Event::Save);
                             app.memory.network_profile =

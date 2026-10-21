@@ -2213,6 +2213,131 @@
     "closureFrom": "kapanis_bas"
    },
    "problem": "“Yollar” ağının kapanmaları için ilk ve son gün alanı birlikte yazılır."
+  },
+  {
+   "name": "saatli kapanma: dört alan",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "closureFrom": "kapanis_bas",
+    "closureTo": "kapanis_son",
+    "closureDays": " kapanis_gun ",
+    "closureHours": "kapanis_saat"
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "both"
+    },
+    "closures": {
+     "from": "kapanis_bas",
+     "to": "kapanis_son",
+     "days": "kapanis_gun",
+     "hours": "kapanis_saat"
+    }
+   }
+  },
+  {
+   "name": "saatli kapanma: yalnız saatler",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "closureFrom": "kapanis_bas",
+    "closureTo": "kapanis_son",
+    "closureHours": "saat"
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "both"
+    },
+    "closures": {
+     "from": "kapanis_bas",
+     "to": "kapanis_son",
+     "hours": "saat"
+    }
+   }
+  },
+  {
+   "name": "saatli kapanma: gün alanları yok",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "closureDays": "kapanis_gun"
+   },
+   "problem": "“Yollar” ağının kapanmasının günleri ve saatleri için ilk ve son gün alanı da yazılır."
   }
  ],
  "retype": [
@@ -3286,6 +3411,47 @@
    "closures": {
     "from": "kapanis_bas",
     "to": "kapanis_son"
+   }
+  },
+  {
+   "id": "ag-1",
+   "name": "Yollar",
+   "kind": "road",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "both"
+   },
+   "closures": {
+    "from": "kapanis_bas",
+    "to": "kapanis_son",
+    "days": "kapanis_gun",
+    "hours": "kapanis_saat"
+   }
+  },
+  {
+   "id": "ag-1",
+   "name": "Yollar",
+   "kind": "road",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "both"
+   },
+   "closures": {
+    "from": "kapanis_bas",
+    "to": "kapanis_son",
+    "hours": "saat"
    }
   }
  ]

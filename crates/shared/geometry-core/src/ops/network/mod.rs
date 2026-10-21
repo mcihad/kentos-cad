@@ -22,7 +22,7 @@ pub mod subnetworks;
 pub mod terminals;
 pub mod turns;
 
-pub use access::{Access, AccessRules, Closing, Varied, day_of};
+pub use access::{Access, AccessRules, ClosureRule, Closing, Varied, day_of, hours_of, weekday_of, weekdays_of};
 pub use check::{Checked, Problem, ProblemKind};
 pub use graph::{BuildReport, EdgeIn, Graph, JunctionIn, Location, Role};
 pub use route::Reorder;

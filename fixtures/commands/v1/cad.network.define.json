@@ -5428,6 +5428,480 @@
       ]
     },
     {
+      "name": "Değiştir: kapanmanın günleri ve saatleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "id": "ag-1",
+              "name": "Yollar",
+              "kind": "road",
+              "edges": [
+                {
+                  "layer": "yol"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.01,
+              "direction": {
+                "kind": "field",
+                "field": "yon",
+                "forward": [
+                  "FT"
+                ],
+                "backward": [
+                  "TF"
+                ],
+                "closed": [
+                  "N"
+                ]
+              },
+              "costs": [
+                {
+                  "name": "Süre",
+                  "kind": "speed",
+                  "field": "hiz",
+                  "speed": 50.0
+                }
+              ],
+              "closures": {
+                "from": "kapanis_bas",
+                "to": "kapanis_son",
+                "days": "kapanis_gun",
+                "hours": "kapanis_saat"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "networks": [
+                {
+                  "id": "ag-1",
+                  "name": "Yollar",
+                  "kind": "road",
+                  "edges": [
+                    {
+                      "layer": "yol"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.01,
+                  "direction": {
+                    "kind": "field",
+                    "field": "yon",
+                    "forward": [
+                      "FT"
+                    ],
+                    "backward": [
+                      "TF"
+                    ],
+                    "closed": [
+                      "N"
+                    ]
+                  },
+                  "costs": [
+                    {
+                      "name": "Süre",
+                      "kind": "speed",
+                      "field": "hiz",
+                      "speed": 50.0
+                    }
+                  ],
+                  "closures": {
+                    "from": "kapanis_bas",
+                    "to": "kapanis_son",
+                    "days": "kapanis_gun",
+                    "hours": "kapanis_saat"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ],
+                "closures": {
+                  "from": "kapanis_bas",
+                  "to": "kapanis_son",
+                  "days": "kapanis_gun",
+                  "hours": "kapanis_saat"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan ağ: saatli kapanma: gün alanı boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "closed": "durum = 'kapalı'",
+              "closures": {
+                "days": "",
+                "from": "kapanis_bas",
+                "to": "kapanis_son"
+              },
+              "connect": "ends",
+              "costs": [
+                {
+                  "field": "hiz",
+                  "kind": "speed",
+                  "name": "Süre",
+                  "speed": 50.0
+                },
+                {
+                  "field": "ucret",
+                  "kind": "field",
+                  "name": "Ücret",
+                  "unit": "TL"
+                }
+              ],
+              "direction": {
+                "backward": [
+                  "TF",
+                  "-1"
+                ],
+                "closed": [
+                  "N"
+                ],
+                "field": "yon",
+                "forward": [
+                  "FT",
+                  "1"
+                ],
+                "kind": "field"
+              },
+              "edges": [
+                {
+                  "filter": "tur <> 'yaya'",
+                  "layer": "yol"
+                }
+              ],
+              "id": "ag-1",
+              "kind": "road",
+              "name": "Yollar",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_network",
+              "message": "“Yollar” ağının kapanmasının haftanın günleri alanı boş, kırpılmamış ya da çok uzun",
+              "path": "network"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan ağ: saatli kapanma: saat alanı ilk günle aynı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "closed": "durum = 'kapalı'",
+              "closures": {
+                "from": "kapanis_bas",
+                "hours": "kapanis_bas",
+                "to": "kapanis_son"
+              },
+              "connect": "ends",
+              "costs": [
+                {
+                  "field": "hiz",
+                  "kind": "speed",
+                  "name": "Süre",
+                  "speed": 50.0
+                },
+                {
+                  "field": "ucret",
+                  "kind": "field",
+                  "name": "Ücret",
+                  "unit": "TL"
+                }
+              ],
+              "direction": {
+                "backward": [
+                  "TF",
+                  "-1"
+                ],
+                "closed": [
+                  "N"
+                ],
+                "field": "yon",
+                "forward": [
+                  "FT",
+                  "1"
+                ],
+                "kind": "field"
+              },
+              "edges": [
+                {
+                  "filter": "tur <> 'yaya'",
+                  "layer": "yol"
+                }
+              ],
+              "id": "ag-1",
+              "kind": "road",
+              "name": "Yollar",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_network",
+              "message": "“Yollar” ağının kapanmasının iki alanı aynı; her biri ayrı bir alan olmalı",
+              "path": "network"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan ağ: alt ağ özniteliği kapanmanın saat alanıyla aynı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "closures": {
+                "from": "kapanis_bas",
+                "hours": "saat",
+                "to": "kapanis_son"
+              },
+              "connect": "vertices",
+              "direction": {
+                "kind": "digitized"
+              },
+              "edges": [
+                {
+                  "layer": "su-hatti"
+                }
+              ],
+              "id": "ag-2",
+              "junctions": [
+                {
+                  "closed": "durum = 'kapalı'",
+                  "layer": "su-vana",
+                  "role": "valve"
+                },
+                {
+                  "layer": "su-depo",
+                  "role": "source"
+                },
+                {
+                  "filter": "tur = 'baglanti'",
+                  "layer": "su-vana",
+                  "role": "junction"
+                }
+              ],
+              "kind": "utility",
+              "name": "İçme suyu",
+              "subnetworks": {
+                "attribute": "saat",
+                "name": "Ad",
+                "reach": "downstream"
+              },
+              "tolerance": 0.005
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_network",
+              "message": "“İçme suyu” ağının alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar; başka bir ad seçin",
+              "path": "network"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "ağsız yazma",
       "steps": [
         {

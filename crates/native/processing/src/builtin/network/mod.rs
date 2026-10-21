@@ -178,6 +178,19 @@ pub fn run_network(
             date.unwrap_or_default()
         ));
     }
+    if varied.hours_unasked {
+        feedback.warn(format!(
+            "{}: {} kenarın saatli kapanması var; kalkış saati verilmedikçe uygulanmaz.",
+            def.name, varied.by_hours
+        ));
+    } else if varied.by_hours > 0 {
+        feedback.info(format!(
+            "{}: {} kenar {} haftasının bazı saatlerinde kapalı; süre bekleyerek ya da dolaşarak hesaplandı.",
+            def.name,
+            varied.by_hours,
+            date.unwrap_or_default()
+        ));
+    }
     if !varied.unread.is_empty() {
         feedback.warn(format!(
             "{}: {} kenarın sınır ya da kapanma değeri okunamadı; o değer kenarı kapatmadı.",

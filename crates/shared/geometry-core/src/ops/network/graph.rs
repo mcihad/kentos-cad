@@ -180,6 +180,9 @@ pub struct Location {
     pub d: f64,
 }
 
+/// The costs both ways and the clocks as defined, kept while a question varies them (docs/adr/0567 §4).
+type Defined = (Vec<f64>, Vec<f64>, Vec<Option<Clock>>);
+
 /// The graph.
 pub struct Graph {
     pub rules: Rules,
@@ -212,7 +215,7 @@ pub struct Graph {
     /// Each edge's profiles' and closures' values, when the definition has some (docs/adr/0567).
     facts: Vec<Vec<Option<String>>>,
     /// The costs and clocks as defined, kept while the graph is varied for a question's access.
-    base: Option<(Vec<f64>, Vec<f64>, Vec<Option<Clock>>)>,
+    base: Option<Defined>,
     /// The access the costs are for, and what varying them for it closed.
     access: Access,
     varied: Varied,
@@ -1108,7 +1111,7 @@ impl Graph {
         &self.varied
     }
 
-    fn vary_from(&mut self, access: Access, (fw0, bw0, clocks0): &(Vec<f64>, Vec<f64>, Vec<Option<Clock>>)) {
+    fn vary_from(&mut self, access: Access, (fw0, bw0, clocks0): &Defined) {
         self.access = access;
         self.varied = Varied::default();
         if access.is_none() {
@@ -1121,13 +1124,24 @@ impl Graph {
         let profile = access.profile.and_then(|i| rules.profiles.get(i));
         let (top, both) = profile.map_or((None, false), |p| (p.top_speed, p.both_ways));
         let mut closing = vec![Closing::Open; self.edges.len()];
+        // The hours each edge is closed in (docs/adr/0568), minutes of the access's week.
+        let mut windows: Vec<Vec<(f64, f64)>> = Vec::new();
+        let mut shut = Vec::new();
         for (i, c) in closing.iter_mut().enumerate() {
             let mut unread = false;
             let facts = self.facts.get(i).map_or(&[][..], Vec::as_slice);
-            *c = rules.closing(&access, facts, &mut unread);
+            shut.clear();
+            *c = rules.closing(&access, facts, &mut unread, &mut shut);
             match *c {
                 Closing::Profile => self.varied.by_profile += 1,
                 Closing::Date => self.varied.by_date += 1,
+                Closing::Hours => {
+                    self.varied.by_hours += 1;
+                    if windows.is_empty() {
+                        windows = vec![Vec::new(); self.edges.len()];
+                    }
+                    windows[i].clone_from(&shut);
+                }
                 Closing::Open => {}
             }
             let id = self.edges[i].id;
@@ -1139,10 +1153,20 @@ impl Graph {
         for (k, p) in self.pieces.iter().enumerate() {
             let e = p.edge as usize;
             let meta = &self.edges[e];
+            // With a time a cost without a clock passes none closed at the question's moment (docs/adr/0568 §2).
+            let shut_now = closing[e] == Closing::Hours
+                && access
+                    .time
+                    .is_some_and(|t| windows[e].iter().any(|w| w.0 <= t && t < w.1));
             for c in 0..n {
                 let at = k * n + c;
                 let (mut f, mut b) = (fw0[at], bw0[at]);
-                if closing[e] != Closing::Open {
+                let shut = match closing[e] {
+                    Closing::Open => false,
+                    Closing::Hours => shut_now && !self.rules.is_time(c),
+                    _ => true,
+                };
+                if shut {
                     f = f64::INFINITY;
                     b = f64::INFINITY;
                 } else {
@@ -1169,6 +1193,44 @@ impl Graph {
                 (k, _) => k.clone(),
             };
         }
+        self.varied.hours_unasked = self.varied.by_hours > 0 && access.time.is_none();
+        if self.varied.by_hours == 0 || access.time.is_none() {
+            return;
+        }
+        // A speed cost's clock through the week, at no speed in the edges' hours (docs/adr/0568 §3).
+        for c in 1..n {
+            if !self.rules.is_time(c) {
+                continue;
+            }
+            let speeds = self.edge_speeds(c);
+            let days: Vec<Vec<(f64, f64)>> = (0..self.edges.len())
+                .map(|e| match &self.clocks[c] {
+                    Some(k) => k.day_steps(e as u32),
+                    None => vec![(0.0, speeds[e])],
+                })
+                .collect();
+            self.clocks[c] = Some(Clock::week(&days, &windows));
+        }
+    }
+
+    /// Each edge's speed with time cost `c` as varied (metres a minute): a piece's length over its minutes, either
+    /// way; none (0) for an edge closed both ways.
+    fn edge_speeds(&self, c: usize) -> Vec<f64> {
+        let n = self.costs;
+        let mut speeds = vec![0.0; self.edges.len()];
+        for (k, p) in self.pieces.iter().enumerate() {
+            let e = p.edge as usize;
+            if speeds[e] > 0.0 {
+                continue;
+            }
+            if let Some(m) = [self.fw[k * n + c], self.bw[k * n + c]]
+                .into_iter()
+                .find(|m| m.is_finite() && *m > 0.0)
+            {
+                speeds[e] = p.len / m;
+            }
+        }
+        speeds
     }
 
     /// Piece `p`'s cost `c` travelled the way it is drawn (`forward`) or against it.

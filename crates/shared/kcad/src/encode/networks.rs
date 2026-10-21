@@ -283,7 +283,16 @@ impl<'d> Encoder<'d> {
                 self.close();
                 Ok(())
             }
-            V::Closures(c) => self.network_map(vec![("from", V::Text(&c.from)), ("to", V::Text(&c.to))]),
+            V::Closures(c) => {
+                let mut f = vec![("from", V::Text(&c.from)), ("to", V::Text(&c.to))];
+                if let Some(d) = &c.days {
+                    f.push(("days", V::Text(d)));
+                }
+                if let Some(h) = &c.hours {
+                    f.push(("hours", V::Text(h)));
+                }
+                self.network_map(f)
+            }
             V::Texts(list) => {
                 self.open(list.len(), false)?;
                 for (i, t) in list.iter().enumerate() {

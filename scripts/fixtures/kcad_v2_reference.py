@@ -1099,7 +1099,9 @@ def network(n):
         "subnetworks": (network_subnetworks, False),
         # Schema 95 (docs/adr/0567): vehicle profiles and dated closures.
         "profiles": (nonempty(network_profile), False),
-        "closures": (lambda c: cmap(fields(c, {"from": (text, True), "to": (text, True)}, "kapanmalar")), False),
+        # Schema 96 (docs/adr/0568): a closure's weekdays and hours.
+        "closures": (lambda c: cmap(fields(c, {"from": (text, True), "to": (text, True), "days": (text, False),
+                                               "hours": (text, False)}, "kapanmalar")), False),
     }
     return cmap(fields(n, table, f"ağ {n.get('id')}"))
 
@@ -2191,6 +2193,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 96 (docs/adr/0568): a closure's weekdays or hours.
+    if any("days" in n.get("closures", {}) or "hours" in n.get("closures", {}) for n in (settings or {}).get("networks", [])):
+        return 96
     # Schema 95 (docs/adr/0567): a network's vehicle profiles or dated closures.
     if any("profiles" in n or "closures" in n for n in (settings or {}).get("networks", [])):
         return 95
@@ -2756,7 +2761,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-96.kcad"] = container(root(cmap(parts), version=uint(96)))
+    files["schema-version-97.kcad"] = container(root(cmap(parts), version=uint(97)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3718,6 +3723,15 @@ def broken(minimal_content, minimal_file):
     files["network-closures-same-field.kcad"] = networked([dated("kapanis", "kapanis")], schema=95)
     files["network-closures-blank.kcad"] = networked([dated(" ", "kapanis_son")], schema=95)
 
+    # A closure's weekdays and hours are schema 96's (docs/adr/0568): in schema 95 unknown fields; a blank field and
+    # two fields alike refused.
+    timed = lambda **x: net(closures=cmap({"from": text("kapanis_bas"), "to": text("kapanis_son"), **x}))  # noqa: E731
+    files["network-closure-days-in-schema-95.kcad"] = networked([timed(days=text("gunler"))], schema=95)
+    files["network-closure-hours-in-schema-95.kcad"] = networked([timed(hours=text("saatler"))], schema=95)
+    files["network-closure-days-blank.kcad"] = networked([timed(days=text(""))], schema=96)
+    files["network-closure-hours-untrimmed.kcad"] = networked([timed(hours=text("saatler "))], schema=96)
+    files["network-closure-hours-same-as-day.kcad"] = networked([timed(days=text("gunler"), hours=text("kapanis_bas"))], schema=96)
+
     # The project's address data is schema 42's (docs/adr/0229 §2): in schema 41 an unknown field; every rule of the
     # contract's `address_locators_problem` broken one at a time; an empty list, an empty area list and a field's empty
     # name refused as such.
@@ -4188,6 +4202,7 @@ def build():
     out["network-terminals.kcad"] = container(document(load("network-terminals.json")))
     out["network-configs.kcad"] = container(document(load("network-configs.json")))
     out["network-profiles.kcad"] = container(document(load("network-profiles.json")))
+    out["network-timed-closures.kcad"] = container(document(load("network-timed-closures.json")))
     out["scenarios.kcad"] = container(document(load("scenarios.json")))
     out["filters.kcad"] = container(document(load("filters.json")))
     out["labels.kcad"] = container(document(load("labels.json")))

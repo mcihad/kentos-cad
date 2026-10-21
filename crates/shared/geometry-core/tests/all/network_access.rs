@@ -118,3 +118,45 @@ fn no_access_is_the_network_as_defined() {
     let after = s.route(&stops, &[], 1.0, 1, Reorder::None).expect("a way");
     assert_eq!(after, before);
 }
+
+/// A closure's weekdays and hours (docs/adr/0568) against fixtures/network/v1/timed-closures.json
+/// (`scripts/fixtures/network_timed_closures_cases.py`: an earliest-arrival Dijkstra stepping through the speed's
+/// changes and the windows, no KentOS code): what each access closed and could not read, whether the hours went
+/// unasked, the cheapest way's cost, length and minutes.
+#[test]
+fn weekdays_and_hours_give_what_the_independent_reference_gives() {
+    let path = format!(
+        "{}/../../../fixtures/network/v1/timed-closures.json",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let file: Value =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("the fixture")).expect("JSON");
+    assert_eq!(file["format"], "kentos.network-timed-closures");
+    let mut s = session(&file);
+    let cases = file["cases"].as_array().expect("cases");
+    assert_eq!(cases.len(), 18);
+    for round in 0..2 {
+        for c in cases {
+            let name = c["name"].as_str().expect("a name");
+            s.set_access(None, c["day"].as_str())
+                .unwrap_or_else(|e| panic!("{name}: {e}"));
+            let varied = s.set_time(c["time"].as_f64());
+            assert_eq!(varied.by_date as u64, c["byDate"].as_u64().unwrap(), "{name}");
+            assert_eq!(varied.by_hours as u64, c["byHours"].as_u64().unwrap(), "{name}");
+            assert_eq!(varied.hours_unasked, c["hoursUnasked"].as_bool().unwrap(), "{name}");
+            let unread: Vec<f64> = c["unread"].as_array().unwrap().iter().map(num).collect();
+            assert_eq!(varied.unread, unread, "{name}");
+            let stops = [point(&c["from"]), point(&c["to"])];
+            let cost = c["cost"].as_u64().unwrap() as usize;
+            let got = s.route(&stops, &[], 1.0, cost, Reorder::None);
+            if c["unreachable"].as_bool() == Some(true) {
+                assert_eq!(got.err(), Some(Refusal::Unreachable(0, 1)), "{name}");
+                continue;
+            }
+            let r = got.unwrap_or_else(|e| panic!("{name} ({round}): {e:?}"));
+            near(r.cost, num(&c["total"]), name);
+            near(r.totals[0].expect("a length"), num(&c["totals"][0]), name);
+            near(r.totals[1].expect("minutes"), num(&c["totals"][1]), name);
+        }
+    }
+}

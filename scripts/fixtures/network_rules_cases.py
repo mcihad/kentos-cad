@@ -298,6 +298,13 @@ NETWORKS = [
     ("tarihli kapanma", changed(road(), set_("closures", {"from": "kapanis_bas", "to": "kapanis_son"}))),
     ("tarihli kapanma: alanlar aynı", changed(road(), set_("closures", {"from": "kapanis", "to": "kapanis"}))),
     ("tarihli kapanma: alan boş", changed(road(), set_("closures", {"from": "", "to": "kapanis_son"}))),
+    ("saatli kapanma", changed(road(), set_("closures", {"from": "kapanis_bas", "to": "kapanis_son", "days": "kapanis_gun", "hours": "kapanis_saat"}))),
+    ("saatli kapanma: yalnız günler", changed(road(), set_("closures", {"from": "kapanis_bas", "to": "kapanis_son", "days": "kapanis_gun"}))),
+    ("saatli kapanma: gün alanı boş", changed(road(), set_("closures", {"from": "kapanis_bas", "to": "kapanis_son", "days": ""}))),
+    ("saatli kapanma: saat alanı kırpılmamış", changed(road(), set_("closures", {"from": "kapanis_bas", "to": "kapanis_son", "hours": "saat "}))),
+    ("saatli kapanma: saat alanı ilk günle aynı", changed(road(), set_("closures", {"from": "kapanis_bas", "to": "kapanis_son", "hours": "kapanis_bas"}))),
+    ("saatli kapanma: gün ve saat alanı aynı", changed(road(), set_("closures", {"from": "kapanis_bas", "to": "kapanis_son", "days": "k", "hours": "k"}))),
+    ("alt ağ özniteliği kapanmanın saat alanıyla aynı", changed(water(), lambda n: (set_("closures", {"from": "kapanis_bas", "to": "kapanis_son", "hours": "saat"})(n), set_("subnetworks", subnets(attribute="saat"))(n)))),
     ("alt ağ özniteliği profilin sınır alanıyla aynı", changed(water(), lambda n: (set_("profiles", [truck()])(n), set_("subnetworks", subnets(attribute="agirlik"))(n)))),
     ("alt ağ özniteliği kapanmanın alanıyla aynı", changed(water(), lambda n: (set_("closures", {"from": "kapanis_bas", "to": "kapanis_son"})(n), set_("subnetworks", subnets(attribute="kapanis_son"))(n)))),
 ]

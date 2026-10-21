@@ -198,6 +198,15 @@ def cases():
                   "tarihli kapanma: alanlar aynı", "alt ağ özniteliği profilin sınır alanıyla aynı"):
         value, words = rule_words(title)
         out.append(refused(f"kuralına uymayan ağ: {title}", {"operation": "set", "network": value}, "invalid_network", words, "network"))
+    # Docs/adr/0568: a closure's weekdays and hours.
+    timed = {**ROADS, "closures": {"from": "kapanis_bas", "to": "kapanis_son", "days": "kapanis_gun", "hours": "kapanis_saat"}}
+    out.append({
+        "name": "Değiştir: kapanmanın günleri ve saatleri",
+        "steps": [step("execute", {"operation": "set", "network": timed}, completed({"networks": [timed], "revision": "$current"}), {**WRITTEN, "networks": [timed]})],
+    })
+    for title in ("saatli kapanma: gün alanı boş", "saatli kapanma: saat alanı ilk günle aynı", "alt ağ özniteliği kapanmanın saat alanıyla aynı"):
+        value, words = rule_words(title)
+        out.append(refused(f"kuralına uymayan ağ: {title}", {"operation": "set", "network": value}, "invalid_network", words, "network"))
     out.append(refused("ağsız yazma", {"operation": "set"}, "no_network", "Yazılacak ağ (network) verilmedi; ağın tanımını verin.", "network"))
     out.append(refused("kimliksiz silme", {"operation": "remove"}, "no_id", "Silinecek ağın kimliğini (id) verin.", "id"))
     out.append(refused("boş kimlikle silme", {"operation": "remove", "id": ""}, "no_id", "Silinecek ağın kimliğini (id) verin.", "id"))

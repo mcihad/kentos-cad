@@ -212,11 +212,14 @@ def def_of(form, unit):
         profiles.append({"name": pname, **({"limits": limits} if limits else {}), **({"forbidden": forbidden} if forbidden else {}),
                          **({"topSpeed": speed} if speed is not None else {}), **({"bothWays": True} if p.get("bothWays") else {})})
     c_from, c_to = form.get("closureFrom", "").strip(), form.get("closureTo", "").strip()
+    c_days, c_hours = form.get("closureDays", "").strip(), form.get("closureHours", "").strip()
     closures = None
     if c_from and c_to:
-        closures = {"from": c_from, "to": c_to}
+        closures = {"from": c_from, "to": c_to, **opt("days", c_days), **opt("hours", c_hours)}
     elif c_from or c_to:
         return {"problem": f"{who} kapanmaları için ilk ve son gün alanı birlikte yazılır."}
+    elif c_days or c_hours:
+        return {"problem": f"{who} kapanmasının günleri ve saatleri için ilk ve son gün alanı da yazılır."}
 
     d = {"id": form["id"], "name": name, "kind": form["kind"], "edges": [{"layer": e["layer"], **opt("filter", e["filter"])} for e in form["edges"]]}
     if form["junctions"]:
@@ -329,6 +332,11 @@ def cases():
     add("araç profili: hız sayı değil", form(profiles=[{**truck, "topSpeed": "hızlı"}]))
     add("tarihli kapanma: iki alan", form(closureFrom=" kapanis_bas ", closureTo="kapanis_son"))
     add("tarihli kapanma: yalnız ilk gün", form(closureFrom="kapanis_bas"))
+    # A closure's weekdays and hours (docs/adr/0568).
+    add("saatli kapanma: dört alan", form(closureFrom="kapanis_bas", closureTo="kapanis_son", closureDays=" kapanis_gun ",
+                                          closureHours="kapanis_saat"))
+    add("saatli kapanma: yalnız saatler", form(closureFrom="kapanis_bas", closureTo="kapanis_son", closureHours="saat"))
+    add("saatli kapanma: gün alanları yok", form(closureDays="kapanis_gun"))
     return out
 
 

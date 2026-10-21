@@ -282,9 +282,10 @@ class Network:
         self._time: str | None = None
         self._profile: str | None = None
         self._date: str | None = None
-        #: What the profile and the date closed (docs/adr/0567): ``byProfile`` and ``byDate`` edges, and the edge
-        #: objects whose limit or closure value could not be read (``unread``).
-        self.closed: dict[str, Any] = {"byProfile": 0, "byDate": 0, "unread": []}
+        #: What the profile, the date and the time closed (docs/adr/0567, 0568): ``byProfile`` and ``byDate`` edges,
+        #: ``byHours`` edges closed in hours of the date's week, ``hoursUnasked`` when those hours went unread for want
+        #: of a time, and the edge objects whose limit or closure value could not be read (``unread``).
+        self.closed: dict[str, Any] = {"byProfile": 0, "byDate": 0, "byHours": 0, "hoursUnasked": False, "unread": []}
 
     def _access(self, profile: str | None, date: str | None) -> None:
         a = json.loads(self._native.set_access(profile, date))
@@ -316,13 +317,14 @@ class Network:
     @property
     def time(self) -> str | None:
         """Saat (docs/adr/0521 §4): the time of day the questions set off at, ``"07:30"``; ``None``, every hour alike.
-        A speed cost with a time profile reads it; a network without one says so and answers as before."""
+        A speed cost with a time profile reads it, and with a date so do closures with hours (docs/adr/0568: the time
+        goes at no speed in them, the length passes none closed at that moment); otherwise answers are as before."""
         return self._time
 
     @time.setter
     def time(self, value: str | None) -> None:
         if value is None:
-            self._native.set_time(None)
+            self.closed = json.loads(self._native.set_time(None))
             self._time = None
             return
         h, _, m = str(value).strip().replace(".", ":").partition(":")
@@ -331,7 +333,7 @@ class Network:
         minutes = int(h) * 60 + int(m or 0)
         if int(m or 0) >= 60 or minutes > 1440:
             raise NetworkError(f"“{value}” günün bir saati değil (00:00–24:00).")
-        self._native.set_time(float(minutes))
+        self.closed = json.loads(self._native.set_time(float(minutes)))
         self._time = f"{minutes // 60:02d}:{minutes % 60:02d}"
 
     def __repr__(self) -> str:

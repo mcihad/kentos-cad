@@ -559,11 +559,14 @@ pub const SCHEMA_WITH_NETWORK_CONFIGS: u32 = 94;
 /// Schema 95 (docs/adr/0567): a network's vehicle `profiles` (limits, forbidding values, top speed, both ways) and
 /// dated `closures` (the edge fields of a closure's first and last day), written only when a network has one.
 pub const SCHEMA_WITH_NETWORK_PROFILES: u32 = 95;
+/// Schema 96 (docs/adr/0568): a network closure's `days` and `hours` (the edge fields of the weekdays and the hours
+/// an edge is closed), written only when a closure names one.
+pub const SCHEMA_WITH_TIMED_CLOSURES: u32 = 96;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 94] = [
+pub const SCHEMAS: [u32; 95] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -658,6 +661,7 @@ pub const SCHEMAS: [u32; 94] = [
     SCHEMA_WITH_NETWORK_TERMINALS,
     SCHEMA_WITH_NETWORK_CONFIGS,
     SCHEMA_WITH_NETWORK_PROFILES,
+    SCHEMA_WITH_TIMED_CLOSURES,
 ];
 
 /// The file a drawing is saved as.

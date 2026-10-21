@@ -1800,6 +1800,16 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || recorded(&n.children)
         })
     }
+    // Schema 96 (docs/adr/0568): a closure's weekdays or hours.
+    if doc
+        .settings
+        .networks
+        .iter()
+        .filter_map(|n| n.closures.as_ref())
+        .any(|c| c.days.is_some() || c.hours.is_some())
+    {
+        return crate::SCHEMA_WITH_TIMED_CLOSURES;
+    }
     // Schema 95 (docs/adr/0567): a network's vehicle profiles or dated closures.
     if doc
         .settings

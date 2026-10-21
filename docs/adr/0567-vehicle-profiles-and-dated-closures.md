@@ -7,7 +7,7 @@
 - **Web:** ertelendi (ADR 0228). Web'de gerekenler TODOS.md §0.2'de.
 - **Sonraya kalan:**
   - Haftanın günlerine ya da saat aralığına bağlı kapanma (pazar günleri pazar yeri, gece kapanan köprü). Bu dilimin kapanması
-    gün gündür; saat ADR 0521'in zaman profilinde kalır.
+    gün gündür; saat ADR 0521'in zaman profilinde kalır. (Yapıldı: [ADR 0568](0568-weekday-and-hour-closures.md).)
   - Dış yönlendirici (Valhalla, OSRM) bağdaştırıcısı: bölgesel ölçek ihtiyacı ölçülünce.
   - Bağlı katmanın (GeoPackage, PostGIS) revizyonu değişince grafın ve maliyetlerinin yenilenmesi: bugün masaüstü ağı çizim
     değişince yeniden kurar; bağlı kaynağın sürümü ayrıca izlenmiyor.

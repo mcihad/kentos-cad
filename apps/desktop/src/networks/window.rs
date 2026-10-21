@@ -226,7 +226,7 @@ pub enum Event {
     ProfileRemove(usize),
     ProfileText(usize, usize, String),
     ProfileWays(usize, usize),
-    /// A closure's first and last day field (docs/adr/0567 §2).
+    /// A closure's first and last day field (docs/adr/0567 §2), its weekdays and hours field (docs/adr/0568).
     ClosureField(usize, String),
     Builder(Field),
     Check,
@@ -1327,6 +1327,24 @@ impl App {
             );
         }
         form = form.push(labelled("Tarihli kapanma", days.into()));
+        let mut when = row![].spacing(6).align_y(Center);
+        for (slot, (hint, typed)) in [
+            ("günlerin alanı: kapanis_gun (Pzt-Cum)", &f.closure_days),
+            ("saatlerin alanı: kapanis_saat (22:00-06:00)", &f.closure_hours),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            when = when.push(
+                container(input(
+                    hint,
+                    typed,
+                    Box::new(move |t| Event::ClosureField(slot + 2, t)),
+                ))
+                .width(Length::FillPortion(1)),
+            );
+        }
+        form = form.push(labelled("Gün ve saat", when.into()));
         // Closed edges.
         form = form.push(head("Kapalı kenarlar", None));
         form = form.push(labelled(
@@ -1793,7 +1811,9 @@ fn edit(f: &mut NetworkForm, e: Event, layers: &[(String, String)]) {
             }
         }
         Event::ClosureField(0, t) => f.closure_from = t,
-        Event::ClosureField(_, t) => f.closure_to = t,
+        Event::ClosureField(1, t) => f.closure_to = t,
+        Event::ClosureField(2, t) => f.closure_days = t,
+        Event::ClosureField(_, t) => f.closure_hours = t,
         Event::SubnetName(t) => f.subnet_name = t,
         Event::SubnetAttribute(t) => f.subnet_attribute = t,
         _ => {}

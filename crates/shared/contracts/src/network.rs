@@ -190,7 +190,10 @@ pub struct ProfileForbid {
 }
 
 /// The edge fields of a closure's first and last day (docs/adr/0567 §2): `YYYY-MM-DD`, both days in; an empty first
-/// day closes from always, an empty last day until ever, both empty not at all.
+/// day closes from always, an empty last day until ever. Its weekdays and hours (docs/adr/0568): an edge closed on
+/// the days its weekday field names (`Pzt-Cum`, `Cmt, Paz`, `1-5`; empty: every day) and, when its hours field holds
+/// any, only in those hours (`22:00-06:00`, `07:00-09:00, 17:00-19:00`; empty: the whole day). An edge whose four
+/// values are all empty is not closed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -199,6 +202,23 @@ pub struct ProfileForbid {
 pub struct NetworkClosures {
     pub from: String,
     pub to: String,
+    /// The edge field of the weekdays an edge is closed on (docs/adr/0568 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub days: Option<String>,
+    /// The edge field of the hours an edge is closed in (docs/adr/0568 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub hours: Option<String>,
+}
+
+impl NetworkClosures {
+    /// The edge fields it reads, in its order: the first and last day, then the weekdays and the hours it names.
+    pub fn fields(&self) -> impl Iterator<Item = &str> {
+        [Some(self.from.as_str()), Some(self.to.as_str()), self.days.as_deref(), self.hours.as_deref()]
+            .into_iter()
+            .flatten()
+    }
 }
 
 /// The terminals of a network's devices (docs/adr/0557 §1): the edge fields naming the terminal an edge's start and
@@ -813,6 +833,16 @@ impl NetworkDef {
             if c.from == c.to {
                 return Some(at("tarihli kapanmasının ilk ve son gün alanı aynı; iki ayrı alan olmalı"));
             }
+            if c.days.as_deref().is_some_and(field_bad) {
+                return Some(at("kapanmasının haftanın günleri alanı boş, kırpılmamış ya da çok uzun"));
+            }
+            if c.hours.as_deref().is_some_and(field_bad) {
+                return Some(at("kapanmasının saat alanı boş, kırpılmamış ya da çok uzun"));
+            }
+            let fields: Vec<&str> = c.fields().collect();
+            if fields.iter().enumerate().any(|(i, f)| fields[..i].contains(f)) {
+                return Some(at("kapanmasının iki alanı aynı; her biri ayrı bir alan olmalı"));
+            }
         }
         if let Some(s) = &self.subnetworks
             && let Some(p) = self.subnetworks_problem(s)
@@ -1026,9 +1056,7 @@ impl NetworkDef {
                     .chain(p.forbidden.iter().map(|f| f.field.as_str()))
             }))
             .chain(
-                self.closures
-                    .iter()
-                    .flat_map(|c| [c.from.as_str(), c.to.as_str()]),
+                self.closures.iter().flat_map(NetworkClosures::fields),
             )
             .collect();
         reads
@@ -1036,9 +1064,11 @@ impl NetworkDef {
             .then(|| "alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar; başka bir ad seçin".into())
     }
 
-    /// Whether a question about the network may give a time: one of its speed costs has a time profile.
+    /// Whether a question about the network may give a time: one of its speed costs has a time profile, or its
+    /// closures have hours (docs/adr/0568).
     pub fn timed(&self) -> bool {
         self.costs.iter().any(|c| !c.periods.is_empty())
+            || self.closures.as_ref().is_some_and(|c| c.hours.is_some())
     }
 
     /// The names of its costs in the tools' order: the length first.
@@ -1562,8 +1592,27 @@ mod tests {
         let same = NetworkClosures {
             from: "k".into(),
             to: "k".into(),
+            days: None,
+            hours: None,
         };
         assert!(with(Vec::new(), Some(same)).problem().unwrap().contains("aynı"));
+        let weekly = NetworkClosures {
+            from: "a".into(),
+            to: "b".into(),
+            days: Some("gunler".into()),
+            hours: Some("saatler".into()),
+        };
+        assert_eq!(with(Vec::new(), Some(weekly.clone())).problem(), None);
+        let twice = NetworkClosures {
+            hours: Some("a".into()),
+            ..weekly.clone()
+        };
+        assert!(with(Vec::new(), Some(twice)).problem().unwrap().contains("iki alanı aynı"));
+        let blank = NetworkClosures {
+            days: Some(" gunler".into()),
+            ..weekly
+        };
+        assert!(with(Vec::new(), Some(blank)).problem().unwrap().contains("haftanın günleri"));
         let def = with(vec![kamyon()], None);
         assert_eq!(def.profile("kamyon").map(|p| p.name.as_str()), Some("Kamyon"));
         assert!(def.profile("Yaya").is_none());

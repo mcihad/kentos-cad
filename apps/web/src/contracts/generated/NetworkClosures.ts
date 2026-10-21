@@ -2,6 +2,17 @@
 
 /**
  * The edge fields of a closure's first and last day (docs/adr/0567 §2): `YYYY-MM-DD`, both days in; an empty first
- * day closes from always, an empty last day until ever, both empty not at all.
+ * day closes from always, an empty last day until ever. Its weekdays and hours (docs/adr/0568): an edge closed on
+ * the days its weekday field names (`Pzt-Cum`, `Cmt, Paz`, `1-5`; empty: every day) and, when its hours field holds
+ * any, only in those hours (`22:00-06:00`, `07:00-09:00, 17:00-19:00`; empty: the whole day). An edge whose four
+ * values are all empty is not closed.
  */
-export type NetworkClosures = { from: string, to: string, };
+export type NetworkClosures = { from: string, to: string, 
+/**
+ * The edge field of the weekdays an edge is closed on (docs/adr/0568 §1).
+ */
+days?: string, 
+/**
+ * The edge field of the hours an edge is closed in (docs/adr/0568 §1).
+ */
+hours?: string, };

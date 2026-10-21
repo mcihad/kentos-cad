@@ -12271,7 +12271,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 45,
+   "cases": 49,
    "files": [
     "fixtures/commands/v1/cad.network.define.json"
    ],

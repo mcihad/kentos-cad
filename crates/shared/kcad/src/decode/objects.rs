@@ -251,6 +251,8 @@ pub(super) struct Features {
     pub(super) network_terminals: bool,
     pub(super) network_configs: bool,
     pub(super) network_profiles: bool,
+    /// Schema 96: a closure's weekdays and hours (docs/adr/0568).
+    pub(super) timed_closures: bool,
     /// Schema 88: a raster's georeference record (docs/adr/0518 §1).
     pub(super) georef: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
@@ -410,6 +412,7 @@ impl Features {
             network_terminals: schema >= crate::SCHEMA_WITH_NETWORK_TERMINALS,
             network_configs: schema >= crate::SCHEMA_WITH_NETWORK_CONFIGS,
             network_profiles: schema >= crate::SCHEMA_WITH_NETWORK_PROFILES,
+            timed_closures: schema >= crate::SCHEMA_WITH_TIMED_CLOSURES,
             georef: schema >= crate::SCHEMA_WITH_GEOREF,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
