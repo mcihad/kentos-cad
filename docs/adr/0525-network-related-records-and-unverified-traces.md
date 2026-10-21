@@ -64,3 +64,13 @@ sonucu uyarı düzeyinde, ağın Ağlar › Denetle ile düzeltilmesini söyleye
   söylenir. Ağ izleri değişmeden geçer.
 - Resim: `KENTOS_SHOTS_ONLY=iz-abone cargo test -p kentos-desktop networks::tests::screens -- --ignored --nocapture`
   (`.run/shots/aglar-iz-abone-*`).
+
+## Ek (21 Ekim 2026): ilk izlemenin süresi
+
+`network::timing`'in “izleme, bağlı” satırı ADR 0525'ten beri 72 ms ölçüyordu (bütçe 20 ms, ADR 0209 §12). Bu bir gerileme
+değildi: oturumun ilk izlemesi, doğrulanmamış bağlantıları söylemek için ağın Denetle'sini (§2) bir kez yapar ve saklar. Ölçüm bu
+tek seferlik işi de sayıyordu. Ölçüm artık iki satırdır:
+- ilk izleme, Denetle'yle birlikte: 72,8 ms; etkileşimin 100 ms'lik bütçesiyle;
+- sonraki izleme: 8,3 ms; ADR 0209'un 20 ms'lik bütçesiyle.
+
+İzlemenin dokunduğu düğümlerin kümesi de bir karma küme yerine düğüm başına bayrak oldu.

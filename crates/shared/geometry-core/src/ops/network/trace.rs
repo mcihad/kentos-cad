@@ -155,8 +155,12 @@ pub fn trace(g: &Graph, starts: &[Location], barriers: &[Location], kind: TraceK
     let mut valves: HashSet<u32> = HashSet::new();
     let mut edge_seen = vec![false; g.edges.len()];
     let mut next_nodes: Vec<(u32, u32, bool, u8)> = Vec::new();
-    // Every node a stretch reached (a closed junction and a barrier too, reached but not passed).
-    let mut touched: HashSet<u32> = start_nodes.iter().copied().collect();
+    // Every node a stretch reached (a closed junction and a barrier too, reached but not passed); flags, not a set:
+    // a trace steps through every node (docs/adr/0209 §12's 20 ms).
+    let mut touched = vec![false; places.count()];
+    for &n in &start_nodes {
+        touched[n as usize] = true;
+    }
     while let Some((n, from)) = queue.pop_front() {
         next_nodes.clear();
         places.steps(g, n, |next, piece, forward, _| {
@@ -174,7 +178,7 @@ pub fn trace(g: &Graph, starts: &[Location], barriers: &[Location], kind: TraceK
             } else {
                 taken.insert((piece, lo.to_bits(), hi.to_bits()))
             };
-            touched.insert(next);
+            touched[next as usize] = true;
             if fresh {
                 out.spans.push(Span { piece, a, b });
                 out.length += hi - lo;
@@ -201,7 +205,7 @@ pub fn trace(g: &Graph, starts: &[Location], barriers: &[Location], kind: TraceK
         .junctions
         .iter()
         .enumerate()
-        .filter(|(_, j)| j.node.is_some_and(|n| touched.contains(&n)))
+        .filter(|(_, j)| j.node.is_some_and(|n| touched[n as usize]))
         .map(|(k, _)| k as u32)
         .collect();
     if kind == TraceKind::Isolation {

@@ -622,6 +622,17 @@ fn timing() {
         30.0,
     );
 
+    // The first trace checks the network once for the connections it says are unverified (docs/adr/0525 §2) and
+    // keeps the check; a trace after it is the trace alone (ADR 0209 §12's 20 ms).
+    let t = Instant::now();
+    let traced = net
+        .trace_of(&[middle], &[], 30.0, TraceKind::Connected)
+        .expect("a trace");
+    row(
+        &format!("ilk izleme, ağın Denetle'siyle ({} nesne)", traced.objects.len()),
+        t.elapsed().as_secs_f64() * 1e3,
+        100.0,
+    );
     let t = Instant::now();
     let traced = net
         .trace_of(&[middle], &[], 30.0, TraceKind::Connected)
