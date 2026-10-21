@@ -426,6 +426,24 @@ pub fn positions(extent: (f64, f64), step: Step) -> Option<(f64, i64)> {
     (k <= MAX_POSITIONS).then_some((anchor, k))
 }
 
+/// The position whose moment is nearest `t` among the slider's `0 … last` (the earlier of two as near).
+pub fn nearest(anchor: f64, step: Step, last: i64, t: f64) -> i64 {
+    let (mut lo, mut hi) = (0, last);
+    while lo < hi {
+        let mid = (lo + hi) / 2;
+        if position(anchor, step, mid) < t {
+            lo = mid + 1;
+        } else {
+            hi = mid;
+        }
+    }
+    if lo > 0 && t - position(anchor, step, lo - 1) <= position(anchor, step, lo) - t {
+        lo - 1
+    } else {
+        lo
+    }
+}
+
 /// The step a slider opens with (§5): the first of year, month, day, hour,
 /// minute and second that cuts the extent into at least 5 steps; else a second.
 pub fn auto_step(extent: (f64, f64)) -> Step {

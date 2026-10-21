@@ -425,7 +425,7 @@
       "title": "Görünümleri bağla",
       "short": "Bağla",
       "icon": "viewSplitLink",
-      "description": "Bölünmüş çizim alanında öbür görünüm etkin görünümün merkezini, ölçeğini ve dönüklüğünü izler; her görünüm kendi temasıyla (projenin bir katman durumu) aynı yeri gösterir. Yeniden basmak görünümleri bağımsız bırakır. Çizim alanı bölünmemişse önce böler.",
+      "description": "Bölünmüş çizim alanında öbür görünüm etkin görünümü izler: yalnız merkezi, merkezi ve ölçeği (dönüklükle) ya da hiçbirini; her görünümün ölçeği çipinde yazar. Her görünümün kendi teması (projenin bir katman durumu), zaman sürgüsü açıkken kendi zamanı ve öbür görünümde başka bir revizyon (geri alma geçmişi, çizim dosyası, sunucudaki revizyon) olabilir; revizyon salt okunur, değişenler işaretlidir. Yeniden basmak görünümleri bağımsız bırakır. Çizim alanı bölünmemişse önce böler.",
       "aliases": [
         "GORUNUMBAGLA",
         "GÖRÜNÜMBAĞLA"

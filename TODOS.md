@@ -363,6 +363,11 @@ Liste:
 - [ ] `CBS-19` bağlı görünümler ve tema (ADR 0523, 19 Ekim): web'de gerekenler: web'in bölünmüş görünümü yok; geri dönüşte iki
   görünüm, görünüm başına tema (katman durumunun ağaç kopyası), Bağla ve kaydırmalı karşılaştırma; depo `labels_shown_in`'i
   WASM bağlayıcısına açar.
+- [ ] `CBS-19` görünüm başına zaman, ölçek bağı ve revizyonlar (ADR 0576, 21 Ekim): web'de gerekenler: web'in bölünmüş görünümü yok;
+  geri dönüşte `Store::with_window`'un WASM karşılığı (görünüm başına pencere), `tools::view_link` (`follow`, `screen_scale`,
+  `own_window`, `own_step`) ve `time::nearest`'ın WASM çağrıları, görünüm başına zaman çipi ve bağ kipi, ikinci görünümde revizyon
+  (geri alma geçmişi, dosya, sunucudaki revizyon: indirilen `.kcad`'in ikinci görünümde açılması) ve `cad.drawing.compare`'in işleyicisi
+  (`kentos_native_application::drawing_compare::diff`'in bağlayıcısı); üretilen TS türleri güncel.
 - [ ] `CBS-05` GML ve XYZ (ADR 0545, 20 Ekim): web'de gerekenler: `file.export.gml`, `file.import.gml` ve `file.export.xyz`'in
   işleyicileri biçim işçisinde (`gml_read`, `gml_write`, `gml_table`, `xyz_table`'ın WASM bağlayıcısı; `.xsd` ve `.gfs` okumada seçilen
   dosyalardan, yazmada indirmede yanında), GML içe/dışa aktar ve XYZ dışa aktar pencereleri; TS türleri üretildi.
@@ -2385,8 +2390,17 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   kopyasında, çizim ve revizyon değişmez; `layer_states::themed`), stilli çizim görünümün önbelleğinde temayla
   (`scene_themed`), etkin görünümün teması seçme ve kenet (`Spatial::set_theme`), etiketler görünümün temasıyla
   (`Store::labels_shown_in`); Görünümleri bağla (merkez, ölçek, dönüklük) ve Kaydırmalı karşılaştır (edilgen öbür görünüm,
-  sürüklenen ayırıcı); Görünüm › Görünümler. Kalan: görünüm başına zaman ve ölçek bağı, iki revizyon, ikiden çok görünüm.
+  sürüklenen ayırıcı); Görünüm › Görünümler. Kalan: ikiden çok görünüm (görünüm başına zaman, ölçek bağı ve iki revizyon
+  [ADR 0576](docs/adr/0576-per-view-time-scale-link-and-revisions.md)'da).
   — **19 Ekim, [ADR 0523](docs/adr/0523-linked-views-themes-and-swipe.md).**
+- [ ] `CBS-19` görünüm başına zaman, ölçek bağı ve iki revizyon (dilim): her görünümün zamanı sürgüyü izler ya da kendi anı vardır (sürgünün
+  ızgarasındaki en yakın konum, ◀ ▶ sürgünün adımıyla; `Store::with_window` görünümün çizimini ve etiketlerini kendi penceresiyle sürer,
+  etkin görünümün penceresi seçme ve kenet için kalıcı pencere); Bağ üç kip (yok, merkez, merkez ve ölçek; `tools::view_link::follow`) ve her
+  görünümde ölçek çipi (1:N, 96 dpi); ikinci görünümde başka revizyon, salt okunur: geri alma geçmişinden `n` adım geri
+  (`Document::past`), dosya, Geçmiş sekmesinden sunucudaki revizyon ya da kontrol noktası (`Download.side`); açık çizimle kalıcı kimlikle
+  eşlenir, `ops::compare` kuralıyla sınıflanır, silinenler ve değişenler işaretli, sayılar çipte; salt okunur `cad.drawing.compare` v1
+  (history ya da file; Python, MCP, manifest); zaman, bağ ve kaynak oturum durumu, `.kcad` şeması değişmez. Kalan: ikiden çok görünüm,
+  revizyonun kendi zamanı, 100 000 nesnede fark süresi. — **21 Ekim, [ADR 0576](docs/adr/0576-per-view-time-scale-link-and-revisions.md).**
 - [ ] `CBS-05` CSV tablolar (dilim): `file.export.csv` (tek CSV, `katman` sütunu; geometri ISO WKT, X ve Y ya da yok; yaylar
   `CIRCULARSTRING` olarak kesin, elips, eğri ve NURBS kirişle, söylenerek; `.csvt` GDAL'ın türleriyle, `.prj` OGC WKT1; bütün
   ya da hiç) ve `file.import.csv` (geometri sütunu adlarından ya da verilen, `.csvt`'den ya da değerlerden türler, 2⁵³ üstü

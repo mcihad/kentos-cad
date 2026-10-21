@@ -560,6 +560,20 @@ const ENTRIES: &[Entry] = &[
             )]
         },
     },
+    // İki revizyonu karşılaştır (docs/adr/0576).
+    Entry {
+        id: "cad.drawing.compare",
+        refusals: &[&[
+            "invalid_tolerance",
+            "invalid_limit",
+            "no_such_step",
+            "invalid_file_path",
+            "file_not_found",
+            "import_unreadable",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
     Entry {
         id: "cad.drawing.audit",
         refusals: &[REVISION],

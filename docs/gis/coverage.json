@@ -2420,6 +2420,35 @@
    "kinds": []
   },
   {
+   "id": "cad.drawing.compare",
+   "title": "Revizyonları karşılaştır",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 29,
+   "files": [
+    "fixtures/commands/v1/cad.drawing.compare.json"
+   ],
+   "options": [
+    {
+     "key": "kind",
+     "value": "file",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "history",
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "cad.entities.array",
    "title": "Nesneleri diziye kopyala",
    "effect": "document",
@@ -3970,7 +3999,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 159,
+   "cases": 161,
    "files": [
     "fixtures/commands/v1/cad.arrays.edit.json",
     "fixtures/commands/v1/cad.columns.create.json",
@@ -3978,6 +4007,7 @@
     "fixtures/commands/v1/cad.dimensions.follow.json",
     "fixtures/commands/v1/cad.dimensions.query.json",
     "fixtures/commands/v1/cad.drawing.audit.json",
+    "fixtures/commands/v1/cad.drawing.compare.json",
     "fixtures/commands/v1/cad.entities.array.assoc.json",
     "fixtures/commands/v1/cad.entities.delete.json",
     "fixtures/commands/v1/cad.entities.delete.relations.json",
@@ -7848,8 +7878,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 978,
+   "cases": 981,
    "files": [
+    "fixtures/commands/v1/cad.drawing.compare.json",
     "fixtures/commands/v1/cad.entities.delete.relations.json",
     "fixtures/commands/v1/cad.entities.set.contingents.json",
     "fixtures/commands/v1/cad.entities.set.forms.json",
@@ -8025,7 +8056,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 319,
+   "cases": 333,
    "files": [
     "fixtures/commands/v1/cad.annotations.scales.json",
     "fixtures/commands/v1/cad.arrays.edit.json",
@@ -8034,6 +8065,7 @@
     "fixtures/commands/v1/cad.curves.edit.json",
     "fixtures/commands/v1/cad.dimensions.follow.json",
     "fixtures/commands/v1/cad.drawing.audit.json",
+    "fixtures/commands/v1/cad.drawing.compare.json",
     "fixtures/commands/v1/cad.entities.array.assoc.json",
     "fixtures/commands/v1/cad.entities.break.parts.json",
     "fixtures/commands/v1/cad.entities.cleanup.json",
@@ -12112,8 +12144,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 89,
+   "cases": 91,
    "files": [
+    "fixtures/commands/v1/cad.drawing.compare.json",
     "fixtures/commands/v1/cad.line.create.fields.json",
     "fixtures/commands/v1/cad.line.create.json",
     "fixtures/commands/v1/cad.subnetworks.follow.json"
@@ -12792,8 +12825,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 73,
+   "cases": 75,
    "files": [
+    "fixtures/commands/v1/cad.drawing.compare.json",
     "fixtures/commands/v1/cad.linearref.follow.json",
     "fixtures/commands/v1/cad.point.create.fields.json",
     "fixtures/commands/v1/cad.point.create.json",
@@ -27839,6 +27873,39 @@
    ]
   },
   {
+   "id": "stats.dbscanSweep",
+   "title": "DBSCAN parametre taraması",
+   "cases": 8,
+   "command": 8,
+   "options": [
+    {
+     "key": "borderNoise",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "borderNoise",
+     "value": false,
+     "covered": true
+    },
+    {
+     "key": "stability",
+     "value": "none",
+     "covered": true
+    },
+    {
+     "key": "stability",
+     "value": "bootstrap",
+     "covered": true
+    },
+    {
+     "key": "stability",
+     "value": "subset",
+     "covered": true
+    }
+   ]
+  },
+  {
    "id": "stats.directionalDistribution",
    "title": "Yön dağılımı",
    "cases": 1,
@@ -28053,6 +28120,16 @@
    "cases": 12,
    "command": 12,
    "options": [
+    {
+     "key": "region",
+     "value": "box",
+     "covered": true
+    },
+    {
+     "key": "region",
+     "value": "areas",
+     "covered": true
+    },
     {
      "key": "inference",
      "value": "analytic",

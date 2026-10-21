@@ -283367,6 +283367,374 @@
       ]
     },
     {
+      "id": "cad.drawing.compare",
+      "version": 1,
+      "title": "Revizyonları karşılaştır",
+      "summary": "Çizimin şimdiki hâliyle aynı çizimin başka bir hâli arasında ne değiştiğini söyler; çizimi değiştirmez. Öbür hâl (against) açık çizimin geri alma geçmişinde steps adım gerisi (history) ya da bir çizim dosyasıdır (file: mutlak yol, .kcad v2 ya da v1 JSON). Nesneler kalıcı kimlikleriyle eşlenir: şimdi olup öbüründe olmayan eklenmiş (added), öbüründe olup şimdi olmayan silinmiş (removed), ikisinde olup ayrılan değişmiş (changed). Değişim, veri karşılaştırmanın kuralıyla (ADR 0179) bulunur: geometri tolerance (metre; varsayılan 0,001) içinde aynıysa ve öznitelikler eşitse aynı; katman bir öznitelik gibi sayılır (fields'ta layer). Cevap sayıları (same, changed, added, removed) ve kimlik listelerini verir; her liste limit'te kesilir ve truncated bunu söyler. Retler: invalid_tolerance, invalid_limit, no_such_step (geri alma geçmişi o kadar adım tutmuyor), invalid_file_path, file_not_found, import_unreadable.",
+      "aliases": [
+        "revizyonkarsilastir",
+        "farkbul"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "CompareAgainst": {
+            "description": "The state the drawing is compared with.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "description": "The drawing `steps` undo steps back (the open drawing's history, 1 to what it holds).",
+                "properties": {
+                  "kind": {
+                    "const": "history",
+                    "type": "string"
+                  },
+                  "steps": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "count"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "steps"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "A drawing file: its absolute path (`.kcad`, v2 or a v1 JSON file).",
+                "properties": {
+                  "kind": {
+                    "const": "file",
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "path"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.drawing.compare` v1. The drawing as it is, is the new side; `against`, the old. Within `tolerance`\nmetres two objects' geometry is the same. Refusals: `invalid_tolerance`, `no_such_step`, `invalid_file_path`,\n`file_not_found`, `import_unreadable`, `invalid_limit`.",
+        "properties": {
+          "against": {
+            "$ref": "#/$defs/CompareAgainst"
+          },
+          "limit": {
+            "description": "The most ids each list holds, 1 to 1 000 000; absent: `COMPARE_LIMIT`. A cut list says so (`truncated`).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "tolerance": {
+            "description": "How far points may lie apart and the geometry still be the same, metres, 0 to 10; absent: `COMPARE_TOLERANCE`.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "against"
+        ],
+        "title": "DrawingCompare",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ChangedObject": {
+            "description": "An object that is in both and differs.",
+            "properties": {
+              "distance": {
+                "description": "How far the objects lie apart, metres, when their kinds agree.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "fields": {
+                "description": "The attributes that differ (`layer` for the layer), by their codes' order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "status": {
+                "description": "`geometry`, `attributes` or `both`; the layer counts as an attribute (`layer` among the fields).",
+                "type": "string"
+              },
+              "uid": {
+                "description": "The object's persistent id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "status",
+              "fields"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.drawing.compare` v1.",
+        "properties": {
+          "added": {
+            "description": "Objects the drawing has now and the other state had not.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "addedUids": {
+            "description": "The added objects' persistent ids, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "against": {
+            "description": "What it was compared with, as the history or the file says it.",
+            "type": "string"
+          },
+          "changed": {
+            "description": "Objects in both that differ.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "changedObjects": {
+            "description": "The changed objects, in the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/ChangedObject"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "description": "Objects the other state had and the drawing has not now.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "removedUids": {
+            "description": "The removed objects' persistent ids, in the other state's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "same": {
+            "description": "Objects equal in both.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "truncated": {
+            "description": "A list was cut at `limit`.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "against",
+          "same",
+          "changed",
+          "added",
+          "removed",
+          "addedUids",
+          "removedUids",
+          "changedObjects",
+          "truncated",
+          "revision"
+        ],
+        "title": "DrawingCompared",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ChangedObject": {
+            "description": "An object that is in both and differs.",
+            "properties": {
+              "distance": {
+                "description": "How far the objects lie apart, metres, when their kinds agree.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "fields": {
+                "description": "The attributes that differ (`layer` for the layer), by their codes' order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "status": {
+                "description": "`geometry`, `attributes` or `both`; the layer counts as an attribute (`layer` among the fields).",
+                "type": "string"
+              },
+              "uid": {
+                "description": "The object's persistent id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "status",
+              "fields"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.drawing.compare` v1.",
+        "properties": {
+          "added": {
+            "description": "Objects the drawing has now and the other state had not.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "addedUids": {
+            "description": "The added objects' persistent ids, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "against": {
+            "description": "What it was compared with, as the history or the file says it.",
+            "type": "string"
+          },
+          "changed": {
+            "description": "Objects in both that differ.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "changedObjects": {
+            "description": "The changed objects, in the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/ChangedObject"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "description": "Objects the other state had and the drawing has not now.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "removedUids": {
+            "description": "The removed objects' persistent ids, in the other state's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "same": {
+            "description": "Objects equal in both.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "truncated": {
+            "description": "A list was cut at `limit`.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "against",
+          "same",
+          "changed",
+          "added",
+          "removed",
+          "addedUids",
+          "removedUids",
+          "changedObjects",
+          "truncated",
+          "revision"
+        ],
+        "title": "DrawingCompared",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_tolerance",
+          "invalid_limit",
+          "no_such_step",
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Geri alma geçmişinde 5 adım geriyle karşılaştır",
+          "input": {
+            "against": {
+              "kind": "history",
+              "steps": 5
+            }
+          }
+        },
+        {
+          "title": "İndirilmiş bir revizyonla karşılaştır, 1 cm toleransla",
+          "input": {
+            "against": {
+              "kind": "file",
+              "path": "/veri/mahalle (revizyon 12).kcad"
+            },
+            "tolerance": 0.01
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.entities.offset",
       "version": 1,
       "title": "Nesneleri ötele",
@@ -1067562,6 +1067930,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Geçerlilik zamanı bir an ya da başlangıcı bitişinden önce bir aralık olmalı."
+    },
+    {
+      "code": "no_such_step",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Geri alma geçmişi bu kadar adım tutmuyor; 1 ile geçmişin adım sayısı arasında bir sayı verin."
+    },
+    {
+      "code": "invalid_limit",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Liste sınırı 1 ile 1 000 000 arasında bir tam sayı olmalı."
     },
     {
       "code": "invalid_address",

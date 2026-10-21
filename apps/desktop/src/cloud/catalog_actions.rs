@@ -84,6 +84,9 @@ pub struct Download {
     /// Revizyonla karşılaştır (docs/adr/0210 §8): the point's name; the file goes to a
     /// place of the app's own and opens as Veri karşılaştır's Eski veri, not to a place chosen.
     pub compare: Option<String>,
+    /// İkinci görünümde (docs/adr/0576 §3): the point's name; the file goes to a place of the app's own and opens
+    /// in the other view of the split area as a revision of the open drawing, not to a place chosen.
+    pub side: Option<String>,
     /// The file's extension, without the dot: `kcad` for a drawing, `gpkg` and `pdf` for what a job made
     /// (docs/adr/0561 §4); the save window offers and adds it.
     pub extension: &'static str,
@@ -162,6 +165,7 @@ impl App {
                         listed: None,
                         extension: "kcad",
                         compare: None,
+                        side: None,
                     },
                 )
             }
@@ -318,8 +322,15 @@ impl App {
         };
         let name = p.name.clone();
         let compare = download.as_ref().and_then(|d| d.compare.clone());
+        let side = download.as_ref().and_then(|d| d.side.clone());
         let download_name = download.map(|d| d.name);
         let open = self.is_open_project(&p.id);
+        // İkinci görünümde (docs/adr/0576 §3): the file opens in the other view, read only.
+        if let (Some(point), Ok(Acted::Downloaded { path, .. })) = (&side, &result) {
+            let path = path.clone();
+            self.revision_from_download(point, &path);
+            return Task::none();
+        }
         // Revizyonla karşılaştır (docs/adr/0210 §8): the file opens as Veri karşılaştır's Eski veri.
         if let (Some(point), Ok(Acted::Downloaded { path, .. })) = (&compare, &result) {
             if let Some(c) = self.cloud.catalog.as_mut() {
@@ -499,7 +510,7 @@ impl App {
             .acting
             .as_ref()
             .and_then(|a| a.download.as_ref())
-            .is_some_and(|d| d.compare.is_some());
+            .is_some_and(|d| d.compare.is_some() || d.side.is_some());
         if compare {
             let path = std::env::temp_dir().join(format!(
                 "kentos-karsilastir-{}-{id}.kcad",

@@ -1,0 +1,1813 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.drawing.compare",
+ "commandVersion": 1,
+ "title": "Revizyonları karşılaştır",
+ "note": "ADR 0576. Bağımsız başvuru scripts/fixtures/drawing_compare_cases.py: nesneler kalıcı kimlikle eşlenir, farkı veri karşılaştırmanın kuralıyla (ADR 0179) bulunur; dosyalar kcad_v2_reference.py'nin yazıcısıyla yazılır; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Revizyon karşılaştırma",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "No": "101",
+     "Sahip": "A"
+    },
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4400020.0
+     },
+     {
+      "x": 500000.0,
+      "y": 4400020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "No": "102",
+     "Sahip": "B"
+    },
+    "pts": [
+     {
+      "x": 500030.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500050.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500050.0,
+      "y": 4400020.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "No": "103"
+    },
+    "pts": [
+     {
+      "x": 500060.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4400020.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4400020.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 4,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 500000.0,
+     "y": 4400030.0
+    },
+    "b": {
+     "x": 500040.0,
+     "y": 4400030.0
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 5,
+    "layerId": "yol",
+    "attrs": {
+     "Ad": "1. Sokak"
+    },
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400040.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400040.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400060.0
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 6,
+    "layerId": "yol",
+    "attrs": {},
+    "p": {
+     "x": 500010.0,
+     "y": 4400050.0
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 7,
+    "layerId": "yol",
+    "attrs": {
+     "Tür": "Ağaç"
+    },
+    "c": {
+     "x": 500050.0,
+     "y": 4400050.0
+    },
+    "r": 5.0
+   }
+  ],
+  "uids": [
+   "0192f5a3-3333-7000-8000-000000000001",
+   "0192f5a3-3333-7000-8000-000000000002",
+   "0192f5a3-3333-7000-8000-000000000003",
+   "0192f5a3-3333-7000-8000-000000000004",
+   "0192f5a3-3333-7000-8000-000000000005",
+   "0192f5a3-3333-7000-8000-000000000006",
+   "0192f5a3-3333-7000-8000-000000000007"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Bir adım geri: 5 m taşınan parsel değişmiş, geometri; öbürleri aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 5.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "1 adım geri, “Taşı” öncesi",
+       "same": 6,
+       "changed": 1,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000002",
+         "status": "geometry",
+         "fields": [],
+         "distance": 5.0
+        }
+       ],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bir adım geri: 0,4 mm'lik kayma tolerans içinde, hepsi aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0004,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "1 adım geri, “Taşı” öncesi",
+       "same": 7,
+       "changed": 0,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tolerans 0: aynı 0,4 mm'lik kayma değişmiş, uzaklığı 0,0004",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0004,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      },
+      "tolerance": 0.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "1 adım geri, “Taşı” öncesi",
+       "same": 6,
+       "changed": 1,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000002",
+         "status": "geometry",
+         "fields": [],
+         "distance": 0.0004000000189989805
+        }
+       ],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Silinen çizgi: şimdi olmayan, öbüründe olan silinmiş",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "0192f5a3-3333-7000-8000-000000000004"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "1 adım geri, “Sil” öncesi",
+       "same": 6,
+       "changed": 0,
+       "added": 0,
+       "removed": 1,
+       "addedUids": [],
+       "removedUids": [
+        "0192f5a3-3333-7000-8000-000000000004"
+       ],
+       "changedObjects": [],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizilen çizgi: şimdi olan, öbüründe olmayan eklenmiş",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.line.create",
+     "input": {
+      "layerId": "yol",
+      "a": {
+       "x": 500005.0,
+       "y": 4400080.0
+      },
+      "b": {
+       "x": 500025.0,
+       "y": 4400080.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 8,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "1 adım geri, “Ekle” öncesi",
+       "same": 7,
+       "changed": 0,
+       "added": 1,
+       "removed": 0,
+       "addedUids": [
+        "$uidOf:8"
+       ],
+       "removedUids": [],
+       "changedObjects": [],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Öznitelikler: değişen, eklenen ve silinen alan; durum attributes, alanlar kod sırasıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000001"
+      ],
+      "attrs": {
+       "Sahip": "C",
+       "Yeni": "x",
+       "No": null
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000001"
+       ],
+       "ids": [
+        1
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "1 adım geri, “Değiştir” öncesi",
+       "same": 6,
+       "changed": 1,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000001",
+         "status": "attributes",
+         "fields": [
+          "No",
+          "Sahip",
+          "Yeni"
+         ],
+         "distance": 0.0
+        }
+       ],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman değişti: öznitelik gibi, alanlarda layer",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000003"
+      ],
+      "layerId": "yol",
+      "operation": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000003"
+       ],
+       "ids": [
+        3
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "1 adım geri, “Katman değiştir” öncesi",
+       "same": 6,
+       "changed": 1,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000003",
+         "status": "attributes",
+         "fields": [
+          "layer"
+         ],
+         "distance": 0.0
+        }
+       ],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki adım geri: taşınan ve öznitelikleri değişen parsel both, tek nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000001"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0,
+       "dy": 3.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000001"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000001"
+      ],
+      "attrs": {
+       "Sahip": "Q"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000001"
+       ],
+       "ids": [
+        1
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 2
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "2 adım geri, “Taşı” öncesi",
+       "same": 6,
+       "changed": 1,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000001",
+         "status": "both",
+         "fields": [
+          "Sahip"
+         ],
+         "distance": 3.0
+        }
+       ],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Üç adım: parsel taşındı, nokta silindi, çizgi çizildi; ilk adıma kadar hepsi",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 5.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000006"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "0192f5a3-3333-7000-8000-000000000006"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.line.create",
+     "input": {
+      "layerId": "yol",
+      "a": {
+       "x": 500000.0,
+       "y": 4400090.0
+      },
+      "b": {
+       "x": 500005.0,
+       "y": 4400090.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 8,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 3
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "3 adım geri, “Taşı” öncesi",
+       "same": 5,
+       "changed": 1,
+       "added": 1,
+       "removed": 1,
+       "addedUids": [
+        "$uidOf:8"
+       ],
+       "removedUids": [
+        "0192f5a3-3333-7000-8000-000000000006"
+       ],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000002",
+         "status": "geometry",
+         "fields": [],
+         "distance": 5.0
+        }
+       ],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geri alınan adım geçmişte yok: 2 adım istenir, 1 var",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 5.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000001"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 1.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000001"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Taşı"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 2
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_such_step",
+       "message": "Geri alma geçmişi 1 adım tutuyor; 2 adım geri istendi. 1 ile 1 arasında bir sayı verin.",
+       "path": "against.steps"
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "1 adım geri, “Taşı” öncesi",
+       "same": 6,
+       "changed": 1,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000002",
+         "status": "geometry",
+         "fields": [],
+         "distance": 5.0
+        }
+       ],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geçmişten fazla adım: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 5.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 3
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_such_step",
+       "message": "Geri alma geçmişi 1 adım tutuyor; 3 adım geri istendi. 1 ile 1 arasında bir sayı verin.",
+       "path": "against.steps"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hiç değişiklik yokken geri adım: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_such_step",
+       "message": "Geri alma geçmişinde adım yok; önce çizimde bir değişiklik yapın.",
+       "path": "against.steps"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sıfır adım: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 5.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_such_step",
+       "message": "Geri alma geçmişi 1 adım tutuyor; 0 adım geri istendi. 1 ile 1 arasında bir sayı verin.",
+       "path": "against.steps"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tolerans eksi: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 5.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      },
+      "tolerance": -1.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tolerance",
+       "message": "Tolerans 0 ile 10 metre arasında olmalı.",
+       "path": "tolerance"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tolerans 10 m'den büyük: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 5.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      },
+      "tolerance": 10.5
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tolerance",
+       "message": "Tolerans 0 ile 10 metre arasında olmalı.",
+       "path": "tolerance"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Liste sınırı sıfır: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 5.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      },
+      "limit": 0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_limit",
+       "message": "Liste sınırı 1 ile 1000000 arasında bir tam sayı olmalı.",
+       "path": "limit"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sınır 1: kesilen listeler truncated der, sayılar bütün",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000001"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 5.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000001"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 5.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.point.create",
+     "input": {
+      "layerId": "yol",
+      "p": {
+       "x": 500000.0,
+       "y": 4400100.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 8,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.point.create",
+     "input": {
+      "layerId": "yol",
+      "p": {
+       "x": 500005.0,
+       "y": 4400100.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 4
+      },
+      "limit": 1
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "4 adım geri, “Taşı” öncesi",
+       "same": 5,
+       "changed": 2,
+       "added": 2,
+       "removed": 0,
+       "addedUids": [
+        "$uidOf:8"
+       ],
+       "removedUids": [],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000001",
+         "status": "geometry",
+         "fields": [],
+         "distance": 5.0
+        }
+       ],
+       "truncated": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı çizim dosyası: hepsi aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:compare/v1/revisions/ayni.kcad"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "ayni.kcad",
+       "same": 7,
+       "changed": 0,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosyada 5 m geride parsel, parsel 103 yok, bir çizgi daha var: değişen, eklenen ve silinen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:compare/v1/revisions/tasindi.kcad"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "tasindi.kcad",
+       "same": 5,
+       "changed": 1,
+       "added": 1,
+       "removed": 1,
+       "addedUids": [
+        "0192f5a3-3333-7000-8000-000000000003"
+       ],
+       "removedUids": [
+        "0192f5a3-3333-7000-8000-000000000009"
+       ],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000002",
+         "status": "geometry",
+         "fields": [],
+         "distance": 5.0
+        }
+       ],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosyada başka öznitelikler ve katman: üç nesne değişmiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:compare/v1/revisions/oznitelik.kcad"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "oznitelik.kcad",
+       "same": 4,
+       "changed": 3,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000001",
+         "status": "attributes",
+         "fields": [
+          "Sahip",
+          "Yok"
+         ],
+         "distance": 0.0
+        },
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000002",
+         "status": "attributes",
+         "fields": [
+          "Sahip"
+         ],
+         "distance": 0.0
+        },
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000003",
+         "status": "attributes",
+         "fields": [
+          "layer"
+         ],
+         "distance": 0.0
+        }
+       ],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosyada beşinci köşeli parsel ve nokta olan çizgi: yapı ve tür farkı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:compare/v1/revisions/yapi.kcad"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "yapi.kcad",
+       "same": 5,
+       "changed": 2,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000001",
+         "status": "geometry",
+         "fields": [],
+         "distance": 2.0
+        },
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000004",
+         "status": "geometry",
+         "fields": []
+        }
+       ],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosyada toleransın altındaki kaymalar: hepsi aynı, 0,002 m'lik kayma değişmiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:compare/v1/revisions/kucuk.kcad"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "kucuk.kcad",
+       "same": 6,
+       "changed": 1,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000006",
+         "status": "geometry",
+         "fields": [],
+         "distance": 0.0020000003278255463
+        }
+       ],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başka köşeden ve ters yönden yazılan halka ve yol: aynı çizim",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:compare/v1/revisions/donuk.kcad"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "donuk.kcad",
+       "same": 7,
+       "changed": 0,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosyada küçük kaymalar, toleransla 0: üç nesne değişmiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:compare/v1/revisions/kucuk.kcad"
+      },
+      "tolerance": 0.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "kucuk.kcad",
+       "same": 4,
+       "changed": 3,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000001",
+         "status": "geometry",
+         "fields": [],
+         "distance": 0.0004000000189989805
+        },
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000006",
+         "status": "geometry",
+         "fields": [],
+         "distance": 0.0020000003278255463
+        },
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000007",
+         "status": "geometry",
+         "fields": [],
+         "distance": 0.0
+        }
+       ],
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosya, sınır 1: kesilen listeler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:compare/v1/revisions/oznitelik.kcad"
+      },
+      "limit": 1
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "against": "oznitelik.kcad",
+       "same": 4,
+       "changed": 3,
+       "added": 0,
+       "removed": 0,
+       "addedUids": [],
+       "removedUids": [],
+       "changedObjects": [
+        {
+         "uid": "0192f5a3-3333-7000-8000-000000000001",
+         "status": "attributes",
+         "fields": [
+          "Sahip",
+          "Yok"
+         ],
+         "distance": 0.0
+        }
+       ],
+       "truncated": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Göreli yol: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "revizyon.kcad"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“revizyon.kcad” mutlak bir dosya yolu değil; dosyanın tam yolunu verin (/klasör/ad.kcad).",
+       "path": "against.path"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan dosya: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:compare/v1/revisions/yok.kcad"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$fixture:compare/v1/revisions/yok.kcad okunamadı: dosya yok ya da açılamıyor.",
+       "path": "against.path"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bozuk dosya: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:kcad/v2/broken/arrays-items-short.kcad"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$any",
+       "path": "against.path"
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -42,6 +42,7 @@ use kentos_native_application::meshes::{describe as meshes_describe, query as me
 use kentos_native_application::pointcloud_areas::{profile as pointclouds_profile, region as pointclouds_region};
 use kentos_native_application::pointclouds::{describe as pointclouds_describe, query as pointclouds_query};
 use kentos_native_application::time_query;
+use kentos_native_application::drawing_compare;
 use kentos_native_application::{
     processing_batch, processing_run, processing_tools, subnetworks, subnetworks_update,
 };
@@ -1669,6 +1670,15 @@ impl Input for kentos_commands::DrawingAudit {
     }
 }
 
+impl Input for kentos_commands::DrawingCompare {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "tolerance" => self.tolerance.as_mut(),
+            _ => None,
+        }
+    }
+}
+
 impl Input for kentos_commands::EntitiesCleanup {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
@@ -3137,6 +3147,9 @@ fn run_op(
         kentos_commands::CAD_DRAWING_AUDIT => {
             run!(drawing_audit, kentos_commands::DrawingAudit)
         }
+        kentos_commands::CAD_DRAWING_COMPARE => {
+            run!(drawing_compare, kentos_commands::DrawingCompare)
+        }
         kentos_commands::CAD_CURVES_EDIT => {
             run!(curves_edit, kentos_commands::CurvesEdit)
         }
@@ -4075,9 +4088,17 @@ fn run_case(command: &str, setup: &Value, case: &Value, at: &str) -> Outcome<()>
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/services/v1/stac"),
     )));
     let setup = &setup_paths(setup);
-    let snapshot = DocumentSnapshotV1::from_json(&setup.to_string())
-        .map_err(|e| format!("{at}: kurulum: {e}"))?;
-    let mut doc = Document::from_snapshot(snapshot).map_err(|e| format!("{at}: kurulum: {e}"))?;
+    // A drawing of the file's v2 form carries its objects' persistent ids (docs/adr/0576 §3): a revision file and the
+    // open drawing then share them. Else the v1 form, whose ids are derived.
+    let mut doc = if setup["version"] == 2 {
+        let snapshot: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_value(setup.clone()).map_err(|e| format!("{at}: kurulum: {e}"))?;
+        Document::from_snapshot_v2(snapshot).map_err(|e| format!("{at}: kurulum: {e}"))?
+    } else {
+        let snapshot = DocumentSnapshotV1::from_json(&setup.to_string())
+            .map_err(|e| format!("{at}: kurulum: {e}"))?;
+        Document::from_snapshot(snapshot).map_err(|e| format!("{at}: kurulum: {e}"))?
+    };
     if doc.is_dirty() || doc.can_undo() {
         return Err(format!("{at}: kurulumdan sonra belge temiz değil"));
     }

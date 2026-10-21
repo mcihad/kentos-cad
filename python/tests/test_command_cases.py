@@ -48,7 +48,17 @@ class Case:
         self.wrapper = cad.command(command)
         # A bound layer's file in the setup is a fixture's path (docs/adr/0503).
         setup_text = re.sub(r"\$fixture:([^\s\"]+)", lambda m: str(ROOT / "fixtures" / m.group(1)), json.dumps(setup))
-        self.doc = cad.Document.from_bytes(setup_text.encode())
+        if setup.get("version") == 2:
+            # A drawing of the file's v2 form carries its objects' persistent ids (docs/adr/0576 §3): written by the
+            # independent KCAD v2 writer, then opened as a file.
+            import sys
+
+            sys.path.insert(0, str(ROOT / "scripts/fixtures"))
+            import kcad_v2_reference as kr
+
+            self.doc = cad.Document.from_bytes(kr.container(kr.document(json.loads(setup_text))))
+        else:
+            self.doc = cad.Document.from_bytes(setup_text.encode())
         info = self.doc.info()
         assert not info.dirty and not info.can_undo, f"{at}: the setup is not clean"
         self.steps = steps

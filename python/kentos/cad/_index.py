@@ -40,6 +40,7 @@ COMMANDS: dict[str, Any] = {
     "cad.domains.edit": domains.edit,
     "cad.domains.export": domains.export,
     "cad.drawing.audit": drawing.audit,
+    "cad.drawing.compare": drawing.compare,
     "cad.entities.array": entities.array,
     "cad.entities.boundary": entities.boundary,
     "cad.entities.break": entities.break_,

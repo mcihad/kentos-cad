@@ -2977,7 +2977,7 @@ impl App {
         Some(match id {
             "draft.ortho" => self.draft.ortho,
             "view.split" => self.split.is_some(),
-            "view.splitLink" => self.split.as_ref().is_some_and(|s| s.linked),
+            "view.splitLink" => self.split.as_ref().is_some_and(|s| s.link != kentos_geometry_core::tools::view_link::Link::Off),
             "view.swipe" => self.split.as_ref().is_some_and(|s| s.swipe.is_some()),
             "draft.rightAngle" => self.draft.right_angle,
             "draft.polar" => self.draft.polar.is_some(),

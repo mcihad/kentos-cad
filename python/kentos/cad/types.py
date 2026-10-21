@@ -4824,6 +4824,27 @@ class ClipBoundary(_Union):
         return _variant(_CLIP_BOUNDARY, "ClipBoundary", "kind", data).from_json(data)
 
 
+class CompareAgainst(_Union):
+    """The state the drawing is compared with.
+
+    One of:
+
+    - :class:`HistoryCompareAgainst` (``kind: history``)
+    - :class:`FileCompareAgainst` (``kind: file``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CompareAgainst:
+        return _variant(_COMPARE_AGAINST, "CompareAgainst", "kind", data).from_json(data)
+
+
 class ConstraintEdit(_Union):
     """What changes.
 
@@ -9817,6 +9838,39 @@ class CellStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ChangedObject(_Model):
+    """An object that is in both and differs.
+    Attributes:
+        uid: The object's persistent id.
+        status: `geometry`, `attributes` or `both`; the layer counts as an attribute (`layer` among the fields).
+        fields: The attributes that differ (`layer` for the layer), by their codes' order.
+        distance: How far the objects lie apart, metres, when their kinds agree. Unit: length.
+    """
+    uid: str
+    status: str
+    fields: list[str]
+    distance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["status"] = self.status
+        out["fields"] = list(self.fields)
+        if self.distance is not UNSET:
+            out["distance"] = None if self.distance is None else float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChangedObject:
+        return cls(
+            uid=data["uid"],
+            status=data["status"],
+            fields=list(data["fields"]),
+            distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ChangesetApplied(_Model):
     """Output of `cad.changeset.apply` v1, and what its plan says it would be.
     Attributes:
@@ -13871,6 +13925,93 @@ class DrawingAudited(_Model):
             findings=[AuditFinding.from_json(e0) for e0 in data["findings"]],
             unused=[UnusedResource.from_json(e0) for e0 in data["unused"]],
             changed=list(data["changed"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingCompare(_Model):
+    """Input of `cad.drawing.compare` v1. The drawing as it is, is the new side; `against`, the old. Within `tolerance`
+    metres two objects' geometry is the same. Refusals: `invalid_tolerance`, `no_such_step`, `invalid_file_path`,
+    `file_not_found`, `import_unreadable`, `invalid_limit`.
+    Attributes:
+        limit: The most ids each list holds, 1 to 1 000 000; absent: `COMPARE_LIMIT`. A cut list says so (`truncated`). Unit: count.
+        tolerance: How far points may lie apart and the geometry still be the same, metres, 0 to 10; absent: `COMPARE_TOLERANCE`. Unit: length.
+    """
+    against: CompareAgainst
+    limit: int | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["against"] = self.against.to_json()
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingCompare:
+        return cls(
+            against=CompareAgainst.from_json(data["against"]),
+            limit=data.get("limit", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingCompared(_Model):
+    """Output of `cad.drawing.compare` v1.
+    Attributes:
+        against: What it was compared with, as the history or the file says it.
+        same: Objects equal in both. Unit: count.
+        changed: Objects in both that differ. Unit: count.
+        added: Objects the drawing has now and the other state had not. Unit: count.
+        removed: Objects the other state had and the drawing has not now. Unit: count.
+        added_uids: The added objects' persistent ids, in the drawing's order.
+        removed_uids: The removed objects' persistent ids, in the other state's order.
+        changed_objects: The changed objects, in the drawing's order.
+        truncated: A list was cut at `limit`.
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    against: str
+    same: int
+    changed: int
+    added: int
+    removed: int
+    added_uids: list[str]
+    removed_uids: list[str]
+    changed_objects: list[ChangedObject]
+    truncated: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["against"] = self.against
+        out["same"] = self.same
+        out["changed"] = self.changed
+        out["added"] = self.added
+        out["removed"] = self.removed
+        out["addedUids"] = list(self.added_uids)
+        out["removedUids"] = list(self.removed_uids)
+        out["changedObjects"] = [e0.to_json() for e0 in self.changed_objects]
+        out["truncated"] = self.truncated
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingCompared:
+        return cls(
+            against=data["against"],
+            same=data["same"],
+            changed=data["changed"],
+            added=data["added"],
+            removed=data["removed"],
+            added_uids=list(data["addedUids"]),
+            removed_uids=list(data["removedUids"]),
+            changed_objects=[ChangedObject.from_json(e0) for e0 in data["changedObjects"]],
+            truncated=data["truncated"],
             revision=data["revision"],
         )
 
@@ -49590,6 +49731,45 @@ class PolygonClipBoundary(ClipBoundary):
 
 
 @dataclass(kw_only=True, slots=True)
+class HistoryCompareAgainst(CompareAgainst):
+    """The drawing `steps` undo steps back (the open drawing's history, 1 to what it holds).
+    Attributes:
+        steps: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "history"
+    steps: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "history"}
+        out["steps"] = self.steps
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HistoryCompareAgainst:
+        return cls(
+            steps=data["steps"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FileCompareAgainst(CompareAgainst):
+    """A drawing file: its absolute path (`.kcad`, v2 or a v1 JSON file)."""
+    TAG_VALUE: ClassVar[str] = "file"
+    path: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "file"}
+        out["path"] = self.path
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FileCompareAgainst:
+        return cls(
+            path=data["path"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddConstraintEdit(ConstraintEdit):
     """These constraints are added, in order, and the drawing solved with them. One that repeats the ones before
     (redundant) is refused: a dimension can be added as a reference instead.
@@ -59039,6 +59219,9 @@ _CELL: dict[str, type[Cell]] = {"any": AnyCell, "empty": EmptyCell, "code": Code
 _CLIP_BOUNDARY: dict[str, type[ClipBoundary]] = {"rectangle": RectangleClipBoundary, "polygon": PolygonClipBoundary}
 
 
+_COMPARE_AGAINST: dict[str, type[CompareAgainst]] = {"history": HistoryCompareAgainst, "file": FileCompareAgainst}
+
+
 _CONSTRAINT_EDIT: dict[str, type[ConstraintEdit]] = {"add": AddConstraintEdit, "remove": RemoveConstraintEdit, "mode": ModeConstraintEdit, "flip": FlipConstraintEdit, "solve": SolveConstraintEdit}
 
 
@@ -59445,6 +59628,7 @@ __all__ = [
     "CenterSubPlace",
     "ChamferRectangleCorners",
     "ChangeFieldTypeMigrationStep",
+    "ChangedObject",
     "ChangesetApplied",
     "ChangesetApply",
     "ChangesetStep",
@@ -59517,6 +59701,7 @@ __all__ = [
     "CombineTextEdit",
     "CommentFormsOp",
     "CommitResult",
+    "CompareAgainst",
     "ComponentEdge",
     "ComponentHatch",
     "ConcentricConstraintRule",
@@ -59663,6 +59848,8 @@ __all__ = [
     "DoorSource",
     "DrawingAudit",
     "DrawingAudited",
+    "DrawingCompare",
+    "DrawingCompared",
     "DrawingFont",
     "DrawingFontName",
     "DrawingStandard",
@@ -59823,6 +60010,7 @@ __all__ = [
     "FieldsWritten",
     "FileCommit",
     "FileCommitted",
+    "FileCompareAgainst",
     "FileTableSource",
     "FileUnit",
     "FileUnitName",
@@ -59982,6 +60170,7 @@ __all__ = [
     "HeightMethodName",
     "HeightReference",
     "Helmert",
+    "HistoryCompareAgainst",
     "HorizontalConstraintRule",
     "ImageEntity",
     "ImageEntityGeometry",
