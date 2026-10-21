@@ -94,6 +94,48 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 | G3 — Analiz ve kartografya üretimi | CBS-10/17…34: mevcut motorların ürün kabulü, batch/model, atlas, ağ, raster/uzaktan algılama ve zaman. Alanlara göre ayrı teslim edilir. | Her teslimde bağımsız hesap referansı, veri provenance'ı, gerçek veri performansı ve aynı otomasyon sonucu. |
 | G4 — Saha ve ileri dağıtım | CBS-27/32…35/43'ün ileri dilimleri; form, 3D ve yol planlarının ilgili teslimleri. | Çevrimdışı replika ve güvenli eşitleme; seçilen açık servis profili; ileri domain doğruluğu. Harita yayınlama ayrıca kapsamlandırılır. |
 
+## Devir notu (21 Ekim 2026)
+
+Bu planı devralan ajan için. Durum:
+
+- **Tamamen biten:** CBS-13 ve CBS-22, ayrıca MEVCUT-01…06.
+- **Hiç başlanmamış:** CBS-35 (canlı GNSS); cihaz yok, bekliyor.
+- **Kısmen biten:** öbür 41 madde. Her maddenin “Kısmen” satırlarında yapılanlar ve “Kalan”ı yazılı.
+
+**Neden kapanmıyorlar:** şimdiye kadar her maddenin kendi başına biten küçük parçaları yapıldı. Çoğu maddenin kalanı aynı ortak işe bağlı:
+dış sağlayıcı katmanı. Bugün bağlı katman bir çalışma kopyasıdır (ADR 0503, 0509); sorgu kaynağa itilmez, katmanın kendi sistemiyle anında
+dönüşüm yoktur. Küçük dilimlerle devam etmek madde kapatmaz.
+
+**Sıradaki iş, bu sırayla:**
+
+1. **CBS-02, ortak sağlayıcı sözleşmesi:** genel `Source`/`Dataset` arayüzü; kaynağa itilen kutu, sütun ve süzgeç sorgusu; kararlı sayfa ve akış;
+   sorgu planının açıklaması. Önce GeoPackage'la (`kentos-geopackage`), sonra PostGIS'le (`kentos-postgis`). Önce ADR'yi yazın, çünkü bu karar
+   çizimi, keneti, seçimi, tabloyu ve analizleri etkiler.
+2. **CBS-04, PostGIS'e itilen sorgu:** sayfa sayfa ilk harita, view ve SQL katmanı, milyon satır ölçümü, QGIS'le eşzamanlı düzenleme.
+3. **CBS-07, her katmanın kendi sistemi:** çizimde anında dönüşüm, ters dönüşümlü tıklama ve kenet, WKT2 ve kullanım alanı.
+
+Bunlar bitince kalanları kapanabilir hâle gelenler: CBS-11, 12, 14, 15, 20, 23, 24, 29, 33, 36 ve 42. CBS-42'nin bütçeleri (görünür küme,
+sayfa sayfa okuma) de bu işe bağlıdır.
+
+**Açık kalanlar:**
+
+- **ADR 0579'un kontrolleri.** `cad.addresses.check` `efd2380dd`'de `main`'e gitti; ortak durumlar masaüstünde ve Python'da geçti. Clippy ile
+  masaüstünün `address::` ve `history::` testleri bitmeden gönderildi. Önce şunları çalıştırın:
+  `cargo clippy -p kentos-geometry-core -p kentos-commands -p kentos-native-application -p kentos-desktop --all-targets -- -D warnings`,
+  `cargo test -p kentos-desktop address::`, `cargo test -p kentos-desktop history::`.
+- **ADR 0580 (CBS-31, STAC maskesi ve yeniden izdüşüm) yarım.** `worktree-agent-a804e8d9b65d2d11d` dalında WIP commit olarak duruyor
+  (`6d69f4e6a`, `ad15b7b72`'nin üstünde); `main`'e alınmadı.
+  - **Hazır olan:** `kentos-raster`'ın `mask.rs`'i, bağımsız başvuru `scripts/fixtures/stac_mask_cases.py` (13 durum), maskeyi okuyan raster
+    koşucuları.
+  - **Eksik olan:** araçların `qaMask` seçeneği (`quality_param()` hazır; `processing_command_cases.py`'nin `ADDED_SINCE`'ine yazılmalı),
+    koleksiyona göre varsayılanlar, masaüstü testi ve resimleri, yeniden izdüşüm (`cad.stac.prepare` bugün `crs_mismatch` ile reddeder),
+    ADR ve belgeler.
+  - Dalı `main`'in üstüne alıp eksikleri bitirmeden birleştirmeyin.
+
+**Çalışma kuralları:** CLAUDE.md §9.2 (araç = komut: Python, MCP, manifest), ADR 0228 (web durdu; web'de gerekenler TODOS.md §0.2'ye),
+[docs/MADDE-TARIFI.md](../docs/MADDE-TARIFI.md). Bu makinede (macOS) her test ikilisinin açılışı uzun sürer; yalnız hedefli, kısa testleri
+birer birer çalıştırın.
+
 ## A — Veri açma ve gerçek veri kaynakları
 
 - [ ] **CBS-01 — Kaynak gezginine canlı GeoPackage/PostGIS ve servis bağlantıları ekle — P0**
