@@ -8,33 +8,22 @@
 //! from its LAZ by the index's builder. The analyses' rasters (docs/adr/0231
 //! §2) are opened the same ways, each with its own reader.
 
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufWriter, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError};
 
 use kentos_commands::{CloudFormat, CloudSource, RasterFields};
-use kentos_pointcloud::ops::convert::Input;
-use kentos_pointcloud::source::{Cloud, Opening, Run};
-use kentos_pointcloud::{Step, text};
+use kentos_pointcloud::text;
 use kentos_processing::Feedback;
+use kentos_processing::cloud_files;
 use kentos_processing::files::{
     Beside, CloudRead, CubeOpen, Files, RASTER_READER_BUDGET, RasterOpen, Sink, with_extension,
 };
 
 use super::bytes::{Bytes, Remote};
 use crate::rasters::tiles::{Origin, jpeg_pixels};
-
-/// A text cloud is read in pieces of this size.
-const PIECE: u64 = 4 * 1024 * 1024;
-
-/// Threads decompressing a file's pieces at once.
-fn threads() -> usize {
-    std::thread::available_parallelism()
-        .map_or(1, |n| n.get().saturating_sub(1))
-        .clamp(1, 4)
-}
 
 /// The run's files: the drawing's folder and the embedded clouds' bytes (as the library holds them, decoded when read).
 pub struct DesktopFiles {
@@ -107,116 +96,12 @@ impl DesktopFiles {
         {
             return Ok(p.clone());
         }
-        let mut scan = text::Scan::new();
-        let size = bytes.size();
-        let mut at = 0;
-        while at < size {
-            let n = PIECE.min(size - at);
-            scan.feed(&bytes.read(at, n)?).map_err(|e| e.0)?;
-            at += n;
-        }
-        let plan = scan.finish().map_err(|e| e.0)?;
+        let plan = cloud_files::text_plan(bytes)?;
         self.plans
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
             .insert(key.to_owned(), plan.clone());
         Ok(plan)
-    }
-}
-
-/// A LAS, LAZ or COPC read whole, its runs decompressed several at once.
-struct LasRead {
-    input: Input,
-    cloud: Arc<Cloud>,
-    bytes: Arc<Bytes>,
-    runs: Vec<Run>,
-    next: usize,
-    ready: VecDeque<Vec<u8>>,
-    total: u64,
-    seen: u64,
-}
-
-impl CloudRead for LasRead {
-    fn input(&self) -> &Input {
-        &self.input
-    }
-
-    fn next(&mut self, out: &mut Vec<u8>) -> Result<bool, String> {
-        if self.ready.is_empty() {
-            if self.next >= self.runs.len() {
-                return Ok(false);
-            }
-            let n = (threads() * 2).min(self.runs.len() - self.next);
-            let batch = &self.runs[self.next..self.next + n];
-            self.next += n;
-            let (cloud, bytes) = (&self.cloud, &self.bytes);
-            let decoded: Vec<Result<Vec<u8>, String>> = std::thread::scope(|s| {
-                let handles: Vec<_> = batch
-                    .iter()
-                    .map(|run| {
-                        s.spawn(move || -> Result<Vec<u8>, String> {
-                            let raw = bytes.read(run.need.offset, run.need.len)?;
-                            let mut recs = Vec::new();
-                            cloud.records(run, &raw, &mut recs).map_err(|e| e.0)?;
-                            Ok(recs)
-                        })
-                    })
-                    .collect();
-                handles
-                    .into_iter()
-                    .map(|h| h.join().unwrap_or_else(|_| Err("Parça çözülemedi.".into())))
-                    .collect()
-            });
-            for d in decoded {
-                self.ready.push_back(d?);
-            }
-        }
-        let Some(recs) = self.ready.pop_front() else {
-            return Ok(false);
-        };
-        self.seen += (recs.len() / self.input.layout.len.max(1)) as u64;
-        out.extend_from_slice(&recs);
-        Ok(true)
-    }
-
-    fn done(&self) -> f64 {
-        self.seen as f64 / self.total.max(1) as f64
-    }
-}
-
-/// A text cloud parsed piece by piece.
-struct TextRead {
-    input: Input,
-    parse: text::Parse,
-    bytes: Bytes,
-    at: u64,
-    finished: bool,
-}
-
-impl CloudRead for TextRead {
-    fn input(&self) -> &Input {
-        &self.input
-    }
-
-    fn next(&mut self, out: &mut Vec<u8>) -> Result<bool, String> {
-        let size = self.bytes.size();
-        if self.at < size {
-            let n = PIECE.min(size - self.at);
-            let piece = self.bytes.read(self.at, n)?;
-            self.at += n;
-            self.parse.feed(&piece, out).map_err(|e| e.0)?;
-            return Ok(true);
-        }
-        if self.finished {
-            return Ok(false);
-        }
-        self.finished = true;
-        self.parse.finish(out).map_err(|e| e.0)?;
-        Ok(true)
-    }
-
-    fn done(&self) -> f64 {
-        self.at as f64 / self.bytes.size().max(1) as f64
     }
 }
 
@@ -279,42 +164,12 @@ impl Drop for FileSink {
 impl Files for DesktopFiles {
     fn open_cloud(&self, source: &CloudSource) -> Result<Box<dyn CloudRead + '_>, String> {
         let (bytes, key) = self.bytes_of(source)?;
-        if source.format == CloudFormat::Xyz {
-            let plan = self.text_plan(&key, &bytes)?;
-            let input = Input::text(&plan);
-            return Ok(Box::new(TextRead {
-                input,
-                parse: text::Parse::new(plan),
-                bytes,
-                at: 0,
-                finished: false,
-            }));
-        }
-        let mut o = Opening::new(bytes.size());
-        let cloud = loop {
-            match o.step().map_err(|e| e.0)? {
-                Step::Done(c) => break c,
-                Step::Need(n) => o.put(n.offset, bytes.read(n.offset, n.len)?),
-            }
+        let plan = if source.format == CloudFormat::Xyz {
+            Some(self.text_plan(&key, &bytes)?)
+        } else {
+            None
         };
-        let input = Input {
-            head: cloud.head.clone(),
-            layout: cloud.layout,
-            vlrs: cloud.vlrs.clone(),
-            evlrs: cloud.evlrs.clone(),
-        };
-        let runs = cloud.runs();
-        let total = cloud.head.count;
-        Ok(Box::new(LasRead {
-            input,
-            cloud: Arc::new(cloud),
-            bytes: Arc::new(bytes),
-            runs,
-            next: 0,
-            ready: VecDeque::new(),
-            total,
-            seen: 0,
-        }))
+        cloud_files::cloud_read(Box::new(bytes), source.format, plan)
     }
 
     fn output_path(

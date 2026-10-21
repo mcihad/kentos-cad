@@ -2096,6 +2096,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   oynatır, ikisi aynı; ev sahibi `drawing` alanlı komutlara açık çizimin dosyasını verir (`with_own_file`). Her yazan komut kayıtta
   kendi adıyla (`call::recorded`; on bir komut düzeldi). Kalan: nokta bulutu ve çok boyutlu araçların başsız yolu, açık seçenek hücreleri. — **20 Ekim,
   [ADR 0548](docs/adr/0548-coverage-matrix-and-run-equivalence.md).**
+- [ ] `CBS-41` nokta bulutu ve çok boyutlu araçlar başsız (dilim): bulutun ve NetCDF'in dosya işi kabuktan ortak modüle
+  (`kentos_processing::cloud_files`: `ReadAt`, `cloud_read`, `text_plan`, `build_index`, `copc_file`, `netcdf_slice`, `netcdf_reader`);
+  başsız `LocalFiles` bulutu, COPC'yi, NetCDF küpünü ve veri setinin rasterini açar; Python ve MCP'de Seyrelt, Zemin süzgeci, COPC,
+  Kesit, Zaman serisi, Mesh hesaplayıcı (`test_headless_clouds.py`: multidim'in 9 ortak durumu, köyün bulutu). Kalan: adresteki bulut ve
+  NetCDF, başsız mozaik ve JPEG raster, açık seçenek hücreleri. — **21 Ekim,
+  [ADR 0572](docs/adr/0572-point-cloud-and-multidim-tools-headless.md).**
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (dilim): `feed::Ending`, `profile::FeedProfile`,
   `FeedConnecting::conformance_request`; masaüstünde Uygunluk satırı ve kayan form; Python `Taken.ending`, teklifin `profile`'ı;
   `feed_paging_cases.py`, `tests/all/paging.rs`, `test_services.py`. Kalan: canlı sağlayıcı, ETag, belirteç yenileme. — **18 Ekim,

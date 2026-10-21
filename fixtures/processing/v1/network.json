@@ -76,6 +76,8 @@
      "direction": "toFacility",
      "reach": 100,
      "time": "",
+     "profile": "",
+     "date": "",
      "layer": {
       "newName": "En yakın tesis"
      }
@@ -97,6 +99,8 @@
      "cutoff": null,
      "reach": 100,
      "time": "",
+     "profile": "",
+     "date": "",
      "lines": false,
      "layer": {
       "newName": "Maliyet matrisi"
@@ -118,6 +122,8 @@
      "trim": 50,
      "reach": 100,
      "time": "",
+     "profile": "",
+     "date": "",
      "layer": {
       "newName": "Hizmet alanı"
      },

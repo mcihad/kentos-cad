@@ -367,19 +367,34 @@ impl BlockSource {
 impl ReaderOpen {
     /// The reader, and where its blocks are read.
     pub(crate) fn split(self) -> (Reader, BlockSource) {
-        (self.reader, BlockSource { source: self.source, members: self.members })
+        (
+            self.reader,
+            BlockSource {
+                source: self.source,
+                members: self.members,
+            },
+        )
     }
 }
 
 /// A virtual mosaic's reader from its VRT file (docs/adr/0517 §2): each of its files opened as a raster of its own
 /// (a GeoTIFF read in pieces), its blocks read where they are; a VRT in a mosaic is refused.
-fn open_mosaic(path: &std::path::Path, source: &Bytes, size: u64, budget: usize) -> Result<ReaderOpen, String> {
+fn open_mosaic(
+    path: &std::path::Path,
+    source: &Bytes,
+    size: u64,
+    budget: usize,
+) -> Result<ReaderOpen, String> {
     use kentos_formats::raster::vrt;
     if size > vrt::MAX_TEXT as u64 {
         return Err("VRT dosyası 16 MB'tan büyük.".into());
     }
-    let text = String::from_utf8(source.read(0, size)?).map_err(|_| "VRT dosyası UTF-8 değil.".to_owned())?;
-    let folder = path.parent().map(std::path::Path::to_path_buf).unwrap_or_default();
+    let text = String::from_utf8(source.read(0, size)?)
+        .map_err(|_| "VRT dosyası UTF-8 değil.".to_owned())?;
+    let folder = path
+        .parent()
+        .map(std::path::Path::to_path_buf)
+        .unwrap_or_default();
     let (reader, members) = vrt::open_mosaic(&text, &folder, budget, |p, each| {
         let head = File::open(p).ok().and_then(|f| {
             let n = f.metadata().ok()?.len().min(64);
@@ -391,7 +406,13 @@ fn open_mosaic(path: &std::path::Path, source: &Bytes, size: u64, budget: usize)
         open_reader_part(&Origin::File(p.to_path_buf()), None, each).map(|r| r.reader)
     })
     .map_err(|e| e.0)?;
-    Ok(ReaderOpen { reader, source: None, size, identity: None, members })
+    Ok(ReaderOpen {
+        reader,
+        source: None,
+        size,
+        identity: None,
+        members,
+    })
 }
 
 /// The NetCDF files opened lately (docs/adr/0243 §5): a slice's reader is made
@@ -462,28 +483,7 @@ pub(crate) fn fresh_cube(origin: &Origin, part: &Part) -> Result<(Cube, Bytes), 
         Origin::Bytes(b) => Bytes::Memory(b.clone()),
         Origin::Url(_) => return Err("NetCDF adresten okunmaz; dosyayı indirip ekleyin.".into()),
     };
-    let size = source.size();
-    let mut store = ByteStore::new();
-    let mut taken = 0u64;
-    let mut cube = loop {
-        match Cube::parse(&store, size).map_err(|e| e.0)? {
-            Step::Done(c) => break c,
-            Step::Need(n) => {
-                taken += n.len;
-                if taken > HEADER_MOST * 2 {
-                    return Err("NetCDF'in başlığı çok büyük.".into());
-                }
-                store.put(n.offset, source.read(n.offset, n.len)?);
-            }
-        }
-    };
-    for n in cube.needs(CubeWant::Part(part)) {
-        if n.len > 1 << 30 {
-            return Err("NetCDF'in bir değişkeni 1 GB'tan büyük; okunmuyor.".into());
-        }
-        let bytes = source.read(n.offset, n.len)?;
-        cube.put(n.offset, bytes);
-    }
+    let cube = kentos_processing::cloud_files::netcdf_slice(&source, part)?;
     Ok((cube, source))
 }
 

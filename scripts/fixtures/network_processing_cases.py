@@ -283,12 +283,12 @@ def build():
     active = {"scope": "layer", "layerId": "cizim"}
     first = {"network": "yollar", "cost": "Uzunluk"}
     tools = {
-        "network.closestFacility": {"network": first, "incidents": active, "facilities": active, "count": 1, "cutoff": None, "direction": "toFacility", "reach": 100, "time": "",
+        "network.closestFacility": {"network": first, "incidents": active, "facilities": active, "count": 1, "cutoff": None, "direction": "toFacility", "reach": 100, "time": "", "profile": "", "date": "",
                                     "layer": {"newName": "En yakın tesis"}},
-        "network.odMatrix": {"network": first, "origins": active, "destinations": active, "count": None, "cutoff": None, "reach": 100, "time": "", "lines": False,
+        "network.odMatrix": {"network": first, "origins": active, "destinations": active, "count": None, "cutoff": None, "reach": 100, "time": "", "profile": "", "date": "", "lines": False,
                              "layer": {"newName": "Maliyet matrisi"}},
         "network.serviceAreas": {"network": first, "facilities": active, "breaks": "500 1000 1500", "direction": "from", "shape": "disc", "merged": True, "trim": 50,
-                                 "reach": 100, "time": "", "layer": {"newName": "Hizmet alanı"}, "lines": False, "linesLayer": {"newName": "Hizmet alanı çizgileri"}},
+                                 "reach": 100, "time": "", "profile": "", "date": "", "layer": {"newName": "Hizmet alanı"}, "lines": False, "linesLayer": {"newName": "Hizmet alanı çizgileri"}},
     }
     defaults = {"lengthDecimals": DECIMALS, "areaDecimals": 2, "angleUnit": "grad", "plotScale": 1000, "drawingFont": "barlow", "activeLayer": "cizim",
                 "measureHeightMm": 2, "networks": [NETWORK]}

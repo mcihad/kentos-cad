@@ -132,6 +132,16 @@ pub enum Bytes {
     Memory(Arc<Vec<u8>>),
 }
 
+impl kentos_processing::cloud_files::ReadAt for Bytes {
+    fn size(&self) -> u64 {
+        Bytes::size(self)
+    }
+
+    fn read(&self, offset: u64, len: u64) -> Result<Vec<u8>, String> {
+        Bytes::read(self, offset, len)
+    }
+}
+
 impl Bytes {
     pub fn size(&self) -> u64 {
         match self {

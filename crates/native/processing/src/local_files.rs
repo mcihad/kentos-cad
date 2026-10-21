@@ -1,8 +1,9 @@
 //! The headless server's files (docs/adr/0515): what a raster tool reads and writes where there is no window — a
 //! raster's linked file or embedded bytes, read where they are, and a result written beside its place, then renamed
 //! (a COG laid out again). Python's `cad.processing.run` and MCP run the raster tools through these, as the desktop
-//! runs them through its own. An address (HTTP ranges), a NetCDF slice, a JPEG and the point clouds' files stay the
-//! desktop's: such a run is refused, saying why.
+//! runs them through its own; the point clouds' files (LAS, LAZ, COPC, text; a COPC index built from a result) and a
+//! NetCDF file's cube for the multidimensional tools too (docs/adr/0572, `cloud_files`). An address (HTTP ranges), a
+//! mosaic opened as a raster and a JPEG stay the desktop's: such a run is refused, saying why.
 
 use std::collections::HashMap;
 use std::fs::File;
@@ -10,13 +11,15 @@ use std::io::{BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError};
 
-use kentos_commands::{CloudSource, RasterFields};
+use kentos_commands::{CloudFormat, CloudSource, RasterFields};
 use kentos_domain::Document;
 use kentos_formats::raster::source::Reader;
 use kentos_formats::raster::{ByteStore, Step, tiff};
 
+use crate::cloud_files::{ReadAt, cloud_read, copc_file, netcdf_reader, netcdf_slice, text_plan};
 use crate::files::{
-    Beside, CloudRead, Files, RASTER_READER_BUDGET, RasterOpen, Sink, cog_file, with_extension,
+    Beside, CloudRead, CubeOpen, Files, RASTER_READER_BUDGET, RasterOpen, Sink, cog_file,
+    with_extension,
 };
 use crate::types::Feedback;
 
@@ -29,6 +32,39 @@ const IMAGE_MOST: u64 = 512 << 20;
 enum Bytes {
     File(Mutex<File>, u64),
     Memory(Arc<Vec<u8>>),
+}
+
+impl ReadAt for Bytes {
+    fn size(&self) -> u64 {
+        Bytes::size(self)
+    }
+
+    fn read(&self, offset: u64, len: u64) -> Result<Vec<u8>, String> {
+        Bytes::read(self, offset, len)
+    }
+}
+
+/// What a file is of, in the refusals' words: a raster's or a point cloud's.
+#[derive(Clone, Copy)]
+enum Of {
+    Raster,
+    Cloud,
+}
+
+impl Of {
+    fn noun(self) -> &'static str {
+        match self {
+            Of::Raster => "raster",
+            Of::Cloud => "nokta bulutu",
+        }
+    }
+
+    fn whose(self) -> &'static str {
+        match self {
+            Of::Raster => "Rasterin",
+            Of::Cloud => "Bulutun",
+        }
+    }
 }
 
 impl Bytes {
@@ -49,7 +85,7 @@ impl Bytes {
                 let mut out = vec![0u8; len as usize];
                 f.seek(SeekFrom::Start(offset))
                     .and_then(|_| f.read_exact(&mut out))
-                    .map_err(|e| format!("Rasterin dosyası okunamadı: {e}."))?;
+                    .map_err(|e| format!("Dosya okunamadı: {e}."))?;
                 Ok(out)
             }
         }
@@ -63,6 +99,8 @@ pub struct LocalFiles {
     /// The project's search paths (docs/adr/0349 §1): a raster not at its path is looked for there.
     search: Vec<String>,
     assets: HashMap<String, String>,
+    /// The text clouds' plans, each file scanned once (its key `file:<path>` or `asset:<id>`).
+    plans: Mutex<HashMap<String, kentos_pointcloud::text::Plan>>,
 }
 
 impl LocalFiles {
@@ -84,7 +122,23 @@ impl LocalFiles {
             folder,
             search: doc.settings().xref_paths.clone(),
             assets,
+            plans: Mutex::new(HashMap::new()),
         }
+    }
+
+    /// A file at `path` opened for reading by ranges (`whose`: “Rasterin”, “Bulutun”).
+    fn file_bytes(path: &Path, whose: &str) -> Result<Bytes, String> {
+        let file = File::open(path).map_err(|e| {
+            format!(
+                "{whose} dosyası “{}” açılamadı: {e}. Dosyanın yerinde olduğunu denetleyin.",
+                path.display()
+            )
+        })?;
+        let size = file
+            .metadata()
+            .map_err(|e| format!("{whose} dosyası okunamadı: {e}."))?
+            .len();
+        Ok(Bytes::File(Mutex::new(file), size))
     }
 
     fn resolve(&self, file: &str) -> PathBuf {
@@ -96,17 +150,36 @@ impl LocalFiles {
     }
 
     fn bytes_of(&self, raster: &RasterFields) -> Result<Bytes, String> {
-        match (&raster.asset, &raster.file, &raster.url) {
+        self.bytes_from(
+            raster.asset.as_deref(),
+            raster.file.as_deref(),
+            raster.url.is_some(),
+            Of::Raster,
+        )
+        .map(|(b, _)| b)
+    }
+
+    /// A file's bytes and its key (`asset:<id>`, `file:<path>`): an embedded one's from the library, a linked one
+    /// found as the desktop finds it; an address refused.
+    fn bytes_from(
+        &self,
+        asset: Option<&str>,
+        file: Option<&str>,
+        url: bool,
+        of: Of,
+    ) -> Result<(Bytes, String), String> {
+        let (noun, whose) = (of.noun(), of.whose());
+        match (asset, file, url) {
             (Some(id), _, _) => {
                 let url = self
                     .assets
                     .get(id)
-                    .ok_or_else(|| format!("“{id}” kimlikli raster projenin kitaplığında yok."))?;
+                    .ok_or_else(|| format!("“{id}” kimlikli {noun} projenin kitaplığında yok."))?;
                 let data = url
                     .split_once(";base64,")
                     .and_then(|(_, d)| kentos_commands::encoding::base64_decode(d))
-                    .ok_or_else(|| format!("“{id}” kimlikli gömülü raster okunamadı."))?;
-                Ok(Bytes::Memory(Arc::new(data)))
+                    .ok_or_else(|| format!("“{id}” kimlikli gömülü {noun} okunamadı."))?;
+                Ok((Bytes::Memory(Arc::new(data)), format!("asset:{id}")))
             }
             (None, Some(f), _) => {
                 // As the desktop finds a linked file: its path, its relative path from the drawing's folder, the
@@ -122,36 +195,53 @@ impl LocalFiles {
                     None if self.folder.is_none() && Path::new(f).is_file() => PathBuf::from(f),
                     None if !found.tried.is_empty() => {
                         return Err(format!(
-                            "Rasterin dosyası “{f}” bulunamadı; bakılan yerler: {}. Dosyayı yerine koyun ya da \
+                            "{whose} dosyası “{f}” bulunamadı; bakılan yerler: {}. Dosyayı yerine koyun ya da \
                              projenin arama yollarına klasörünü ekleyin.",
                             found.tried.join(", ")
                         ));
                     }
                     None => self.resolve(f),
                 };
-                let file = File::open(&path).map_err(|e| {
-                    format!(
-                        "Rasterin dosyası “{}” açılamadı: {e}. Dosyanın yerinde olduğunu denetleyin.",
-                        path.display()
-                    )
-                })?;
-                let size = file
-                    .metadata()
-                    .map_err(|e| format!("Rasterin dosyası okunamadı: {e}."))?
-                    .len();
-                Ok(Bytes::File(Mutex::new(file), size))
+                let bytes = Self::file_bytes(&path, whose)?;
+                Ok((bytes, format!("file:{}", path.display())))
             }
-            (None, None, Some(_)) => {
-                Err("Adresteki raster yalnız masaüstünde okunur; dosyayı indirip ekleyin.".into())
-            }
-            (None, None, None) => Err("Rasterin dosyası yok.".into()),
+            (None, None, true) => Err(format!(
+                "Adresteki {noun} yalnız masaüstünde okunur; dosyayı indirip ekleyin."
+            )),
+            (None, None, false) => Err(format!("{whose} dosyası yok.")),
         }
     }
 }
 
 impl Files for LocalFiles {
-    fn open_cloud(&self, _: &CloudSource) -> Result<Box<dyn CloudRead + '_>, String> {
-        Err("Nokta bulutu araçları yalnız masaüstünde çalışır.".into())
+    fn open_cloud(&self, source: &CloudSource) -> Result<Box<dyn CloudRead + '_>, String> {
+        let (bytes, key) = self.bytes_from(
+            source.asset.as_deref(),
+            source.file.as_deref(),
+            source.url.is_some(),
+            Of::Cloud,
+        )?;
+        // A text cloud is scanned once a run; the run's next passes take its plan.
+        let plan = if source.format == CloudFormat::Xyz {
+            let kept = self
+                .plans
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .get(&key)
+                .cloned();
+            let plan = match kept {
+                Some(p) => p,
+                None => text_plan(&bytes)?,
+            };
+            self.plans
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .insert(key, plan.clone());
+            Some(plan)
+        } else {
+            None
+        };
+        cloud_read(Box::new(bytes), source.format, plan)
     }
 
     fn output_path(
@@ -206,8 +296,20 @@ impl Files for LocalFiles {
         }))
     }
 
-    fn copc(&self, _: &str, _: &str, _: &mut dyn Feedback, _: f64, _: f64) -> Result<(), String> {
-        Err("COPC dizini yalnız masaüstünde kurulur.".into())
+    fn copc(
+        &self,
+        from: &str,
+        to: &str,
+        feedback: &mut dyn Feedback,
+        start: f64,
+        end: f64,
+    ) -> Result<(), String> {
+        let bytes = Self::file_bytes(Path::new(from), "Bulutun")?;
+        let mut tick = |done: f64| {
+            feedback.progress(start + (end - start) * done, "COPC dizini kuruluyor");
+            feedback.canceled()
+        };
+        copc_file(Box::new(bytes), Path::new(to), &mut tick)
     }
 
     fn remove(&self, path: &str) {
@@ -215,10 +317,15 @@ impl Files for LocalFiles {
     }
 
     fn open_raster(&self, raster: &RasterFields) -> Result<RasterOpen<'_>, String> {
-        if raster.dataset.is_some() {
-            return Err("NetCDF veri setinin rasteri yalnız masaüstünde okunur.".into());
-        }
         let source = self.bytes_of(raster)?;
+        if let Some(part) = kentos_formats::multidim::cube::Part::of(raster) {
+            let reader = netcdf_reader(&source, &part, RASTER_READER_BUDGET)?;
+            return Ok(RasterOpen {
+                reader,
+                block: Box::new(move |need| source.read(need.offset, need.len)),
+                jpeg: Box::new(|_| Err("NetCDF'in dilimi JPEG değil.".to_owned())),
+            });
+        }
         let size = source.size();
         let head = source.read(0, size.min(16))?;
         let reader = if tiff::sniff(&head) {
@@ -274,6 +381,19 @@ impl Files for LocalFiles {
                 }
             }),
             jpeg: Box::new(|_| Err("JPEG sıkıştırmalı TIFF yalnız masaüstünde okunur.".to_owned())),
+        })
+    }
+
+    fn open_cube(&self, raster: &RasterFields) -> Result<CubeOpen<'_>, String> {
+        let Some(part) = kentos_formats::multidim::cube::Part::of(raster) else {
+            return Err("Bu raster NetCDF veri seti göstermiyor.".to_owned());
+        };
+        let source = self.bytes_of(raster)?;
+        let cube = netcdf_slice(&source, &part)?;
+        Ok(CubeOpen {
+            cube,
+            part,
+            read: Box::new(move |offset, len| source.read(offset, len)),
         })
     }
 }
