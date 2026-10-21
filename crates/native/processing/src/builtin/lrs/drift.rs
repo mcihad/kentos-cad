@@ -6,17 +6,14 @@
 
 use std::collections::BTreeMap;
 
-use kentos_commands::{Entity, LineEntity, PointEntity, Vec2 as Point};
+use kentos_commands::Entity;
 use kentos_domain::Slot;
-use kentos_geometry_core::Vec2;
-use kentos_geometry_core::ops::lrs::{EventIn, RoutePart, events_run, line_drift, point_drift};
+use kentos_geometry_core::ops::lrs::events_run;
+use kentos_native_application::lrs_events::{self, Rules};
 use serde_json::{Value, json};
 
 use super::events::fault_text;
-use super::{
-    ROUTE_KINDS, again_text, cell_reason, features, field, number, polyline_of, read_measure,
-    route_of, routes_by_id, side_param, text_of,
-};
+use super::{ROUTE_KINDS, again_text, features, field, number, routes_by_id, side_param, text_of};
 use crate::builtin::proximity::length_text;
 use crate::types::{
     ChangeSet, EnumOption, Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Patch, Resolved,
@@ -94,62 +91,23 @@ pub fn event_drift() -> Tool {
     }
 }
 
-fn p(q: Vec2) -> Point {
-    Point { x: q.x, y: q.y }
-}
-
-/// An event object's shape as a route's parts (a point none).
-fn parts_of(e: &Entity) -> Option<Vec<RoutePart>> {
-    route_of(e).map(|r| r.parts)
-}
-
-/// The object moved to its place, of its own kind; none when a line cannot take a bent path.
-fn moved(e: &Entity, at: Option<Vec2>, parts: Option<&[RoutePart]>) -> Option<Entity> {
-    match (e, at, parts) {
-        (Entity::Point(q), Some(at), _) => Some(Entity::Point(PointEntity {
-            p: p(at),
-            ..q.clone()
-        })),
-        (Entity::Line(l), _, Some([one])) => {
-            let straight = one
-                .bulges
-                .as_ref()
-                .is_none_or(|b| b.iter().all(|&x| x == 0.0));
-            if one.pts.len() != 2 || !straight {
-                return None;
-            }
-            Some(Entity::Line(LineEntity {
-                a: p(one.pts[0]),
-                b: p(one.pts[1]),
-                za: None,
-                zb: None,
-                ma: one.ms.first().copied().flatten(),
-                mb: one.ms.get(1).copied().flatten(),
-                ..l.clone()
-            }))
-        }
-        (Entity::Polyline(_), _, Some(parts)) => {
-            Some(polyline_of(parts, &e.base().layer_id, BTreeMap::new()))
-        }
-        _ => None,
-    }
-}
-
 fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> RunResult {
     let routes = routes_by_id(&v.features("routes").entities, v.text("routeField"));
     if routes.again > 0 {
         feedback.warn(again_text(routes.again));
     }
     let line = v.text("eventKind") == "line";
-    let mut fields = vec![v.text("eventRoute").to_owned()];
-    if line {
-        fields.push(v.text("from").to_owned());
-        fields.push(v.text("to").to_owned());
-    } else {
-        fields.push(v.text("measure").to_owned());
-    }
     let offset_field = crate::text::js_trim(v.text("offset")).to_owned();
-    let turn = if v.text("side") == "left" { -1.0 } else { 1.0 };
+    let rules = Rules {
+        route: v.text("eventRoute"),
+        measures: if line {
+            vec![v.text("from"), v.text("to")]
+        } else {
+            vec![v.text("measure")]
+        },
+        offset: Some(offset_field.as_str()),
+        turn: if v.text("side") == "left" { -1.0 } else { 1.0 },
+    };
     let tolerance = v.number("tolerance").unwrap_or(0.001);
     let fix = v.flag("fix");
     let objects = &v.features("events").entities;
@@ -168,30 +126,15 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             other += 1;
             continue;
         }
-        let attrs = &e.base().attrs;
-        let cell = |name: &str| attrs.get(name).map_or("", String::as_str);
-        let id = crate::text::js_trim(cell(&fields[0])).to_owned();
-        let mut nums = Vec::new();
-        let mut why: Option<String> = None;
-        for f in &fields[1..] {
-            match read_measure(cell(f)) {
-                Some(n) => nums.push(n),
-                None => {
-                    why = Some(cell_reason(f, cell(f)));
-                    break;
-                }
-            }
-        }
-        let mut offset = 0.0;
-        if why.is_none()
-            && !offset_field.is_empty()
-            && !crate::text::js_trim(cell(&offset_field)).is_empty()
-        {
-            match read_measure(cell(&offset_field)) {
-                Some(n) => offset = n,
-                None => why = Some(cell_reason(&offset_field, cell(&offset_field))),
-            }
-        }
+        let (id, reading) = match lrs_events::read(e, &rules) {
+            Ok(r) => (r.id.clone(), Ok(r)),
+            Err(why) => (
+                crate::text::js_trim(e.base().attrs.get(rules.route).map_or("", String::as_str))
+                    .to_owned(),
+                Err(why),
+            ),
+        };
+        let mut why: Option<String> = reading.as_ref().err().cloned();
         let route = routes.index.get(id.as_str()).copied();
         if why.is_none() && route.is_none() {
             why = Some(format!("“{id}” rotası yok"));
@@ -202,14 +145,11 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             rows.push((at, json!([format!("#{}", e.base().id), id, "", why])));
             continue;
         }
+        let Ok(reading) = reading else {
+            continue;
+        };
         checked.push((at, e));
-        events.push(EventIn {
-            route,
-            m: (!line).then(|| nums[0]),
-            from: line.then(|| nums[0]),
-            to: line.then(|| nums[1]),
-            offset: Some(offset * turn),
-        });
+        events.push(lrs_events::event_in(&reading, route, line));
     }
     if other > 0 {
         feedback.info(format!("{other} nesne olay türünde değil; denetlenmedi."));
@@ -230,10 +170,8 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             rows.push((at, json!([label, rid, "", fault_text(ctx.units, f)])));
             continue;
         }
-        let drift = match (e, out.p, &out.parts) {
-            (Entity::Point(q), Some(at), _) => point_drift(Vec2 { x: q.p.x, y: q.p.y }, at),
-            (_, _, Some(parts)) => parts_of(e).map_or(f64::INFINITY, |now| line_drift(&now, parts)),
-            _ => continue,
+        let Some(drift) = lrs_events::drift_of(e, out) else {
+            continue;
         };
         if drift <= tolerance {
             continue;
@@ -241,7 +179,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         drifted += 1;
         let mut said = "Kaydı".to_owned();
         if fix {
-            match moved(e, out.p, out.parts.as_deref()) {
+            match lrs_events::moved(e, out) {
                 Some(shape) => {
                     said = "Yerine taşındı".into();
                     update.push(Patch {

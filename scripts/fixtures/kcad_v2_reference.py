@@ -344,6 +344,8 @@ def settings(s):
                 "relations": (opaque, False),
                 # Schema 89 (docs/adr/0527): the project's join views, as their JSON.
                 "joinViews": (opaque, False),
+                # Schema 97 (docs/adr/0569): the project's links of event layers to their routes, as their JSON.
+                "linearEvents": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
                 "domains": (opaque, False),
                 # Schema 71 (docs/adr/0331 §1): the project's own hatch patterns, as their JSON.
@@ -2193,6 +2195,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 97 (docs/adr/0569): the project's links of event layers to their routes.
+    if "linearEvents" in (settings or {}):
+        return 97
     # Schema 96 (docs/adr/0568): a closure's weekdays or hours.
     if any("days" in n.get("closures", {}) or "hours" in n.get("closures", {}) for n in (settings or {}).get("networks", [])):
         return 96
@@ -2761,7 +2766,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-97.kcad"] = container(root(cmap(parts), version=uint(97)))
+    files["schema-version-98.kcad"] = container(root(cmap(parts), version=uint(98)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4613,6 +4618,30 @@ def build():
     out["broken/join-views-empty.kcad"] = join_broken(lambda d: d["settings"].update(joinViews=[]))
     out["broken/join-views-empty-fields.kcad"] = join_broken(lambda d: d["settings"]["joinViews"][0].update(fields=[]))
     out["broken/join-views-same-id.kcad"] = join_broken(lambda d: d["settings"]["joinViews"].append(dict(d["settings"]["joinViews"][0])))
+    # Linear events (docs/adr/0569): schema 97's; in schema 96 an unknown field; an unknown field of a link, a default
+    # written (`side` right), an empty list, a point link with a from, a line link without a to, a route layer that is the
+    # event layer, two links of one id, one event layer in two links, an event layer another link routes over, a
+    # negative tolerance.
+    out["linear-events.kcad"] = container(document(load("linear-events.json")))
+    events_payload = document(load("linear-events.json"))
+    assert events_payload.count(b"\x67version\x18\x61") == 1, "the linear events are schema 97"
+    out["broken/linear-events-in-schema-96.kcad"] = container(events_payload.replace(b"\x67version\x18\x61", b"\x67version\x18\x60"))
+
+    def events_broken(change):
+        d = copy.deepcopy(load("linear-events.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/linear-events-unknown-field.kcad"] = events_broken(lambda d: d["settings"]["linearEvents"][0].update(sql="select 1"))
+    out["broken/linear-events-default-written.kcad"] = events_broken(lambda d: d["settings"]["linearEvents"][0].update(side="right"))
+    out["broken/linear-events-empty.kcad"] = events_broken(lambda d: d["settings"].update(linearEvents=[]))
+    out["broken/linear-events-point-with-from.kcad"] = events_broken(lambda d: d["settings"]["linearEvents"][0].update({"from": "bas"}))
+    out["broken/linear-events-line-without-to.kcad"] = events_broken(lambda d: d["settings"]["linearEvents"][1].pop("to"))
+    out["broken/linear-events-route-is-event.kcad"] = events_broken(lambda d: d["settings"]["linearEvents"][0].update(routes=["kaza"]))
+    out["broken/linear-events-same-id.kcad"] = events_broken(lambda d: d["settings"]["linearEvents"][1].update(id="kazalar"))
+    out["broken/linear-events-same-layer.kcad"] = events_broken(lambda d: d["settings"]["linearEvents"][1].update(events="kaza"))
+    out["broken/linear-events-feeds-another.kcad"] = events_broken(lambda d: d["settings"]["linearEvents"][1].update(routes=["yol", "kaza"]))
+    out["broken/linear-events-negative-tolerance.kcad"] = events_broken(lambda d: d["settings"]["linearEvents"][0].update(tolerance=-1.0))
     # Recorded time (docs/adr/0537): schema 90's; in schema 89 an unknown field; an end without a start, a field the
     # valid time holds.
     out["recorded-time.kcad"] = container(document(load("recorded-time.json")))

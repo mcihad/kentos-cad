@@ -230,6 +230,8 @@ pub enum Dialog {
     Relations,
     /// Birleşik görünümler (joins_window.rs, docs/adr/0527); the window is `App::joins_window`.
     Joins,
+    /// Olay bağları (event_links_window.rs, docs/adr/0569); the window is `App::event_links_window`.
+    EventLinks,
     /// Kayıtları denetle (forms/audit.rs, docs/adr/0406); the window is `App::form_audit`.
     FormAudit,
     /// Koşullu biçim (forms/table_styles.rs, docs/adr/0413); the window is `App::table_styles`.
@@ -531,6 +533,8 @@ pub enum Message {
     Relations(crate::forms::relations::Event),
     /// An event of Birleşik görünümler (joins_window.rs, docs/adr/0527).
     Joins(crate::joins_window::Event),
+    /// An event of Olay bağları (event_links_window.rs, docs/adr/0569).
+    EventLinks(crate::event_links_window::Event),
     TableStyles(crate::forms::table_styles::Event),
     Subtypes(crate::forms::subtypes::Event),
     Contingents(crate::forms::contingents::Event),
@@ -1019,6 +1023,8 @@ pub struct App {
     pub(crate) relations_window: Option<crate::forms::relations::Window>,
     /// Birleşik görünümler (joins_window.rs, docs/adr/0527).
     pub(crate) joins_window: Option<crate::joins_window::Window>,
+    /// Olay bağları (event_links_window.rs, docs/adr/0569).
+    pub(crate) event_links_window: Option<crate::event_links_window::Window>,
     pub(crate) table_styles: Option<crate::forms::table_styles::Window>,
     pub(crate) subtypes: Option<crate::forms::subtypes::Window>,
     pub(crate) contingents: Option<crate::forms::contingents::Window>,
@@ -1366,6 +1372,7 @@ impl App {
             form_stack: Vec::new(),
             relations_window: None,
             joins_window: None,
+            event_links_window: None,
             table_styles: None,
             subtypes: None,
             contingents: None,
@@ -1934,6 +1941,7 @@ impl App {
             Message::Forms(event) => return self.forms_event(event),
             Message::Relations(event) => return self.relations_event(event),
             Message::Joins(event) => return self.joins_event(event),
+            Message::EventLinks(event) => return self.event_links_event(event),
             Message::TableStyles(event) => return self.table_styles_event(event),
             Message::Subtypes(event) => return self.subtypes_event(event),
             Message::Contingents(event) => return self.contingents_event(event),
@@ -2847,6 +2855,8 @@ impl App {
             "standards.check" | "standards.apply" => self.open_drawing_standard(),
             "profile.window" => self.open_data_profile(),
             "network.subnetworks" => self.open_subnetworks(),
+            // Olay bağları (event_links_window.rs, docs/adr/0569 §5).
+            "linearRef.eventLinks" => self.open_event_links(),
             // Çizgi tipleri (docs/adr/0313 §7).
             "lineTypes.manage" => self.open_line_types(),
             "hatchPatterns.manage" => self.open_hatch_patterns(),

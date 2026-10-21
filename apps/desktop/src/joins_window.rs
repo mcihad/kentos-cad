@@ -242,7 +242,7 @@ impl App {
     }
 
     /// A layer's keys for the lists: the object's id, then its fields (an untyped layer's attributes).
-    fn join_keys_of(&self, layer: &str) -> Vec<(String, String)> {
+    pub(crate) fn join_keys_of(&self, layer: &str) -> Vec<(String, String)> {
         let mut out = vec![(UID_KEY.to_owned(), UID_WORDS.to_owned())];
         let Some(doc) = &self.document else {
             return out;

@@ -684,6 +684,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.service"
             // Its remove takes a network's definition away (docs/adr/0209 §11).
             | "cad.network.define"
+            // Its remove takes an event link away (docs/adr/0569 §2).
+            | "cad.linearref.define"
             // It overwrites the attribute's values and takes them away from what no subnetwork reaches (docs/adr/0557 §2).
             | "cad.subnetworks.update"
             // Its remove takes address data's definition away (docs/adr/0229 §14).

@@ -5113,6 +5113,55 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Olayları rotalarına bağla (docs/adr/0569), held together by fixtures/commands/v1/cad.linearref.define.json.
+        CommandDescriptor {
+            id: crate::CAD_LINEARREF_DEFINE.into(),
+            version: crate::CAD_LINEARREF_DEFINE_VERSION,
+            title: "Olay bağı".into(),
+            summary: "Projenin olay bağlarına bir bağ yazar (set: aynı kimlikli bağın yerini alır, yoksa sona eklenir) ya da birini siler (remove). \
+                      Bağ, bir olay katmanının (noktalar ya da çizgiler ve çoklu çizgiler) rotalarına bağlanışıdır: rota katmanları (1–16) ve rotaların kimlik alanı, olayların rota alanı, nokta olayı için ölçü alanı (kind point) ya da çizgi olayı için başlangıç ve bitiş ölçüsü alanları (kind line), isteğe bağlı öteleme alanı ve yönü (side: right ya da left), tolerans (m, varsayılan 0,001). \
+                      Bağ olayları rotalarında güncel tutar: rota katmanlarının ya da olay katmanının bir nesnesine dokunan her yazma (rotanın geometrisi, M'si ya da kimliği; olayın rota ya da ölçü öznitelikleri; olayın kendisi), aynı adımda, olay nesnelerini Olayları rotada göster'in kuralıyla rotanın verdiği yere koyar (Olay kaymasını denetle'nin Yerine taşı'sı gibi): nokta noktaya, çizgi rotanın parçasına. Geri alma yazmayı ve olayların yerlerini birlikte geri alır. \
+                      Bir yazma bu yüzden hiçbir zaman reddedilmez: rotası olmayan, ölçüsü sayı olmayan ya da rotanın dışında kalan olay, kilitli olay katmanı ve kırıklı yola taşınamayan çizgi olayı olduğu yerde kalır ve yazmanın cevabına events_dirty uyarısı girer. \
+                      Bağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir ve olayları kendiliğinden taşımaz; bağdan sonraki yazmalar taşır. Çizimde olmayan katmanı adlandıran bağ yazılır, unknown_layer uyarısıyla. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LinearRefDefine>(),
+            output: schema::<crate::LinearRefDefined>(),
+            plan: Some(schema::<crate::LinearRefDefined>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Kaza noktaları D-100 rotasında kilometreleriyle kalsın".into(),
+                    input: json!({
+                        "operation": "set",
+                        "link": {
+                            "id": "kazalar",
+                            "name": "Kazalar",
+                            "events": "kaza",
+                            "kind": "point",
+                            "routes": ["yol"],
+                            "routeField": "Yol",
+                            "eventRoute": "Yol",
+                            "measure": "Km"
+                        }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Olay bağını sil".into(),
+                    input: json!({ "operation": "remove", "id": "kazalar" }),
+                    output: None,
+                },
+            ],
+        },
         // Adres verisi (docs/adr/0229 §14), held together by fixtures/commands/v1/cad.addresses.define.json.
         // The web is paused (docs/adr/0228): the desktop's host alone runs it for now.
         CommandDescriptor {
@@ -9190,6 +9239,9 @@ mod tests {
                     crate::CAD_NETWORK_DEFINE => {
                         serde_json::from_value::<crate::NetworkDefine>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LINEARREF_DEFINE => {
+                        serde_json::from_value::<crate::LinearRefDefine>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SUBNETWORKS_FIND => {
                         serde_json::from_value::<crate::SubnetworksFind>(e.input.clone()).map(|_| ())
                     }
@@ -9676,6 +9728,10 @@ mod tests {
                         }
                         crate::CAD_NETWORK_DEFINE => {
                             serde_json::from_value::<crate::NetworkDefined>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LINEARREF_DEFINE => {
+                            serde_json::from_value::<crate::LinearRefDefined>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {

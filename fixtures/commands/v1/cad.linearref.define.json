@@ -1,0 +1,2561 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.linearref.define",
+  "commandVersion": 1,
+  "title": "Olay bağı: bir olay katmanının rotalarına bağını yaz ya da sil (ADR 0569 §2)",
+  "note": "scripts/fixtures/linearref_define_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/commands/src/cad_linearref.rs, crates/shared/contracts/src/linear_events.rs) KentOS kodu olmadan kurulur. `expect.linearEvents` projenin olay bağlarıdır. Olay bağı proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı yazmaz ve olayları kendiliğinden taşımaz; bağdan sonraki yazmalar taşır (cad.linearref.follow.json).",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Olay bağları",
+    "settings": {
+      "srid": 5254,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow",
+      "linearEvents": [
+        {
+          "id": "kazalar",
+          "name": "Kazalar",
+          "events": "kaza",
+          "kind": "point",
+          "routes": [
+            "yol"
+          ],
+          "routeField": "Yol",
+          "eventRoute": "Yol",
+          "measure": "Km"
+        }
+      ]
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "yol-eski",
+        "name": "Eski yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kaza",
+        "name": "Kaza",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kesim",
+        "name": "Kesim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "point",
+        "id": 1,
+        "layerId": "kaza",
+        "attrs": {
+          "Yol": "D-100",
+          "Km": "4"
+        },
+        "p": {
+          "x": 500004,
+          "y": 4400000
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Ekle: yeni bağ sona; proje ayarıdır, geri alma adımı yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "links": [
+                {
+                  "id": "kazalar",
+                  "name": "Kazalar",
+                  "events": "kaza",
+                  "kind": "point",
+                  "routes": [
+                    "yol"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "measure": "Km"
+                },
+                {
+                  "id": "kesimler",
+                  "name": "Kaplama kesimleri",
+                  "events": "kesim",
+                  "kind": "line",
+                  "routes": [
+                    "yol",
+                    "yol-eski"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "from": "Bas",
+                  "to": "Son",
+                  "offset": "Sapma",
+                  "side": "left",
+                  "tolerance": 0.01
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              },
+              {
+                "id": "kesimler",
+                "name": "Kaplama kesimleri",
+                "events": "kesim",
+                "kind": "line",
+                "routes": [
+                  "yol",
+                  "yol-eski"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "from": "Bas",
+                "to": "Son",
+                "offset": "Sapma",
+                "side": "left",
+                "tolerance": 0.01
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: aynı kimlikli bağ yerinde değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "links": [
+                {
+                  "id": "kazalar",
+                  "name": "Kazalar",
+                  "events": "kaza",
+                  "kind": "point",
+                  "routes": [
+                    "yol"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "measure": "Km"
+                },
+                {
+                  "id": "kesimler",
+                  "name": "Kaplama kesimleri",
+                  "events": "kesim",
+                  "kind": "line",
+                  "routes": [
+                    "yol",
+                    "yol-eski"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "from": "Bas",
+                  "to": "Son",
+                  "offset": "Sapma",
+                  "side": "left",
+                  "tolerance": 0.01
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kazalar",
+              "name": "Kazalar",
+              "events": "kaza",
+              "kind": "point",
+              "routes": [
+                "yol"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "measure": "Km",
+              "offset": "Sapma",
+              "tolerance": 0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "links": [
+                {
+                  "id": "kazalar",
+                  "name": "Kazalar",
+                  "events": "kaza",
+                  "kind": "point",
+                  "routes": [
+                    "yol"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "measure": "Km",
+                  "offset": "Sapma",
+                  "tolerance": 0.5
+                },
+                {
+                  "id": "kesimler",
+                  "name": "Kaplama kesimleri",
+                  "events": "kesim",
+                  "kind": "line",
+                  "routes": [
+                    "yol",
+                    "yol-eski"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "from": "Bas",
+                  "to": "Son",
+                  "offset": "Sapma",
+                  "side": "left",
+                  "tolerance": 0.01
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km",
+                "offset": "Sapma",
+                "tolerance": 0.5
+              },
+              {
+                "id": "kesimler",
+                "name": "Kaplama kesimleri",
+                "events": "kesim",
+                "kind": "line",
+                "routes": [
+                  "yol",
+                  "yol-eski"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "from": "Bas",
+                "to": "Son",
+                "offset": "Sapma",
+                "side": "left",
+                "tolerance": 0.01
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sil: olaylar olduğu yerde kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "id": "kazalar"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "links": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "linearEvents": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimde olmayan katmanlar: bağ yazılır, her katman bir uyarıyla (olay katmanı, sonra rotalar)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "yok",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "links": [
+                {
+                  "id": "kazalar",
+                  "name": "Kazalar",
+                  "events": "kaza",
+                  "kind": "point",
+                  "routes": [
+                    "yol"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "measure": "Km"
+                },
+                {
+                  "id": "kesimler",
+                  "name": "Kaplama kesimleri",
+                  "events": "yok",
+                  "kind": "line",
+                  "routes": [
+                    "yol",
+                    "eski"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "from": "Bas",
+                  "to": "Son",
+                  "offset": "Sapma",
+                  "side": "left",
+                  "tolerance": 0.01
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "unknown_layer",
+                "message": "“yok” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“eski” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              },
+              {
+                "id": "kesimler",
+                "name": "Kaplama kesimleri",
+                "events": "yok",
+                "kind": "line",
+                "routes": [
+                  "yol",
+                  "eski"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "from": "Bas",
+                "to": "Son",
+                "offset": "Sapma",
+                "side": "left",
+                "tolerance": 0.01
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrula: hiçbir şey yazılmaz, uyarılar söylenir",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "yok",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": [
+              {
+                "code": "unknown_layer",
+                "message": "“yok” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“eski” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: yazılacak liste ve şimdiki sürüm; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "links": [
+                {
+                  "id": "kazalar",
+                  "name": "Kazalar",
+                  "events": "kaza",
+                  "kind": "point",
+                  "routes": [
+                    "yol"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "measure": "Km"
+                },
+                {
+                  "id": "kesimler",
+                  "name": "Kaplama kesimleri",
+                  "events": "kesim",
+                  "kind": "line",
+                  "routes": [
+                    "yol",
+                    "yol-eski"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "from": "Bas",
+                  "to": "Son",
+                  "offset": "Sapma",
+                  "side": "left",
+                  "tolerance": 0.01
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: silmenin listesi; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "operation": "remove",
+            "id": "kazalar"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "links": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: dört alanlı çizgi bağı, öteleme, sol yön ve sıfır tolerans",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "links": [
+                {
+                  "id": "kazalar",
+                  "name": "Kazalar",
+                  "events": "kaza",
+                  "kind": "point",
+                  "routes": [
+                    "yol"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "measure": "Km"
+                },
+                {
+                  "id": "kesimler",
+                  "name": "Kaplama kesimleri",
+                  "events": "kesim",
+                  "kind": "line",
+                  "routes": [
+                    "yol",
+                    "yol-eski"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "from": "Bas",
+                  "to": "Son",
+                  "offset": "Sapma",
+                  "side": "left",
+                  "tolerance": 0.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              },
+              {
+                "id": "kesimler",
+                "name": "Kaplama kesimleri",
+                "events": "kesim",
+                "kind": "line",
+                "routes": [
+                  "yol",
+                  "yol-eski"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "from": "Bas",
+                "to": "Son",
+                "offset": "Sapma",
+                "side": "left",
+                "tolerance": 0.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: en çok on altı rota katmanı (çizimde olmayanlar uyarıyla)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "r0",
+                "r1",
+                "r2",
+                "r3",
+                "r4",
+                "r5",
+                "r6",
+                "r7",
+                "r8",
+                "r9",
+                "r10",
+                "r11",
+                "r12",
+                "r13",
+                "r14",
+                "r15"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "links": [
+                {
+                  "id": "kazalar",
+                  "name": "Kazalar",
+                  "events": "kaza",
+                  "kind": "point",
+                  "routes": [
+                    "yol"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "measure": "Km"
+                },
+                {
+                  "id": "kesimler",
+                  "name": "Kaplama kesimleri",
+                  "events": "kesim",
+                  "kind": "line",
+                  "routes": [
+                    "r0",
+                    "r1",
+                    "r2",
+                    "r3",
+                    "r4",
+                    "r5",
+                    "r6",
+                    "r7",
+                    "r8",
+                    "r9",
+                    "r10",
+                    "r11",
+                    "r12",
+                    "r13",
+                    "r14",
+                    "r15"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "from": "Bas",
+                  "to": "Son",
+                  "offset": "Sapma",
+                  "side": "left",
+                  "tolerance": 0.01
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "unknown_layer",
+                "message": "“r0” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r1” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r2” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r3” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r4” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r5” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r6” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r7” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r8” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r9” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r10” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r11” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r12” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r13” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r14” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“r15” kimlikli katman çizimde yok; bağ bu katman gelene dek bir şey yapmaz.",
+                "path": "link"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              },
+              {
+                "id": "kesimler",
+                "name": "Kaplama kesimleri",
+                "events": "kesim",
+                "kind": "line",
+                "routes": [
+                  "r0",
+                  "r1",
+                  "r2",
+                  "r3",
+                  "r4",
+                  "r5",
+                  "r6",
+                  "r7",
+                  "r8",
+                  "r9",
+                  "r10",
+                  "r11",
+                  "r12",
+                  "r13",
+                  "r14",
+                  "r15"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "from": "Bas",
+                "to": "Son",
+                "offset": "Sapma",
+                "side": "left",
+                "tolerance": 0.01
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "bağsız yazma",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_event_link",
+              "message": "Yazılacak olay bağı (link) verilmedi; bağın tanımını verin.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kimliksiz silme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_id",
+              "message": "Silinecek olay bağının kimliğini (id) verin.",
+              "path": "id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş kimlikle silme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "id": ""
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_id",
+              "message": "Silinecek olay bağının kimliğini (id) verin.",
+              "path": "id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: kimlikte boşluk",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kaplama kesimi",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“kaplama kesimi” bir bağ kimliği olamaz: 1–64 harf, rakam, -, _ ya da . olmalı.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: adı boşlukla başlıyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": " Kesimler",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“kesimler” bağının adı boş, baş ya da sonda boşluklu, 64 karakterden uzun ya da denetim karakterli.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: olay katmanı yazılmamış",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kaplama kesimleri” bağının olay katmanı yazılmamış.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: rota katmanı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kaplama kesimleri” bağının 1–16 rota katmanı olmalı; 0 verildi.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: on yedi rota katmanı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "r0",
+                "r1",
+                "r2",
+                "r3",
+                "r4",
+                "r5",
+                "r6",
+                "r7",
+                "r8",
+                "r9",
+                "r10",
+                "r11",
+                "r12",
+                "r13",
+                "r14",
+                "r15",
+                "r16"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kaplama kesimleri” bağının 1–16 rota katmanı olmalı; 17 verildi.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: rota katmanlarından biri boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                ""
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kaplama kesimleri” bağının rota katmanlarından biri boş.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: olay katmanı rota katmanı da",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "kesim"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kaplama kesimleri” bağında olay katmanı rota katmanı da olamaz.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: rota katmanı iki kez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kaplama kesimleri” bağında “yol” rota katmanı iki kez yazılmış.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: rota kimliği alanı boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kaplama kesimleri” bağının rota kimliği alanı boş.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: olayın rota alanı boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kaplama kesimleri” bağının olayın rota alanı boş.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: öteleme alanı boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kaplama kesimleri” bağının öteleme alanı boş.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: nokta bağında ölçü alanı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kazalar",
+              "name": "Kazalar",
+              "events": "kaza",
+              "kind": "point",
+              "routes": [
+                "yol"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kazalar” nokta bağının ölçü alanı (measure) yazılmamış.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: nokta bağında ölçü alanı boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kazalar",
+              "name": "Kazalar",
+              "events": "kaza",
+              "kind": "point",
+              "routes": [
+                "yol"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "measure": ""
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kazalar” bağının ölçü alanı boş.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: nokta bağında başlangıç alanı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kazalar",
+              "name": "Kazalar",
+              "events": "kaza",
+              "kind": "point",
+              "routes": [
+                "yol"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "measure": "Km",
+              "from": "Bas"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kazalar” nokta bağının başlangıç ve bitiş alanı olmaz; ölçü alanı verin.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: çizgi bağında bitiş alanı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kaplama kesimleri” çizgi bağının başlangıç (from) ve bitiş (to) ölçüsü alanları yazılmalı.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: çizgi bağında tek ölçü alanı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01,
+              "measure": "Km"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kaplama kesimleri” çizgi bağının tek ölçü alanı olmaz; başlangıç ve bitiş alanlarını verin.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: eksi tolerans",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": -0.5
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“Kaplama kesimleri” bağının toleransı sıfır ya da daha büyük bir sayı olmalı.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: başka bağın olay katmanı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "ikinci",
+              "name": "İkinci",
+              "events": "kaza",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“kaza” katmanının olayları iki bağda; bir katman bir bağın olay katmanıdır.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağ: başka bağın olay katmanı bu bağın rotası",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "besleyen",
+              "name": "Besleyen",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "kaza"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_event_link",
+              "message": "“kaza” katmanı “Kazalar” bağının olay katmanı ve “Besleyen” bağının rota katmanı; ikisi birden olamaz.",
+              "path": "link"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            },
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "sürüm çakışması: plan edilen sürümden sonra çizim değişmişse hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "once"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "link": {
+              "id": "kesimler",
+              "name": "Kaplama kesimleri",
+              "events": "kesim",
+              "kind": "line",
+              "routes": [
+                "yol",
+                "yol-eski"
+              ],
+              "routeField": "Yol",
+              "eventRoute": "Yol",
+              "from": "Bas",
+              "to": "Son",
+              "offset": "Sapma",
+              "side": "left",
+              "tolerance": 0.01
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "links": [
+                {
+                  "id": "kazalar",
+                  "name": "Kazalar",
+                  "events": "kaza",
+                  "kind": "point",
+                  "routes": [
+                    "yol"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "measure": "Km"
+                },
+                {
+                  "id": "kesimler",
+                  "name": "Kaplama kesimleri",
+                  "events": "kesim",
+                  "kind": "line",
+                  "routes": [
+                    "yol",
+                    "yol-eski"
+                  ],
+                  "routeField": "Yol",
+                  "eventRoute": "Yol",
+                  "from": "Bas",
+                  "to": "Son",
+                  "offset": "Sapma",
+                  "side": "left",
+                  "tolerance": 0.01
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "id": "kazalar",
+            "expectedRevision": "$once"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              },
+              {
+                "id": "kesimler",
+                "name": "Kaplama kesimleri",
+                "events": "kesim",
+                "kind": "line",
+                "routes": [
+                  "yol",
+                  "yol-eski"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "from": "Bas",
+                "to": "Son",
+                "offset": "Sapma",
+                "side": "left",
+                "tolerance": 0.01
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "projede olmayan bağı silme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "id": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_event_link",
+              "message": "“yok” kimlikli olay bağı projede yok. Var olan bir bağın kimliğini verin.",
+              "path": "id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "linearEvents": [
+              {
+                "id": "kazalar",
+                "name": "Kazalar",
+                "events": "kaza",
+                "kind": "point",
+                "routes": [
+                  "yol"
+                ],
+                "routeField": "Yol",
+                "eventRoute": "Yol",
+                "measure": "Km"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

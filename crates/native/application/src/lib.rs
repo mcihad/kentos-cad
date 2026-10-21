@@ -202,6 +202,9 @@ pub mod hatch_patterns_edit;
 pub mod line_types_edit;
 pub mod match_props;
 pub mod network_define;
+pub mod event_follow;
+pub mod linearref_define;
+pub mod lrs_events;
 pub mod nurbs;
 pub mod walls;
 pub mod walls_create;
@@ -779,6 +782,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_NETWORK_DEFINE,
         kentos_commands::CAD_NETWORK_DEFINE_VERSION,
+    ),
+    // Olay bağı ([`linearref_define`], docs/adr/0569 §2).
+    (
+        kentos_commands::CAD_LINEARREF_DEFINE,
+        kentos_commands::CAD_LINEARREF_DEFINE_VERSION,
     ),
     // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
     (

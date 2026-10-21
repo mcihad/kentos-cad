@@ -184,6 +184,7 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
             forms: Vec::new(),
             relations: Vec::new(),
             join_views: Vec::new(),
+            linear_events: Vec::new(),
             source_bases: Vec::new(),
             ucs: None,
             srid: 5256,
