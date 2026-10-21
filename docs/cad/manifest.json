@@ -4055,6 +4055,22 @@
    "tests": 0
   },
   {
+   "id": "linearRef.eventLinks",
+   "kind": "command",
+   "title": "Olay bağları…",
+   "level": "semantic",
+   "via": [
+    "cad.linearref.define"
+   ],
+   "operation": null,
+   "python": "kentos.cad.linearref.define",
+   "mcp": "cad.linearref.define",
+   "note": "Olay bağı cad.linearref.define'ın yazdığı proje ayarıdır; bağlı katmanın olayları sonraki her yazmada aynı adımda rotalarında güncel kalır (ADR 0569).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "map.contours",
    "kind": "command",
    "title": "Eşyükselti üret…",

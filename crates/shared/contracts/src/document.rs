@@ -347,6 +347,10 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::JoinView>>", optional))]
     pub join_views: Vec<crate::JoinView>,
+    /// The project's links of event layers to their routes (docs/adr/0569), in the list's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::EventLink>>", optional))]
+    pub linear_events: Vec<crate::EventLink>,
     /// How lengths are written (docs/adr/0262 §2): none, decimal; the others
     /// only in an inch or foot drawing.
     #[serde(default, skip_serializing_if = "Option::is_none")]

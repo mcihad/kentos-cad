@@ -3970,7 +3970,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 157,
+   "cases": 159,
    "files": [
     "fixtures/commands/v1/cad.arrays.edit.json",
     "fixtures/commands/v1/cad.columns.create.json",
@@ -3985,6 +3985,7 @@
     "fixtures/commands/v1/cad.fields.edit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
     "fixtures/commands/v1/cad.leaders.edit.json",
+    "fixtures/commands/v1/cad.linearref.follow.json",
     "fixtures/commands/v1/cad.openings.edit.json",
     "fixtures/commands/v1/cad.schedules.create.json",
     "fixtures/commands/v1/cad.sources.describe.json",
@@ -7847,7 +7848,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 967,
+   "cases": 978,
    "files": [
     "fixtures/commands/v1/cad.entities.delete.relations.json",
     "fixtures/commands/v1/cad.entities.set.contingents.json",
@@ -7862,6 +7863,7 @@
     "fixtures/commands/v1/cad.forms.validate.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
     "fixtures/commands/v1/cad.joins.query.json",
+    "fixtures/commands/v1/cad.linearref.follow.json",
     "fixtures/commands/v1/cad.profiles.apply.json",
     "fixtures/commands/v1/cad.profiles.check.json",
     "fixtures/commands/v1/cad.profiles.migrate.json",
@@ -8023,7 +8025,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 310,
+   "cases": 319,
    "files": [
     "fixtures/commands/v1/cad.annotations.scales.json",
     "fixtures/commands/v1/cad.arrays.edit.json",
@@ -8045,6 +8047,7 @@
     "fixtures/commands/v1/cad.fields.edit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
     "fixtures/commands/v1/cad.leaders.edit.json",
+    "fixtures/commands/v1/cad.linearref.follow.json",
     "fixtures/commands/v1/cad.openings.edit.json",
     "fixtures/commands/v1/cad.schedules.create.json",
     "fixtures/commands/v1/cad.sources.describe.json",
@@ -12140,6 +12143,56 @@
    "kinds": []
   },
   {
+   "id": "cad.linearref.define",
+   "title": "Olay bağı",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 38,
+   "files": [
+    "fixtures/commands/v1/cad.linearref.define.json",
+    "fixtures/commands/v1/cad.linearref.follow.json"
+   ],
+   "options": [
+    {
+     "key": "kind",
+     "value": "line",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "point",
+     "covered": true
+    },
+    {
+     "key": "operation",
+     "value": "remove",
+     "covered": true
+    },
+    {
+     "key": "operation",
+     "value": "set",
+     "covered": true
+    },
+    {
+     "key": "side",
+     "value": "left",
+     "covered": true
+    },
+    {
+     "key": "side",
+     "value": "right",
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "cad.linetypes.edit",
    "title": "Çizgi tipleri",
    "effect": "document",
@@ -12739,8 +12792,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 71,
+   "cases": 73,
    "files": [
+    "fixtures/commands/v1/cad.linearref.follow.json",
     "fixtures/commands/v1/cad.point.create.fields.json",
     "fixtures/commands/v1/cad.point.create.json",
     "fixtures/commands/v1/cad.sources.describe.json",
@@ -20973,6 +21027,16 @@
      "covered": false
     },
     {
+     "key": "side",
+     "value": "left",
+     "covered": false
+    },
+    {
+     "key": "side",
+     "value": "right",
+     "covered": false
+    },
+    {
      "key": "spaceMethod",
      "value": "centerline",
      "covered": false
@@ -23022,6 +23086,16 @@
     {
      "key": "shape",
      "value": "round",
+     "covered": false
+    },
+    {
+     "key": "side",
+     "value": "left",
+     "covered": false
+    },
+    {
+     "key": "side",
+     "value": "right",
      "covered": false
     },
     {

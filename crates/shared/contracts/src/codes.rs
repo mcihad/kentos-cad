@@ -515,6 +515,14 @@ codes! {
     SUBNETWORK_LAYER_SKIPPED = "subnetwork_layer_skipped", Warning, false, "Bir katmanın nesnelerine alt ağ adı yazılmadı (kilitli ya da özniteliğin alanı yok).";
     /// A write left a network's subnetwork attribute out of date though the network keeps it current (docs/adr/0562 §3).
     SUBNETWORK_DIRTY = "subnetwork_dirty", Warning, false, "Ağ alt ağ adlarını güncel tutuyor ama bu yazma onları güncelleyemedi; Alt ağları güncelle ile yenileyin.";
+    /// `set` of an event link without the link (docs/adr/0569).
+    NO_EVENT_LINK = "no_event_link", Failed, false, "Kaydetmek için olay bağı verilmedi.";
+    /// The event link, or the project's links with it, against their rules.
+    INVALID_EVENT_LINK = "invalid_event_link", Failed, false, "Olay bağı ya da onunla projenin bağları kurallarına uymuyor.";
+    /// `remove` of an event link the project does not have.
+    UNKNOWN_EVENT_LINK = "unknown_event_link", Failed, false, "Projede bu kimlikte olay bağı yok.";
+    /// A write left the events of a link that keeps them on their routes out of place (docs/adr/0569 §3).
+    EVENTS_DIRTY = "events_dirty", Warning, false, "Olay bağı olayları rotalarında tutuyor ama bu yazma bazılarını yerine koyamadı (rota yok, ölçü sayı değil ya da rotanın dışında, katman kilitli); Olay kaymasını denetle nedenleri söyler.";
     /// A warning: a network or a locator names a layer the drawing does not have.
     UNKNOWN_LAYER = "unknown_layer", Warning, false, "Tanım çizimde olmayan bir katmanı adlıyor.";
     /// `set` without a locator.

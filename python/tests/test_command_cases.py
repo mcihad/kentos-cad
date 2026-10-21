@@ -354,6 +354,10 @@ class Case:
                         if isinstance(got, dict):
                             got = {k: v for k, v in got.items() if k != "objects"}
                     same(got, self.block_ids(w, at), f"{at}: {name} dış başvurusu")
+            elif key == "linearEvents":
+                # The project's links of event layers to their routes (docs/adr/0569 §2).
+                settings = json.loads(self.doc._session.summary())["settings"]
+                same(settings.get("linearEvents", []), want, f"{at}: linearEvents")
             elif key == "addressLocators":
                 # The project's address data (docs/adr/0229 §2).
                 settings = json.loads(self.doc._session.summary())["settings"]

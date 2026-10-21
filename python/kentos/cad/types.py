@@ -1400,6 +1400,34 @@ EmptyResultName = Literal["keep", "clear"]
 """The names of :class:`EmptyResult`, for a plain string."""
 
 
+class EventLinkKind(_StrEnum):
+    """What an event object is: a point at a measure, or a line between two.
+
+    - ``point``: A point at one measure (`measure`).
+    - ``line``: A line or a polyline from one measure to another (`from`, `to`).
+    """
+    POINT = "point"
+    LINE = "line"
+
+
+EventLinkKindName = Literal["point", "line"]
+"""The names of :class:`EventLinkKind`, for a plain string."""
+
+
+class EventSide(_StrEnum):
+    """Which side of the route a positive offset lies on.
+
+    - ``right``: The right of the measure's direction.
+    - ``left``: The left of it.
+    """
+    RIGHT = "right"
+    LEFT = "left"
+
+
+EventSideName = Literal["right", "left"]
+"""The names of :class:`EventSide`, for a plain string."""
+
+
 class FeedKind(_StrEnum):
     """What a layer's objects were taken from (docs/adr/0208 §10).
 
@@ -2360,6 +2388,20 @@ class LineTypesOperation(_StrEnum):
 
 LineTypesOperationName = Literal["load", "add", "remove", "scale", "export"]
 """The names of :class:`LineTypesOperation`, for a plain string."""
+
+
+class LinearRefDefineOperation(_StrEnum):
+    """What `cad.linearref.define` does.
+
+    - ``set``: The link replaces the project's of its id, or goes last.
+    - ``remove``: The link of `id` goes; the events stay where they are.
+    """
+    SET = "set"
+    REMOVE = "remove"
+
+
+LinearRefDefineOperationName = Literal["set", "remove"]
+"""The names of :class:`LinearRefDefineOperation`, for a plain string."""
 
 
 class LookPart(_StrEnum):
@@ -17065,6 +17107,78 @@ class EntitiesVertexed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class EventLink(_Model):
+    """A link: the events of one layer on the routes of some others.
+    Attributes:
+        id: Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.
+        name: What the windows show; trimmed, 1–64 characters.
+        events: The event layer's id: the objects it holds are the events (points, or lines and polylines).
+        routes: The route layers' ids (1–16, none twice, none the event layer).
+        route_field: The routes' id field: a route is the first object of an id.
+        event_route: The events' attribute naming their route.
+        from_: A line event's from and to measure attributes (`line` only, and then both required).
+        measure: A point event's measure attribute (`point` only, and then required).
+        offset: The attribute of the offset from the route (m, perpendicular); none: the event is on the route.
+        side: The side a positive offset lies on; written only when not `right`.
+        tolerance: How far (m) an event may lie from its route's place before a write moves it; none: 0,001. Unit: length.
+    """
+    id: str
+    name: str
+    events: str
+    kind: EventLinkKind | EventLinkKindName
+    routes: list[str]
+    route_field: str
+    event_route: str
+    from_: str | None | Unset = UNSET
+    measure: str | None | Unset = UNSET
+    offset: str | None | Unset = UNSET
+    side: EventSide | EventSideName | Unset = UNSET
+    to: str | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["events"] = self.events
+        out["kind"] = _enum_out(self.kind)
+        out["routes"] = list(self.routes)
+        out["routeField"] = self.route_field
+        out["eventRoute"] = self.event_route
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.measure is not UNSET:
+            out["measure"] = self.measure
+        if self.offset is not UNSET:
+            out["offset"] = self.offset
+        if self.side is not UNSET:
+            out["side"] = _enum_out(self.side)
+        if self.to is not UNSET:
+            out["to"] = self.to
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EventLink:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            events=data["events"],
+            kind=_enum_in(EventLinkKind, data["kind"]),
+            routes=list(data["routes"]),
+            route_field=data["routeField"],
+            event_route=data["eventRoute"],
+            from_=data.get("from", UNSET),
+            measure=data.get("measure", UNSET),
+            offset=data.get("offset", UNSET),
+            side=_enum_in(EventSide, data["side"]) if "side" in data else UNSET,
+            to=data.get("to", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportAtlas(_Model):
     """Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_sheets`,
     `unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `crs_unsupported` (`crs`), `unknown_theme`, `invalid_time`,
@@ -28047,6 +28161,69 @@ class LineTypesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LinearRefDefine(_Model):
+    """Input of `cad.linearref.define` v1.
+
+    - `set`: `link`, which replaces the project's link of its id or goes last;
+    - `remove`: `id`.
+
+    Refusals (`CommandError.code`), checked in this order: `no_event_link` (set without `link`), `no_id` (remove without
+    `id`), `invalid_event_link` (the link, or the project's links with it, by `event_links_problem`); then
+    `invalid_revision`, `revision_conflict` (status `conflict`), `unknown_event_link` (remove: the project has no link of
+    the id). A link naming a layer the drawing does not have is written, with the warning `unknown_layer`; the link
+    does nothing until the layer exists.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    operation: LinearRefDefineOperation | LinearRefDefineOperationName
+    expected_revision: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    link: EventLink | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.link is not UNSET:
+            out["link"] = None if self.link is None else self.link.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LinearRefDefine:
+        return cls(
+            operation=_enum_in(LinearRefDefineOperation, data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            id=data.get("id", UNSET),
+            link=UNSET if "link" not in data else None if data["link"] is None else EventLink.from_json(data["link"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LinearRefDefined(_Model):
+    """Output of `cad.linearref.define` v1, and its plan: the project's links as the write leaves them and the
+    revision after it (a plan: before it).
+    """
+    links: list[EventLink]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["links"] = [e0.to_json() for e0 in self.links]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LinearRefDefined:
+        return cls(
+            links=[EventLink.from_json(e0) for e0 in data["links"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ListedConstraint(_Model):
     """A constraint as the query lists it.
     Attributes:
@@ -35702,6 +35879,7 @@ class ProjectSettings(_Model):
         line_type_scale: The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
             absent: 1. Unit: 1.
         line_types: The project's line types with patterns (docs/adr/0313 §1).
+        linear_events: The project's links of event layers to their routes (docs/adr/0569), in the list's order.
         named_ucs: The project's named UCSs, in the order they were kept.
         named_views: The project's named views, in the order they were kept (docs/adr/0285 §1).
         networks: The project's networks (docs/adr/0209 §2).
@@ -35754,6 +35932,7 @@ class ProjectSettings(_Model):
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_types: list[LineTypeDef] | Unset = UNSET
+    linear_events: list[EventLink] | Unset = UNSET
     named_ucs: list[NamedUcs] | Unset = UNSET
     named_views: list[NamedView] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
@@ -35819,6 +35998,8 @@ class ProjectSettings(_Model):
             out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_types is not UNSET:
             out["lineTypes"] = [e0.to_json() for e0 in self.line_types]
+        if self.linear_events is not UNSET:
+            out["linearEvents"] = [e0.to_json() for e0 in self.linear_events]
         if self.named_ucs is not UNSET:
             out["namedUcs"] = [e0.to_json() for e0 in self.named_ucs]
         if self.named_views is not UNSET:
@@ -35882,6 +36063,7 @@ class ProjectSettings(_Model):
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_types=[LineTypeDef.from_json(e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
+            linear_events=[EventLink.from_json(e0) for e0 in data["linearEvents"]] if "linearEvents" in data else UNSET,
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             named_views=[NamedView.from_json(e0) for e0 in data["namedViews"]] if "namedViews" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
@@ -59578,6 +59760,11 @@ __all__ = [
     "EntityEdit",
     "EntityGeometry",
     "EqualConstraintRule",
+    "EventLink",
+    "EventLinkKind",
+    "EventLinkKindName",
+    "EventSide",
+    "EventSideName",
     "ExplodeDensity",
     "ExportAtlas",
     "ExportBlock",
@@ -60006,6 +60193,10 @@ __all__ = [
     "LineTypesOperationName",
     "LinearBlockParameter",
     "LinearDimensionMeasure",
+    "LinearRefDefine",
+    "LinearRefDefineOperation",
+    "LinearRefDefineOperationName",
+    "LinearRefDefined",
     "LinesCornerPick",
     "LinkDomainsOp",
     "LinkSourcesEditOp",

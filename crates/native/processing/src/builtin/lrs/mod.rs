@@ -12,11 +12,7 @@ pub mod events;
 pub mod locate;
 pub mod routes;
 
-use std::collections::{BTreeMap, HashMap};
-
-use kentos_commands::{AreaPart, Entity, EntityBase, PathEntity, Vec2 as Point};
-use kentos_geometry_core::Vec2;
-use kentos_geometry_core::ops::lrs::{Route, RoutePart};
+use kentos_commands::Entity;
 use serde_json::{Value, json};
 
 use super::join_source::source_table;
@@ -91,123 +87,14 @@ pub fn side_param(label: &str) -> ParamDef {
     .default_value(json!("right"))
 }
 
-fn p(q: Vec2) -> Point {
-    Point { x: q.x, y: q.y }
-}
-
 /// An object as a route (the application's, which Km yaz reads too).
 pub use kentos_native_application::geometry::route as route_of;
 
-/// The routes of objects by their id: the id field's value, trimmed (an
-/// empty one no route); of several objects of an id the first.
-pub struct Routes<'a> {
-    pub ids: Vec<String>,
-    pub routes: Vec<Route>,
-    pub objects: Vec<&'a Entity>,
-    pub index: HashMap<String, usize>,
-    /// Objects of an id that came before.
-    pub again: usize,
-}
-
-pub fn routes_by_id<'a>(objects: &[&'a Entity], field: &str) -> Routes<'a> {
-    let mut out = Routes {
-        ids: Vec::new(),
-        routes: Vec::new(),
-        objects: Vec::new(),
-        index: HashMap::new(),
-        again: 0,
-    };
-    for e in objects {
-        let Some(route) = route_of(e) else {
-            continue;
-        };
-        let id = crate::text::js_trim(e.base().attrs.get(field).map_or("", String::as_str));
-        if id.is_empty() {
-            continue;
-        }
-        if out.index.contains_key(id) {
-            out.again += 1;
-            continue;
-        }
-        out.index.insert(id.to_owned(), out.ids.len());
-        out.ids.push(id.to_owned());
-        out.routes.push(route);
-        out.objects.push(e);
-    }
-    out
-}
-
-/// The warning of ids that came again.
-pub fn again_text(again: usize) -> String {
-    format!("{again} rota kimliği birden çok kez var; ilki kullanıldı.")
-}
-
-/// A cell's number (docs/adr/0180): a sign, digits and one decimal point or comma.
-pub fn read_measure(text: &str) -> Option<f64> {
-    kentos_geometry_core::ops::cogo::read_number(text)
-}
-
-/// Why a cell gives no number.
-pub fn cell_reason(field: &str, cell: &str) -> String {
-    let t = crate::text::js_trim(cell);
-    if t.is_empty() {
-        format!("“{field}” boş")
-    } else {
-        format!("“{field}” sayı değil: {t}")
-    }
-}
-
-/// A route's parts as a polyline on `layer_id` with `attrs` (a part's
-/// bulges only when one bends).
-pub fn polyline_of(parts: &[RoutePart], layer_id: &str, attrs: BTreeMap<String, String>) -> Entity {
-    let bends = |q: &RoutePart| {
-        q.bulges
-            .as_ref()
-            .filter(|b| b.iter().any(|&x| x != 0.0))
-            .cloned()
-    };
-    let (first, rest) = parts
-        .split_first()
-        .map_or((None, &[][..]), |(f, r)| (Some(f), r));
-    let empty = RoutePart {
-        pts: Vec::new(),
-        bulges: None,
-        ms: Vec::new(),
-    };
-    let first = first.unwrap_or(&empty);
-    Entity::Polyline(PathEntity {
-        base: EntityBase {
-            look: Default::default(),
-            id: 0,
-            layer_id: layer_id.to_owned(),
-            color: None,
-            attrs,
-            label: None,
-            symbol: None,
-            line_weight: None,
-            label_pins: Vec::new(),
-            attachments: Vec::new(),
-        },
-        pts: first.pts.iter().copied().map(p).collect(),
-        bulges: bends(first),
-        holes: None,
-        zs: None,
-        ms: Some(first.ms.clone()),
-        parts: (!rest.is_empty()).then(|| {
-            rest.iter()
-                .map(|q| AreaPart {
-                    pts: q.pts.iter().copied().map(p).collect(),
-                    bulges: bends(q),
-                    holes: None,
-                    zs: None,
-                    ms: Some(q.ms.clone()),
-                })
-                .collect()
-        }),
-        closed: false,
-        widths: None,
-    })
-}
+/// The routes of objects by their id, a number cell's rules and a route's parts as a polyline: the application's,
+/// which the events a project's link keeps on their routes read too (docs/adr/0569).
+pub use kentos_native_application::lrs_events::{
+    Routes, again_text, cell_reason, polyline_of, read_measure, routes_by_id,
+};
 
 // ── Olay tabloları ────────────────────────────────────────────────────
 

@@ -9,6 +9,7 @@ import type { DatumTransform } from "./DatumTransform";
 import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { EventLink } from "./EventLink";
 import type { FieldDomain } from "./FieldDomain";
 import type { HatchPatternDef } from "./HatchPatternDef";
 import type { HeightReference } from "./HeightReference";
@@ -181,6 +182,10 @@ relations?: Array<ProjectRelation>,
  * The project's join views (docs/adr/0527), in the table's order.
  */
 joinViews?: Array<JoinView>, 
+/**
+ * The project's links of event layers to their routes (docs/adr/0569), in the list's order.
+ */
+linearEvents?: Array<EventLink>, 
 /**
  * How lengths are written (docs/adr/0262 §2): none, decimal; the others
  * only in an inch or foot drawing.

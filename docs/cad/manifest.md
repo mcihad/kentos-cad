@@ -17,14 +17,14 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 127 | 152 | 41 | 66 | 386 |
+| semantic | 127 | 152 | 41 | 67 | 387 |
 | geometry | 16 | 58 | 0 | 8 | 82 |
 | processing | 0 | 11 | 2 | 141 | 154 |
 | none | 0 | 17 | 0 | 6 | 23 |
 | query | 7 | 27 | 2 | 4 | 40 |
 | session | 0 | 85 | 57 | 5 | 147 |
 | host | 0 | 17 | 14 | 4 | 35 |
-| **toplam** | 150 | 367 | 116 | 234 | 867 |
+| **toplam** | 150 | 367 | 116 | 235 | 868 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).

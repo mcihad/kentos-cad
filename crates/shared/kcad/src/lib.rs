@@ -562,11 +562,14 @@ pub const SCHEMA_WITH_NETWORK_PROFILES: u32 = 95;
 /// Schema 96 (docs/adr/0568): a network closure's `days` and `hours` (the edge fields of the weekdays and the hours
 /// an edge is closed), written only when a closure names one.
 pub const SCHEMA_WITH_TIMED_CLOSURES: u32 = 96;
+/// Schema 97 (docs/adr/0569): the settings' `linearEvents`, the project's links of event layers to their routes (their
+/// JSON), written only when the project has one.
+pub const SCHEMA_WITH_LINEAR_EVENTS: u32 = 97;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 95] = [
+pub const SCHEMAS: [u32; 96] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -662,6 +665,7 @@ pub const SCHEMAS: [u32; 95] = [
     SCHEMA_WITH_NETWORK_CONFIGS,
     SCHEMA_WITH_NETWORK_PROFILES,
     SCHEMA_WITH_TIMED_CLOSURES,
+    SCHEMA_WITH_LINEAR_EVENTS,
 ];
 
 /// The file a drawing is saved as.

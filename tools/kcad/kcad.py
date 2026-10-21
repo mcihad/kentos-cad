@@ -335,6 +335,8 @@ SCHEMA_WITH_NETWORK_CONFIGS = 94
 SCHEMA_WITH_NETWORK_PROFILES = 95
 # Schema 96: schema 95 and a closure's `days` and `hours` (docs/adr/0568).
 SCHEMA_WITH_TIMED_CLOSURES = 96
+# Schema 97: schema 96 and the settings' links of event layers to their routes `linearEvents` (docs/adr/0569).
+SCHEMA_WITH_LINEAR_EVENTS = 97
 # The most bytes a base's field records take decoded, and the most vertex hashes a record keeps.
 MAX_FIELD_BASE_BYTES = 8 * 1024 * 1024
 MAX_BASE_VERTICES = 128
@@ -578,7 +580,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2296,6 +2298,45 @@ def join_views_problem(views):
     return None
 
 
+def event_links_problem(links):
+    """The contract's `event_links_problem` (docs/adr/0569): at most 50 links, each link's id and name holding, an
+    event layer, 1-16 distinct route layers none the event layer, the field names written, a point link's measure or
+    a line link's from and to (never the other's), a tolerance of zero or more; ids unique, an event layer of one
+    link only and never another link's route layer."""
+    if len(links) > 50:
+        return "projede çok olay bağı var"
+    ids, layers = set(), set()
+    for l in links:
+        if not _form_id_ok(l["id"]):
+            return f"“{l['id']}” bir bağ kimliği olamaz"
+        if not _form_name_ok(l["name"]):
+            return f"“{l['id']}” bağının adı geçersiz"
+        routes = l["routes"]
+        if not l["events"] or not 1 <= len(routes) <= 16 or any(not r for r in routes) or len(set(routes)) != len(routes) \
+                or l["events"] in routes:
+            return f"“{l['name']}” bağının katmanları geçersiz"
+        names = [l["routeField"], l["eventRoute"]] + [l[k] for k in ("measure", "from", "to", "offset") if k in l]
+        if any(not n for n in names):
+            return f"“{l['name']}” bağının bir alanı boş"
+        if l["kind"] == "point":
+            if "measure" not in l or "from" in l or "to" in l:
+                return f"“{l['name']}” nokta bağının ölçü alanı yanlış"
+        elif "from" not in l or "to" not in l or "measure" in l:
+            return f"“{l['name']}” çizgi bağının ölçü alanları yanlış"
+        if "tolerance" in l and not l["tolerance"] >= 0:
+            return f"“{l['name']}” bağının toleransı geçersiz"
+        if l["id"] in ids:
+            return f"“{l['id']}” kimlikli iki olay bağı var"
+        if l["events"] in layers:
+            return f"“{l['events']}” katmanının olayları iki bağda"
+        ids.add(l["id"])
+        layers.add(l["events"])
+    for l in links:
+        if any(l["events"] in m["routes"] for m in links):
+            return f"“{l['events']}” katmanı hem olay hem rota katmanı"
+    return None
+
+
 def forms_problem(forms):
     """The contract's `forms_problem`: at most 100 forms with ids and names that hold, ids unique, a layer, bodies that
     hold, releases numbered on from the first with their body's digest (the first 32 hex digits of the SHA-256 of its
@@ -2995,6 +3036,7 @@ class _Schema:
         self.network_configs = version >= SCHEMA_WITH_NETWORK_CONFIGS
         self.network_profiles = version >= SCHEMA_WITH_NETWORK_PROFILES
         self.timed_closures = version >= SCHEMA_WITH_TIMED_CLOSURES
+        self.linear_events = version >= SCHEMA_WITH_LINEAR_EVENTS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3539,6 +3581,7 @@ class _Schema:
                 **({"hatchPatterns": (self.hatch_patterns_, False)} if self.hatch_extras else {}),
                 **({"xrefPaths": (self.xref_paths_, False)} if self.xref_paths else {}),
                 **({"joinViews": (self.join_views_, False)} if self.join_views else {}),
+                **({"linearEvents": (self.linear_events_, False)} if self.linear_events else {}),
                 **({"heights": (self.heights_, False), "coordinateEpoch": (self.epoch_, False)} if self.heights else {}),
             }
         )(v)
@@ -4902,6 +4945,42 @@ class _Schema:
         if not lst:
             self.fail("bad_value", "boş liste yazılmaz")
         problem = join_views_problem(lst)
+        if problem:
+            self.fail("bad_value", problem)
+        return lst
+
+    def linear_events_(self, v):
+        """Schema 97 (docs/adr/0569): the project's links of event layers to their routes; `side` written only when
+        `left`, `tolerance` only when given."""
+        def kind(x):
+            if x not in ("point", "line"):
+                self.fail("bad_value", f"“{x}” bilinmiyor (point, line)")
+            return x
+
+        def side(x):
+            if x != "left":
+                self.fail("bad_value", f"“{x}” bilinmiyor (left; right yazılmaz)")
+            return x
+
+        link = self.fields({
+            "id": (self.text, True),
+            "name": (self.text, True),
+            "events": (self.text, True),
+            "kind": (kind, True),
+            "routes": (self.array(self.text), True),
+            "routeField": (self.text, True),
+            "eventRoute": (self.text, True),
+            "measure": (self.text, False),
+            "from": (self.text, False),
+            "to": (self.text, False),
+            "offset": (self.text, False),
+            "side": (side, False),
+            "tolerance": (self.float, False),
+        })
+        lst = self.array(link)(v)
+        if not lst:
+            self.fail("bad_value", "boş liste yazılmaz")
+        problem = event_links_problem(lst)
         if problem:
             self.fail("bad_value", problem)
         return lst

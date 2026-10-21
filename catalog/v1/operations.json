@@ -812,6 +812,13 @@
       ],
       "note": "Alt ağlar cad.subnetworks.find'ın cevabı, Güncelle'nin önizlemesi cad.subnetworks.update'in planı (ADR 0557)."
     },
+    "linearRef.eventLinks": {
+      "level": "semantic",
+      "via": [
+        "cad.linearref.define"
+      ],
+      "note": "Olay bağı cad.linearref.define'ın yazdığı proje ayarıdır; bağlı katmanın olayları sonraki her yazmada aynı adımda rotalarında güncel kalır (ADR 0569)."
+    },
     "scenario.apply": {
       "level": "semantic",
       "via": [

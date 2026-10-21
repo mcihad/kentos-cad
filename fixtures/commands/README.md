@@ -32,6 +32,8 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.subnetworks.find.json` | `cad.subnetworks.find` v1 (ADR 0557 §3: ağın alt ağları, yetim, paylaşılan ve eski nesneler; ADR 0562 §2: cihazın yapılandırması noktanın özniteliğinden; masaüstünün) | 37 |
 | `v1/cad.subnetworks.update.json` | `cad.subnetworks.update` v1 (ADR 0557 §3: alt ağ adlarını özniteliğe tek adımda yazar; ADR 0562 §2: yapılandırmalı cihazlar; masaüstünün) | 27 |
 | `v1/cad.subnetworks.follow.json` | başka komutların yazmasından sonra alt ağ adlarının aynı adımda yeniden yazılması (ADR 0562 §3: `keepCurrent`, `subnetwork_dirty`; dosyanın komutu `cad.subnetworks.update`, adımlar kendi komutlarıyla; masaüstünün) | 28 |
+| `v1/cad.linearref.define.json` | `cad.linearref.define` v1 (ADR 0569 §2: olay bağını yaz ya da sil, bağın kuralları, uyarılar, sürüm; masaüstünün) | 34 |
+| `v1/cad.linearref.follow.json` | başka komutların yazmasından sonra olayların aynı adımda rotalarında yeniden yerleştirilmesi (ADR 0569 §3: rota taşınır, ölçü ya da rota değişir, elle taşınan geri döner, `events_dirty`; dosyanın komutu `cad.linearref.define`, adımlar kendi komutlarıyla; masaüstünün) | 24 |
 | `v1/cad.layers.time.json` | `cad.layers.time` v1 (ADR 0210 §11: katmanın zaman ayarı; masaüstünün) | 29 |
 | `v1/cad.scenarios.edit.json` | `cad.scenarios.edit` v1 (ADR 0210 §11: senaryolar; masaüstünün) | 39 |
 | `v1/cad.layers.filter.json` | `cad.layers.filter` v1 (ADR 0211 §5: katman süzgeci; masaüstünün) | 30 |

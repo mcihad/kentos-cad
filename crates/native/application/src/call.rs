@@ -136,6 +136,8 @@ where
                             warnings.extend(followed.warnings);
                             // The subnetwork names of the networks that keep them (docs/adr/0562 §3).
                             warnings.extend(crate::subnetwork_follow::follow(inner.doc, command));
+                            // The events of the links that keep them on their routes (docs/adr/0569 §3).
+                            warnings.extend(crate::event_follow::follow(inner.doc, command));
                             Ok((output, warnings, followed.relaxed))
                         }
                         Err(stop) => Err(Box::new(stop.into())),

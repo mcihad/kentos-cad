@@ -240,6 +240,11 @@ Liste:
   kodeğinde okunması, `model/networkRules.ts`'in ve `networkForm.ts`'in yapılandırma kuralları (`rules.json` ve `form.json`'un yeni
   durumları), `call.recorded`'ın alt ağ izleyicisinin web karşılığı (belgenin ardından aynı adımda yazma), Ağlar penceresinin seçen alan,
   yapılandırmalar ve Güncelleme alanları.
+- [ ] `CBS-27` olaylar rotalarını kendiliğinden izler (ADR 0569, 21 Ekim): web'de gerekenler: `EventLink`, `EventLinkKind` ve `EventSide`'ın
+  TS türleri ve `ProjectSettings.linearEvents` (üretilir), `.kcad` şema 97'nin web kodeğinde okunması, `cad.linearref.define`'ın web
+  işleyicisi (`product/`), `call.recorded`'ın olay izleyicisinin web karşılığı (belgenin ardından aynı adımda yerleştirme: çekirdekten,
+  `ops::lrs::events_run` ve `line_drift` WASM'da; `processing/builtin/lrs/drift.ts`'in okuma ve taşıması aynı yerden), Olay bağları penceresi
+  (`routeEventLink` ikonu, Ağ analizi ▾'deki yeri); ortak durumlar `fixtures/commands/v1/cad.linearref.*.json`.
 - [ ] `CBS-37` alan alan birleştirme (ADR 0553, 20 Ekim): web'de gerekenler: `kentos_contracts::merge_entities`'in TS karşılığı
   (nesnenin JSON'unun üst düzey alanları, öznitelikler tek tek) ve web bulut istemcisinin iki çatışma yolunda (dışarıdan gelen değişiklik,
   409) kullanması; Kaynakla uzlaştır web'de yok.
@@ -2134,6 +2139,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   kurulumu (yalnız dokunulan parçaların yeniden kurulması), `cad.network.define` ağın tanımını değiştirince alt ağ özniteliğinin kendiliğinden
   yeniden yazılması, yapılandırmanın cihaz katmanı yerine nesnenin türünden okunması (varlık türü tablosu), güncel tutmanın uzun işlerde
   (sunucu işi) kopyada çalışması. — **21 Ekim, [ADR 0562](docs/adr/0562-network-terminals-everywhere-and-subnetworks-kept-current.md).**
+- [x] `CBS-27` olaylar rotalarını kendiliğinden izler (dilim): projenin olay bağları (`settings.linearEvents`, `.kcad` şema 97: olay katmanı, rota
+  katmanları ve olayın rota, ölçü ve öteleme öznitelikleri), `cad.linearref.define` ve Olay bağları penceresi; bağın katmanlarına dokunan her yazma
+  aynı adımda olay nesnelerini Olay kaymasını denetle'nin kuralıyla (`lrs_events`, çekirdekte `events_run`) rotanın verdiği yere koyar, geri alma
+  ikisini birlikte geri alır; koyamadığını (rota yok, ölçü sayı değil ya da dışarıda, kilitli katman, kırıklı yola çizgi) olduğu yerde bırakır ve
+  yazmayı reddetmeden `events_dirty` der. Bağımsız başvurular `linearref_define_command_cases.py` (34 durum) ve `linearref_follow_cases.py` (24
+  durum, 50 basamaklı rota kuralıyla); Python ve MCP. Kalan: yalnız dokunulan rotaların olaylarının yerleştirilmesi, artımlı graf. —
+  **21 Ekim, [ADR 0569](docs/adr/0569-events-follow-their-routes.md).**
 - [ ] `CBS-34` TUCBS profili (dilim): veri profilleri veri olarak (`catalog/v1/profiles/tucbs-temel.json`: mahalle, ada, parsel, bina,
   yol, adres, imar; alanlar, kimlikler, kayıtlı alan ve toleransı, değer listeleri, ilişkiler, adres eşlemesi; kolon adı kodda yok),
   `cad.profiles.apply` (eksik grup, katman, alan, değer listesi, ilişki ve adres verisi; var olan korunur, tek geri alma adımı) ve salt

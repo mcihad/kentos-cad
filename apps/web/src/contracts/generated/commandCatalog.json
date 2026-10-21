@@ -5383,6 +5383,122 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "EventLink": {
+            "additionalProperties": false,
+            "description": "A link: the events of one layer on the routes of some others.",
+            "properties": {
+              "eventRoute": {
+                "description": "The events' attribute naming their route.",
+                "type": "string"
+              },
+              "events": {
+                "description": "The event layer's id: the objects it holds are the events (points, or lines and polylines).",
+                "type": "string"
+              },
+              "from": {
+                "description": "A line event's from and to measure attributes (`line` only, and then both required).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/EventLinkKind"
+              },
+              "measure": {
+                "description": "A point event's measure attribute (`point` only, and then required).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "What the windows show; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "offset": {
+                "description": "The attribute of the offset from the route (m, perpendicular); none: the event is on the route.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "routeField": {
+                "description": "The routes' id field: a route is the first object of an id.",
+                "type": "string"
+              },
+              "routes": {
+                "description": "The route layers' ids (1–16, none twice, none the event layer).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "side": {
+                "$ref": "#/$defs/EventSide",
+                "description": "The side a positive offset lies on; written only when not `right`."
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tolerance": {
+                "description": "How far (m) an event may lie from its route's place before a write moves it; none: 0,001.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "events",
+              "kind",
+              "routes",
+              "routeField",
+              "eventRoute"
+            ],
+            "type": "object"
+          },
+          "EventLinkKind": {
+            "description": "What an event object is: a point at a measure, or a line between two.",
+            "oneOf": [
+              {
+                "const": "point",
+                "description": "A point at one measure (`measure`).",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "A line or a polyline from one measure to another (`from`, `to`).",
+                "type": "string"
+              }
+            ]
+          },
+          "EventSide": {
+            "description": "Which side of the route a positive offset lies on.",
+            "oneOf": [
+              {
+                "const": "right",
+                "description": "The right of the measure's direction.",
+                "type": "string"
+              },
+              {
+                "const": "left",
+                "description": "The left of it.",
+                "type": "string"
+              }
+            ]
+          },
           "FeatureChange": {
             "oneOf": [
               {
@@ -13612,6 +13728,13 @@
                 "description": "The project's line types with patterns (docs/adr/0313 §1).",
                 "items": {
                   "$ref": "#/$defs/LineTypeDef"
+                },
+                "type": "array"
+              },
+              "linearEvents": {
+                "description": "The project's links of event layers to their routes (docs/adr/0569), in the list's order.",
+                "items": {
+                  "$ref": "#/$defs/EventLink"
                 },
                 "type": "array"
               },
@@ -21937,6 +22060,122 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "EventLink": {
+            "additionalProperties": false,
+            "description": "A link: the events of one layer on the routes of some others.",
+            "properties": {
+              "eventRoute": {
+                "description": "The events' attribute naming their route.",
+                "type": "string"
+              },
+              "events": {
+                "description": "The event layer's id: the objects it holds are the events (points, or lines and polylines).",
+                "type": "string"
+              },
+              "from": {
+                "description": "A line event's from and to measure attributes (`line` only, and then both required).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/EventLinkKind"
+              },
+              "measure": {
+                "description": "A point event's measure attribute (`point` only, and then required).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "What the windows show; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "offset": {
+                "description": "The attribute of the offset from the route (m, perpendicular); none: the event is on the route.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "routeField": {
+                "description": "The routes' id field: a route is the first object of an id.",
+                "type": "string"
+              },
+              "routes": {
+                "description": "The route layers' ids (1–16, none twice, none the event layer).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "side": {
+                "$ref": "#/$defs/EventSide",
+                "description": "The side a positive offset lies on; written only when not `right`."
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tolerance": {
+                "description": "How far (m) an event may lie from its route's place before a write moves it; none: 0,001.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "events",
+              "kind",
+              "routes",
+              "routeField",
+              "eventRoute"
+            ],
+            "type": "object"
+          },
+          "EventLinkKind": {
+            "description": "What an event object is: a point at a measure, or a line between two.",
+            "oneOf": [
+              {
+                "const": "point",
+                "description": "A point at one measure (`measure`).",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "A line or a polyline from one measure to another (`from`, `to`).",
+                "type": "string"
+              }
+            ]
+          },
+          "EventSide": {
+            "description": "Which side of the route a positive offset lies on.",
+            "oneOf": [
+              {
+                "const": "right",
+                "description": "The right of the measure's direction.",
+                "type": "string"
+              },
+              {
+                "const": "left",
+                "description": "The left of it.",
+                "type": "string"
+              }
+            ]
+          },
           "FeatureFeed": {
             "description": "Where a layer's objects came from, to take them again (docs/adr/0208 §10).",
             "properties": {
@@ -26641,6 +26880,13 @@
                 "description": "The project's line types with patterns (docs/adr/0313 §1).",
                 "items": {
                   "$ref": "#/$defs/LineTypeDef"
+                },
+                "type": "array"
+              },
+              "linearEvents": {
+                "description": "The project's links of event layers to their routes (docs/adr/0569), in the list's order.",
+                "items": {
+                  "$ref": "#/$defs/EventLink"
                 },
                 "type": "array"
               },
@@ -34140,6 +34386,122 @@
             "format": "uuid",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
+          },
+          "EventLink": {
+            "additionalProperties": false,
+            "description": "A link: the events of one layer on the routes of some others.",
+            "properties": {
+              "eventRoute": {
+                "description": "The events' attribute naming their route.",
+                "type": "string"
+              },
+              "events": {
+                "description": "The event layer's id: the objects it holds are the events (points, or lines and polylines).",
+                "type": "string"
+              },
+              "from": {
+                "description": "A line event's from and to measure attributes (`line` only, and then both required).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/EventLinkKind"
+              },
+              "measure": {
+                "description": "A point event's measure attribute (`point` only, and then required).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "What the windows show; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "offset": {
+                "description": "The attribute of the offset from the route (m, perpendicular); none: the event is on the route.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "routeField": {
+                "description": "The routes' id field: a route is the first object of an id.",
+                "type": "string"
+              },
+              "routes": {
+                "description": "The route layers' ids (1–16, none twice, none the event layer).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "side": {
+                "$ref": "#/$defs/EventSide",
+                "description": "The side a positive offset lies on; written only when not `right`."
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tolerance": {
+                "description": "How far (m) an event may lie from its route's place before a write moves it; none: 0,001.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "events",
+              "kind",
+              "routes",
+              "routeField",
+              "eventRoute"
+            ],
+            "type": "object"
+          },
+          "EventLinkKind": {
+            "description": "What an event object is: a point at a measure, or a line between two.",
+            "oneOf": [
+              {
+                "const": "point",
+                "description": "A point at one measure (`measure`).",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "A line or a polyline from one measure to another (`from`, `to`).",
+                "type": "string"
+              }
+            ]
+          },
+          "EventSide": {
+            "description": "Which side of the route a positive offset lies on.",
+            "oneOf": [
+              {
+                "const": "right",
+                "description": "The right of the measure's direction.",
+                "type": "string"
+              },
+              {
+                "const": "left",
+                "description": "The left of it.",
+                "type": "string"
+              }
+            ]
           },
           "FeatureFeed": {
             "description": "Where a layer's objects came from, to take them again (docs/adr/0208 §10).",
@@ -42346,6 +42708,13 @@
                 "description": "The project's line types with patterns (docs/adr/0313 §1).",
                 "items": {
                   "$ref": "#/$defs/LineTypeDef"
+                },
+                "type": "array"
+              },
+              "linearEvents": {
+                "description": "The project's links of event layers to their routes (docs/adr/0569), in the list's order.",
+                "items": {
+                  "$ref": "#/$defs/EventLink"
                 },
                 "type": "array"
               },
@@ -941195,6 +941564,515 @@
       ]
     },
     {
+      "id": "cad.linearref.define",
+      "version": 1,
+      "title": "Olay bağı",
+      "summary": "Projenin olay bağlarına bir bağ yazar (set: aynı kimlikli bağın yerini alır, yoksa sona eklenir) ya da birini siler (remove). Bağ, bir olay katmanının (noktalar ya da çizgiler ve çoklu çizgiler) rotalarına bağlanışıdır: rota katmanları (1–16) ve rotaların kimlik alanı, olayların rota alanı, nokta olayı için ölçü alanı (kind point) ya da çizgi olayı için başlangıç ve bitiş ölçüsü alanları (kind line), isteğe bağlı öteleme alanı ve yönü (side: right ya da left), tolerans (m, varsayılan 0,001). Bağ olayları rotalarında güncel tutar: rota katmanlarının ya da olay katmanının bir nesnesine dokunan her yazma (rotanın geometrisi, M'si ya da kimliği; olayın rota ya da ölçü öznitelikleri; olayın kendisi), aynı adımda, olay nesnelerini Olayları rotada göster'in kuralıyla rotanın verdiği yere koyar (Olay kaymasını denetle'nin Yerine taşı'sı gibi): nokta noktaya, çizgi rotanın parçasına. Geri alma yazmayı ve olayların yerlerini birlikte geri alır. Bir yazma bu yüzden hiçbir zaman reddedilmez: rotası olmayan, ölçüsü sayı olmayan ya da rotanın dışında kalan olay, kilitli olay katmanı ve kırıklı yola taşınamayan çizgi olayı olduğu yerde kalır ve yazmanın cevabına events_dirty uyarısı girer. Bağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir ve olayları kendiliğinden taşımaz; bağdan sonraki yazmalar taşır. Çizimde olmayan katmanı adlandıran bağ yazılır, unknown_layer uyarısıyla. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "EventLink": {
+            "additionalProperties": false,
+            "description": "A link: the events of one layer on the routes of some others.",
+            "properties": {
+              "eventRoute": {
+                "description": "The events' attribute naming their route.",
+                "type": "string"
+              },
+              "events": {
+                "description": "The event layer's id: the objects it holds are the events (points, or lines and polylines).",
+                "type": "string"
+              },
+              "from": {
+                "description": "A line event's from and to measure attributes (`line` only, and then both required).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/EventLinkKind"
+              },
+              "measure": {
+                "description": "A point event's measure attribute (`point` only, and then required).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "What the windows show; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "offset": {
+                "description": "The attribute of the offset from the route (m, perpendicular); none: the event is on the route.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "routeField": {
+                "description": "The routes' id field: a route is the first object of an id.",
+                "type": "string"
+              },
+              "routes": {
+                "description": "The route layers' ids (1–16, none twice, none the event layer).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "side": {
+                "$ref": "#/$defs/EventSide",
+                "description": "The side a positive offset lies on; written only when not `right`."
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tolerance": {
+                "description": "How far (m) an event may lie from its route's place before a write moves it; none: 0,001.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "events",
+              "kind",
+              "routes",
+              "routeField",
+              "eventRoute"
+            ],
+            "type": "object"
+          },
+          "EventLinkKind": {
+            "description": "What an event object is: a point at a measure, or a line between two.",
+            "oneOf": [
+              {
+                "const": "point",
+                "description": "A point at one measure (`measure`).",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "A line or a polyline from one measure to another (`from`, `to`).",
+                "type": "string"
+              }
+            ]
+          },
+          "EventSide": {
+            "description": "Which side of the route a positive offset lies on.",
+            "oneOf": [
+              {
+                "const": "right",
+                "description": "The right of the measure's direction.",
+                "type": "string"
+              },
+              {
+                "const": "left",
+                "description": "The left of it.",
+                "type": "string"
+              }
+            ]
+          },
+          "LinearRefDefineOperation": {
+            "description": "What `cad.linearref.define` does.",
+            "oneOf": [
+              {
+                "const": "set",
+                "description": "The link replaces the project's of its id, or goes last.",
+                "type": "string"
+              },
+              {
+                "const": "remove",
+                "description": "The link of `id` goes; the events stay where they are.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.linearref.define` v1.\n\n- `set`: `link`, which replaces the project's link of its id or goes last;\n- `remove`: `id`.\n\nRefusals (`CommandError.code`), checked in this order: `no_event_link` (set without `link`), `no_id` (remove without\n`id`), `invalid_event_link` (the link, or the project's links with it, by `event_links_problem`); then\n`invalid_revision`, `revision_conflict` (status `conflict`), `unknown_event_link` (remove: the project has no link of\nthe id). A link naming a layer the drawing does not have is written, with the warning `unknown_layer`; the link\ndoes nothing until the layer exists.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "link": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/EventLink"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/LinearRefDefineOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "LinearRefDefine",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "EventLink": {
+            "additionalProperties": false,
+            "description": "A link: the events of one layer on the routes of some others.",
+            "properties": {
+              "eventRoute": {
+                "description": "The events' attribute naming their route.",
+                "type": "string"
+              },
+              "events": {
+                "description": "The event layer's id: the objects it holds are the events (points, or lines and polylines).",
+                "type": "string"
+              },
+              "from": {
+                "description": "A line event's from and to measure attributes (`line` only, and then both required).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/EventLinkKind"
+              },
+              "measure": {
+                "description": "A point event's measure attribute (`point` only, and then required).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "What the windows show; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "offset": {
+                "description": "The attribute of the offset from the route (m, perpendicular); none: the event is on the route.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "routeField": {
+                "description": "The routes' id field: a route is the first object of an id.",
+                "type": "string"
+              },
+              "routes": {
+                "description": "The route layers' ids (1–16, none twice, none the event layer).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "side": {
+                "$ref": "#/$defs/EventSide",
+                "description": "The side a positive offset lies on; written only when not `right`."
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tolerance": {
+                "description": "How far (m) an event may lie from its route's place before a write moves it; none: 0,001.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "events",
+              "kind",
+              "routes",
+              "routeField",
+              "eventRoute"
+            ],
+            "type": "object"
+          },
+          "EventLinkKind": {
+            "description": "What an event object is: a point at a measure, or a line between two.",
+            "oneOf": [
+              {
+                "const": "point",
+                "description": "A point at one measure (`measure`).",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "A line or a polyline from one measure to another (`from`, `to`).",
+                "type": "string"
+              }
+            ]
+          },
+          "EventSide": {
+            "description": "Which side of the route a positive offset lies on.",
+            "oneOf": [
+              {
+                "const": "right",
+                "description": "The right of the measure's direction.",
+                "type": "string"
+              },
+              {
+                "const": "left",
+                "description": "The left of it.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.linearref.define` v1, and its plan: the project's links as the write leaves them and the\nrevision after it (a plan: before it).",
+        "properties": {
+          "links": {
+            "items": {
+              "$ref": "#/$defs/EventLink"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "links",
+          "revision"
+        ],
+        "title": "LinearRefDefined",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "EventLink": {
+            "additionalProperties": false,
+            "description": "A link: the events of one layer on the routes of some others.",
+            "properties": {
+              "eventRoute": {
+                "description": "The events' attribute naming their route.",
+                "type": "string"
+              },
+              "events": {
+                "description": "The event layer's id: the objects it holds are the events (points, or lines and polylines).",
+                "type": "string"
+              },
+              "from": {
+                "description": "A line event's from and to measure attributes (`line` only, and then both required).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/EventLinkKind"
+              },
+              "measure": {
+                "description": "A point event's measure attribute (`point` only, and then required).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "What the windows show; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "offset": {
+                "description": "The attribute of the offset from the route (m, perpendicular); none: the event is on the route.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "routeField": {
+                "description": "The routes' id field: a route is the first object of an id.",
+                "type": "string"
+              },
+              "routes": {
+                "description": "The route layers' ids (1–16, none twice, none the event layer).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "side": {
+                "$ref": "#/$defs/EventSide",
+                "description": "The side a positive offset lies on; written only when not `right`."
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tolerance": {
+                "description": "How far (m) an event may lie from its route's place before a write moves it; none: 0,001.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "events",
+              "kind",
+              "routes",
+              "routeField",
+              "eventRoute"
+            ],
+            "type": "object"
+          },
+          "EventLinkKind": {
+            "description": "What an event object is: a point at a measure, or a line between two.",
+            "oneOf": [
+              {
+                "const": "point",
+                "description": "A point at one measure (`measure`).",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "A line or a polyline from one measure to another (`from`, `to`).",
+                "type": "string"
+              }
+            ]
+          },
+          "EventSide": {
+            "description": "Which side of the route a positive offset lies on.",
+            "oneOf": [
+              {
+                "const": "right",
+                "description": "The right of the measure's direction.",
+                "type": "string"
+              },
+              {
+                "const": "left",
+                "description": "The left of it.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.linearref.define` v1, and its plan: the project's links as the write leaves them and the\nrevision after it (a plan: before it).",
+        "properties": {
+          "links": {
+            "items": {
+              "$ref": "#/$defs/EventLink"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "links",
+          "revision"
+        ],
+        "title": "LinearRefDefined",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_event_link",
+          "no_id",
+          "invalid_event_link",
+          "unknown_event_link",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "unknown_layer"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kaza noktaları D-100 rotasında kilometreleriyle kalsın",
+          "input": {
+            "link": {
+              "eventRoute": "Yol",
+              "events": "kaza",
+              "id": "kazalar",
+              "kind": "point",
+              "measure": "Km",
+              "name": "Kazalar",
+              "routeField": "Yol",
+              "routes": [
+                "yol"
+              ]
+            },
+            "operation": "set"
+          }
+        },
+        {
+          "title": "Olay bağını sil",
+          "input": {
+            "id": "kazalar",
+            "operation": "remove"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.addresses.define",
       "version": 1,
       "title": "Adres verisi",
@@ -1064658,6 +1065536,30 @@
       "meaning": "Ağ alt ağ adlarını güncel tutuyor ama bu yazma onları güncelleyemedi; Alt ağları güncelle ile yenileyin."
     },
     {
+      "code": "no_event_link",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kaydetmek için olay bağı verilmedi."
+    },
+    {
+      "code": "invalid_event_link",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Olay bağı ya da onunla projenin bağları kurallarına uymuyor."
+    },
+    {
+      "code": "unknown_event_link",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte olay bağı yok."
+    },
+    {
+      "code": "events_dirty",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Olay bağı olayları rotalarında tutuyor ama bu yazma bazılarını yerine koyamadı (rota yok, ölçü sayı değil ya da rotanın dışında, katman kilitli); Olay kaymasını denetle nedenleri söyler."
+    },
+    {
       "code": "unknown_layer",
       "kind": "warning",
       "retryable": false,
@@ -1068074,7 +1068976,8 @@
     "not_converged",
     "constraints_removed",
     "constraints_relaxed",
-    "subnetwork_dirty"
+    "subnetwork_dirty",
+    "events_dirty"
   ],
   "units": [
     {

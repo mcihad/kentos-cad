@@ -236,6 +236,7 @@ pub(super) struct Features {
     pub(super) xrefs: bool,
     pub(super) xref_paths: bool,
     pub(super) join_views: bool,
+    pub(super) linear_events: bool,
     /// Schema 90: a layer time's system time attributes (docs/adr/0537).
     pub(super) recorded_time: bool,
     pub(super) source_bases: bool,
@@ -403,6 +404,7 @@ impl Features {
             xrefs: schema >= crate::SCHEMA_WITH_XREFS,
             xref_paths: schema >= crate::SCHEMA_WITH_XREF_PATHS,
             join_views: schema >= crate::SCHEMA_WITH_JOIN_VIEWS,
+            linear_events: schema >= crate::SCHEMA_WITH_LINEAR_EVENTS,
             recorded_time: schema >= crate::SCHEMA_WITH_RECORDED_TIME,
             source_bases: schema >= crate::SCHEMA_WITH_SOURCE_BASES,
             source_field_bases: schema >= crate::SCHEMA_WITH_SOURCE_FIELD_BASES,

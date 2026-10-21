@@ -392,6 +392,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.domains.is_empty())
             + usize::from(!s.relations.is_empty())
             + usize::from(!s.join_views.is_empty())
+            + usize::from(!s.linear_events.is_empty())
             + usize::from(!s.sources.is_empty())
             + usize::from(!s.source_bases.is_empty())
             + usize::from(!s.line_types.is_empty())
@@ -630,6 +631,19 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &format!("{field}: {words}")));
                 }
                 e.json(&serde_json::to_value(&s.leader_styles).unwrap_or_default())
+            })?;
+        }
+        // Schema 97 (docs/adr/0569): the project's links of event layers to their routes (written between the
+        // 12-letter keys: canonical order is by length, then bytes).
+        if !s.linear_events.is_empty() {
+            self.key("linearEvents");
+            self.at(Seg::Name("linearEvents"), |e| {
+                if let Some(problem) = kentos_contracts::event_links_problem(&s.linear_events) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.linear_events)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
             })?;
         }
         // Schema 71 (docs/adr/0331 §1): the project's own hatch patterns, as their JSON.
@@ -1799,6 +1813,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 .is_some_and(kentos_contracts::LayerTime::recorded)
                 || recorded(&n.children)
         })
+    }
+    // Schema 97 (docs/adr/0569): the project's links of event layers to their routes.
+    if !doc.settings.linear_events.is_empty() {
+        return crate::SCHEMA_WITH_LINEAR_EVENTS;
     }
     // Schema 96 (docs/adr/0568): a closure's weekdays or hours.
     if doc

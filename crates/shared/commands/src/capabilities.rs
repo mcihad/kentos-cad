@@ -70,6 +70,8 @@ pub const PROTOCOL_CODES: &[&str] = &[
     "constraints_relaxed",
     // Every write that touches the objects of a network that keeps its subnetworks current (docs/adr/0562 §3).
     "subnetwork_dirty",
+    // Every write that touches the routes or the events of a link that keeps them on their routes (docs/adr/0569 §3).
+    "events_dirty",
 ];
 
 /// The revision's two, every writing command's.
@@ -955,6 +957,16 @@ const ENTRIES: &[Entry] = &[
         id: "cad.network.define",
         refusals: &[
             &["no_network", "no_id", "invalid_network", "unknown_network"],
+            REVISION,
+        ],
+        warnings: &["unknown_layer"],
+        targets: none,
+    },
+    // Olay bağı (docs/adr/0569).
+    Entry {
+        id: "cad.linearref.define",
+        refusals: &[
+            &["no_event_link", "no_id", "invalid_event_link", "unknown_event_link"],
             REVISION,
         ],
         warnings: &["unknown_layer"],

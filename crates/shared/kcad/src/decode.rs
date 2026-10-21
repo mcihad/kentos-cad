@@ -502,6 +502,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut domains = Vec::new();
     let mut relations = Vec::new();
     let mut join_views = Vec::new();
+    let mut linear_events = Vec::new();
     let mut source_bases: Vec<kentos_contracts::SourceBase> = Vec::new();
     let mut sources = Vec::new();
     let mut length_style = None;
@@ -729,6 +730,39 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 join_views = list;
+            }
+            // Schema 97 (docs/adr/0569): the project's links of event layers to their routes, read whole and checked.
+            "linearEvents" if has.linear_events => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::EventLink> =
+                    serde_json::from_value(value.clone()).map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("olay bağları okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&list).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "olay bağları yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                    ));
+                }
+                if list.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; bağ yoksa alan hiç yazılmaz",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::event_links_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                linear_events = list;
             }
             // Schema 56 (docs/adr/0313 §1): the project's line types and line type scale.
             "lineTypes" if has.patterns => {
@@ -1057,6 +1091,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         forms,
         relations,
         join_views,
+        linear_events,
         sources,
         length_style,
         domains,

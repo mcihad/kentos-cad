@@ -57,7 +57,7 @@ use kentos_native_application::{
     edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick, entities_relate, crs_transform,
     entities_select, entities_trim, entities_vertex, labels_pin, labels_report, layers_compose, layers_edit,
     layers_filter, fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
-    layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, walls_create, walls_edit, walls_from_lines, walls_joins, openings_create, openings_edit, spaces_create, spaces_edit, spaces_quantities,
+    layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, linearref_define, network_define, nurbs, offset, walls_create, walls_edit, walls_from_lines, walls_joins, openings_create, openings_edit, spaces_create, spaces_edit, spaces_quantities,
     point, points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit,
     set, settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
     views_edit,
@@ -2409,6 +2409,16 @@ impl Input for NetworkDefine {
     }
 }
 
+impl Input for kentos_commands::LinearRefDefine {
+    /// `link.tolerance` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "link.tolerance" => self.link.as_mut().and_then(|l| l.tolerance.as_mut()),
+            _ => None,
+        }
+    }
+}
+
 impl Input for EntitiesOffset {
     /// `by.distance`, `by.side.x`, `by.point.y` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -3326,6 +3336,9 @@ fn run_op(
         }
         kentos_commands::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         kentos_commands::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
+        kentos_commands::CAD_LINEARREF_DEFINE => {
+            run!(linearref_define, kentos_commands::LinearRefDefine)
+        }
         kentos_commands::CAD_SUBNETWORKS_FIND => {
             run!(subnetworks, kentos_commands::SubnetworksFind)
         }
@@ -4030,6 +4043,12 @@ fn check(
                 let got = serde_json::to_value(&doc.settings().address_locators)
                     .map_err(|e| format!("{at}: {e}"))?;
                 expect_same(&got, &fill(want, doc, state, at)?, "adres verileri", at)?;
+            }
+            // The project's links of event layers to their routes (docs/adr/0569 §2).
+            "linearEvents" => {
+                let got = serde_json::to_value(&doc.settings().linear_events)
+                    .map_err(|e| format!("{at}: {e}"))?;
+                expect_same(&got, &fill(want, doc, state, at)?, "olay bağları", at)?;
             }
             // A misspelt expectation would otherwise pass unchecked.
             other => return Err(format!("{at}: bilinmeyen beklenti “{other}”")),
