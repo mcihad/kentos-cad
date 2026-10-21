@@ -53,6 +53,7 @@ pub mod shp;
 pub mod maplibre;
 pub mod qml;
 pub mod sld;
+pub mod style_extras;
 pub mod spaces;
 pub mod table_file;
 pub mod text;

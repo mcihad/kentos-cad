@@ -1,0 +1,62 @@
+{
+  "layers": [
+    {
+      "id": "import-parsel/1",
+      "metadata": {
+        "kentos:class": "parsel",
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "paint": {
+        "fill-color": [
+          "to-color",
+          [
+            "get",
+            "renk"
+          ],
+          "#ff0000"
+        ],
+        "fill-opacity": 1
+      },
+      "source": "import-parsel",
+      "type": "fill"
+    },
+    {
+      "id": "import-parsel/2",
+      "layout": {
+        "line-cap": "butt",
+        "line-join": "miter"
+      },
+      "metadata": {
+        "kentos:class": "parsel",
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "paint": {
+        "line-color": [
+          "to-color",
+          [
+            "get",
+            "kenar"
+          ],
+          "#000000"
+        ],
+        "line-opacity": 1,
+        "line-width": 1.5118
+      },
+      "source": "import-parsel",
+      "type": "line"
+    }
+  ],
+  "metadata": {
+    "kentos:format": "kentos-maplibre/1"
+  },
+  "name": "parsel",
+  "sources": {
+    "import-parsel": {
+      "data": "kentos-renk.geojson",
+      "type": "geojson"
+    }
+  },
+  "version": 8
+}

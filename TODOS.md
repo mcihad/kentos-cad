@@ -226,6 +226,11 @@ Liste:
 - [ ] `CBS-17` MapLibre alışverişi (ADR 0560, 20 Ekim): web'de gerekenler: `file.export.maplibre` ve `file.import.maplibre`'nin
   işleyicileri (`maplibre`'nin WASM bağlayıcısı, `formats-wasm`'e; GeoJSON yazımı mevcut `writeGeoJsonWgs84`'le), Katmanlar'ın sağ
   tık menüsünde iki öğe ve Veri › Dosya alışverişi'nde ikisi (ikonlar `maplibreExport`, `maplibreImport`); TS türleri üretildi.
+- [ ] `CBS-17` stil alışverişinin kalanı (ADR 0571, 21 Ekim): web'de gerekenler: `sld`, `qml` ve `maplibre`'nin WASM bağlayıcılarında degrade,
+  nokta deseni, SVG ve yazı işareti ve renklerin veriye bağlı değerleri (aynı çekirdek: `style_extras`, `sld::StyleAsset`); okumada dönen
+  `assets`'in projenin kitaplığına eklenmesi (`library::svg_asset`'in web karşılığı, kitaplık geri alma tutmaz), yazmada `inline_assets`
+  (kitaplığın SVG çizimi simgeye `svgData` olarak); `file.import.*`'ın web işleyicileri bunları çağırır. Ortak durumlar
+  `fixtures/commands/v1/file.import.{qml,sld,maplibre}.json`.
 - [ ] `CBS-28` COG (ADR 0515, 19 Ekim): web'de gerekenler: çözümleme işçisinin raster sonuçlarını `cog::plan`'la COG'a çevirmesi
   (WASM bağlayıcısı; indirilen dosya da COG), Raster işlemleri'nde COG olarak kaydet (`copy` işi bağlayıcıda).
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
@@ -2426,8 +2431,16 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   kaydırma, alt simgenin çizgisi), `markerLine` QGIS'in `MarkerLine`'ı (yedi yerleşim, aralık, baştan uzaklık, dönme, halkalar,
   işaret); çizginin kalınlığı (`outlineWidth`), işaretin boyu ve dönüşü veriye bağlı değer olarak iki yönde, ifadeler alanlar,
   sayılar ve dört işlemse çevrilir, öbürleri ve renkler adıyla söylenir; 29 ortak durum `qml_cases.py`'den, QGIS 4.2'nin iki
-  yeni QML'i ve KentOS'unkiler QGIS'te. Kalan: degrade, nokta deseni, SVG ve yazı işareti, renklerin veriye bağlı değerleri,
-  işlevli ifadeler. — **21 Ekim, [ADR 0565](docs/adr/0565-qml-hatch-marker-line-and-data-defined-values.md).**
+  yeni QML'i ve KentOS'unkiler QGIS'te. Kalan: işlevli ifadeler (degrade, nokta deseni, SVG ve yazı işareti, renklerin veriye bağlı
+  değerleri ADR 0571'de). — **21 Ekim, [ADR 0565](docs/adr/0565-qml-hatch-marker-line-and-data-defined-values.md).**
+- [x] `CBS-17` stil alışverişinin kalanı (dilim): üç biçimde de degrade (QML'in `GradientFill`'i: doğrusal, küre, silindir, açı; SLD ve
+  MapLibre'de yok, söylenir), nokta deseni (QML `PointPatternFill`, SLD `GraphicFill`; MapLibre `fill-pattern` sprite ister, söylenir), SVG
+  işareti (çizim simgeye konur, QML `base64:` adresi, SLD iki `ExternalGraphic`; okumada çizim projenin kitaplığına girer; MapLibre
+  söylenir), yazı işareti (QML `FontMarker`, SLD `ttf://` + `MarkIndex`, MapLibre `symbol` katmanı) ve renklerin veriye bağlı değerleri
+  (QML'de alan ve ifade, SLD'de `PropertyName` ve `Recode`/`Categorize`, MapLibre'de `to-color` + `get`); QGIS SLD'deki alana bağlı rengi
+  okumaz, söylenir. `.kcad` şeması değişmedi. QGIS 4.2'nin sekiz yeni QML'i ve dört SLD'si, KentOS'unkiler QGIS'te ve MapLibre'nin
+  doğrulayıcısında; ortak durumlar QML 37, SLD 30, MapLibre 35. Kalan: işlevli ifadeler, QGIS'in öbür simge katmanları, etiketler. —
+  **21 Ekim, [ADR 0571](docs/adr/0571-style-exchange-gradient-pattern-svg-font-and-colours.md).**
 - [ ] `CBS-17` QML alışverişi (ikinci dilim): `kentos_formats::qml` (QGIS 4.2'nin `renderer-v2`'si: tek simge, kategorili ve NULL
   sınıfı, aralıklı, iç içe kurallı; basit dolgu, çizgi, işaret ve merkez dolgusu; birimler mm, piksel, haritada metre; simgenin
   saydamlığı, kapalı katman; süzgeçler QGIS'in ifadesinden ve ifadesine, IN de; tek geometri türü), `file.export.qml` ve

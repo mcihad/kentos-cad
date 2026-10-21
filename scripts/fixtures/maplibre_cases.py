@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """MapLibre stilinden görünüş al'ın ortak durumları ve KentOS'un yazdığı stillerin resmî doğrulayıcıyla denetimi
-(docs/adr/0560), KentOS kodu olmadan.
+(docs/adr/0560, 0571), KentOS kodu olmadan.
 
     python3 scripts/fixtures/maplibre_cases.py --files   # elle yazılmış stilleri fixtures/maplibre/v1'e yazar
     python3 scripts/fixtures/maplibre_cases.py           # fixtures/commands/v1/file.import.maplibre.json'u yazar
@@ -9,7 +9,8 @@
 Okuma kuralları ADR'den, bu betikte yeniden yazılmıştır (json ile): stil katmanları (fill, line, circle), süzgeçler
 (ifade ve eski biçim) KentOS'un ifadesine, `match` kategorili, `step` aralıklı, süzgeçli katmanlar kurallı görünüşe;
 renkler CSS'ten #rrggbb(aa)'ya; pikseller piksel, yakınlaştırmayla büyüyen genişlikler metre; yakınlaştırma düzeyleri
-ölçek paydasına. Alınamayanların cümleleri de ADR'nin sözleridir.
+ölçek paydasına; ADR 0571'den `to-color` + `get` renkleri ve yazı işareti `symbol` katmanları. Alınamayanların cümleleri de
+ADR'nin sözleridir.
 
 KentOS'un yazdığı stilleri (`KENTOS_WRITE_MAPLIBRE=1 cargo test -p kentos-headless --test headless maplibre` yazar,
 fixtures/maplibre/v1/out) iki şeyle denetler:
@@ -455,6 +456,12 @@ def prop_of(v, key, lost, what):
         return ("const", css_rgba(rgb, a))
     if name == "to-color" and len(v) == 2 and isinstance(v[1], str):
         return ("const", v[1])
+    if name == "to-color" and len(v) == 3 and isinstance(v[2], str) and operand_field(v[1]) is not None:
+        return ("data", operand_field(v[1]), v[2])
+    if name == "to-color" and len(v) == 2 and operand_field(v[1]) is not None:
+        return ("data", operand_field(v[1]), None)
+    if name == "get" and len(v) == 2 and key.endswith("color") and isinstance(v[1], str):
+        return ("data", v[1], None)
     if name == "match" and len(v) >= 5 and len(v) % 2 == 1:
         field = operand_field(v[1])
         if field is None:
@@ -502,6 +509,8 @@ def prop_at(p, cls):
         return p[1]
     if k == "metres":
         return {"metres": p[1]}
+    if k == "data":
+        return p[2]
     if k == "match":
         if cls[0] == "value":
             for labels, out in p[2]:
@@ -519,11 +528,12 @@ def prop_at(p, cls):
     return None
 
 
-READ_KEYS = {"fill-color", "fill-opacity", "fill-outline-color", "fill-antialias", "line-color", "line-width",
+READ_KEYS = {"text-color", "text-opacity", "text-halo-color", "text-halo-width", "fill-color", "fill-opacity", "fill-outline-color", "fill-antialias", "line-color", "line-width",
              "line-opacity", "line-dasharray", "circle-radius", "circle-color", "circle-opacity",
              "circle-stroke-color", "circle-stroke-width", "circle-stroke-opacity", "circle-pitch-alignment",
              "circle-pitch-scale", "fill-sort-key"}
-LAYOUT_OK = {"visibility", "line-cap", "line-join", "line-miter-limit", "line-round-limit", "circle-sort-key",
+LAYOUT_OK = {"text-field", "text-font", "text-size", "text-rotate", "text-allow-overlap", "text-ignore-placement",
+             "visibility", "line-cap", "line-join", "line-miter-limit", "line-round-limit", "circle-sort-key",
              "fill-sort-key", "line-sort-key"}
 
 
@@ -542,6 +552,13 @@ class Raw:
                 return prop_at(p, cls)
         return None
 
+    def colour_value(self, key, colour):
+        """A colour as the symbol layer's value: of a field when the style says it so, the colour its fallback."""
+        for k, p in self.paint:
+            if k == key and p[0] == "data":
+                return {"expr": f"[{p[1]}]", "fallback": colour}
+        return colour
+
     def number(self, key, cls):
         v = self.value(key, cls)
         return float(v) if is_num(v) else None
@@ -559,10 +576,20 @@ class Raw:
         return None
 
 
+def is_font_marker(l):
+    """A text marker: one the writer made, or a literal single character with no icon (other text is a label)."""
+    if l["type"] != "symbol":
+        return False
+    layout, meta = l.get("layout", {}), l.get("metadata", {})
+    text = layout.get("text-field")
+    return (isinstance(text, str) and "icon-image" not in layout and "kentos:label" not in meta
+            and (meta.get("kentos:symbol") == "marker" or ("kentos:symbol" not in meta and len(text) == 1)))
+
+
 def raw_of(l, lost):
     what = f"“{l['id']}” katmanı"
     kind = l["type"]
-    if kind not in ("fill", "line", "circle"):
+    if kind not in ("fill", "line", "circle") and not is_font_marker(l):
         if kind == "symbol":
             lost.append(f"{what}: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır")
         else:
@@ -582,7 +609,7 @@ def raw_of(l, lost):
         p = prop_of(l["paint"][k], k, lost, what)
         if p is not None:
             paint.append((k, p))
-    colour_key = {"fill": "fill-color", "line": "line-color"}.get(kind, "circle-color")
+    colour_key = {"fill": "fill-color", "line": "line-color", "symbol": "text-color"}.get(kind, "circle-color")
     if colour_key in l.get("paint", {}) and not any(k == colour_key for k, _ in paint):
         lost.append(f"{what}: “{colour_key}” okunamadığı için katman alınmadı")
         return None
@@ -615,7 +642,7 @@ def draw(raw, cls, others_fill, lost):
     if kind == "fill":
         colour = raw.colour("fill-color", cls) or ("#000000", 1.0)
         opacity = min(max(raw.number("fill-opacity", cls) if raw.number("fill-opacity", cls) is not None else 1.0, 0), 1)
-        out.append(("fill", {"type": "simpleFill", "color": kcolour(colour, 1.0)}, opacity))
+        out.append(("fill", {"type": "simpleFill", "color": raw.colour_value("fill-color", kcolour(colour, 1.0))}, opacity))
         o = raw.colour("fill-outline-color", cls)
         if o:
             out.append(("fill", {"type": "simpleLine", "color": kcolour(o, 1.0), "width": 1, "unit": "px"}, opacity))
@@ -625,7 +652,7 @@ def draw(raw, cls, others_fill, lost):
         opacity = min(max(opv if opv is not None else 1.0, 0), 1)
         width = raw.length("line-width", cls) or ("px", 1.0)
         w, unit = len_parts(width)
-        l = {"type": "simpleLine", "color": kcolour(colour, 1.0), "width": w, "unit": unit}
+        l = {"type": "simpleLine", "color": raw.colour_value("line-color", kcolour(colour, 1.0)), "width": w, "unit": unit}
         d = raw.value("line-dasharray", cls)
         if isinstance(d, list):
             ds = [float(x) for x in d if is_num(x)]
@@ -645,6 +672,37 @@ def draw(raw, cls, others_fill, lost):
         else:
             on_polygons = others_fill
         out.append(("fill" if on_polygons else "line", l, opacity))
+    elif kind == "symbol":
+        text = layout.get("text-field") if isinstance(layout.get("text-field"), str) else ""
+        size, unit = 16.0, "px"
+        if layout.get("text-size") is not None:
+            tp = prop_of(layout["text-size"], "text-size", lost, what)
+            if tp is not None and tp[0] == "metres":
+                size, unit = round4(tp[1]), "m"
+            elif tp is not None and tp[0] == "const":
+                size = float(tp[1]) if is_num(tp[1]) else 16.0
+        font = layout.get("text-font")
+        stack = font[0] if isinstance(font, list) and font and isinstance(font[0], str) else ""
+        colour = raw.colour("text-color", cls) or ("#000000", 1.0)
+        top = raw.number("text-opacity", cls)
+        opacity = min(max(top if top is not None else 1.0, 0), 1)
+        m = {"type": "text", "text": text, "size": size, "unit": unit,
+             "color": raw.colour_value("text-color", kcolour(colour, 1.0))}
+        named = src.get("metadata", {}).get("kentos:font")
+        if isinstance(named, str):
+            m["font"] = named
+        if "Bold" in stack:
+            m["weight"] = 700
+        if "Italic" in stack:
+            m["italic"] = True
+        rot = layout.get("text-rotate")
+        if is_num(rot) and rot != 0:
+            m["rotation"] = -float(rot)
+        hw = raw.number("text-halo-width", cls)
+        hc = raw.colour("text-halo-color", cls)
+        if hw is not None and hw > 0 and hc is not None:
+            m["halo"] = {"color": kcolour(hc, 1.0), "width": round4(hw)}
+        out.append(("marker", m, opacity))
     else:
         radius = raw.length("circle-radius", cls) or ("px", 5.0)
         r, unit = len_parts(radius)
@@ -657,13 +715,13 @@ def draw(raw, cls, others_fill, lost):
         sw = raw.length("circle-stroke-width", cls)
         stroke_on = sw is not None and sw[1] > 0 and stroke_o > 0
         m = {"type": "shape", "shape": "circle", "size": round4(r * 2.0), "unit": unit,
-             "fill": kcolour(fill, 1.0) if fill_o > 0 else None}
+             "fill": raw.colour_value("circle-color", kcolour(fill, 1.0)) if fill_o > 0 else None}
         if stroke_on:
             w, su = len_parts(sw)
             if su != unit:
                 lost.append(f"{what}: çemberin kenar kalınlığının birimi boyununkinden başka; kalınlık alınmadı")
             else:
-                m["stroke"] = kcolour(stroke, 1.0)
+                m["stroke"] = raw.colour_value("circle-stroke-color", kcolour(stroke, 1.0))
                 m["strokeWidth"] = w
         if fill_o > 0 and stroke_on and abs(fill_o - stroke_o) > 1e-9:
             m["fill"] = kcolour(fill, fill_o)
@@ -1381,6 +1439,30 @@ HAND = {
     "cizilemeyen.json": style(
         {"id": "parsel/etiket", "type": "symbol", "source": "s", "layout": {"text-field": "{ad}"}},
         {"id": "parsel/arka", "type": "background"}),
+    # ADR 0571: a colour of a field (`to-color` of `get` with its fallback; `get` alone has none).
+    "veriye-bagli.json": style(
+        {"id": "dolgu", "type": "fill", "source": "s", "source-layer": "parsel",
+         "paint": {"fill-color": ["to-color", ["get", "renk"], "#ff0000"], "fill-opacity": 0.8}},
+        {"id": "kenar", "type": "line", "source": "s", "source-layer": "parsel",
+         "paint": {"line-color": ["get", "kenar"], "line-width": 2}},
+        {"id": "nokta", "type": "circle", "source": "s", "source-layer": "durak",
+         "paint": {"circle-radius": 4, "circle-color": ["to-color", ["to-string", ["get", "renk"]], "#00aa00"],
+                   "circle-stroke-color": ["to-color", ["get", "kenar"], "#000000"], "circle-stroke-width": 1}}),
+    # A text marker the writer made (its font in the metadata), one character alone, a label, an icon.
+    "yazi-isareti.json": style(
+        {"id": "durak/1", "type": "symbol", "source": "s", "source-layer": "durak",
+         "metadata": {"kentos:layer": "durak", "kentos:symbol": "marker", "kentos:font": "Arial"},
+         "layout": {"text-field": "A", "text-size": 17, "text-font": ["Noto Sans Bold Italic"], "text-rotate": 15,
+                    "text-allow-overlap": True},
+         "paint": {"text-color": ["to-color", ["get", "renk"], "#aa0000"], "text-opacity": 0.5,
+                   "text-halo-color": "#ffffff", "text-halo-width": 1.5}},
+        {"id": "durak/2", "type": "symbol", "source": "s", "source-layer": "durak",
+         "layout": {"text-field": "★", "text-size": metres(2.0)},
+         "paint": {"text-color": "#ffcc00"}},
+        {"id": "durak/3", "type": "symbol", "source": "s", "source-layer": "durak",
+         "layout": {"text-field": "Hastane"}, "paint": {"text-color": "#000000"}},
+        {"id": "durak/4", "type": "symbol", "source": "s", "source-layer": "durak",
+         "layout": {"icon-image": "hastane", "text-field": "H"}}),
     "surum7.json": {"version": 7, "sources": {}, "layers": []},
     "katmansiz.json": {"version": 8, "sources": {}},
     "bozuk.json": "{ \"version\": 8, \"layers\": [",
@@ -1413,6 +1495,10 @@ def build_cases():
                 "kayipli.json", "parsel"),
         ok_case("CSS renkleri: #abc, rgb, rgba, hsl, hsla, adlı, transparent, rgba ifadesi, sekiz haneli", "renkler.json",
                 "parsel"),
+        ok_case("Veriye bağlı renkler: to-color ve get alanın değerini renk yapar, yedek rengi sabit renk olur", "veriye-bagli.json",
+                "parsel"),
+        ok_case("Yazı işareti: KentOS'un yazdığı, tek karakterli, etiket ve simgeli katman söylenir", "yazi-isareti.json",
+                "durak"),
         ok_case("Geometri süzgeçleri hangi simgenin olduğunu söyler", "geometri.json", "parsel"),
         ok_case("Görünmez stil katmanı kapalı katman olur", "kapali.json", "parsel"),
         ok_case("KentOS'un yazdığı biçim: metadata kentos:layer, üyelik süzgeci Diğerleri'ni kapatır, etiketler",
@@ -1539,12 +1625,12 @@ def validate(path: Path):
 
 # The objects the evaluator draws: typed numbers and the same numbers as text.
 FEATURES = [
-    {"type": "Polygon", "properties": {"ada": "A", "alan": 420, "tapulu": 1}},
+    {"type": "Polygon", "properties": {"ada": "A", "alan": 420, "tapulu": 1, "renk": "#336699"}},
     {"type": "Polygon", "properties": {"ada": "B", "alan": 750, "tapulu": 0}},
     {"type": "Polygon", "properties": {"ada": "C", "alan": 1500, "tapulu": 1}},
     {"type": "Polygon", "properties": {"ada": "A", "alan": 9000}},
     {"type": "Polygon", "properties": {"ada": "D"}},
-    {"type": "Polygon", "properties": {"ada": "B", "alan": "750", "tapulu": "0"}},
+    {"type": "Polygon", "properties": {"ada": "B", "alan": "750", "tapulu": "0", "kenar": "#112233"}},
     {"type": "Polygon", "properties": {"ada": "A", "alan": 5000, "tapulu": "1"}},
     {"type": "Polygon", "properties": {"ada": "A", "alan": 500, "tapulu": 1}},
 ]
@@ -1553,7 +1639,7 @@ FEATURES = [
 def check_out():
     out_dir = DIR / "out"
     names = ["kentos-kategorili.json", "kentos-aralikli.json", "kentos-kurallar.json", "kentos-cizgi.json",
-             "kentos-nokta.json", "kentos-cok.json"]
+             "kentos-nokta.json", "kentos-renk.json", "kentos-yazi.json", "kentos-cok.json"]
     missing = [n for n in names if not (out_dir / n).exists()]
     if missing:
         return [f"{n} yok: önce KENTOS_WRITE_MAPLIBRE=1 ile KentOS'un testini çalıştırın" for n in missing]
@@ -1691,6 +1777,34 @@ def evaluate_out(out_dir):
     r = circles[0]["features"][0]["values"]["circle-radius"]
     if abs(r - 1.5 * PX_PER_MM) > 1e-3:
         problems.append(f"nokta: yarıçap {r}, beklenen {1.5 * PX_PER_MM}")
+    # ADR 0571: a colour of a field is `to-color` of it with its fallback; a text marker is a symbol layer.
+    got = get("kentos-renk.json")
+    fill = next(e for e in got if e["type"] == "fill")
+    line = next(e for e in got if e["type"] == "line")
+    for i in range(len(FEATURES)):
+        want_fill = FEATURES[i]["properties"].get("renk", "#ff0000")
+        want_line = FEATURES[i]["properties"].get("kenar", "#000000")
+        c = colour_of(fill["features"][i]["values"]["fill-color"])[0]
+        d = colour_of(line["features"][i]["values"]["line-color"])[0]
+        if c != want_fill:
+            problems.append(f"renk: {i}. nesnenin dolgusu {c}, beklenen {want_fill}")
+        if d != want_line:
+            problems.append(f"renk: {i}. nesnenin kenarı {d}, beklenen {want_line}")
+    style = json.loads((out_dir / "kentos-yazi.json").read_text(encoding="utf-8"))
+    sym = next((l for l in style["layers"] if l["type"] == "symbol"), None)
+    if sym is None:
+        problems.append("yazı: symbol katmanı yok")
+    else:
+        lay = sym["layout"]
+        if (lay.get("text-field"), lay.get("text-font"), lay.get("text-rotate")) != ("A", ["Noto Sans Bold"], 15):
+            problems.append(f"yazı: yerleşim {lay}")
+        got = get("kentos-yazi.json")
+        e = next(e for e in got if e["type"] == "symbol")
+        for i in (0, 1):
+            want = FEATURES[i]["properties"].get("renk", "#aa0000")
+            c = colour_of(e["features"][i]["values"]["text-color"])[0]
+            if c != want:
+                problems.append(f"yazı: {i}. nesnenin rengi {c}, beklenen {want}")
     return problems
 
 

@@ -97,6 +97,29 @@ fn layer_looks_go_out_as_maplibre_styles_and_come_back() {
                 { "id": "g", "type": "shape", "shape": "triangle", "size": 2.0, "unit": "mm", "fill": "#00ff00" } ] } } }),
             "single",
         ),
+        (
+            "kentos-renk",
+            parsel.clone(),
+            json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
+                { "id": "g", "type": "gradientFill", "shape": "linear", "color": "#ff0000", "color2": "#0000ff" },
+                { "id": "p", "type": "patternFill", "spacingX": 5.0, "spacingY": 5.0, "unit": "mm",
+                  "marker": { "type": "marker", "layers": [
+                    { "id": "m", "type": "shape", "shape": "circle", "size": 1.5, "unit": "mm", "fill": "#00aa00" } ] } },
+                { "id": "f", "type": "simpleFill", "color": { "expr": "[renk]", "fallback": "#ff0000" } },
+                { "id": "o", "type": "simpleLine", "width": 0.4, "unit": "mm",
+                  "color": { "expr": "[kenar]", "fallback": "#000000" } } ] } } }),
+            "single",
+        ),
+        (
+            "kentos-yazi",
+            nokta.clone(),
+            json!({ "type": "single", "symbols": { "marker": { "type": "marker", "layers": [
+                { "id": "t", "type": "text", "text": "A", "font": "Arial", "size": 6.0, "unit": "mm", "weight": 700,
+                  "italic": true, "color": { "expr": "[renk]", "fallback": "#aa0000" }, "rotation": -15.0,
+                  "halo": { "color": "#ffffff", "width": 0.4 } },
+                { "id": "v", "type": "svg", "asset": "yok", "size": 4.0, "unit": "mm" } ] } } }),
+            "single",
+        ),
     ];
     let dir = scratch("maplibre");
     for (name, layer, renderer, kind) in &looks {
@@ -164,6 +187,12 @@ fn layer_looks_go_out_as_maplibre_styles_and_come_back() {
             "kentos-nokta" => assert!(lost.contains("“triangle” şekli"), "{out}"),
             "kentos-cizgi" => assert!(lost.contains("metre cinsinden"), "{out}"),
             "kentos-kurallar" => assert!(lost.contains("ölçek aralıkları"), "{out}"),
+            "kentos-renk" => {
+                assert!(lost.contains("degrade dolgu") && lost.contains("fill-pattern"), "{out}");
+            }
+            "kentos-yazi" => {
+                assert!(lost.contains("Arial") && lost.contains("SVG işareti") && lost.contains("kalın ve eğik"), "{out}");
+            }
             _ => assert!(out["output"].get("lost").is_none(), "{name}: {out}"),
         }
         // Read back into the same layer.
@@ -221,6 +250,19 @@ fn layer_looks_go_out_as_maplibre_styles_and_come_back() {
                 let m = &r["symbols"]["marker"]["layers"][0];
                 assert_eq!(m["shape"], "circle");
                 assert_eq!(m["fill"], "#ff0000");
+            }
+            "kentos-renk" => {
+                let l = &r["symbols"]["fill"]["layers"];
+                assert_eq!(l[0]["color"], json!({ "expr": "[renk]", "fallback": "#ff0000" }), "{r}");
+                assert_eq!(l[1]["color"], json!({ "expr": "[kenar]", "fallback": "#000000" }), "{r}");
+            }
+            "kentos-yazi" => {
+                let t = &r["symbols"]["marker"]["layers"][0];
+                assert_eq!((t["text"].as_str(), t["font"].as_str(), t["weight"].as_u64()), (Some("A"), Some("Arial"), Some(700)));
+                assert_eq!(t["color"], json!({ "expr": "[renk]", "fallback": "#aa0000" }), "{r}");
+                assert_eq!(t["rotation"].as_f64(), Some(-15.0));
+                assert_eq!(t["halo"]["color"], "#ffffff");
+                assert_eq!(r["symbols"]["marker"]["layers"].as_array().map(Vec::len), Some(1), "the drawing is not written");
             }
             _ => {}
         }

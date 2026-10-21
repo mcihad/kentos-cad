@@ -359,6 +359,8 @@ mod statistics;
 mod stats_scenes;
 mod style;
 #[cfg(test)]
+mod style_exchange_scenes;
+#[cfg(test)]
 mod style_scenes;
 #[cfg(test)]
 mod suitability_scenes;

@@ -13,7 +13,7 @@ use kentos_formats::qml::{self, Written};
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
-use crate::sld::{kinds_of, library_symbol, simple_renderer};
+use crate::sld::{inline_assets, kinds_of, library_symbol, simple_renderer};
 
 fn refuse(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
@@ -43,11 +43,12 @@ pub fn export(
             Some("layer".into()),
         )));
     }
-    let renderer = node
+    let mut renderer = node
         .style
         .renderer
         .clone()
         .unwrap_or_else(|| simple_renderer(&node.style));
+    inline_assets(doc, &mut renderer);
     let written = qml::write(&renderer, kinds_of(doc, layer), &|id| {
         library_symbol(doc, id)
     });
@@ -128,6 +129,10 @@ fn run(
 ) -> Result<(QmlImported, Vec<CommandWarning>), Stop> {
     let read = read(input)?;
     checks::revision(cx.doc, input.expected_revision.as_deref())?;
+    if write {
+        // The SVG drawings the file carried join the project's library (a library edit, no undo step).
+        crate::sld::add_assets(cx.doc, &read.assets);
+    }
     let renderer_input = LayersRenderer {
         layer: input.layer.clone(),
         renderer: Some(read.renderer.clone()),

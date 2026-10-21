@@ -140,6 +140,7 @@ fn pointed_scenes() -> Vec<Pointed> {
     all.extend(crate::multidim_scenes::pointed());
     all.extend(crate::label_scenes::pointed());
     all.extend(crate::renderer_scenes::pointed());
+    all.extend(crate::style_exchange_scenes::pointed());
     all.extend(crate::attachment_scenes::pointed());
     all.extend(crate::address_scenes::pointed());
     all.extend(crate::history_scenes::pointed());

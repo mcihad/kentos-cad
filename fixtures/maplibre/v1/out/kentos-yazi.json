@@ -1,0 +1,50 @@
+{
+  "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "import-nokta/1",
+      "layout": {
+        "text-allow-overlap": true,
+        "text-field": "A",
+        "text-font": [
+          "Noto Sans Bold"
+        ],
+        "text-ignore-placement": true,
+        "text-rotate": 15,
+        "text-size": 22.6772
+      },
+      "metadata": {
+        "kentos:class": "nokta",
+        "kentos:font": "Arial",
+        "kentos:layer": "import-nokta",
+        "kentos:symbol": "marker"
+      },
+      "paint": {
+        "text-color": [
+          "to-color",
+          [
+            "get",
+            "renk"
+          ],
+          "#aa0000"
+        ],
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.5118,
+        "text-opacity": 1
+      },
+      "source": "import-nokta",
+      "type": "symbol"
+    }
+  ],
+  "metadata": {
+    "kentos:format": "kentos-maplibre/1"
+  },
+  "name": "nokta",
+  "sources": {
+    "import-nokta": {
+      "data": "kentos-yazi.geojson",
+      "type": "geojson"
+    }
+  },
+  "version": 8
+}

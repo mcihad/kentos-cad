@@ -1,0 +1,66 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "dolgu",
+   "type": "fill",
+   "source": "s",
+   "source-layer": "parsel",
+   "paint": {
+    "fill-color": [
+     "to-color",
+     [
+      "get",
+      "renk"
+     ],
+     "#ff0000"
+    ],
+    "fill-opacity": 0.8
+   }
+  },
+  {
+   "id": "kenar",
+   "type": "line",
+   "source": "s",
+   "source-layer": "parsel",
+   "paint": {
+    "line-color": [
+     "get",
+     "kenar"
+    ],
+    "line-width": 2
+   }
+  },
+  {
+   "id": "nokta",
+   "type": "circle",
+   "source": "s",
+   "source-layer": "durak",
+   "paint": {
+    "circle-radius": 4,
+    "circle-color": [
+     "to-color",
+     [
+      "to-string",
+      [
+       "get",
+       "renk"
+      ]
+     ],
+     "#00aa00"
+    ],
+    "circle-stroke-color": [
+     "to-color",
+     [
+      "get",
+      "kenar"
+     ],
+     "#000000"
+    ],
+    "circle-stroke-width": 1
+   }
+  }
+ ]
+}

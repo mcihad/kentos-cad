@@ -16,10 +16,10 @@ use std::fmt::Write as _;
 use serde_json::{Map, Value, json};
 
 use crate::sld::{
-    self, Filter, Lit, Op, colour, colour_with, esc, field_of, filter_text, fixed, num,
+    self, Filter, Lit, Op, colour, colour_with, esc, field_of, filter_text, num,
     parse_filter, parse_qgis, round3,
 };
-pub use crate::sld::{Kinds, Read, Written};
+pub use crate::sld::{Kinds, Read, StyleAsset, Written};
 
 /// A point (1/72 inch), mm.
 const POINT_MM: f64 = 25.4 / 72.0;
@@ -304,7 +304,31 @@ fn num_value(
         dds.push((prop, if negate { negated(&q) } else { q }));
         return v.get("fallback").and_then(Value::as_f64);
     }
-    fixed(layer, key, lost, what).and_then(Value::as_f64)
+    sld::fixed_for(layer, key, lost, what, "QML'e").and_then(Value::as_f64)
+}
+
+/// A layer's colour at `key`: fixed, or data-defined when its expression says itself in QGIS's (then QGIS's property
+/// `prop` takes it) and the fallback is written (a transparent colour without one).
+fn colour_value(
+    layer: &Value,
+    key: &str,
+    prop: &'static str,
+    dds: &mut Vec<(&'static str, String)>,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<String> {
+    let v = layer.get(key)?;
+    if let Some(e) = v.get("expr").and_then(Value::as_str)
+        && let Some(q) = qgis_value(e)
+    {
+        dds.push((prop, q));
+        return Some(
+            v.get("fallback")
+                .and_then(rgba)
+                .unwrap_or_else(|| "0,0,0,0".into()),
+        );
+    }
+    sld::fixed_for(layer, key, lost, what, "QML'e").and_then(rgba)
 }
 
 /// A symbol layer's `<data_defined_properties>` of expressions.
@@ -382,11 +406,11 @@ fn layer_losses(layer: &Value, lost: &mut Vec<String>, what: &str) {
 
 fn line_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) -> Option<String> {
     let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
-    let Some(color) = fixed(layer, "color", lost, what).and_then(rgba) else {
+    let mut dds = Vec::new();
+    let Some(color) = colour_value(layer, "color", "outlineColor", &mut dds, lost, what) else {
         lost.push(format!("{what}: çizginin rengi QML'in renklerinden değil"));
         return None;
     };
-    let mut dds = Vec::new();
     let width =
         num_value(layer, "width", "outlineWidth", false, &mut dds, lost, what).unwrap_or(0.0);
     let cap = match layer.get("cap").and_then(Value::as_str).unwrap_or("butt") {
@@ -452,7 +476,8 @@ fn line_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) -> O
 }
 
 fn fill_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) -> Option<String> {
-    let Some(color) = fixed(layer, "color", lost, what).and_then(rgba) else {
+    let mut dds = Vec::new();
+    let Some(color) = colour_value(layer, "color", "fillColor", &mut dds, lost, what) else {
         lost.push(format!("{what}: dolgunun rengi QML'in renklerinden değil"));
         return None;
     };
@@ -473,17 +498,57 @@ fn fill_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) -> O
         ],
         &format!("{pad}  "),
     ));
+    s.push_str(&dd_xml(&dds, &format!("{pad}  ")));
     let _ = writeln!(s, "{pad}</layer>");
     Some(s)
 }
 
+/// What a marker layer's three kinds share: its unit (QGIS's name), size and angle (each data-defined when its
+/// expression says itself), and the losses of what QGIS's marker layers lack (offset, anchor).
+fn marker_common(
+    layer: &Value,
+    default_size: f64,
+    dds: &mut Vec<(&'static str, String)>,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> (String, f64, f64) {
+    let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
+    let size = num_value(layer, "size", "size", false, dds, lost, what).unwrap_or(default_size);
+    // KentOS turns counter-clockwise, QGIS clockwise.
+    let angle = num_value(layer, "rotation", "angle", true, dds, lost, what)
+        .map_or(0.0, |r| if r == 0.0 { 0.0 } else { -r });
+    if layer
+        .get("offset")
+        .and_then(Value::as_array)
+        .is_some_and(|o| o.iter().any(|v| v.as_f64().is_some_and(|x| x != 0.0)))
+    {
+        lost.push(format!("{what}: işaretin kaydırması QML'e yazılmadı"));
+    }
+    if layer
+        .get("anchor")
+        .and_then(Value::as_str)
+        .is_some_and(|a| a != "center")
+    {
+        lost.push(format!("{what}: işaretin bağlantı noktası QML'e yazılmadı"));
+    }
+    layer_losses(layer, lost, what);
+    (unit_out(unit).to_owned(), size, angle)
+}
+
+/// A marker layer as QGIS's: a shape as `SimpleMarker`, an SVG drawing as `SvgMarker` (its text inside the QML,
+/// `base64:`), a text as `FontMarker`.
 fn marker_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) -> Option<String> {
     let t = layer.get("type").and_then(Value::as_str).unwrap_or("");
-    if t != "shape" {
-        lost.push(format!(
-            "{what}: “{t}” işareti QML'e yazılmadı (yalnız şekil işaretleri yazılır)"
-        ));
-        return None;
+    match t {
+        "shape" => {}
+        "svg" => return svg_marker_layer(layer, pad, lost, what),
+        "text" => return font_marker_layer(layer, pad, lost, what),
+        _ => {
+            lost.push(format!(
+                "{what}: “{t}” işareti QML'e yazılmadı (şekil, SVG ve yazı işaretleri yazılır)"
+            ));
+            return None;
+        }
     }
     let shape = layer
         .get("shape")
@@ -508,34 +573,15 @@ fn marker_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) ->
             return None;
         }
     };
-    let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
     let mut dds = Vec::new();
-    let size = num_value(layer, "size", "size", false, &mut dds, lost, what).unwrap_or(2.0);
-    let fill = fixed(layer, "fill", lost, what)
-        .and_then(rgba)
+    let (u, size, angle) = marker_common(layer, 2.0, &mut dds, lost, what);
+    let fill = colour_value(layer, "fill", "fillColor", &mut dds, lost, what)
         .unwrap_or_else(|| "0,0,0,0".into());
-    let stroke = fixed(layer, "stroke", lost, what).and_then(rgba);
+    let stroke = colour_value(layer, "stroke", "outlineColor", &mut dds, lost, what);
     let stroke_width = layer
         .get("strokeWidth")
         .and_then(Value::as_f64)
         .unwrap_or(0.0);
-    // KentOS turns counter-clockwise, QGIS clockwise.
-    let angle = num_value(layer, "rotation", "angle", true, &mut dds, lost, what)
-        .map_or(0.0, |r| if r == 0.0 { 0.0 } else { -r });
-    if layer
-        .get("offset")
-        .and_then(Value::as_array)
-        .is_some_and(|o| o.iter().any(|v| v.as_f64().is_some_and(|x| x != 0.0)))
-    {
-        lost.push(format!("{what}: işaretin kaydırması QML'e yazılmadı"));
-    }
-    if layer
-        .get("anchor")
-        .and_then(Value::as_str)
-        .is_some_and(|a| a != "center")
-    {
-        lost.push(format!("{what}: işaretin bağlantı noktası QML'e yazılmadı"));
-    }
     if layer.get("height").is_some_and(|v| !v.is_null()) {
         lost.push(format!("{what}: işaretin yüksekliği QML'e yazılmadı"));
     }
@@ -546,8 +592,6 @@ fn marker_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) ->
     {
         lost.push(format!("{what}: işaretin deliği QML'e yazılmadı"));
     }
-    layer_losses(layer, lost, what);
-    let u = unit_out(unit).to_owned();
     let mut s = layer_open("SimpleMarker", layer, pad);
     s.push_str(&options(
         &[
@@ -577,6 +621,328 @@ fn marker_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) ->
         &format!("{pad}  "),
     ));
     s.push_str(&dd_xml(&dds, &format!("{pad}  ")));
+    let _ = writeln!(s, "{pad}</layer>");
+    Some(s)
+}
+
+/// An SVG marker as `SvgMarker`: the drawing is the library asset's text (put into the layer as `svgData` by the
+/// host), inside the QML as `base64:`; its fill and outline colours, size and angle.
+fn svg_marker_layer(
+    layer: &Value,
+    pad: &str,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<String> {
+    let Some(svg) = layer.get("svgData").and_then(Value::as_str) else {
+        lost.push(format!(
+            "{what}: SVG işaretinin çizimi kitaplıkta yok; işaret QML'e yazılmadı"
+        ));
+        return None;
+    };
+    let mut dds = Vec::new();
+    let (u, size, angle) = marker_common(layer, 2.0, &mut dds, lost, what);
+    let fill = colour_value(layer, "fill", "fillColor", &mut dds, lost, what)
+        .unwrap_or_else(|| "0,0,0,255".into());
+    let stroke = colour_value(layer, "stroke", "outlineColor", &mut dds, lost, what);
+    let mut s = layer_open("SvgMarker", layer, pad);
+    s.push_str(&options(
+        &[
+            ("angle", num(round3(angle))),
+            ("color", fill),
+            ("horizontal_anchor_point", "1".into()),
+            (
+                "name",
+                format!("base64:{}", crate::style_extras::b64_encode(svg.as_bytes())),
+            ),
+            ("offset", "0,0".into()),
+            ("offset_unit", "MM".into()),
+            (
+                "outline_color",
+                stroke.clone().unwrap_or_else(|| "0,0,0,0".into()),
+            ),
+            // KentOS's SVG marker has no outline width: a drawing's own strokes take QGIS's usual 0.2.
+            (
+                "outline_width",
+                if stroke.is_some() { "0.2" } else { "0" }.into(),
+            ),
+            ("outline_width_unit", u.clone()),
+            ("scale_method", "diameter".into()),
+            ("size", num(round3(size))),
+            ("size_unit", u),
+            ("vertical_anchor_point", "1".into()),
+        ],
+        &format!("{pad}  "),
+    ));
+    s.push_str(&dd_xml(&dds, &format!("{pad}  ")));
+    let _ = writeln!(s, "{pad}</layer>");
+    Some(s)
+}
+
+/// A text marker as `FontMarker`: QGIS's marker is one character (the first of the text), its font family and style
+/// (KentOS's weight from 600 is bold), colour, halo as the outline, size and angle.
+fn font_marker_layer(
+    layer: &Value,
+    pad: &str,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<String> {
+    let mut dds = Vec::new();
+    let text = layer.get("text");
+    let (chr, dd) = match text {
+        Some(t) if t.get("expr").is_some() => {
+            let fallback = t.get("fallback").and_then(Value::as_str).unwrap_or("");
+            let dd = t
+                .get("expr")
+                .and_then(Value::as_str)
+                .and_then(qgis_value);
+            if dd.is_none() {
+                lost.push(format!(
+                    "{what}: yazı işaretinin metni bir ifadeyle (veriye göre); QML'e yedek değeri yazıldı"
+                ));
+            }
+            (fallback.to_owned(), dd)
+        }
+        Some(t) => (t.as_str().unwrap_or("").to_owned(), None),
+        None => (String::new(), None),
+    };
+    if let Some(d) = dd {
+        dds.push(("char", d));
+    }
+    if chr.chars().count() > 1 {
+        lost.push(format!(
+            "{what}: QGIS'in yazı işareti tek karakterdir; metnin yalnız ilk karakteri yazıldı"
+        ));
+    }
+    let first: String = chr.chars().take(1).collect();
+    if first.is_empty() && !dds.iter().any(|(p, _)| *p == "char") {
+        lost.push(format!(
+            "{what}: yazı işaretinin metni boş; işaret QML'e yazılmadı"
+        ));
+        return None;
+    }
+    let (u, size, angle) = marker_common(layer, 2.0, &mut dds, lost, what);
+    let color = colour_value(layer, "color", "fillColor", &mut dds, lost, what)
+        .unwrap_or_else(|| "0,0,0,255".into());
+    let bold = layer
+        .get("weight")
+        .and_then(Value::as_f64)
+        .is_some_and(|w| w >= 600.0);
+    let italic = layer.get("italic") == Some(&Value::Bool(true));
+    let style = match (bold, italic) {
+        (true, true) => "Bold Italic",
+        (true, false) => "Bold",
+        (false, true) => "Italic",
+        (false, false) => "Regular",
+    };
+    let halo = layer.get("halo").filter(|h| h.is_object());
+    let (outline, outline_width) = match halo {
+        Some(h) => (
+            h.get("color")
+                .and_then(rgba)
+                .unwrap_or_else(|| "0,0,0,0".into()),
+            h.get("width").and_then(Value::as_f64).unwrap_or(0.0),
+        ),
+        None => ("0,0,0,0".into(), 0.0),
+    };
+    let mut s = layer_open("FontMarker", layer, pad);
+    s.push_str(&options(
+        &[
+            ("angle", num(round3(angle))),
+            ("chr", first),
+            ("color", color),
+            (
+                "font",
+                layer
+                    .get("font")
+                    .and_then(Value::as_str)
+                    .unwrap_or("Sans Serif")
+                    .to_owned(),
+            ),
+            ("font_style", style.into()),
+            ("horizontal_anchor_point", "1".into()),
+            ("joinstyle", "miter".into()),
+            ("offset", "0,0".into()),
+            ("offset_unit", "MM".into()),
+            ("outline_color", outline),
+            ("outline_width", num(round3(outline_width))),
+            ("outline_width_unit", u.clone()),
+            ("size", num(round3(size))),
+            ("size_unit", u),
+            ("vertical_anchor_point", "1".into()),
+        ],
+        &format!("{pad}  "),
+    ));
+    s.push_str(&dd_xml(&dds, &format!("{pad}  ")));
+    let _ = writeln!(s, "{pad}</layer>");
+    Some(s)
+}
+
+/// A gradient as `GradientFill` (docs/adr/0571 §1). QGIS draws a linear gradient from its first reference point to
+/// its second, a radial one from the first outward to the second's distance; its fractions are of the object's box.
+/// So KentOS's linear gradient is the box's west-to-east pair turned by the angle (QGIS turns counter-clockwise too);
+/// the sphere is the box's centre out to its corner; the cylinder is the half-box with `spread` reflecting.
+fn gradient_layer(
+    layer: &Value,
+    pad: &str,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<String> {
+    let mut dds = Vec::new();
+    let mut c1 = (
+        colour_value(layer, "color", "fillColor", &mut dds, lost, what),
+        "fillColor",
+    );
+    let mut c2 = (
+        colour_value(layer, "color2", "color2", &mut dds, lost, what),
+        "color2",
+    );
+    let (Some(_), Some(_)) = (&c1.0, &c2.0) else {
+        lost.push(format!(
+            "{what}: degradenin iki rengi QML'in renklerinden değil; degrade yazılmadı"
+        ));
+        return None;
+    };
+    let shape = layer
+        .get("shape")
+        .and_then(Value::as_str)
+        .unwrap_or("linear");
+    let inverted = layer.get("inverted") == Some(&Value::Bool(true));
+    // QGIS's first colour is where its gradient starts: the box's west (linear), its edge (cylinder), its centre (sphere).
+    let swap = match shape {
+        "spherical" => !inverted,
+        _ => inverted,
+    };
+    if swap {
+        std::mem::swap(&mut c1.0, &mut c2.0);
+    }
+    // The data-defined properties follow their colours.
+    for (prop, _) in &mut dds {
+        let first = (*prop == "fillColor") != swap;
+        *prop = if first { "fillColor" } else { "color2" };
+    }
+    let (ty, spread, p1, p2) = match shape {
+        "spherical" => ("1", "0", "0.5,0.5", "1,1"),
+        "cylinder" => ("0", "1", "0,0.5", "0.5,0.5"),
+        _ => ("0", "0", "0,0.5", "1,0.5"),
+    };
+    let angle = if shape == "spherical" {
+        0.0
+    } else {
+        layer.get("angle").and_then(Value::as_f64).unwrap_or(0.0)
+    };
+    if shape != "spherical" && angle.rem_euclid(90.0) != 0.0 {
+        lost.push(format!(
+            "{what}: açılı degradenin uçları QGIS'te kutunun yan kenarlarına oturur (KentOS'ta kutunun doğrultudaki izdüşümüne); 0, 90, 180 ve 270 dışındaki açıda renk geçişi biraz kısalır"
+        ));
+    }
+    layer_losses(layer, lost, what);
+    let mut s = layer_open("GradientFill", layer, pad);
+    s.push_str(&options(
+        &[
+            ("angle", num(round3(angle))),
+            ("color", c1.0.unwrap_or_default()),
+            ("color_type", "0".into()),
+            ("coordinate_mode", "0".into()),
+            ("gradient_color2", c2.0.unwrap_or_default()),
+            ("offset", "0,0".into()),
+            ("offset_unit", "MM".into()),
+            ("reference_point1", p1.into()),
+            ("reference_point1_iscentroid", "0".into()),
+            ("reference_point2", p2.into()),
+            ("reference_point2_iscentroid", "0".into()),
+            ("spread", spread.into()),
+            ("type", ty.into()),
+        ],
+        &format!("{pad}  "),
+    ));
+    s.push_str(&dd_xml(&dds, &format!("{pad}  ")));
+    let _ = writeln!(s, "{pad}</layer>");
+    Some(s)
+}
+
+/// A point pattern as `PointPatternFill` (docs/adr/0571 §2): the marker's cell spacing, the half-spacing shift of
+/// every second row (`stagger`), the rotation and the start offset, its marker the sub-symbol.
+fn pattern_layer(
+    layer: &Value,
+    name: &str,
+    i: usize,
+    pad: &str,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<String> {
+    let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
+    let sx = layer.get("spacingX").and_then(Value::as_f64).unwrap_or(0.0);
+    let sy = layer.get("spacingY").and_then(Value::as_f64).unwrap_or(0.0);
+    if !(sx > 0.0 && sy > 0.0) {
+        lost.push(format!("{what}: aralığı olmayan desen QML'e yazılmadı"));
+        return None;
+    }
+    let marker = layer.get("marker").cloned().unwrap_or(Value::Null);
+    let at = format!("{pad}  ");
+    let sub = symbol_xml(&marker, "marker", &format!("@{name}@{i}"), &at, lost, what)?;
+    let more = |key: &str, none: f64| {
+        layer
+            .get(key)
+            .and_then(Value::as_f64)
+            .is_some_and(|v| v != none)
+    };
+    if more("jitter", 0.0) || more("coverage", 1.0) || more("seed", 0.0) {
+        lost.push(format!(
+            "{what}: desenin rastgele sapması, doluluğu ve tohumu QML'e yazılmadı (QGIS'in nokta deseninde sabit dizilim vardır)"
+        ));
+    }
+    lost.push(format!(
+        "{what}: desenin dizilimi QGIS'te nesnenin kutusundan, KentOS'ta çizimin başlangıç noktasından başlar; işaretlerin yeri bir hücre kayabilir"
+    ));
+    layer_losses(layer, lost, what);
+    let stagger = layer.get("stagger") == Some(&Value::Bool(true));
+    let offset = layer
+        .get("offset")
+        .and_then(Value::as_array)
+        .map(|o| {
+            (
+                o.first().and_then(Value::as_f64).unwrap_or(0.0),
+                o.get(1).and_then(Value::as_f64).unwrap_or(0.0),
+            )
+        })
+        .unwrap_or((0.0, 0.0));
+    let u = unit_out(unit).to_owned();
+    let mut s = layer_open("PointPatternFill", layer, pad);
+    s.push_str(&options(
+        &[
+            (
+                "angle",
+                num(round3(
+                    // KentOS turns the grid counter-clockwise, QGIS clockwise.
+                    -layer.get("angle").and_then(Value::as_f64).unwrap_or(0.0) + 0.0,
+                )),
+            ),
+            ("clip_mode", "shape".into()),
+            ("coordinate_reference", "feature".into()),
+            (
+                "displacement_x",
+                num(round3(if stagger { sx / 2.0 } else { 0.0 })),
+            ),
+            ("displacement_x_unit", u.clone()),
+            ("displacement_y", "0".into()),
+            ("displacement_y_unit", u.clone()),
+            ("distance_x", num(round3(sx))),
+            ("distance_x_unit", u.clone()),
+            ("distance_y", num(round3(sy))),
+            ("distance_y_unit", u.clone()),
+            ("offset_x", num(round3(offset.0))),
+            ("offset_x_unit", u.clone()),
+            // QGIS counts the offset's y downward, KentOS northward.
+            ("offset_y", num(round3(-offset.1 + 0.0))),
+            ("offset_y_unit", u),
+            ("outline_width_unit", "MM".into()),
+            ("random_deviation_x", "0".into()),
+            ("random_deviation_y", "0".into()),
+            ("seed", "0".into()),
+        ],
+        &at,
+    ));
+    s.push_str(&sub);
     let _ = writeln!(s, "{pad}</layer>");
     Some(s)
 }
@@ -789,14 +1155,16 @@ fn symbol_xml(
                 }
             }
             ("fill", "hatchFill") => hatch_layer(layer, name, i, &inner, lost, what),
+            ("fill", "gradientFill") => gradient_layer(layer, &inner, lost, what),
+            ("fill", "patternFill") => pattern_layer(layer, name, i, &inner, lost, what),
             (_, "markerLine") if key != "marker" => {
                 marker_line_layer(layer, name, i, &inner, lost, what)
             }
             (_, other) => {
                 let words = match other {
                     "hatchFill" => "tarama dolgusu (çizgi simgesinde)",
-                    "gradientFill" => "degrade dolgu",
-                    "patternFill" => "desen dolgusu",
+                    "gradientFill" => "degrade dolgu (çizgi simgesinde)",
+                    "patternFill" => "desen dolgusu (çizgi simgesinde)",
                     "imageFill" => "resim dolgusu",
                     "markerLine" => "işaretli çizgi (işaret simgesinde)",
                     "geometryGenerator" => "geometri üretici",
@@ -1292,18 +1660,20 @@ fn dd_props(layer: Node<'_, '_>) -> Vec<(String, String)> {
     out
 }
 
-/// The layer's data-defined values KentOS takes: `supported` names QGIS's property, the KentOS key it becomes
-/// and whether it turns the other way (an angle); the static value stays the fallback. The others are said.
+/// One data-defined property KentOS takes: QGIS's name, the KentOS layer type it goes to, the key it becomes and
+/// whether it turns the other way (an angle).
+type DdTake = (&'static str, &'static str, &'static str, bool);
+
+/// The layer's data-defined values KentOS takes (`supported`); the static value stays the fallback. The others are said.
 fn take_dd(
     layer: Node<'_, '_>,
-    supported: &[(&str, &str, bool)],
-    target: Option<&mut Value>,
+    supported: &[DdTake],
+    taken: &mut [Value],
     lost: &mut Vec<String>,
     what: &str,
 ) {
-    let mut target = target;
     for (name, q) in dd_props(layer) {
-        let Some(&(_, key, negate)) = supported.iter().find(|(p, _, _)| *p == name) else {
+        let Some(&(_, kind, key, negate)) = supported.iter().find(|(p, _, _, _)| *p == name) else {
             lost.push(format!(
                 "{what}: QGIS'in “{name}” veriye bağlı değeri KentOS'un bu katmanında yok; sabit değeri alındı"
             ));
@@ -1315,19 +1685,32 @@ fn take_dd(
             ));
             continue;
         };
-        if let Some(t) = target.as_deref_mut() {
-            let expr = if negate { negated(&e) } else { e };
-            t[key] = match t.get(key).cloned() {
-                Some(fallback) => json!({ "expr": expr, "fallback": fallback }),
-                None => json!({ "expr": expr }),
-            };
-        }
+        let Some(t) = taken
+            .iter_mut()
+            .find(|t| t.get("type").and_then(Value::as_str) == Some(kind))
+        else {
+            lost.push(format!(
+                "{what}: QGIS'in “{name}” veriye bağlı değerinin katmanı alınmadı; değer alınmadı"
+            ));
+            continue;
+        };
+        let expr = if negate { negated(&e) } else { e };
+        t[key] = match t.get(key).filter(|f| !f.is_null()).cloned() {
+            Some(fallback) => json!({ "expr": expr, "fallback": fallback }),
+            None => json!({ "expr": expr }),
+        };
     }
+}
+
+/// The names of the layer's active data-defined properties.
+fn dd_names(layer: Node<'_, '_>) -> Vec<String> {
+    dd_props(layer).into_iter().map(|(n, _)| n).collect()
 }
 
 fn read_line(
     m: &Map<String, Value>,
     id: String,
+    dd_color: bool,
     lost: &mut Vec<String>,
     what: &str,
 ) -> Option<Value> {
@@ -1335,7 +1718,10 @@ fn read_line(
     if style == "no" {
         return None;
     }
-    let color = colour_in(prop(m, "line_color").or(prop(m, "color")))?;
+    let color = colour_in(prop(m, "line_color").or(prop(m, "color")));
+    if color.is_none() && !dd_color {
+        return None;
+    }
     let (width, unit) = size_in(
         prop_num(m, "line_width").unwrap_or(0.26),
         prop(m, "line_width_unit"),
@@ -1346,8 +1732,10 @@ fn read_line(
         ));
         (0.26, "mm")
     });
-    let mut l =
-        json!({ "id": id, "type": "simpleLine", "color": color, "width": width, "unit": unit });
+    let mut l = json!({ "id": id, "type": "simpleLine", "width": width, "unit": unit });
+    if let Some(c) = color {
+        l["color"] = json!(c);
+    }
     let custom = prop(m, "use_custom_dash") == Some("1");
     let dash: Option<Vec<f64>> = if custom {
         let unit_of = prop(m, "customdash_unit");
@@ -1457,6 +1845,312 @@ fn read_marker(m: &Map<String, Value>, lost: &mut Vec<String>, what: &str) -> Va
         lost.push(format!("{what}: işaretin alana göre ölçeklenmesi alınmadı"));
     }
     v
+}
+
+thread_local! {
+    /// The SVG drawings the QML being read carried (`base64:` in an SVG marker), by the ids the markers refer to.
+    static ASSETS: std::cell::RefCell<Vec<StyleAsset>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+/// An SVG marker as KentOS's: the drawing a `base64:` name carries becomes a library drawing (`assets`), a file's
+/// path cannot be read here.
+fn read_svg_marker(m: &Map<String, Value>, lost: &mut Vec<String>, what: &str) -> Option<Value> {
+    let name = prop(m, "name").unwrap_or("");
+    let encoded = name
+        .strip_prefix("base64:")
+        .or_else(|| name.strip_prefix("data:image/svg+xml;base64,"));
+    let svg = encoded
+        .and_then(crate::style_extras::b64_decode)
+        .map(|b| String::from_utf8_lossy(&b).into_owned())
+        .filter(|t| crate::style_extras::looks_like_svg(t));
+    let Some(svg) = svg else {
+        lost.push(format!(
+            "{what}: SVG işareti “{}” dosyasına bağlı; KentOS çizimin içindeki SVG'yi alır, dosyayı okumaz; işaret alınmadı",
+            name.chars().take(60).collect::<String>()
+        ));
+        return None;
+    };
+    let id = crate::style_extras::asset_id("qml", &svg);
+    ASSETS.with(|a| {
+        let mut a = a.borrow_mut();
+        if !a.iter().any(|x| x.id == id) {
+            a.push(StyleAsset {
+                id: id.clone(),
+                name: "QGIS'ten gelen SVG işareti".into(),
+                svg,
+            });
+        }
+    });
+    let (size, unit) = size_in(prop_num(m, "size").unwrap_or(2.0), prop(m, "size_unit"))
+        .unwrap_or_else(|| {
+            lost.push(format!(
+                "{what}: işaretin yüzde boyu KentOS'ta yok; 2 mm alındı"
+            ));
+            (2.0, "mm")
+        });
+    let mut v = json!({ "id": "v", "type": "svg", "asset": id, "size": size, "unit": unit });
+    if let Some(c) = colour_in(prop(m, "color")) {
+        v["fill"] = json!(c);
+    }
+    if let Some(c) = colour_in(prop(m, "outline_color")) {
+        v["stroke"] = json!(c);
+    }
+    marker_pose(m, &mut v, lost, what);
+    Some(v)
+}
+
+/// What a QGIS marker layer's angle, offset and anchor say about a KentOS marker (the angle turns the other way).
+fn marker_pose(m: &Map<String, Value>, v: &mut Value, lost: &mut Vec<String>, what: &str) {
+    if let Some(a) = prop_num(m, "angle").filter(|a| *a != 0.0) {
+        v["rotation"] = json!(-a);
+    }
+    if prop(m, "offset").is_some_and(|o| {
+        o.split(',')
+            .any(|x| x.trim().parse::<f64>().is_ok_and(|x| x != 0.0))
+    }) {
+        lost.push(format!("{what}: işaretin kaydırması alınmadı"));
+    }
+    if prop(m, "horizontal_anchor_point").is_some_and(|a| a != "1")
+        || prop(m, "vertical_anchor_point").is_some_and(|a| a != "1")
+    {
+        lost.push(format!("{what}: işaretin bağlantı noktası alınmadı"));
+    }
+}
+
+/// A font marker as KentOS's text marker: the character, its font, its style (bold, italic), its colour, its outline
+/// as the halo.
+fn read_font_marker(m: &Map<String, Value>, lost: &mut Vec<String>, what: &str) -> Value {
+    let (size, unit) = size_in(prop_num(m, "size").unwrap_or(2.0), prop(m, "size_unit"))
+        .unwrap_or_else(|| {
+            lost.push(format!(
+                "{what}: işaretin yüzde boyu KentOS'ta yok; 2 mm alındı"
+            ));
+            (2.0, "mm")
+        });
+    let mut v = json!({
+        "id": "t", "type": "text", "text": prop(m, "chr").unwrap_or(""), "size": size, "unit": unit,
+    });
+    if let Some(f) = prop(m, "font").filter(|f| !f.is_empty()) {
+        v["font"] = json!(f);
+    }
+    let style = prop(m, "font_style").unwrap_or("");
+    if style.to_ascii_lowercase().contains("bold") {
+        v["weight"] = json!(700);
+    }
+    if style.to_ascii_lowercase().contains("italic") || style.to_ascii_lowercase().contains("oblique")
+    {
+        v["italic"] = json!(true);
+    }
+    if let Some(c) = colour_in(prop(m, "color")) {
+        v["color"] = json!(c);
+    }
+    if prop_num(m, "outline_width").is_some_and(|w| w > 0.0)
+        && let Some(c) = colour_in(prop(m, "outline_color"))
+    {
+        match size_as(
+            prop_num(m, "outline_width").unwrap_or(0.0),
+            prop(m, "outline_width_unit"),
+            unit,
+        ) {
+            Some(w) => v["halo"] = json!({ "color": c, "width": w }),
+            None => lost.push(format!(
+                "{what}: yazı işaretinin çizgi kalınlığının birimi boyununkinden başka; hale alınmadı"
+            )),
+        }
+    }
+    marker_pose(m, &mut v, lost, what);
+    v
+}
+
+/// A gradient fill as KentOS's (docs/adr/0571 §1): the type (linear, radial as the sphere; the reflected half-box pair as
+/// the cylinder), the box's direction turned by the angle, the two colours; the data-defined ones follow their colours.
+/// Returns the layer and the data-defined properties it takes.
+fn read_gradient(
+    layer: Node<'_, '_>,
+    m: &Map<String, Value>,
+    i: usize,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> (Value, Vec<DdTake>) {
+    let pair = |k: &str, default: (f64, f64)| {
+        prop(m, k)
+            .and_then(|t| {
+                let mut it = t.split(',').map(|x| x.trim().parse::<f64>().ok());
+                Some((it.next()??, it.next()??))
+            })
+            .unwrap_or(default)
+    };
+    let p1 = pair("reference_point1", (0.5, 0.0));
+    let p2 = pair("reference_point2", (0.5, 1.0));
+    let kind = prop(m, "type").or_else(|| prop(m, "gradient_type")).unwrap_or("0");
+    let spread = prop(m, "spread").unwrap_or("0");
+    let (mut c1, mut c2) = (
+        colour_in(prop(m, "color")),
+        colour_in(prop(m, "gradient_color2")),
+    );
+    if prop(m, "color_type") == Some("1") {
+        // QGIS 4 writes the ramp's colours in the layer's own properties, QGIS 3 in a `<colorramp>` of its own.
+        let r = child(layer, "colorramp").map_or_else(|| m.clone(), props);
+        match (colour_in(prop(&r, "color1")), colour_in(prop(&r, "color2"))) {
+            (Some(a), Some(b)) => {
+                c1 = Some(a);
+                c2 = Some(b);
+                if prop(&r, "stops").is_some_and(|t| !t.is_empty()) {
+                    lost.push(format!(
+                        "{what}: degradenin renk rampasının ara durakları alınmadı; ilk ve son rengi alındı"
+                    ));
+                }
+            }
+            _ => lost.push(format!(
+                "{what}: degradenin renk rampası okunamadı; iki rengi alındı"
+            )),
+        }
+    }
+    let half = |a: (f64, f64), b: (f64, f64)| a == (0.0, 0.5) && b == (0.5, 0.5);
+    let shape = match kind {
+        "1" => "spherical",
+        "2" => {
+            lost.push(format!(
+                "{what}: konik degrade KentOS'ta yok; doğrusal alındı"
+            ));
+            "linear"
+        }
+        _ if spread == "1" && half(p1, p2) => "cylinder",
+        _ => "linear",
+    };
+    if shape != "cylinder" && spread != "0" && kind != "1" {
+        lost.push(format!(
+            "{what}: degradenin yansıtma ve yineleme yayılımı KentOS'ta yok (yalnız kutunun yarısıyla yansıtma silindir olur); alınmadı"
+        ));
+    }
+    let mut g = json!({ "id": format!("g{i}"), "type": "gradientFill", "shape": shape });
+    let mut takes: Vec<DdTake> = Vec::new();
+    // QGIS's first colour is where its gradient starts: the box's west or edge, or the sphere's centre.
+    let (k1, k2) = if shape == "spherical" {
+        ("color2", "color")
+    } else {
+        ("color", "color2")
+    };
+    if let Some(c) = c1 {
+        g[k1] = json!(c);
+    }
+    if let Some(c) = c2 {
+        g[k2] = json!(c);
+    }
+    takes.push(("fillColor", "gradientFill", k1, false));
+    takes.push(("color2", "gradientFill", k2, false));
+    if shape != "spherical" {
+        let along = libm::atan2(-(p2.1 - p1.1), p2.0 - p1.0).to_degrees();
+        let angle = (prop_num(m, "angle").unwrap_or(0.0) + along).rem_euclid(360.0);
+        let angle = round3(angle);
+        if angle != 0.0 {
+            g["angle"] = json!(angle);
+        }
+        let standard = |a: (f64, f64), b: (f64, f64)| {
+            (a == (0.0, 0.5) && b == (1.0, 0.5))
+                || (a == (1.0, 0.5) && b == (0.0, 0.5))
+                || (a == (0.5, 0.0) && b == (0.5, 1.0))
+                || (a == (0.5, 1.0) && b == (0.5, 0.0))
+                || half(a, b)
+        };
+        if !standard(p1, p2) || angle.rem_euclid(90.0) != 0.0 {
+            lost.push(format!(
+                "{what}: degradenin uçları QGIS'te kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu"
+            ));
+        }
+    }
+    if prop(m, "coordinate_mode") == Some("1") {
+        lost.push(format!(
+            "{what}: degradenin görünüm kutusuna göre koordinatı alınmadı (KentOS nesnenin kutusunu kullanır)"
+        ));
+    }
+    if prop(m, "offset").is_some_and(|o| {
+        o.split(',')
+            .any(|x| x.trim().parse::<f64>().is_ok_and(|x| x != 0.0))
+    }) {
+        lost.push(format!("{what}: degradenin kaydırması alınmadı"));
+    }
+    (g, takes)
+}
+
+/// A point pattern fill as KentOS's pattern (docs/adr/0571 §2): its marker sub-symbol, cell spacing, the half-spacing
+/// shift of every second row, rotation and offset.
+fn read_pattern(
+    layer: Node<'_, '_>,
+    m: &Map<String, Value>,
+    i: usize,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<Value> {
+    let Some((k, marker)) = child(layer, "symbol").and_then(|sub| read_symbol(sub, lost, what))
+    else {
+        lost.push(format!("{what}: nokta deseninin işareti alınmadı"));
+        return None;
+    };
+    if k != "marker" {
+        lost.push(format!("{what}: nokta deseninin işareti alınmadı"));
+        return None;
+    }
+    let Some((sx, unit)) = size_in(
+        prop_num(m, "distance_x").unwrap_or(15.0),
+        prop(m, "distance_x_unit"),
+    ) else {
+        lost.push(format!(
+            "{what}: nokta deseninin yüzde aralığı KentOS'ta yok; desen alınmadı"
+        ));
+        return None;
+    };
+    let Some(sy) = size_as(
+        prop_num(m, "distance_y").unwrap_or(15.0),
+        prop(m, "distance_y_unit"),
+        unit,
+    ) else {
+        lost.push(format!(
+            "{what}: nokta deseninin iki aralığının birimi ayrı; desen alınmadı"
+        ));
+        return None;
+    };
+    let mut v = json!({
+        "id": format!("pt{i}"), "type": "patternFill", "marker": marker, "spacingX": sx, "spacingY": sy, "unit": unit,
+    });
+    let shift = |k: &str| prop_num(m, k).filter(|x| *x != 0.0);
+    match (
+        shift("displacement_x").map(|d| size_as(d, prop(m, "displacement_x_unit"), unit)),
+        shift("displacement_y"),
+    ) {
+        (Some(Some(d)), None) if (d - sx / 2.0).abs() < 1e-9 => v["stagger"] = json!(true),
+        (None, None) => {}
+        _ => lost.push(format!(
+            "{what}: nokta deseninin kayması KentOS'un yarım aralık kaymasından başka; alınmadı"
+        )),
+    }
+    if let Some(a) = prop_num(m, "angle").filter(|a| *a != 0.0) {
+        // QGIS turns the grid clockwise, KentOS counter-clockwise.
+        v["angle"] = json!(-a);
+    }
+    let ox = prop_num(m, "offset_x").unwrap_or(0.0);
+    let oy = prop_num(m, "offset_y").unwrap_or(0.0);
+    if ox != 0.0 || oy != 0.0 {
+        match (
+            size_as(ox, prop(m, "offset_x_unit"), unit),
+            size_as(oy, prop(m, "offset_y_unit"), unit),
+        ) {
+            // QGIS counts the offset's y downward, KentOS northward.
+            (Some(x), Some(y)) => v["offset"] = json!([x, -y + 0.0]),
+            _ => lost.push(format!(
+                "{what}: nokta deseninin başlangıç kaymasının birimi aralığınkinden başka; alınmadı"
+            )),
+        }
+    }
+    if ["random_deviation_x", "random_deviation_y"]
+        .iter()
+        .any(|k| prop_num(m, k).is_some_and(|d| d != 0.0))
+    {
+        lost.push(format!(
+            "{what}: nokta deseninin rastgele sapması KentOS'un sapmasıyla aynı değil; alınmadı"
+        ));
+    }
+    Some(v)
 }
 
 /// A line pattern fill as KentOS's hatch: its angle, spacing and offset, its line's colour, width and dashes.
@@ -1629,15 +2323,25 @@ fn read_symbol(s: Node<'_, '_>, lost: &mut Vec<String>, what: &str) -> Option<(S
     {
         let class = layer.attribute("class").unwrap_or("");
         let m = props(layer);
+        let names = dd_names(layer);
+        let has = |p: &str| names.iter().any(|n| n == p);
         let mut taken: Vec<Value> = Vec::new();
-        let mut supported: &[(&str, &str, bool)] = &[];
+        let mut supported: Vec<DdTake> = Vec::new();
         match (key.as_str(), class) {
             ("fill", "SimpleFill") => {
+                supported = vec![
+                    ("fillColor", "simpleFill", "color", false),
+                    ("outlineColor", "simpleLine", "color", false),
+                    ("outlineWidth", "simpleLine", "width", false),
+                ];
                 if prop(&m, "style").unwrap_or("solid") == "solid" {
-                    if let Some(c) = colour_in(prop(&m, "color")) {
-                        taken.push(
-                            json!({ "id": format!("f{i}"), "type": "simpleFill", "color": c }),
-                        );
+                    let c = colour_in(prop(&m, "color"));
+                    if c.is_some() || has("fillColor") {
+                        let mut f = json!({ "id": format!("f{i}"), "type": "simpleFill" });
+                        if let Some(c) = c {
+                            f["color"] = json!(c);
+                        }
+                        taken.push(f);
                     }
                 } else if prop(&m, "style") != Some("no") {
                     lost.push(format!(
@@ -1656,7 +2360,7 @@ fn read_symbol(s: Node<'_, '_>, lost: &mut Vec<String>, what: &str) -> Option<(S
                     .into_iter()
                     .filter_map(|(k, v)| v.map(|v| (k.to_owned(), v.clone())))
                     .collect();
-                    if let Some(l) = read_line(&line, format!("o{i}"), lost, what) {
+                    if let Some(l) = read_line(&line, format!("o{i}"), has("outlineColor"), lost, what) {
                         taken.push(l);
                     }
                 }
@@ -1668,14 +2372,52 @@ fn read_symbol(s: Node<'_, '_>, lost: &mut Vec<String>, what: &str) -> Option<(S
                 }
             }
             ("fill" | "line", "SimpleLine") => {
-                supported = &[("outlineWidth", "width", false)];
-                if let Some(l) = read_line(&m, format!("l{i}"), lost, what) {
+                supported = vec![
+                    ("outlineWidth", "simpleLine", "width", false),
+                    ("outlineColor", "simpleLine", "color", false),
+                ];
+                if let Some(l) = read_line(&m, format!("l{i}"), has("outlineColor"), lost, what) {
                     taken.push(l);
                 }
             }
             ("marker", "SimpleMarker") => {
-                supported = &[("size", "size", false), ("angle", "rotation", true)];
+                supported = vec![
+                    ("size", "shape", "size", false),
+                    ("angle", "shape", "rotation", true),
+                    ("fillColor", "shape", "fill", false),
+                    ("outlineColor", "shape", "stroke", false),
+                ];
                 taken.push(read_marker(&m, lost, what));
+            }
+            ("marker", "SvgMarker") => {
+                supported = vec![
+                    ("size", "svg", "size", false),
+                    ("angle", "svg", "rotation", true),
+                    ("fillColor", "svg", "fill", false),
+                    ("outlineColor", "svg", "stroke", false),
+                ];
+                if let Some(v) = read_svg_marker(&m, lost, what) {
+                    taken.push(v);
+                }
+            }
+            ("marker", "FontMarker") => {
+                supported = vec![
+                    ("size", "text", "size", false),
+                    ("angle", "text", "rotation", true),
+                    ("fillColor", "text", "color", false),
+                    ("char", "text", "text", false),
+                ];
+                taken.push(read_font_marker(&m, lost, what));
+            }
+            ("fill", "GradientFill") => {
+                let (g, takes) = read_gradient(layer, &m, i, lost, what);
+                supported = takes;
+                taken.push(g);
+            }
+            ("fill", "PointPatternFill") => {
+                if let Some(v) = read_pattern(layer, &m, i, lost, what) {
+                    taken.push(v);
+                }
             }
             ("fill", "LinePatternFill") => {
                 if let Some(h) = read_hatch(layer, &m, i, lost, what) {
@@ -1703,7 +2445,7 @@ fn read_symbol(s: Node<'_, '_>, lost: &mut Vec<String>, what: &str) -> Option<(S
                 "{what}: QGIS'in “{other}” simge katmanı KentOS'un katmanına çevrilmedi"
             )),
         }
-        take_dd(layer, supported, taken.first_mut(), lost, what);
+        take_dd(layer, &supported, &mut taken, lost, what);
         if layer.attribute("enabled") == Some("0") {
             for l in &mut taken {
                 l["enabled"] = json!(false);
@@ -1814,6 +2556,13 @@ fn read_rules(
 
 /// KentOS's renderer of a QML: its `renderer-v2` as the renderer of the same kind.
 pub fn read(text: &str) -> Result<Read, String> {
+    ASSETS.with(|a| a.borrow_mut().clear());
+    let mut read = read_in(text)?;
+    read.assets = ASSETS.with(|a| std::mem::take(&mut *a.borrow_mut()));
+    Ok(read)
+}
+
+fn read_in(text: &str) -> Result<Read, String> {
     let doc = crate::xml::document_with_dtd(text)
         .map_err(|_| "Dosya okunabilir bir XML değil.".to_owned())?;
     let root = doc.root_element();
@@ -1979,6 +2728,7 @@ pub fn read(text: &str) -> Result<Read, String> {
         renderer,
         lost,
         rules,
+        assets: Vec::new(),
     })
 }
 
@@ -2065,13 +2815,13 @@ mod tests {
     #[test]
     fn what_a_qml_cannot_say_is_named() {
         let r = json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
-            { "id": "h", "type": "gradientFill", "color2": "#ffffff", "angle": 45, "spacing": 2, "width": 0.2, "color": "#000000" },
+            { "id": "h", "type": "imageFill", "asset": "doku", "tileSize": 4, "angle": 45 },
             { "id": "f", "type": "simpleFill", "color": "#ffffff" },
         ] } } });
         let w = write(&r, Kinds::ALL, &none);
         assert_eq!(w.rules, 1);
         assert!(
-            w.lost.iter().any(|l| l.contains("degrade dolgu")),
+            w.lost.iter().any(|l| l.contains("resim dolgusu")),
             "{:?}",
             w.lost
         );
@@ -2126,5 +2876,191 @@ mod tests {
         assert_eq!(qgis_value("[a] ve [b]"), None);
         assert_eq!(kentos_value("'x'"), None);
         assert_eq!(negated(&negated("\"a\" * 2")), "\"a\" * 2");
+    }
+
+    fn area_look(layers: Value) -> Value {
+        json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": layers } } })
+    }
+
+    fn point_look(layers: Value) -> Value {
+        json!({ "type": "single", "symbols": { "marker": { "type": "marker", "layers": layers } } })
+    }
+
+    fn points() -> Kinds {
+        Kinds {
+            point: true,
+            line: false,
+            area: false,
+        }
+    }
+
+    #[test]
+    fn gradients_go_out_and_come_back_in_their_three_shapes() {
+        for (shape, inverted, angle) in [
+            ("linear", false, 0.0),
+            ("linear", true, 90.0),
+            ("linear", false, 180.0),
+            ("cylinder", false, 0.0),
+            ("spherical", false, 0.0),
+            ("spherical", true, 0.0),
+        ] {
+            let g = json!({ "id": "g", "type": "gradientFill", "shape": shape, "angle": angle,
+                "inverted": inverted, "color": "#ff0000", "color2": "#0000ff" });
+            let w = write(&area_look(json!([g.clone()])), area(), &none);
+            assert!(w.lost.is_empty(), "{shape}: {:?}", w.lost);
+            assert!(w.xml.contains("class=\"GradientFill\""), "{}", w.xml);
+            let back = read(&w.xml).expect("reads");
+            assert_eq!(back.lost, Vec::<String>::new(), "{shape}");
+            let l = &back.renderer["symbols"]["fill"]["layers"][0];
+            assert_eq!(l["shape"], shape);
+            assert_eq!(l["angle"].as_f64().unwrap_or(0.0), angle);
+            // A reflected sphere and a swapped linear gradient come back with the colours the way they ran.
+            let (a, b) = (l["color"].as_str().unwrap(), l["color2"].as_str().unwrap());
+            if inverted {
+                assert_eq!((a, b), ("#0000ff", "#ff0000"), "{shape} inverted");
+            } else {
+                assert_eq!((a, b), ("#ff0000", "#0000ff"), "{shape}");
+            }
+        }
+    }
+
+    #[test]
+    fn a_gradient_at_a_slant_and_a_plain_conic_one_are_said() {
+        let g = json!({ "id": "g", "type": "gradientFill", "shape": "linear", "angle": 30, "color": "#ff0000", "color2": "#0000ff" });
+        let w = write(&area_look(json!([g])), area(), &none);
+        assert_eq!(w.lost.len(), 1, "{:?}", w.lost);
+        assert!(w.lost[0].contains("açılı degradenin"));
+        let conic = w
+            .xml
+            .replace("name=\"type\" type=\"QString\" value=\"0\"", "name=\"type\" type=\"QString\" value=\"2\"");
+        let back = read(&conic).expect("reads");
+        assert!(back.lost.iter().any(|l| l.contains("konik degrade")), "{:?}", back.lost);
+        assert_eq!(back.renderer["symbols"]["fill"]["layers"][0]["shape"], "linear");
+    }
+
+    #[test]
+    fn data_defined_colours_go_out_and_come_back_on_every_layer() {
+        let r = area_look(json!([
+            { "id": "g", "type": "gradientFill", "shape": "spherical", "color": { "expr": "[Renk]", "fallback": "#ff0000" },
+              "color2": { "expr": "[Renk2]" } },
+            { "id": "f", "type": "simpleFill", "color": { "expr": "[Dolgu]", "fallback": "#00ff00" } },
+            { "id": "o", "type": "simpleLine", "color": { "expr": "[Kenar]", "fallback": "#000000" }, "width": 0.3, "unit": "mm" },
+        ]));
+        let w = write(&r, area(), &none);
+        assert!(w.lost.is_empty(), "{:?}", w.lost);
+        // The sphere's first QGIS colour is its centre, KentOS's second.
+        assert!(w.xml.contains("name=\"color2\" type=\"Map\""), "{}", w.xml);
+        let back = read(&w.xml).expect("reads");
+        assert_eq!(back.lost, Vec::<String>::new());
+        let l = &back.renderer["symbols"]["fill"]["layers"];
+        assert_eq!(l[0]["color"], json!({ "expr": "[Renk]", "fallback": "#ff0000" }));
+        assert_eq!(l[0]["color2"], json!({ "expr": "[Renk2]" }));
+        assert_eq!(l[1]["color"], json!({ "expr": "[Dolgu]", "fallback": "#00ff00" }));
+        assert_eq!(l[2]["color"], json!({ "expr": "[Kenar]", "fallback": "#000000" }));
+        // An expression that is not fields and operators is said, its fallback written.
+        let text = area_look(json!([
+            { "id": "f", "type": "simpleFill", "color": { "expr": "'ink'", "fallback": "#00ff00" } },
+        ]));
+        let w = write(&text, area(), &none);
+        assert_eq!(w.lost.len(), 1, "{:?}", w.lost);
+        assert!(w.lost[0].contains("bir ifadeyle"), "{:?}", w.lost);
+        let m = point_look(json!([
+            { "id": "p", "type": "shape", "shape": "circle", "size": 3, "unit": "mm",
+              "fill": { "expr": "[Renk]", "fallback": "#ff0000" }, "stroke": { "expr": "[Çizgi]" } },
+        ]));
+        let w = write(&m, points(), &none);
+        let back = read(&w.xml).expect("reads");
+        let p = &back.renderer["symbols"]["marker"]["layers"][0];
+        assert_eq!(p["fill"], json!({ "expr": "[Renk]", "fallback": "#ff0000" }));
+        assert_eq!(p["stroke"], json!({ "expr": "[Çizgi]" }));
+        assert!(back.lost.is_empty(), "{:?}", back.lost);
+    }
+
+    #[test]
+    fn a_point_pattern_goes_out_and_comes_back() {
+        let r = area_look(json!([
+            { "id": "p", "type": "patternFill", "unit": "mm", "spacingX": 6, "spacingY": 4, "stagger": true, "angle": 30,
+              "offset": [1, 2], "marker": { "type": "marker", "layers": [
+                { "id": "m", "type": "shape", "shape": "star", "size": 2, "unit": "mm", "fill": "#228833" }] } },
+        ]));
+        let w = write(&r, area(), &none);
+        assert_eq!(w.lost.len(), 1, "{:?}", w.lost);
+        assert!(w.lost[0].contains("dizilimi"), "{:?}", w.lost);
+        assert!(w.xml.contains("class=\"PointPatternFill\""), "{}", w.xml);
+        // QGIS turns the grid clockwise and counts the offset's y downward.
+        assert!(w.xml.contains("name=\"angle\" type=\"QString\" value=\"-30\""), "{}", w.xml);
+        assert!(w.xml.contains("name=\"offset_y\" type=\"QString\" value=\"-2\""), "{}", w.xml);
+        assert!(w.xml.contains("name=\"displacement_x\" type=\"QString\" value=\"3\""), "{}", w.xml);
+        let back = read(&w.xml).expect("reads");
+        assert_eq!(back.lost, Vec::<String>::new());
+        let l = &back.renderer["symbols"]["fill"]["layers"][0];
+        assert_eq!(l["type"], "patternFill");
+        assert_eq!((l["spacingX"].as_f64(), l["spacingY"].as_f64()), (Some(6.0), Some(4.0)));
+        assert_eq!(l["stagger"], true);
+        assert_eq!(l["angle"], 30.0);
+        assert_eq!(l["offset"], json!([1.0, 2.0]));
+        assert_eq!(l["marker"]["layers"][0]["shape"], "star");
+        // What KentOS's pattern has and QGIS's has not is said.
+        let more = area_look(json!([
+            { "id": "p", "type": "patternFill", "unit": "mm", "spacingX": 6, "spacingY": 4, "jitter": 0.3, "coverage": 0.5,
+              "marker": { "type": "marker", "layers": [{ "id": "m", "type": "shape", "shape": "circle", "size": 2 }] } },
+        ]));
+        assert!(write(&more, area(), &none).lost.iter().any(|l| l.contains("rastgele sapması")));
+    }
+
+    #[test]
+    fn an_svg_marker_carries_its_drawing_inside_the_qml() {
+        let svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 4 4\"><circle cx=\"2\" cy=\"2\" r=\"2\"/></svg>";
+        let r = point_look(json!([
+            { "id": "v", "type": "svg", "asset": "agac", "svgData": svg, "size": 4, "unit": "mm", "rotation": 30,
+              "fill": "#112233", "stroke": { "expr": "[Çizgi]", "fallback": "#445566" } },
+        ]));
+        let w = write(&r, points(), &none);
+        assert!(w.lost.is_empty(), "{:?}", w.lost);
+        assert!(w.xml.contains("class=\"SvgMarker\""), "{}", w.xml);
+        assert!(w.xml.contains("value=\"base64:"), "{}", w.xml);
+        let back = read(&w.xml).expect("reads");
+        assert_eq!(back.lost, Vec::<String>::new());
+        assert_eq!(back.assets.len(), 1);
+        assert_eq!(back.assets[0].svg, svg);
+        let v = &back.renderer["symbols"]["marker"]["layers"][0];
+        assert_eq!(v["type"], "svg");
+        assert_eq!(v["asset"], back.assets[0].id);
+        assert_eq!(v["rotation"], 30.0);
+        assert_eq!(v["fill"], "#112233");
+        assert_eq!(v["stroke"], json!({ "expr": "[Çizgi]", "fallback": "#445566" }));
+        // A marker whose drawing the library lacks, and one that names a file, are said.
+        let none_there = point_look(json!([{ "id": "v", "type": "svg", "asset": "yok", "size": 4 }]));
+        assert!(write(&none_there, points(), &none).lost.iter().any(|l| l.contains("çizimi kitaplıkta yok")));
+        let file = w.xml.replace(&format!("base64:{}", crate::style_extras::b64_encode(svg.as_bytes())), "/usr/share/agac.svg");
+        let back = read(&file).expect_err("nothing is left to read");
+        assert!(back.contains("çizebileceği"), "{back}");
+    }
+
+    #[test]
+    fn a_text_marker_is_a_font_marker() {
+        let r = point_look(json!([
+            { "id": "t", "type": "text", "text": "★", "font": "Arial", "weight": 700, "italic": true, "size": 6, "unit": "mm",
+              "rotation": 15, "color": { "expr": "[Renk]", "fallback": "#aa0000" }, "halo": { "color": "#ffffff", "width": 0.4 } },
+        ]));
+        let w = write(&r, points(), &none);
+        assert!(w.lost.is_empty(), "{:?}", w.lost);
+        assert!(w.xml.contains("class=\"FontMarker\""), "{}", w.xml);
+        assert!(w.xml.contains("name=\"font_style\" type=\"QString\" value=\"Bold Italic\""), "{}", w.xml);
+        let back = read(&w.xml).expect("reads");
+        assert_eq!(back.lost, Vec::<String>::new());
+        let t = &back.renderer["symbols"]["marker"]["layers"][0];
+        assert_eq!(t["text"], "★");
+        assert_eq!((t["font"].as_str(), t["weight"].as_f64(), t["italic"].as_bool()), (Some("Arial"), Some(700.0), Some(true)));
+        assert_eq!(t["rotation"], 15.0);
+        assert_eq!(t["color"], json!({ "expr": "[Renk]", "fallback": "#aa0000" }));
+        assert_eq!(t["halo"], json!({ "color": "#ffffff", "width": 0.4 }));
+        // QGIS's marker is one character, and its character may come from a field.
+        let long = point_look(json!([{ "id": "t", "type": "text", "text": { "expr": "[Kod]", "fallback": "AB" }, "size": 3 }]));
+        let w = write(&long, points(), &none);
+        assert_eq!(w.lost.len(), 1, "{:?}", w.lost);
+        assert!(w.lost[0].contains("yalnız ilk karakter"), "{:?}", w.lost);
+        let back = read(&w.xml).expect("reads");
+        assert_eq!(back.renderer["symbols"]["marker"]["layers"][0]["text"], json!({ "expr": "[Kod]", "fallback": "A" }));
     }
 }

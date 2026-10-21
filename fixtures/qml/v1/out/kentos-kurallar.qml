@@ -21,6 +21,13 @@
             <Option name="outline_width_unit" type="QString" value="MM"/>
             <Option name="style" type="QString" value="solid"/>
           </Option>
+          <data_defined_properties>
+            <Option type="Map">
+              <Option name="name" type="QString" value=""/>
+              <Option name="properties"/>
+              <Option name="type" type="QString" value="collection"/>
+            </Option>
+          </data_defined_properties>
         </layer>
         <layer class="SimpleLine" enabled="1" locked="0" pass="0">
           <Option type="Map">
@@ -59,6 +66,13 @@
             <Option name="outline_width_unit" type="QString" value="MM"/>
             <Option name="style" type="QString" value="solid"/>
           </Option>
+          <data_defined_properties>
+            <Option type="Map">
+              <Option name="name" type="QString" value=""/>
+              <Option name="properties"/>
+              <Option name="type" type="QString" value="collection"/>
+            </Option>
+          </data_defined_properties>
         </layer>
         <layer class="SimpleLine" enabled="1" locked="0" pass="0">
           <Option type="Map">
@@ -97,6 +111,13 @@
             <Option name="outline_width_unit" type="QString" value="MM"/>
             <Option name="style" type="QString" value="solid"/>
           </Option>
+          <data_defined_properties>
+            <Option type="Map">
+              <Option name="name" type="QString" value=""/>
+              <Option name="properties"/>
+              <Option name="type" type="QString" value="collection"/>
+            </Option>
+          </data_defined_properties>
         </layer>
         <layer class="SimpleLine" enabled="1" locked="0" pass="0">
           <Option type="Map">

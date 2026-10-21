@@ -9,7 +9,7 @@
           <se:Name>yol</se:Name>
           <se:Description><se:Title>yol</se:Title></se:Description>
           <se:LineSymbolizer uom="http://www.opengeospatial.org/se/units/pixel"><se:Stroke><se:SvgParameter name="stroke">#3366cc</se:SvgParameter><se:SvgParameter name="stroke-width">2.857</se:SvgParameter><se:SvgParameter name="stroke-linejoin">round</se:SvgParameter><se:SvgParameter name="stroke-linecap">round</se:SvgParameter><se:SvgParameter name="stroke-dasharray">10.714 5.357</se:SvgParameter></se:Stroke></se:LineSymbolizer>
-          <se:LineSymbolizer uom="http://www.opengeospatial.org/se/units/pixel"><se:Stroke><se:SvgParameter name="stroke">#ffffff</se:SvgParameter><se:SvgParameter name="stroke-width">0.714</se:SvgParameter></se:Stroke></se:LineSymbolizer>
+          <se:LineSymbolizer uom="http://www.opengeospatial.org/se/units/pixel"><se:Stroke><se:SvgParameter name="stroke"><ogc:PropertyName>renk</ogc:PropertyName></se:SvgParameter><se:SvgParameter name="stroke-width">0.714</se:SvgParameter></se:Stroke></se:LineSymbolizer>
         </se:Rule>
       </se:FeatureTypeStyle>
     </UserStyle>

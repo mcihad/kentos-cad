@@ -2506,6 +2506,420 @@
    ]
   },
   {
+   "name": "Veriye bağlı renkler: to-color ve get alanın değerini renk yapar, yedek rengi sabit renk olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:maplibre/v1/veriye-bagli.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "dolgu",
+          "kenar"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": {
+               "expr": "[renk]",
+               "fallback": "#ff0000"
+              },
+              "id": "f0"
+             },
+             {
+              "type": "simpleLine",
+              "color": {
+               "expr": "[kenar]",
+               "fallback": "#000000"
+              },
+              "width": 2.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "f1"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": {
+               "expr": "[renk]",
+               "fallback": "#ff0000"
+              },
+              "id": "f0"
+             },
+             {
+              "type": "simpleLine",
+              "color": {
+               "expr": "[kenar]",
+               "fallback": "#000000"
+              },
+              "width": 2.0,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "f1"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yazı işareti: KentOS'un yazdığı, tek karakterli, etiket ve simgeli katman söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "durak",
+      "path": "$fixture:maplibre/v1/yazi-isareti.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "durak",
+         "from": [
+          "durak/1",
+          "durak/2",
+          "durak/3",
+          "durak/4"
+         ],
+         "kind": "single",
+         "rules": 1,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "text",
+              "text": "A",
+              "size": 17.0,
+              "unit": "px",
+              "color": {
+               "expr": "[renk]",
+               "fallback": "#aa0000"
+              },
+              "font": "Arial",
+              "weight": 700,
+              "italic": true,
+              "rotation": -15.0,
+              "halo": {
+               "color": "#ffffff",
+               "width": 1.5
+              },
+              "id": "m0"
+             },
+             {
+              "type": "text",
+              "text": "★",
+              "size": 2.0,
+              "unit": "m",
+              "color": "#ffcc00",
+              "id": "m1"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "lost": [
+        "“durak/3” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır",
+        "“durak/4” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır"
+       ]
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "Stilin bazı parçaları alınamadı: “durak/3” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır; “durak/4” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "text",
+              "text": "A",
+              "size": 17.0,
+              "unit": "px",
+              "color": {
+               "expr": "[renk]",
+               "fallback": "#aa0000"
+              },
+              "font": "Arial",
+              "weight": 700,
+              "italic": true,
+              "rotation": -15.0,
+              "halo": {
+               "color": "#ffffff",
+               "width": 1.5
+              },
+              "id": "m0"
+             },
+             {
+              "type": "text",
+              "text": "★",
+              "size": 2.0,
+              "unit": "m",
+              "color": "#ffcc00",
+              "id": "m1"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
    "name": "Geometri süzgeçleri hangi simgenin olduğunu söyler",
    "steps": [
     {

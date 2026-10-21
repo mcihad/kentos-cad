@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SLD'den görünüş al'ın ortak durumları ve SLD'nin QGIS 4.2 ile iki yönlü denetimi (docs/adr/0516), KentOS kodu olmadan.
+"""SLD'den görünüş al'ın ortak durumları ve SLD'nin QGIS 4.2 ile iki yönlü denetimi (docs/adr/0516, 0571), KentOS kodu olmadan.
 
     python3 scripts/fixtures/sld_cases.py --files    # QGIS 4.2'nin SLD'lerini ve elle yazılanları fixtures/sld/v1'e yazar
     python3 scripts/fixtures/sld_cases.py            # fixtures/commands/v1/file.import.sld.json'u yazar
@@ -7,7 +7,9 @@
 
 Okuma kuralları ADR'den, bu betikte yeniden yazılmıştır (xml.etree ile): bir alanın değerlerine eşit kurallar
 kategorili, bir alanın aralıkları aralıklı görünüş, süzgeçsiz tek kural tek simge, ötekiler kurallı görünüş; SE'nin
-pikseli piksel, metresi metre; renkler ve saydamlıkları #rrggbb(aa). Alınamayanların cümleleri de ADR'nin sözleridir.
+pikseli piksel, metresi metre; renkler ve saydamlıkları #rrggbb(aa); ADR 0571'den `GraphicFill` nokta deseni, SVG (`base64:`
+ve satır içi), `ttf://` yazı işareti, `PropertyName` ve `Recode`/`Categorize` renkleri. Alınamayanların cümleleri de ADR'nin
+sözleridir.
 
 KentOS'un yazdığı SLD'leri (`KENTOS_WRITE_SLD=1 cargo test -p kentos-headless --test headless sld` yazar,
 fixtures/sld/v1/out) QGIS 4.2 açar: görünüşün türü, sınıflar, renkler ve kalınlıklar beklenenle denetlenir.
@@ -15,6 +17,7 @@ fixtures/sld/v1/out) QGIS 4.2 açar: görünüşün türü, sınıflar, renkler 
 
 from __future__ import annotations
 
+import base64
 import json
 import math
 import os
@@ -50,11 +53,19 @@ def text_of(n) -> str:
     return "".join(n.itertext()).strip()
 
 
-def param(n, name):
+def param_node(n, name):
     for c in n:
         if local(c.tag) in ("SvgParameter", "CssParameter") and c.get("name") == name:
-            return text_of(c)
+            return c
     return None
+
+
+def param(n, name):
+    """A parameter's literal text; none when it holds a property name or a function (see paint)."""
+    p = param_node(n, name)
+    if p is None or len(list(p)) > 0:
+        return None
+    return text_of(p)
 
 
 def fnum(s):
@@ -175,12 +186,75 @@ def filter_text(f) -> str:
     raise ValueError(k)
 
 
-def read_stroke(s, uom, ident):
-    rgb = param(s, "stroke") or "#000000"
-    opacity = fnum(param(s, "stroke-opacity"))
+def literal_expr(t):
+    t = t.strip()
+    v = fnum(t)
+    if v is not None and math.isfinite(v):
+        return num(v)
+    return "'" + t.replace("'", "''") + "'"
+
+
+def function_expr(f, fallback, lost, what):
+    """Recode and Categorize of one field as a `durum` chain whose values are colours."""
+    name = f.get("name") or ""
+    args = list(f)
+    field = text_of(args[0]) if args and local(args[0].tag) == "PropertyName" else None
+    lits = [text_of(a) for a in args[1:]] if all(local(a.tag) == "Literal" for a in args[1:]) else None
+    if field is None or lits is None:
+        lost.append(f"{what}: SE'nin “{name}” işlevi KentOS'un ifadesine çevrilemedi; sabit değeri alındı")
+        return None
+
+    def q(c):
+        return "'" + colour_with(c.strip(), None) + "'"
+
+    out = "durum"
+    if name == "Recode" and len(lits) >= 2 and len(lits) % 2 == 0:
+        for i in range(0, len(lits), 2):
+            out += f" eğer [{field}] = {literal_expr(lits[i])} ise {q(lits[i + 1])}"
+        out += f" yoksa '{fallback}' son"
+    elif name == "Categorize" and len(lits) >= 3 and len(lits) % 2 == 1:
+        rest = lits[1:]
+        for k in range(0, len(rest), 2):
+            out += f" eğer [{field}] < {literal_expr(rest[k])} ise {q(lits[k])}"
+        out += f" yoksa {q(lits[-1])} son"
+    else:
+        lost.append(f"{what}: SE'nin “{name}” işlevi KentOS'un ifadesine çevrilemedi; sabit değeri alındı")
+        return None
+    return out
+
+
+def paint(n, name, default, lost, what):
+    """A colour parameter as the layer's value: fixed, or an expression with the colour as its fallback."""
+    opacity = fnum(param(n, name + "-opacity"))
+    rgb = param(n, name)
+    fixed = colour_with(rgb, opacity) if rgb is not None else None
+    p = param_node(n, name)
+    if p is None or len(list(p)) == 0:
+        if fixed is not None:
+            return fixed
+        return colour_with(default, opacity) if default is not None else None
+    fallback = colour_with(default, opacity) if default is not None else ""
+    e = list(p)[0]
+    tag = local(e.tag)
+    if tag == "PropertyName":
+        expr = f"[{text_of(e)}]"
+    elif tag == "Function":
+        expr = function_expr(e, fallback, lost, what)
+    else:
+        lost.append(f"{what}: “{name}” değerinin “{tag}” ifadesi KentOS'ta yok; sabit değeri alındı")
+        expr = None
+    if expr is not None:
+        return {"expr": expr, "fallback": fallback} if fallback else {"expr": expr}
+    return fallback if fallback else None
+
+
+def read_stroke(s, uom, ident, lost):
+    color = paint(s, "stroke", "#000000", lost, "Çizgi")
+    if color is None:
+        color = "#000000"
     w = fnum(param(s, "stroke-width"))
     width, unit = size_in(1.0 if w is None else w, uom)
-    layer = {"id": ident, "type": "simpleLine", "color": colour_with(rgb, opacity), "width": width, "unit": unit}
+    layer = {"id": ident, "type": "simpleLine", "color": color, "width": width, "unit": unit}
     dash = param(s, "stroke-dasharray")
     if dash is not None:
         parts = [fnum(p.strip()) for p in dash.replace(",", " ").split(" ")]
@@ -196,20 +270,144 @@ def read_stroke(s, uom, ident):
     return layer
 
 
-def read_fill(f, ident, lost):
-    if child(f, "GraphicFill") is not None:
-        lost.append("desenli dolgu (GraphicFill) KentOS'un dolgusuna çevrilmedi")
+def read_fill(f, uom, ident, lost):
+    gf = child(f, "GraphicFill")
+    if gf is not None:
+        g = child(gf, "Graphic")
+        marker = read_mark(g, uom, lost) if g is not None else None
+        if marker is None:
+            lost.append("desenli dolgunun (GraphicFill) işareti KentOS'un işaretine çevrilemedi; dolgu alınmadı")
+            return None
+        size = marker.get("size", 6.0)
+        lost.append("desenli dolgu (GraphicFill): SE işareti kendi boyunda döşer; KentOS'un deseninin aralığı işaretin boyu alındı")
+        return {"id": ident, "type": "patternFill", "marker": {"type": "marker", "layers": [marker]},
+                "spacingX": size, "spacingY": size, "unit": marker.get("unit", "px")}
+    color = paint(f, "fill", "#808080", lost, "Dolgu")
+    if color is None:
         return None
-    rgb = param(f, "fill") or "#808080"
-    return {"id": ident, "type": "simpleFill", "color": colour_with(rgb, fnum(param(f, "fill-opacity")))}
+    return {"id": ident, "type": "simpleFill", "color": color}
+
+
+def asset_id(prefix, svg):
+    h = 0xcbf29ce484222325
+    for b in svg.encode("utf-8"):
+        h ^= b
+        h = (h * 0x100000001b3) & 0xFFFFFFFFFFFFFFFF
+    return f"{prefix}-{h:016x}"
+
+
+def looks_like_svg(t):
+    head = t.lower()
+    i = head.find("<svg")
+    return i >= 0 and (len(head) == i + 4 or head[i + 4] in " \t\r\n>/")
+
+
+def decode_svg(text):
+    clean = "".join(text.split()).replace("=", "")
+    try:
+        t = base64.b64decode(clean + "=" * (-len(clean) % 4), validate=True).decode("utf-8", "replace")
+    except Exception:
+        return None
+    return t if looks_like_svg(t) else None
+
+
+def href_of(n):
+    for k, v in n.attrib.items():
+        if local(k) == "href":
+            return v
+    return None
+
+
+def read_external(g, lost):
+    seen = False
+    for e in kids(g, "ExternalGraphic"):
+        seen = True
+        text = None
+        o = child(e, "OnlineResource")
+        h = href_of(o) if o is not None else None
+        if h is not None:
+            for pre in ("base64:", "data:image/svg+xml;base64,"):
+                if h.startswith(pre):
+                    text = h[len(pre):]
+                    break
+        if text is None:
+            ic = child(e, "InlineContent")
+            if ic is not None:
+                text = text_of(ic)
+        svg = decode_svg(text) if text is not None else None
+        if svg is not None:
+            return asset_id("sld", svg)
+    if seen:
+        lost.append("dış resimli işaret (ExternalGraphic): çizimin içindeki bir SVG değil (dosya adresi ya da başka bir resim); KentOS çizimin içindeki SVG'yi alır, işaret alınmadı")
+    return None
+
+
+def font_mark(mark):
+    font, code = None, None
+    o = child(mark, "OnlineResource")
+    if o is not None:
+        h = href_of(o)
+        if h is not None and h.startswith("ttf://"):
+            font = h[len("ttf://"):]
+    mi = child(mark, "MarkIndex")
+    if mi is not None:
+        t = text_of(mi)
+        if t.isdigit() and int(t) < 0x110000 and not 0xD800 <= int(t) < 0xE000:
+            code = chr(int(t))
+    w = child(mark, "WellKnownName")
+    if w is not None and text_of(w).startswith("ttf://"):
+        r = text_of(w)[len("ttf://"):]
+        f, _, c = r.partition("#")
+        font = f
+        if code is None:
+            v = None
+            if c.startswith("0x"):
+                try:
+                    v = int(c[2:], 16)
+                except ValueError:
+                    v = None
+            elif c.isdigit():
+                v = int(c)
+            if v is not None and v < 0x110000 and not 0xD800 <= v < 0xE000:
+                code = chr(v)
+            elif v is None and len(c) == 1:
+                code = c
+    if font is None or code is None:
+        return None
+    return font, code
 
 
 def read_mark(g, uom, lost):
-    if child(g, "ExternalGraphic") is not None:
-        lost.append("dış resimli işaret (ExternalGraphic) KentOS'un işaretine çevrilmedi")
+    sz = child(g, "Size")
+    sv = fnum(text_of(sz)) if sz is not None else None
+    size, unit = size_in(6.0 if sv is None else sv, uom)
+    rot = child(g, "Rotation")
+    rotation = fnum(text_of(rot)) if rot is not None else None
+    asset = read_external(g, lost)
+    if asset is not None:
+        m = {"id": "v", "type": "svg", "asset": asset, "size": size, "unit": unit}
+        if rotation is not None:
+            m["rotation"] = -rotation
+        return m
     mark = child(g, "Mark")
     if mark is None:
         return None
+    fm = font_mark(mark)
+    if fm is not None:
+        m = {"id": "t", "type": "text", "text": fm[1], "font": fm[0], "size": size, "unit": unit}
+        fill = child(mark, "Fill")
+        if fill is not None:
+            c = paint(fill, "fill", None, lost, "Yazı işareti")
+            if c is not None:
+                m["color"] = c
+        st = child(mark, "Stroke")
+        if st is not None and param(st, "stroke") is not None:
+            sw = fnum(param(st, "stroke-width"))
+            m["halo"] = {"color": colour_with(param(st, "stroke"), fnum(param(st, "stroke-opacity"))),
+                         "width": size_in(1.0 if sw is None else sw, uom)[0]}
+        if rotation is not None:
+            m["rotation"] = -rotation
+        return m
     w = child(mark, "WellKnownName")
     wkn = text_of(w) if w is not None else "square"
     if wkn in ("circle", "square", "triangle", "star", "cross", "x"):
@@ -217,21 +415,20 @@ def read_mark(g, uom, lost):
     else:
         lost.append(f"“{wkn}” işareti KentOS'ta yok; kare yazıldı")
         shape = "square"
-    sz = child(g, "Size")
-    sv = fnum(text_of(sz)) if sz is not None else None
-    size, unit = size_in(6.0 if sv is None else sv, uom)
     m = {"id": "p", "type": "shape", "shape": shape, "size": size, "unit": unit, "fill": None}
     fill = child(mark, "Fill")
     if fill is not None:
-        m["fill"] = colour_with(param(fill, "fill") or "#808080", fnum(param(fill, "fill-opacity")))
+        c = paint(fill, "fill", "#808080", lost, "İşaret")
+        if c is not None:
+            m["fill"] = c
     st = child(mark, "Stroke")
     if st is not None:
-        m["stroke"] = colour_with(param(st, "stroke") or "#000000", fnum(param(st, "stroke-opacity")))
+        c = paint(st, "stroke", "#000000", lost, "İşaret")
+        m["stroke"] = c if c is not None else "#000000"
         sw = fnum(param(st, "stroke-width"))
         m["strokeWidth"] = size_in(1.0 if sw is None else sw, uom)[0]
-    rot = child(g, "Rotation")
-    if rot is not None and fnum(text_of(rot)) is not None:
-        m["rotation"] = -fnum(text_of(rot))
+    if rotation is not None:
+        m["rotation"] = -rotation
     return m
 
 
@@ -243,12 +440,12 @@ def read_symbols(rule, lost):
         if tag == "PolygonSymbolizer":
             f = child(s, "Fill")
             if f is not None:
-                got = read_fill(f, f"f{len(fill)}", lost)
+                got = read_fill(f, uom, f"f{len(fill)}", lost)
                 if got is not None:
                     fill.append(got)
             st = child(s, "Stroke")
             if st is not None:
-                fill.append(read_stroke(st, uom, f"o{len(fill)}"))
+                fill.append(read_stroke(st, uom, f"o{len(fill)}", lost))
             if child(s, "Displacement") is not None or child(s, "PerpendicularOffset") is not None:
                 lost.append("alanın kaydırması KentOS'un dolgusuna çevrilmedi")
         elif tag == "LineSymbolizer":
@@ -257,7 +454,7 @@ def read_symbols(rule, lost):
                 if child(st, "GraphicStroke") is not None:
                     lost.append("işaretli çizgi (GraphicStroke) KentOS'un çizgisine çevrilmedi")
                     continue
-                layer = read_stroke(st, uom, f"l{len(line)}")
+                layer = read_stroke(st, uom, f"l{len(line)}", lost)
                 off = child(s, "PerpendicularOffset")
                 if off is not None and fnum(text_of(off)) is not None:
                     layer["offset"] = size_in(fnum(text_of(off)), uom)[0]
@@ -489,6 +686,50 @@ HAND = {
   </se:FeatureTypeStyle></UserStyle></NamedLayer>
 </StyledLayerDescriptor>
 """,
+    # SE's own forms: a Recode and a Categorize of a field, a field's colour in a stroke and a mark, a font mark by its
+    # WellKnownName, an SVG inline, a graphic that is a picture file.
+    "renk-islevleri.sld": """<?xml version="1.0" encoding="UTF-8"?>
+<StyledLayerDescriptor version="1.1.0" xmlns="http://www.opengis.net/sld" xmlns:se="http://www.opengis.net/se" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <NamedLayer><se:Name>parsel</se:Name><UserStyle><se:FeatureTypeStyle>
+    <se:Rule><se:Name>İşlevli</se:Name>
+      <se:PolygonSymbolizer>
+        <se:Fill><se:SvgParameter name="fill"><ogc:Function name="Recode"><ogc:PropertyName>tür</ogc:PropertyName>
+          <ogc:Literal>konut</ogc:Literal><ogc:Literal>#FF0000</ogc:Literal><ogc:Literal>3</ogc:Literal><ogc:Literal>#00FF00</ogc:Literal>
+        </ogc:Function></se:SvgParameter></se:Fill>
+        <se:Stroke><se:SvgParameter name="stroke"><ogc:Function name="Categorize"><ogc:PropertyName>alan</ogc:PropertyName>
+          <ogc:Literal>#111111</ogc:Literal><ogc:Literal>100</ogc:Literal><ogc:Literal>#555555</ogc:Literal><ogc:Literal>500</ogc:Literal><ogc:Literal>#999999</ogc:Literal>
+        </ogc:Function></se:SvgParameter><se:SvgParameter name="stroke-width">2</se:SvgParameter></se:Stroke>
+      </se:PolygonSymbolizer>
+      <se:PolygonSymbolizer><se:Fill><se:SvgParameter name="fill"><ogc:Function name="strConcat"><ogc:PropertyName>a</ogc:PropertyName><ogc:Literal>b</ogc:Literal></ogc:Function></se:SvgParameter></se:Fill></se:PolygonSymbolizer>
+      <se:PolygonSymbolizer><se:Fill><se:SvgParameter name="fill"><ogc:Function name="Recode"><ogc:PropertyName>tür</ogc:PropertyName><ogc:PropertyName>başka</ogc:PropertyName></ogc:Function></se:SvgParameter></se:Fill></se:PolygonSymbolizer>
+      <se:PointSymbolizer><se:Graphic>
+        <se:Mark><se:WellKnownName>circle</se:WellKnownName>
+          <se:Fill><se:SvgParameter name="fill"><ogc:PropertyName>renk</ogc:PropertyName></se:SvgParameter><se:SvgParameter name="fill-opacity">0.5</se:SvgParameter></se:Fill>
+          <se:Stroke><se:SvgParameter name="stroke"><ogc:PropertyName>kenar</ogc:PropertyName></se:SvgParameter></se:Stroke></se:Mark>
+        <se:Size>8</se:Size></se:Graphic></se:PointSymbolizer>
+    </se:Rule>
+  </se:FeatureTypeStyle></UserStyle></NamedLayer>
+</StyledLayerDescriptor>
+""",
+    "yazi-isaretleri.sld": """<?xml version="1.0" encoding="UTF-8"?>
+<StyledLayerDescriptor version="1.1.0" xmlns="http://www.opengis.net/sld" xmlns:se="http://www.opengis.net/se" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <NamedLayer><se:Name>nokta</se:Name><UserStyle><se:FeatureTypeStyle>
+    <se:Rule><se:Name>Yazı</se:Name>
+      <se:PointSymbolizer><se:Graphic>
+        <se:Mark><se:WellKnownName>ttf://Webdings#0x41</se:WellKnownName><se:Fill><se:SvgParameter name="fill">#00AA00</se:SvgParameter></se:Fill></se:Mark>
+        <se:Size>14</se:Size><se:Rotation>45</se:Rotation></se:Graphic></se:PointSymbolizer>
+      <se:PointSymbolizer><se:Graphic>
+        <se:Mark><se:WellKnownName>ttf://Arial#66</se:WellKnownName></se:Mark><se:Size>10</se:Size></se:Graphic></se:PointSymbolizer>
+      <se:PointSymbolizer><se:Graphic>
+        <se:ExternalGraphic><se:InlineContent encoding="base64">PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0IDQiPjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIyIi8+PC9zdmc+</se:InlineContent><se:Format>image/svg+xml</se:Format></se:ExternalGraphic>
+        <se:Size>12</se:Size></se:Graphic></se:PointSymbolizer>
+      <se:PointSymbolizer><se:Graphic>
+        <se:ExternalGraphic><se:OnlineResource xlink:type="simple" xlink:href="durak.png"/><se:Format>image/png</se:Format></se:ExternalGraphic>
+        <se:Mark><se:WellKnownName>square</se:WellKnownName></se:Mark><se:Size>9</se:Size></se:Graphic></se:PointSymbolizer>
+    </se:Rule>
+  </se:FeatureTypeStyle></UserStyle></NamedLayer>
+</StyledLayerDescriptor>
+""",
     "bos.sld": """<?xml version="1.0" encoding="UTF-8"?>
 <StyledLayerDescriptor version="1.1.0" xmlns="http://www.opengis.net/sld"><NamedLayer><Name>x</Name></NamedLayer></StyledLayerDescriptor>
 """,
@@ -501,6 +742,7 @@ HAND = {
 
 QGIS_STYLES = r"""
 from qgis.core import *
+from qgis.PyQt.QtGui import QColor
 QgsApplication.setPrefixPath('{q}/MacOS', True)
 app = QgsApplication([], False); app.initQgis()
 G = '{g}'
@@ -526,6 +768,22 @@ yol.saveSldStyle(out + 'qgis-cizgi.sld')
 nokta = QgsVectorLayer(G + '|layername=nokta', 'nokta', 'ogr')
 nokta.setRenderer(QgsSingleSymbolRenderer(QgsMarkerSymbol.createSimple({{'name': 'triangle', 'color': '#ff0000', 'outline_color': '#000000', 'size': '3', 'angle': '30'}})))
 nokta.saveSldStyle(out + 'qgis-nokta.sld')
+# ADR 0571: a point pattern, an embedded SVG marker, a font marker, data-defined colours.
+pp = QgsPointPatternFillSymbolLayer(); pp.setDistanceX(5); pp.setDistanceY(6)
+pp.setSubSymbol(QgsMarkerSymbol.createSimple({{'name': 'circle', 'color': '#00aa00', 'size': '2', 'outline_color': '#003300', 'outline_width': '0.2'}}))
+fs = QgsFillSymbol(); fs.changeSymbolLayer(0, pp)
+parsel.setRenderer(QgsSingleSymbolRenderer(fs)); parsel.saveSldStyle(out + 'qgis-desen.sld')
+svg = 'base64:PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0IDQiPjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIyIi8+PC9zdmc+'
+sv = QgsSvgMarkerSymbolLayer(svg, 5, 20)
+ms = QgsMarkerSymbol(); ms.changeSymbolLayer(0, sv)
+nokta.setRenderer(QgsSingleSymbolRenderer(ms)); nokta.saveSldStyle(out + 'qgis-svg.sld')
+fm = QgsFontMarkerSymbolLayer('Arial', 'A', 6, QColor('#aa0000')); fm.setStrokeColor(QColor('#ffffff')); fm.setStrokeWidth(0.4)
+ms = QgsMarkerSymbol(); ms.changeSymbolLayer(0, fm)
+nokta.setRenderer(QgsSingleSymbolRenderer(ms)); nokta.saveSldStyle(out + 'qgis-yazi.sld')
+fl = QgsFillSymbol.createSimple({{'color': '#ff0000', 'outline_color': '#000000', 'outline_width': '0.4'}})
+fl.symbolLayer(0).setDataDefinedProperty(QgsSymbolLayer.Property.FillColor, QgsProperty.fromField('renk'))
+fl.symbolLayer(0).setDataDefinedProperty(QgsSymbolLayer.Property.StrokeColor, QgsProperty.fromField('kenar'))
+parsel.setRenderer(QgsSingleSymbolRenderer(fl)); parsel.saveSldStyle(out + 'qgis-renkler.sld')
 print('ok')
 """
 
@@ -545,7 +803,7 @@ def write_files() -> None:
                        timeout=120)
     if "ok" not in r.stdout:
         sys.exit(f"QGIS SLD yazamadı: {r.stderr[-600:]}")
-    print(f"{len(HAND)} elle yazılmış ve 5 QGIS SLD'si: {DIR}")
+    print(f"{len(HAND)} elle yazılmış ve 9 QGIS SLD'si: {DIR}")
 
 
 # ─── The cases ─────────────────────────────────────────────────────────────────────────────────────────
@@ -641,7 +899,19 @@ def build_cases():
         ok_case("Metre biriminde iki çizgi: yolun dolgusu ve kaydırılmış kesikli şerit çizgisi", "yol", "metre.sld"),
         ok_case("Alınamayanlar söylenir: dış resim, bilinmeyen işaret, etiket, BBOX süzgeci, ikinci görünüş",
                 "durak", "kayipli.sld"),
-        ok_case("Desenli dolgu ve işaretli çizgi alınmaz; saydam kenar alınır", "parsel", "desenli.sld"),
+        ok_case("Desenli dolgu nokta deseni olur (aralığı işaretin boyu); işaretli çizgi alınmaz; saydam kenar alınır",
+                "parsel", "desenli.sld"),
+        ok_case("QGIS'in nokta deseni: işaret ve kenarı, GraphicFill'in işareti kendi boyunda döşer", "parsel",
+                "qgis-desen.sld"),
+        ok_case("QGIS'in SVG işareti: parametreli adres alınmaz, düz base64 adresi kitaplığa girer; döndürme", "durak",
+                "qgis-svg.sld"),
+        ok_case("QGIS'in yazı işareti: ttf adresi ve MarkIndex; renk", "durak", "qgis-yazi.sld"),
+        ok_case("QGIS'in veriye bağlı rengi SLD'ye yazmadığı görünüş (sabit renkler) olduğu gibi okunur", "parsel",
+                "qgis-renkler.sld"),
+        ok_case("SE'nin işlevleri: Recode ve Categorize durum ifadesine, başka işlev söylenir; alanın rengi", "parsel",
+                "renk-islevleri.sld"),
+        ok_case("Yazı işaretleri: WellKnownName'deki ttf adresi (onaltılık, ondalık), satır içi SVG, resim dosyası "
+                "söylenir ve işarete düşer", "durak", "yazi-isaretleri.sld"),
         ok_case("Süzgeçler: boş, gibi (joker karakterler çevrilir), arasında, değil ve veya; tırnak iki kez",
                 "parsel", "suzgecler.sld"),
         ok_case("SLD dosya yerine metin olarak verilir", "parsel", "qgis-kategorili.sld", by_text=True),
@@ -713,9 +983,21 @@ def build_cases():
 QGIS_READ = r"""
 import json
 from qgis.core import *
+from qgis.PyQt.QtGui import QColor
 QgsApplication.setPrefixPath('{q}/MacOS', True)
 app = QgsApplication([], False); app.initQgis()
 G = '{g}'
+def layer_info(sl):
+    t = sl.layerType()
+    if t == 'PointPatternFill':
+        sub = sl.subSymbol().symbolLayer(0)
+        return [t, sl.distanceX(), sl.distanceY(), sub.layerType(), sub.color().name()]
+    if t == 'SvgMarker':
+        return [t, sl.path()[:7], sl.path()[7:].__len__() > 40, round(sl.size(), 4), round(sl.angle(), 4)]
+    if t == 'FontMarker':
+        return [t, sl.fontFamily(), sl.character(), round(sl.size(), 4), round(sl.angle(), 4), sl.color().name(),
+                sl.strokeColor().name()]
+    return [t, sl.color().name()]
 out = {{}}
 for name, table in {files}:
     l = QgsVectorLayer(G + '|layername=' + table, table, 'ogr')
@@ -740,6 +1022,7 @@ for name, table in {files}:
             info['width'] = [sl.width(), int(sl.widthUnit())]
         if hasattr(sl, 'strokeWidth'):
             info['width'] = [sl.strokeWidth(), int(sl.strokeWidthUnit())]
+        info['layers'] = [layer_info(sl) for sl in [s.symbolLayer(i) for i in range(s.symbolLayerCount())]]
     out[name] = info
 print(json.dumps(out))
 """
@@ -753,6 +1036,13 @@ WANT = {
         ["küçük", "alan >= 0 AND alan < 500", "#fee5d9"],
         ["orta", "alan >= 500 AND alan < 1000", "#fcae91"],
         ["büyük", "alan >= 1000 AND alan <= 5000", "#de2d26"]]}),
+    # ADR 0571: a point pattern (a GraphicFill of a mark; the gradient is not written), an SVG marker with its drawing
+    # and a font marker (angles turn clockwise), a colour of a field (QGIS reads no field in a colour: grey).
+    "kentos-desen.sld": ("parsel", {"type": "singleSymbol", "layer": "PointPatternFill",
+                                    "layers": [["PointPatternFill", 7.143, 7.143, "SimpleMarker", "#00aa00"]]}),
+    "kentos-isaretler.sld": ("nokta", {"type": "singleSymbol", "layers": [
+        ["SvgMarker", "base64:", True, 17.857, 20.0], ["FontMarker", "Arial", "A", 21.429, 15.0, "#aa0000", "#ffffff"]]}),
+    "kentos-renk.sld": ("parsel", {"type": "singleSymbol", "layers": [["SimpleFill", "#808080"]]}),
     "kentos-sade.sld": ("yol", {"type": "singleSymbol", "colour": "#3366cc", "layer": "SimpleLine", "width": [2.857, 2]}),
 }
 
