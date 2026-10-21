@@ -831,6 +831,9 @@ def cases():
     # En yakın komşu's Monte Carlo test and the clusters' stability (docs/adr/0566).
     import spatial_stability_cases
     out += spatial_stability_cases.cases(stability_case)
+    # The study area and DBSCAN's parameter sweep (docs/adr/0574).
+    import spatial_study_cases
+    out += spatial_study_cases.cases(study_case)
     return out
 
 
@@ -853,6 +856,28 @@ def stability_case(cid, title, tool, values, run, selection=None):
                "layers": [layer], "layerAbove": {layer_id(lname): "kaza"}, "added": added_,
                "outputs": {"count": len(added_), "table": run["table"], "profile": run["profile"]["table"],
                            "experiment": run["profile"]["experiment"], "clusters": run["clusters"], "stable": run["stable"]}}
+    c = {"id": cid, "title": title, "document": "spatial-stats.kcad", "run": {"tool": tool}, "values": values, "expect": exp}
+    if selection is not None:
+        c["selection"] = selection
+    return c
+
+
+def study_case(cid, title, tool, values, run, selection=None):
+    """A case of docs/adr/0574 (spatial_study_cases.py): En yakın komşu over a study area, DBSCAN's sweep."""
+    if "invalid" in run:
+        exp = {"status": "invalid", "issues": run["invalid"]}
+    elif "refused" in run:
+        exp = {"status": "error", "message": run["refused"]}
+    else:
+        exp = {"status": "ok", "summary": run["summary"], "undo": None, "log": log_of(run), "outputs": {"table": run["table"]}}
+        if tool == "stats.dbscanSweep":
+            for key in ("cells", "suggestedRadius", "suggestedMinPoints", "kneeRadius", "clusters", "noiseShare"):
+                exp["outputs"][key] = run[key]
+        if "profile" in run:
+            exp["outputs"]["profile"] = run["profile"]["table"]
+            exp["outputs"]["experiment"] = run["profile"]["experiment"]
+        if "pSimulation" in run:
+            exp["outputs"]["pSimulation"] = run["pSimulation"]
     c = {"id": cid, "title": title, "document": "spatial-stats.kcad", "run": {"tool": tool}, "values": values, "expect": exp}
     if selection is not None:
         c["selection"] = selection
@@ -907,6 +932,8 @@ def main():
     self_checks()
     import spatial_stability_cases
     spatial_stability_cases.self_checks()
+    import spatial_study_cases
+    spatial_study_cases.self_checks()
     text = json.dumps(build(), ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv[1:]:
         if not OUT.exists() or OUT.read_text("utf-8") != text:

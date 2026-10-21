@@ -10,7 +10,7 @@
 //! and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=ist-serit,ist-elips,ist-elips-cizim,ist-moran,ist-komsu,ist-sicak-cizim,ist-dbscan-cizim,ist-moran-permutasyon,ist-sicak-fdr,ist-sicak-fdr-cizim,ist-lisa,ist-lisa-profil,ist-lisa-cizim,ist-komsu-benzetim,ist-kararlilik,ist-kararlilik-kortalama cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=ist-serit,ist-elips,ist-elips-cizim,ist-moran,ist-komsu,ist-sicak-cizim,ist-dbscan-cizim,ist-moran-permutasyon,ist-sicak-fdr,ist-sicak-fdr-cizim,ist-lisa,ist-lisa-profil,ist-lisa-cizim,ist-komsu-benzetim,ist-kararlilik,ist-kararlilik-kortalama,ist-alan-pencere,ist-alan-sonuc,ist-alan-cizim,ist-tarama-pencere,ist-tarama,ist-tarama-oneri,ist-tarama-kararlilik cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -151,8 +151,103 @@ pub(crate) fn clusters_tested() -> Vec<(&'static str, Value)> {
     v
 }
 
+/// En yakın komşu of the accidents over the neighbourhood's border (a hole, a corner cut away), 999 random patterns
+/// (docs/adr/0574 §1).
+pub(crate) fn study() -> Vec<(&'static str, Value)> {
+    vec![
+        ("input", layer("kaza")),
+        ("region", json!("areas")),
+        ("studyArea", layer("sinir")),
+        ("inference", json!("simulation")),
+    ]
+}
+
+/// DBSCAN's sweep of the accidents over its automatic range (docs/adr/0574 §2).
+pub(crate) fn sweep() -> Vec<(&'static str, Value)> {
+    vec![("input", layer("kaza"))]
+}
+
+/// [`sweep`] with 50 bootstrap resamples a cell.
+pub(crate) fn sweep_tested() -> Vec<(&'static str, Value)> {
+    let mut v = sweep();
+    v.push(("stability", json!("bootstrap")));
+    v.push(("resamples", json!(50)));
+    v
+}
+
 pub(crate) fn pointed() -> Vec<Pointed> {
     vec![
+        // En yakın komşu's window with the study area given as the neighbourhood's border (docs/adr/0574 §1).
+        (
+            "ist-alan-pencere",
+            |app| {
+                opened(app);
+                window(app, "processing.run.stats.nearestNeighbor", &study());
+            },
+            view,
+        ),
+        // Its run: the region's area, the objects it left out, the Monte Carlo rows under the window.
+        (
+            "ist-alan-sonuc",
+            |app| {
+                opened(app);
+                ran(app, "processing.run.stats.nearestNeighbor", &study(), false);
+            },
+            view_end,
+        ),
+        // The border over the district: the pond and the cut corner no place counts in.
+        (
+            "ist-alan-cizim",
+            |app| {
+                opened(app);
+                ran(app, "processing.run.stats.nearestNeighbor", &study(), true);
+            },
+            view,
+        ),
+        // One least-points value, 4: the seven radii in the table with the suggested pair marked.
+        (
+            "ist-tarama-oneri",
+            |app| {
+                opened(app);
+                let mut v = sweep();
+                v.push(("minFirst", json!(4)));
+                v.push(("minLast", json!(4)));
+                ran(app, "processing.run.stats.dbscanSweep", &v, false);
+            },
+            view_end,
+        ),
+        // DBSCAN parametre taraması's window.
+        (
+            "ist-tarama-pencere",
+            |app| {
+                opened(app);
+                window(app, "processing.run.stats.dbscanSweep", &sweep());
+            },
+            view,
+        ),
+        // Its table under the window: the suggested pair marked (docs/adr/0574 §2).
+        (
+            "ist-tarama",
+            |app| {
+                opened(app);
+                ran(app, "processing.run.stats.dbscanSweep", &sweep(), false);
+            },
+            view_end,
+        ),
+        // The same with 50 bootstrap resamples a cell: the stability columns and the experiment profile.
+        (
+            "ist-tarama-kararlilik",
+            |app| {
+                opened(app);
+                ran(
+                    app,
+                    "processing.run.stats.dbscanSweep",
+                    &sweep_tested(),
+                    false,
+                );
+            },
+            view_end,
+        ),
         // The CBS ribbon's Analiz with Mekânsal istatistik, over the district.
         ("ist-serit", opened, view),
         // Yön dağılımı's window: the accidents by kind.
@@ -302,7 +397,12 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             "ist-kararlilik",
             |app| {
                 opened(app);
-                ran(app, "processing.run.stats.dbscan", &clusters_tested(), false);
+                ran(
+                    app,
+                    "processing.run.stats.dbscan",
+                    &clusters_tested(),
+                    false,
+                );
             },
             view_end,
         ),

@@ -16,6 +16,15 @@ packages compute, the rule of the neighbourhood is not theirs to test. What is c
 - FDR: esda.fdr's threshold rejects what KentOS's adjusted p rejects;
 - En yakın komşu: the observed mean distance (pointpats.PointPattern);
 - DBSCAN and k-means: scikit-learn's partition (k-means from the same farthest-first seeds, Lloyd, one start) is KentOS's.
+
+docs/adr/0574 adds shapely and kneed (`--with shapely --with kneed`):
+
+- the study area: shapely's union has the net area KentOS writes, covers the places KentOS keeps and not the ones it leaves out,
+  and a numpy Monte Carlo (uniform points in the union by rejection, 2 000 patterns) has a mean nearest-neighbour distance
+  within three standard errors of KentOS's simulations';
+- DBSCAN's sweep: every cell's clusters and noise are scikit-learn's DBSCAN's (DBSCAN\*: its core points; a cell with a pair
+  distance within 10⁻⁹ of the radius is left out: float64's neighbour rule decides it), the k-distance graph is
+  `NearestNeighbors`', the knee is `kneed.KneeLocator`'s (convex, increasing, S = 0, online = True: the global optimum; its default online = False reports the first knee it detects, which on a graph with a second bend of outliers is that later one).
 """
 
 import json
@@ -27,7 +36,11 @@ import esda
 import libpysal
 import numpy as np
 from pointpats import PointPattern
+from kneed import KneeLocator
+from shapely.geometry import Point, Polygon
+from shapely.ops import unary_union
 from sklearn.cluster import DBSCAN, KMeans
+from sklearn.neighbors import NearestNeighbors
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import spatial_inference_cases as si  # noqa: E402
@@ -209,6 +222,92 @@ def clusters_check(cases, cid, objs, tool, **params):
         check(partition(ours) == partition(list(km.labels_)), f"{cid}: k-ortalamaların kümeleri scikit-learn'ünkiyle aynı değil")
 
 
+def region_of(entities):
+    """shapely's union of the objects' areas, holes out."""
+    polys = []
+    for e in entities:
+        for q in [e] + list(e.get("parts") or []):
+            ring = lambda r: [(float(p["x"]), float(p["y"])) for p in r["pts"]]  # noqa: E731
+            polys.append(Polygon(ring(q), [ring(h) for h in q.get("holes") or []]))
+    return unary_union(polys)
+
+
+def study_check(cases, cid, objs, study, simulated=False):
+    region = region_of(study)
+    t = table(case(cases, cid))
+    close(t["Alan (m²)"], region.area, 2, f"{cid} bölgenin alanı")
+    kept = [i for i, e in enumerate(objs) if region.covers(Point(*[float(c) for c in si.place(e)]))]
+    check(int(t["Nesne sayısı"]) == len(kept), f"{cid}: KentOS {t['Nesne sayısı']} nesne aldı, shapely bölgede {len(kept)} buldu")
+    check(int(t["Alanın dışında kalan nesne"]) == len(objs) - len(kept), f"{cid}: dışarıda kalanların sayısı")
+    if not simulated:
+        return
+    pts = np.array([[float(c) for c in si.place(objs[i])] for i in kept])
+    n, rng = len(kept), np.random.default_rng(7)
+    minx, miny, maxx, maxy = region.bounds
+    means = []
+    for _ in range(2000):
+        got = []
+        while len(got) < n:
+            x, y = rng.uniform(minx, maxx), rng.uniform(miny, maxy)
+            if region.covers(Point(x, y)):
+                got.append((x, y))
+        means.append(PointPattern(np.array(got)).mean_nnd)
+    mean, se = float(np.mean(means)), float(np.std(means, ddof=1)) / math.sqrt(len(means))
+    theirs = float(t["Benzetimlerin ortalama uzaklığı (m)"])
+    # KentOS's 199 patterns have their own error: the sd of one pattern over √199.
+    sd = float(np.std(means, ddof=1))
+    bound = 3 * math.sqrt(se ** 2 + sd ** 2 / int(t["Benzetim sayısı"]))
+    check(abs(theirs - mean) <= bound, f"{cid}: KentOS'un benzetimlerinin ortalaması {theirs}, numpy'ınki {mean:.3f} ± {bound:.3f}")
+    close(t["Gözlenen ortalama uzaklık (m)"], PointPattern(pts).mean_nnd, 3, f"{cid} gözlenen ortalama uzaklık")
+
+
+def sweep_check(cases, cid, objs, first=3, last=8, step=1, radii=None, steps=7, border=False):
+    """Every cell of a sweep against scikit-learn; the k-distance graph and the knee against NearestNeighbors and kneed."""
+    exp = case(cases, cid)
+    rows = exp["outputs"]["table"]["rows"]
+    pts = np.array([[float(c) - float(o) for c, o in zip(si.place(e), si.place(objs[0]))] for e in objs])
+    n = len(pts)
+    mins = list(range(first, last + 1, step))
+    aim = mins[0]
+    for m in mins[1:]:
+        if abs(m - 4) < abs(aim - 4) or (abs(m - 4) == abs(aim - 4) and m > aim):
+            aim = m
+    check(int(exp["outputs"]["suggestedMinPoints"]) == aim, f"{cid}: önerilen en az nokta")
+    d = NearestNeighbors(n_neighbors=aim).fit(pts).kneighbors(pts)[0]
+    kd = np.sort(d[:, aim - 1]) if aim > 1 else np.zeros(n)
+    x = np.arange(n) / (n - 1)
+    y = (kd - kd[0]) / (kd[-1] - kd[0])
+    ours = float(kd[int(np.argmax(x - y))])
+    check(abs(ours - exp["outputs"]["kneeRadius"]) <= 1e-9 * max(1.0, ours), f"{cid}: dirsek {exp['outputs']['kneeRadius']}, numpy {ours}")
+    found = KneeLocator(list(range(n)), list(kd), curve="convex", direction="increasing", S=0, online=True).knee
+    kneed_note = "kneed dirseği bulamadı" if found is None else f"kneed {kd[found]:.3f}"
+    if found is not None:
+        check(abs(float(kd[found]) - ours) <= 1e-9 * max(1.0, ours), f"{cid}: dirsek {ours}, kneed {kd[found]}")
+    r0, r1 = radii if radii else (0.5 * ours, 2.0 * ours)
+    rs = [r0 + (r1 - r0) * j / (steps - 1) for j in range(steps)]
+    dist = np.sqrt(((pts[:, None, :] - pts[None, :, :]) ** 2).sum(axis=2))
+    at, skipped = 0, 0
+    for m in mins:
+        for r in rs:
+            row = rows[at]
+            at += 1
+            check(row[0] == str(m), f"{cid}: satırın en az noktası")
+            off = dist[~np.eye(n, dtype=bool)]
+            if np.any(np.abs(off - r) <= 1e-9 * max(r, 1.0)):
+                skipped += 1
+                continue
+            db = DBSCAN(eps=r, min_samples=m).fit(pts)
+            labels = db.labels_
+            if border:
+                core = db.core_sample_indices_
+                clusters, noise = len(set(labels[core])), n - len(core)
+            else:
+                clusters, noise = len(set(labels) - {-1}), int((labels == -1).sum())
+            check(int(row[2]) == clusters, f"{cid} (m {m}, r {r:.3f}): küme sayısı KentOS {row[2]}, scikit-learn {clusters}")
+            check(int(row[3]) == noise, f"{cid} (m {m}, r {r:.3f}): gürültü KentOS {row[3]}, scikit-learn {noise}")
+    return len(rows), skipped, kneed_note
+
+
 def main():
     cases = json.loads(CASES.read_text("utf-8"))["cases"]
     parsel, kaza = si.objects("parsel"), si.objects("kaza")
@@ -227,10 +326,22 @@ def main():
     clusters_check(cases, "dbscan-subset", kaza, "dbscan", radius=12, min_points=3)
     clusters_check(cases, "kmeans-boot-3", kaza, "kmeans", k=3)
     clusters_check(cases, "kmeans-boot-5", kaza, "kmeans", k=5)
+    study = si.objects("calisma")
+    study_check(cases, "nn-study", kaza, study)
+    study_check(cases, "nn-study-sim", kaza, study, simulated=True)
+    study_check(cases, "nn-study-area-ignored", kaza, study)
+    study_check(cases, "nn-study-selection", kaza, study[:1])
+    notes = []
+    notes.append(("sweep-auto",) + sweep_check(cases, "sweep-auto", kaza))
+    notes.append(("sweep-range",) + sweep_check(cases, "sweep-range", kaza, 2, 10, 4, (4.0, 14.0), 6, True))
+    notes.append(("sweep-stability",) + sweep_check(cases, "sweep-stability", kaza, 4, 5, 1, None, 3))
+    notes.append(("sweep-subset",) + sweep_check(cases, "sweep-subset", kaza, 3, 4, 1, None, 3))
+    for cid, cells, skipped, note in notes:
+        print(f"{cid}: {cells} hücre, scikit-learn ile {cells - skipped} karşılaştırıldı, {skipped} belirsiz hücre atlandı; {note}")
     if PROBLEMS:
         print("\n".join(PROBLEMS))
         return 1
-    print(f"esda {esda.__version__}, libpysal {libpysal.__version__}, scikit-learn ile 15 durum: KentOS'un değerleri paketlerinkiyle aynı.")
+    print(f"esda {esda.__version__}, libpysal {libpysal.__version__}, scikit-learn, shapely ve kneed ile 23 durum: KentOS'un değerleri paketlerinkiyle aynı.")
     return 0
 
 

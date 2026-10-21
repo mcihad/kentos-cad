@@ -196,6 +196,7 @@ pub fn tools() -> Vec<Tool> {
         stats::tools::hot_spot(),
         stats::tools::local_moran(),
         stats::tools::dbscan_tool(),
+        stats::tools::dbscan_sweep_tool(),
         stats::tools::k_means_tool(),
         // Uzaktan algılama (docs/adr/0242): both platforms.
         remote::tools::composite(),

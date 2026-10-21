@@ -218,6 +218,11 @@ Liste:
 - [ ] `CBS-25` (ADR 0566, 21 Ekim): web'in En yakın komşu aracına Çıkarım (Monte Carlo), Benzetim sayısı ve Tohum; DBSCAN ve
   k-ortalamalar'a Kararlılık sınaması, Tekrar sayısı ve Tohum, kararlılık tablosu, kopyaların Kararlılık ve Kararlılık sınıfı; çekirdeğin
   `nearest_with`, `dbscan_with`, `k_means_with`'inin WASM çağrıları; WASM süreleri.
+- [ ] `CBS-25` (ADR 0574, 21 Ekim): web'in En yakın komşu aracına Çalışma alanı (Kutu | Alan nesneleri) ve Çalışma alanı nesneleri
+  (çekirdeğin `nearest_in`'i ve `Window`'u, bölgenin birleşimi ve içeride–dışarıda sorgusu için WASM çağrısı, `region` ve
+  `studyArea` parametreleri); DBSCAN parametre taraması aracı (`stats.dbscanSweep`; çekirdeğin `sweep::dbscan_sweep`'inin WASM
+  çağrısı, tablo, `suggested*` sayıları, kararlılık sütunları ve deney profili), Analiz panelinde düğmesi (ikon `statsDbscanSweep`,
+  `catalog/v1/additions.json`'dan); WASM süreleri.
 - [ ] `CBS-17` SLD alışverişi (ADR 0516, 19 Ekim): web'de gerekenler: `file.export.sld` ve `file.import.sld`'nin işleyicileri
   (`sld`'nin WASM bağlayıcısı), Katmanlar'ın sağ tık menüsünde iki öğe; TS türleri üretildi.
 - [ ] `CBS-17` QML alışverişi (ADR 0555, 20 Ekim): web'de gerekenler: `file.export.qml` ve `file.import.qml`'nin işleyicileri
@@ -2469,6 +2474,15 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   scikit-learn ile çapraz denetim `spatial_esda_cases.py` (esda'nın ikili ağırlıklı Yerel Moran p'si tanımdan sapıyor; numpy'la).
   Kalan: çalışma alanının alan nesnesinden verilmesi, DBSCAN'ın parametre taraması, R'ın fpc'siyle çapraz denetim. — **21 Ekim,
   [ADR 0566](docs/adr/0566-nearest-neighbour-simulation-and-cluster-stability.md).**
+- [x] `CBS-25` çalışma alanının alan nesnesinden verilmesi ve DBSCAN'ın parametre taraması: En yakın komşu'ya Çalışma alanı (Kutu |
+  Alan nesneleri): bölge verilen alanların birleşimi (delikli ve çok parçalı), A net alanı, bölge dışında ve deliklerde kalan nesneler
+  alınmaz ve söylenir, Monte Carlo noktaları bölgede atılır (kutuya atılır, bölgede olmayan aday atılır), profilde bölgenin köşeleri;
+  yeni DBSCAN parametre taraması aracı: en az nokta × yarıçap ızgarasında küme sayısı, gürültü payı ve istenirse kararlılık, k-uzaklık
+  grafiğinin dirseğinden (Kneedle) ve en az nokta 4'ten (Schubert) önerilen çift işaretli; 14 yeni ortak durum
+  `spatial_study_cases.py`'den, esda betiğine shapely, scikit-learn ve kneed ile çapraz denetim (23 durum; `kneed`'in varsayılan
+  `online=False`'u iki kıvrımlı grafikte kuyruğu bildirir, kural `online=True`'nun en belirgin kıvrımıdır), Python testi, masaüstü
+  resimleri. R bu makinede yok: fpc ile çapraz denetim yapılmadı, sahibin izniyle kurulabilir. — **21 Ekim,
+  [ADR 0574](docs/adr/0574-study-area-and-dbscan-sweep.md).**
 - [ ] `CBS-28` sanal mozaik (ikinci dilim): GDAL VRT okuma ve yazma (`kentos_formats::raster::vrt`), okuyucuda mozaik
   (`Reader::mosaic`, `BlockNeed.member`), `cad.rasters.mosaic` (gdalbuildvrt'nin kuralı; öncelik sıra, ince piksel, yeni tarih; `layer`
   ile raster tek adım), 38 ortak durum GDAL'la, Python, MCP, masaüstünde Sanal mozaik penceresi. Kalan: mozaiğin önizleme piramidi,

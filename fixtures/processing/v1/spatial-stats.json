@@ -65,6 +65,11 @@
       "scope": "layer",
       "layerId": "cizim"
      },
+     "region": "box",
+     "studyArea": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
      "area": null,
      "inference": "analytic",
      "simulations": 999,
@@ -115,6 +120,22 @@
      "layer": {
       "newName": "Kümeler (DBSCAN)"
      }
+    },
+    "stats.dbscanSweep": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "minFirst": 3,
+     "minLast": 8,
+     "minStep": 1,
+     "radiusFirst": null,
+     "radiusLast": null,
+     "radiusSteps": 7,
+     "borderNoise": false,
+     "stability": "none",
+     "resamples": 100,
+     "seed": 1
     },
     "stats.kMeans": {
      "input": {
