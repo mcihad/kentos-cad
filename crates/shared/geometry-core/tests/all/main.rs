@@ -82,3 +82,4 @@ mod tags;
 mod viewmarks;
 mod wall_joins;
 mod walls;
+mod view_links;

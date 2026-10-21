@@ -425,6 +425,53 @@ impl App {
                 listed: Some(r.sha256),
                 extension: "kcad",
                 compare: None,
+                side: None,
+            },
+        )
+    }
+
+    /// İkinci görünümde göster (docs/adr/0576 §3): the point's drawing, downloaded to a file of the app's own, in
+    /// the other view of the open drawing, read only, what differs marked.
+    pub(crate) fn history_side(&mut self, point: Point) -> Task<Message> {
+        let Some(p) = self.history_project() else {
+            return Task::none();
+        };
+        let (fetch, name, listed, refused) = match point {
+            Point::Revision(r) => (
+                Fetch::Revision(r.revision.clone()),
+                format!("Revizyon {}", r.revision),
+                Some(r.sha256),
+                history::why_not_download(&p.access.permissions).is_some(),
+            ),
+            Point::Checkpoint(c) => (
+                Fetch::Checkpoint(c.id),
+                c.name.clone(),
+                Some(c.sha256),
+                history::why_not_take(&p.access.permissions, "indirme").is_some(),
+            ),
+        };
+        if refused {
+            return Task::none();
+        }
+        if self.document.is_none() {
+            self.warn("Açık çizim yok; ikinci görünümde göstermek için önce bir çizim açın.");
+            return Task::none();
+        }
+        if !self.is_open_project(&p.id) {
+            self.warn(format!(
+                "Açık çizim “{}” projesinin değil: fark kalıcı kimliklerle bulunur, ortak nesne az olabilir.",
+                p.name
+            ));
+        }
+        self.catalog_download(
+            p,
+            Download {
+                fetch,
+                name: name.clone(),
+                listed,
+                extension: "kcad",
+                compare: None,
+                side: Some(name),
             },
         )
     }
@@ -464,6 +511,7 @@ impl App {
                 listed,
                 extension: "kcad",
                 compare: Some(name),
+                side: None,
             },
         )
     }
@@ -485,6 +533,7 @@ impl App {
                 listed: Some(c.sha256),
                 extension: "kcad",
                 compare: None,
+                side: None,
             },
         )
     }

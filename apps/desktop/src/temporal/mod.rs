@@ -174,21 +174,20 @@ impl Slider {
     }
 
     /// The position whose moment is nearest `t` (the earlier of two as near).
-    fn nearest(&self, t: f64) -> i64 {
-        let (mut lo, mut hi) = (0, self.last);
-        while lo < hi {
-            let mid = (lo + hi) / 2;
-            if self.moment_at(mid) < t {
-                lo = mid + 1;
-            } else {
-                hi = mid;
-            }
-        }
-        if lo > 0 && t - self.moment_at(lo - 1) <= self.moment_at(lo) - t {
-            lo - 1
-        } else {
-            lo
-        }
+    pub fn nearest(&self, t: f64) -> i64 {
+        time::nearest(self.anchor, self.step, self.last, t)
+    }
+
+    /// The window a view with a time of its own shows at `moment` (docs/adr/0576 §1): the grid's nearest
+    /// position, as the slider's own (a moment, or up to the next).
+    pub fn window_near(&self, moment: f64) -> Window {
+        kentos_geometry_core::tools::view_link::own_window(
+            self.anchor,
+            self.step,
+            self.last,
+            self.ranged,
+            moment,
+        )
     }
 }
 

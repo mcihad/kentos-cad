@@ -1235,6 +1235,10 @@ codes! {
     PROFILE_REPLACED = "profile_replaced", Warning, false, "Projedeki aynı adlı profil ya da eşleme değiştirildi; iletisi eski sürümünü söyler.";
     /// A valid time's period that does not hold: an instant and a period together, an end alone, an end not after the start (docs/adr/0537).
     INVALID_PERIOD = "invalid_period", Failed, false, "Geçerlilik zamanı bir an ya da başlangıcı bitişinden önce bir aralık olmalı.";
+    /// A drawing compared with a state of its history that is not there: no steps back asked, or more than it holds (docs/adr/0576).
+    NO_SUCH_STEP = "no_such_step", Failed, false, "Geri alma geçmişi bu kadar adım tutmuyor; 1 ile geçmişin adım sayısı arasında bir sayı verin.";
+    /// A list limit out of its range (docs/adr/0576).
+    INVALID_LIMIT = "invalid_limit", Failed, false, "Liste sınırı 1 ile 1 000 000 arasında bir tam sayı olmalı.";
     /// A database address that cannot be kept: a password in it, no host or no database (docs/adr/0505).
     INVALID_ADDRESS = "invalid_address", Failed, false, "Veritabanı adresi geçersiz ya da parola taşıyor; parola projeye yazılmaz.";
     /// The database cannot be reached, refuses the login, or this host has no provider for it (docs/adr/0505).

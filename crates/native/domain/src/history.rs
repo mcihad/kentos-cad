@@ -650,6 +650,31 @@ impl Document {
         !self.history.undo.is_empty()
     }
 
+    /// The undo steps' names, the last step first (the first one `undo` would revert).
+    pub fn undo_labels(&self) -> Vec<String> {
+        self.history
+            .undo
+            .iter()
+            .rev()
+            .map(|step| step.label.clone())
+            .collect()
+    }
+
+    /// The drawing as it was `steps` undo steps back, a copy: this one, its history and its revision stay as they
+    /// are (docs/adr/0576 §3). The name of the oldest step it undid says what it stands before; none when `steps`
+    /// is 0 or the history holds fewer, or while a transaction or a group is open.
+    pub fn past(&self, steps: usize) -> Option<(Document, String)> {
+        if steps == 0 || self.is_busy() || self.history.undo.len() < steps {
+            return None;
+        }
+        let mut copy = self.clone();
+        let mut label = String::new();
+        for _ in 0..steps {
+            label = copy.undo()?;
+        }
+        Some((copy, label))
+    }
+
     pub fn can_redo(&self) -> bool {
         !self.history.redo.is_empty()
     }

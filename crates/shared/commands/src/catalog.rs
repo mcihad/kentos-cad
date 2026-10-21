@@ -1613,6 +1613,43 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // İki revizyonu karşılaştır (docs/adr/0576), held together by fixtures/commands/v1/cad.drawing.compare.json.
+        CommandDescriptor {
+            id: crate::CAD_DRAWING_COMPARE.into(),
+            version: crate::CAD_DRAWING_COMPARE_VERSION,
+            title: "Revizyonları karşılaştır".into(),
+            summary: "Çizimin şimdiki hâliyle aynı çizimin başka bir hâli arasında ne değiştiğini söyler; çizimi değiştirmez. \
+                      Öbür hâl (against) açık çizimin geri alma geçmişinde steps adım gerisi (history) ya da bir çizim dosyasıdır (file: mutlak yol, .kcad v2 ya da v1 JSON). \
+                      Nesneler kalıcı kimlikleriyle eşlenir: şimdi olup öbüründe olmayan eklenmiş (added), öbüründe olup şimdi olmayan silinmiş (removed), ikisinde olup ayrılan değişmiş (changed). \
+                      Değişim, veri karşılaştırmanın kuralıyla (ADR 0179) bulunur: geometri tolerance (metre; varsayılan 0,001) içinde aynıysa ve öznitelikler eşitse aynı; katman bir öznitelik gibi sayılır (fields'ta layer). \
+                      Cevap sayıları (same, changed, added, removed) ve kimlik listelerini verir; her liste limit'te kesilir ve truncated bunu söyler. \
+                      Retler: invalid_tolerance, invalid_limit, no_such_step (geri alma geçmişi o kadar adım tutmuyor), invalid_file_path, file_not_found, import_unreadable."
+                .into(),
+            aliases: vec!["revizyonkarsilastir".into(), "farkbul".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::DrawingCompare>(),
+            output: schema::<crate::DrawingCompared>(),
+            plan: Some(schema::<crate::DrawingCompared>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Geri alma geçmişinde 5 adım geriyle karşılaştır".into(),
+                    input: json!({ "against": { "kind": "history", "steps": 5 } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İndirilmiş bir revizyonla karşılaştır, 1 cm toleransla".into(),
+                    input: json!({ "against": { "kind": "file", "path": "/veri/mahalle (revizyon 12).kcad" }, "tolerance": 0.01 }),
+                    output: None,
+                },
+            ],
+        },
         // Ötele's semantic command (docs/adr/0246), held together by
         // fixtures/commands/v1/cad.entities.offset.json. The web is paused
         // (docs/adr/0228): the desktop's host alone runs it for now.
@@ -8959,6 +8996,9 @@ mod tests {
                     crate::CAD_DRAWING_AUDIT => {
                         serde_json::from_value::<crate::DrawingAudit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_DRAWING_COMPARE => {
+                        serde_json::from_value::<crate::DrawingCompare>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_COPY => {
                         serde_json::from_value::<crate::EntitiesCopy>(e.input.clone()).map(|_| ())
                     }
@@ -9690,6 +9730,10 @@ mod tests {
                         }
                         crate::CAD_DRAWING_AUDIT => {
                             serde_json::from_value::<crate::DrawingAudited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_DRAWING_COMPARE => {
+                            serde_json::from_value::<crate::DrawingCompared>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_COPY => {

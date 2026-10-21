@@ -120,6 +120,18 @@ impl Document {
             .ok_or_else(|| format!("{}: açılış durduruldu.", path.display()))
     }
 
+    /// A drawing of its own from a model: a state of another drawing's history, shown and never written
+    /// (docs/adr/0576 §3). On no file.
+    pub fn of_model(model: kentos_domain::Document) -> Self {
+        Self {
+            model,
+            path: None,
+            source: Source::Local,
+            session: session(),
+            legacy: false,
+        }
+    }
+
     /// A cloud project just read from the server (docs/adr/0041): clean,
     /// without a file, a new opening.
     pub fn cloud(model: kentos_domain::Document, source: CloudSource) -> Self {

@@ -177,6 +177,47 @@ type IdSet = HashSet<u64, BuildHasherDefault<IdHasher>>;
 /// Rebuild the tree when this many objects changed since the last build (or a sixteenth of all, if more).
 const REBUILD_AFTER: usize = 256;
 
+/// A view's own time window, in force inside `Store::with_window` (docs/adr/0576 §1), kept in atomics so the store
+/// stays shareable across the threads that build a scene: set before them and restored after them, read by them.
+#[derive(Default)]
+struct ViewWindow {
+    /// 0: none in force; 1: in force, no window; 2: an instant; 3: a range.
+    kind: std::sync::atomic::AtomicU8,
+    a: std::sync::atomic::AtomicU64,
+    b: std::sync::atomic::AtomicU64,
+}
+
+impl ViewWindow {
+    fn get(&self) -> Option<Option<crate::time::Window>> {
+        use crate::time::Window;
+        use std::sync::atomic::Ordering::Relaxed;
+        let (a, b) = (
+            f64::from_bits(self.a.load(Relaxed)),
+            f64::from_bits(self.b.load(Relaxed)),
+        );
+        match self.kind.load(Relaxed) {
+            0 => None,
+            1 => Some(None),
+            2 => Some(Some(Window::Instant(a))),
+            _ => Some(Some(Window::Range(a, b))),
+        }
+    }
+
+    fn set(&self, v: Option<Option<crate::time::Window>>) {
+        use crate::time::Window;
+        use std::sync::atomic::Ordering::Relaxed;
+        let (kind, a, b) = match v {
+            None => (0, 0.0, 0.0),
+            Some(None) => (1, 0.0, 0.0),
+            Some(Some(Window::Instant(a))) => (2, a, 0.0),
+            Some(Some(Window::Range(a, b))) => (3, a, b),
+        };
+        self.a.store(a.to_bits(), Relaxed);
+        self.b.store(b.to_bits(), Relaxed);
+        self.kind.store(kind, Relaxed);
+    }
+}
+
 #[derive(Default)]
 pub struct Store {
     slots: Vec<Option<Item>>,
@@ -228,6 +269,9 @@ pub struct Store {
     times: IdMap<crate::time::Time>,
     /// The time slider's window (`set_time_window`); none, no object is left out by its time.
     time_window: Option<crate::time::Window>,
+    /// A view's own window, in force inside `with_window` (docs/adr/0576 §1): none, the slider's; some, that
+    /// view's (whose own may be none: every object shows).
+    view_window: ViewWindow,
     /// The system times of the objects of layers recording their versions (`set_recorded`, docs/adr/0537): none, a
     /// version never recorded.
     recorded: IdMap<Option<(f64, f64)>>,
@@ -677,8 +721,26 @@ impl Store {
         self.time_window = window;
     }
 
+    /// The window the queries read now: the view's own inside [`Store::with_window`], else the slider's.
     pub fn time_window(&self) -> Option<crate::time::Window> {
-        self.time_window
+        self.view_window.get().unwrap_or(self.time_window)
+    }
+
+    /// Runs `f` with `window` as the window of every query and filter (docs/adr/0576 §1): a split area's view
+    /// with a time of its own is drawn, its labels placed and its marks found as that time shows the drawing, the
+    /// slider's window and the drawing untouched. Nested calls restore the outer one. The window is set and
+    /// restored on this thread around `f`; threads `f` starts and joins read it.
+    pub fn with_window<R>(&self, window: Option<crate::time::Window>, f: impl FnOnce() -> R) -> R {
+        struct Restore<'a>(&'a ViewWindow, Option<Option<crate::time::Window>>);
+        impl Drop for Restore<'_> {
+            fn drop(&mut self) {
+                self.0.set(self.1);
+            }
+        }
+        let before = self.view_window.get();
+        self.view_window.set(Some(window));
+        let _restore = Restore(&self.view_window, before);
+        f()
     }
 
     /// The objects their layer's filter leaves out (docs/adr/0211 §3): `true`
@@ -759,7 +821,8 @@ impl Store {
         {
             return false;
         }
-        let Some(w) = &self.time_window else {
+        let window = self.time_window();
+        let Some(w) = &window else {
             return true;
         };
         self.times

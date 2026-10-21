@@ -350,6 +350,11 @@ mod snap_menu;
 mod snap_tests;
 mod snapshot;
 mod sources;
+mod split_revision;
+#[cfg(test)]
+mod split_scenes;
+#[cfg(test)]
+mod split_tests;
 mod split_view;
 mod start;
 #[cfg(test)]

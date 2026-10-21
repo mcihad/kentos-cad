@@ -20,3 +20,4 @@ pub mod point_calc;
 pub mod point_input;
 pub mod point_text;
 pub mod ucs;
+pub mod view_link;

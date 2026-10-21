@@ -344,6 +344,8 @@ pub struct Viewport {
     pub(crate) theme: Option<kentos_commands::LayerState>,
     /// The tree as the theme shows it, by the drawing's session and generation and the theme it was made with.
     themed: RefCell<Option<KeptTheme>>,
+    /// The time the view shows (docs/adr/0576 §1): the slider's, or a moment of its own.
+    pub(crate) time: crate::split_view::ViewTime,
 }
 
 type KeptTheme = (
@@ -454,6 +456,7 @@ impl Viewport {
             passive: false,
             theme: None,
             themed: RefCell::new(None),
+            time: crate::split_view::ViewTime::Follow,
         }
     }
 
@@ -500,6 +503,11 @@ impl Viewport {
             });
         }
         cache.as_ref().map_or_else(Arc::default, |g| g.part.clone())
+    }
+
+    /// What the view shows is another drawing now (docs/adr/0576 §3): its scene is built afresh, its camera stays.
+    pub(crate) fn rebuild(&mut self) {
+        self.generation += 1;
     }
 
     /// A drawing was opened: its scene is built afresh and the view goes to

@@ -53,6 +53,7 @@ pub mod constraints_edit;
 pub mod constraints_query;
 pub mod parameters_edit;
 pub mod audit_cmd;
+pub mod drawing_compare;
 pub mod blocks;
 pub mod blocks_define;
 pub mod blocks_edit;
@@ -933,6 +934,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_DRAWING_AUDIT,
         kentos_commands::CAD_DRAWING_AUDIT_VERSION,
+    ),
+    // İki revizyonu karşılaştır ([`drawing_compare`], docs/adr/0576).
+    (
+        kentos_commands::CAD_DRAWING_COMPARE,
+        kentos_commands::CAD_DRAWING_COMPARE_VERSION,
     ),
     (
         kentos_commands::CAD_ENTITIES_COPY,

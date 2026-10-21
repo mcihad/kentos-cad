@@ -241,6 +241,8 @@ pub enum Event {
     HistoryDownloadCheckpoint(kentos_commands::Checkpoint),
     /// Revizyonla karşılaştır (docs/adr/0210 §8).
     HistoryCompare(crate::cloud::catalog_history::Point),
+    /// İkinci görünümde göster (docs/adr/0576 §3).
+    HistorySide(crate::cloud::catalog_history::Point),
     HistoryCreate,
     HistoryRestore(catalog_history::Point),
     HistoryRemove(kentos_commands::Checkpoint),
@@ -650,6 +652,7 @@ impl App {
             Event::HistoryDownloadRevision(r) => self.history_download_revision(r),
             Event::HistoryDownloadCheckpoint(c) => self.history_download_checkpoint(c),
             Event::HistoryCompare(point) => self.history_compare(point),
+            Event::HistorySide(point) => self.history_side(point),
             Event::HistoryLoaded { .. }
             | Event::HistoryEvents { .. }
             | Event::HistoryRetry

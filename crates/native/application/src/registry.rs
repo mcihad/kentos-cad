@@ -45,6 +45,8 @@ use kentos_commands::{
     PointCloudsRegion, TimeQuery,
 };
 use crate::time_query;
+use crate::drawing_compare;
+use kentos_commands::DrawingCompare;
 use kentos_commands::{StacPrepare, StacSearch};
 use crate::{subnetworks, subnetworks_update};
 use crate::sources::{describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile, relate as sources_relate, sync as sources_sync};
@@ -239,6 +241,7 @@ macro_rules! by_command {
             kentos_commands::CAD_ENTITIES_MATCH => $then!(entities_match, EntitiesMatch),
             kentos_commands::CAD_ENTITIES_CLEANUP => $then!(entities_cleanup, EntitiesCleanup),
             kentos_commands::CAD_DRAWING_AUDIT => $then!(drawing_audit, DrawingAudit),
+            kentos_commands::CAD_DRAWING_COMPARE => $then!(drawing_compare, DrawingCompare),
             kentos_commands::CAD_ENTITIES_COPY => $then!(entities_copy, EntitiesCopy),
             kentos_commands::CAD_ENTITIES_PASTE => $then!(entities_paste, EntitiesPaste),
             kentos_commands::CAD_ENTITIES_DIVIDE => $then!(divide, EntitiesDivide),

@@ -18,13 +18,86 @@
 //! the other view follow the active one's centre, scale and twist; Kaydırmalı
 //! karşılaştır draws the other view over the active one right of a divider
 //! dragged across, at the same place, the pointer going through it.
+//!
+//! Görünüm başına zaman, bağ ve revizyon (docs/adr/0576): each view may show its own time (a moment of the slider's
+//! grid, or the slider's own window), Bağla follows the centre alone or the centre, scale and twist (or nothing), each
+//! view says its screen scale, and the other view may show another state of the drawing (`split_revision.rs`).
 
-use iced::widget::{Space, container, mouse_area, row, stack};
-use iced::{Element, Fill, Length, Point, Task};
+use iced::widget::{Space, button, column, container, mouse_area, row, stack};
+use iced::{Center, Element, Fill, Length, Point, Task};
+use kentos_geometry_core::time::{self, Window};
+use kentos_geometry_core::tools::view_link::{self, Frame, Link};
+use kentos_geometry_core::vec2::Vec2 as Vec2d;
 use kentos_interaction::{Cursor, Level};
+use kentos_ui::theme::Tokens;
+use kentos_ui::{label, style};
 
 use crate::app::{App, Message};
+use crate::split_revision::Revision;
 use crate::viewport::{Event as ViewEvent, Viewport};
+
+/// The time a view shows (docs/adr/0576 §1): the time slider's window, or a moment of its own: the slider's grid
+/// position nearest it (the slider's step and its Anlık or Aralık), while the slider is open.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub(crate) enum ViewTime {
+    #[default]
+    Follow,
+    Own(f64),
+}
+
+/// What a view's time control asks.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TimeAsk {
+    /// Kendi zamanı: the slider's moment now, then the view goes its own way.
+    Own,
+    /// ◀ and ▶: a step of the slider's.
+    Step(i64),
+    /// Sürgüyü izle.
+    Follow,
+}
+
+/// The source the other view shows (docs/adr/0576 §3), by its place in the list.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Source {
+    /// The open drawing.
+    Drawing,
+    /// The open drawing this many undo steps back.
+    History(usize),
+    /// A drawing file, chosen.
+    File,
+}
+
+/// The width of a view's choosers, logical pixels.
+const CHOOSER: f32 = 200.0;
+
+/// A small pill over a view: a control or a fact, in the surface's colour.
+fn chip<'a>(content: Element<'a, Message>) -> Element<'a, Message> {
+    container(content)
+        .padding([2, 8])
+        .style(|theme: &iced::Theme| {
+            let t = Tokens::of(theme);
+            container::Style {
+                background: Some(iced::Background::Color(t.surface)),
+                text_color: Some(t.text),
+                border: iced::Border {
+                    color: t.border,
+                    width: 1.0,
+                    radius: 999.0.into(),
+                },
+                ..container::Style::default()
+            }
+        })
+        .into()
+}
+
+/// A camera as the link's rules take it.
+fn frame_of(c: &kentos_render_wgpu::Camera) -> Frame {
+    Frame {
+        centre: Vec2d::new(c.center.x, c.center.y),
+        scale: c.scale,
+        twist: c.twist,
+    }
+}
 
 /// The second view and where it stands.
 pub(crate) struct Split {
@@ -36,8 +109,10 @@ pub(crate) struct Split {
     pub(crate) left: bool,
     /// The drawing it was split for: another drawing goes back to one view.
     session: u64,
-    /// Bağla: the other view follows the active one's centre, scale and twist (docs/adr/0523 §3).
-    pub(crate) linked: bool,
+    /// Bağla: what the other view follows of the active one (docs/adr/0523 §3, 0576 §2).
+    pub(crate) link: Link,
+    /// The other state of the drawing the other view shows, read only (docs/adr/0576 §3); none, the open drawing.
+    pub(crate) revision: Option<Revision>,
     /// Kaydırmalı karşılaştır: where the divider stands, a share of the active view's width from its left;
     /// none, side by side.
     pub(crate) swipe: Option<f32>,
@@ -45,9 +120,23 @@ pub(crate) struct Split {
     pub(crate) dragging: bool,
 }
 
+impl Split {
+    /// The other view's text is placed again (what it shows changed).
+    pub(crate) fn reset_text(&mut self) {
+        self.spots = crate::labels::Spots::default();
+    }
+}
+
 /// What the views' own controls ask (docs/adr/0523).
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// A view's time chosen (docs/adr/0576 §1): the active view's or the other's.
+    Time { active: bool, ask: TimeAsk },
+    /// What the other view follows (docs/adr/0576 §2).
+    Link(Link),
+    /// What the other view shows (docs/adr/0576 §3); a file is asked for, then `RevisionPicked`.
+    Source(Source),
+    RevisionPicked(Option<std::path::PathBuf>),
     /// A view's theme chosen: the active view's or the other's; the layer state's place in the project's list,
     /// none: as the drawing is.
     Theme {
@@ -82,7 +171,8 @@ impl App {
             spots: crate::labels::Spots::default(),
             left: false,
             session: doc.session,
-            linked: false,
+            link: Link::Off,
+            revision: None,
             swipe: None,
             dragging: false,
         });
@@ -121,24 +211,41 @@ impl App {
                 split.viewport.theme = None;
             }
         }
-        if let Some(split) = self.split.as_mut()
-            && (split.linked || split.swipe.is_some())
-        {
+        if let Some(split) = self.split.as_mut() {
             let active = self.viewport.camera;
             let other = &mut split.viewport;
-            other.camera.scale = active.scale;
-            other.camera.twist = active.twist;
-            other.camera.center = if split.swipe.is_some() {
+            if split.swipe.is_some() {
                 // The same world under the same place of the window: the other view's middle as the active one sees it.
+                other.camera.scale = active.scale;
+                other.camera.twist = active.twist;
                 let b = other.bounds;
                 let a = self.viewport.bounds;
-                self.viewport.world(Point::new(
+                other.camera.center = self.viewport.world(Point::new(
                     b.x + b.width / 2.0 - a.x,
                     b.y + b.height / 2.0 - a.y,
-                ))
-            } else {
-                active.center
-            };
+                ));
+            } else if split.link != Link::Off {
+                let got = view_link::follow(split.link, frame_of(&active), frame_of(&other.camera));
+                other.camera.center = kentos_render_wgpu::Vec2::new(got.centre.x, got.centre.y);
+                other.camera.scale = got.scale;
+                other.camera.twist = got.twist;
+            }
+        }
+        // A time of its own needs the slider: without it every view follows (the slider's window is none).
+        if !self.time.slider.open {
+            self.viewport.time = ViewTime::Follow;
+            if let Some(split) = self.split.as_mut() {
+                split.viewport.time = ViewTime::Follow;
+            }
+        } else if self.split.is_none() {
+            self.viewport.time = ViewTime::Follow;
+        }
+        // The marks of a revision follow the open drawing's edits (split_revision.rs).
+        self.follow_revision();
+        // What is picked and snapped to is what the active view shows, at its time too (docs/adr/0576 §1).
+        let want = self.view_window(self.viewport.time);
+        if self.spatial.store().time_window() != want {
+            self.spatial.set_time_window(want);
         }
         if let Some(doc) = &self.document
             && self.spatial.theme() != self.viewport.theme.as_ref()
@@ -156,11 +263,17 @@ impl App {
         let Some(split) = self.split.as_mut() else {
             return;
         };
-        split.linked = !split.linked;
-        let said = if split.linked {
-            "Görünümler bağlı: öbür görünüm etkin görünümün merkezini, ölçeğini ve dönüklüğünü izler."
+        split.link = if split.link == Link::Off {
+            Link::CentreScale
         } else {
-            "Görünümler bağımsız: her birinin kendi kamerası var."
+            Link::Off
+        };
+        let said = match split.link {
+            Link::Off => "Görünümler bağımsız: her birinin kendi kamerası var.",
+            Link::Centre => "Görünümler bağlı: öbür görünüm etkin görünümün merkezini izler, ölçeğini korur.",
+            Link::CentreScale => {
+                "Görünümler bağlı: öbür görünüm etkin görünümün merkezini, ölçeğini ve dönüklüğünü izler."
+            }
         };
         self.say(Level::Info, said);
     }
@@ -191,6 +304,39 @@ impl App {
     /// What the views' controls ask.
     pub(crate) fn split_event(&mut self, event: Event) -> Task<Message> {
         match event {
+            Event::Time { active, ask } => {
+                let s = &self.time.slider;
+                let (anchor, step, last, moment) = (s.anchor, s.step, s.last, s.moment());
+                let view = if active {
+                    Some(&mut self.viewport)
+                } else {
+                    self.split.as_mut().map(|s| &mut s.viewport)
+                };
+                if let Some(view) = view {
+                    view.time = match (ask, view.time) {
+                        (TimeAsk::Own, _) => ViewTime::Own(moment),
+                        (TimeAsk::Step(by), ViewTime::Own(m)) => {
+                            ViewTime::Own(view_link::own_step(anchor, step, last, m, by))
+                        }
+                        (TimeAsk::Step(_), ViewTime::Follow) | (TimeAsk::Follow, _) => ViewTime::Follow,
+                    };
+                }
+                self.follow_split();
+            }
+            Event::Link(link) => {
+                if let Some(split) = self.split.as_mut() {
+                    split.link = link;
+                }
+                self.follow_split();
+            }
+            Event::Source(Source::Drawing) => self.hide_revision(),
+            Event::Source(Source::History(n)) => self.revision_from_history(n),
+            Event::Source(Source::File) => return self.pick_revision_file(),
+            Event::RevisionPicked(path) => {
+                if let Some(path) = path {
+                    self.revision_from_file(&path);
+                }
+            }
             Event::Theme { active, state } => {
                 let theme = state.and_then(|i| {
                     self.document
@@ -253,10 +399,162 @@ impl App {
                 state: i.checked_sub(1),
             })
         });
-        container(pick)
-            .width(Length::Fixed(220.0))
-            .padding(8)
-            .into()
+        container(pick).width(Length::Fixed(CHOOSER)).into()
+    }
+
+    /// What a view with this time shows now (docs/adr/0576 §1): its own moment's position of the slider's grid, or the
+    /// slider's window (none while the slider is closed).
+    pub(crate) fn view_window(&self, time: ViewTime) -> Option<Window> {
+        let s = &self.time.slider;
+        match time {
+            ViewTime::Own(moment) if s.open => Some(s.window_near(moment)),
+            _ => s.window(),
+        }
+    }
+
+    /// A view's time control (docs/adr/0576 §1): while the slider is open, Kendi zamanı, or ◀ the moment ▶ and
+    /// Sürgüyü izle.
+    fn time_chip<'a>(&'a self, active: bool) -> Option<Element<'a, Message>> {
+        let slider = &self.time.slider;
+        if !slider.open {
+            return None;
+        }
+        let time = if active {
+            self.viewport.time
+        } else {
+            self.split.as_ref()?.viewport.time
+        };
+        let ask = move |ask: TimeAsk| Message::Split(Event::Time { active, ask });
+        let small = move |words: &'static str, a: TimeAsk| {
+            button(label::caption(words))
+                .on_press(ask(a))
+                .padding([2, 6])
+                .style(style::button::flat)
+        };
+        let content: Element<'a, Message> = match time {
+            ViewTime::Follow => row![
+                label::caption("Zaman: sürgü"),
+                small("Kendi zamanı", TimeAsk::Own),
+            ]
+            .spacing(4)
+            .align_y(Center)
+            .into(),
+            ViewTime::Own(moment) => {
+                let w = slider.window_near(moment);
+                row![
+                    small("◀", TimeAsk::Step(-1)),
+                    label::caption(time::show_window(&w, slider.step.unit)),
+                    small("▶", TimeAsk::Step(1)),
+                    small("Sürgüyü izle", TimeAsk::Follow),
+                ]
+                .spacing(4)
+                .align_y(Center)
+                .into()
+            }
+        };
+        Some(chip(content))
+    }
+
+    /// A view's screen scale, 1:N on a 96 dpi screen (docs/adr/0576 §2).
+    fn scale_chip<'a>(&'a self, active: bool) -> Element<'a, Message> {
+        let camera = if active {
+            self.viewport.camera
+        } else {
+            match &self.split {
+                Some(s) => s.viewport.camera,
+                None => self.viewport.camera,
+            }
+        };
+        let n = view_link::screen_scale(camera.scale).round();
+        chip(label::caption(format!("Ölçek {}", kentos_project::wizard::scale_text(n))).into())
+    }
+
+    /// What the other view follows of the active one (docs/adr/0576 §2).
+    fn link_chooser<'a>(&'a self) -> Element<'a, Message> {
+        use kentos_ui::widget::select::{Choice, Select};
+        let links = [Link::Off, Link::Centre, Link::CentreScale];
+        let at = self
+            .split
+            .as_ref()
+            .and_then(|s| links.iter().position(|l| *l == s.link));
+        let choices = [
+            Choice::new("Bağ: yok".to_owned()),
+            Choice::new("Bağ: merkez".to_owned()),
+            Choice::new("Bağ: merkez ve ölçek".to_owned()),
+        ];
+        let pick = Select::new(choices, at, move |i| Message::Split(Event::Link(links[i])));
+        container(pick).width(Length::Fixed(CHOOSER)).into()
+    }
+
+    /// What the other view shows (docs/adr/0576 §3): the open drawing, its history some steps back, a file.
+    fn source_chooser<'a>(&'a self) -> Element<'a, Message> {
+        use kentos_ui::widget::select::{Choice, Select};
+        let Some(doc) = &self.document else {
+            return Space::new().into();
+        };
+        let held = doc.model.undo_labels();
+        let steps = held.len().min(crate::split_revision::MOST_STEPS);
+        let mut sources = vec![Source::Drawing];
+        let mut choices = vec![Choice::new("Açık çizim".to_owned())];
+        for n in 1..=steps {
+            sources.push(Source::History(n));
+            choices.push(Choice::new(format!(
+                "Geçmiş: {n} adım geri, “{}” öncesi",
+                held[n - 1]
+            )));
+        }
+        sources.push(Source::File);
+        choices.push(Choice::new("Dosyadan…".to_owned()));
+        let at = match self.split.as_ref().and_then(|s| s.revision.as_ref()) {
+            None => Some(0),
+            Some(r) => sources.iter().position(|x| *x == r.source),
+        };
+        let pick = Select::new(choices, at, move |i| Message::Split(Event::Source(sources[i])));
+        container(pick).width(Length::Fixed(CHOOSER)).into()
+    }
+
+    /// A view's controls at its top left (docs/adr/0523 §1, 0576): the theme and the scale, the time, and for the
+    /// other view what it shows, what it follows and what it differs in.
+    fn strip<'a>(&'a self, active: bool) -> Element<'a, Message> {
+        let revision = if active {
+            None
+        } else {
+            self.split.as_ref().and_then(|s| s.revision.as_ref())
+        };
+        let mut col = column![].spacing(4).padding(8);
+        if active {
+            col = col.push(
+                row![self.theme_chooser(true), self.scale_chip(true)]
+                    .spacing(4)
+                    .align_y(Center),
+            );
+        } else {
+            col = col.push(
+                row![self.source_chooser(), self.scale_chip(false)]
+                    .spacing(4)
+                    .align_y(Center),
+            );
+            if revision.is_none() {
+                col = col.push(self.theme_chooser(false));
+            }
+        }
+        if let Some(time) = self.time_chip(active) {
+            col = col.push(time);
+        }
+        if !active {
+            col = col.push(self.link_chooser());
+        }
+        if let Some(r) = revision {
+            let c = r.counts;
+            col = col.push(chip(
+                label::caption(format!(
+                    "{} · {} eklendi · {} silindi · {} değişti",
+                    r.name, c.added, c.removed, c.changed
+                ))
+                .into(),
+            ));
+        }
+        col.into()
     }
 
     /// Kaydırmalı karşılaştır's part of the active area (view.rs puts it over the active view's text, under its
@@ -301,49 +599,63 @@ impl App {
         Some(parts.into())
     }
 
-    /// The other view's drawing and text as it shows them (its camera, its theme).
+    /// The other view's drawing and text as it shows them (its camera, its theme, its time), or the revision it
+    /// shows: its own drawing and store, its changed objects marked.
     fn other_view<'a>(
         &'a self,
         split: &'a Split,
         doc: &'a crate::document::Document,
     ) -> Element<'a, Message> {
-        let format = kentos_interaction::Format::of(doc.settings());
+        let theme = self.theme();
+        let (shown, spatial, selection, mark) = match &split.revision {
+            Some(r) => (&r.doc, &r.spatial, &r.marked, Tokens::of(&theme).warning),
+            None => (doc, &self.spatial, &self.selection, Tokens::of(&theme).accent),
+        };
         let accent = crate::viewport::highlight_color(
             &self.settings.text("graphics.highlightColor"),
-            crate::view::rgba8(kentos_ui::theme::Tokens::of(&self.theme()).accent),
+            crate::view::rgba8(mark),
         );
-        let spots = split.spots.last();
-        let area = split.viewport.view(
-            doc,
-            self.canvas(),
-            self.graphics(),
-            &self.selection,
-            accent,
-            Cursor::Pick,
-            Some(crate::viewport::Styling {
-                labels: spots.as_deref().map(Vec::as_slice),
-                ..self.styles.styling(&self.spatial, &self.settings)
-            }),
-        );
-        let tree = split.viewport.themed_tree(doc);
-        let labels = crate::labels::layer(
-            &doc.model,
-            doc.session,
-            &self.spatial,
-            &split.spots,
-            &split.viewport.camera,
-            self.canvas(),
-            &crate::viewport::palette(self.canvas()),
-            &format,
-            None,
-            None,
-            self.color_mode(),
-            self.label_size(),
-            0.0,
-            crate::labels::Engine::default(),
-            tree.as_deref(),
-        );
-        stack![area, labels].into()
+        let accent = if split.revision.is_some() {
+            crate::view::rgba8(mark)
+        } else {
+            accent
+        };
+        let format = kentos_interaction::Format::of(shown.settings());
+        let window = self.view_window(split.viewport.time);
+        spatial.store().with_window(window, || {
+            let spots = split.spots.last();
+            let area = split.viewport.view(
+                shown,
+                self.canvas(),
+                self.graphics(),
+                selection,
+                accent,
+                Cursor::Pick,
+                Some(crate::viewport::Styling {
+                    labels: spots.as_deref().map(Vec::as_slice),
+                    ..self.styles.styling(spatial, &self.settings)
+                }),
+            );
+            let tree = split.viewport.themed_tree(shown);
+            let labels = crate::labels::layer(
+                &shown.model,
+                shown.session,
+                spatial,
+                &split.spots,
+                &split.viewport.camera,
+                self.canvas(),
+                &crate::viewport::palette(self.canvas()),
+                &format,
+                None,
+                None,
+                self.color_mode(),
+                self.label_size(),
+                0.0,
+                crate::labels::Engine::default(),
+                tree.as_deref(),
+            );
+            stack![area, labels].into()
+        })
     }
 
     /// What the other view reports: its size and the wheel and middle button move it; a press makes it the
@@ -362,6 +674,10 @@ impl App {
                 Task::none()
             }
             ViewEvent::Pressed(_) | ViewEvent::RightPressed(_) => {
+                // A revision is read only: it never takes the pointer, the tool or the snap (docs/adr/0576 §3).
+                if split.revision.is_some() {
+                    return Task::none();
+                }
                 self.activate_other();
                 self.pointer(event)
             }
@@ -374,6 +690,9 @@ impl App {
         let Some(split) = self.split.as_mut() else {
             return;
         };
+        if split.revision.is_some() {
+            return;
+        }
         std::mem::swap(&mut self.viewport, &mut split.viewport);
         std::mem::swap(&mut self.label_spots, &mut split.spots);
         self.viewport.other = false;
@@ -395,18 +714,11 @@ impl App {
         if split.swipe.is_some() {
             return stack![
                 active,
-                row![
-                    self.theme_chooser(true),
-                    Space::new().width(Fill),
-                    self.theme_chooser(false)
-                ]
+                row![self.strip(true), Space::new().width(Fill), self.strip(false)]
             ]
             .into();
         }
-        let other: Element<'a, Message> = container(stack![
-            self.other_view(split, doc),
-            self.theme_chooser(false)
-        ])
+        let other: Element<'a, Message> = container(stack![self.other_view(split, doc), self.strip(false)])
         .padding(1)
         .style(|theme: &iced::Theme| container::Style {
             border: iced::Border {
@@ -419,7 +731,7 @@ impl App {
         .width(Fill)
         .height(Fill)
         .into();
-        let active: Element<'a, Message> = container(stack![active, self.theme_chooser(true)])
+        let active: Element<'a, Message> = container(stack![active, self.strip(true)])
             .padding(1)
             .style(|theme: &iced::Theme| container::Style {
                 border: iced::Border {
@@ -447,6 +759,7 @@ mod tests {
     use crate::app::{App, Message};
     use crate::files_testing::app_with_drawing;
     use crate::viewport::Event;
+    use kentos_geometry_core::tools::view_link::Link;
 
     fn open() -> App {
         let mut app = app_with_drawing();
@@ -525,7 +838,7 @@ mod tests {
         let revision = app.document.as_ref().expect("open").model.revision();
         let _ = app.update(Message::Run("view.splitLink"));
         assert!(
-            app.split.as_ref().is_some_and(|s| s.linked),
+            app.split.as_ref().is_some_and(|s| s.link == Link::CentreScale),
             "Bağla splits first"
         );
         let _ = app.update(Message::Split(super::Event::Theme {
