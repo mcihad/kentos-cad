@@ -2107,6 +2107,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   Kesit, Zaman serisi, Mesh hesaplayıcı (`test_headless_clouds.py`: multidim'in 9 ortak durumu, köyün bulutu). Kalan: adresteki bulut ve
   NetCDF, başsız mozaik ve JPEG raster, açık seçenek hücreleri. — **21 Ekim,
   [ADR 0572](docs/adr/0572-point-cloud-and-multidim-tools-headless.md).**
+- [ ] `CBS-41` başsız mozaik ve JPEG rasterler (dilim): rasterin dosya işi kabuktan `kentos_processing::raster_files`'a
+  (`read_at`, `jpeg_size`, `jpeg_pixels`, `picture_reader`, `mosaic_text`, `mosaic_reader`, `read_member`); başsız `LocalFiles` JPEG
+  resmi, JPEG sıkıştırmalı TIFF'i ve bağlı VRT mozaiğini açar, gömülü mozaiği nedeniyle reddeder (`test_headless_rasters.py`,
+  `headless_raster_cases.py`: GDAL'ın özetleri). Kalan: adresteki raster, bulut ve NetCDF, açık seçenek hücreleri. — **21 Ekim,
+  [ADR 0573](docs/adr/0573-headless-mosaic-and-jpeg-rasters.md).**
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (dilim): `feed::Ending`, `profile::FeedProfile`,
   `FeedConnecting::conformance_request`; masaüstünde Uygunluk satırı ve kayan form; Python `Taken.ending`, teklifin `profile`'ı;
   `feed_paging_cases.py`, `tests/all/paging.rs`, `test_services.py`. Kalan: canlı sağlayıcı, ETag, belirteç yenileme. — **18 Ekim,

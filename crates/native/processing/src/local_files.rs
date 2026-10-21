@@ -2,8 +2,9 @@
 //! raster's linked file or embedded bytes, read where they are, and a result written beside its place, then renamed
 //! (a COG laid out again). Python's `cad.processing.run` and MCP run the raster tools through these, as the desktop
 //! runs them through its own; the point clouds' files (LAS, LAZ, COPC, text; a COPC index built from a result) and a
-//! NetCDF file's cube for the multidimensional tools too (docs/adr/0572, `cloud_files`). An address (HTTP ranges), a
-//! mosaic opened as a raster and a JPEG stay the desktop's: such a run is refused, saying why.
+//! NetCDF file's cube for the multidimensional tools too (docs/adr/0572, `cloud_files`), a virtual mosaic (VRT) and a PNG
+//! or JPEG picture or JPEG-compressed TIFF (docs/adr/0573, `raster_files`). An address (HTTP ranges) stays the
+//! desktop's: such a run is refused, saying why.
 
 use std::collections::HashMap;
 use std::fs::File;
@@ -14,18 +15,21 @@ use std::sync::{Arc, Mutex, PoisonError};
 use kentos_commands::{CloudFormat, CloudSource, RasterFields};
 use kentos_domain::Document;
 use kentos_formats::raster::source::Reader;
-use kentos_formats::raster::{ByteStore, Step, tiff};
+use kentos_formats::raster::{ByteStore, Step, tiff, vrt};
 
 use crate::cloud_files::{ReadAt, cloud_read, copc_file, netcdf_reader, netcdf_slice, text_plan};
 use crate::files::{
     Beside, CloudRead, CubeOpen, Files, RASTER_READER_BUDGET, RasterOpen, Sink, cog_file,
     with_extension,
 };
+use crate::raster_files::{
+    is_jpeg, jpeg_pixels, mosaic_reader, mosaic_text, picture_reader, read_member,
+};
 use crate::types::Feedback;
 
 /// At most this many bytes of a TIFF's directories are read to open it.
 const HEADER_MOST: u64 = 256 << 20;
-/// At most this big a PNG is read whole.
+/// At most this big a PNG or JPEG is read whole.
 const IMAGE_MOST: u64 = 512 << 20;
 
 /// A raster's bytes: a file read by ranges, or an embedded file's bytes.
@@ -317,60 +321,48 @@ impl Files for LocalFiles {
     }
 
     fn open_raster(&self, raster: &RasterFields) -> Result<RasterOpen<'_>, String> {
-        let source = self.bytes_of(raster)?;
+        let (source, key) = self.bytes_from(
+            raster.asset.as_deref(),
+            raster.file.as_deref(),
+            raster.url.is_some(),
+            Of::Raster,
+        )?;
         if let Some(part) = kentos_formats::multidim::cube::Part::of(raster) {
             let reader = netcdf_reader(&source, &part, RASTER_READER_BUDGET)?;
             return Ok(RasterOpen {
                 reader,
                 block: Box::new(move |need| source.read(need.offset, need.len)),
-                jpeg: Box::new(|_| Err("NetCDF'in dilimi JPEG değil.".to_owned())),
+                jpeg: Box::new(jpeg_pixels),
             });
         }
-        let size = source.size();
-        let head = source.read(0, size.min(16))?;
-        let reader = if tiff::sniff(&head) {
-            let mut store = ByteStore::new();
-            let mut taken = 0u64;
-            let t = loop {
-                match tiff::parse(&store, size).map_err(|e| e.0)? {
-                    Step::Done(t) => break t,
-                    Step::Need(n) => {
-                        taken += n.len;
-                        if taken > HEADER_MOST {
-                            return Err("TIFF'in başlığı çok büyük.".into());
-                        }
-                        store.put(n.offset, source.read(n.offset, n.len)?);
-                    }
-                }
+        let head = source.read(0, source.size().min(64))?;
+        if vrt::sniff(&head) {
+            // A mosaic's files are beside its VRT (docs/adr/0517 §2): an embedded VRT has no folder to find them in.
+            let Some(path) = key.strip_prefix("file:").map(PathBuf::from) else {
+                return Err(
+                    "Gömülü mozaik (VRT) açılmaz: dosyaları yanında olmalı; mozaiği bağlı dosya olarak ekleyin."
+                        .into(),
+                );
             };
-            Reader::tiff(&t, None, RASTER_READER_BUDGET).map_err(|e| e.0)?
-        } else if kentos_formats::raster::png::sniff(&head) {
-            if size > IMAGE_MOST {
-                return Err(format!(
-                    "PNG {} MB; en çok {} MB okunur.",
-                    size >> 20,
-                    IMAGE_MOST >> 20
-                ));
-            }
-            let p = kentos_formats::raster::png::decode(&source.read(0, size)?).map_err(|e| e.0)?;
-            Reader::image(
-                p.width,
-                p.height,
-                p.bands,
-                p.samples,
-                p.nodata,
-                None,
-                RASTER_READER_BUDGET,
-            )
-            .map_err(|e| e.0)?
-        } else if head.starts_with(&[0xFF, 0xD8]) {
-            return Err(
-                "JPEG raster yalnız masaüstünde okunur; GeoTIFF ya da PNG'ye çevirin.".into(),
-            );
-        } else {
-            return Err("Rasterin dosyası GeoTIFF, TIFF ya da PNG değil.".into());
-        };
-        let tiled = tiff::sniff(&head);
+            let text = mosaic_text(source.read(0, source.size().min(vrt::MAX_TEXT as u64 + 1))?)?;
+            let (reader, members) =
+                mosaic_reader(&path, &text, RASTER_READER_BUDGET, |p, each| {
+                    let bytes = Self::file_bytes(p, "Rasterin")?;
+                    reader_of(&bytes, each).map(|(r, _)| r)
+                })?;
+            return Ok(RasterOpen {
+                reader,
+                block: Box::new(move |need| {
+                    if need.member > 0 {
+                        read_member(&members, need)
+                    } else {
+                        Err("Mozaiğin bu bloğu okunamadı.".to_owned())
+                    }
+                }),
+                jpeg: Box::new(jpeg_pixels),
+            });
+        }
+        let (reader, tiled) = reader_of(&source, RASTER_READER_BUDGET)?;
         Ok(RasterOpen {
             reader,
             block: Box::new(move |need| {
@@ -380,7 +372,7 @@ impl Files for LocalFiles {
                     Err("Rasterin bu bloğu okunamadı.".to_owned())
                 }
             }),
-            jpeg: Box::new(|_| Err("JPEG sıkıştırmalı TIFF yalnız masaüstünde okunur.".to_owned())),
+            jpeg: Box::new(jpeg_pixels),
         })
     }
 
@@ -396,6 +388,41 @@ impl Files for LocalFiles {
             read: Box::new(move |offset, len| source.read(offset, len)),
         })
     }
+}
+
+/// A raster's reader from its bytes and whether its blocks are read later from them (a TIFF read in pieces) or it is in
+/// memory (a PNG or JPEG decoded whole); why not.
+fn reader_of(source: &Bytes, budget: usize) -> Result<(Reader, bool), String> {
+    let size = source.size();
+    let head = source.read(0, size.min(16))?;
+    if tiff::sniff(&head) {
+        let mut store = ByteStore::new();
+        let mut taken = 0u64;
+        let t = loop {
+            match tiff::parse(&store, size).map_err(|e| e.0)? {
+                Step::Done(t) => break t,
+                Step::Need(n) => {
+                    taken += n.len;
+                    if taken > HEADER_MOST {
+                        return Err("TIFF'in başlığı çok büyük.".into());
+                    }
+                    store.put(n.offset, source.read(n.offset, n.len)?);
+                }
+            }
+        };
+        return Ok((Reader::tiff(&t, None, budget).map_err(|e| e.0)?, true));
+    }
+    if kentos_formats::raster::png::sniff(&head) || is_jpeg(&head) {
+        if size > IMAGE_MOST {
+            return Err(format!(
+                "Resim {} MB; en çok {} MB okunur.",
+                size >> 20,
+                IMAGE_MOST >> 20
+            ));
+        }
+        return Ok((picture_reader(&source.read(0, size)?, budget)?, false));
+    }
+    Err("Rasterin dosyası GeoTIFF, TIFF, PNG ya da JPEG değil.".into())
 }
 
 /// A file written beside its place, then renamed.

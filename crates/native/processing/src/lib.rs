@@ -32,6 +32,7 @@ pub mod batch_table;
 pub mod builtin;
 pub mod categories;
 pub mod cloud_files;
+pub mod raster_files;
 pub mod command;
 pub mod designer;
 pub mod expression;

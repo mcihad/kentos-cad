@@ -166,20 +166,7 @@ pub(super) struct Opened {
     members: Vec<PathBuf>,
 }
 
-/// A mosaic's file's block (docs/adr/0517 §2): the file opened for the read and closed after, so that a mosaic of
-/// thousands of files holds no handle of its own.
-pub(crate) fn read_member(members: &[PathBuf], need: &BlockNeed) -> Result<Vec<u8>, String> {
-    let path = need
-        .member
-        .checked_sub(1)
-        .and_then(|m| members.get(m as usize))
-        .ok_or_else(|| "Mozaiğin böyle bir dosyası yok.".to_owned())?;
-    if need.file != 0 {
-        return Err("Mozaiğin dosyalarının önizleme piramidi okunmaz.".into());
-    }
-    let file = File::open(path).map_err(|e| format!("“{}” açılamadı: {e}.", path.display()))?;
-    read_at(&file, need.offset, need.len)
-}
+pub(crate) use kentos_processing::raster_files::{jpeg_pixels, jpeg_size, read_at, read_member};
 
 impl Opened {
     /// A run of the raster's bytes: its file's, its pyramid's or its own.
@@ -271,44 +258,6 @@ impl Opened {
     }
 }
 
-/// `len` bytes of `file` from `offset`, without moving a shared cursor.
-pub(crate) fn read_at(file: &File, offset: u64, len: u64) -> Result<Vec<u8>, String> {
-    let mut out = vec![0u8; usize::try_from(len).map_err(|_| "Blok çok büyük.".to_owned())?];
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::FileExt;
-        file.read_exact_at(&mut out, offset)
-            .map_err(|e| format!("Raster dosyası okunamadı: {e}."))?;
-    }
-    #[cfg(windows)]
-    {
-        use std::os::windows::fs::FileExt;
-        let mut done = 0;
-        while done < out.len() {
-            let n = file
-                .seek_read(&mut out[done..], offset + done as u64)
-                .map_err(|e| format!("Raster dosyası okunamadı: {e}."))?;
-            if n == 0 {
-                return Err("Raster dosyası beklenenden kısa.".into());
-            }
-            done += n;
-        }
-    }
-    Ok(out)
-}
-
-/// A JPEG block's or image's pixels (zune-jpeg) and their components.
-pub(crate) fn jpeg_pixels(stream: &[u8]) -> Result<(Vec<u8>, u32), String> {
-    use zune_jpeg::JpegDecoder;
-    use zune_jpeg::zune_core::bytestream::ZCursor;
-    use zune_jpeg::zune_core::colorspace::ColorSpace;
-    use zune_jpeg::zune_core::options::DecoderOptions;
-    let options = DecoderOptions::default().jpeg_set_out_colorspace(ColorSpace::RGB);
-    let mut d = JpegDecoder::new_with_options(ZCursor::new(stream), options);
-    let pixels = d.decode().map_err(|e| format!("JPEG çözülemedi: {e}."))?;
-    Ok((pixels, 3))
-}
-
 /// A linked file's identity for its pyramid: its path, size and change time.
 fn file_identity(path: &std::path::Path) -> Option<String> {
     let meta = std::fs::metadata(path).ok()?;
@@ -385,27 +334,14 @@ fn open_mosaic(
     size: u64,
     budget: usize,
 ) -> Result<ReaderOpen, String> {
-    use kentos_formats::raster::vrt;
-    if size > vrt::MAX_TEXT as u64 {
+    if size > kentos_formats::raster::vrt::MAX_TEXT as u64 {
         return Err("VRT dosyası 16 MB'tan büyük.".into());
     }
-    let text = String::from_utf8(source.read(0, size)?)
-        .map_err(|_| "VRT dosyası UTF-8 değil.".to_owned())?;
-    let folder = path
-        .parent()
-        .map(std::path::Path::to_path_buf)
-        .unwrap_or_default();
-    let (reader, members) = vrt::open_mosaic(&text, &folder, budget, |p, each| {
-        let head = File::open(p).ok().and_then(|f| {
-            let n = f.metadata().ok()?.len().min(64);
-            read_at(&f, 0, n).ok()
-        });
-        if head.as_deref().is_some_and(vrt::sniff) {
-            return Err("mozaiğin içinde mozaik açılmaz".into());
-        }
-        open_reader_part(&Origin::File(p.to_path_buf()), None, each).map(|r| r.reader)
-    })
-    .map_err(|e| e.0)?;
+    let text = kentos_processing::raster_files::mosaic_text(source.read(0, size)?)?;
+    let (reader, members) =
+        kentos_processing::raster_files::mosaic_reader(path, &text, budget, |p, each| {
+            open_reader_part(&Origin::File(p.to_path_buf()), None, each).map(|r| r.reader)
+        })?;
     Ok(ReaderOpen {
         reader,
         source: None,
@@ -654,19 +590,6 @@ pub(crate) fn open_reader_part(
         identity: identity.filter(|_| tiled),
         members: Vec::new(),
     })
-}
-
-/// A JPEG's size from its header (zune-jpeg).
-pub(super) fn jpeg_size(data: &[u8]) -> Result<(u32, u32), String> {
-    use zune_jpeg::JpegDecoder;
-    use zune_jpeg::zune_core::bytestream::ZCursor;
-    let mut d = JpegDecoder::new(ZCursor::new(data));
-    d.decode_headers()
-        .map_err(|e| format!("JPEG okunamadı: {e}."))?;
-    let (w, h) = d
-        .dimensions()
-        .ok_or_else(|| "JPEG'in boyu yok.".to_owned())?;
-    Ok((w as u32, h as u32))
 }
 
 /// A raster the scene draws: where it is and, once a worker opened it, the opened one.

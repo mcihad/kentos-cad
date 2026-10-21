@@ -2944,6 +2944,7 @@ dependencies = [
  "kentos-style-core",
  "serde",
  "serde_json",
+ "zune-jpeg 0.5.15",
 ]
 
 [[package]]
