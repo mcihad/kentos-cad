@@ -56,7 +56,12 @@ fn session(file: &Value) -> NetworkSession {
                 0,
                 bulge_path_edges(&pts, None, false),
                 attr(e, "yon"),
-                vec![attr(e, "hiz")],
+                file["definition"]["costs"]
+                    .as_array()
+                    .expect("costs")
+                    .iter()
+                    .map(|c| attr(e, c["field"].as_str().expect("a field")))
+                    .collect(),
                 e["closed"].as_bool().unwrap_or(false),
             );
             edge.facts = rules.access.facts.iter().map(|f| attr(e, f)).collect();
@@ -88,7 +93,7 @@ fn profiles_and_closures_give_what_the_independent_reference_gives() {
             let cost = c["cost"].as_u64().unwrap() as usize;
             let got = s.route(&stops, &[], 1.0, cost, Reorder::None);
             if c["unreachable"].as_bool() == Some(true) {
-                assert_eq!(got.err(), Some(Refusal::Unreachable(0, 1)), "{name}");
+                assert!(matches!(got, Err(Refusal::Unreachable(0, 1, _))), "{name}");
                 continue;
             }
             let r = got.unwrap_or_else(|e| panic!("{name} ({round}): {e:?}"));
@@ -150,13 +155,52 @@ fn weekdays_and_hours_give_what_the_independent_reference_gives() {
             let cost = c["cost"].as_u64().unwrap() as usize;
             let got = s.route(&stops, &[], 1.0, cost, Reorder::None);
             if c["unreachable"].as_bool() == Some(true) {
-                assert_eq!(got.err(), Some(Refusal::Unreachable(0, 1)), "{name}");
+                assert!(matches!(got, Err(Refusal::Unreachable(0, 1, _))), "{name}");
                 continue;
             }
             let r = got.unwrap_or_else(|e| panic!("{name} ({round}): {e:?}"));
             near(r.cost, num(&c["total"]), name);
             near(r.totals[0].expect("a length"), num(&c["totals"][0]), name);
             near(r.totals[1].expect("minutes"), num(&c["totals"][1]), name);
+        }
+    }
+}
+
+/// Why two stops have no way (docs/adr/0570) against fixtures/network/v1/blocked.json
+/// (`scripts/fixtures/network_blocked_cases.py`: a plain Dijkstra by length with nothing closed, each edge's reason
+/// from the ADR's rules, no KentOS code): whether a way exists, and if not the refusal's `blocked` exactly.
+#[test]
+fn an_unreachable_stop_says_what_shuts_the_way_as_the_independent_reference() {
+    let path = format!(
+        "{}/../../../fixtures/network/v1/blocked.json",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let file: Value =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("the fixture")).expect("JSON");
+    assert_eq!(file["format"], "kentos.network-blocked");
+    let mut s = session(&file);
+    let cases = file["cases"].as_array().expect("cases");
+    assert_eq!(cases.len(), 14);
+    for c in cases {
+        let name = c["name"].as_str().expect("a name");
+        s.set_access(c["profile"].as_str(), c["day"].as_str())
+            .unwrap_or_else(|e| panic!("{name}: {e}"));
+        s.set_time(c["time"].as_f64());
+        let stops = [point(&c["from"]), point(&c["to"])];
+        let barriers: Vec<Vec2> = c["barriers"].as_array().unwrap().iter().map(point).collect();
+        let cost = c["cost"].as_u64().unwrap() as usize;
+        let got = s.route(&stops, &barriers, 1.0, cost, Reorder::None);
+        if c["reachable"].as_bool() == Some(true) {
+            assert!(got.is_ok(), "{name}: {got:?}");
+            continue;
+        }
+        let Err(Refusal::Unreachable(0, 1, why)) = got else {
+            panic!("{name}: {got:?}")
+        };
+        let json: Value = serde_json::from_str(&why.json()).expect("JSON");
+        assert_eq!(json, c["blocked"], "{name}: {}", why.words());
+        if barriers.is_empty() {
+            assert_eq!(s.blocked_between(stops[0], stops[1], 1.0, cost), Some(why), "{name}");
         }
     }
 }

@@ -253,6 +253,27 @@ pub fn point_of(e: &Entity) -> Option<Vec2> {
 }
 
 /// The objects found on the network within `reach` (in their order, with their points) and those that are not.
+/// Why pairs of points have no way between them with cost `cost` (docs/adr/0570): the first three as
+/// “A → B: …”, and how many more.
+pub fn unreached_words(
+    s: &NetworkSession,
+    pairs: &[(String, Vec2, String, Vec2)],
+    reach: f64,
+    cost: usize,
+) -> String {
+    let said: Vec<String> = pairs
+        .iter()
+        .take(3)
+        .filter_map(|(a, pa, b, pb)| {
+            let why = s.blocked_between(*pa, *pb, reach, cost)?;
+            Some(format!("{a} → {b}: {}", why.words()))
+        })
+        .collect();
+    let more = pairs.len().saturating_sub(3);
+    let tail = if more > 0 { format!("; {more} tane daha") } else { String::new() };
+    format!("{}{tail}", said.join("; "))
+}
+
 pub fn places_of<'e>(
     s: &NetworkSession,
     objects: &[&'e Entity],

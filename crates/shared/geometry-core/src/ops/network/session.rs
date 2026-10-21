@@ -8,6 +8,7 @@
 //! it is asked on every pointer move.
 
 use super::access::{Access, Varied, day_of};
+use super::blocked::{Blocked, blocked};
 use super::area::{AreaQuery, service_lines, service_polygons};
 use super::check::{Checked, ProblemKind, check};
 use super::closest::{Nearest, nearest};
@@ -88,14 +89,15 @@ impl Missing {
 }
 
 /// Why a question has no answer: a point (by its index) that finds no network, too few or too many stops, no order
-/// of them that can be travelled, two stops (by their order) with no way between, breaks that are not rising numbers.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// of them that can be travelled, two stops (by their order) with no way between and why (docs/adr/0570), breaks that
+/// are not rising numbers.
+#[derive(Clone, Debug, PartialEq)]
 pub enum Refusal {
     NotFound(Missing, usize),
     TooFew,
     TooMany,
     NoOrder,
-    Unreachable(usize, usize),
+    Unreachable(usize, usize, Blocked),
     Breaks,
 }
 
@@ -110,8 +112,8 @@ impl Refusal {
             Missing::Origin | Missing::Start => "başlangıç",
             Missing::Target => "varış",
         };
-        match *self {
-            Refusal::NotFound(m, at) => {
+        match self {
+            &Refusal::NotFound(m, at) => {
                 format!("{}. {} ağa {within} içinde değil.", at + 1, place(m))
             }
             Refusal::TooFew => "En az iki durak gerekir.".into(),
@@ -123,12 +125,8 @@ impl Refusal {
                 "Durakları her sırayla gezen bir yol yok; bazı duraklar birbirine ulaşamıyor."
                     .into()
             }
-            Refusal::Unreachable(a, b) => {
-                format!(
-                    "{}. ve {}. duraklar arasında yol yok (kapalı kenar, tek yön ya da kopuk ağ).",
-                    a + 1,
-                    b + 1
-                )
+            Refusal::Unreachable(a, b, why) => {
+                format!("{}. ve {}. duraklar arasında yol yok: {}.", a + 1, b + 1, why.words())
             }
             Refusal::Breaks => "Aralıklar artan, sıfırdan büyük sayılar olmalı.".into(),
         }
@@ -141,8 +139,8 @@ impl Refusal {
             Refusal::TooFew => r#"{"error":"tooFew"}"#.into(),
             Refusal::TooMany => r#"{"error":"tooMany"}"#.into(),
             Refusal::NoOrder => r#"{"error":"noOrder"}"#.into(),
-            Refusal::Unreachable(a, b) => {
-                format!(r#"{{"error":"unreachable","between":[{a},{b}]}}"#)
+            Refusal::Unreachable(a, b, why) => {
+                format!(r#"{{"error":"unreachable","between":[{a},{b}],"blocked":{}}}"#, why.json())
             }
             Refusal::Breaks => r#"{"error":"breaks"}"#.into(),
         }
@@ -595,6 +593,14 @@ impl NetworkSession {
         })
     }
 
+    /// Why `from` and `to` have no way with cost `cost` (docs/adr/0570); none when either finds no network within
+    /// `reach`. Asked of a pair a question found unreachable.
+    pub fn blocked_between(&self, from: Vec2, to: Vec2, reach: f64, cost: usize) -> Option<Blocked> {
+        let g = &self.graph;
+        let (a, b) = (g.locate(from, reach)?, g.locate(to, reach)?);
+        Some(blocked(g, &a, &b, cost.min(g.costs - 1), &[]))
+    }
+
     /// The place nearest `at` within `reach`, if any.
     pub fn locate(&self, at: Vec2, reach: f64) -> Option<Place> {
         self.graph.locate(at, reach).map(|l| Place {
@@ -643,7 +649,10 @@ impl NetworkSession {
             Err(RouteError::TooFew) => Err(Refusal::TooFew),
             Err(RouteError::TooMany) => Err(Refusal::TooMany),
             Err(RouteError::NoOrder) => Err(Refusal::NoOrder),
-            Err(RouteError::Unreachable(a, b)) => Err(Refusal::Unreachable(a, b)),
+            Err(RouteError::Unreachable(a, b)) => {
+                let why = blocked(g, &stops[a], &stops[b], cost.min(g.costs - 1), &barriers);
+                Err(Refusal::Unreachable(a, b, why))
+            }
         }
     }
 

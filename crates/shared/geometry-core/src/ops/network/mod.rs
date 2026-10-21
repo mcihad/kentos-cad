@@ -8,6 +8,7 @@
 
 pub mod access;
 pub mod area;
+pub mod blocked;
 pub mod check;
 pub mod clock;
 pub mod closest;
@@ -22,6 +23,7 @@ pub mod subnetworks;
 pub mod terminals;
 pub mod turns;
 
+pub use blocked::{Blocked, Blocker, Why};
 pub use access::{Access, AccessRules, ClosureRule, Closing, Varied, day_of, hours_of, weekday_of, weekdays_of};
 pub use check::{Checked, Problem, ProblemKind};
 pub use graph::{BuildReport, EdgeIn, Graph, JunctionIn, Location, Role};

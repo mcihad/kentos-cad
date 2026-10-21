@@ -139,7 +139,8 @@ pub struct Window {
 }
 
 impl Window {
-    /// The form of the network the window shows, as typed.
+    /// The form of the network the window shows, as typed (the tests read it).
+    #[cfg(test)]
     pub fn form(&self) -> Option<&NetworkForm> {
         self.chosen.and_then(|i| self.forms.get(i))
     }

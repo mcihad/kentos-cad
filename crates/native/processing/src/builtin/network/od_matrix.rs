@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 
 use super::{
     RunNetwork, cost_value, missing_note, name_of, network_param, places_of, points_param,
-    reach_param, run_network, time_param, date_param, profile_param,
+    reach_param, run_network, time_param, date_param, profile_param, unreached_words,
 };
 use crate::builtin::geometry::{edit_object, layer_param_styled};
 use crate::types::{
@@ -94,6 +94,26 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         Err(_) => return RunResult::refused("Noktalar ağda bulunamadı.".into()),
     };
     let name = cost_names[cost].clone();
+    // With neither a count nor a cutoff every pair has a row; a pair without one has no way (docs/adr/0570).
+    if k.is_none() && cutoff.is_none() {
+        let mut unreached = Vec::new();
+        for (i, row) in rows.iter().enumerate() {
+            for (j, (t, b)) in targets.iter().enumerate() {
+                if !row.iter().any(|f| f.target == j) {
+                    let (o, a) = origins[i];
+                    unreached.push((name_of(o), a, name_of(t), *b));
+                }
+            }
+        }
+        if !unreached.is_empty() {
+            feedback.warn(format!(
+                "{}: {} başlangıç–varış çiftinin arasında yol yok; tabloda yoklar (sıfır sayılmadı). {}.",
+                def.name,
+                unreached.len(),
+                unreached_words(&session, &unreached, reach, cost)
+            ));
+        }
+    }
     let lines = v.flag("lines");
     let layer = v.layer("layer").id.clone();
     let mut table: Vec<Vec<String>> = Vec::new();

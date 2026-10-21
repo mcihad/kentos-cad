@@ -327,6 +327,9 @@ Liste:
 - [ ] `CBS-29` raster oturtmanın kaydı (ADR 0518, 19 Ekim): web'de gerekenler: `cad.rasters.georef`'in işleyicisi (WASM'da
   `rasters_georef`'in planı ve yeniden örneklemesi), Raster oturt penceresinde Denetim ve Ad sütunları, hedeflerin sistemi, kayıttan
   açılış, `.points` alışverişi; `.kcad` şema 88'in TS kodeği ve sütunların rasterinin 5. seçeneği; TS türleri üretildi.
+- [ ] `CBS-26` ulaşılamayanın nedeni (ADR 0570, 21 Ekim): web'de gerekenler: ağın işçisinde reddin `blocked`'ı ve
+  `NetworkSession.blocked_between` (WASM bağlayıcısı), `model/networkAnswers.ts`'in ret sözü nedeniyle, İşlemler'in Maliyet matrisi ve En
+  yakın tesis sözleri.
 - [ ] `CBS-26` haftanın günü ve saatle kapanma (ADR 0568, 21 Ekim): web'de gerekenler: ağın işçisinde `NetworkSession.set_time_json`
   (WASM bağlayıcısı), `model/networkInput.ts`'in gün ve saat alanlarının değerleri, Ağlar penceresinde Gün ve saat
   (`model/networkForm.ts`, ortak `form.json`), Saat (Z)'in saatli kapanmalı ağda da sunulması, İşlemler'in saatli kapanma sözleri;
@@ -2320,6 +2323,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilk çıkar); `.kcad` şema 87; Ağlar penceresi, araçlarda Saat (Z), İşlemler'de Kalkış saati, Python `Network.time`. Kalan: araç
   profilleri, tarih aralıklı kapanma, Dönüş çiz aracı, dış yönlendirici, bağlı katmanın revizyonu. —
   **19 Ekim, [ADR 0521](docs/adr/0521-turns-levels-and-time-profiles.md).**
+- [ ] `CBS-26` ulaşılamayanın nedeni (dilim): yolu olmayan iki yer için her kenarın açık olduğu ağda uzunlukça en kısa yol ve onu
+  kapatan kenarlar nesneleri ve nedenleriyle (ifade, profil, gün, saat, yön alanı, tek yön, maliyet değeri yok) ve engeller; yol yoksa
+  kopuk ağ, kapatan yoksa dönüş, düğüm ya da cihaz (`ops::network::blocked`, `Refusal::Unreachable`'ın nedeni, JSON'un `blocked`'ı,
+  `NetworkSession::blocked_between`); Maliyet matrisi satırı olmayan çiftleri sayar ve söyler, En yakın tesis ulaşamayan olayın nedenini
+  söyler; Python'un reddi nedeniyle. Kalan: en küçük kesim, Başka'nın ayrıntısı, hizmet alanı. —
+  **21 Ekim, [ADR 0570](docs/adr/0570-why-a-stop-is-unreachable.md).**
 - [ ] `CBS-26` haftanın günü ve saatle kapanma (dilim): kapanmanın `days` (`Pzt-Cum`, `Cmt, Paz`, `1-5`) ve `hours` (`22:00-06:00`;
   ertesi güne uzanan pencere) alanları, `.kcad` şema 96; saatsiz kapanma sorunun gününde bütün gün, saatli kapanma yalnız saatle:
   hız maliyetinin saati haftalık (`Clock::week`: sorunun günü, sonraki beş gün ve önceki gün) ve pencerelerde sıfır hız (bekler ya da

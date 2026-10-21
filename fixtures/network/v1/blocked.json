@@ -1,0 +1,636 @@
+{
+ "format": "kentos.network-blocked",
+ "version": 1,
+ "definition": {
+  "id": "ag-1",
+  "name": "Yollar",
+  "kind": "road",
+  "edges": [
+   {
+    "layer": "yol"
+   }
+  ],
+  "connect": "ends",
+  "tolerance": 0.01,
+  "direction": {
+   "kind": "field",
+   "field": "yon",
+   "forward": [
+    "FT"
+   ],
+   "backward": [
+    "TF"
+   ],
+   "closed": [
+    "N"
+   ]
+  },
+  "costs": [
+   {
+    "name": "Süre",
+    "kind": "speed",
+    "field": "hiz",
+    "speed": 50.0
+   },
+   {
+    "name": "Ücret",
+    "kind": "field",
+    "field": "ucret",
+    "unit": "TL"
+   }
+  ],
+  "profiles": [
+   {
+    "name": "Kamyon",
+    "limits": [
+     {
+      "field": "agirlik",
+      "value": 18.0
+     }
+    ]
+   }
+  ],
+  "closures": {
+   "from": "kapanis_bas",
+   "to": "kapanis_son",
+   "hours": "kapanis_saat"
+  }
+ },
+ "edges": [
+  {
+   "id": 1,
+   "pts": [
+    [
+     600000.0,
+     4300000.0
+    ],
+    [
+     600103.18,
+     4300006.58
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   }
+  },
+  {
+   "id": 2,
+   "pts": [
+    [
+     600103.18,
+     4300006.58
+    ],
+    [
+     600201.06,
+     4300005.64
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   },
+   "closed": true
+  },
+  {
+   "id": 3,
+   "pts": [
+    [
+     600201.06,
+     4300005.64
+    ],
+    [
+     600303.71,
+     4300007.99
+    ]
+   ],
+   "attrs": {
+    "ucret": "5",
+    "yon": "N"
+   }
+  },
+  {
+   "id": 4,
+   "pts": [
+    [
+     600005.3,
+     4300108.46
+    ],
+    [
+     600100.53,
+     4300104.7
+    ]
+   ],
+   "attrs": {
+    "ucret": "5",
+    "yon": "FT"
+   }
+  },
+  {
+   "id": 5,
+   "pts": [
+    [
+     600100.53,
+     4300104.7
+    ],
+    [
+     600200.53,
+     4300104.23
+    ]
+   ],
+   "attrs": {
+    "ucret": "5",
+    "agirlik": "10"
+   }
+  },
+  {
+   "id": 6,
+   "pts": [
+    [
+     600200.53,
+     4300104.23
+    ],
+    [
+     600305.3,
+     4300107.05
+    ]
+   ],
+   "attrs": {
+    "ucret": "5",
+    "kapanis_bas": "2026-11-01",
+    "kapanis_son": "2026-11-05"
+   }
+  },
+  {
+   "id": 7,
+   "pts": [
+    [
+     600003.71,
+     4300200.0
+    ],
+    [
+     600101.06,
+     4300207.52
+    ]
+   ],
+   "attrs": {
+    "ucret": "5",
+    "kapanis_saat": "08:00-10:00"
+   }
+  },
+  {
+   "id": 8,
+   "pts": [
+    [
+     600101.06,
+     4300207.52
+    ],
+    [
+     600203.18,
+     4300207.52
+    ]
+   ],
+   "attrs": {}
+  },
+  {
+   "id": 9,
+   "pts": [
+    [
+     600203.18,
+     4300207.52
+    ],
+    [
+     600300.0,
+     4300200.0
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   }
+  },
+  {
+   "id": 10,
+   "pts": [
+    [
+     600005.3,
+     4300307.05
+    ],
+    [
+     600104.77,
+     4300304.23
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   }
+  },
+  {
+   "id": 11,
+   "pts": [
+    [
+     600104.77,
+     4300304.23
+    ],
+    [
+     600209.01,
+     4300304.7
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   }
+  },
+  {
+   "id": 12,
+   "pts": [
+    [
+     600007.95,
+     4300502.82
+    ],
+    [
+     600101.59,
+     4300500.94
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   },
+   "closed": true
+  },
+  {
+   "id": 13,
+   "pts": [
+    [
+     600007.95,
+     4300502.82
+    ],
+    [
+     600009.01,
+     4300602.35
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   }
+  },
+  {
+   "id": 14,
+   "pts": [
+    [
+     600009.01,
+     4300602.35
+    ],
+    [
+     600104.77,
+     4300600.94
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   }
+  },
+  {
+   "id": 15,
+   "pts": [
+    [
+     600101.59,
+     4300500.94
+    ],
+    [
+     600104.77,
+     4300600.94
+    ]
+   ],
+   "attrs": {
+    "ucret": "5",
+    "yon": "FT"
+   }
+  }
+ ],
+ "cases": [
+  {
+   "name": "ifade-ve-yon-alani",
+   "from": [
+    600000.0,
+    4300000.0
+   ],
+   "to": [
+    600303.71,
+    4300007.99
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "blocked": {
+    "kind": "by",
+    "edges": [
+     {
+      "id": 2,
+      "why": "expression"
+     },
+     {
+      "id": 3,
+      "why": "shut"
+     }
+    ],
+    "barriers": []
+   }
+  },
+  {
+   "name": "ters-yon-profil-tarih",
+   "from": [
+    600305.3,
+    4300107.05
+   ],
+   "to": [
+    600005.3,
+    4300108.46
+   ],
+   "cost": 1,
+   "profile": "Kamyon",
+   "day": "2026-11-03",
+   "time": null,
+   "barriers": [],
+   "blocked": {
+    "kind": "by",
+    "edges": [
+     {
+      "id": 6,
+      "why": "date"
+     },
+     {
+      "id": 5,
+      "why": "profile"
+     },
+     {
+      "id": 4,
+      "why": "oneWay"
+     }
+    ],
+    "barriers": []
+   }
+  },
+  {
+   "name": "ileri-acik",
+   "from": [
+    600005.3,
+    4300108.46
+   ],
+   "to": [
+    600305.3,
+    4300107.05
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "reachable": true
+  },
+  {
+   "name": "ileri-profil",
+   "from": [
+    600005.3,
+    4300108.46
+   ],
+   "to": [
+    600305.3,
+    4300107.05
+   ],
+   "cost": 0,
+   "profile": "Kamyon",
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "blocked": {
+    "kind": "by",
+    "edges": [
+     {
+      "id": 5,
+      "why": "profile"
+     }
+    ],
+    "barriers": []
+   }
+  },
+  {
+   "name": "ileri-tarih",
+   "from": [
+    600005.3,
+    4300108.46
+   ],
+   "to": [
+    600305.3,
+    4300107.05
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": "2026-11-05",
+   "time": null,
+   "barriers": [],
+   "blocked": {
+    "kind": "by",
+    "edges": [
+     {
+      "id": 6,
+      "why": "date"
+     }
+    ],
+    "barriers": []
+   }
+  },
+  {
+   "name": "ileri-tarih-sonrasi",
+   "from": [
+    600005.3,
+    4300108.46
+   ],
+   "to": [
+    600305.3,
+    4300107.05
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": "2026-11-06",
+   "time": null,
+   "barriers": [],
+   "reachable": true
+  },
+  {
+   "name": "saat-uzunluk",
+   "from": [
+    600003.71,
+    4300200.0
+   ],
+   "to": [
+    600300.0,
+    4300200.0
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": "2026-11-03",
+   "time": 540.0,
+   "barriers": [],
+   "blocked": {
+    "kind": "by",
+    "edges": [
+     {
+      "id": 7,
+      "why": "hours"
+     }
+    ],
+    "barriers": []
+   }
+  },
+  {
+   "name": "saat-sure-bekler",
+   "from": [
+    600003.71,
+    4300200.0
+   ],
+   "to": [
+    600300.0,
+    4300200.0
+   ],
+   "cost": 1,
+   "profile": null,
+   "day": "2026-11-03",
+   "time": 540.0,
+   "barriers": [],
+   "reachable": true
+  },
+  {
+   "name": "saat-disi",
+   "from": [
+    600003.71,
+    4300200.0
+   ],
+   "to": [
+    600300.0,
+    4300200.0
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": "2026-11-03",
+   "time": 600.0,
+   "barriers": [],
+   "reachable": true
+  },
+  {
+   "name": "ucret-yok",
+   "from": [
+    600003.71,
+    4300200.0
+   ],
+   "to": [
+    600300.0,
+    4300200.0
+   ],
+   "cost": 2,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "blocked": {
+    "kind": "by",
+    "edges": [
+     {
+      "id": 8,
+      "why": "cost"
+     }
+    ],
+    "barriers": []
+   }
+  },
+  {
+   "name": "engel",
+   "from": [
+    600005.3,
+    4300307.05
+   ],
+   "to": [
+    600209.01,
+    4300304.7
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [
+    [
+     600146.466,
+     4300304.4180000005
+    ]
+   ],
+   "blocked": {
+    "kind": "by",
+    "edges": [],
+    "barriers": [
+     0
+    ]
+   }
+  },
+  {
+   "name": "kopuk",
+   "from": [
+    600000.0,
+    4300000.0
+   ],
+   "to": [
+    600209.01,
+    4300304.7
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "blocked": {
+    "kind": "apart"
+   }
+  },
+  {
+   "name": "kisa-yol-kapali",
+   "from": [
+    600007.95,
+    4300502.82
+   ],
+   "to": [
+    600101.59,
+    4300500.94
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "blocked": {
+    "kind": "by",
+    "edges": [
+     {
+      "id": 12,
+      "why": "expression"
+     }
+    ],
+    "barriers": []
+   }
+  },
+  {
+   "name": "kisa-yol-ters",
+   "from": [
+    600101.59,
+    4300500.94
+   ],
+   "to": [
+    600007.95,
+    4300502.82
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "reachable": true
+  }
+ ]
+}

@@ -12,10 +12,11 @@ use serde_json::{Value, json};
 
 use super::{
     RunNetwork, cost_value, line_geometry, missing_note, name_of, network_param, places_of,
-    points_param, reach_param, run_network, time_param, date_param, profile_param,
+    points_param, reach_param, run_network, time_param, date_param, profile_param, unreached_words,
 };
 use crate::builtin::geometry::{edit_object, layer_param_styled};
 use crate::text::js_number;
+use kentos_geometry_core::geometry::dist;
 use crate::types::{
     ChangeSet, EnumOption, Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Resolved,
     RunContext, RunResult, Target, Tool, Values,
@@ -131,9 +132,23 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     let mut add = Vec::new();
     let mut table: Vec<Vec<String>> = Vec::new();
     let mut none = 0;
+    // Each incident reached by no facility and the facility nearest it as the crow flies (docs/adr/0570).
+    let mut unreached = Vec::new();
     for (i, row) in rows.iter().enumerate() {
         if row.is_empty() {
             none += 1;
+            let (o, a) = incidents[i];
+            if let Some((t, b)) = facilities
+                .iter()
+                .min_by(|x, y| dist(x.1, a).total_cmp(&dist(y.1, a)))
+            {
+                let pair = if reverse {
+                    (name_of(t), *b, name_of(o), a)
+                } else {
+                    (name_of(o), a, name_of(t), *b)
+                };
+                unreached.push(pair);
+            }
         }
         for (rank, f) in row.iter().enumerate() {
             let values: Vec<String> = (0..cost_names.len())
@@ -167,14 +182,12 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             }
         }
     }
-    if none > 0 {
+    if none > 0 && cutoff.is_some() {
+        feedback.warn(format!("{none} olaya üst sınır içinde ulaşılabilen tesis yok."));
+    } else if none > 0 {
         feedback.warn(format!(
-            "{none} olaya {}ulaşılabilen tesis yok.",
-            if cutoff.is_some() {
-                "üst sınır içinde "
-            } else {
-                ""
-            }
+            "{none} olaya ulaşılabilen tesis yok; en yakın tesisle: {}.",
+            unreached_words(&session, &unreached, reach, cost)
         ));
     }
     let mut columns = vec!["Olay".to_owned(), "Tesis".to_owned(), "Sıra".to_owned()];

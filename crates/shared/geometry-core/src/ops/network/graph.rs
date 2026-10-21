@@ -219,6 +219,8 @@ pub struct Graph {
     /// The access the costs are for, and what varying them for it closed.
     access: Access,
     varied: Varied,
+    /// Why each edge is closed to the access (docs/adr/0570); empty for none.
+    closing: Vec<Closing>,
 }
 
 /// A cut along an edge: where (metres from its start), the point and its order among all cuts.
@@ -889,6 +891,7 @@ impl Graph {
             base: None,
             access: Access::default(),
             varied: Varied::default(),
+            closing: Vec::new(),
         };
         if g.rules.turns.is_some() {
             g.turns = Some(g.turn_table(turns, &mut report));
@@ -1114,6 +1117,7 @@ impl Graph {
     fn vary_from(&mut self, access: Access, (fw0, bw0, clocks0): &Defined) {
         self.access = access;
         self.varied = Varied::default();
+        self.closing.clear();
         if access.is_none() {
             self.fw.clone_from(fw0);
             self.bw.clone_from(bw0);
@@ -1194,6 +1198,16 @@ impl Graph {
             };
         }
         self.varied.hours_unasked = self.varied.by_hours > 0 && access.time.is_none();
+        // An edge closed in hours is closed to a question only when its cost passes none at the question's moment.
+        for (e, c) in closing.iter_mut().enumerate() {
+            let shut_now = access
+                .time
+                .is_some_and(|t| windows.get(e).is_some_and(|w| w.iter().any(|w| w.0 <= t && t < w.1)));
+            if *c == Closing::Hours && !shut_now {
+                *c = Closing::Open;
+            }
+        }
+        self.closing = closing;
         if self.varied.by_hours == 0 || access.time.is_none() {
             return;
         }
@@ -1231,6 +1245,11 @@ impl Graph {
             }
         }
         speeds
+    }
+
+    /// Why edge `e` is closed to the access the costs are for (docs/adr/0570).
+    pub fn closing_of(&self, e: usize) -> Closing {
+        self.closing.get(e).copied().unwrap_or(Closing::Open)
     }
 
     /// Piece `p`'s cost `c` travelled the way it is drawn (`forward`) or against it.

@@ -180,7 +180,10 @@ def build():
         none = sum(1 for r in rows if not r)
         log = [FAR_NOTE.format("olay")]
         if none:
-            log.append(f"{none} olaya {'üst sınır içinde ' if cutoff is not None else ''}ulaşılabilen tesis yok.")
+            # Without a cutoff the words name what shuts the way (docs/adr/0570; network_blocked_cases.py), not
+            # written here: no case of this scene reaches it.
+            assert cutoff is not None, "an incident with no facility and no cutoff"
+            log.append(f"{none} olaya üst sınır içinde ulaşılabilen tesis yok.")
         expect = {
             "status": "ok",
             "summary": f"3 olay için {len(table)} tesis bulundu; {len(shapes)} yol “Yollar” ağında {COSTS[c]} ile yazıldı.",
