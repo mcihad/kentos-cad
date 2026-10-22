@@ -4,4 +4,4 @@ import type { ArcSeg } from "./ArcSeg";
 /**
  * A path's step: move, line, arc (a line to its start first, as Canvas does) or close.
  */
-export type Seg = { "m": [number, number] } | { "l": [number, number] } | { "a": ArcSeg } | "z";
+export type Seg = { "m": [number, number] } | { "l": [number, number] } | { "a": ArcSeg } | { "c": [[number, number], [number, number], [number, number]] } | "z";

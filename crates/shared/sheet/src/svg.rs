@@ -256,6 +256,14 @@ fn path_d(segs: &[Seg]) -> String {
                 let _ = write!(d, "L{} {}", p[0], p[1]);
                 cur = Some(*p);
             }
+            Seg::C(ps) => {
+                let _ = write!(
+                    d,
+                    "C{} {} {} {} {} {}",
+                    ps[0][0], ps[0][1], ps[1][0], ps[1][1], ps[2][0], ps[2][1]
+                );
+                cur = Some(ps[2]);
+            }
             Seg::A(a) => {
                 let start = arc_point(a, i64::from(a.start));
                 match cur {

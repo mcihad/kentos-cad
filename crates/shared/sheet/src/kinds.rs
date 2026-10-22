@@ -1085,7 +1085,7 @@ pub struct PolygonShape {
     pub points: Vec<[i32; 2]>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
@@ -1097,9 +1097,11 @@ pub enum ShapeKind {
     /// Its apex at the top centre.
     Triangle(Empty),
     Polygon(PolygonShape),
+    /// Analytic CAD curves; the frame is independent of their actual size.
+    Cad(crate::cad::CadShape),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

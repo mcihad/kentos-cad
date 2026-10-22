@@ -276,17 +276,27 @@ impl<'a> Nurbs<'a> {
 
     /// The curve as points, every chord within `tol` of it (its ends exact).
     pub fn tessellate(&self, tol: f64) -> Vec<Vec2> {
+        self.tessellate_bounded(tol, usize::MAX).unwrap_or_default()
+    }
+
+    /// The same tolerance rule with a hard point budget. None means invalid input or a budget
+    /// exhausted; no partial curve is returned (paper CAD output, ADR 0593).
+    pub fn tessellate_bounded(&self, tol: f64, limit: usize) -> Option<Vec<Vec2>> {
+        if !self.valid() || !tol.is_finite() || tol <= 0. || limit < 2 {
+            return None;
+        }
         let breaks = self.breaks();
-        let mut out = vec![self.point(breaks[0])];
+        let mut out = vec![self.point(*breaks.first()?)];
         for w in breaks.windows(2) {
             let (u0, u1) = (w[0], w[1]);
-            let p0 = *out.last().unwrap_or(&self.point(u0));
+            let p0 = *out.last()?;
             let p1 = self.point(u1);
-            // A span of a curve of degree two or more bends: halve it at least twice.
             let min = if self.degree >= 2 { 2 } else { 0 };
-            self.refine(tol, u0, p0, u1, p1, 0, min, &mut out);
+            if !self.refine(tol, u0, p0, u1, p1, 0, min, limit, &mut out) {
+                return None;
+            }
         }
-        out
+        Some(out)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -299,8 +309,12 @@ impl<'a> Nurbs<'a> {
         p1: Vec2,
         depth: u32,
         min: u32,
+        limit: usize,
         out: &mut Vec<Vec2>,
-    ) {
+    ) -> bool {
+        if out.len() >= limit {
+            return false;
+        }
         let um = 0.5 * (u0 + u1);
         let pm = self.point(um);
         let q1 = self.point(0.5 * (u0 + um));
@@ -309,11 +323,15 @@ impl<'a> Nurbs<'a> {
             js_max(chord_distance(pm, p0, p1), chord_distance(q1, p0, p1)),
             chord_distance(q3, p0, p1),
         );
+        if depth >= DEPTH && far > tol && limit != usize::MAX {
+            return false;
+        }
         if depth < DEPTH && (depth < min || far > tol) {
-            self.refine(tol, u0, p0, um, pm, depth + 1, min, out);
-            self.refine(tol, um, pm, u1, p1, depth + 1, min, out);
+            self.refine(tol, u0, p0, um, pm, depth + 1, min, limit, out)
+                && self.refine(tol, um, pm, u1, p1, depth + 1, min, limit, out)
         } else {
             out.push(p1);
+            true
         }
     }
 
@@ -751,5 +769,30 @@ mod tests {
         }
         assert_eq!(pts[0], v(1.0, 0.0));
         assert_eq!(*pts.last().unwrap(), v(0.0, 1.0));
+    }
+}
+
+#[cfg(test)]
+mod bounded_tests {
+    use super::*;
+    #[test]
+    fn bounded_tessellation_is_complete_or_fails_without_a_partial_curve() {
+        let ctrl = [Vec2::new(1., 0.), Vec2::new(1., 1.), Vec2::new(0., 1.)];
+        let knots = [0., 0., 0., 1., 1., 1.];
+        let weights = [1., core::f64::consts::FRAC_1_SQRT_2, 1.];
+        let n = Nurbs {
+            degree: 2,
+            ctrl: &ctrl,
+            knots: &knots,
+            weights: Some(&weights),
+        };
+        assert!(n.tessellate_bounded(1e-8, 2).is_none());
+        assert!(n.tessellate_bounded(0., 1000).is_none());
+        let points = n.tessellate_bounded(1e-4, 1000).unwrap();
+        assert_eq!(points.first(), Some(&ctrl[0]));
+        assert_eq!(points.last(), Some(&ctrl[2]));
+        for p in points {
+            assert!((p.x.hypot(p.y) - 1.).abs() < 1e-12);
+        }
     }
 }

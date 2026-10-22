@@ -176,6 +176,7 @@ pub mod polygon_regular {
 }
 pub mod curves_construct;
 pub mod cad_layouts;
+mod cad_paper;
 mod cad_source;
 pub mod file_import;
 pub mod file_import_dwg;

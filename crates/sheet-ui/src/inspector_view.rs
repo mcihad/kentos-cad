@@ -309,6 +309,17 @@ impl Designer {
                 .padding([8, 12]),
             );
         }
+        if chosen.len() == 1
+            && let Some(origin) = &chosen[0].cad_origin
+        {
+            let source = format!(
+                "Kaynak: {} · {} · {}. nesne",
+                origin.file.as_deref().unwrap_or("CAD çizimi"),
+                origin.layout,
+                origin.record.saturating_add(1)
+            );
+            col = col.push(container(label::caption(source)).padding([8, 12]));
+        }
         // The kind's own properties.
         if !self.kind_fields.is_empty() {
             let kind = kind_name(chosen[0]);

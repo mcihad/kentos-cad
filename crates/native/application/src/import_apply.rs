@@ -79,6 +79,7 @@ pub struct Applied {
 #[derive(Clone, Debug, Default)]
 pub struct Styles {
     pub layouts: Vec<kentos_commands::CadLayout>,
+    pub cad_source:Option<crate::cad_layouts::Source>,
     pub text: Vec<TextStyleDef>,
     pub dimension: Vec<DimensionStyleDef>,
     /// The file's line types with patterns and its line type scale (docs/adr/0313 §6).
@@ -571,7 +572,7 @@ fn apply_inner(
     styles: Styles,
     plan: &ImportPlan,
 ) -> Result<Applied, String> {
-    let sheets = crate::cad_layouts::merge(doc, &styles.layouts)?;
+    let sheets = crate::cad_layouts::merge_with_source(doc, &styles.layouts,styles.cad_source.as_ref())?;
     let mut prepared = prepare(doc, plan)?;
     let mut styles = ImportedStyles::new(doc.settings(), styles);
     let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets, &styles);
@@ -749,7 +750,7 @@ impl Progressive {
         styles: Styles,
         plan: &ImportPlan,
     ) -> Result<Self, String> {
-        let sheets = crate::cad_layouts::merge(doc, &styles.layouts)?;
+        let sheets = crate::cad_layouts::merge_with_source(doc, &styles.layouts,styles.cad_source.as_ref())?;
         let mut prepared = prepare(doc, plan)?;
         let styles = ImportedStyles::new(doc.settings(), styles);
         let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets, &styles);
@@ -1586,6 +1587,7 @@ mod tests {
         let mut def = block(1, "Pafta", None);
         def.entities.push(text_in("", "dxf-text-2"));
         let styles = Styles {
+            cad_source:None,
             layouts: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),

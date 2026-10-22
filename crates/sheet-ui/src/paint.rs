@@ -625,6 +625,21 @@ pub(crate) fn flatten(segments: &[Seg], xf: &Xf) -> Vec<Poly> {
                 };
             }
             Seg::L(p) => cur.pts.push(xf.pt(*p)),
+            Seg::C(ps) => {
+                if let Some(start) = cur.pts.last().copied() {
+                    let points = ps.map(|p| xf.pt(p));
+                    cur.pts.extend(
+                        kentos_sheet::cad::flatten_cubic(
+                            [f64::from(start.x), f64::from(start.y)],
+                            points.map(|p| [f64::from(p.x), f64::from(p.y)]),
+                            0.2,
+                        )
+                        .into_iter()
+                        .skip(1)
+                        .map(|p| Point::new(p[0] as f32, p[1] as f32)),
+                    );
+                }
+            }
             Seg::A(a) => cur.pts.extend(arc_points(a, xf)),
             Seg::Z => {
                 cur.closed = true;

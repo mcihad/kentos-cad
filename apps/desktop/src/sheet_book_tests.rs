@@ -650,3 +650,85 @@ fn sheet07_tools_screens() {
         println!("{}", path.display());
     }
 }
+
+#[test]
+#[ignore = "GPU pictures, run alone"]
+fn sheet08_analytic_paper_screens() {
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/commands/v1/cad.sheets.fit.json"
+    ))
+    .unwrap();
+    let mut model = kentos_domain::Document::from_snapshot(
+        serde_json::from_value(fixture["setup"].clone()).unwrap(),
+    )
+    .unwrap();
+    model.set_sheets(None).unwrap();
+    let mut layout = kentos_commands::CadLayout {
+        name: "Analitik pafta".into(),
+        width_mm: 297.,
+        height_mm: 210.,
+        ..Default::default()
+    };
+    let curves = [
+        serde_json::json!({"kind":"circle","c":{"x":0.06,"y":0.145},"r":0.025}),
+        serde_json::json!({"kind":"arc","c":{"x":0.15,"y":0.145},"r":0.025,"a0":0,"a1":4.7}),
+        serde_json::json!({"kind":"ellipse","c":{"x":0.24,"y":0.145},"major":{"x":0.025,"y":0.01},"ratio":0.4,"t0":0.3,"t1":5.2}),
+        serde_json::json!({"kind":"nurbs","degree":3,"ctrl":[{"x":0.035,"y":0.055},{"x":0.04,"y":0.12},{"x":0.09,"y":0.0},{"x":0.105,"y":0.06}],"knots":[0,0,0,0,1,1,1,1]}),
+        serde_json::json!({"kind":"polyline","pts":[{"x":0.14,"y":0.06},{"x":0.2,"y":0.06}],"bulges":[1,0],"widths":[[0.002,0.005],[0,0]],"closed":false}),
+        serde_json::json!({"kind":"text","p":{"x":0.035,"y":0.19},"text":"ANALİTİK PAFTA · Yay / Elips / NURBS","height":0.005,"rotation":0}),
+        serde_json::json!({"kind":"circle","c":{"x":0.24,"y":0.06},"r":0.0001}),
+    ];
+    for (mut raw, i) in curves.into_iter().zip(1..) {
+        raw["id"] = serde_json::json!(i);
+        raw["layerId"] = serde_json::json!("0");
+        raw["attrs"] = serde_json::json!({});
+        raw["color"] = serde_json::json!("#1747aa");
+        layout.entities.push(serde_json::from_value(raw).unwrap());
+    }
+    let sheets = kentos_native_application::cad_layouts::merge_with_source(
+        &model,
+        &[layout],
+        Some(&kentos_native_application::cad_layouts::Source {
+            file: "analytic.dxf".into(),
+            sha256: Some("a".repeat(64)),
+        }),
+    )
+    .unwrap();
+    model.set_sheets(sheets).unwrap();
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).unwrap();
+    let pdf=kentos_plot::book::book_pdf(&model,&[],"Test","2026-10-22").unwrap();
+    std::fs::write(out.join("sheet08-curves.pdf"),pdf.bytes).unwrap();
+    for (theme, text, width, height) in [
+        ("light", 13, 1440., 900.),
+        ("dark", 13, 1440., 900.),
+        ("dark", 18, 1100., 650.),
+    ] {
+        let (mut app, _store) = app_with_store("sheet08-curves");
+        app.settings.choose(&[
+            ("appearance.theme", serde_json::json!(theme)),
+            ("appearance.textSize", serde_json::json!(text)),
+        ]);
+        app.apply_settings();
+        let doc = Document::from_v2(model.to_snapshot_v2(), None).unwrap();
+        let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        drive(&mut app, task);
+        sheet(&mut app, Sheet::Tab(1));
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(width, height)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        sheet(&mut app, Sheet::ZoomPage);
+        snap.settle(&mut app, App::view, &mut update);
+        let image = snap.render(app.view(), &app.theme());
+        let(x0,y0,x1,y1,least)=if text==13{(301,222,1094,783,2000)}else{(328,250,734,537,400)};
+        let mut blue=0;
+        for y in y0..y1{for x in x0..x1{let at=(y*width as usize+x)*4;let p=&image.rgba[at..at+4];if p[2]>90&&p[0]<70&&p[1]<120{blue+=1;}}}
+        let path=out.join(format!("sheet08-curves-{theme}-{text}.png"));image.save(&path).unwrap();
+        assert!(blue>least,"{theme}-{text}: missing curves {blue}");
+        println!("{}", path.display());
+    }
+}

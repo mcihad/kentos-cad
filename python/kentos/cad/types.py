@@ -6408,6 +6408,29 @@ class PaperAtlasScale(_Union):
         return _variant(_PAPER_ATLAS_SCALE, "PaperAtlasScale", "type", data).from_json(data)
 
 
+class PaperCadGeometry(_Union):
+    """One of:
+
+    - :class:`PolylinePaperCadGeometry` (``type: polyline``)
+    - :class:`CirclePaperCadGeometry` (``type: circle``)
+    - :class:`ArcPaperCadGeometry` (``type: arc``)
+    - :class:`EllipsePaperCadGeometry` (``type: ellipse``)
+    - :class:`BezierPaperCadGeometry` (``type: bezier``)
+    - :class:`NurbsPaperCadGeometry` (``type: nurbs``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "type"
+
+    @property
+    def type(self) -> str:
+        """The name of the variant (``type`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperCadGeometry:
+        return _variant(_PAPER_CAD_GEOMETRY, "PaperCadGeometry", "type", data).from_json(data)
+
+
 class PaperCoordSource(_Union):
     """Where a coordinate list's points come from; the host gives them.
 
@@ -6695,6 +6718,7 @@ class PaperShapeKind(_Union):
     - :class:`EllipsePaperShapeKind` (``type: ellipse``)
     - :class:`TrianglePaperShapeKind` (``type: triangle``)
     - :class:`PolygonPaperShapeKind` (``type: polygon``)
+    - :class:`CadPaperShapeKind` (``type: cad``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "type"
@@ -33183,6 +33207,81 @@ class PaperBinding(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PaperCadOrigin(_Model):
+    """Provenance of a copy, never a second live owner of model geometry.
+    Attributes:
+        record: Unit: index.
+    """
+    layout: str
+    record: int
+    entity_kind: str
+    file: str | None | Unset = UNSET
+    handle: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    sha256: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layout"] = self.layout
+        out["record"] = self.record
+        out["entityKind"] = self.entity_kind
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.handle is not UNSET:
+            out["handle"] = self.handle
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.sha256 is not UNSET:
+            out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperCadOrigin:
+        return cls(
+            layout=data["layout"],
+            record=data["record"],
+            entity_kind=data["entityKind"],
+            file=data.get("file", UNSET),
+            handle=data.get("handle", UNSET),
+            layer=data.get("layer", UNSET),
+            sha256=data.get("sha256", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PaperCadPolyline(_Model):
+    """
+    Attributes:
+        points: Unit: paper-um.
+        bulges: tan(sweep/4), clockwise positive in paper coordinates. Unit: 1.
+        widths: Unit: paper-um.
+    """
+    points: list[list[float]]
+    bulges: list[float] | Unset = UNSET
+    closed: bool = False
+    widths: list[list[float]] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["points"] = [[float(e1) for e1 in e0] for e0 in self.points]
+        if self.bulges is not UNSET:
+            out["bulges"] = [float(e0) for e0 in self.bulges]
+        out["closed"] = self.closed
+        if self.widths is not UNSET:
+            out["widths"] = [[float(e1) for e1 in e0] for e0 in self.widths]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperCadPolyline:
+        return cls(
+            points=[[float(e1) for e1 in e0] for e0 in data["points"]],
+            bulges=[float(e0) for e0 in data["bulges"]] if "bulges" in data else UNSET,
+            closed=data["closed"] if "closed" in data else False,
+            widths=[[float(e1) for e1 in e0] for e0 in data["widths"]] if "widths" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PaperCellStyle(_Model):
     """A cell's look.
     Attributes:
@@ -33521,6 +33620,7 @@ class PaperItem(_Model):
         frame: The frame before rotation.
         bindings: Data-defined properties (design §7).
         border: A line around the frame.
+        cad_origin: Source of an imported paper entity (a copy, not a live model alias).
         fill: The frame's background.
         group: The group item this one belongs to.
         opacity: 0–100. Unit: percent.
@@ -33534,6 +33634,7 @@ class PaperItem(_Model):
     kind: PaperItemKind
     bindings: list[PaperBinding] = field(default_factory=list)
     border: PaperStroke | None | Unset = UNSET
+    cad_origin: PaperCadOrigin | None | Unset = UNSET
     constraints: PaperConstraints = field(default_factory=(lambda: PaperConstraints.from_json({'h': 'left', 'relativeTo': 'margins', 'v': 'top'})))
     fill: str | None | Unset = UNSET
     group: str | None | Unset = UNSET
@@ -33553,6 +33654,8 @@ class PaperItem(_Model):
         out["bindings"] = [e0.to_json() for e0 in self.bindings]
         if self.border is not UNSET:
             out["border"] = None if self.border is None else self.border.to_json()
+        if self.cad_origin is not UNSET:
+            out["cadOrigin"] = None if self.cad_origin is None else self.cad_origin.to_json()
         out["constraints"] = self.constraints.to_json()
         if self.fill is not UNSET:
             out["fill"] = self.fill
@@ -33575,6 +33678,7 @@ class PaperItem(_Model):
             kind=PaperItemKind.from_json(data["kind"]),
             bindings=[PaperBinding.from_json(e0) for e0 in data["bindings"]] if "bindings" in data else list(),
             border=UNSET if "border" not in data else None if data["border"] is None else PaperStroke.from_json(data["border"]),
+            cad_origin=UNSET if "cadOrigin" not in data else None if data["cadOrigin"] is None else PaperCadOrigin.from_json(data["cadOrigin"]),
             constraints=PaperConstraints.from_json(data["constraints"]) if "constraints" in data else (lambda: PaperConstraints.from_json({'h': 'left', 'relativeTo': 'margins', 'v': 'top'}))(),
             fill=data.get("fill", UNSET),
             group=data.get("group", UNSET),
@@ -59455,6 +59559,198 @@ class PredefinedPaperAtlasScale(PaperAtlasScale):
 
 
 @dataclass(kw_only=True, slots=True)
+class PolylinePaperCadGeometry(PaperCadGeometry):
+    TAG_VALUE: ClassVar[str] = "polyline"
+    paths: list[PaperCadPolyline]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "polyline"}
+        out["paths"] = [e0.to_json() for e0 in self.paths]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PolylinePaperCadGeometry:
+        return cls(
+            paths=[PaperCadPolyline.from_json(e0) for e0 in data["paths"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CirclePaperCadGeometry(PaperCadGeometry):
+    """
+    Attributes:
+        center: Unit: paper-um.
+        radius: Unit: paper-um.
+    """
+    TAG_VALUE: ClassVar[str] = "circle"
+    center: list[float]
+    radius: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "circle"}
+        out["center"] = [float(e0) for e0 in self.center]
+        out["radius"] = float(self.radius)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CirclePaperCadGeometry:
+        return cls(
+            center=[float(e0) for e0 in data["center"]],
+            radius=float(data["radius"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArcPaperCadGeometry(PaperCadGeometry):
+    """
+    Attributes:
+        center: Unit: paper-um.
+        radius: Unit: paper-um.
+        start: Unit: rad.
+        sweep: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "arc"
+    center: list[float]
+    radius: float
+    start: float
+    sweep: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "arc"}
+        out["center"] = [float(e0) for e0 in self.center]
+        out["radius"] = float(self.radius)
+        out["start"] = float(self.start)
+        out["sweep"] = float(self.sweep)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArcPaperCadGeometry:
+        return cls(
+            center=[float(e0) for e0 in data["center"]],
+            radius=float(data["radius"]),
+            start=float(data["start"]),
+            sweep=float(data["sweep"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EllipsePaperCadGeometry(PaperCadGeometry):
+    """
+    Attributes:
+        center: Unit: paper-um.
+        major: Major axis vector, from the centre. Unit: paper-um.
+        ratio: Unit: 1.
+        start: Unit: rad.
+        sweep: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "ellipse"
+    center: list[float]
+    major: list[float]
+    ratio: float
+    start: float
+    sweep: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "ellipse"}
+        out["center"] = [float(e0) for e0 in self.center]
+        out["major"] = [float(e0) for e0 in self.major]
+        out["ratio"] = float(self.ratio)
+        out["start"] = float(self.start)
+        out["sweep"] = float(self.sweep)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EllipsePaperCadGeometry:
+        return cls(
+            center=[float(e0) for e0 in data["center"]],
+            major=[float(e0) for e0 in data["major"]],
+            ratio=float(data["ratio"]),
+            start=float(data["start"]),
+            sweep=float(data["sweep"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BezierPaperCadGeometry(PaperCadGeometry):
+    """Three (quadratic) or four (cubic) control points, retained exactly.
+    Attributes:
+        points: Unit: paper-um.
+    """
+    TAG_VALUE: ClassVar[str] = "bezier"
+    points: list[list[float]]
+    closed: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "bezier"}
+        out["points"] = [[float(e1) for e1 in e0] for e0 in self.points]
+        out["closed"] = self.closed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BezierPaperCadGeometry:
+        return cls(
+            points=[[float(e1) for e1 in e0] for e0 in data["points"]],
+            closed=data["closed"] if "closed" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NurbsPaperCadGeometry(PaperCadGeometry):
+    """
+    Attributes:
+        degree: Unit: count.
+        control: Unit: paper-um.
+        knots: Unit: 1.
+        fit: Unit: paper-um.
+        fit_tolerance: Unit: paper-um.
+        tangents: Unit: 1.
+        weights: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "nurbs"
+    degree: int
+    control: list[list[float]]
+    knots: list[float]
+    closed: bool = False
+    fit: list[list[float]] | Unset = UNSET
+    fit_tolerance: float | None | Unset = UNSET
+    periodic: bool | Unset = UNSET
+    tangents: list[list[float] | None] | None | Unset = UNSET
+    weights: list[float] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "nurbs"}
+        out["degree"] = self.degree
+        out["control"] = [[float(e1) for e1 in e0] for e0 in self.control]
+        out["knots"] = [float(e0) for e0 in self.knots]
+        out["closed"] = self.closed
+        if self.fit is not UNSET:
+            out["fit"] = [[float(e1) for e1 in e0] for e0 in self.fit]
+        if self.fit_tolerance is not UNSET:
+            out["fitTolerance"] = None if self.fit_tolerance is None else float(self.fit_tolerance)
+        if self.periodic is not UNSET:
+            out["periodic"] = self.periodic
+        if self.tangents is not UNSET:
+            out["tangents"] = None if self.tangents is None else [None if e0 is None else [float(e1) for e1 in e0] for e0 in self.tangents]
+        if self.weights is not UNSET:
+            out["weights"] = [float(e0) for e0 in self.weights]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NurbsPaperCadGeometry:
+        return cls(
+            degree=data["degree"],
+            control=[[float(e1) for e1 in e0] for e0 in data["control"]],
+            knots=[float(e0) for e0 in data["knots"]],
+            closed=data["closed"] if "closed" in data else False,
+            fit=[[float(e1) for e1 in e0] for e0 in data["fit"]] if "fit" in data else UNSET,
+            fit_tolerance=UNSET if "fitTolerance" not in data else None if data["fitTolerance"] is None else float(data["fitTolerance"]),
+            periodic=data.get("periodic", UNSET),
+            tangents=UNSET if "tangents" not in data else None if data["tangents"] is None else [None if e0 is None else [float(e1) for e1 in e0] for e0 in data["tangents"]],
+            weights=[float(e0) for e0 in data["weights"]] if "weights" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SelectionPaperCoordSource(PaperCoordSource):
     """The objects chosen in the drawing now (live; the first lists')."""
     TAG_VALUE: ClassVar[str] = "selection"
@@ -61519,6 +61815,30 @@ class PolygonPaperShapeKind(PaperShapeKind):
     def from_json(cls, data: Mapping[str, Any]) -> PolygonPaperShapeKind:
         return cls(
             points=[list(e0) for e0 in data["points"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CadPaperShapeKind(PaperShapeKind):
+    """Analytic CAD curves; the frame is independent of their actual size.
+    Attributes:
+        reference: Original selection box. Geometry is local paper micrometres, before the item's affine resize/rotation.
+    """
+    TAG_VALUE: ClassVar[str] = "cad"
+    reference: PaperSizeUm
+    geometry: PaperCadGeometry
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "cad"}
+        out["reference"] = self.reference.to_json()
+        out["geometry"] = self.geometry.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CadPaperShapeKind:
+        return cls(
+            reference=PaperSizeUm.from_json(data["reference"]),
+            geometry=PaperCadGeometry.from_json(data["geometry"]),
         )
 
 
@@ -65149,6 +65469,9 @@ _OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOpe
 _PAPER_ATLAS_SCALE: dict[str, type[PaperAtlasScale]] = {"fit": FitPaperAtlasScale, "fixed": FixedPaperAtlasScale, "predefined": PredefinedPaperAtlasScale}
 
 
+_PAPER_CAD_GEOMETRY: dict[str, type[PaperCadGeometry]] = {"polyline": PolylinePaperCadGeometry, "circle": CirclePaperCadGeometry, "arc": ArcPaperCadGeometry, "ellipse": EllipsePaperCadGeometry, "bezier": BezierPaperCadGeometry, "nurbs": NurbsPaperCadGeometry}
+
+
 _PAPER_COORD_SOURCE: dict[str, type[PaperCoordSource]] = {"selection": SelectionPaperCoordSource, "layer": LayerPaperCoordSource, "objects": ObjectsPaperCoordSource}
 
 
@@ -65182,7 +65505,7 @@ _PAPER_POINT_NAMING: dict[str, type[PaperPointNaming]] = {"given": GivenPaperPoi
 _PAPER_SCALE_BAR_LENGTH: dict[str, type[PaperScaleBarLength]] = {"auto": AutoPaperScaleBarLength, "fixed": FixedPaperScaleBarLength}
 
 
-_PAPER_SHAPE_KIND: dict[str, type[PaperShapeKind]] = {"rect": RectPaperShapeKind, "ellipse": EllipsePaperShapeKind, "triangle": TrianglePaperShapeKind, "polygon": PolygonPaperShapeKind}
+_PAPER_SHAPE_KIND: dict[str, type[PaperShapeKind]] = {"rect": RectPaperShapeKind, "ellipse": EllipsePaperShapeKind, "triangle": TrianglePaperShapeKind, "polygon": PolygonPaperShapeKind, "cad": CadPaperShapeKind}
 
 
 _PAPER_TABLE_SOURCE: dict[str, type[PaperTableSource]] = {"fixed": FixedPaperTableSource, "layer": LayerPaperTableSource, "continued": ContinuedPaperTableSource}
@@ -65335,6 +65658,7 @@ __all__ = [
     "ArcEntity",
     "ArcEntityGeometry",
     "ArcLengthDimensionMeasure",
+    "ArcPaperCadGeometry",
     "ArcPlan",
     "ArcStartCentreAngleCurveConstruction",
     "ArcStartCentreChordCurveConstruction",
@@ -65431,6 +65755,7 @@ __all__ = [
     "BatchRow",
     "BatchRowFailed",
     "BatchRowRan",
+    "BezierPaperCadGeometry",
     "BindLeaderEdit",
     "BindXrefsOperation",
     "BitsStacMask",
@@ -65487,6 +65812,7 @@ __all__ = [
     "BreakLine",
     "BreakLineName",
     "CadElement",
+    "CadPaperShapeKind",
     "CadParameter",
     "CalculateFieldsWriteOp",
     "CalloutKind",
@@ -65523,6 +65849,7 @@ __all__ = [
     "CircleCreated",
     "CircleEntity",
     "CircleEntityGeometry",
+    "CirclePaperCadGeometry",
     "CirclePlan",
     "CircleSelectRegion",
     "CircleTangentTangentRadiusCurveConstruction",
@@ -65762,6 +66089,7 @@ __all__ = [
     "EllipseEntity",
     "EllipseEntityGeometry",
     "EllipseHatchCurve",
+    "EllipsePaperCadGeometry",
     "EllipsePaperShapeKind",
     "Ellipsoid",
     "EmbedImagesOperation",
@@ -66431,6 +66759,7 @@ __all__ = [
     "NurbsEntity",
     "NurbsEntityGeometry",
     "NurbsHatchCurve",
+    "NurbsPaperCadGeometry",
     "NurbsPlan",
     "ObjectEnd",
     "ObjectFieldSource",
@@ -66498,6 +66827,9 @@ __all__ = [
     "PaperBinding",
     "PaperBorderStyle",
     "PaperBorderStyleName",
+    "PaperCadGeometry",
+    "PaperCadOrigin",
+    "PaperCadPolyline",
     "PaperCellStyle",
     "PaperConstraintBox",
     "PaperConstraintBoxName",
@@ -66720,6 +67052,7 @@ __all__ = [
     "PolylineCreated",
     "PolylineEntity",
     "PolylineEntityGeometry",
+    "PolylinePaperCadGeometry",
     "PolylinePlan",
     "PredefinedPaperAtlasScale",
     "ProcessingBatch",

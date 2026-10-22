@@ -90,6 +90,7 @@ const OBJECTS: &[&str] = &[
 
 /// Forwarded sheet validation codes: the convenience create command uses the same core.
 const SHEET_CORE: &[&str] = &[
+    "bad_curve", "curve_too_complex",
     "asset_in_use",
     "asset_too_large",
     "bad_asset",
@@ -4335,38 +4336,6 @@ pub fn listed() -> impl Iterator<Item = &'static str> {
     ENTRIES.iter().map(|e| e.id)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn every_listed_code_has_its_meaning() {
-        for id in listed() {
-            let c = capabilities_of(id).expect("listed");
-            for code in c.refusals.iter().chain(&c.warnings) {
-                assert!(
-                    crate::codes::info(code).is_some(),
-                    "{id}: {code} has no meaning in codes.rs"
-                );
-            }
-            for t in &c.targets {
-                for k in t.kinds.iter().chain(&t.except) {
-                    assert!(k == "*" || KINDS.contains(&k.as_str()), "{id}: {k}");
-                }
-                if let Some(code) = &t.refused_with {
-                    assert!(
-                        c.refusals.contains(code),
-                        "{id}: {code} refuses a kind but is not listed"
-                    );
-                }
-            }
-        }
-        for code in PROTOCOL_CODES {
-            assert!(crate::codes::info(code).is_some(), "{code}");
-        }
-    }
-}
-
 /// A codec may decode more than the KentOS model can edit; never advertise both as one boolean.
 fn exchange_profile(id: &str) -> Option<crate::CadFormatCapabilities> {
     if !matches!(id, "file.import.dxf" | "file.export.dxf" | "file.import.dwg" | "file.export.dwg") { return None; }
@@ -4397,4 +4366,37 @@ fn exchange_profile(id: &str) -> Option<crate::CadFormatCapabilities> {
             feature: (*feature).into(), read: (*read).into(), write: (*write).into(), note: (*note).into()
         }).collect(),
     })
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn every_listed_code_has_its_meaning() {
+        for id in listed() {
+            let c = capabilities_of(id).expect("listed");
+            for code in c.refusals.iter().chain(&c.warnings) {
+                assert!(
+                    crate::codes::info(code).is_some(),
+                    "{id}: {code} has no meaning in codes.rs"
+                );
+            }
+            for t in &c.targets {
+                for k in t.kinds.iter().chain(&t.except) {
+                    assert!(k == "*" || KINDS.contains(&k.as_str()), "{id}: {k}");
+                }
+                if let Some(code) = &t.refused_with {
+                    assert!(
+                        c.refusals.contains(code),
+                        "{id}: {code} refuses a kind but is not listed"
+                    );
+                }
+            }
+        }
+        for code in PROTOCOL_CODES {
+            assert!(crate::codes::info(code).is_some(), "{code}");
+        }
+    }
 }

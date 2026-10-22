@@ -165,6 +165,39 @@ fn dist_to_segment(p: [f64; 2], a: [f64; 2], b: [f64; 2]) -> f64 {
 pub fn point_on(item: &Item, p: [f64; 2], tol: f64) -> bool {
     let c = item.frame.center();
     let q = rotate(p, c, -item.rotation);
+    if let ItemKind::Shape(shape) = &item.kind
+        && let crate::kinds::ShapeKind::Cad(cad) = &shape.shape
+    {
+        if let Ok(paths) = crate::cad::outlines(cad, &item.content_rect(), tol.max(1.) / 4.) {
+            let mut inside = false;
+            for (pts, closed, band) in &paths {
+                if *band && *closed && in_polygon(q, pts) {
+                    return true;
+                }
+                if !*band && shape.fill.is_some() && *closed && in_polygon(q, pts) {
+                    inside = !inside;
+                }
+                if *band || shape.stroke.is_some() {
+                    let reach = tol
+                        + shape
+                            .stroke
+                            .as_ref()
+                            .map_or(0., |s| f64::from(s.width) / 2.);
+                    if pts
+                        .windows(2)
+                        .any(|p| dist_to_segment(q, p[0], p[1]) <= reach)
+                        || (*closed
+                            && pts.len() > 1
+                            && dist_to_segment(q, pts[pts.len() - 1], pts[0]) <= reach)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return inside;
+        }
+        return false;
+    }
     if let ItemKind::Line(l) = &item.kind {
         let pts: Vec<[f64; 2]> = l
             .points
@@ -297,4 +330,22 @@ pub fn hit_test(book: &SheetBook, sheet_id: &str, query: &HitQuery) -> Result<Hi
         }
     }
     Ok(out)
+}
+
+fn in_polygon(p: [f64; 2], ring: &[[f64; 2]]) -> bool {
+    let mut inside = false;
+    if ring.len() < 3 {
+        return false;
+    }
+    let mut j = ring.len() - 1;
+    for i in 0..ring.len() {
+        let (a, b) = (ring[i], ring[j]);
+        if (a[1] > p[1]) != (b[1] > p[1])
+            && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]
+        {
+            inside = !inside;
+        }
+        j = i;
+    }
+    inside
 }

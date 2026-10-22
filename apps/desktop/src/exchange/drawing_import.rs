@@ -684,7 +684,7 @@ impl App {
             layers,
             group: Some(name.clone()),
         };
-        self.write_import(&name, result, plan, None)
+        self.write_import(&name, result, plan, None,None)
     }
 
     /// A DXF in by `file.import.dxf` (docs/adr/0257 §3, §4): the input says
@@ -738,7 +738,7 @@ impl App {
             };
             let said = file_import::warnings_of_read(&result);
             let base = doc.model.revision();
-            return self.write_import(&name, result, plan, Some((input, said, base, format)));
+            return self.write_import(&name, result, plan, Some((input, said, base, format)),Some(kentos_native_application::cad_layouts::Source{file:name.clone(),sha256:Some(kentos_commands::encoding::sha256_hex(&bytes))}));
         }
         let first = doc.model.next_slot();
         let read = ReadDxf::of(&name, &bytes, (*result).clone());
@@ -794,12 +794,14 @@ impl App {
         result: Arc<ImportResult>,
         plan: ImportPlan,
         command: Option<(ImportDxf, Vec<CommandWarning>, u64, CadFormat)>,
+        cad_source:Option<kentos_native_application::cad_layouts::Source>,
     ) -> Task<Message> {
         let name = name.to_owned();
         let chosen = plan.layers.len();
         let skipped = result.report.skipped.clone();
         // The file's text and dimension styles (docs/adr/0183 §7).
         let styles = Styles {
+            cad_source,
             layouts: result.layouts.clone(),
             text: result.text_styles.clone(),
             dimension: result.dimension_styles.clone(),

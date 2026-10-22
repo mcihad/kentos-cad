@@ -24,107 +24,11 @@ fn color(e: &Entity) -> String {
         .cloned()
         .unwrap_or_else(|| "#000000".into())
 }
-fn core(p: &Vec2) -> kentos_geometry_core::Vec2 {
-    kentos_geometry_core::Vec2::new(p.x, p.y)
-}
-fn chord_step(radius: f64) -> f64 {
-    // Stable for very large radii; acos(1-t/r) loses the small difference.
-    4. * (0.5e-6 / radius).min(1.).sqrt().asin()
-}
 fn path(e: &Entity) -> Option<(Vec<Vec2>, bool)> {
-    use kentos_geometry_core::geom::{arc, bulge, nurbs};
-    let points = |p: Vec<kentos_geometry_core::Vec2>| {
-        p.into_iter().map(|p| Vec2 { x: p.x, y: p.y }).collect()
-    };
     match e {
         Entity::Line(l) => Some((vec![l.a, l.b], false)),
         Entity::Polyline(p) | Entity::Polygon(p) => {
-            let closed = matches!(e, Entity::Polygon(_)) || p.closed;
-            let pts: Vec<_> = p.pts.iter().map(core).collect();
-            let mut step = 0.1f64;
-            for i in 0..if closed {
-                pts.len()
-            } else {
-                pts.len().saturating_sub(1)
-            } {
-                if let Some(a) = bulge::bulge_arc(
-                    pts[i],
-                    pts[(i + 1) % pts.len()],
-                    p.bulges
-                        .as_ref()
-                        .and_then(|b| b.get(i))
-                        .copied()
-                        .unwrap_or(0.),
-                ) {
-                    step = step.min(chord_step(a.r));
-                }
-            }
-            if !step.is_finite() || step <= 0. {
-                return None;
-            }
-            let mut needed = pts.len() as f64;
-            for i in 0..if closed {
-                pts.len()
-            } else {
-                pts.len().saturating_sub(1)
-            } {
-                if let Some(a) = bulge::bulge_arc(
-                    pts[i],
-                    pts[(i + 1) % pts.len()],
-                    p.bulges
-                        .as_ref()
-                        .and_then(|b| b.get(i))
-                        .copied()
-                        .unwrap_or(0.),
-                ) {
-                    needed += (a.sweep.abs() / step).ceil();
-                }
-            }
-            if needed > 65536. {
-                return None;
-            }
-            Some((
-                points(bulge::bulge_path_outline(
-                    &pts,
-                    p.bulges.as_deref(),
-                    closed,
-                    step,
-                )),
-                closed,
-            ))
-        }
-        Entity::Arc(a) => {
-            let step = chord_step(a.r);
-            if !step.is_finite() || step <= 0. || (arc::sweep(a.a0, a.a1) / step).ceil() > 65535. {
-                return None;
-            }
-            Some((
-                points(arc::tessellate_arc(
-                    &arc::ArcGeom {
-                        c: core(&a.c),
-                        r: a.r,
-                        a0: a.a0,
-                        a1: a.a1,
-                    },
-                    step,
-                )),
-                false,
-            ))
-        }
-        Entity::Nurbs(n) => {
-            let ctrl: Vec<_> = n.ctrl.iter().map(core).collect();
-            Some((
-                points(
-                    nurbs::Nurbs {
-                        degree: n.degree as usize,
-                        ctrl: &ctrl,
-                        knots: &n.knots,
-                        weights: n.weights.as_deref(),
-                    }
-                    .tessellate(1e-6),
-                ),
-                n.closed,
-            ))
+            Some((p.pts.clone(), matches!(e, Entity::Polygon(_)) || p.closed))
         }
         _ => None,
     }
@@ -146,7 +50,7 @@ fn paper_item(e: &Entity, height_mm: f64) -> Option<Item> {
             return None;
         };
         text.content = t.text.clone();
-        text.style = TextStyle::new(um(t.height).max(100), if t.face.bold { 700 } else { 400 });
+        text.style = TextStyle::new(um(t.height).max(1), if t.face.bold { 700 } else { 400 });
         text.style.color = color(e);
         text.style.font = kentos_commands::DrawingFont::id_of(t.face.font).into();
         text.style.italic = t.face.italic;
@@ -155,8 +59,8 @@ fn paper_item(e: &Entity, height_mm: f64) -> Option<Item> {
             .paragraph
             .box_width
             .unwrap_or(t.height * (t.text.chars().count().max(1) as f64));
-        let w = um(width).max(1);
-        let h = um(t.height * 1.3).max(1);
+        let w = um(width).max(1000);
+        let h = um(t.height * 1.3).max(1000);
         let baseline = kentos_sheet::text::face(&text.style)
             .map(|f| {
                 kentos_sheet::text::baseline_in_line(
@@ -177,47 +81,18 @@ fn paper_item(e: &Entity, height_mm: f64) -> Option<Item> {
         item.rotation = rotation;
         return Some(item);
     }
-    if let Entity::Circle(c) = e {
+    if crate::cad_paper::supports(e) {
+        let (frame, cad) = crate::cad_paper::read(e, height_mm)?;
         return Some(Item::new(
             &id,
             &name,
-            RectUm::new(
-                um(c.c.x - c.r),
-                um(y(c.c.y) - c.r),
-                um(c.r * 2.).max(1),
-                um(c.r * 2.).max(1),
-            ),
+            frame,
             ItemKind::Shape(kinds::ShapeItem {
-                shape: ShapeKind::Ellipse(kinds::Empty {}),
+                shape: ShapeKind::Cad(cad),
                 stroke: Some(stroke),
                 fill: None,
             }),
         ));
-    }
-    if let Entity::Ellipse(e) = e {
-        let sweep = (e.t1 - e.t0).abs();
-        if (sweep - std::f64::consts::TAU).abs() < 1e-8 {
-            let a = e.major.x.hypot(e.major.y);
-            let b = a * e.ratio;
-            let mut item = Item::new(
-                &id,
-                &name,
-                RectUm::new(
-                    um(e.c.x - a),
-                    um(y(e.c.y) - b),
-                    um(a * 2.).max(1),
-                    um(b * 2.).max(1),
-                ),
-                ItemKind::Shape(kinds::ShapeItem {
-                    shape: ShapeKind::Ellipse(kinds::Empty {}),
-                    stroke: Some(stroke),
-                    fill: None,
-                }),
-            );
-            item.rotation = ((-e.major.y.atan2(e.major.x).to_degrees() * 1000.).round() as i32)
-                .rem_euclid(360000);
-            return Some(item);
-        }
     }
     let (pts, closed) = path(e)?;
     if pts.len() < 2 || pts.len() > 65536 {
@@ -265,7 +140,19 @@ fn paper_item(e: &Entity, height_mm: f64) -> Option<Item> {
     ))
 }
 
+#[derive(Clone, Debug)]
+pub struct Source {
+    pub file: String,
+    pub sha256: Option<String>,
+}
 pub fn merge(doc: &Document, layouts: &[CadLayout]) -> Result<Option<ProjectSheets>, String> {
+    merge_with_source(doc, layouts, None)
+}
+pub fn merge_with_source(
+    doc: &Document,
+    layouts: &[CadLayout],
+    source: Option<&Source>,
+) -> Result<Option<ProjectSheets>, String> {
     if layouts.is_empty() {
         return Ok(None);
     }
@@ -295,6 +182,15 @@ pub fn merge(doc: &Document, layouts: &[CadLayout]) -> Result<Option<ProjectShee
         for (i, entity) in layout.entities.iter().enumerate() {
             if let Some(mut item) = paper_item(entity, layout.height_mm) {
                 item.name = format!("DXF {} {}", entity.kind(), i + 1);
+                item.cad_origin = Some(kentos_sheet::cad::Origin {
+                    layout: layout.name.clone(),
+                    record: i as u32,
+                    entity_kind: entity.kind().into(),
+                    file: source.map(|s| s.file.clone()),
+                    sha256: source.and_then(|s| s.sha256.clone()),
+                    handle: None,
+                    layer: Some(entity.base().layer_id.clone()),
+                });
                 sheet.items.push(item);
             }
         }
@@ -350,24 +246,39 @@ pub fn diagnostics(layouts: &[CadLayout]) -> Vec<ReportItem> {
         .flat_map(|l| l.entities.iter().map(move |e| (l, e)))
         .filter(|(l, e)| paper_item(e, l.height_mm).is_none())
         .count();
-    let curved = layouts.iter().flat_map(|l| &l.entities).filter(|e| matches!(e, Entity::Arc(_) | Entity::Nurbs(_)) || matches!(e, Entity::Polyline(p) | Entity::Polygon(p) if p.bulges.as_ref().is_some_and(|b| b.iter().any(|v| *v != 0.)))).count();
     let formatted_text = layouts.iter().flat_map(|l| &l.entities).filter(|e| matches!(e, Entity::Text(t) if t.align.is_some() || t.width_factor.is_some_and(|w| w != 1.) || t.face.oblique.is_some() || !t.paragraph.runs.is_empty() || t.paragraph.layout.is_some() || t.mask)).count();
     let mut out = Vec::new();
-    let paths: Vec<_> = layouts.iter().flat_map(|l| &l.entities).filter_map(|e| match e {
-        Entity::Polyline(p) | Entity::Polygon(p) => Some(p), _ => None,
-    }).collect();
-    for (property, reason, affected) in [
-        ("paper_width", "Pafta kitabının çizgi öğesi değişken çoklu çizgi genişliğini taşımaz.", paths.iter().filter(|p| p.widths.is_some()).collect::<Vec<_>>()),
-        ("paper_bulge", "Pafta kitabındaki çoklu çizgi yayları çizgilere çevrilir.", paths.iter().filter(|p| p.bulges.as_ref().is_some_and(|b| b.iter().any(|v| *v != 0.))).collect::<Vec<_>>()),
-        ("paper_elevation", "Pafta kitabının çizgi öğesi köşe kotlarını taşımaz.", paths.iter().filter(|p| p.zs.as_ref().is_some_and(|z| z.iter().any(|v| v.is_some_and(|v| v != 0.)))).collect::<Vec<_>>()),
-    ] {
+    let paths: Vec<_> = layouts
+        .iter()
+        .flat_map(|l| &l.entities)
+        .filter_map(|e| match e {
+            Entity::Polyline(p) | Entity::Polygon(p) => Some(p),
+            _ => None,
+        })
+        .collect();
+    for (property, reason, affected) in [(
+        "paper_elevation",
+        "Pafta kitabının çizgi öğesi köşe kotlarını taşımaz.",
+        paths
+            .iter()
+            .filter(|p| {
+                p.zs.as_ref()
+                    .is_some_and(|z| z.iter().any(|v| v.is_some_and(|v| v != 0.)))
+            })
+            .collect::<Vec<_>>(),
+    )] {
         if !affected.is_empty() {
             out.push(ReportItem {
-                severity: Some(ReportSeverity::Warning), what: "Pafta çoklu çizgisi".into(),
-                count: affected.len() as u32, reason: reason.into(), lines: Vec::new(),
+                severity: Some(ReportSeverity::Warning),
+                what: "Pafta çoklu çizgisi".into(),
+                count: affected.len() as u32,
+                reason: reason.into(),
+                lines: Vec::new(),
                 details: vec![kentos_commands::ReportDetail {
-                    entity_type: "LWPOLYLINE/POLYLINE".into(), property: format!("polyline.loss.{property}"),
-                    source_id: None, source_line: None,
+                    entity_type: "LWPOLYLINE/POLYLINE".into(),
+                    property: format!("polyline.loss.{property}"),
+                    source_id: None,
+                    source_line: None,
                 }],
             });
         }
@@ -380,10 +291,6 @@ pub fn diagnostics(layouts: &[CadLayout]) -> Vec<ReportItem> {
         (
             formatted_text,
             "Pafta yazısının özel hizası, genişletme/eğiklik, karakter biçimleri veya zemini yerel sade metne dönüştürüldü; metin içeriği korundu.",
-        ),
-        (
-            curved,
-            "Paftadaki eğriler 0,001 mm kiriş toleransıyla çizgilere çevrildi; model uzayının analitik eğrileri değişmedi.",
         ),
     ] {
         if count > 0 {
@@ -404,7 +311,7 @@ fn point(item: &Item, p: [i32; 2], height: f64) -> Vec2 {
     let p = kinds::frame_point(&item.frame, p);
     world_point(item, p, height)
 }
-fn world_point(item: &Item, p: [f64; 2], height: f64) -> Vec2 {
+pub(crate) fn world_point(item: &Item, p: [f64; 2], height: f64) -> Vec2 {
     let c = [
         f64::from(item.frame.left) + f64::from(item.frame.width) / 2.,
         f64::from(item.frame.top) + f64::from(item.frame.height) / 2.,
@@ -552,6 +459,20 @@ pub fn export(doc: &Document) -> (Vec<CadLayout>, Vec<ReportItem>) {
                     base
                 }
                 ItemKind::Shape(shape) => {
+                    if let ShapeKind::Cad(cad) = &shape.shape {
+                        match crate::cad_paper::write(cad, item, layout.height_mm, &base) {
+                            Some((entities, loss)) => {
+                                layout.entities.extend(entities);
+                                omitted += loss;
+                            }
+                            None => omitted += 1,
+                        }
+                        if shape.fill.is_some() {
+                            omitted += 1;
+                        }
+                        continue;
+                    }
+
                     if matches!(shape.shape, ShapeKind::Ellipse(_)) {
                         let center = point(item, [500000, 500000], layout.height_mm);
                         let width = f64::from(item.frame.width) / 1e6;

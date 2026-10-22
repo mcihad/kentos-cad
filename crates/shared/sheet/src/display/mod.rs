@@ -13,7 +13,7 @@ mod inputs;
 mod legend;
 pub(crate) mod map;
 mod marks;
-pub use map::{fixed_corners, content_rect as map_content_rect};
+pub use map::{content_rect as map_content_rect, fixed_corners};
 pub use marks::{DateSource, DeclinationSource, NorthInfo, NorthMissing};
 mod table;
 mod title;
@@ -62,6 +62,8 @@ pub enum Seg {
     M(PointUm),
     L(PointUm),
     A(ArcSeg),
+    /// Cubic controls and endpoint (the start is the previous point).
+    C([PointUm; 3]),
     Z,
 }
 

@@ -1,0 +1,563 @@
+{
+  "schema": "kentos.sheet.paper-cad/1",
+  "cases": [
+    {
+      "name": "circle-0.0001",
+      "entity": {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.0001
+      },
+      "radiusUm": 100.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "arc-0.0001",
+      "entity": {
+        "kind": "arc",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.0001,
+        "a0": 0,
+        "a1": 1.5707963267948966
+      },
+      "radiusUm": 100.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "circle-0.0002",
+      "entity": {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.0002
+      },
+      "radiusUm": 200.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "arc-0.0002",
+      "entity": {
+        "kind": "arc",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.0002,
+        "a0": 0,
+        "a1": 1.5707963267948966
+      },
+      "radiusUm": 200.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "circle-0.00049",
+      "entity": {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.00049
+      },
+      "radiusUm": 490.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "arc-0.00049",
+      "entity": {
+        "kind": "arc",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.00049,
+        "a0": 0,
+        "a1": 1.5707963267948966
+      },
+      "radiusUm": 490.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "circle-0.0005",
+      "entity": {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.0005
+      },
+      "radiusUm": 500.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "arc-0.0005",
+      "entity": {
+        "kind": "arc",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.0005,
+        "a0": 0,
+        "a1": 1.5707963267948966
+      },
+      "radiusUm": 500.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "circle-0.001",
+      "entity": {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.001
+      },
+      "radiusUm": 1000.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "arc-0.001",
+      "entity": {
+        "kind": "arc",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.001,
+        "a0": 0,
+        "a1": 1.5707963267948966
+      },
+      "radiusUm": 1000.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "circle-0.01",
+      "entity": {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.01
+      },
+      "radiusUm": 10000.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "arc-0.01",
+      "entity": {
+        "kind": "arc",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.01,
+        "a0": 0,
+        "a1": 1.5707963267948966
+      },
+      "radiusUm": 10000.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "circle-0.05",
+      "entity": {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.05
+      },
+      "radiusUm": 50000.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "arc-0.05",
+      "entity": {
+        "kind": "arc",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.07,
+          "y": 0.09
+        },
+        "r": 0.05,
+        "a0": 0,
+        "a1": 1.5707963267948966
+      },
+      "radiusUm": 50000.0,
+      "center": [
+        0.07,
+        0.09
+      ]
+    },
+    {
+      "name": "ellipse-0-True",
+      "entity": {
+        "kind": "ellipse",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.12,
+          "y": 0.13
+        },
+        "major": {
+          "x": 0.03,
+          "y": 0.0
+        },
+        "ratio": 0.4,
+        "t0": 0,
+        "t1": 6.283185307179586
+      },
+      "majorLength": 0.03,
+      "ratio": 0.4
+    },
+    {
+      "name": "ellipse-0-False",
+      "entity": {
+        "kind": "ellipse",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.12,
+          "y": 0.13
+        },
+        "major": {
+          "x": 0.03,
+          "y": 0.0
+        },
+        "ratio": 0.4,
+        "t0": 0,
+        "t1": 2.1
+      },
+      "majorLength": 0.03,
+      "ratio": 0.4
+    },
+    {
+      "name": "ellipse-0.2-True",
+      "entity": {
+        "kind": "ellipse",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.12,
+          "y": 0.13
+        },
+        "major": {
+          "x": 0.029401997335237247,
+          "y": 0.005960079923851836
+        },
+        "ratio": 0.4,
+        "t0": 0,
+        "t1": 6.283185307179586
+      },
+      "majorLength": 0.03,
+      "ratio": 0.4
+    },
+    {
+      "name": "ellipse-0.2-False",
+      "entity": {
+        "kind": "ellipse",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.12,
+          "y": 0.13
+        },
+        "major": {
+          "x": 0.029401997335237247,
+          "y": 0.005960079923851836
+        },
+        "ratio": 0.4,
+        "t0": 0,
+        "t1": 2.1
+      },
+      "majorLength": 0.03,
+      "ratio": 0.4
+    },
+    {
+      "name": "ellipse-1.4-True",
+      "entity": {
+        "kind": "ellipse",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.12,
+          "y": 0.13
+        },
+        "major": {
+          "x": 0.005099014287007231,
+          "y": 0.029563491899653804
+        },
+        "ratio": 0.4,
+        "t0": 0,
+        "t1": 6.283185307179586
+      },
+      "majorLength": 0.03,
+      "ratio": 0.4
+    },
+    {
+      "name": "ellipse-1.4-False",
+      "entity": {
+        "kind": "ellipse",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.12,
+          "y": 0.13
+        },
+        "major": {
+          "x": 0.005099014287007231,
+          "y": 0.029563491899653804
+        },
+        "ratio": 0.4,
+        "t0": 0,
+        "t1": 2.1
+      },
+      "majorLength": 0.03,
+      "ratio": 0.4
+    },
+    {
+      "name": "ellipse-3.1-True",
+      "entity": {
+        "kind": "ellipse",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.12,
+          "y": 0.13
+        },
+        "major": {
+          "x": -0.029974054508198383,
+          "y": 0.0012474198729987146
+        },
+        "ratio": 0.4,
+        "t0": 0,
+        "t1": 6.283185307179586
+      },
+      "majorLength": 0.03,
+      "ratio": 0.4
+    },
+    {
+      "name": "ellipse-3.1-False",
+      "entity": {
+        "kind": "ellipse",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+          "x": 0.12,
+          "y": 0.13
+        },
+        "major": {
+          "x": -0.029974054508198383,
+          "y": 0.0012474198729987146
+        },
+        "ratio": 0.4,
+        "t0": 0,
+        "t1": 2.1
+      },
+      "majorLength": 0.03,
+      "ratio": 0.4
+    },
+    {
+      "name": "rational-quarter-circle",
+      "entity": {
+        "kind": "nurbs",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "degree": 2,
+        "ctrl": [
+          {
+            "x": 0.05,
+            "y": 0
+          },
+          {
+            "x": 0.05,
+            "y": 0.05
+          },
+          {
+            "x": 0,
+            "y": 0.05
+          }
+        ],
+        "knots": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        "weights": [
+          1,
+          0.7071067811865476,
+          1
+        ],
+        "fit": [
+          {
+            "x": 0.05,
+            "y": 0
+          },
+          {
+            "x": 0,
+            "y": 0.05
+          }
+        ],
+        "tangents": [
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": -1,
+            "y": 0
+          }
+        ],
+        "fitTolerance": 1e-05
+      },
+      "radiusUm": 50000
+    },
+    {
+      "name": "wide-bulged-line",
+      "entity": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.02,
+            "y": 0.02
+          },
+          {
+            "x": 0.06,
+            "y": 0.02
+          },
+          {
+            "x": 0.06,
+            "y": 0.08
+          }
+        ],
+        "bulges": [
+          1,
+          0,
+          0
+        ],
+        "closed": false,
+        "widths": [
+          [
+            0.001,
+            0.002
+          ],
+          [
+            0.002,
+            0.001
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      }
+    }
+  ]
+}

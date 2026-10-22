@@ -482,6 +482,7 @@ fn write(doc: &mut Document, input: &ImportDxf, read: ReadDxf, format: CadFormat
     let report = serde_json::to_value(&result.report).unwrap_or(Value::Null);
     let unit = result.unit.clone().unwrap_or_else(metres);
     let styles = Styles {
+        cad_source:Some(crate::cad_layouts::Source{file:file.clone(),sha256:Some(sha256.clone())}),
         layouts: result.layouts,
         text: result.text_styles,
         dimension: result.dimension_styles,

@@ -554232,6 +554232,385 @@
             ],
             "type": "string"
           },
+          "PaperCadGeometry": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "paths": {
+                    "items": {
+                      "$ref": "#/$defs/PaperCadPolyline"
+                    },
+                    "type": "array"
+                  },
+                  "type": {
+                    "const": "polyline",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "paths"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "center": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "radius": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "paper-um"
+                  },
+                  "type": {
+                    "const": "circle",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "center",
+                  "radius"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "center": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "radius": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "paper-um"
+                  },
+                  "start": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "sweep": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "type": {
+                    "const": "arc",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "center",
+                  "radius",
+                  "start",
+                  "sweep"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "center": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "major": {
+                    "description": "Major axis vector, from the centre.",
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "ratio": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  },
+                  "start": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "sweep": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "type": {
+                    "const": "ellipse",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "center",
+                  "major",
+                  "ratio",
+                  "start",
+                  "sweep"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Three (quadratic) or four (cubic) control points, retained exactly.",
+                "properties": {
+                  "closed": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "points": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "type": {
+                    "const": "bezier",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "points"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "closed": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "control": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "degree": {
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "fit": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "fitTolerance": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "paper-um"
+                  },
+                  "knots": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "type": "array",
+                    "x-unit": "1"
+                  },
+                  "periodic": {
+                    "type": "boolean"
+                  },
+                  "tangents": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": [
+                        "array",
+                        "null"
+                      ]
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "x-unit": "1"
+                  },
+                  "type": {
+                    "const": "nurbs",
+                    "type": "string"
+                  },
+                  "weights": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "type": "array",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "type",
+                  "degree",
+                  "control",
+                  "knots"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperCadOrigin": {
+            "additionalProperties": false,
+            "description": "Provenance of a copy, never a second live owner of model geometry.",
+            "properties": {
+              "entityKind": {
+                "type": "string"
+              },
+              "file": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "handle": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layout": {
+                "type": "string"
+              },
+              "record": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layout",
+              "record",
+              "entityKind"
+            ],
+            "type": "object"
+          },
+          "PaperCadPolyline": {
+            "additionalProperties": false,
+            "properties": {
+              "bulges": {
+                "description": "tan(sweep/4), clockwise positive in paper coordinates.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array",
+                "x-unit": "1"
+              },
+              "closed": {
+                "default": false,
+                "type": "boolean"
+              },
+              "points": {
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": "array",
+                "x-unit": "paper-um"
+              },
+              "widths": {
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": "array",
+                "x-unit": "paper-um"
+              }
+            },
+            "required": [
+              "points"
+            ],
+            "type": "object"
+          },
           "PaperCellStyle": {
             "additionalProperties": false,
             "description": "A cell's look.",
@@ -554746,6 +555125,17 @@
                   }
                 ],
                 "description": "A line around the frame."
+              },
+              "cadOrigin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperCadOrigin"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Source of an imported paper entity (a copy, not a live model alias)."
               },
               "constraints": {
                 "$ref": "#/$defs/PaperConstraints",
@@ -556740,6 +557130,29 @@
                 "required": [
                   "type",
                   "points"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Analytic CAD curves; the frame is independent of their actual size.",
+                "properties": {
+                  "geometry": {
+                    "$ref": "#/$defs/PaperCadGeometry"
+                  },
+                  "reference": {
+                    "$ref": "#/$defs/PaperSizeUm",
+                    "description": "Original selection box. Geometry is local paper micrometres, before the item's affine resize/rotation."
+                  },
+                  "type": {
+                    "const": "cad",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "reference",
+                  "geometry"
                 ],
                 "type": "object"
               }
@@ -558241,6 +558654,385 @@
             ],
             "type": "string"
           },
+          "PaperCadGeometry": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "paths": {
+                    "items": {
+                      "$ref": "#/$defs/PaperCadPolyline"
+                    },
+                    "type": "array"
+                  },
+                  "type": {
+                    "const": "polyline",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "paths"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "center": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "radius": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "paper-um"
+                  },
+                  "type": {
+                    "const": "circle",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "center",
+                  "radius"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "center": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "radius": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "paper-um"
+                  },
+                  "start": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "sweep": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "type": {
+                    "const": "arc",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "center",
+                  "radius",
+                  "start",
+                  "sweep"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "center": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "major": {
+                    "description": "Major axis vector, from the centre.",
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "ratio": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  },
+                  "start": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "sweep": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "type": {
+                    "const": "ellipse",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "center",
+                  "major",
+                  "ratio",
+                  "start",
+                  "sweep"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Three (quadratic) or four (cubic) control points, retained exactly.",
+                "properties": {
+                  "closed": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "points": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "type": {
+                    "const": "bezier",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "points"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "closed": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "control": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "degree": {
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "fit": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "fitTolerance": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "paper-um"
+                  },
+                  "knots": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "type": "array",
+                    "x-unit": "1"
+                  },
+                  "periodic": {
+                    "type": "boolean"
+                  },
+                  "tangents": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": [
+                        "array",
+                        "null"
+                      ]
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "x-unit": "1"
+                  },
+                  "type": {
+                    "const": "nurbs",
+                    "type": "string"
+                  },
+                  "weights": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "type": "array",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "type",
+                  "degree",
+                  "control",
+                  "knots"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperCadOrigin": {
+            "additionalProperties": false,
+            "description": "Provenance of a copy, never a second live owner of model geometry.",
+            "properties": {
+              "entityKind": {
+                "type": "string"
+              },
+              "file": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "handle": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layout": {
+                "type": "string"
+              },
+              "record": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layout",
+              "record",
+              "entityKind"
+            ],
+            "type": "object"
+          },
+          "PaperCadPolyline": {
+            "additionalProperties": false,
+            "properties": {
+              "bulges": {
+                "description": "tan(sweep/4), clockwise positive in paper coordinates.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array",
+                "x-unit": "1"
+              },
+              "closed": {
+                "default": false,
+                "type": "boolean"
+              },
+              "points": {
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": "array",
+                "x-unit": "paper-um"
+              },
+              "widths": {
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": "array",
+                "x-unit": "paper-um"
+              }
+            },
+            "required": [
+              "points"
+            ],
+            "type": "object"
+          },
           "PaperCellStyle": {
             "additionalProperties": false,
             "description": "A cell's look.",
@@ -558755,6 +559547,17 @@
                   }
                 ],
                 "description": "A line around the frame."
+              },
+              "cadOrigin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperCadOrigin"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Source of an imported paper entity (a copy, not a live model alias)."
               },
               "constraints": {
                 "$ref": "#/$defs/PaperConstraints",
@@ -560749,6 +561552,29 @@
                 "required": [
                   "type",
                   "points"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Analytic CAD curves; the frame is independent of their actual size.",
+                "properties": {
+                  "geometry": {
+                    "$ref": "#/$defs/PaperCadGeometry"
+                  },
+                  "reference": {
+                    "$ref": "#/$defs/PaperSizeUm",
+                    "description": "Original selection box. Geometry is local paper micrometres, before the item's affine resize/rotation."
+                  },
+                  "type": {
+                    "const": "cad",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "reference",
+                  "geometry"
                 ],
                 "type": "object"
               }
@@ -1031234,6 +1032060,385 @@
             ],
             "type": "string"
           },
+          "PaperCadGeometry": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "paths": {
+                    "items": {
+                      "$ref": "#/$defs/PaperCadPolyline"
+                    },
+                    "type": "array"
+                  },
+                  "type": {
+                    "const": "polyline",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "paths"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "center": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "radius": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "paper-um"
+                  },
+                  "type": {
+                    "const": "circle",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "center",
+                  "radius"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "center": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "radius": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "paper-um"
+                  },
+                  "start": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "sweep": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "type": {
+                    "const": "arc",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "center",
+                  "radius",
+                  "start",
+                  "sweep"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "center": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "major": {
+                    "description": "Major axis vector, from the centre.",
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "ratio": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  },
+                  "start": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "sweep": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "type": {
+                    "const": "ellipse",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "center",
+                  "major",
+                  "ratio",
+                  "start",
+                  "sweep"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Three (quadratic) or four (cubic) control points, retained exactly.",
+                "properties": {
+                  "closed": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "points": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "type": {
+                    "const": "bezier",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "points"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "closed": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "control": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "degree": {
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "fit": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "fitTolerance": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "paper-um"
+                  },
+                  "knots": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "type": "array",
+                    "x-unit": "1"
+                  },
+                  "periodic": {
+                    "type": "boolean"
+                  },
+                  "tangents": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": [
+                        "array",
+                        "null"
+                      ]
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "x-unit": "1"
+                  },
+                  "type": {
+                    "const": "nurbs",
+                    "type": "string"
+                  },
+                  "weights": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "type": "array",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "type",
+                  "degree",
+                  "control",
+                  "knots"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperCadOrigin": {
+            "additionalProperties": false,
+            "description": "Provenance of a copy, never a second live owner of model geometry.",
+            "properties": {
+              "entityKind": {
+                "type": "string"
+              },
+              "file": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "handle": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layout": {
+                "type": "string"
+              },
+              "record": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layout",
+              "record",
+              "entityKind"
+            ],
+            "type": "object"
+          },
+          "PaperCadPolyline": {
+            "additionalProperties": false,
+            "properties": {
+              "bulges": {
+                "description": "tan(sweep/4), clockwise positive in paper coordinates.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array",
+                "x-unit": "1"
+              },
+              "closed": {
+                "default": false,
+                "type": "boolean"
+              },
+              "points": {
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": "array",
+                "x-unit": "paper-um"
+              },
+              "widths": {
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": "array",
+                "x-unit": "paper-um"
+              }
+            },
+            "required": [
+              "points"
+            ],
+            "type": "object"
+          },
           "PaperCellStyle": {
             "additionalProperties": false,
             "description": "A cell's look.",
@@ -1031801,6 +1033006,17 @@
                   }
                 ],
                 "description": "A line around the frame."
+              },
+              "cadOrigin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperCadOrigin"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Source of an imported paper entity (a copy, not a live model alias)."
               },
               "constraints": {
                 "$ref": "#/$defs/PaperConstraints",
@@ -1033797,6 +1035013,29 @@
                   "points"
                 ],
                 "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Analytic CAD curves; the frame is independent of their actual size.",
+                "properties": {
+                  "geometry": {
+                    "$ref": "#/$defs/PaperCadGeometry"
+                  },
+                  "reference": {
+                    "$ref": "#/$defs/PaperSizeUm",
+                    "description": "Original selection box. Geometry is local paper micrometres, before the item's affine resize/rotation."
+                  },
+                  "type": {
+                    "const": "cad",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "reference",
+                  "geometry"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -1035117,6 +1036356,8 @@
       },
       "capabilities": {
         "refusals": [
+          "bad_curve",
+          "curve_too_complex",
           "asset_in_use",
           "asset_too_large",
           "bad_asset",
@@ -1035878,6 +1037119,385 @@
             ],
             "type": "string"
           },
+          "PaperCadGeometry": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "paths": {
+                    "items": {
+                      "$ref": "#/$defs/PaperCadPolyline"
+                    },
+                    "type": "array"
+                  },
+                  "type": {
+                    "const": "polyline",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "paths"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "center": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "radius": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "paper-um"
+                  },
+                  "type": {
+                    "const": "circle",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "center",
+                  "radius"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "center": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "radius": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "paper-um"
+                  },
+                  "start": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "sweep": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "type": {
+                    "const": "arc",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "center",
+                  "radius",
+                  "start",
+                  "sweep"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "center": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "major": {
+                    "description": "Major axis vector, from the centre.",
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "ratio": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  },
+                  "start": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "sweep": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "type": {
+                    "const": "ellipse",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "center",
+                  "major",
+                  "ratio",
+                  "start",
+                  "sweep"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Three (quadratic) or four (cubic) control points, retained exactly.",
+                "properties": {
+                  "closed": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "points": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "type": {
+                    "const": "bezier",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "points"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "closed": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "control": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "degree": {
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "fit": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "fitTolerance": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "paper-um"
+                  },
+                  "knots": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "type": "array",
+                    "x-unit": "1"
+                  },
+                  "periodic": {
+                    "type": "boolean"
+                  },
+                  "tangents": {
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": [
+                        "array",
+                        "null"
+                      ]
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "x-unit": "1"
+                  },
+                  "type": {
+                    "const": "nurbs",
+                    "type": "string"
+                  },
+                  "weights": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "type": "array",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "type",
+                  "degree",
+                  "control",
+                  "knots"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperCadOrigin": {
+            "additionalProperties": false,
+            "description": "Provenance of a copy, never a second live owner of model geometry.",
+            "properties": {
+              "entityKind": {
+                "type": "string"
+              },
+              "file": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "handle": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layout": {
+                "type": "string"
+              },
+              "record": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layout",
+              "record",
+              "entityKind"
+            ],
+            "type": "object"
+          },
+          "PaperCadPolyline": {
+            "additionalProperties": false,
+            "properties": {
+              "bulges": {
+                "description": "tan(sweep/4), clockwise positive in paper coordinates.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array",
+                "x-unit": "1"
+              },
+              "closed": {
+                "default": false,
+                "type": "boolean"
+              },
+              "points": {
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": "array",
+                "x-unit": "paper-um"
+              },
+              "widths": {
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": "array",
+                "x-unit": "paper-um"
+              }
+            },
+            "required": [
+              "points"
+            ],
+            "type": "object"
+          },
           "PaperCellStyle": {
             "additionalProperties": false,
             "description": "A cell's look.",
@@ -1036521,6 +1038141,17 @@
                   }
                 ],
                 "description": "A line around the frame."
+              },
+              "cadOrigin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperCadOrigin"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Source of an imported paper entity (a copy, not a live model alias)."
               },
               "constraints": {
                 "$ref": "#/$defs/PaperConstraints",
@@ -1039737,6 +1041368,29 @@
                   "points"
                 ],
                 "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Analytic CAD curves; the frame is independent of their actual size.",
+                "properties": {
+                  "geometry": {
+                    "$ref": "#/$defs/PaperCadGeometry"
+                  },
+                  "reference": {
+                    "$ref": "#/$defs/PaperSizeUm",
+                    "description": "Original selection box. Geometry is local paper micrometres, before the item's affine resize/rotation."
+                  },
+                  "type": {
+                    "const": "cad",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "reference",
+                  "geometry"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -1041040,6 +1042694,8 @@
       },
       "capabilities": {
         "refusals": [
+          "bad_curve",
+          "curve_too_complex",
           "asset_in_use",
           "asset_too_large",
           "bad_asset",
@@ -1090237,6 +1091893,216 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Gruplama kurallarına uymuyor."
+    },
+    {
+      "code": "bad_curve",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta eğrisinin sayısal tanımı geçersiz."
+    },
+    {
+      "code": "curve_too_complex",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta eğrisi çizim toleransında işlem sınırını aşıyor; eğriyi bölün veya çerçeveyi küçültün."
+    },
+    {
+      "code": "asset_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta kaynağı izin verilen bayt sınırını aşıyor."
+    },
+    {
+      "code": "bad_asset",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta resim kaynağı, özeti veya baytları geçersiz."
+    },
+    {
+      "code": "bad_atlas",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Atlas tanımı geçersiz."
+    },
+    {
+      "code": "bad_binding",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta öğesinin veri bağı geçersiz."
+    },
+    {
+      "code": "bad_constraint",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta öğesinin yerleşim kısıtı geçersiz."
+    },
+    {
+      "code": "bad_continuation",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tablonun devam çerçevesi geçersiz."
+    },
+    {
+      "code": "bad_font",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta yazı tipi tanınmıyor."
+    },
+    {
+      "code": "bad_id",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta öğesinin kimliği geçersiz."
+    },
+    {
+      "code": "bad_layout",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta yerleşim tanımı geçersiz."
+    },
+    {
+      "code": "bad_link",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta öğesinin başvurduğu öğe uygun değil."
+    },
+    {
+      "code": "bad_name",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta adı geçersiz."
+    },
+    {
+      "code": "bad_template",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta şablonu geçersiz."
+    },
+    {
+      "code": "bad_variable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta değişkeninin tanımı geçersiz."
+    },
+    {
+      "code": "bad_variable_value",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta değişkeninin değeri türüne veya kurallarına uymuyor."
+    },
+    {
+      "code": "duplicate_variable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Aynı pafta değişkeni birden çok kez verilmiş."
+    },
+    {
+      "code": "empty_group",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta grubu boş olamaz."
+    },
+    {
+      "code": "group_cycle",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta grupları kendi altına bağlanamaz."
+    },
+    {
+      "code": "invalid_column_name",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tablo sütununun adı geçersiz."
+    },
+    {
+      "code": "margins_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kâğıdın kenar boşlukları kullanılabilir alan bırakmıyor."
+    },
+    {
+      "code": "missing_asset",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta öğesinin resim kaynağı eksik."
+    },
+    {
+      "code": "newer_schema",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta daha yeni bir şemayla yazılmış; uygulamayı güncelleyin."
+    },
+    {
+      "code": "page_orientation",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kâğıdın yönü boyutlarıyla uyuşmuyor."
+    },
+    {
+      "code": "page_size_mismatch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kâğıdın boyutları seçilen standarda uymuyor."
+    },
+    {
+      "code": "reserved_id",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta kimliği sistem için ayrılmış."
+    },
+    {
+      "code": "template_has_place",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Şablon çizime özgü konum taşıyamaz."
+    },
+    {
+      "code": "template_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta şablonu izin verilen boyutu aşıyor."
+    },
+    {
+      "code": "unknown_paper",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kâğıt standardı tanınmıyor."
+    },
+    {
+      "code": "unknown_schema",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta şeması tanınmıyor."
+    },
+    {
+      "code": "unknown_variable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Şablonda bu adla bir değişken yok."
+    },
+    {
+      "code": "invalid_options",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta oluşturma seçenekleri geçersiz ya da bilinmeyen alan taşıyor."
+    },
+    {
+      "code": "bad_json",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta işlemi türüne uygun JSON değil."
+    },
+    {
+      "code": "ambiguous_source",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Sığdırmak için ya kapsam ya nesne kimlikleri verilmeli."
+    },
+    {
+      "code": "not_fixed_map",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu işlem sabit görünüm penceresi gerektiriyor."
     },
     {
       "code": "no_steps",

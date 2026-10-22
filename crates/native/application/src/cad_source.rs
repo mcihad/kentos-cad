@@ -51,6 +51,7 @@ pub fn drawing(bytes: &[u8], path: &Path) -> Result<DocumentSnapshotV2, String> 
     )
     .map_err(|e| e.message)?;
     let styles = crate::import_apply::Styles {
+        cad_source:None,
         layouts: Vec::new(),
         text: read.text_styles,
         dimension: read.dimension_styles,

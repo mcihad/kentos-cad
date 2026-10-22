@@ -152,11 +152,11 @@ fn text_style(path: &str, t: &TextStyle) -> Result<()> {
             "Yazı tipi adı boş olamaz.",
         ));
     }
-    if !(200..=500_000).contains(&t.size) {
+    if !(1..=500_000).contains(&t.size) {
         return Err(err(
             "out_of_range",
             &format!("{path}.size"),
-            "Yazı boyu 0,2 ile 500 mm arasında olmalı.",
+            "Yazı boyu 0,001 ile 500 mm arasında olmalı.",
         ));
     }
     if !(100..=900).contains(&t.weight) || !t.weight.is_multiple_of(100) {
@@ -780,6 +780,12 @@ fn kind(path: &str, item: &Item) -> Result<()> {
                     FRAME_LIMIT,
                     "Köşe yarıçapı (µm)",
                 )?,
+                ShapeKind::Cad(cad) => {
+                    crate::cad::paths(cad, &item.content_rect()).map_err(|mut e| {
+                        e.path = Some(format!("{p}.shape"));
+                        e
+                    })?;
+                }
                 ShapeKind::Polygon(poly) => {
                     if poly.points.len() < 3 || poly.points.len() > 10_000 {
                         return Err(err(
@@ -904,6 +910,31 @@ fn kind(path: &str, item: &Item) -> Result<()> {
 }
 
 fn item(path: &str, it: &Item) -> Result<()> {
+    if let Some(origin) = &it.cad_origin
+        && (origin.layout.trim().is_empty()
+            || origin.layout.chars().count() > 120
+            || origin.entity_kind.is_empty()
+            || origin.entity_kind.len() > 64
+            || origin.file.as_ref().is_some_and(|s| s.len() > 1024)
+            || origin.handle.as_ref().is_some_and(|s| s.len() > 128)
+            || origin
+                .layer
+                .as_ref()
+                .is_some_and(|s| s.chars().count() > 1024)
+            || origin.sha256.as_ref().is_some_and(|s| {
+                s.len() != 64
+                    || !s
+                        .bytes()
+                        .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+            }))
+    {
+        return Err(err(
+            "bad_value",
+            &format!("{path}.cadOrigin"),
+            "CAD kaynak bilgileri geçersiz.",
+        ));
+    }
+
     if !valid_id(&it.id) {
         return Err(err(
             "bad_id",

@@ -521,6 +521,10 @@ pub struct Item {
     /// Data-defined properties (design §7).
     #[serde(default)]
     pub bindings: Vec<Binding>,
+    /// Source of an imported paper entity (a copy, not a live model alias).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub cad_origin: Option<crate::cad::Origin>,
     pub kind: ItemKind,
 }
 
@@ -542,6 +546,7 @@ impl Item {
             padding: 0,
             group: None,
             bindings: Vec::new(),
+            cad_origin: None,
             kind,
         }
     }

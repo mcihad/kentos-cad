@@ -2,6 +2,7 @@
 import type { Binding } from "./Binding";
 import type { Constraints } from "./Constraints";
 import type { ItemKind } from "./ItemKind";
+import type { Origin } from "./Origin";
 import type { RectUm } from "./RectUm";
 import type { Stroke } from "./Stroke";
 
@@ -48,4 +49,8 @@ group?: string,
 /**
  * Data-defined properties (design §7).
  */
-bindings: Array<Binding>, kind: ItemKind, };
+bindings: Array<Binding>, 
+/**
+ * Source of an imported paper entity (a copy, not a live model alias).
+ */
+cadOrigin?: Origin, kind: ItemKind, };
