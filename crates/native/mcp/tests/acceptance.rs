@@ -879,3 +879,45 @@ fn an_agent_saves_applies_and_exports_a_named_page_setup() {
     assert!(String::from_utf8(output.stdout).unwrap().contains("PRINT"));
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn an_agent_keeps_twenty_native_plot_profiles_before_any_sheet_exists() {
+    let data: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/plot-profiles.json"
+    ))
+    .unwrap();
+    let source: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/page-setups.json"
+    ))
+    .unwrap();
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-sheet19-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("source.kcad");
+    std::fs::write(
+        &path,
+        serde_json::to_vec(&source["cases"][0]["model"]).unwrap(),
+    )
+    .unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    for c in data["cases"].as_array().unwrap() {
+        let done = call(
+            &mut server,
+            "cad.sheets.edit",
+            json!({"drawing":drawing,"ops":[{"op":"savePlotProfiles","profiles":[c["exchange"]["profile"]]}]}),
+        );
+        let state = call(
+            &mut server,
+            "cad.sheets.set",
+            json!({"drawing":drawing,"details":true}),
+        );
+        assert_eq!(state["output"]["book"]["plotProfiles"][0], c["exchange"]["profile"]);
+        call(
+            &mut server,
+            "cad.sheets.edit",
+            json!({"drawing":drawing,"ops":done["output"]["inverse"]}),
+        );
+    }
+    std::fs::remove_dir_all(dir).unwrap();
+}

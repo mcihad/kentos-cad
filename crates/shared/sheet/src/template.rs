@@ -275,6 +275,7 @@ pub fn used_assets(items: &[Item]) -> Vec<String> {
 /// The book a template stands for (its sheet, master and pictures), for the book's rules.
 fn as_book(t: &Template) -> SheetBook {
     SheetBook {
+        plot_profiles:Vec::new(),
         page_setups: Vec::new(),
         schema: BOOK_SCHEMA.to_owned(),
         sheets: vec![t.sheet.clone()],
@@ -542,11 +543,22 @@ fn id_map(items: &[Item], new: &[ItemId], what: &str) -> Result<BTreeMap<String,
 }
 
 /// A new sheet from a template: new ids from the host, links kept, the paper chosen (items follow their constraints), the questions answered.
-pub fn instantiate(t: &Template, ids: &InstanceIds, options: &InstanceOptions) -> Result<Instance> {
+pub fn instantiate(
+    t: &Template,
+    ids: &InstanceIds,
+    options: &InstanceOptions,
+) -> Result<Instance> {
     let mut sheet = t.sheet.clone();
     let mut master = t.master.clone();
     let map = id_map(&sheet.items, &ids.items, "Paftanın öğeleri")?;
     remap_items(&mut sheet.items, &map);
+    if let Some(p) = sheet
+        .plot
+        .as_mut()
+        .and_then(|p| p.settings.profile_snapshot.as_mut())
+    {
+        crate::book_transfer::profile(p, &BTreeMap::new(), &map);
+    }
     crate::variants::remap(&mut sheet.variants, &mut sheet.base_layout, &map);
     sheet.id = ids.sheet.clone();
     if let Some(m) = &mut master {
@@ -558,6 +570,13 @@ pub fn instantiate(t: &Template, ids: &InstanceIds, options: &InstanceOptions) -
         })?;
         let mmap = id_map(&m.items, &ids.master_items, "Ana sayfanın öğeleri")?;
         remap_items(&mut m.items, &mmap);
+        if let Some(p) = sheet
+            .plot
+            .as_mut()
+            .and_then(|p| p.settings.profile_snapshot.as_mut())
+        {
+            crate::book_transfer::profile(p, &BTreeMap::new(), &mmap);
+        }
         crate::variants::remap(&mut m.variants, &mut m.base_layout, &mmap);
         m.id = mid.clone();
         sheet.master = Some(mid);
@@ -570,8 +589,8 @@ pub fn instantiate(t: &Template, ids: &InstanceIds, options: &InstanceOptions) -
     let to = match &options.paper {
         Some(choice) => {
             let size = paper::paper_size(choice.paper, choice.orientation).ok_or_else(|| {
-                SheetError::new("unknown_paper", "Özel kâğıt şablondan seçilemez; önce standart bir kâğıtla kullanın, sonra boyunu değiştirin.")
-            })?;
+            SheetError::new("unknown_paper", "Özel kâğıt şablondan seçilemez; önce standart bir kâğıtla kullanın, sonra boyunu değiştirin.")
+        })?;
             Page {
                 paper: choice.paper,
                 orientation: choice.orientation,
@@ -596,7 +615,8 @@ pub fn instantiate(t: &Template, ids: &InstanceIds, options: &InstanceOptions) -
                 f.center = Some(c);
             }
             if let Some(s) = options.scale {
-                f.scale = s; f.ratio=None;
+                f.scale = s;
+                f.ratio = None;
             }
         }
     }
@@ -652,6 +672,12 @@ pub fn extract(
         )
     })?;
     let mut sheet = src.clone();
+    if let Some(plot) = &mut sheet.plot {
+        if plot.settings.profile_snapshot.is_none() {
+            plot.settings.profile_snapshot = crate::plot_profile::for_sheet(book, sheet_id)?.cloned();
+        }
+        plot.source = None;
+    }
     let master = sheet
         .master
         .as_deref()

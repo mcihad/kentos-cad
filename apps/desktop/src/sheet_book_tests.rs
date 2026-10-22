@@ -2096,3 +2096,70 @@ fn sheet18_page_setup_screens() {
         assert!(app.sheets.open_sheet().unwrap().plot.is_some());
     }
 }
+
+#[test]
+#[ignore="GPU profile choice window, run alone"]
+fn sheet19_plot_profile_screens() {
+    use kentos_sheet_ui::page_setup::SetupMessage as P;
+    use kentos_sheet::{
+        ops::Op,
+        plot_profile::{SavePlotProfiles, PlotProfile},
+    };
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/plot-profiles.json"
+    ))
+    .unwrap();
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme, text, w, h) in [
+        ("light", 13, 1440., 900.),
+        ("dark", 13, 1440., 900.),
+        ("dark", 18, 1100., 650.),
+    ] {
+        let mut app = multipage_set_app(theme, text);
+        sheet(&mut app, Sheet::Tab(3));
+        let profiles: Vec<PlotProfile> = [0, 10]
+            .into_iter()
+            .map(|i| {
+                serde_json::from_value(data["cases"][i]["exchange"]["profile"].clone()).unwrap()
+            })
+            .collect();
+        let id = profiles[1].id.clone();
+        assert!(app.sheets.apply(
+            vec![Op::SavePlotProfiles(SavePlotProfiles { profiles })],
+            "Baskı profilleri"
+        ));
+        for m in [P::Open, P::Name("Profil ile baskı".into()), P::Profile(id)] {
+            sheet(&mut app, Sheet::PageSetup(m));
+        }
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(w, h)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet19-profiles-{theme}-{text}.png")))
+            .unwrap();
+        if theme=="light" {
+            use kentos_ui::snapshot::Input;
+            snap.input(&mut app,App::view,&mut update,Input::Click(iced::Point::new(700.,566.)));
+            snap.render(app.view(),&app.theme()).save(out.join("sheet19-profiles-menu.png")).unwrap();
+            snap.input(&mut app,App::view,&mut update,Input::Key(iced::keyboard::key::Named::ArrowUp));
+            snap.input(&mut app,App::view,&mut update,Input::Key(iced::keyboard::key::Named::Enter));
+        }
+        sheet(&mut app, Sheet::PageSetup(P::Save));
+        if theme=="light" {assert_eq!(app.sheets.open_sheet().unwrap().plot.as_ref().unwrap().settings.profile.as_deref(),Some("profile-0"));}
+        assert!(app.sheets.error().is_none());
+        assert!(
+            app.sheets
+                .open_sheet()
+                .unwrap()
+                .plot
+                .as_ref()
+                .unwrap()
+                .settings.profile_snapshot
+                .is_some()
+        );
+    }
+}

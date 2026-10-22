@@ -1292,6 +1292,7 @@ fn guides(path: &str, gs: &[Guide]) -> Result<()> {
 /// Every rule of the book; the first one broken is the error.
 pub fn validate_book(book: &SheetBook) -> Result<()> {
     crate::print_setup::validate_book(book)?;
+    crate::plot_profile::validate_book(book)?;
     if book.schema != BOOK_SCHEMA {
         return Err(err(
             "unknown_schema",

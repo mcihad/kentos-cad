@@ -188,10 +188,7 @@ impl Designer {
                     }));
                     ops.push(Op::SetSheetPlot(SetSheetPlot {
                         sheet: d.sheet,
-                        plot: Some(AppliedPageSetup {
-                            source: d.source,
-                            settings: d.settings,
-                        }),
+                        plot: Some(AppliedPageSetup::capture(&self.book, d.source, d.settings)),
                     }));
                 }
                 self.commit(ops);
@@ -207,7 +204,20 @@ impl Designer {
                     match other {
                         SetupMessage::Name(v) => d.name = v,
                         SetupMessage::Profile(v) => {
-                            d.settings.profile = (!v.trim().is_empty()).then(|| v.trim().to_owned())
+                            d.settings.profile =
+                                (!v.trim().is_empty()).then(|| v.trim().to_owned());
+                            let saved = d
+                                .settings
+                                .profile_snapshot
+                                .take()
+                                .filter(|p| Some(&p.id) == d.settings.profile.as_ref());
+                            d.settings.profile_snapshot = self
+                                .book
+                                .plot_profiles
+                                .iter()
+                                .find(|p| Some(&p.id) == d.settings.profile.as_ref())
+                                .cloned()
+                                .or(saved);
                         }
                         SetupMessage::Area(v) => {
                             d.settings.area = match v {
@@ -388,13 +398,45 @@ impl Designer {
                     .width(Fill),
             );
         }
+        let mut profiles = vec![(String::new(), "Çizim görünüşü".to_owned())];
+        profiles.extend(
+            self.book
+                .plot_profiles
+                .iter()
+                .map(|p| (p.id.clone(), p.name.clone())),
+        );
+        if let Some(id) = &d.settings.profile
+            && !profiles.iter().any(|p| &p.0 == id)
+        {
+            profiles.push((
+                id.clone(),
+                d.settings
+                    .profile_snapshot
+                    .as_ref()
+                    .filter(|p| &p.id == id)
+                    .map_or_else(
+                        || format!("Eksik profil: {id}"),
+                        |p| format!("Kaydedilen: {}", p.name),
+                    ),
+            ));
+        }
+        let selected = profiles
+            .iter()
+            .position(|p| Some(p.0.as_str()) == d.settings.profile.as_deref())
+            .unwrap_or(0);
+        let keys = profiles.iter().map(|p| p.0.clone()).collect::<Vec<_>>();
         body = body.push(
-            InputField::new(
-                "Baskı profili kimliği (boş: çizim görünüşü)",
-                d.settings.profile.as_deref().unwrap_or(""),
-            )
-            .on_input(move |v| on(SetupMessage::Profile(v)))
-            .width(Fill),
+            column![
+                label::body("Baskı profili"),
+                kentos_ui::widget::Select::new(
+                    profiles
+                        .iter()
+                        .map(|p| kentos_ui::widget::Choice::new(&p.1)),
+                    Some(selected),
+                    move |i| on(SetupMessage::Profile(keys[i].clone()))
+                )
+            ]
+            .spacing(4),
         );
         body=body.push(label::muted("PDF dışa aktarma her cihazda kullanılabilir. Fiziksel yazdırma, seçilen cihazı masaüstü yazdırma penceresinde doğrular."));
         if let Some(e) = d.error.clone().or_else(|| d.check().err()) {

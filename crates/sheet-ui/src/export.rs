@@ -485,7 +485,10 @@ impl Designer {
             }
         };
         self.keep_pictures(assets);
-        let incoming = if replace { book } else { self.renew_ids(&book) };
+        let mut incoming = if replace { book } else { self.renew_ids(&book) };
+        if !replace {
+            kentos_sheet::book_transfer::unique_names(&mut incoming, &self.book);
+        }
         let have: std::collections::BTreeSet<String> =
             self.book.assets.iter().map(|a| a.sha256.clone()).collect();
         let mut ops = Vec::new();
@@ -530,6 +533,24 @@ impl Designer {
                 variables: incoming.variables.clone(),
             }));
         }
+        let mut profiles = if replace {
+            Vec::new()
+        } else {
+            self.book.plot_profiles.clone()
+        };
+        profiles.extend(incoming.plot_profiles.clone());
+        let mut setups = if replace {
+            Vec::new()
+        } else {
+            self.book.page_setups.clone()
+        };
+        setups.extend(incoming.page_setups.clone());
+        ops.push(Op::SavePlotProfiles(
+            kentos_sheet::plot_profile::SavePlotProfiles { profiles },
+        ));
+        ops.push(Op::SavePageSetups(
+            kentos_sheet::print_setup::SavePageSetups { setups },
+        ));
         let n = incoming.sheets.len();
         if self.commit(ops) {
             self.open = incoming.sheets.first().map(|s| s.id.clone());
@@ -551,29 +572,7 @@ impl Designer {
 
     /// The book with new ids for its sheets, masters, items and guides (the web's `renewIds`): every place an id is written takes the new one.
     fn renew_ids(&mut self, book: &SheetBook) -> SheetBook {
-        let mut ids: Vec<String> = Vec::new();
-        for s in &book.sheets {
-            ids.push(s.id.clone());
-            ids.extend(s.items.iter().map(|i| i.id.clone()));
-            ids.extend(s.guides.iter().map(|g| g.id.clone()));
-        }
-        for m in &book.masters {
-            ids.push(m.id.clone());
-            ids.extend(m.items.iter().map(|i| i.id.clone()));
-            ids.extend(m.guides.iter().map(|g| g.id.clone()));
-        }
-        let Ok(mut text) = serde_json::to_string(book) else {
-            return book.clone();
-        };
-        for id in ids {
-            let fresh = self.new_id("i");
-            let (old, new) = (
-                serde_json::Value::from(id).to_string(),
-                serde_json::Value::from(fresh).to_string(),
-            );
-            text = text.replace(&old, &new);
-        }
-        serde_json::from_str(&text).unwrap_or_else(|_| book.clone())
+        kentos_sheet::book_transfer::renew_ids(book, || self.new_id("i"))
     }
 
     /// The export the host asked a path for (after [`crate::Effect::AskExportPath`]) as bytes,

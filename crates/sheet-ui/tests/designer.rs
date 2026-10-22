@@ -1999,3 +1999,76 @@ fn named_page_setups_save_apply_to_another_sheet_and_undo_as_one_step() {
     assert!(d.book().page_setups.is_empty());
     assert!(d.open_sheet().unwrap().plot.is_some());
 }
+
+#[test]
+fn plot_profile_choice_transfer_and_last_sheet_removal_keep_both_libraries() {
+    use kentos_sheet::{ops::Op, plot_profile::SavePlotProfiles, print_setup::SavePageSetups};
+    use kentos_sheet_ui::page_setup::SetupMessage as P;
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/plot-profiles.json"
+    ))
+    .unwrap();
+    let p: kentos_sheet::plot_profile::PlotProfile =
+        serde_json::from_value(data["cases"][10]["exchange"]["profile"].clone()).unwrap();
+    let setups: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/sheet/v1/page-setups.json"))
+            .unwrap();
+    let setup = serde_json::from_value(setups["cases"][0]["setup"].clone()).unwrap();
+    let mut d = designer();
+    assert!(d.apply(
+        vec![
+            Op::SavePlotProfiles(SavePlotProfiles {
+                profiles: vec![p.clone()]
+            }),
+            Op::SavePageSetups(SavePageSetups {
+                setups: vec![setup]
+            })
+        ],
+        "Baskı kaynakları"
+    ));
+    for m in [P::Open, P::Profile(p.id.clone()), P::Apply] {
+        d.update(Message::PageSetup(m));
+    }
+    assert_eq!(
+        d.open_sheet()
+            .unwrap()
+            .plot
+            .as_ref()
+            .unwrap()
+            .settings.profile_snapshot,
+        Some(p.clone())
+    );
+    let text = d.kpafta().unwrap();
+    d.update(Message::ImportText("aynı kitap.kpafta".into(), text));
+    d.update(Message::ImportChoose(false));
+    assert!(d.error().is_none(), "{:?}", d.error());
+    assert_eq!(d.book().plot_profiles.len(), 2);
+    assert_eq!(d.book().page_setups.len(), 2);
+    assert_ne!(d.book().plot_profiles[0].id, d.book().plot_profiles[1].id);
+    assert_ne!(
+        d.book().plot_profiles[0].name,
+        d.book().plot_profiles[1].name
+    );
+    let ids = d
+        .book()
+        .sheets
+        .iter()
+        .map(|s| s.id.clone())
+        .collect::<Vec<_>>();
+    for id in ids {
+        d.update(Message::RemoveSheet(id));
+    }
+    assert!(d.project_sheets().unwrap().is_some());
+    assert_eq!(d.book().plot_profiles.len(), 2);
+    assert_eq!(d.book().page_setups.len(), 2);
+}
+
+#[test]
+fn editing_offsets_or_saving_a_preset_keeps_an_archived_profile_after_library_removal() {
+ use kentos_sheet::{ops::Op,plot_profile::SavePlotProfiles};use kentos_sheet_ui::page_setup::SetupMessage as P;
+ let data:serde_json::Value=serde_json::from_str(include_str!("../../../fixtures/sheet/v1/plot-profiles.json")).unwrap();let p:kentos_sheet::plot_profile::PlotProfile=serde_json::from_value(data["cases"][10]["exchange"]["profile"].clone()).unwrap();
+ let mut d=designer();assert!(d.apply(vec![Op::SavePlotProfiles(SavePlotProfiles{profiles:vec![p.clone()]})],"Profil"));for m in [P::Open,P::Profile(p.id.clone()),P::Apply] {d.update(Message::PageSetup(m));}
+ assert!(d.apply(vec![Op::SavePlotProfiles(SavePlotProfiles{profiles:vec![]})],"Kitaplıktan kaldır"));
+ for m in [P::Open,P::Offset(0,5.),P::Apply,P::Open,P::Name("Arşiv baskısı".into()),P::Save] {d.update(Message::PageSetup(m));}
+ assert!(d.error().is_none(),"{:?}",d.error());assert_eq!(d.open_sheet().unwrap().plot.as_ref().unwrap().settings.profile_snapshot,Some(p.clone()));assert_eq!(d.book().page_setups[0].settings.profile_snapshot,Some(p));
+}

@@ -65,6 +65,9 @@ pub enum PrintDevice {
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotSettings"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PlotSettings {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub profile_snapshot: Option<crate::plot_profile::PlotProfile>,
     #[serde(default)]
     pub area: PlotArea,
     #[serde(default)]
@@ -83,6 +86,7 @@ pub struct PlotSettings {
 impl Default for PlotSettings {
     fn default() -> Self {
         Self {
+            profile_snapshot: None,
             area: PlotArea::Layout,
             scale: Default::default(),
             offset: Default::default(),
@@ -152,6 +156,16 @@ pub struct SetSheetPlot {
 }
 
 pub fn validate_settings(s: &PlotSettings) -> Result<()> {
+    if let Some(profile) = &s.profile_snapshot {
+        crate::plot_profile::validate(profile)?;
+        if s.profile.as_ref() != Some(&profile.id) {
+            return Err(SheetError::new(
+                "plot_profile_snapshot_mismatch",
+                "Saklanan profil seçilen profilin kimliğiyle eşleşmiyor.",
+            ));
+        }
+    }
+
     if let PlotArea::Window { rect } = &s.area
         && (rect.width <= 0
             || rect.height <= 0
@@ -320,13 +334,21 @@ pub fn plan_for(book: &SheetBook, sheet: &str) -> Result<Option<Plan>> {
         .plot
         .as_ref()
         .map(|plot| {
-            if plot.settings.profile.is_some() {
-                return Err(SheetError::new(
-                    "unknown_plot_profile",
-                    "Baskı profili kitapta bulunamadı; geçerli bir profil seçin.",
-                ));
-            }
+            crate::plot_profile::for_sheet(book, &sheet.id)?;
             plan(&sheet.page, &plot.settings, extents(book, &sheet.id)?)
         })
         .transpose()
+}
+
+impl AppliedPageSetup {
+    pub fn capture(book: &SheetBook, source: Option<String>, mut settings: PlotSettings) -> Self {
+        if settings.profile_snapshot.as_ref().map(|p| &p.id) != settings.profile.as_ref() {
+            settings.profile_snapshot = settings
+                .profile
+                .as_ref()
+                .and_then(|id| book.plot_profiles.iter().find(|p| &p.id == id))
+                .cloned();
+        }
+        Self { source, settings }
+    }
 }

@@ -24,3 +24,5 @@ mod view_links;
 mod viewport_annotations;
 
 mod page_setups;
+
+mod plot_profiles;

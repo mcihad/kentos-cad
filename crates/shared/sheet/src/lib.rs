@@ -16,6 +16,8 @@ pub mod viewport;
 pub mod model_scope;
 pub mod projection;
 pub mod print_setup;
+pub mod plot_profile;
+pub mod book_transfer;
 pub mod cloud;
 pub mod create;
 pub mod fit;

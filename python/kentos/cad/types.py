@@ -3205,6 +3205,15 @@ PaperPictureFitName = Literal["stretch", "contain", "cover", "original"]
 """The names of :class:`PaperPictureFit`, for a plain string."""
 
 
+class PaperPlotTableKind(_StrEnum):
+    COLOR_DEPENDENT = "colorDependent"
+    NAMED = "named"
+
+
+PaperPlotTableKindName = Literal["colorDependent", "named"]
+"""The names of :class:`PaperPlotTableKind`, for a plain string."""
+
+
 class PaperReorderTo(_StrEnum):
     FRONT = "front"
     BACK = "back"
@@ -6617,6 +6626,7 @@ class PaperMapView(_Union):
 class PaperOp(_Union):
     """One of:
 
+    - :class:`SavePlotProfilesPaperOp` (``op: savePlotProfiles``)
     - :class:`SavePageSetupsPaperOp` (``op: savePageSetups``)
     - :class:`ApplyPageSetupPaperOp` (``op: applyPageSetup``)
     - :class:`SetSheetPlotPaperOp` (``op: setSheetPlot``)
@@ -6721,6 +6731,27 @@ class PaperPlotArea(_Union):
         return _variant(_PAPER_PLOT_AREA, "PaperPlotArea", "type", data).from_json(data)
 
 
+class PaperPlotColor(_Union):
+    """One of:
+
+    - :class:`ObjectPaperPlotColor` (``type: object``)
+    - :class:`BlackPaperPlotColor` (``type: black``)
+    - :class:`GrayscalePaperPlotColor` (``type: grayscale``)
+    - :class:`ColorPaperPlotColor` (``type: color``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "type"
+
+    @property
+    def type(self) -> str:
+        """The name of the variant (``type`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperPlotColor:
+        return _variant(_PAPER_PLOT_COLOR, "PaperPlotColor", "type", data).from_json(data)
+
+
 class PaperPlotScale(_Union):
     """One of:
 
@@ -6738,6 +6769,48 @@ class PaperPlotScale(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> PaperPlotScale:
         return _variant(_PAPER_PLOT_SCALE, "PaperPlotScale", "type", data).from_json(data)
+
+
+class PaperPlotStyleKey(_Union):
+    """One of:
+
+    - :class:`AciPaperPlotStyleKey` (``type: aci``)
+    - :class:`NamedPaperPlotStyleKey` (``type: named``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "type"
+
+    @property
+    def type(self) -> str:
+        """The name of the variant (``type`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperPlotStyleKey:
+        return _variant(_PAPER_PLOT_STYLE_KEY, "PaperPlotStyleKey", "type", data).from_json(data)
+
+
+class PaperPlotTarget(_Union):
+    """One of:
+
+    - :class:`ModelLayerPaperPlotTarget` (``type: modelLayer``)
+    - :class:`PaperItemPaperPlotTarget` (``type: paperItem``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "type"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        id: str
+
+    @property
+    def type(self) -> str:
+        """The name of the variant (``type`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperPlotTarget:
+        return _variant(_PAPER_PLOT_TARGET, "PaperPlotTarget", "type", data).from_json(data)
 
 
 class PaperPointNaming(_Union):
@@ -34262,6 +34335,57 @@ class PaperPaperChoice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PaperPlotAssignment(_Model):
+    target: PaperPlotTarget
+    key: PaperPlotStyleKey
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["target"] = self.target.to_json()
+        out["key"] = self.key.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperPlotAssignment:
+        return cls(
+            target=PaperPlotTarget.from_json(data["target"]),
+            key=PaperPlotStyleKey.from_json(data["key"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PaperPlotProfile(_Model):
+    id: str
+    name: str
+    kind: PaperPlotTableKind | PaperPlotTableKindName
+    entries: list[PaperPlotStyleEntry]
+    assignments: list[PaperPlotAssignment] = field(default_factory=list)
+    default_style: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["entries"] = [e0.to_json() for e0 in self.entries]
+        out["assignments"] = [e0.to_json() for e0 in self.assignments]
+        if self.default_style is not UNSET:
+            out["defaultStyle"] = self.default_style
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperPlotProfile:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            kind=_enum_in(PaperPlotTableKind, data["kind"]),
+            entries=[PaperPlotStyleEntry.from_json(e0) for e0 in data["entries"]],
+            assignments=[PaperPlotAssignment.from_json(e0) for e0 in data["assignments"]] if "assignments" in data else list(),
+            default_style=data.get("defaultStyle", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PaperPlotSettings(_Model):
     """
     Attributes:
@@ -34272,6 +34396,7 @@ class PaperPlotSettings(_Model):
     device: PaperPrintDevice = field(default_factory=(lambda: PaperPrintDevice.from_json({'type': 'pdf'})))
     offset: list[int] = field(default_factory=(lambda: list([0, 0])))
     profile: str | None | Unset = UNSET
+    profile_snapshot: PaperPlotProfile | None | Unset = UNSET
     scale: PaperPlotScale = field(default_factory=(lambda: PaperPlotScale.from_json({'ratio': {'model': 1.0, 'paper': 1.0}, 'type': 'ratio'})))
 
     def to_json(self) -> dict[str, Any]:
@@ -34282,6 +34407,8 @@ class PaperPlotSettings(_Model):
         out["offset"] = list(self.offset)
         if self.profile is not UNSET:
             out["profile"] = self.profile
+        if self.profile_snapshot is not UNSET:
+            out["profileSnapshot"] = None if self.profile_snapshot is None else self.profile_snapshot.to_json()
         out["scale"] = self.scale.to_json()
         return out
 
@@ -34293,7 +34420,73 @@ class PaperPlotSettings(_Model):
             device=PaperPrintDevice.from_json(data["device"]) if "device" in data else (lambda: PaperPrintDevice.from_json({'type': 'pdf'}))(),
             offset=list(data["offset"]) if "offset" in data else (lambda: list([0, 0]))(),
             profile=data.get("profile", UNSET),
+            profile_snapshot=UNSET if "profileSnapshot" not in data else None if data["profileSnapshot"] is None else PaperPlotProfile.from_json(data["profileSnapshot"]),
             scale=PaperPlotScale.from_json(data["scale"]) if "scale" in data else (lambda: PaperPlotScale.from_json({'ratio': {'model': 1.0, 'paper': 1.0}, 'type': 'ratio'}))(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PaperPlotStyle(_Model):
+    """
+    Attributes:
+        dash: Unit: paper-um.
+        line_weight: Unit: paper-um.
+        opacity: Unit: percent.
+        screening: Unit: percent.
+    """
+    cap: PaperLineCap | PaperLineCapName | None | Unset = UNSET
+    color: PaperPlotColor = field(default_factory=(lambda: PaperPlotColor.from_json({'type': 'object'})))
+    dash: list[int] | None | Unset = UNSET
+    join: PaperLineJoin | PaperLineJoinName | None | Unset = UNSET
+    line_weight: int | None | Unset = UNSET
+    opacity: int | None | Unset = UNSET
+    screening: int = 100
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.cap is not UNSET:
+            out["cap"] = None if self.cap is None else _enum_out(self.cap)
+        out["color"] = self.color.to_json()
+        if self.dash is not UNSET:
+            out["dash"] = None if self.dash is None else list(self.dash)
+        if self.join is not UNSET:
+            out["join"] = None if self.join is None else _enum_out(self.join)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = self.line_weight
+        if self.opacity is not UNSET:
+            out["opacity"] = self.opacity
+        out["screening"] = self.screening
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperPlotStyle:
+        return cls(
+            cap=UNSET if "cap" not in data else None if data["cap"] is None else _enum_in(PaperLineCap, data["cap"]),
+            color=PaperPlotColor.from_json(data["color"]) if "color" in data else (lambda: PaperPlotColor.from_json({'type': 'object'}))(),
+            dash=UNSET if "dash" not in data else None if data["dash"] is None else list(data["dash"]),
+            join=UNSET if "join" not in data else None if data["join"] is None else _enum_in(PaperLineJoin, data["join"]),
+            line_weight=data.get("lineWeight", UNSET),
+            opacity=data.get("opacity", UNSET),
+            screening=data["screening"] if "screening" in data else 100,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PaperPlotStyleEntry(_Model):
+    key: PaperPlotStyleKey
+    style: PaperPlotStyle
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key.to_json()
+        out["style"] = self.style.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperPlotStyleEntry:
+        return cls(
+            key=PaperPlotStyleKey.from_json(data["key"]),
+            style=PaperPlotStyle.from_json(data["style"]),
         )
 
 
@@ -34440,6 +34633,7 @@ class PaperSheetBook(_Model):
     assets: list[PaperAssetMeta] = field(default_factory=list)
     masters: list[PaperMaster] = field(default_factory=list)
     page_setups: list[PaperNamedPageSetup] | Unset = UNSET
+    plot_profiles: list[PaperPlotProfile] | Unset = UNSET
     sheets: list[PaperSheet] = field(default_factory=list)
     variables: list[PaperVariable] = field(default_factory=list)
 
@@ -34450,6 +34644,8 @@ class PaperSheetBook(_Model):
         out["masters"] = [e0.to_json() for e0 in self.masters]
         if self.page_setups is not UNSET:
             out["pageSetups"] = [e0.to_json() for e0 in self.page_setups]
+        if self.plot_profiles is not UNSET:
+            out["plotProfiles"] = [e0.to_json() for e0 in self.plot_profiles]
         out["sheets"] = [e0.to_json() for e0 in self.sheets]
         out["variables"] = [e0.to_json() for e0 in self.variables]
         return out
@@ -34461,6 +34657,7 @@ class PaperSheetBook(_Model):
             assets=[PaperAssetMeta.from_json(e0) for e0 in data["assets"]] if "assets" in data else list(),
             masters=[PaperMaster.from_json(e0) for e0 in data["masters"]] if "masters" in data else list(),
             page_setups=[PaperNamedPageSetup.from_json(e0) for e0 in data["pageSetups"]] if "pageSetups" in data else UNSET,
+            plot_profiles=[PaperPlotProfile.from_json(e0) for e0 in data["plotProfiles"]] if "plotProfiles" in data else UNSET,
             sheets=[PaperSheet.from_json(e0) for e0 in data["sheets"]] if "sheets" in data else list(),
             variables=[PaperVariable.from_json(e0) for e0 in data["variables"]] if "variables" in data else list(),
         )
@@ -60970,6 +61167,23 @@ class AtlasPaperMapView(PaperMapView):
 
 
 @dataclass(kw_only=True, slots=True)
+class SavePlotProfilesPaperOp(PaperOp):
+    TAG_VALUE: ClassVar[str] = "savePlotProfiles"
+    profiles: list[PaperPlotProfile]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "savePlotProfiles"}
+        out["profiles"] = [e0.to_json() for e0 in self.profiles]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SavePlotProfilesPaperOp:
+        return cls(
+            profiles=[PaperPlotProfile.from_json(e0) for e0 in data["profiles"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SavePageSetupsPaperOp(PaperOp):
     TAG_VALUE: ClassVar[str] = "savePageSetups"
     setups: list[PaperNamedPageSetup]
@@ -62240,6 +62454,62 @@ class WindowPaperPlotArea(PaperPlotArea):
 
 
 @dataclass(kw_only=True, slots=True)
+class ObjectPaperPlotColor(PaperPlotColor):
+    TAG_VALUE: ClassVar[str] = "object"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "object"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ObjectPaperPlotColor:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class BlackPaperPlotColor(PaperPlotColor):
+    TAG_VALUE: ClassVar[str] = "black"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "black"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlackPaperPlotColor:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class GrayscalePaperPlotColor(PaperPlotColor):
+    TAG_VALUE: ClassVar[str] = "grayscale"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "grayscale"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GrayscalePaperPlotColor:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ColorPaperPlotColor(PaperPlotColor):
+    TAG_VALUE: ClassVar[str] = "color"
+    value: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "color"}
+        out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColorPaperPlotColor:
+        return cls(
+            value=data["value"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RatioPaperPlotScale(PaperPlotScale):
     TAG_VALUE: ClassVar[str] = "ratio"
     ratio: PaperScaleRatio
@@ -62267,6 +62537,78 @@ class FitPaperPlotScale(PaperPlotScale):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> FitPaperPlotScale:
         return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class AciPaperPlotStyleKey(PaperPlotStyleKey):
+    """
+    Attributes:
+        index: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "aci"
+    index: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "aci"}
+        out["index"] = self.index
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AciPaperPlotStyleKey:
+        return cls(
+            index=data["index"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NamedPaperPlotStyleKey(PaperPlotStyleKey):
+    TAG_VALUE: ClassVar[str] = "named"
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "named"}
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NamedPaperPlotStyleKey:
+        return cls(
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ModelLayerPaperPlotTarget(PaperPlotTarget):
+    TAG_VALUE: ClassVar[str] = "modelLayer"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "modelLayer"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ModelLayerPaperPlotTarget:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PaperItemPaperPlotTarget(PaperPlotTarget):
+    TAG_VALUE: ClassVar[str] = "paperItem"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "paperItem"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperItemPaperPlotTarget:
+        return cls(
+            id=data["id"],
+        )
 
 
 @dataclass(kw_only=True, slots=True)
@@ -66224,7 +66566,7 @@ _PAPER_MAP_LAYERS: dict[str, type[PaperMapLayers]] = {"all": AllPaperMapLayers, 
 _PAPER_MAP_VIEW: dict[str, type[PaperMapView]] = {"fixed": FixedPaperMapView, "atlas": AtlasPaperMapView}
 
 
-_PAPER_OP: dict[str, type[PaperOp]] = {"savePageSetups": SavePageSetupsPaperOp, "applyPageSetup": ApplyPageSetupPaperOp, "setSheetPlot": SetSheetPlotPaperOp, "addSheet": AddSheetPaperOp, "removeSheet": RemoveSheetPaperOp, "renameSheet": RenameSheetPaperOp, "moveSheet": MoveSheetPaperOp, "duplicateSheet": DuplicateSheetPaperOp, "replaceSheet": ReplaceSheetPaperOp, "setPage": SetPagePaperOp, "addMaster": AddMasterPaperOp, "removeMaster": RemoveMasterPaperOp, "replaceMaster": ReplaceMasterPaperOp, "setSheetMaster": SetSheetMasterPaperOp, "detachMaster": DetachMasterPaperOp, "addItems": AddItemsPaperOp, "insertItems": InsertItemsPaperOp, "removeItems": RemoveItemsPaperOp, "moveItems": MoveItemsPaperOp, "resizeItem": ResizeItemPaperOp, "rotateItems": RotateItemsPaperOp, "setFrames": SetFramesPaperOp, "setItemProps": SetItemPropsPaperOp, "setViewport": SetViewportPaperOp, "navigateViewport": NavigateViewportPaperOp, "renameItem": RenameItemPaperOp, "reorder": ReorderPaperOp, "setOrder": SetOrderPaperOp, "group": GroupPaperOp, "ungroup": UngroupPaperOp, "setItems": SetItemsPaperOp, "lock": LockPaperOp, "hide": HidePaperOp, "align": AlignPaperOp, "distribute": DistributePaperOp, "matchSize": MatchSizePaperOp, "addGuide": AddGuidePaperOp, "moveGuide": MoveGuidePaperOp, "removeGuide": RemoveGuidePaperOp, "setSnapGrid": SetSnapGridPaperOp, "setAtlas": SetAtlasPaperOp, "setExport": SetExportPaperOp, "applyTemplate": ApplyTemplatePaperOp, "saveVariables": SaveVariablesPaperOp, "addAssets": AddAssetsPaperOp, "removeAssets": RemoveAssetsPaperOp, "addVariant": AddVariantPaperOp, "removeVariant": RemoveVariantPaperOp, "setVariant": SetVariantPaperOp}
+_PAPER_OP: dict[str, type[PaperOp]] = {"savePlotProfiles": SavePlotProfilesPaperOp, "savePageSetups": SavePageSetupsPaperOp, "applyPageSetup": ApplyPageSetupPaperOp, "setSheetPlot": SetSheetPlotPaperOp, "addSheet": AddSheetPaperOp, "removeSheet": RemoveSheetPaperOp, "renameSheet": RenameSheetPaperOp, "moveSheet": MoveSheetPaperOp, "duplicateSheet": DuplicateSheetPaperOp, "replaceSheet": ReplaceSheetPaperOp, "setPage": SetPagePaperOp, "addMaster": AddMasterPaperOp, "removeMaster": RemoveMasterPaperOp, "replaceMaster": ReplaceMasterPaperOp, "setSheetMaster": SetSheetMasterPaperOp, "detachMaster": DetachMasterPaperOp, "addItems": AddItemsPaperOp, "insertItems": InsertItemsPaperOp, "removeItems": RemoveItemsPaperOp, "moveItems": MoveItemsPaperOp, "resizeItem": ResizeItemPaperOp, "rotateItems": RotateItemsPaperOp, "setFrames": SetFramesPaperOp, "setItemProps": SetItemPropsPaperOp, "setViewport": SetViewportPaperOp, "navigateViewport": NavigateViewportPaperOp, "renameItem": RenameItemPaperOp, "reorder": ReorderPaperOp, "setOrder": SetOrderPaperOp, "group": GroupPaperOp, "ungroup": UngroupPaperOp, "setItems": SetItemsPaperOp, "lock": LockPaperOp, "hide": HidePaperOp, "align": AlignPaperOp, "distribute": DistributePaperOp, "matchSize": MatchSizePaperOp, "addGuide": AddGuidePaperOp, "moveGuide": MoveGuidePaperOp, "removeGuide": RemoveGuidePaperOp, "setSnapGrid": SetSnapGridPaperOp, "setAtlas": SetAtlasPaperOp, "setExport": SetExportPaperOp, "applyTemplate": ApplyTemplatePaperOp, "saveVariables": SaveVariablesPaperOp, "addAssets": AddAssetsPaperOp, "removeAssets": RemoveAssetsPaperOp, "addVariant": AddVariantPaperOp, "removeVariant": RemoveVariantPaperOp, "setVariant": SetVariantPaperOp}
 
 
 _PAPER_OVERFLOW: dict[str, type[PaperOverflow]] = {"clip": ClipPaperOverflow, "continueIn": ContinueInPaperOverflow}
@@ -66233,7 +66575,16 @@ _PAPER_OVERFLOW: dict[str, type[PaperOverflow]] = {"clip": ClipPaperOverflow, "c
 _PAPER_PLOT_AREA: dict[str, type[PaperPlotArea]] = {"layout": LayoutPaperPlotArea, "extents": ExtentsPaperPlotArea, "window": WindowPaperPlotArea}
 
 
+_PAPER_PLOT_COLOR: dict[str, type[PaperPlotColor]] = {"object": ObjectPaperPlotColor, "black": BlackPaperPlotColor, "grayscale": GrayscalePaperPlotColor, "color": ColorPaperPlotColor}
+
+
 _PAPER_PLOT_SCALE: dict[str, type[PaperPlotScale]] = {"ratio": RatioPaperPlotScale, "fit": FitPaperPlotScale}
+
+
+_PAPER_PLOT_STYLE_KEY: dict[str, type[PaperPlotStyleKey]] = {"aci": AciPaperPlotStyleKey, "named": NamedPaperPlotStyleKey}
+
+
+_PAPER_PLOT_TARGET: dict[str, type[PaperPlotTarget]] = {"modelLayer": ModelLayerPaperPlotTarget, "paperItem": PaperItemPaperPlotTarget}
 
 
 _PAPER_POINT_NAMING: dict[str, type[PaperPointNaming]] = {"given": GivenPaperPointNaming, "sequence": SequencePaperPointNaming}
@@ -66333,6 +66684,7 @@ __all__ = [
     "AccessSource",
     "AccessSourceName",
     "AccuracyReport",
+    "AciPaperPlotStyleKey",
     "ActionFormItem",
     "ActionKind",
     "ActionKindName",
@@ -66507,6 +66859,7 @@ __all__ = [
     "BindLeaderEdit",
     "BindXrefsOperation",
     "BitsStacMask",
+    "BlackPaperPlotColor",
     "BlendMode",
     "BlendModeName",
     "BlockAction",
@@ -66636,6 +66989,7 @@ __all__ = [
     "CoincidentConstraintRule",
     "CollectLeaderEdit",
     "CollinearConstraintRule",
+    "ColorPaperPlotColor",
     "ColumnAlignTableEdit",
     "ColumnBreak",
     "ColumnBreakName",
@@ -67096,6 +67450,7 @@ __all__ = [
     "GradientShapeName",
     "GrantRole",
     "GrantRoleName",
+    "GrayscalePaperPlotColor",
     "GridArrayLayout",
     "GridBubbles",
     "GridBubblesName",
@@ -67447,6 +67802,7 @@ __all__ = [
     "MirrorTextName",
     "MirrorTransform",
     "ModeConstraintEdit",
+    "ModelLayerPaperPlotTarget",
     "MosaicOrder",
     "MosaicOrderName",
     "MosaicResolution",
@@ -67462,6 +67818,7 @@ __all__ = [
     "MoveTextDimensionEdit",
     "MoveTransform",
     "NamedFont",
+    "NamedPaperPlotStyleKey",
     "NamedUcs",
     "NamedUcsTo",
     "NamedView",
@@ -67518,6 +67875,7 @@ __all__ = [
     "NurbsPlan",
     "ObjectEnd",
     "ObjectFieldSource",
+    "ObjectPaperPlotColor",
     "ObjectUcsTo",
     "ObjectValue",
     "ObjectValueName",
@@ -67620,6 +67978,7 @@ __all__ = [
     "PaperItem",
     "PaperItemFrame",
     "PaperItemKind",
+    "PaperItemPaperPlotTarget",
     "PaperLabelDirection",
     "PaperLabelDirectionName",
     "PaperLabelPosition",
@@ -67661,8 +68020,17 @@ __all__ = [
     "PaperPictureFit",
     "PaperPictureFitName",
     "PaperPlotArea",
+    "PaperPlotAssignment",
+    "PaperPlotColor",
+    "PaperPlotProfile",
     "PaperPlotScale",
     "PaperPlotSettings",
+    "PaperPlotStyle",
+    "PaperPlotStyleEntry",
+    "PaperPlotStyleKey",
+    "PaperPlotTableKind",
+    "PaperPlotTableKindName",
+    "PaperPlotTarget",
     "PaperPointNaming",
     "PaperPrintDevice",
     "PaperRectUm",
@@ -68074,6 +68442,7 @@ __all__ = [
     "RunInput",
     "RunSink",
     "SavePageSetupsPaperOp",
+    "SavePlotProfilesPaperOp",
     "SaveUcsTo",
     "SaveVariablesPaperOp",
     "SaveViewsOp",

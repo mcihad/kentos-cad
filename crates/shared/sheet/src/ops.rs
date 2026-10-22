@@ -690,6 +690,7 @@ pub struct SetVariant {
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperOp"))]
 pub enum Op {
+    SavePlotProfiles(crate::plot_profile::SavePlotProfiles),
     SavePageSetups(crate::print_setup::SavePageSetups),
     ApplyPageSetup(crate::print_setup::ApplyPageSetup),
     SetSheetPlot(crate::print_setup::SetSheetPlot),
@@ -1073,6 +1074,12 @@ fn step(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
 
 fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
     match op {
+        Op::SavePlotProfiles(p) => {
+            let old = std::mem::replace(&mut b.plot_profiles, p.profiles.clone());
+            Ok(vec![Op::SavePlotProfiles(
+                crate::plot_profile::SavePlotProfiles { profiles: old },
+            )])
+        }
         Op::SavePageSetups(s) => {
             let old = std::mem::replace(&mut b.page_setups, s.setups.clone());
             Ok(vec![Op::SavePageSetups(
@@ -1108,10 +1115,12 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
                     relayout: true,
                 },
             )?;
-            sheet_mut(b, &s.sheet)?.plot = Some(crate::print_setup::AppliedPageSetup {
-                source: Some(setup.id),
-                settings: setup.settings,
-            });
+            let plot = crate::print_setup::AppliedPageSetup::capture(
+                b,
+                Some(setup.id),
+                setup.settings,
+            );
+            sheet_mut(b, &s.sheet)?.plot = Some(plot);
             Ok(vec![Op::ReplaceSheet(ReplaceSheet { sheet: old })])
         }
         Op::AddSheet(a) => {
@@ -1166,6 +1175,14 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
                 .zip(&d.item_ids)
                 .map(|(it, n)| (it.id.clone(), n.clone()))
                 .collect();
+            if let Some(plot) = s.plot.as_mut() {
+                if plot.settings.profile_snapshot.is_none() {
+                    plot.settings.profile_snapshot = crate::plot_profile::for_sheet(b, &d.id)?.cloned();
+                }
+                if let Some(profile) = &mut plot.settings.profile_snapshot {
+                    crate::book_transfer::profile(profile, &BTreeMap::new(), &map);
+                }
+            }
             crate::template::remap_items(&mut s.items, &map);
             crate::variants::remap(&mut s.variants, &mut s.base_layout, &map);
             s.id = d.new_id.clone();
@@ -2257,6 +2274,7 @@ pub fn describe(b: &SheetBook, op: &Op) -> String {
         Op::DuplicateSheet(d) => format!("Paftayı çoğalt: {}", sheet_name(&d.id)),
         Op::ReplaceSheet(r) => format!("Paftayı değiştir: {}", r.sheet.name),
         Op::SetPage(_) => "Sayfa ayarları".to_owned(),
+        Op::SavePlotProfiles(_) => "Baskı profilleri".into(),
         Op::SavePageSetups(_) => "Adlı sayfa düzenleri".into(),
         Op::ApplyPageSetup(_) => "Sayfa düzenini uygula".into(),
         Op::SetSheetPlot(_) => "Baskı ayarları".into(),

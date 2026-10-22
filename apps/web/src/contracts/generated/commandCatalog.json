@@ -557109,6 +557109,122 @@
               }
             ]
           },
+          "PaperPlotAssignment": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "$ref": "#/$defs/PaperPlotStyleKey"
+              },
+              "target": {
+                "$ref": "#/$defs/PaperPlotTarget"
+              }
+            },
+            "required": [
+              "target",
+              "key"
+            ],
+            "type": "object"
+          },
+          "PaperPlotColor": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "object",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "black",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "grayscale",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "color",
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "value"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotProfile": {
+            "additionalProperties": false,
+            "properties": {
+              "assignments": {
+                "default": [],
+                "items": {
+                  "$ref": "#/$defs/PaperPlotAssignment"
+                },
+                "type": "array"
+              },
+              "defaultStyle": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "entries": {
+                "items": {
+                  "$ref": "#/$defs/PaperPlotStyleEntry"
+                },
+                "type": "array"
+              },
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/PaperPlotTableKind"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "entries"
+            ],
+            "type": "object"
+          },
           "PaperPlotScale": {
             "oneOf": [
               {
@@ -557182,6 +557298,16 @@
                   "null"
                 ]
               },
+              "profileSnapshot": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperPlotProfile"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "scale": {
                 "$ref": "#/$defs/PaperPlotScale",
                 "default": {
@@ -557194,6 +557320,178 @@
               }
             },
             "type": "object"
+          },
+          "PaperPlotStyle": {
+            "additionalProperties": false,
+            "properties": {
+              "cap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperLineCap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "color": {
+                "$ref": "#/$defs/PaperPlotColor",
+                "default": {
+                  "type": "object"
+                }
+              },
+              "dash": {
+                "items": {
+                  "format": "int32",
+                  "type": "integer"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "paper-um"
+              },
+              "join": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperLineJoin"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lineWeight": {
+                "format": "int32",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "paper-um"
+              },
+              "opacity": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "percent"
+              },
+              "screening": {
+                "default": 100,
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "percent"
+              }
+            },
+            "type": "object"
+          },
+          "PaperPlotStyleEntry": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "$ref": "#/$defs/PaperPlotStyleKey"
+              },
+              "style": {
+                "$ref": "#/$defs/PaperPlotStyle"
+              }
+            },
+            "required": [
+              "key",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PaperPlotStyleKey": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "index": {
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "1"
+                  },
+                  "type": {
+                    "const": "aci",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "named",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "name"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotTableKind": {
+            "enum": [
+              "colorDependent",
+              "named"
+            ],
+            "type": "string"
+          },
+          "PaperPlotTarget": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "modelLayer",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "paperItem",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              }
+            ]
           },
           "PaperPointNaming": {
             "description": "How points are named: their own names (the host's), or numbered.",
@@ -557653,6 +557951,12 @@
               "pageSetups": {
                 "items": {
                   "$ref": "#/$defs/PaperNamedPageSetup"
+                },
+                "type": "array"
+              },
+              "plotProfiles": {
+                "items": {
+                  "$ref": "#/$defs/PaperPlotProfile"
                 },
                 "type": "array"
               },
@@ -562048,6 +562352,122 @@
               }
             ]
           },
+          "PaperPlotAssignment": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "$ref": "#/$defs/PaperPlotStyleKey"
+              },
+              "target": {
+                "$ref": "#/$defs/PaperPlotTarget"
+              }
+            },
+            "required": [
+              "target",
+              "key"
+            ],
+            "type": "object"
+          },
+          "PaperPlotColor": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "object",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "black",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "grayscale",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "color",
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "value"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotProfile": {
+            "additionalProperties": false,
+            "properties": {
+              "assignments": {
+                "default": [],
+                "items": {
+                  "$ref": "#/$defs/PaperPlotAssignment"
+                },
+                "type": "array"
+              },
+              "defaultStyle": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "entries": {
+                "items": {
+                  "$ref": "#/$defs/PaperPlotStyleEntry"
+                },
+                "type": "array"
+              },
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/PaperPlotTableKind"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "entries"
+            ],
+            "type": "object"
+          },
           "PaperPlotScale": {
             "oneOf": [
               {
@@ -562121,6 +562541,16 @@
                   "null"
                 ]
               },
+              "profileSnapshot": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperPlotProfile"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "scale": {
                 "$ref": "#/$defs/PaperPlotScale",
                 "default": {
@@ -562133,6 +562563,178 @@
               }
             },
             "type": "object"
+          },
+          "PaperPlotStyle": {
+            "additionalProperties": false,
+            "properties": {
+              "cap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperLineCap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "color": {
+                "$ref": "#/$defs/PaperPlotColor",
+                "default": {
+                  "type": "object"
+                }
+              },
+              "dash": {
+                "items": {
+                  "format": "int32",
+                  "type": "integer"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "paper-um"
+              },
+              "join": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperLineJoin"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lineWeight": {
+                "format": "int32",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "paper-um"
+              },
+              "opacity": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "percent"
+              },
+              "screening": {
+                "default": 100,
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "percent"
+              }
+            },
+            "type": "object"
+          },
+          "PaperPlotStyleEntry": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "$ref": "#/$defs/PaperPlotStyleKey"
+              },
+              "style": {
+                "$ref": "#/$defs/PaperPlotStyle"
+              }
+            },
+            "required": [
+              "key",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PaperPlotStyleKey": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "index": {
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "1"
+                  },
+                  "type": {
+                    "const": "aci",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "named",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "name"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotTableKind": {
+            "enum": [
+              "colorDependent",
+              "named"
+            ],
+            "type": "string"
+          },
+          "PaperPlotTarget": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "modelLayer",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "paperItem",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              }
+            ]
           },
           "PaperPointNaming": {
             "description": "How points are named: their own names (the host's), or numbered.",
@@ -562592,6 +563194,12 @@
               "pageSetups": {
                 "items": {
                   "$ref": "#/$defs/PaperNamedPageSetup"
+                },
+                "type": "array"
+              },
+              "plotProfiles": {
+                "items": {
+                  "$ref": "#/$defs/PaperPlotProfile"
                 },
                 "type": "array"
               },
@@ -1035981,6 +1036589,122 @@
               }
             ]
           },
+          "PaperPlotAssignment": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "$ref": "#/$defs/PaperPlotStyleKey"
+              },
+              "target": {
+                "$ref": "#/$defs/PaperPlotTarget"
+              }
+            },
+            "required": [
+              "target",
+              "key"
+            ],
+            "type": "object"
+          },
+          "PaperPlotColor": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "object",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "black",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "grayscale",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "color",
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "value"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotProfile": {
+            "additionalProperties": false,
+            "properties": {
+              "assignments": {
+                "default": [],
+                "items": {
+                  "$ref": "#/$defs/PaperPlotAssignment"
+                },
+                "type": "array"
+              },
+              "defaultStyle": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "entries": {
+                "items": {
+                  "$ref": "#/$defs/PaperPlotStyleEntry"
+                },
+                "type": "array"
+              },
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/PaperPlotTableKind"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "entries"
+            ],
+            "type": "object"
+          },
           "PaperPlotScale": {
             "oneOf": [
               {
@@ -1036054,6 +1036778,16 @@
                   "null"
                 ]
               },
+              "profileSnapshot": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperPlotProfile"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "scale": {
                 "$ref": "#/$defs/PaperPlotScale",
                 "default": {
@@ -1036066,6 +1036800,178 @@
               }
             },
             "type": "object"
+          },
+          "PaperPlotStyle": {
+            "additionalProperties": false,
+            "properties": {
+              "cap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperLineCap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "color": {
+                "$ref": "#/$defs/PaperPlotColor",
+                "default": {
+                  "type": "object"
+                }
+              },
+              "dash": {
+                "items": {
+                  "format": "int32",
+                  "type": "integer"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "paper-um"
+              },
+              "join": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperLineJoin"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lineWeight": {
+                "format": "int32",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "paper-um"
+              },
+              "opacity": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "percent"
+              },
+              "screening": {
+                "default": 100,
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "percent"
+              }
+            },
+            "type": "object"
+          },
+          "PaperPlotStyleEntry": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "$ref": "#/$defs/PaperPlotStyleKey"
+              },
+              "style": {
+                "$ref": "#/$defs/PaperPlotStyle"
+              }
+            },
+            "required": [
+              "key",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PaperPlotStyleKey": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "index": {
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "1"
+                  },
+                  "type": {
+                    "const": "aci",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "named",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "name"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotTableKind": {
+            "enum": [
+              "colorDependent",
+              "named"
+            ],
+            "type": "string"
+          },
+          "PaperPlotTarget": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "modelLayer",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "paperItem",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              }
+            ]
           },
           "PaperPointNaming": {
             "description": "How points are named: their own names (the host's), or numbered.",
@@ -1041493,6 +1042399,26 @@
                 "additionalProperties": false,
                 "properties": {
                   "op": {
+                    "const": "savePlotProfiles",
+                    "type": "string"
+                  },
+                  "profiles": {
+                    "items": {
+                      "$ref": "#/$defs/PaperPlotProfile"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "op",
+                  "profiles"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "op": {
                     "const": "savePageSetups",
                     "type": "string"
                   },
@@ -1043111,6 +1044037,122 @@
               }
             ]
           },
+          "PaperPlotAssignment": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "$ref": "#/$defs/PaperPlotStyleKey"
+              },
+              "target": {
+                "$ref": "#/$defs/PaperPlotTarget"
+              }
+            },
+            "required": [
+              "target",
+              "key"
+            ],
+            "type": "object"
+          },
+          "PaperPlotColor": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "object",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "black",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "grayscale",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "color",
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "value"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotProfile": {
+            "additionalProperties": false,
+            "properties": {
+              "assignments": {
+                "default": [],
+                "items": {
+                  "$ref": "#/$defs/PaperPlotAssignment"
+                },
+                "type": "array"
+              },
+              "defaultStyle": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "entries": {
+                "items": {
+                  "$ref": "#/$defs/PaperPlotStyleEntry"
+                },
+                "type": "array"
+              },
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/PaperPlotTableKind"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "entries"
+            ],
+            "type": "object"
+          },
           "PaperPlotScale": {
             "oneOf": [
               {
@@ -1043184,6 +1044226,16 @@
                   "null"
                 ]
               },
+              "profileSnapshot": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperPlotProfile"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "scale": {
                 "$ref": "#/$defs/PaperPlotScale",
                 "default": {
@@ -1043196,6 +1044248,178 @@
               }
             },
             "type": "object"
+          },
+          "PaperPlotStyle": {
+            "additionalProperties": false,
+            "properties": {
+              "cap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperLineCap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "color": {
+                "$ref": "#/$defs/PaperPlotColor",
+                "default": {
+                  "type": "object"
+                }
+              },
+              "dash": {
+                "items": {
+                  "format": "int32",
+                  "type": "integer"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "paper-um"
+              },
+              "join": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperLineJoin"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lineWeight": {
+                "format": "int32",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "paper-um"
+              },
+              "opacity": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "percent"
+              },
+              "screening": {
+                "default": 100,
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "percent"
+              }
+            },
+            "type": "object"
+          },
+          "PaperPlotStyleEntry": {
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "$ref": "#/$defs/PaperPlotStyleKey"
+              },
+              "style": {
+                "$ref": "#/$defs/PaperPlotStyle"
+              }
+            },
+            "required": [
+              "key",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PaperPlotStyleKey": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "index": {
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "1"
+                  },
+                  "type": {
+                    "const": "aci",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "named",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "name"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotTableKind": {
+            "enum": [
+              "colorDependent",
+              "named"
+            ],
+            "type": "string"
+          },
+          "PaperPlotTarget": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "modelLayer",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "paperItem",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              }
+            ]
           },
           "PaperPointNaming": {
             "description": "How points are named: their own names (the host's), or numbered.",

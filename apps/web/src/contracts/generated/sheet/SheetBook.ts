@@ -2,13 +2,14 @@
 import type { AssetMeta } from "./AssetMeta";
 import type { Master } from "./Master";
 import type { NamedPageSetup } from "./NamedPageSetup";
+import type { PlotProfile } from "./PlotProfile";
 import type { Sheet } from "./Sheet";
 import type { Variable } from "./Variable";
 
 /**
  * Every sheet of a project.
  */
-export type SheetBook = { pageSetups?: Array<NamedPageSetup>,
+export type SheetBook = { plotProfiles?: Array<PlotProfile>, pageSetups?: Array<NamedPageSetup>,
 /**
  * `kentos.sheet/1`.
  */
