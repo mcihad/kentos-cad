@@ -18,12 +18,14 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use iced::Task;
 use iced::futures::channel::oneshot;
 use iced::widget::text::Wrapping;
-use iced::widget::{button, column, container, mouse_area, row, space};
-use iced::{Center, Element, Fill, Length};
+use iced::widget::{button, row};
+use iced::{Center, Element, Length};
 use kentos_commands::{
     CommandResult, QueryOrder, QueryScope, SourceLink, SourcesQueried, SourcesQuery, js_trim,
 };
 use kentos_domain::Uuid;
+use kentos_ui::icon::{Icon, icon};
+use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, SortOrder, Table};
 use kentos_ui::widget::{Tip, tip};
 use kentos_ui::{label, style};
@@ -37,14 +39,11 @@ pub mod words {
     pub const WHOLE_HINT: &str = "Tablo bağlı kaynağın bütün kayıtlarını kaynaktan sayfa sayfa okur; sıralama ve \
          süzgeç kaynağa gider. Kayıtlar burada salt okunur; düzenleme Çalışma kopyası'nda yapılır.";
     pub const LOADED: &str = "Çalışma kopyası";
-    pub const LOADED_HINT: &str = "Tablo katmanın çizimdeki nesnelerini gösterir.";
     pub const MORE: &str = "Sonraki sayfa";
     pub const READING: &str = "Kaynak okunuyor…";
     pub const STOP: &str = "Durdur";
     pub const STOPPED: &str = "Kaynağın okunması durduruldu.";
     pub const NO_ROWS: &str = "Kaynakta soruya uyan kayıt yok.";
-    pub const NOT_HELD: &str =
-        "Bu kayıt çalışma kopyasında değil: katman tablonun yalnız bir parçasını tutuyor.";
     pub const CHANGED: &str =
         "Kaynak ilk sayfa okunduğundan beri değişti; ilk sayfa yeniden okundu.";
     pub const BY_KEY: &str = "anahtar sırasıyla";
@@ -58,6 +57,22 @@ pub mod words {
             Some(t) => format!("{shown} / {t} kayıt okundu"),
             None => format!("{shown} kayıt okundu"),
         }
+    }
+}
+
+/// What the table shows of a bound layer.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Scope {
+    Copy,
+    Whole,
+}
+
+impl std::fmt::Display for Scope {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Scope::Copy => words::LOADED,
+            Scope::Whole => words::WHOLE,
+        })
     }
 }
 
@@ -327,20 +342,17 @@ impl App {
         }
     }
 
-    /// Kaynağın tümü or Çalışma kopyası on the source line.
+    /// Çalışma kopyası | Kaynağın tümü on the source line.
     pub(crate) fn whole_switch<'a>(&self, layer: &str) -> Element<'a, Message> {
         let on = self.features.whole.layer.as_deref() == Some(layer);
-        let (text, hint, style): (_, _, fn(&iced::Theme, button::Status) -> button::Style) = if on {
-            (words::LOADED, words::LOADED_HINT, style::button::secondary)
-        } else {
-            (words::WHOLE, words::WHOLE_HINT, style::button::secondary)
-        };
         tip(
-            button(label::caption(text))
-                .on_press(msg(WholeEvent::Toggle(!on)))
-                .padding([2, 8])
-                .style(style),
-            Tip::new(text).body(hint),
+            Segmented::new(
+                [Scope::Copy, Scope::Whole],
+                if on { Scope::Whole } else { Scope::Copy },
+                |s| msg(WholeEvent::Toggle(s == Scope::Whole)),
+            )
+            .compact(),
+            Tip::new(words::WHOLE).body(words::WHOLE_HINT),
             iced::widget::tooltip::Position::Top,
         )
     }
@@ -405,6 +417,7 @@ impl App {
         let rows = &p.rows;
         let shown = columns_shown.clone();
         let table = Table::new(columns)
+            .height(iced::Fill)
             .horizontal()
             .min_width(min_width)
             .virtualized(rows.len(), move |i| {
@@ -430,42 +443,52 @@ impl App {
             } else {
                 words::NO_ROWS
             });
-        let mut foot = row![label::muted(self.whole_report())]
+        table.into()
+    }
+}
+
+impl App {
+    /// The foot under the source's rows: how many were read of how many, who ordered them, where the filter was
+    /// checked; Sonraki sayfa, or Durdur while a page is read.
+    pub(crate) fn whole_foot<'a>(&self) -> Element<'a, Message> {
+        let p = &self.features.whole;
+        let mut words = row![label::caption(self.whole_report()).style(style::text::muted)]
             .spacing(8)
             .align_y(Center);
         if let Some(why) = &p.problem {
-            foot = foot.push(label::body(why.clone()).style(style::text::warning));
+            words = words.push(label::caption(why.clone()).style(style::text::warning));
         }
-        foot = foot.push(space::horizontal());
-        if p.running.is_some() {
-            foot = foot.push(label::muted(words::READING)).push(
-                button(label::caption(words::STOP))
-                    .on_press(msg(WholeEvent::Stop))
-                    .padding([2, 8])
-                    .style(style::button::secondary),
-            );
+        let end: Option<Element<'a, Message>> = if p.running.is_some() {
+            Some(
+                row![
+                    label::caption(words::READING).style(style::text::muted),
+                    button(label::caption(words::STOP))
+                        .on_press(msg(WholeEvent::Stop))
+                        .padding([2, 8])
+                        .style(style::button::ghost),
+                ]
+                .spacing(6)
+                .align_y(Center)
+                .into(),
+            )
         } else if p.last.as_ref().is_some_and(|l| l.next.is_some()) {
-            foot = foot.push(
-                button(label::caption(words::MORE))
-                    .on_press(msg(WholeEvent::More))
-                    .padding([2, 8])
-                    .style(style::button::secondary),
-            );
-        }
-        let notice = tip(
-            mouse_area(label::caption("ⓘ").style(style::text::muted)),
-            Tip::new(words::WHOLE).body(words::NOT_HELD),
-            iced::widget::tooltip::Position::Top,
-        );
-        column![
-            container(row![foot, notice].spacing(8).align_y(Center))
-                .padding([4, 10])
-                .width(Fill),
-            kentos_ui::widget::horizontal_divider(),
-            table
-        ]
-        .width(Fill)
-        .height(Fill)
-        .into()
+            Some(
+                button(
+                    row![
+                        label::caption(words::MORE),
+                        icon(Icon::ChevronRight).size(12.0)
+                    ]
+                    .spacing(4)
+                    .align_y(Center),
+                )
+                .on_press(msg(WholeEvent::More))
+                .padding([2, 8])
+                .style(style::button::ghost)
+                .into(),
+            )
+        } else {
+            None
+        };
+        super::view::foot_line(words.into(), end)
     }
 }

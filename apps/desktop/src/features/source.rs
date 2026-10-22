@@ -8,9 +8,10 @@
 //! [`LIVE_MOST`] objects, whenever the drawing changed (a layer edit is “Katmanda yazılmamış” at once). A larger
 //! layer keeps the last reading and says so (“Yenile”) instead of hashing a million objects after every edit.
 
-use iced::widget::{button, container, row};
+use iced::widget::{button, container, row, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{SourceNext, SourceState};
+use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Elided;
 use kentos_ui::{label, style};
@@ -110,15 +111,17 @@ impl App {
         }
     }
 
-    /// The source line over the table; none for a layer that is not bound.
+    /// The source line over the table; none for a layer that is not bound: a dot in the state's colour, the
+    /// source and its state (the whole of it on hover), the one way out the state asks for, Çalışma kopyası or
+    /// Kaynağın tümü, Yenile.
     pub(crate) fn features_source_line<'a>(&self, rows: &Rows) -> Option<Element<'a, Message>> {
         let (state, stale) = self.source_state(rows)?;
         let srid = self
             .document
             .as_ref()
             .map_or(0, |d| d.model.settings().srid);
-        // The four scopes apart (plan/gis.md CBS-20): the table's rows in the layer (scope_words: the layer's
-        // objects and rows of the table), the ones shown after the filter, the selected, and the whole table.
+        // The four scopes apart (plan/gis.md CBS-20): the table's rows in the layer, the ones shown after the
+        // filter, the selected, and the whole table; the foot line says the counts, the chip's hint all of it.
         let selected = self.document.as_ref().map_or(0, |d| {
             self.selection
                 .ids()
@@ -130,7 +133,7 @@ impl App {
                 })
                 .count()
         });
-        let words = format!(
+        let detail = format!(
             "{} · {} · {} · {} gösterilen · {selected} seçili · {}",
             source_words(&state),
             state_words(&state),
@@ -138,52 +141,76 @@ impl App {
             rows.shown.len(),
             system_words(&state, srid)
         );
-        let act: Option<Element<'a, Message>> = act_words(state.next, state.link.kind).map(|w| {
-            let blocked = state.next == SourceNext::Write && !state.link.writable;
-            button(label::caption(if blocked { READ_ONLY } else { w }))
-                .on_press_maybe(
-                    (!blocked).then(|| Message::Features(super::Event::Source(SourceEvent::Act))),
-                )
-                .padding([2, 8])
-                .style(style::button::secondary)
-                .into()
-        });
-        let note: Option<Element<'a, Message>> = stale.then(|| {
-            label::caption(STALE)
-                .style(|t: &iced::Theme| iced::widget::text::Style {
+        let tone: fn(&Tokens) -> iced::Color = match (state.found, state.next) {
+            (false, _) | (_, SourceNext::Relink | SourceNext::Reconcile) => |t: &Tokens| t.danger,
+            (_, SourceNext::Write | SourceNext::Read) => |t: &Tokens| t.warning,
+            (_, SourceNext::None) => |t: &Tokens| t.success,
+        };
+        let dot =
+            container(space::horizontal())
+                .width(8)
+                .height(8)
+                .style(move |theme: &iced::Theme| container::Style {
+                    background: Some(tone(&Tokens::of(theme)).into()),
+                    border: iced::Border {
+                        radius: 4.0.into(),
+                        ..iced::Border::default()
+                    },
+                    ..container::Style::default()
+                });
+        let words = format!(
+            "{}  ·  {}  ·  {}",
+            source_words(&state),
+            state_words(&state),
+            system_words(&state, srid)
+        );
+        let chip = kentos_ui::widget::tip(
+            row![
+                dot,
+                Elided::new(words)
+                    .size(typography::caption())
+                    .font(typography::ui())
+                    .style(|t: &iced::Theme| iced::widget::text::Style {
+                        color: Some(Tokens::of(t).muted),
+                    })
+                    .width(Fill),
+            ]
+            .spacing(8)
+            .align_y(Center),
+            kentos_ui::widget::Tip::new(SOURCE).body(detail),
+            iced::widget::tooltip::Position::Top,
+        );
+        let mut line = row![container(chip).width(Fill)].spacing(6).align_y(Center);
+        if stale {
+            line = line.push(label::caption(STALE).style(|t: &iced::Theme| {
+                iced::widget::text::Style {
                     color: Some(Tokens::of(t).warning),
-                })
-                .into()
-        });
-        let mut line = row![
-            container(label::caption(SOURCE).style(style::text::muted)).padding([0, 2]),
-            Elided::new(words)
-                .size(typography::caption())
-                .font(typography::ui())
-                .style(|t: &iced::Theme| iced::widget::text::Style {
-                    color: Some(Tokens::of(t).text),
-                })
-                .width(Fill),
-        ]
-        .spacing(8)
-        .align_y(Center);
-        if let Some(n) = note {
-            line = line.push(n);
+                }
+            }));
         }
-        if let Some(a) = act {
-            line = line.push(a);
+        if let Some(w) = act_words(state.next, state.link.kind) {
+            let blocked = state.next == SourceNext::Write && !state.link.writable;
+            line = line.push(
+                button(label::caption(if blocked { READ_ONLY } else { w }))
+                    .on_press_maybe(
+                        (!blocked)
+                            .then(|| Message::Features(super::Event::Source(SourceEvent::Act))),
+                    )
+                    .padding([2, 8])
+                    .style(style::button::secondary),
+            );
         }
         line = line.push(self.whole_switch(&state.link.layer));
         line = line.push(kentos_ui::widget::tip(
-            button(label::caption(REFRESH))
+            button(icon(Icon::Retry).size(14.0))
                 .on_press(Message::Features(super::Event::Source(
                     SourceEvent::Refresh,
                 )))
-                .padding([2, 8])
-                .style(style::button::subtle),
+                .padding(4)
+                .style(style::button::ghost),
             kentos_ui::widget::Tip::new(REFRESH).body(REFRESH_HINT),
             iced::widget::tooltip::Position::Top,
         ));
-        Some(container(line).padding([2, 10]).width(Fill).into())
+        Some(container(line).padding([0, 10]).width(Fill).into())
     }
 }

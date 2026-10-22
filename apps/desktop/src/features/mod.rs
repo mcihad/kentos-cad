@@ -77,6 +77,8 @@ pub mod texts {
     pub const PASTE: &str = "Yapıştır";
     pub const PASTE_HINT: &str = "Panodaki hücreleri (elektronik tablodan, sekmeyle ayrılmış) ilk seçili satırdan başlayarak alanlara yazar; ilk satır alan adlarıysa başlık sayılır. Önce önizler.";
     pub const EXPORT: &str = "Dışa aktar";
+    pub const MORE: &str = "Diğer";
+    pub const MORE_HINT: &str = "Kayıt ekle, Çoğalt, Yapıştır ve Alanlar…";
     pub const EXPORT_HINT: &str = "Tablonun gösterilen satırlarını Excel (XLSX), OpenDocument (ODS) ya da CSV dosyasına yazar; alanlar türleriyle (sayı, tarih, evet/hayır).";
     pub const NO_LAYERS: &str = "Çizimde katman yok.";
     pub const NONE: &str = "Katmanda nesne yok.";

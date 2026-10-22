@@ -27,7 +27,7 @@ fn msg(e: Event) -> Message {
     Message::Features(e)
 }
 
-/// A bar button: its icon and words, its hint above it.
+/// A bar button: its icon alone, without a frame; its words and hint above it.
 fn bar_button<'a>(
     glyph: &str,
     words: &'a str,
@@ -35,23 +35,46 @@ fn bar_button<'a>(
     on: Option<Message>,
 ) -> Element<'a, Message> {
     tip(
-        button(
-            row![icon(from_web(Some(glyph))).size(14.0), label::body(words)]
-                .spacing(6)
-                .align_y(Center),
-        )
-        .style(style::button::secondary)
-        .padding([4, 10])
-        .on_press_maybe(on),
+        button(icon(from_web(Some(glyph))).size(16.0))
+            .style(style::button::ghost)
+            .padding(5)
+            .on_press_maybe(on),
         Tip::new(words).body(hint),
         iced::widget::tooltip::Position::Top,
     )
 }
 
-/// What the bar needs in one row, logical pixels at the default type size:
-/// the layer (220), the search (180), Göster (190), the filter (220 and its
-/// ε), the count and the three buttons, their gaps and margins.
-const BAR_ONE_ROW: f32 = 1760.0;
+/// A bar menu: its icon and a small ▾, without a frame; `badge` beside the icon (how many are hidden).
+fn bar_menu<'a>(
+    glyph: Icon,
+    badge: Option<String>,
+    words: String,
+    hint: &'a str,
+    menu: impl Fn() -> Menu<Message> + 'a,
+) -> Element<'a, Message> {
+    let mut face = row![icon(glyph).size(16.0)].spacing(3).align_y(Center);
+    if let Some(badge) = badge {
+        face = face.push(label::caption(badge).style(style::text::accent));
+    }
+    face = face.push(icon(Icon::ChevronDown).size(10.0).tone(Tone::Muted));
+    tip(
+        MenuButton::new(container(face).padding(5), menu),
+        Tip::new(words).body(hint),
+        iced::widget::tooltip::Position::Top,
+    )
+}
+
+/// A thin upright line between the bar's groups.
+fn bar_gap<'a>() -> Element<'a, Message> {
+    container(kentos_ui::widget::vertical_divider())
+        .height(Length::Fixed(18.0))
+        .padding([0, 4])
+        .into()
+}
+
+/// What the bar needs in one row, logical pixels at the default type size: Tablo | Form, the layer (250), the
+/// search (170), Göster (150), the filter (200 and its ε), the eight buttons, their gaps and margins.
+const BAR_ONE_ROW: f32 = 1240.0;
 
 /// A list editor's choices for a field: none, then its codes by their labels,
 /// or yes and no; with the one written now.
@@ -82,7 +105,7 @@ fn choices_of(
 
 impl App {
     /// Katman ▾: the layers, then the project's join views (docs/adr/0527).
-    pub(crate) fn layer_select<'a>(&self, rows: &Rows) -> Element<'a, Message> {
+    pub(crate) fn layer_select<'a>(&self, rows: &Rows) -> Select<'a, Message> {
         let views: Vec<(String, String)> = self
             .document
             .as_ref()
@@ -117,7 +140,8 @@ impl App {
             }
         })
         .placeholder(texts::NO_LAYERS)
-        .into()
+        .inline()
+        .prefix(texts::LAYER)
     }
 
     fn features_bar<'a>(&self, rows: &Rows, width: f32) -> Element<'a, Message> {
@@ -132,7 +156,9 @@ impl App {
             Show::ALL.iter().map(|s| Choice::new(s.label())),
             Show::ALL.iter().position(|s| *s == panel.show),
             |i| msg(Event::Show(Show::ALL[i])),
-        );
+        )
+        .inline()
+        .prefix(texts::SHOW);
         let filter = text_input(texts::FILTER, &panel.filter)
             .on_input(|t| msg(Event::Filter(t)))
             .size(typography::body())
@@ -144,7 +170,7 @@ impl App {
             .unwrap_or_else(|| texts::FILTER_HINT.to_owned());
         let filter = tip(
             row![
-                container(filter).width(Length::Fixed(220.0)),
+                container(filter).width(Length::Fixed(200.0)),
                 button(icon(from_web(Some("expression"))).size(16.0))
                     .style(style::button::subtle)
                     .padding(4)
@@ -155,48 +181,26 @@ impl App {
             Tip::new(texts::FILTER).body(hint),
             iced::widget::tooltip::Position::Top,
         );
-        // Each label stays with its control; in a narrow panel the controls
-        // wrap, the filter last (the web's `ftable` bar).
+        let pane = kentos_ui::widget::segmented::Segmented::new(
+            [super::Pane::Table, super::Pane::Form],
+            self.features.pane,
+            |p| msg(Event::Pane(p)),
+        )
+        .compact();
+        // The labels are inside their boxes (the web's `ftable` bar); in a narrow panel the controls wrap, the
+        // filter last.
         let filters = row![
-            row![
-                container(label::muted(texts::LAYER)).padding([0, 2]),
-                container(layer).width(Length::Fixed(220.0)),
-            ]
-            .spacing(8)
-            .align_y(Center),
-            container(search).width(Length::Fixed(180.0)),
-            row![
-                container(label::muted(texts::SHOW)).padding([0, 2]),
-                container(show).width(Length::Fixed(150.0)),
-            ]
-            .spacing(8)
-            .align_y(Center),
-            filter,
+            pane,
+            container(layer).width(Length::Fixed(250.0)),
+            container(search).width(Length::Fixed(170.0)),
+            container(show).width(Length::Fixed(150.0)),
         ]
         .spacing(8)
         .align_y(Center)
         .wrap()
         .vertical_spacing(6);
-        let count = format!("{} / {}", rows.shown.len(), rows.slots.len());
-        // Dışa aktar ▾ (docs/adr/0223 §3): the rows shown, as the table shows them.
-        let face = container(
-            row![
-                icon(from_web(Some("export"))).size(14.0),
-                label::body(texts::EXPORT),
-                icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
-            ]
-            .spacing(6)
-            .align_y(Center),
-        )
-        .padding([4, 10])
-        .style(style::container::field_box);
-        let export = tip(
-            MenuButton::new(face, || {
-                crate::table_write::items(Menu::new(), |f| msg(Event::Export(f)))
-            }),
-            Tip::new(texts::EXPORT).body(texts::EXPORT_HINT),
-            iced::widget::tooltip::Position::Top,
-        );
+        let has_layer = rows.layer.is_some();
+        let on_layer = |m: Event| has_layer.then(|| msg(m));
         // Sütunlar ▾ (docs/adr/0546 §1): which columns the table shows; a hidden one is in no copy or file either.
         let hidden = self.hidden_columns(rows.layer.as_deref());
         let named: Vec<(String, String)> = rows
@@ -206,23 +210,16 @@ impl App {
             .filter_map(|c| Some((c.key.clone()?, c.label.clone())))
             .collect();
         let hidden_count = named.iter().filter(|(k, _)| hidden.contains(k)).count();
-        let columns_face = container(
-            row![
-                icon(from_web(Some("columns"))).size(14.0),
-                label::body(if hidden_count == 0 {
-                    out_words::COLUMNS.to_owned()
-                } else {
-                    format!("{} ({hidden_count} gizli)", out_words::COLUMNS)
-                }),
-                icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
-            ]
-            .spacing(6)
-            .align_y(Center),
-        )
-        .padding([4, 10])
-        .style(style::container::field_box);
-        let columns_menu = tip(
-            MenuButton::new(columns_face, move || {
+        let columns_menu = bar_menu(
+            from_web(Some("columns")),
+            (hidden_count > 0).then(|| hidden_count.to_string()),
+            if hidden_count == 0 {
+                out_words::COLUMNS.to_owned()
+            } else {
+                format!("{} ({hidden_count} gizli)", out_words::COLUMNS)
+            },
+            out_words::COLUMNS_HINT,
+            move || {
                 let mut menu = Menu::new().header(out_words::COLUMNS_HEADER);
                 for (key, label) in &named {
                     menu = menu
@@ -237,25 +234,23 @@ impl App {
                     out_words::SHOW_ALL,
                     Some(msg(Event::Columns(ColumnsEvent::ShowAll))),
                 )
-            }),
-            Tip::new(out_words::COLUMNS).body(out_words::COLUMNS_HINT),
-            iced::widget::tooltip::Position::Top,
+            },
+        );
+        // Dışa aktar ▾ (docs/adr/0223 §3): the rows shown, as the table shows them.
+        let export = bar_menu(
+            from_web(Some("export")),
+            None,
+            texts::EXPORT.to_owned(),
+            texts::EXPORT_HINT,
+            || crate::table_write::items(Menu::new(), |f| msg(Event::Export(f))),
         );
         // İncele ▾ (docs/adr/0546 §2): İstatistik and Grafik over the rows the table shows.
-        let analyse_face = container(
-            row![
-                icon(from_web(Some("chartBar"))).size(14.0),
-                label::body(out_words::ANALYSE),
-                icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
-            ]
-            .spacing(6)
-            .align_y(Center),
-        )
-        .padding([4, 10])
-        .style(style::container::field_box);
-        let has_layer = rows.layer.is_some();
-        let analyse = tip(
-            MenuButton::new(analyse_face, move || {
+        let analyse = bar_menu(
+            from_web(Some("chartBar")),
+            None,
+            out_words::ANALYSE.to_owned(),
+            out_words::ANALYSE_HINT,
+            move || {
                 if !has_layer {
                     return Menu::new();
                 }
@@ -267,83 +262,83 @@ impl App {
                     .icon(from_web(Some("chartHistogram")))
                     .item(out_words::CHART, Some(msg(Event::Analyse(Analyse::Chart))))
                     .icon(from_web(Some("chartPie")))
-            }),
-            Tip::new(out_words::ANALYSE).body(out_words::ANALYSE_HINT),
-            iced::widget::tooltip::Position::Top,
+            },
         );
-        let pane = kentos_ui::widget::segmented::Segmented::new(
-            [super::Pane::Table, super::Pane::Form],
-            self.features.pane,
-            |p| msg(Event::Pane(p)),
-        )
-        .compact();
+        // ⋯: what a table is rarely asked for: a record, a copy of the selected, values pasted, the fields.
+        let selected = !self.selection.is_empty();
+        let more = bar_menu(
+            Icon::More,
+            None,
+            texts::MORE.to_owned(),
+            texts::MORE_HINT,
+            move || {
+                Menu::new()
+                    .item(
+                        texts::ADD_RECORD,
+                        has_layer.then(|| msg(Event::AddRecord)),
+                    )
+                    .icon(from_web(Some("tableRowBelow")))
+                    .detail(texts::ADD_RECORD_HINT)
+                    .item(
+                        texts::DUPLICATE,
+                        selected.then(|| msg(Event::Duplicate)),
+                    )
+                    .icon(from_web(Some("copy")))
+                    .detail(texts::DUPLICATE_HINT)
+                    .item(
+                        texts::PASTE,
+                        has_layer.then(|| msg(Event::Write(super::write::WriteEvent::Paste))),
+                    )
+                    .icon(from_web(Some("paste")))
+                    .detail(texts::PASTE_HINT)
+                    .separator()
+                    .item(texts::FIELDS, has_layer.then(|| msg(Event::Fields)))
+                    .icon(from_web(Some("layerFields")))
+                    .detail(texts::FIELDS_HINT)
+            },
+        );
         let actions = row![
-            pane,
-            label::muted(count),
             bar_button(
                 "zoomSelection",
                 texts::ZOOM,
                 texts::ZOOM_HINT,
-                (!self.selection.is_empty()).then(|| msg(Event::ZoomSelection)),
+                selected.then(|| msg(Event::ZoomSelection)),
             ),
             columns_menu,
-            bar_button(
-                "tableGridAll",
-                out_words::COPY,
-                out_words::COPY_HINT,
-                rows.layer.is_some().then(|| msg(Event::Copy)),
-            ),
-            export,
-            analyse,
-            bar_button(
-                "tableRowBelow",
-                texts::ADD_RECORD,
-                texts::ADD_RECORD_HINT,
-                rows.layer.is_some().then(|| msg(Event::AddRecord)),
-            ),
-            bar_button(
-                "copy",
-                texts::DUPLICATE,
-                texts::DUPLICATE_HINT,
-                (!self.selection.is_empty()).then(|| msg(Event::Duplicate)),
-            ),
+            bar_gap(),
             bar_button(
                 "fieldCalc",
                 texts::CALCULATE,
                 texts::CALCULATE_HINT,
-                rows.layer
-                    .is_some()
-                    .then(|| msg(Event::Write(super::write::WriteEvent::Open))),
+                on_layer(Event::Write(super::write::WriteEvent::Open)),
             ),
             bar_button(
-                "paste",
-                texts::PASTE,
-                texts::PASTE_HINT,
-                rows.layer
-                    .is_some()
-                    .then(|| msg(Event::Write(super::write::WriteEvent::Paste))),
+                "tableGridAll",
+                out_words::COPY,
+                out_words::COPY_HINT,
+                on_layer(Event::Copy),
             ),
-            bar_button(
-                "layerFields",
-                texts::FIELDS,
-                texts::FIELDS_HINT,
-                rows.layer.is_some().then(|| msg(Event::Fields)),
-            ),
+            export,
+            analyse,
+            bar_gap(),
+            more,
         ]
-        .spacing(10)
-        .align_y(Center)
-        .wrap()
-        .vertical_spacing(6);
+        .spacing(2)
+        .align_y(Center);
         let one_row = width <= 0.0 || width >= typography::from_default(BAR_ONE_ROW);
         let bar: Element<'_, Message> = if one_row {
-            row![filters, space::horizontal(), actions]
+            row![filters, filter, space::horizontal(), actions]
+                .spacing(8)
                 .align_y(Center)
                 .into()
         } else {
-            // The buttons wrap in a narrow panel, as the filters do.
-            iced::widget::column![filters, container(actions).width(Fill)]
-                .spacing(6)
-                .into()
+            // In a narrower panel the filter and the buttons share the second row.
+            iced::widget::column![
+                filters,
+                row![filter, space::horizontal(), actions].align_y(Center)
+            ]
+            .spacing(6)
+            .into()
         };
         container(bar).padding([6, 10]).width(Fill).into()
     }
@@ -356,19 +351,15 @@ impl App {
         let rows = self.feature_rows(doc);
         let panel = &self.features;
         if let Some(v) = self.join_view(doc) {
-            let picker = row![
-                container(label::muted(texts::LAYER)).padding([0, 2]),
-                container(self.layer_select(&rows)).width(Length::Fixed(260.0)),
-            ]
-            .spacing(8)
-            .align_y(Center)
-            .into();
+            let picker = container(self.layer_select(&rows))
+                .width(Length::Fixed(260.0))
+                .into();
             return self.joins_tab(doc, v, picker);
         }
         let bar = self.features_bar(&rows, self.viewport.bounds.width);
         // A bound layer's table: its source, state and the one way out (docs/adr/0546 §3).
         let bar: Element<'_, Message> = match self.features_source_line(&rows) {
-            Some(line) => iced::widget::column![bar, line].into(),
+            Some(line) => iced::widget::column![bar, line].spacing(2).padding(iced::Padding::ZERO.bottom(4)).into(),
             None => bar,
         };
         // Kaynağın tümü: the source's rows instead of the working copy's (docs/adr/0591 §4).
@@ -378,7 +369,8 @@ impl App {
             return iced::widget::column![
                 bar,
                 kentos_ui::widget::horizontal_divider(),
-                self.whole_table(layer)
+                self.whole_table(layer),
+                self.whole_foot()
             ]
             .width(Fill)
             .height(Fill)
@@ -459,6 +451,7 @@ impl App {
                 .sum::<f32>()
             + 8.0 * visible.len() as f32;
         let table = Table::new(columns)
+            .height(Fill)
             .horizontal()
             .min_width(min_width)
             .virtualized(count, move |i| {
@@ -600,11 +593,47 @@ impl App {
             } else {
                 texts::NO_MATCH
             });
-        iced::widget::column![bar, kentos_ui::widget::horizontal_divider(), table]
-            .width(Fill)
-            .height(Fill)
-            .into()
+        iced::widget::column![
+            bar,
+            kentos_ui::widget::horizontal_divider(),
+            table,
+            self.features_foot(&rows)
+        ]
+        .width(Fill)
+        .height(Fill)
+        .into()
     }
+
+    /// The line under the rows, muted: how many are shown of how many, how many are selected.
+    fn features_foot<'a>(&self, rows: &Rows) -> Element<'a, Message> {
+        let selected = rows
+            .slots
+            .iter()
+            .filter(|s| self.selection.contains(**s))
+            .count();
+        let mut words = format!(
+            "{} / {} kayıt gösteriliyor · {selected} seçili",
+            rows.shown.len(),
+            rows.slots.len()
+        );
+        if let Some(why) = &rows.filter_error {
+            words.push_str(&format!(" · süzgeç okunamadı: {why}"));
+        }
+        foot_line(label::caption(words).style(style::text::muted).into(), None)
+    }
+}
+
+/// The table's foot: a thin line over it, its words on the left, `end` on the right.
+pub(crate) fn foot_line<'a>(words: Element<'a, Message>, end: Option<Element<'a, Message>>) -> Element<'a, Message> {
+    let mut line = row![container(words).width(Fill)].spacing(8).align_y(Center);
+    if let Some(end) = end {
+        line = line.push(end);
+    }
+    iced::widget::column![
+        kentos_ui::widget::horizontal_divider(),
+        container(line).padding([3, 10]).width(Fill)
+    ]
+    .into()
 }
 
 impl App {
