@@ -673,16 +673,62 @@ async fn scan(
         }
         _ => None,
     };
-    wheres.push(format!("{key} > ${}", next + 1));
-    let sql = format!(
-        "SELECT {} FROM {sql_name} WHERE {} ORDER BY {key} LIMIT {}",
-        select.join(", "),
-        wheres.join(" AND "),
-        q.chunk.max(1)
-    );
+    // The order's column among those read (docs/adr/0591 §1): each part starts after the last row's value and key.
+    let ordered = match &q.order {
+        None => None,
+        Some(o) => {
+            let at = q
+                .columns
+                .map_or(Some(o.column), |list| list.iter().position(|&i| i == o.column))
+                .ok_or_else(|| refused(format!("{}. sütun sıralanıyor ama okunmuyor", o.column)))?;
+            let c = s
+                .layer
+                .columns
+                .get(o.column)
+                .ok_or_else(|| refused(format!("{}: {}. sütun yok", s.layer.name, o.column)))?;
+            Some((at, quote(&c.name), c.decl.clone(), o.descending))
+        }
+    };
+    let mut place: Option<(gpkg::Value, i64)> = q.order.as_ref().and_then(|o| o.after.clone());
     let mut after = q.after.unwrap_or(i64::MIN);
     let mut handed = 0u64;
     loop {
+        let mut conditions = wheres.clone();
+        let mut extra: Vec<Option<String>> = Vec::new();
+        match &ordered {
+            None => conditions.push(format!("{key} > ${}", next + 1)),
+            Some((_, c, decl, d)) => match &place {
+                None => {}
+                Some((gpkg::Value::Null, _)) => {
+                    conditions.push(format!("({c} IS NULL AND {key} > ${})", next + 1));
+                }
+                Some((value, _)) => {
+                    let past = if *d { "<" } else { ">" };
+                    let v = format!("CAST(${} AS {decl})", next + 2);
+                    conditions.push(format!(
+                        "({c} {past} {v} OR ({c} = {v} AND {key} > ${}) OR {c} IS NULL)",
+                        next + 1
+                    ));
+                    extra.push(Some(match value {
+                        gpkg::Value::Integer(i) => i.to_string(),
+                        gpkg::Value::Real(x) => x.to_string(),
+                        gpkg::Value::Text(t) => t.clone(),
+                        _ => String::new(),
+                    }));
+                }
+            },
+        }
+        let order_by = match &ordered {
+            None => key.clone(),
+            Some((_, c, _, d)) => format!("{c} {} NULLS LAST, {key}", if *d { "DESC" } else { "ASC" }),
+        };
+        let sql = format!(
+            "SELECT {} FROM {sql_name}{}{} ORDER BY {order_by} LIMIT {}",
+            select.join(", "),
+            if conditions.is_empty() { "" } else { " WHERE " },
+            conditions.join(" AND "),
+            q.chunk.max(1)
+        );
         let mut query = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()));
         for p in params {
             query = match p {
@@ -695,11 +741,18 @@ async fn scan(
                 query = query.bind(v);
             }
         }
-        let found: Vec<PgRow> = query
-            .bind(after)
-            .fetch_all(&mut *conn)
-            .await
-            .map_err(unreachable)?;
+        let last_key = match (&ordered, &place) {
+            (None, _) => Some(after),
+            (Some(_), Some((_, k))) => Some(*k),
+            (Some(_), None) => None,
+        };
+        if let Some(k) = last_key {
+            query = query.bind(k);
+        }
+        for v in extra.into_iter().flatten() {
+            query = query.bind(v);
+        }
+        let found: Vec<PgRow> = query.fetch_all(&mut *conn).await.map_err(unreachable)?;
         let done = found.len() < q.chunk.max(1);
         let mut part = Vec::with_capacity(found.len());
         for r in &found {
@@ -711,6 +764,9 @@ async fn scan(
                 values: values_of(r, &columns, 2)?,
             });
             after = fid;
+        }
+        if let (Some((at, ..)), Some(r)) = (&ordered, part.last()) {
+            place = Some((r.values[*at].clone(), r.fid));
         }
         handed += part.len() as u64;
         if part.is_empty() || !f(part) || done {

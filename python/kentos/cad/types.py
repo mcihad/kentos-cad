@@ -37369,6 +37369,29 @@ class QueryNear(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class QueryOrder(_Model):
+    """The order of a question's records other than the key's (docs/adr/0591): a field and which way. Records without a
+    value come after every one with; equal ones by key (the drawing's: by lasting id).
+    """
+    field: str
+    descending: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        if self.descending is not UNSET:
+            out["descending"] = self.descending
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> QueryOrder:
+        return cls(
+            field=data["field"],
+            descending=data.get("descending", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class QueryPlan(_Model):
     """What the source did and what was done here (docs/adr/0581 §4).
     Attributes:
@@ -37377,7 +37400,8 @@ class QueryPlan(_Model):
         exact: Whether that condition is the whole filter and keeps exactly what it keeps.
         local: What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,
             `statistics`.
-        order: The order of the records: `key` (the source's) or `uid` (the drawing's).
+        order: The order of the records: `key` (the source's), `uid` (the drawing's), `column` (the source ordered them by the
+            field) or `here` (ordered here, docs/adr/0591 §2).
         pushed: The condition the source checked, its values written in.
     """
     columns: list[str]
@@ -42166,17 +42190,22 @@ class SourcesQuery(_Model):
     is reversed or not finite), `invalid_tolerance`, `invalid_cursor` (not a cursor of this question), `invalid_expression`
     (the filter does not compile, reads `$sıra` or `$ölçek`, or looks at another layer), `layer_not_found`, `invalid_input`
     (`scope: source` on a layer that is not bound), `file_not_found`, `import_unreadable`, `table_not_found`,
-    `field_not_found` (in `fields` or `statistics`), `source_unreachable`. A job stopped answers `cancelled`.
+    `field_not_found` (in `fields`, `statistics` or `order`), `source_changed` (a conflict: the file is not the one
+    `expectedStamp` names), `order_too_large` (more than 200 000 records to order here), `source_unreachable`. A job
+    stopped answers `cancelled`.
     Attributes:
         bbox: Records whose box meets this one, in the project's system: west, south, east, north. Unit: length.
         count: Count every record the question keeps.
         cursor: The page after the one whose `next` this is.
+        expected_stamp: The file's `stamp` the first page gave back: a later page is read only of the same file (docs/adr/0591 §3).
         fields: The fields returned, by name; none: all of them.
         filter: A condition in İfadeyle seç's language: the records it holds for.
         geometry: Return each record's geometry in the project's system (ISO WKT).
         layer: A layer of the drawing (its id).
         limit: How many records a page holds, 0–10 000; none: 100. 0 returns none (for a count or statistics). Unit: count.
         near: Records near a place.
+        order: Another order than the key's (docs/adr/0591 §2). A number, date, time or true/false field is ordered by the
+            source; a text field here, in the attribute table's natural order.
         path: A GeoPackage file's path, or a database's address (`postgresql://…`, no password).
         scope: With `layer`: its working copy (the default) or its source's whole table.
         statistics: Fields whose statistics are of every record the question keeps (`kentos.statistics/1`).
@@ -42185,12 +42214,14 @@ class SourcesQuery(_Model):
     bbox: list[float] | None | Unset = UNSET
     count: bool | None | Unset = UNSET
     cursor: str | None | Unset = UNSET
+    expected_stamp: str | None | Unset = UNSET
     fields: list[str] | None | Unset = UNSET
     filter: str | None | Unset = UNSET
     geometry: bool | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     limit: int | None | Unset = UNSET
     near: QueryNear | None | Unset = UNSET
+    order: QueryOrder | None | Unset = UNSET
     path: str | None | Unset = UNSET
     scope: QueryScope | QueryScopeName | None | Unset = UNSET
     statistics: list[str] | None | Unset = UNSET
@@ -42204,6 +42235,8 @@ class SourcesQuery(_Model):
             out["count"] = self.count
         if self.cursor is not UNSET:
             out["cursor"] = self.cursor
+        if self.expected_stamp is not UNSET:
+            out["expectedStamp"] = self.expected_stamp
         if self.fields is not UNSET:
             out["fields"] = None if self.fields is None else list(self.fields)
         if self.filter is not UNSET:
@@ -42216,6 +42249,8 @@ class SourcesQuery(_Model):
             out["limit"] = self.limit
         if self.near is not UNSET:
             out["near"] = None if self.near is None else self.near.to_json()
+        if self.order is not UNSET:
+            out["order"] = None if self.order is None else self.order.to_json()
         if self.path is not UNSET:
             out["path"] = self.path
         if self.scope is not UNSET:
@@ -42232,12 +42267,14 @@ class SourcesQuery(_Model):
             bbox=UNSET if "bbox" not in data else None if data["bbox"] is None else [float(e0) for e0 in data["bbox"]],
             count=data.get("count", UNSET),
             cursor=data.get("cursor", UNSET),
+            expected_stamp=data.get("expectedStamp", UNSET),
             fields=UNSET if "fields" not in data else None if data["fields"] is None else list(data["fields"]),
             filter=data.get("filter", UNSET),
             geometry=data.get("geometry", UNSET),
             layer=data.get("layer", UNSET),
             limit=data.get("limit", UNSET),
             near=UNSET if "near" not in data else None if data["near"] is None else QueryNear.from_json(data["near"]),
+            order=UNSET if "order" not in data else None if data["order"] is None else QueryOrder.from_json(data["order"]),
             path=data.get("path", UNSET),
             scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(QueryScope, data["scope"]),
             statistics=UNSET if "statistics" not in data else None if data["statistics"] is None else list(data["statistics"]),
@@ -62274,6 +62311,7 @@ __all__ = [
     "QueriedSource",
     "QueriedStatistic",
     "QueryNear",
+    "QueryOrder",
     "QueryPlan",
     "QueryScope",
     "QueryScopeName",

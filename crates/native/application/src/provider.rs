@@ -135,6 +135,8 @@ pub struct ProviderScan<'a> {
     pub filter: Option<(&'a str, &'a [Param])>,
     pub after: Option<i64>,
     pub chunk: usize,
+    /// Another order than the key's (docs/adr/0591 §1); `after` is then unused.
+    pub order: Option<gpkg::ScanOrder>,
 }
 
 /// A provider of database tables.

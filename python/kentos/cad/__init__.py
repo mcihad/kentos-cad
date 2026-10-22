@@ -1447,6 +1447,7 @@ __all__ = [
     "QueriedSource",
     "QueriedStatistic",
     "QueryNear",
+    "QueryOrder",
     "QueryPlan",
     "QueryScope",
     "QueryScopeName",

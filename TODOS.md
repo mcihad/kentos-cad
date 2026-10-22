@@ -353,6 +353,7 @@ Liste:
 - [ ] `CBS-07` Katmanın kaynak sistemi ve harita sistemi (ADR 0583, 22 Ekim): web'de gerekenler: `.kcad` şema 98'in `sourceCrs` ve `mapSrid`'inin okunup yazılması (TS türleri üretildi); web'in çizim hatlarında (WebGL2, WebGPU) stil toplayıcısının izdüşümü (`View.map`, WASM `styledBatches`'e harita sistemi), kameranın harita sistemi (`map_ratio`, ters dönüşümlü imleç), durum çubuğunda harita hücresi, koordinat sistemi menüsünde Harita sistemi ▸, katmanın sağ tık menüsünde Koordinat sistemi ▸ (Sistem ata, Yeniden izdüşür) ve `cad.layers.crs`, `cad.layers.reproject` işleyicileri; içe aktarmaların `sourceCrs`'i.
 - [ ] `CBS-12` Veritabanında alanın dışındaki komşular, yetki ve tam geçerlilik (ADR 0585, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; GeoPackage parçasının yazması web'e gelince komşunun geçerliliği Geçerliliği denetle'nin sorunlarıyla (yinelenen köşe hariç, önceden geçersiz komşu engel değil).
 - [ ] `CBS-14` Kaynağa bağlı topoloji denetimi (ADR 0589, 22 Ekim): web'de gerekenler: `.kcad` şema 99'un TS kodeği (istisnanın `digest`'i), Topoloji panelinde düşen istisnanın “(istisna düştü)” işareti ve uyarısı, Düzelt ▾'de önizlemenin ikinci satırı (`cad.topology.check`'in `preview`'u WASM'la), İstisna yap'ın `cad.topology.exceptions` ile yazması; bağlı parça web'de yok.
+- [ ] `CBS-20` kaynakta sıralama ve sıralı sayfalar (ADR 0591, 22 Ekim): web'de gerekenler: `cad.sources.query`'nin `order`'ı ve `expectedStamp`'i web'in işleyicisi gelince (WASM'da burada sıralama `feature_table`'la); Öznitelik tablosunda Kaynağın tümü kipi (sayfalar, başlıkla sıralama, Sonraki sayfa).
 - [ ] `CBS-15` PostGIS'te bağlantı tablosu (ADR 0590, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; İlişkiler penceresinin Veritabanında bölümü ve Bağlantı tablosu kur/kaldır web'in ilişkiler penceresi gelince.
 - [ ] `CBS-11` Aynı kaynağa birlikte yazma ve yazmada Z ile M (ADR 0584, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; GeoPackage'a yazan web yolunda (yoksa) Z ve M denetimi `dims_problem`'in kuralıyla, Kaynağa birlikte yaz'ın aynı kaynağın değişen katmanlarını toplaması.
 - [ ] `CBS-02` kaynağı sorgula (ADR 0581, 22 Ekim): web'de gerekenler: `cad.sources.query`'nin işleyicisi (web'in GeoPackage'ı yok; WASM'da itme kuralı ve yerel sınama), İstatistik panelinde Kapsam; TS türleri üretildi.
@@ -2126,6 +2127,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   sütunlarla, formda `redact`'lı alan dışarı çıkmaz; İstatistik ve Grafik Tablonun süzgeciyle; bağlı katmanın tablosunda Kaynak satırı.
   Kalan: kaynağa itilen sıralama, süzgeç ve toplam, imleçli sayfalar (ADR 0546 §4'ün tasarımı), sütun başlığı menüsü, alan yetkisinin
   ortak çözücüsü (CBS-38), bilgi kartında kaynak satırı. — **20 Ekim, [ADR 0546](docs/adr/0546-attribute-table-outgoing-and-source-line.md).**
+  Kaynakta sıralama ve sıralı sayfalar: `cad.sources.query`'nin `order`'ı (sayı, tarih, evet/hayır kaynakta anahtar kümesiyle;
+  metin ve çizim burada, en çok 200 000 kayıt), sıralı imleç `o:[yer,değer]`, `expectedStamp`; masaüstünde Öznitelik tablosunun
+  Kaynağın tümü kipi (500'lük sayfalar, başlıkla sıralama, İfade süzgeci, Sonraki sayfa, salt okunur). Kalan: Kaynağın tümü'nde
+  düzenleme, çok sütunlu sıra, metnin kaynakta sıralanması, PostGIS'te işlem anlık görüntüsü, sütun başlığı menüsü, alan yetkisi
+  (CBS-38). — **22 Ekim, [ADR 0591](docs/adr/0591-source-ordered-pages.md).**
 - [ ] `CBS-41` kapsam matrisi ve eşdeğerlik (dilim): `scripts/gis/coverage.py` (işlem + seçenek + veri türü + ev sahibi, kanıtı ortak
   durumlardan) → `docs/gis/coverage.{json,md}`; `tests/cases/equivalence.rs` 420 durumu (raster dosyaları bayt bayt) pencereden ve `cad.processing.run`'dan
   oynatır, ikisi aynı; ev sahibi `drawing` alanlı komutlara açık çizimin dosyasını verir (`with_own_file`). Her yazan komut kayıtta

@@ -264,6 +264,34 @@ pub struct Scan<'a> {
     pub filter: Option<(&'a str, &'a [Value])>,
     pub after: Option<i64>,
     pub chunk: usize,
+    /// Another order than the key's; `after` is then unused.
+    pub order: Option<ScanOrder>,
+}
+
+/// A scan's order by a column (docs/adr/0591 §1): `column` an index into the layer's columns (one of those read),
+/// which way; a row without a value after every row with one; equal ones by key. `after` is where the previous page
+/// ended: the column's value there and the row's key.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ScanOrder {
+    pub column: usize,
+    pub descending: bool,
+    pub after: Option<(Value, i64)>,
+}
+
+/// The condition that keeps the rows after `(value, key)` in an order by `column` (NULLs last, keys rising), and its
+/// values: the keyset of the next part.
+pub fn keyset(column: &str, key: &str, descending: bool, after: &Option<(Value, i64)>) -> (String, Vec<Value>) {
+    match after {
+        None => (String::new(), Vec::new()),
+        Some((Value::Null, k)) => (format!("({column} IS NULL AND {key} > ?)"), vec![Value::Integer(*k)]),
+        Some((v, k)) => {
+            let past = if descending { "<" } else { ">" };
+            (
+                format!("({column} {past} ? OR ({column} = ? AND {key} > ?) OR {column} IS NULL)"),
+                vec![v.clone(), v.clone(), Value::Integer(*k)],
+            )
+        }
+    }
 }
 
 /// A table to write.
@@ -714,17 +742,57 @@ impl GeoPackage {
             wh.push(format!("({cond})"));
             args.extend(values.iter().cloned());
         }
-        wh.push(format!("t.{fid} > ?"));
-        sql.push_str(" WHERE ");
-        sql.push_str(&wh.join(" AND "));
-        sql.push_str(&format!(" ORDER BY t.{fid} LIMIT {}", s.chunk.max(1)));
-        let mut st = self.conn.prepare(&sql)?;
+        // The order's column among those read, and where each part starts: the key, or the column's value and the key.
+        let ordered = match &s.order {
+            None => None,
+            Some(o) => {
+                let at = columns
+                    .iter()
+                    .position(|&i| i == o.column)
+                    .ok_or_else(|| Error(format!("{}. sütun sıralanıyor ama okunmuyor", o.column)))?;
+                Some((at, quote(&layer.columns[o.column].name), o.descending))
+            }
+        };
+        let base = sql.clone();
+        let base_where = wh.clone();
+        let make = |cond: &str| -> String {
+            let mut sql = base.clone();
+            let mut wh = base_where.clone();
+            if !cond.is_empty() {
+                wh.push(cond.to_owned());
+            }
+            if !wh.is_empty() {
+                sql.push_str(" WHERE ");
+                sql.push_str(&wh.join(" AND "));
+            }
+            match &ordered {
+                None => sql.push_str(&format!(" ORDER BY t.{fid} LIMIT {}", s.chunk.max(1))),
+                Some((_, c, d)) => sql.push_str(&format!(
+                    " ORDER BY t.{c} {} NULLS LAST, t.{fid} LIMIT {}",
+                    if *d { "DESC" } else { "ASC" },
+                    s.chunk.max(1)
+                )),
+            }
+            sql
+        };
         let n = columns.len();
         let mut after = s.after.unwrap_or(i64::MIN);
+        let mut place: Option<(Value, i64)> = s.order.as_ref().and_then(|o| o.after.clone());
         let mut handed = 0u64;
         loop {
             let mut bound = args.clone();
-            bound.push(Value::Integer(after));
+            let sql = match &ordered {
+                None => {
+                    bound.push(Value::Integer(after));
+                    make(&format!("t.{fid} > ?"))
+                }
+                Some((_, c, d)) => {
+                    let (cond, values) = keyset(&format!("t.{c}"), &format!("t.{fid}"), *d, &place);
+                    bound.extend(values);
+                    make(&cond)
+                }
+            };
+            let mut st = self.conn.prepare_cached(&sql)?;
             let rows = st
                 .query_map(rusqlite::params_from_iter(bound.iter()), |r| {
                     let geometry = match r.get_ref(1)? {
@@ -750,6 +818,9 @@ impl GeoPackage {
             };
             let full = rows.len() >= s.chunk.max(1);
             after = last;
+            if let (Some((at, ..)), Some(r)) = (&ordered, rows.last()) {
+                place = Some((r.values[*at].clone(), r.fid));
+            }
             handed += rows.len() as u64;
             let mut rows = rows;
             if let Some(b) = s.bbox

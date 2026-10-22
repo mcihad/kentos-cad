@@ -371,6 +371,19 @@ impl App {
             Some(line) => iced::widget::column![bar, line].into(),
             None => bar,
         };
+        // Kaynağın tümü: the source's rows instead of the working copy's (docs/adr/0591 §4).
+        if let Some(layer) = rows.layer.as_deref()
+            && self.whole_link(Some(layer)).is_some()
+        {
+            return iced::widget::column![
+                bar,
+                kentos_ui::widget::horizontal_divider(),
+                self.whole_table(layer)
+            ]
+            .width(Fill)
+            .height(Fill)
+            .into();
+        }
         if panel.pane == super::Pane::Form {
             return iced::widget::column![
                 bar,

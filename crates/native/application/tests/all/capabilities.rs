@@ -393,6 +393,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     ),
     (
         "cad.sources.query",
+        "order_too_large",
+        "200 000 kaydı aşan tablo durum dosyasını büyütür; sınır geçici dosyada sources_query.rs'in an_order_here_keeps_at_most_two_hundred_thousand_records'ında (ADR 0591 §2)",
+    ),
+    (
+        "cad.sources.query",
         "no_row_key",
         "view ve sorgu katmanı yalnız veritabanında; ev sahibinin sağlayıcısı uygulamanın testlerinde kayıtlı değil, durum kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
     ),

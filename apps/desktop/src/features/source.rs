@@ -173,6 +173,7 @@ impl App {
         if let Some(a) = act {
             line = line.push(a);
         }
+        line = line.push(self.whole_switch(&state.link.layer));
         line = line.push(kentos_ui::widget::tip(
             button(label::caption(REFRESH))
                 .on_press(Message::Features(super::Event::Source(

@@ -185,6 +185,14 @@ def main():
                                      layerCreationOptions=["SCHEMA=sorgu", "FID=fid", "GEOMETRY_NAME=geom"],
                                      preserveFID=True))
         c.cursor().execute("UPDATE sorgu.nokta SET kot = NULL WHERE fid = 60")
+        # The order cases' file (docs/adr/0591): its table in the schema sira, the date a date, the true/false a
+        # boolean.
+        c.cursor().execute("CREATE SCHEMA sira")
+        gdal.VectorTranslate(pg, str(ROOT / "fixtures/sources/v1/sira.gpkg"),
+                             options=gdal.VectorTranslateOptions(
+                                 layers=["olay"],
+                                 layerCreationOptions=["SCHEMA=sira", "FID=fid", "GEOMETRY_NAME=geom"],
+                                 preserveFID=True))
         # A view keyed by fid and one without a key (docs/adr/0582 §3).
         c.cursor().execute("CREATE VIEW sorgu.nokta_v AS SELECT fid, ad, tur, geom FROM sorgu.nokta WHERE fid <= 50")
         c.cursor().execute("CREATE VIEW sorgu.anahtarsiz AS SELECT ad, geom FROM sorgu.nokta")

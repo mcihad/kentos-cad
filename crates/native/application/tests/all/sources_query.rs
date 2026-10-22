@@ -225,3 +225,180 @@ fn what_a_source_is_sent_keeps_every_row_the_condition_keeps() {
     assert!(sent > 200, "{sent} koşul kaynağa gitti");
     let _ = std::fs::remove_file(&path);
 }
+
+/// A whole answer's rows paged through: every page's `next` given back until there is none (docs/adr/0591 §3).
+fn paged(doc: &mut Document, mut input: Value, limit: u64) -> Vec<Value> {
+    let mut out = Vec::new();
+    input["limit"] = json!(limit);
+    loop {
+        let answer = run(doc, "cad.sources.query", input.clone());
+        let o = ok(&answer);
+        out.extend(o["rows"].as_array().expect("rows").iter().cloned());
+        match o["next"].as_str() {
+            Some(next) => input["cursor"] = json!(next),
+            None => return out,
+        }
+    }
+}
+
+/// A field's values in the rows' order; an empty text is no value (the order puts both last, each by its own place).
+fn values(rows: &[Value], field: &str) -> Vec<Value> {
+    rows.iter()
+        .map(|r| match &r["attrs"][field] {
+            Value::String(t) if t.is_empty() => Value::Null,
+            v => v.clone(),
+        })
+        .collect()
+}
+
+#[test]
+fn pages_of_an_order_join_to_the_whole_order_and_the_drawing_orders_the_same_values() {
+    let path = std::env::temp_dir().join(format!("kentos-sorgu-sira-{}.gpkg", std::process::id()));
+    let _ = std::fs::remove_file(&path);
+    let mut d = Dice(0x51_7C_C1_B7_27_22_0A_95);
+    {
+        let mut file = GeoPackage::create(&path).expect("created");
+        let def = TableDef {
+            name: "t".into(),
+            data_type: DataType::Attributes,
+            identifier: None,
+            description: None,
+            srs_id: None,
+            geometry: None,
+            columns: vec![
+                column("a", "REAL", ColumnKind::Real),
+                column("b", "INTEGER", ColumnKind::Integer),
+                column("s", "TEXT", ColumnKind::Text(None)),
+            ],
+        };
+        let reals = [
+            V::Null,
+            V::Real(-1.5),
+            V::Real(0.0),
+            V::Real(0.25),
+            V::Real(2.0),
+            V::Real(1e-10),
+            V::Real(7.75),
+        ];
+        let ints = [
+            V::Null,
+            V::Integer(-3),
+            V::Integer(0),
+            V::Integer(1),
+            V::Integer(12),
+            V::Integer(100),
+        ];
+        let texts = [
+            V::Null,
+            V::Text(String::new()),
+            V::Text("ağaç 2".into()),
+            V::Text("Ağaç 10".into()),
+            V::Text("çam".into()),
+            V::Text("ılgın".into()),
+            V::Text("İncir".into()),
+            V::Text("z".into()),
+        ];
+        let rows: Vec<NewRow> = (0..2600)
+            .map(|_| NewRow {
+                fid: None,
+                geometry: None,
+                values: vec![
+                    d.pick(&reals).clone(),
+                    d.pick(&ints).clone(),
+                    d.pick(&texts).clone(),
+                ],
+            })
+            .collect();
+        file.write_table(&def, &rows, None).expect("written");
+    }
+    let file = path.display().to_string();
+    let mut doc = doc();
+    let imported = run(&mut doc, "file.import.gpkg", json!({ "path": file }));
+    let layer = ok(&imported)["tables"][0]["layer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    for (field, by) in [("a", "column"), ("b", "column"), ("s", "here")] {
+        for descending in [false, true] {
+            let order = json!({ "field": field, "descending": descending });
+            let ask = json!({ "path": file, "table": "t", "order": order });
+            let whole = run(
+                &mut doc,
+                "cad.sources.query",
+                json!({ "path": file, "table": "t", "order": order, "limit": 10000 }),
+            );
+            assert_eq!(ok(&whole)["plan"]["order"], by, "{field}");
+            let whole = ok(&whole)["rows"].as_array().expect("rows").clone();
+            assert_eq!(whole.len(), 2600);
+            for limit in [7, 333, 1000, 1001] {
+                let pages = paged(&mut doc, ask.clone(), limit);
+                assert_eq!(pages, whole, "{field} {descending} {limit}");
+            }
+            // Equal values go by key in the file, by lasting id in the drawing: the values' sequence is the same.
+            let drawn = paged(&mut doc, json!({ "layer": layer, "order": order }), 500);
+            assert_eq!(
+                values(&drawn, field),
+                values(&whole, field),
+                "{field} {descending}"
+            );
+        }
+    }
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn an_order_here_keeps_at_most_two_hundred_thousand_records() {
+    let path = std::env::temp_dir().join(format!("kentos-sorgu-cok-{}.gpkg", std::process::id()));
+    let _ = std::fs::remove_file(&path);
+    {
+        let mut file = GeoPackage::create(&path).expect("created");
+        let def = TableDef {
+            name: "t".into(),
+            data_type: DataType::Attributes,
+            identifier: None,
+            description: None,
+            srs_id: None,
+            geometry: None,
+            columns: vec![
+                column("s", "TEXT", ColumnKind::Text(None)),
+                column("n", "INTEGER", ColumnKind::Integer),
+            ],
+        };
+        let most = kentos_commands::MOST_ORDERED_HERE as i64;
+        let rows: Vec<NewRow> = (0..=most)
+            .map(|k| NewRow {
+                fid: None,
+                geometry: None,
+                values: vec![V::Text(format!("k{}", k % 977)), V::Integer(k)],
+            })
+            .collect();
+        file.write_table(&def, &rows, None).expect("written");
+    }
+    let file = path.display().to_string();
+    let mut doc = doc();
+    let refused = run(
+        &mut doc,
+        "cad.sources.query",
+        json!({ "path": file, "table": "t", "order": { "field": "s" }, "limit": 1 }),
+    );
+    assert_eq!(refused["status"], "failed", "{refused}");
+    assert_eq!(refused["error"]["code"], "order_too_large");
+    assert_eq!(refused["error"]["path"], "order");
+    // A filter that keeps fewer, or an order the source makes, is answered.
+    let fewer = run(
+        &mut doc,
+        "cad.sources.query",
+        json!({ "path": file, "table": "t", "order": { "field": "s" }, "filter": "n < 1000", "limit": 1 }),
+    );
+    assert_eq!(ok(&fewer)["plan"]["order"], "here");
+    let source = run(
+        &mut doc,
+        "cad.sources.query",
+        json!({ "path": file, "table": "t", "order": { "field": "n", "descending": true }, "limit": 1 }),
+    );
+    assert_eq!(
+        ok(&source)["rows"][0]["key"],
+        json!(kentos_commands::MOST_ORDERED_HERE + 1)
+    );
+    let _ = std::fs::remove_file(&path);
+}

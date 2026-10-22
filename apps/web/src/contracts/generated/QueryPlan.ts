@@ -27,6 +27,7 @@ exact: boolean,
  */
 local: Array<string>, 
 /**
- * The order of the records: `key` (the source's) or `uid` (the drawing's).
+ * The order of the records: `key` (the source's), `uid` (the drawing's), `column` (the source ordered them by the
+ * field) or `here` (ordered here, docs/adr/0591 §2).
  */
 order: string, };

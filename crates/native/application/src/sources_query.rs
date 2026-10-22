@@ -10,9 +10,9 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, LayerFilter, MOST_QUERIED, PlanBox, ProjectSettings,
-    QUERIED, QueriedKind, QueriedRow, QueriedSource, QueriedStatistic, QueryPlan, QueryScope,
-    SourceKind, SourcesQueried, SourcesQuery,
+    CommandResult, CommandWarning, Entity, LayerFieldKind, LayerFilter, MOST_ORDERED_HERE,
+    MOST_QUERIED, PlanBox, ProjectSettings, QUERIED, QueriedKind, QueriedRow, QueriedSource,
+    QueriedStatistic, QueryOrder, QueryPlan, QueryScope, SourceKind, SourcesQueried, SourcesQuery,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_expression::pushdown::{self, ColumnSort, Dialect, Param, Pushed};
@@ -37,11 +37,20 @@ fn fail(code: &str, message: impl Into<String>, path: &str) -> Stop {
     Stop::failed(error(code, message.into(), Some(path.to_owned())))
 }
 
-/// Where a page ends: a source's key, or a drawing object's lasting id.
+/// Where a record stands: a source's key, or a drawing object's lasting id.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Place {
+    Key(i64),
+    Uid(Uuid),
+}
+
+/// Where a page ends: a source's key, a drawing object's lasting id, or in an order by a field the last record's
+/// place and its value there (docs/adr/0591 §3: `o:[17,"Ada"]`).
+#[derive(Clone, Debug, PartialEq)]
 enum Cursor {
     Key(i64),
     Uid(Uuid),
+    After(Place, serde_json::Value),
 }
 
 impl Cursor {
@@ -50,15 +59,164 @@ impl Cursor {
             let n: i64 = k.parse().ok()?;
             return (n.to_string() == k).then_some(Cursor::Key(n));
         }
+        if let Some(rest) = text.strip_prefix("o:") {
+            let v: serde_json::Value = serde_json::from_str(rest).ok()?;
+            let [place, value] = v.as_array()?.as_slice() else {
+                return None;
+            };
+            let place = match place {
+                serde_json::Value::Number(n) => Place::Key(n.as_i64()?),
+                serde_json::Value::String(u) => Place::Uid(Uuid::parse_str(u).ok()?),
+                _ => return None,
+            };
+            if !matches!(
+                value,
+                serde_json::Value::Null
+                    | serde_json::Value::Number(_)
+                    | serde_json::Value::String(_)
+            ) {
+                return None;
+            }
+            let c = Cursor::After(place, value.clone());
+            return (c.text() == text).then_some(c);
+        }
         let u = Uuid::parse_str(text.strip_prefix("u:")?).ok()?;
         (format!("u:{u}") == text).then_some(Cursor::Uid(u))
     }
 
-    fn text(self) -> String {
+    fn text(&self) -> String {
         match self {
             Cursor::Key(k) => format!("k:{k}"),
             Cursor::Uid(u) => format!("u:{u}"),
+            Cursor::After(place, value) => {
+                let place = match place {
+                    Place::Key(k) => serde_json::json!(k),
+                    Place::Uid(u) => serde_json::json!(u.to_string()),
+                };
+                format!("o:{}", serde_json::json!([place, value]))
+            }
         }
+    }
+}
+
+/// A source's raw value as a cursor keeps it, and back.
+fn json_of(v: &gpkg::Value) -> serde_json::Value {
+    match v {
+        gpkg::Value::Null | gpkg::Value::Blob(_) => serde_json::Value::Null,
+        gpkg::Value::Integer(i) => serde_json::json!(i),
+        gpkg::Value::Real(x) => serde_json::Number::from_f64(*x)
+            .map_or(serde_json::Value::Null, serde_json::Value::Number),
+        gpkg::Value::Text(t) => serde_json::json!(t),
+    }
+}
+
+fn value_of(v: &serde_json::Value) -> gpkg::Value {
+    match v {
+        serde_json::Value::Number(n) => match n.as_i64() {
+            Some(i) => gpkg::Value::Integer(i),
+            None => gpkg::Value::Real(n.as_f64().unwrap_or(0.0)),
+        },
+        serde_json::Value::String(t) => gpkg::Value::Text(t.clone()),
+        _ => gpkg::Value::Null,
+    }
+}
+
+/// A record's value in a field, as the order here reads it: none when it has none (or an empty one).
+fn here_value(e: &Entity, field: &str) -> Option<String> {
+    e.base().attrs.get(field).filter(|v| !v.is_empty()).cloned()
+}
+
+/// The records ordered here (docs/adr/0591 §2), from where the cursor stands: by the attribute table's rule for the
+/// field's kind (`number`, `date`, `boolean`, `text`), a record without a value after every one with, equal ones by
+/// their place (the list comes in that order). The cursor's record is put back where it stood, so a page goes on
+/// after it even when the record itself is gone.
+fn order_here(
+    list: Vec<(Uuid, Option<i64>, Entity)>,
+    field: &str,
+    kind: &str,
+    descending: bool,
+    cursor: Option<&Cursor>,
+) -> Vec<(Uuid, Option<i64>, Entity)> {
+    use kentos_geometry_core::ops::feature_table::{Cell, Column, Query, Row, feature_table};
+    let row = |v: Option<String>| Row {
+        cells: vec![Cell {
+            shown: v.clone().unwrap_or_default(),
+            key: v,
+        }],
+        selected: false,
+        in_view: true,
+        passes: true,
+    };
+    let mut rows: Vec<Row> = list
+        .iter()
+        .map(|(_, _, e)| row(here_value(e, field)))
+        .collect();
+    // The cursor's record goes after every record whose place is not past its own.
+    let at = match cursor {
+        Some(Cursor::After(place, value)) => {
+            let at = list.partition_point(|(u, k, _)| match (place, k) {
+                (Place::Key(c), Some(k)) => k <= c,
+                (Place::Uid(c), None) => u <= c,
+                _ => false,
+            });
+            let value = match value {
+                serde_json::Value::Null => None,
+                serde_json::Value::String(t) if t.is_empty() => None,
+                serde_json::Value::String(t) => Some(t.clone()),
+                other => Some(other.to_string()),
+            };
+            rows.insert(at, row(value));
+            Some(at)
+        }
+        _ => None,
+    };
+    let order = feature_table(
+        &[Column {
+            order: kind.to_owned(),
+            searched: false,
+        }],
+        &rows,
+        &Query {
+            search: String::new(),
+            show: "all".into(),
+            sort: Some(0),
+            descending,
+        },
+    );
+    let start = match at {
+        None => 0,
+        Some(at) => order
+            .iter()
+            .position(|&i| i as usize == at)
+            .map_or(0, |p| p + 1),
+    };
+    let mut taken: Vec<Option<(Uuid, Option<i64>, Entity)>> = list.into_iter().map(Some).collect();
+    order[start..]
+        .iter()
+        .filter_map(|&i| {
+            let i = i as usize;
+            let i = match at {
+                Some(at) if i == at => return None,
+                Some(at) if i > at => i - 1,
+                _ => i,
+            };
+            taken.get_mut(i).and_then(Option::take)
+        })
+        .collect()
+}
+
+/// The kind of order a layer's field takes (its type), `text` without one.
+fn field_order(doc: &Document, layer: &str, field: &str) -> &'static str {
+    let kind = doc
+        .layers()
+        .get(layer)
+        .and_then(|n| n.fields.iter().find(|f| f.name == field))
+        .map(|f| f.kind);
+    match kind {
+        Some(LayerFieldKind::Integer | LayerFieldKind::Decimal) => "number",
+        Some(LayerFieldKind::Date | LayerFieldKind::DateTime | LayerFieldKind::Time) => "date",
+        Some(LayerFieldKind::Boolean) => "boolean",
+        _ => "text",
     }
 }
 
@@ -73,6 +231,8 @@ struct Asked {
     count: bool,
     statistics: Vec<String>,
     cursor: Option<Cursor>,
+    order: Option<QueryOrder>,
+    expected_stamp: Option<String>,
 }
 
 impl Asked {
@@ -104,6 +264,16 @@ impl Asked {
         }
         out
     }
+}
+
+fn too_many_to_order() -> Stop {
+    fail(
+        codes::ORDER_TOO_LARGE,
+        format!(
+            "Bu alan burada sıralanır ve soru {MOST_ORDERED_HERE} kayıttan çoğunu tutuyor; süzgeçle, kutuyla ya da kaynağın sıraladığı bir alanla (sayı, tarih, evet/hayır) sorun."
+        ),
+        "order",
+    )
 }
 
 fn finite_box(b: &[f64; 4]) -> bool {
@@ -190,6 +360,23 @@ fn asked(input: &SourcesQuery, settings: &ProjectSettings) -> Result<Asked, Stop
             )
         })?),
     };
+    match (&cursor, &input.order) {
+        (Some(Cursor::After(..)), None) => {
+            return Err(fail(
+                codes::INVALID_CURSOR,
+                "Bu imleç bir sıralamanın; sırayı (order) ilk sayfadaki gibi verin.",
+                "cursor",
+            ));
+        }
+        (Some(Cursor::Key(_) | Cursor::Uid(_)), Some(_)) => {
+            return Err(fail(
+                codes::INVALID_CURSOR,
+                "Bu imleç sırasız bir sorunun; sıralı sorunun sayfaları bir önceki sıralı cevabın next'iyle sürer.",
+                "cursor",
+            ));
+        }
+        _ => {}
+    }
     let filter = match input.filter.as_deref().map(str::trim) {
         None | Some("") => None,
         Some(text) => {
@@ -221,6 +408,8 @@ fn asked(input: &SourcesQuery, settings: &ProjectSettings) -> Result<Asked, Stop
         count: input.count.unwrap_or(false),
         statistics: input.statistics.clone().unwrap_or_default(),
         cursor,
+        order: input.order.clone(),
+        expected_stamp: input.expected_stamp.clone(),
     })
 }
 
@@ -254,7 +443,8 @@ impl<'a> Gather<'a> {
             || (self.asked.limit == 0 && !self.asked.count && self.asked.statistics.is_empty())
     }
 
-    fn take(&mut self, uid: Uuid, key: Option<i64>, e: &Entity) {
+    /// One record that passes; `value`: its value in the order's field (an ordered question's cursor keeps it).
+    fn take(&mut self, uid: Uuid, key: Option<i64>, e: &Entity, value: Option<&serde_json::Value>) {
         self.total += 1;
         for (k, f) in self.asked.statistics.iter().enumerate() {
             if let Some(v) = e.base().attrs.get(f) {
@@ -283,12 +473,17 @@ impl<'a> Gather<'a> {
                 attrs,
                 wkt,
             });
-            self.last = Some(match key {
-                Some(k) => Cursor::Key(k),
-                None => Cursor::Uid(uid),
+            let place = match key {
+                Some(k) => Place::Key(k),
+                None => Place::Uid(uid),
+            };
+            self.last = Some(match (place, self.asked.order.is_some()) {
+                (p, true) => Cursor::After(p, value.cloned().unwrap_or(serde_json::Value::Null)),
+                (Place::Key(k), false) => Cursor::Key(k),
+                (Place::Uid(u), false) => Cursor::Uid(u),
             });
         } else if self.next.is_none() && self.asked.limit > 0 {
-            self.next = self.last.map(Cursor::text);
+            self.next = self.last.as_ref().map(Cursor::text);
         }
     }
 
@@ -384,7 +579,7 @@ fn drawing(
     asked: &Asked,
     stop: &dyn Fn() -> bool,
 ) -> Result<(SourcesQueried, Vec<CommandWarning>), Stop> {
-    if let Some(Cursor::Key(_)) = asked.cursor {
+    if let Some(Cursor::Key(_) | Cursor::After(Place::Key(_), _)) = asked.cursor {
         return Err(fail(
             codes::INVALID_CURSOR,
             "Bu imleç bir kaynağın; çizimin nesneleri kalıcı kimlikleriyle sayfalanır.",
@@ -392,6 +587,16 @@ fn drawing(
         ));
     }
     let node = doc.layers().get(layer);
+    if let (Some(o), Some(n)) = (&asked.order, node)
+        && !n.fields.is_empty()
+        && !n.fields.iter().any(|lf| lf.name == o.field)
+    {
+        return Err(fail(
+            codes::FIELD_NOT_FOUND,
+            format!("“{}” alanı “{}” katmanında yok.", o.field, n.name),
+            "order.field",
+        ));
+    }
     for (i, f) in asked.fields.iter().flatten().enumerate() {
         if let Some(n) = node
             && !n.fields.is_empty()
@@ -433,6 +638,7 @@ fn drawing(
     };
     let mut g = Gather::new(asked);
     let mut read = 0u64;
+    let mut held: Vec<(Uuid, Option<i64>, Entity)> = Vec::new();
     for part in list[start..].chunks(CHUNK) {
         if stop() {
             return Err(Stop::Cancelled);
@@ -441,13 +647,29 @@ fn drawing(
         let owned: Vec<(Uuid, Option<i64>, Entity)> =
             part.iter().map(|(u, e)| (*u, None, (*e).clone())).collect();
         let pass = passing(asked, &owned, &names);
-        for ((u, _, e), p) in owned.iter().zip(pass) {
-            if p {
-                g.take(*u, None, e);
+        for (o, p) in owned.into_iter().zip(pass) {
+            if !p {
+                continue;
+            }
+            if asked.order.is_some() {
+                held.push(o);
+                if held.len() as u64 > MOST_ORDERED_HERE {
+                    return Err(too_many_to_order());
+                }
+            } else {
+                g.take(o.0, None, &o.2, None);
             }
         }
         if g.done() {
             break;
+        }
+    }
+    if let Some(o) = &asked.order {
+        let kind = field_order(doc, layer, &o.field);
+        // As without an order, what is counted is what comes from the cursor on.
+        for (u, k, e) in order_here(held, &o.field, kind, o.descending, asked.cursor.as_ref()) {
+            let v = here_value(&e, &o.field).map(serde_json::Value::String);
+            g.take(u, k, &e, v.as_ref());
         }
     }
     let link = doc.settings().sources.iter().find(|s| s.layer == layer);
@@ -481,7 +703,7 @@ fn drawing(
                 pushed: None,
                 exact: asked.filter.is_none(),
                 local: asked.local(),
-                order: "uid".into(),
+                order: if asked.order.is_some() { "here" } else { "uid" }.into(),
             },
             rows: g.rows,
             next: g.next,
@@ -566,7 +788,7 @@ fn source(
     revision: String,
     stop: &dyn Fn() -> bool,
 ) -> Result<(SourcesQueried, Vec<CommandWarning>), Stop> {
-    if let Some(Cursor::Uid(_)) = asked.cursor {
+    if let Some(Cursor::Uid(_) | Cursor::After(Place::Uid(_), _)) = asked.cursor {
         return Err(fail(
             codes::INVALID_CURSOR,
             "Bu imleç çizimin; bir kaynağın kayıtları anahtarlarıyla sayfalanır.",
@@ -609,6 +831,36 @@ fn source(
                 &format!("statistics.{i}"),
             ));
         }
+    }
+    // The order's column, and who orders by it (docs/adr/0591 §2): the source, unless it holds text.
+    let order_column = match &asked.order {
+        None => None,
+        Some(o) => Some(column(&o.field).ok_or_else(|| {
+            fail(
+                codes::FIELD_NOT_FOUND,
+                format!("“{}” sütunu “{table}” tablosunda yok.", o.field),
+                "order.field",
+            )
+        })?),
+    };
+    let here = order_column.is_some_and(|i| {
+        matches!(
+            found.layer.columns[i].kind,
+            ColumnKind::Text(_) | ColumnKind::Blob(_)
+        )
+    });
+    // A later page is read only of the file the first one was (docs/adr/0591 §3).
+    if let (Some(expected), Some(path)) = (&asked.expected_stamp, path)
+        && file_stamp(path).as_deref() != Some(expected.as_str())
+    {
+        return Err(Stop::conflict(error(
+            codes::SOURCE_CHANGED,
+            format!(
+                "{} ilk sayfa okunduğundan beri değişti; soruyu imleçsiz baştan sorun.",
+                path.display()
+            ),
+            Some("expectedStamp".to_owned()),
+        )));
     }
     // The geometry is in the project's system when anything here reads it.
     let geometry = asked.geometry || asked.needs_shape();
@@ -656,7 +908,11 @@ fn source(
         e.fields.iter().for_each(|f| want(f));
     }
     asked.statistics.iter().for_each(|f| want(f));
+    if let Some(o) = &asked.order {
+        want(&o.field);
+    }
     read_columns.sort_unstable();
+    let order_at = order_column.and_then(|i| read_columns.iter().position(|&c| c == i));
     let mut projected = found.layer.clone();
     projected.columns = read_columns
         .iter()
@@ -691,7 +947,20 @@ fn source(
         Some(Cursor::Key(k)) => Some(k),
         _ => None,
     };
+    let scan_order = match (&asked.order, order_column) {
+        (Some(o), Some(column)) if !here => Some(gpkg::ScanOrder {
+            column,
+            descending: o.descending,
+            after: match &asked.cursor {
+                Some(Cursor::After(Place::Key(k), v)) => Some((value_of(v), *k)),
+                _ => None,
+            },
+        }),
+        _ => None,
+    };
     let mut g = Gather::new(asked);
+    let mut held: Vec<(Uuid, Option<i64>, Entity)> = Vec::new();
+    let mut too_many = false;
     let mut problem: Option<String> = None;
     let mut cancelled = false;
     let names = |id: &str| id.to_owned();
@@ -700,6 +969,14 @@ fn source(
             cancelled = true;
             return false;
         }
+        // The order's raw values by key, for the cursor of a source's order.
+        let raw: std::collections::HashMap<i64, serde_json::Value> = match (&scan_order, order_at) {
+            (Some(_), Some(at)) => rows
+                .iter()
+                .map(|r| (r.fid, json_of(&r.values[at])))
+                .collect(),
+            _ => std::collections::HashMap::new(),
+        };
         let t = match gp::table_of_rows(&projected, &rows, &found.uids, &uid_of) {
             Ok(t) => t,
             Err(why) => {
@@ -720,9 +997,19 @@ fn source(
             list.push((uid, Some(key), e));
         }
         let pass = passing(asked, &list, &names);
-        for ((uid, key, e), p) in list.iter().zip(pass) {
-            if p {
-                g.take(*uid, *key, e);
+        for (o, p) in list.into_iter().zip(pass) {
+            if !p {
+                continue;
+            }
+            if here {
+                held.push(o);
+                if held.len() as u64 > MOST_ORDERED_HERE {
+                    too_many = true;
+                    return false;
+                }
+            } else {
+                let v = o.1.and_then(|k| raw.get(&k));
+                g.take(o.0, o.1, &o.2, v);
             }
         }
         !g.done()
@@ -754,6 +1041,7 @@ fn source(
                         .then_some((pushed.sql.as_str(), values.as_slice())),
                     after,
                     chunk: CHUNK,
+                    order: scan_order.clone(),
                 },
                 &mut take,
             )
@@ -778,6 +1066,7 @@ fn source(
                         .then_some((pushed.sql.as_str(), pushed.params.as_slice())),
                     after,
                     chunk: CHUNK,
+                    order: scan_order.clone(),
                 },
                 &mut take,
             )
@@ -789,6 +1078,15 @@ fn source(
     }
     if let Some(why) = problem {
         return Err(fail(codes::IMPORT_UNREADABLE, why, at.table));
+    }
+    if too_many {
+        return Err(too_many_to_order());
+    }
+    if let (true, Some(o)) = (here, &asked.order) {
+        for (u, k, e) in order_here(held, &o.field, "text", o.descending, asked.cursor.as_ref()) {
+            let v = here_value(&e, &o.field).map(serde_json::Value::String);
+            g.take(u, k, &e, v.as_ref());
+        }
     }
     let mut warnings = Vec::new();
     if g.unreadable > 0 {
@@ -815,7 +1113,12 @@ fn source(
         pushed: shown,
         exact: asked.filter.is_none() || pushed.exact,
         local: asked.local(),
-        order: "key".into(),
+        order: match (&asked.order, here) {
+            (None, _) => "key",
+            (Some(_), false) => "column",
+            (Some(_), true) => "here",
+        }
+        .into(),
     };
     Ok((
         SourcesQueried {

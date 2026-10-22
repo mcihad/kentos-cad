@@ -3630,6 +3630,8 @@ const ENTRIES: &[Entry] = &[
                 "crs_mismatch",
                 "no_row_key",
                 "row_key_not_unique",
+                "source_changed",
+                "order_too_large",
             ],
         ],
         warnings: &["partial_scope", "rows_unreadable"],

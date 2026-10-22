@@ -1020937,6 +1020937,22 @@
             ],
             "type": "object"
           },
+          "QueryOrder": {
+            "additionalProperties": false,
+            "description": "The order of a question's records other than the key's (docs/adr/0591): a field and which way. Records without a\nvalue come after every one with; equal ones by key (the drawing's: by lasting id).",
+            "properties": {
+              "descending": {
+                "type": "boolean"
+              },
+              "field": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field"
+            ],
+            "type": "object"
+          },
           "QueryScope": {
             "description": "What a layer's question is asked of.",
             "oneOf": [
@@ -1020955,7 +1020971,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.sources.query` v1: `layer`, or `path` and `table`.\n\nRefusals, checked in this order: `invalid_input` (neither or both of `layer` and `path`, `table` without `path`,\n`path` without `table`, `scope` without `layer`), `invalid_count` (`limit` past 10 000), `invalid_extent` (a box that\nis reversed or not finite), `invalid_tolerance`, `invalid_cursor` (not a cursor of this question), `invalid_expression`\n(the filter does not compile, reads `$sıra` or `$ölçek`, or looks at another layer), `layer_not_found`, `invalid_input`\n(`scope: source` on a layer that is not bound), `file_not_found`, `import_unreadable`, `table_not_found`,\n`field_not_found` (in `fields` or `statistics`), `source_unreachable`. A job stopped answers `cancelled`.",
+        "description": "Input of `cad.sources.query` v1: `layer`, or `path` and `table`.\n\nRefusals, checked in this order: `invalid_input` (neither or both of `layer` and `path`, `table` without `path`,\n`path` without `table`, `scope` without `layer`), `invalid_count` (`limit` past 10 000), `invalid_extent` (a box that\nis reversed or not finite), `invalid_tolerance`, `invalid_cursor` (not a cursor of this question), `invalid_expression`\n(the filter does not compile, reads `$sıra` or `$ölçek`, or looks at another layer), `layer_not_found`, `invalid_input`\n(`scope: source` on a layer that is not bound), `file_not_found`, `import_unreadable`, `table_not_found`,\n`field_not_found` (in `fields`, `statistics` or `order`), `source_changed` (a conflict: the file is not the one\n`expectedStamp` names), `order_too_large` (more than 200 000 records to order here), `source_unreachable`. A job\nstopped answers `cancelled`.",
         "properties": {
           "bbox": {
             "description": "Records whose box meets this one, in the project's system: west, south, east, north.",
@@ -1020980,6 +1020996,13 @@
           },
           "cursor": {
             "description": "The page after the one whose `next` this is.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedStamp": {
+            "description": "The file's `stamp` the first page gave back: a later page is read only of the same file (docs/adr/0591 §3).",
             "type": [
               "string",
               "null"
@@ -1021036,6 +1021059,17 @@
               }
             ],
             "description": "Records near a place."
+          },
+          "order": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryOrder"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Another order than the key's (docs/adr/0591 §2). A number, date, time or true/false field is ordered by the\nsource; a text field here, in the attribute table's natural order."
           },
           "path": {
             "description": "A GeoPackage file's path, or a database's address (`postgresql://…`, no password).",
@@ -1021298,7 +1021332,7 @@
                 "type": "array"
               },
               "order": {
-                "description": "The order of the records: `key` (the source's) or `uid` (the drawing's).",
+                "description": "The order of the records: `key` (the source's), `uid` (the drawing's), `column` (the source ordered them by the\nfield) or `here` (ordered here, docs/adr/0591 §2).",
                 "type": "string"
               },
               "pushed": {
@@ -1021612,7 +1021646,7 @@
                 "type": "array"
               },
               "order": {
-                "description": "The order of the records: `key` (the source's) or `uid` (the drawing's).",
+                "description": "The order of the records: `key` (the source's), `uid` (the drawing's), `column` (the source ordered them by the\nfield) or `here` (ordered here, docs/adr/0591 §2).",
                 "type": "string"
               },
               "pushed": {
@@ -1021721,7 +1021755,9 @@
           "invalid_address",
           "crs_mismatch",
           "no_row_key",
-          "row_key_not_unique"
+          "row_key_not_unique",
+          "source_changed",
+          "order_too_large"
         ],
         "warnings": [
           "partial_scope",
@@ -1074122,6 +1074158,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "İstisnanın nesnelerinin geometrisi değişti; bulgu yeniden açık."
+    },
+    {
+      "code": "order_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Metin alanına göre sıralanacak kayıt çok fazla; süzgeçle daraltın ya da sayı alanına göre sıralayın."
     },
     {
       "code": "rows_denied",

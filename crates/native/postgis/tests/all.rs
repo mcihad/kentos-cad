@@ -391,6 +391,79 @@ fn the_queries_answer_alike_from_postgis() {
     }
 }
 
+/// The same ordered questions of `fixtures/sources/v1/sira.gpkg` and of its table loaded into the schema `sira` by
+/// ogr2ogr (docs/adr/0591): every page of each the same rows and keys in the same order, the same `next` (the raw
+/// value: a number, a date's text, 0 or 1), the same totals. The file's orders are the shared cases'
+/// (`source_order_cases.py`); PostgreSQL orders the real, the integer, the date and the boolean itself.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn orders_answer_alike_from_postgis() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        eprintln!("KENTOS_PG_URL yok: atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/sources/v1/sira.gpkg")
+        .display()
+        .to_string();
+    let questions = [
+        json!({ "order": { "field": "puan" } }),
+        json!({ "order": { "field": "puan", "descending": true }, "fields": ["ad", "puan"] }),
+        json!({ "order": { "field": "sayi" }, "filter": "puan > 100", "count": true }),
+        json!({ "order": { "field": "tarih", "descending": true }, "fields": ["tarih"] }),
+        json!({ "order": { "field": "acik" }, "fields": ["acik", "sayi"] }),
+        json!({ "order": { "field": "ad" }, "fields": ["ad"] }),
+        json!({ "order": { "field": "ad", "descending": true }, "filter": "sayi < 0", "count": true }),
+        json!({ "order": { "field": "puan" }, "filter": "ad gibi '% 7'", "fields": ["ad", "puan"] }),
+    ];
+    let mut d = doc();
+    for (k, q) in questions.iter().enumerate() {
+        let mut on_file = q.clone();
+        on_file["path"] = json!(file);
+        on_file["table"] = json!("olay");
+        on_file["limit"] = json!(173);
+        let mut on_db = on_file.clone();
+        on_db["path"] = json!(url);
+        on_db["table"] = json!("sira.olay");
+        let mut read = 0;
+        loop {
+            let a = run(
+                &mut d,
+                "cad.sources.query",
+                CallOp::Execute,
+                on_file.clone(),
+            );
+            let b = run(&mut d, "cad.sources.query", CallOp::Execute, on_db.clone());
+            let (a, b) = (ok(&a), ok(&b));
+            let rows = |v: &Value| -> Vec<Value> {
+                v["rows"]
+                    .as_array()
+                    .expect("rows")
+                    .iter()
+                    .map(|r| json!([r["key"], r["attrs"]]))
+                    .collect()
+            };
+            assert_eq!(rows(a), rows(b), "{k}: {q} ({read} okundu)");
+            for part in ["total", "next"] {
+                assert_eq!(a[part], b[part], "{k}: {q}: {part}");
+            }
+            assert_eq!(a["plan"]["order"], b["plan"]["order"], "{k}: {q}");
+            read += rows(a).len();
+            match a["next"].as_str() {
+                Some(next) => {
+                    on_file["cursor"] = json!(next);
+                    on_db["cursor"] = json!(next);
+                    on_file.as_object_mut().expect("an object").remove("count");
+                    on_db.as_object_mut().expect("an object").remove("count");
+                }
+                None => break,
+            }
+        }
+        eprintln!("{k}: {read} satır sırayla aynı");
+    }
+}
+
 /// Views, queries and areas (docs/adr/0582): a view and a query bound read-only, keyed by `fid`; a view without a key
 /// refused; a query that would be two statements refused; a table bound by an area holds only the area's rows, and its
 /// area moves.
