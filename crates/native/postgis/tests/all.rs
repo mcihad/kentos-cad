@@ -909,3 +909,205 @@ fn postgis_timing() {
         t,
     );
 }
+
+const OWNER_1: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001";
+const OWNER_2: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002";
+const OWNER_3: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003";
+const PARCEL_1: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001";
+const PARCEL_2: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2002";
+const PARCEL_3: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2003";
+
+/// The owners and parcels of `schema` bound, the parcels' `malikler` a many-to-many reference to the owners.
+fn owners_and_parcels(url: &str, schema: &str) -> (Document, String, String) {
+    let mut d = doc();
+    let (owners, _) = bind(&mut d, url, &format!("{schema}.malik"));
+    let (parcels, _) = bind(&mut d, url, &format!("{schema}.parsel"));
+    ok(&run(
+        &mut d,
+        "cad.layers.edit",
+        CallOp::Execute,
+        json!({ "operation": "fields", "layer": parcels, "fields": [
+            { "name": "ada", "kind": "text" }, { "name": "parsel_no", "kind": "text" },
+            { "name": "malikler", "kind": "text", "multiple": true } ] }),
+    ));
+    ok(&run(
+        &mut d,
+        "cad.relations.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "create", "relation": { "id": "parsel-malik", "name": "Parselin malikleri",
+            "parent": owners, "child": parcels, "field": "malikler" } } }),
+    ));
+    (d, owners, parcels)
+}
+
+fn relate(d: &mut Document, op: CallOp, action: &str) -> Value {
+    run(
+        d,
+        "cad.sources.relate",
+        op,
+        json!({ "relation": "parsel-malik", "action": action }),
+    )
+}
+
+fn references(d: &mut Document, uid: &str, value: &str) {
+    ok(&run(
+        d,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [uid], "attrs": { "malikler": value }, "operation": "attributes" }),
+    ));
+}
+
+fn write_layer(d: &mut Document, layer: &str) -> Value {
+    run(
+        d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write" }),
+    )
+}
+
+fn junction(url: &str) -> Vec<(i64, i64)> {
+    kentos_native_application::provider::postgis()
+        .expect("registered")
+        .mapping_rows(url, "iliski.parsel_malik")
+        .expect("rows")
+}
+
+/// docs/adr/0590: KentOS's junction table in the database, made from the parcels' references, rewritten in the tables'
+/// transaction (a new parcel by the key the same transaction gives it), read back in the references' order, refused
+/// over a reference to a deleted owner; someone else's junction table reported, never written over.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn many_to_many_references_keep_a_junction_table() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    let (mut d, owners, parcels) = owners_and_parcels(&url, "iliski");
+    let state = |a: &Value| ok(a)["state"].as_str().unwrap_or_default().to_owned();
+    assert_eq!(state(&relate(&mut d, CallOp::Execute, "check")), "text");
+    // The plan says what the table would hold and writes nothing.
+    let planned = relate(&mut d, CallOp::Plan, "map");
+    assert_eq!(ok(&planned)["rows"], json!(4), "{planned}");
+    assert_eq!(
+        ok(&planned)["mapping"],
+        json!("iliski.parsel_malik"),
+        "{planned}"
+    );
+    assert_eq!(state(&relate(&mut d, CallOp::Execute, "check")), "text");
+    let mapped = relate(&mut d, CallOp::Execute, "map");
+    assert_eq!(state(&mapped), "mapped", "{mapped}");
+    assert_eq!(junction(&url), vec![(1, 1), (1, 2), (2, 2), (2, 3)]);
+    let again = relate(&mut d, CallOp::Execute, "map");
+    assert_eq!(again["error"]["code"], "relation_mapped", "{again}");
+    // A reference added and one taken off: the rows follow in the parcels' write.
+    references(&mut d, PARCEL_3, OWNER_3);
+    let written = ok(&write_layer(&mut d, &parcels)).clone();
+    assert_eq!(
+        written["relations"],
+        json!([{ "relation": "parsel-malik", "added": 1, "removed": 0 }]),
+        "{written}"
+    );
+    references(&mut d, PARCEL_1, OWNER_2);
+    let written = ok(&write_layer(&mut d, &parcels)).clone();
+    assert_eq!(written["relations"][0]["removed"], json!(1), "{written}");
+    // The parent order of a child is kept.
+    references(&mut d, PARCEL_2, &format!("{OWNER_3}; {OWNER_2}"));
+    ok(&write_layer(&mut d, &parcels));
+    assert_eq!(junction(&url), vec![(1, 2), (2, 3), (2, 2), (3, 3)]);
+    // A new parcel's row goes in by the key its insert gets.
+    let made = ok(&run(
+        &mut d,
+        "cad.polygon.create",
+        CallOp::Execute,
+        json!({ "layerId": parcels, "pts": [
+            { "x": 487100.0, "y": 4420100.0 }, { "x": 487110.0, "y": 4420100.0 },
+            { "x": 487110.0, "y": 4420110.0 }, { "x": 487100.0, "y": 4420110.0 } ] }),
+    ))
+    .clone();
+    let new_uid = made["uid"].as_str().expect("uid").to_owned();
+    references(&mut d, &new_uid, OWNER_1);
+    let written = ok(&write_layer(&mut d, &parcels)).clone();
+    assert_eq!(written["added"], json!(1), "{written}");
+    let rows = junction(&url);
+    assert_eq!(rows.len(), 5, "{rows:?}");
+    let new_fid = rows.last().map(|r| r.0).expect("a row");
+    assert!(
+        new_fid > 3 && rows.last() == Some(&(new_fid, 1)),
+        "{rows:?}"
+    );
+    // Read back by a fresh drawing: the references from the junction, in their order.
+    let (mut fresh, _, fresh_parcels) = owners_and_parcels(&url, "iliski");
+    ok(&run(
+        &mut fresh,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": fresh_parcels, "direction": "read" }),
+    ));
+    let value = |d: &Document, uid: &str| {
+        let slot = d.slot_of(uid.parse().expect("uuid")).expect("held");
+        d.get(slot)
+            .and_then(|e| e.base().attrs.get("malikler").cloned())
+            .unwrap_or_default()
+    };
+    assert_eq!(value(&fresh, PARCEL_1), OWNER_2);
+    assert_eq!(value(&fresh, PARCEL_2), format!("{OWNER_3}; {OWNER_2}"));
+    assert_eq!(value(&fresh, PARCEL_3), OWNER_3);
+    assert_eq!(value(&fresh, &new_uid), OWNER_1);
+    // A parcel naming an owner the database does not hold yet: refused alone, written with the owners in one
+    // transaction, the row by the owner's new key.
+    let owner = ok(&run(
+        &mut d,
+        "cad.records.create",
+        CallOp::Execute,
+        json!({ "layerId": owners, "rows": [{ "attrs": { "ad": "Yeni Malik" } }] }),
+    ))
+    .clone();
+    let owner_uid = owner["uids"][0].as_str().expect("uid").to_owned();
+    references(&mut d, PARCEL_3, &owner_uid);
+    let refused = write_layer(&mut d, &parcels);
+    assert_eq!(refused["error"]["code"], "relation_dangling", "{refused}");
+    assert_eq!(junction(&url).len(), 5);
+    let together = ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": parcels, "direction": "write", "with": [owners] }),
+    ))
+    .clone();
+    assert_eq!(together["added"], json!(1), "{together}");
+    let rows = junction(&url);
+    let third: Vec<&(i64, i64)> = rows.iter().filter(|r| r.0 == 3).collect();
+    assert!(third.len() == 1 && third[0].1 > 3, "{rows:?}");
+    // Someone else's junction table: reported, not written over, the reference written as text with a warning.
+    let (mut other, _, other_parcels) = owners_and_parcels(&url, "iliski2");
+    let foreign = relate(&mut other, CallOp::Execute, "check");
+    assert_eq!(state(&foreign), "foreign", "{foreign}");
+    assert!(
+        ok(&foreign)["why"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("iliski2.sahiplik"),
+        "{foreign}"
+    );
+    let unsupported = relate(&mut other, CallOp::Execute, "map");
+    assert_eq!(
+        unsupported["error"]["code"], "relation_unsupported",
+        "{unsupported}"
+    );
+    references(&mut other, PARCEL_3, OWNER_1);
+    let text = write_layer(&mut other, &other_parcels);
+    assert!(
+        text["warnings"]
+            .as_array()
+            .is_some_and(|w| w.iter().any(|w| w["code"] == "relation_unmapped")),
+        "{text}"
+    );
+    // Taken away and made again: the junction holds the parcels' references as they now are.
+    let unmapped = relate(&mut d, CallOp::Execute, "unmap");
+    assert_eq!(state(&unmapped), "text", "{unmapped}");
+    assert_eq!(state(&relate(&mut d, CallOp::Execute, "check")), "text");
+    let remapped = relate(&mut d, CallOp::Execute, "map");
+    assert_eq!(ok(&remapped)["rows"], json!(5), "{remapped}");
+}

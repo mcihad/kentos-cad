@@ -20,6 +20,7 @@
 import json
 import os
 import socket
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -125,6 +126,37 @@ def check(c, seen, before):
     narrow = dict(cur.fetchall())
     if "487011 4420004" not in narrow.get("A", "") or "487010 4420004" not in narrow.get("B", ""):
         problems.append(f"satır güvenliğinin tablosu: {narrow}")
+    # The junction table (docs/adr/0590): its rows in the references' order, its mark, its cascading foreign keys;
+    # someone else's junction untouched and the reference beside it written as text.
+    cur.execute("SELECT base_id, related_id, position FROM iliski.parsel_malik ORDER BY base_id, position")
+    junction = cur.fetchall()
+    cur.execute("SELECT fid FROM iliski.malik WHERE ad = 'Yeni Malik'")
+    added_owner = [r[0] for r in cur.fetchall()]
+    if junction[:3] != [(1, 2, 0), (2, 3, 0), (2, 2, 1)] or len(junction) != 5 or len(added_owner) != 1 \
+            or junction[3] != (3, added_owner[0], 0) or junction[4][1:] != (1, 0) or junction[4][0] <= 3:
+        problems.append(f"bağlantı tablosu {junction}, yeni malik {added_owner}")
+    cur.execute("SELECT obj_description('iliski.parsel_malik'::regclass, 'pg_class')")
+    mark = cur.fetchone()[0]
+    if mark != "kentos_references base=iliski.parsel related=iliski.malik":
+        problems.append(f"bağlantı tablosunun işareti {mark!r}")
+    cur.execute("SELECT a.attname, k.confrelid::regclass::text, k.confdeltype FROM pg_constraint k "
+                "JOIN pg_attribute a ON a.attrelid = k.conrelid AND a.attnum = k.conkey[1] "
+                "WHERE k.conrelid = 'iliski.parsel_malik'::regclass AND k.contype = 'f' ORDER BY 1")
+    keys = cur.fetchall()
+    if keys != [("base_id", "iliski.parsel", "c"), ("related_id", "iliski.malik", "c")]:
+        problems.append(f"bağlantı tablosunun yabancı anahtarları {keys}")
+    cur.execute("BEGIN")
+    cur.execute("DELETE FROM iliski.malik WHERE fid = 3")
+    cur.execute("SELECT count(*) FROM iliski.parsel_malik WHERE related_id = 3")
+    if cur.fetchone()[0] != 0:
+        problems.append("silinen malikin bağlantı satırları kalmış")
+    cur.execute("ROLLBACK")
+    cur.execute("SELECT count(*) FROM iliski2.sahiplik")
+    if cur.fetchone()[0] != 2:
+        problems.append("başkasının bağlantı tablosuna dokunulmuş")
+    cur.execute("SELECT malikler FROM iliski2.parsel WHERE fid = 3")
+    if cur.fetchone()[0] != "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001":
+        problems.append("başka temsilli ilişkide başvuru metin olarak yazılmamış")
     cur.execute("SELECT data_type FROM information_schema.columns WHERE table_schema = 'kadastro' "
                 "AND table_name = 'parsel' AND column_name = 'durum'")
     if [r[0] for r in cur.fetchall()] != ["text"]:
@@ -182,6 +214,26 @@ def main():
         cur.execute("ALTER TABLE komsu.kisitli ENABLE ROW LEVEL SECURITY")
         cur.execute("CREATE POLICY gor ON komsu.kisitli FOR SELECT USING (true)")
         cur.execute("CREATE POLICY degistir ON komsu.kisitli FOR UPDATE USING (ad <> 'B')")
+        # Many-to-many references (docs/adr/0590): the owners, parcels and buildings of iliskili.gpkg with their lasting
+        # ids, and in iliski2 the same owners and parcels joined by someone else's junction table.
+        for schema in ("iliski", "iliski2"):
+            cur.execute(f"CREATE SCHEMA {schema}")
+            for table in ("malik", "parsel", "bina") if schema == "iliski" else ("malik", "parsel"):
+                gdal.VectorTranslate(pg, str(ROOT / "fixtures/geopackage/v1/iliskili.gpkg"),
+                                     options=gdal.VectorTranslateOptions(
+                                         layers=[table],
+                                         layerCreationOptions=[f"SCHEMA={schema}", "FID=fid", "GEOMETRY_NAME=geom"],
+                                         preserveFID=True))
+            cur.execute(f"CREATE TABLE {schema}.kentos_uids (table_name text NOT NULL, pk bigint NOT NULL, "
+                        "uid uuid NOT NULL, PRIMARY KEY (table_name, pk))")
+            gp = sqlite3.connect(str(ROOT / "fixtures/geopackage/v1/iliskili.gpkg"))
+            for table, pk, uid in gp.execute("SELECT table_name, fid, uid FROM kentos_uids"):
+                if schema == "iliski" or table != "bina":
+                    cur.execute(f"INSERT INTO {schema}.kentos_uids VALUES (%s, %s, %s)", (f"{schema}.{table}", pk, uid))
+            gp.close()
+        cur.execute("CREATE TABLE iliski2.sahiplik (parsel bigint NOT NULL REFERENCES iliski2.parsel (fid), "
+                    "malik bigint NOT NULL REFERENCES iliski2.malik (fid))")
+        cur.execute("INSERT INTO iliski2.sahiplik VALUES (1, 1), (1, 2)")
         before = catalogue(c)
         out = Path(tempfile.mkstemp(suffix=".json")[1])
         env = dict(os.environ, KENTOS_PG_URL=f"postgresql://postgres@127.0.0.1:{port}/postgres",

@@ -146,16 +146,30 @@ pub(super) fn ties(doc: &Document) -> Vec<Tie> {
         let Some(field) = multiple_field(doc, r) else {
             continue;
         };
-        let bound = |layer: &str| {
-            doc.settings()
-                .sources
-                .iter()
-                .find(|s| s.layer == layer && s.kind == SourceKind::Geopackage)
-        };
+        let bound = |layer: &str| doc.settings().sources.iter().find(|s| s.layer == layer);
         let (Some(child), Some(parent)) = (bound(&r.child), bound(&r.parent)) else {
             continue;
         };
-        if child.path != parent.path || r.child == r.parent {
+        if child.path != parent.path || child.kind != parent.kind || r.child == r.parent {
+            continue;
+        }
+        // Two tables of one database: its junction table (docs/adr/0590 §1).
+        if child.kind == SourceKind::Postgis {
+            let Some(p) = crate::provider::postgis() else {
+                continue;
+            };
+            let Ok(found) = p.relation(&child.path, &child.table, &parent.table) else {
+                continue;
+            };
+            out.push(Tie {
+                relation: r.id.clone(),
+                child_layer: r.child.clone(),
+                parent_layer: r.parent.clone(),
+                field: field.name.clone(),
+                child: child.clone(),
+                parent: parent.clone(),
+                kept: database_kept(found, &child.table, &parent.table),
+            });
             continue;
         }
         let entry = files.entry(child.path.clone()).or_insert_with(|| {
@@ -180,6 +194,25 @@ pub(super) fn ties(doc: &Document) -> Vec<Tie> {
         });
     }
     out
+}
+
+/// A database's junction as the ties keep it: KentOS's as a relation of the profile's name, its mapping the table.
+pub(super) fn database_kept(found: crate::provider::DbRelation, child: &str, parent: &str) -> Kept {
+    use crate::provider::DbRelation;
+    match found {
+        DbRelation::Text => Kept::Text,
+        DbRelation::Mapped(mapping) => Kept::Mapped(Relation {
+            id: 0,
+            base_table: child.to_owned(),
+            base_column: String::new(),
+            related_table: parent.to_owned(),
+            related_column: String::new(),
+            name: KENTOS_RELATION.to_owned(),
+            mapping,
+        }),
+        DbRelation::Foreign(why) => Kept::Foreign(why),
+        DbRelation::Broken(why) => Kept::Broken(why),
+    }
 }
 
 /// The mapped ties among `ties` that touch one of `layers` (as child or parent).
@@ -334,8 +367,23 @@ pub(super) fn plan_mapping(
         })
         .count() as u32;
     let removed = had.iter().filter(|p| !wanted.contains(p)).count() as u32;
+    // The same rows in another order are a change too: a child's parents are read back in the rows' order.
+    let reordered = {
+        let mut now: HashMap<i64, Vec<i64>> = HashMap::new();
+        for (b, r) in file_rows {
+            now.entry(*b).or_default().push(*r);
+        }
+        let mut then: HashMap<i64, Vec<i64>> = HashMap::new();
+        for (b, r) in &pairs {
+            if let (Key::Fid(b), Key::Fid(r)) = (b, r) {
+                then.entry(*b).or_default().push(*r);
+            }
+        }
+        then.iter()
+            .any(|(b, list)| now.get(b).is_some_and(|old| old != list))
+    };
     pairs.extend(kept_rows);
-    let edit = (inserted || added > 0 || removed > 0).then(|| MapEdit {
+    let edit = (inserted || added > 0 || removed > 0 || reordered).then(|| MapEdit {
         mapping: mapping.to_owned(),
         pairs,
     });

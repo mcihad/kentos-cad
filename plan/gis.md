@@ -302,9 +302,11 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-11/12/13/15. G1'de mevcut denetle→bul→düzelt→yeniden denetle akışı bütün kaynaklarda çalışsın. G2'de QA revision'ı ile commit revision'ı uyuşmalı; eski doğrulama yeni kaydı onaylamamalı. Tüm veriyle yapılan denetim ile artımlı denetim aynı bulgu kümesini versin; kaynaklar arası kuralda eksik sayfa “hata yok” sonucu üretmesin.
 
-- [ ] **CBS-15 — Mevcut form/ilişki standardını dış dataset transaction'ına bağla — P0/P1**
+- [x] **CBS-15 — Mevcut form/ilişki standardını dış dataset transaction'ına bağla — P0/P1**
 
   *Kısmen (19 Ekim 2026; [ADR 0532](../docs/adr/0532-forms-and-sources-transaction.md)): bağlı GeoPackage'ta üst ve alt kayıtların tek SQLite işleminde yazılması (`cad.sources.sync`'in `with`'i, `cad.forms.submit`'in `commit`'i; bir alt kayıt reddedilirse hiçbiri yazılmaz), çoktan çoğa yerel başvurunun OGC 18-000 ilişki profiline açık eşlemesi (`cad.sources.relate`; bilinmeyen temsil metne çevrilmez), başka katmandan kayıtların ve ilişkili kayıtların sayfalı, süzgeçli toplamla ve kaynak sürümüyle okunması (`cad.records.page`); bina→parsel→malik örneği harita, tablo, form, Python ve MCP'de aynı. Kalan: PostGIS'te çok tablolu işlem ve bağlantı tablosu, formun lookup'ının `cad.records.page` üzerinden okuması, erişim politikası (CBS-38).*
+
+  *Yapıldı (22 Ekim 2026; [ADR 0584](../docs/adr/0584-commit-together-and-z-m-on-write.md), [ADR 0590](../docs/adr/0590-junction-tables-in-postgis.md)): PostGIS'te aynı veritabanının tabloları tek işlemde (ADR 0584); çoktan çoğa başvurunun PostgreSQL bağlantı tablosu (`base_id`, `related_id`, `position`, iki yabancı anahtar `ON DELETE CASCADE`, yorumu `kentos_references`): `cad.sources.relate` veritabanında, başkasının bağlantı tablosu `foreign` ve üzerine yazılmaz, metne çevrilmez; satırları tabloların işleminde, yeni kaydın satırı işlemin verdiği anahtarla, okuma başvurunun sırasıyla; gerçek PostGIS'te uçtan uca ve psycopg2'yle bağımsız denetim. Kalan: formun lookup'ının arayüzde `cad.records.page` üzerinden okuması, erişim politikası (CBS-38).*
 
   **Mevcut:** Designer, domain/subtype/contingent, lookup, kayıt kuralları, geometrisiz tablo ve ilişkiler PR'de mevcut [P25-A…C]. Yeniden form çekirdeği veya ikinci validation motoru yazılmayacak.
 

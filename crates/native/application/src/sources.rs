@@ -477,6 +477,11 @@ pub(crate) fn provider_stop(e: provider::ProviderError, address: &str, at: At<'_
             format!("{address} veritabanının sorgusu okunamadı: {why}"),
             at.table,
         ),
+        provider::ProviderError::Exists(name) => refuse(
+            codes::INVALID_MAPPING,
+            format!("Veritabanında “{name}” adlı bir tablo zaten var; başka bir ad verin."),
+            "mapping",
+        ),
         provider::ProviderError::KeyRepeats(name, key) => refuse(
             codes::ROW_KEY_NOT_UNIQUE,
             format!(

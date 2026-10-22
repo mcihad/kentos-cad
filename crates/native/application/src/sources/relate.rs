@@ -58,16 +58,41 @@ fn find(doc: &Document, r: &ProjectRelation) -> Result<Found, Stop> {
         return Ok(none(RelationState::Unbound));
     };
     let (child, parent) = (child.clone(), parent.clone());
-    let split = child.kind != SourceKind::Geopackage
-        || parent.kind != SourceKind::Geopackage
-        || child.path != parent.path
-        || r.child == r.parent;
+    let split = child.kind != parent.kind || child.path != parent.path || r.child == r.parent;
     if split {
         return Ok(Found {
             state: RelationState::Split,
             child: Some(child),
             parent: Some(parent),
             kept: None,
+        });
+    }
+    if child.kind == SourceKind::Postgis {
+        let single = relations::multiple_field(doc, r).is_none();
+        if single {
+            return Ok(Found {
+                state: RelationState::Single,
+                child: Some(child),
+                parent: Some(parent),
+                kept: None,
+            });
+        }
+        let p = super::database_provider("relation")?;
+        let found = p
+            .relation(&child.path, &child.table, &parent.table)
+            .map_err(|e| super::provider_stop(e, &child.path, super::at_one("relation")))?;
+        let kept = relations::database_kept(found, &child.table, &parent.table);
+        let state = match &kept {
+            Kept::Text => RelationState::Text,
+            Kept::Mapped(_) => RelationState::Mapped,
+            Kept::Foreign(_) => RelationState::Foreign,
+            Kept::Broken(_) => RelationState::Broken,
+        };
+        return Ok(Found {
+            state,
+            child: Some(child),
+            parent: Some(parent),
+            kept: Some(kept),
         });
     }
     let path = Path::new(&child.path);
@@ -229,6 +254,9 @@ fn run(
             ),
             "relation",
         ));
+    }
+    if child.kind == SourceKind::Postgis {
+        return run_database(doc, input, write, &r, &f, child, parent);
     }
     let mapped_rows = |f: &Found| -> Result<(Option<String>, u32), Stop> {
         let Some(Kept::Mapped(rel)) = &f.kept else {
@@ -479,6 +507,218 @@ fn run(
             ))
         }
     }
+}
+
+/// A database's junction table (docs/adr/0590 §2): its state, KentOS's made from the layers' references, or taken away;
+/// each in one transaction of the database. The tables' rows do not change, so the layers' bonds keep their revisions.
+fn run_database(
+    doc: &mut Document,
+    input: &SourcesRelate,
+    write: bool,
+    r: &ProjectRelation,
+    f: &Found,
+    child: SourceLink,
+    parent: SourceLink,
+) -> Result<(SourcesRelated, Vec<CommandWarning>), Stop> {
+    let p = super::database_provider("relation")?;
+    let stop = |e| super::provider_stop(e, &child.path, super::at_one("relation"));
+    let source = Some(child.revision.clone());
+    if input.action == RelateOp::Check {
+        let (mapping, rows) = match &f.kept {
+            Some(Kept::Mapped(rel)) => {
+                let n = p
+                    .mapping_rows(&child.path, &rel.mapping)
+                    .map_err(stop)?
+                    .len();
+                (Some(rel.mapping.clone()), n as u32)
+            }
+            _ => (None, 0),
+        };
+        return Ok((
+            answer(doc, r, f, f.state, mapping, rows, source),
+            Vec::new(),
+        ));
+    }
+    if f.state == RelationState::Single {
+        return Err(match input.action {
+            RelateOp::Map => refuse(
+                codes::RELATION_NOT_MULTIPLE,
+                format!(
+                    "“{}” ilişkisinin ‘{}’ alanı tek kimlik tutuyor (çok değerli değil); eşlenecek bir çoktan çoğa başvuru yok. Alanı Alanlar penceresinden çok değerli yapın.",
+                    r.name, r.field
+                ),
+                "relation",
+            ),
+            _ => refuse(
+                codes::RELATION_NOT_MAPPED,
+                format!(
+                    "“{}” ilişkisi veritabanında eşli değil; kaldırılacak bir bağlantı tablosu yok.",
+                    r.name
+                ),
+                "relation",
+            ),
+        });
+    }
+    let child_stored = load_link(doc, &child, "relation")?.stored;
+    let parent_stored = load_link(doc, &parent, "relation")?.stored;
+    for (link, stored) in [(&child, &child_stored), (&parent, &parent_stored)] {
+        if !link.writable || !stored.writable {
+            return Err(refuse(
+                codes::SOURCE_READONLY,
+                format!(
+                    "{} veritabanının “{}” tablosuna yazılamaz (salt okunur).",
+                    link.path, link.table
+                ),
+                "relation",
+            ));
+        }
+    }
+    match input.action {
+        RelateOp::Check => unreachable!("checked above"),
+        RelateOp::Map => {
+            match &f.kept {
+                Some(Kept::Mapped(_)) => {
+                    return Err(refuse(
+                        codes::RELATION_MAPPED,
+                        format!("“{}” ilişkisi veritabanında zaten eşli.", r.name),
+                        "relation",
+                    ));
+                }
+                Some(Kept::Foreign(why) | Kept::Broken(why)) => {
+                    return Err(refuse(
+                        codes::RELATION_UNSUPPORTED,
+                        format!(
+                            "{} ile {} tabloları veritabanında başka bir temsille ilişkili: {why}. KentOS onun üzerine yazmaz ve metne çevirmez.",
+                            child.table, parent.table
+                        ),
+                        "relation",
+                    ));
+                }
+                _ => {}
+            }
+            // The junction in the child's schema: `schema.child_parent` unless named.
+            let (schema, child_name) = child
+                .table
+                .split_once('.')
+                .unwrap_or(("public", child.table.as_str()));
+            let parent_name = parent
+                .table
+                .split_once('.')
+                .map_or(parent.table.as_str(), |(_, n)| n);
+            let name = input
+                .mapping
+                .clone()
+                .unwrap_or_else(|| default_mapping(child_name, parent_name));
+            let (in_schema, bare) = match name.split_once('.') {
+                Some((s, n)) => (s.to_owned(), n.to_owned()),
+                None => (schema.to_owned(), name.clone()),
+            };
+            if let Some(why) = database_name_problem(&in_schema).or(database_name_problem(&bare)) {
+                return Err(refuse(
+                    codes::INVALID_MAPPING,
+                    format!("“{name}” bir bağlantı tablosu adı olamaz: {why}."),
+                    "mapping",
+                ));
+            }
+            let mapping = format!("{in_schema}.{bare}");
+            let tie = relations::Tie {
+                relation: r.id.clone(),
+                child_layer: r.child.clone(),
+                parent_layer: r.parent.clone(),
+                field: relations::multiple_field(doc, r)
+                    .map(|f| f.name.clone())
+                    .unwrap_or_else(|| r.field.clone()),
+                child: child.clone(),
+                parent: parent.clone(),
+                kept: Kept::Text,
+            };
+            let planned = relations::plan_mapping(
+                doc,
+                &tie,
+                &mapping,
+                &[],
+                &Side {
+                    stored: &child_stored,
+                    job: None,
+                },
+                &Side {
+                    stored: &parent_stored,
+                    job: None,
+                },
+            )?;
+            let pairs: Vec<(i64, i64)> = planned
+                .edit
+                .map(|e| {
+                    e.pairs
+                        .iter()
+                        .filter_map(|(b, p)| match (b, p) {
+                            (
+                                kentos_geopackage::relations::Key::Fid(b),
+                                kentos_geopackage::relations::Key::Fid(p),
+                            ) => Some((*b, *p)),
+                            _ => None,
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            let rows = pairs.len() as u32;
+            if write {
+                p.map(&child.path, &child.table, &parent.table, &mapping, &pairs)
+                    .map_err(stop)?;
+            }
+            Ok((
+                answer(
+                    doc,
+                    r,
+                    f,
+                    RelationState::Mapped,
+                    Some(mapping),
+                    rows,
+                    source,
+                ),
+                Vec::new(),
+            ))
+        }
+        RelateOp::Unmap => {
+            let Some(Kept::Mapped(rel)) = &f.kept else {
+                return Err(refuse(
+                    codes::RELATION_NOT_MAPPED,
+                    format!(
+                        "“{}” ilişkisi veritabanında eşli değil; kaldırılacak bir bağlantı tablosu yok.",
+                        r.name
+                    ),
+                    "relation",
+                ));
+            };
+            if write {
+                p.unmap(&child.path, &rel.mapping).map_err(stop)?;
+            }
+            Ok((
+                answer(doc, r, f, RelationState::Text, None, 0, source),
+                Vec::new(),
+            ))
+        }
+    }
+}
+
+/// Why a name is not one a database's schema or table can have here, if it is not.
+fn database_name_problem(name: &str) -> Option<&'static str> {
+    let mut chars = name.chars();
+    let Some(first) = chars.next() else {
+        return Some("boş olamaz");
+    };
+    if name.len() > 63 {
+        return Some("en çok 63 bayt olur");
+    }
+    if !(first.is_ascii_alphabetic() || first == '_')
+        || !chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+    {
+        return Some("harfle ya da _ ile başlamalı, yalnız harf, rakam ve _ taşımalı");
+    }
+    if name.starts_with("pg_") || name == "kentos_uids" {
+        return Some("veritabanının ve KentOS'un kendi adlarından biri olamaz");
+    }
+    None
 }
 
 /// The file's new SHA-256 into every bound table of it that matched the old one: the tables the write did not touch

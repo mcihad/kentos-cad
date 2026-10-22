@@ -353,6 +353,7 @@ Liste:
 - [ ] `CBS-07` Katmanın kaynak sistemi ve harita sistemi (ADR 0583, 22 Ekim): web'de gerekenler: `.kcad` şema 98'in `sourceCrs` ve `mapSrid`'inin okunup yazılması (TS türleri üretildi); web'in çizim hatlarında (WebGL2, WebGPU) stil toplayıcısının izdüşümü (`View.map`, WASM `styledBatches`'e harita sistemi), kameranın harita sistemi (`map_ratio`, ters dönüşümlü imleç), durum çubuğunda harita hücresi, koordinat sistemi menüsünde Harita sistemi ▸, katmanın sağ tık menüsünde Koordinat sistemi ▸ (Sistem ata, Yeniden izdüşür) ve `cad.layers.crs`, `cad.layers.reproject` işleyicileri; içe aktarmaların `sourceCrs`'i.
 - [ ] `CBS-12` Veritabanında alanın dışındaki komşular, yetki ve tam geçerlilik (ADR 0585, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; GeoPackage parçasının yazması web'e gelince komşunun geçerliliği Geçerliliği denetle'nin sorunlarıyla (yinelenen köşe hariç, önceden geçersiz komşu engel değil).
 - [ ] `CBS-14` Kaynağa bağlı topoloji denetimi (ADR 0589, 22 Ekim): web'de gerekenler: `.kcad` şema 99'un TS kodeği (istisnanın `digest`'i), Topoloji panelinde düşen istisnanın “(istisna düştü)” işareti ve uyarısı, Düzelt ▾'de önizlemenin ikinci satırı (`cad.topology.check`'in `preview`'u WASM'la), İstisna yap'ın `cad.topology.exceptions` ile yazması; bağlı parça web'de yok.
+- [ ] `CBS-15` PostGIS'te bağlantı tablosu (ADR 0590, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; İlişkiler penceresinin Veritabanında bölümü ve Bağlantı tablosu kur/kaldır web'in ilişkiler penceresi gelince.
 - [ ] `CBS-11` Aynı kaynağa birlikte yazma ve yazmada Z ile M (ADR 0584, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; GeoPackage'a yazan web yolunda (yoksa) Z ve M denetimi `dims_problem`'in kuralıyla, Kaynağa birlikte yaz'ın aynı kaynağın değişen katmanlarını toplaması.
 - [ ] `CBS-02` kaynağı sorgula (ADR 0581, 22 Ekim): web'de gerekenler: `cad.sources.query`'nin işleyicisi (web'in GeoPackage'ı yok; WASM'da itme kuralı ve yerel sınama), İstatistik panelinde Kapsam; TS türleri üretildi.
 - [ ] `CBS-34` adres verisini denetle (ADR 0579, 21 Ekim): web'de gerekenler: `cad.addresses.check`'in işleyicisi (WASM'da
@@ -2313,6 +2314,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   düzenle'nin Kaynağa da yaz'ı ve Kaynak ▸ Kaynağa birlikte yaz; bina → parsel → malik örneği masaüstü, Python ve MCP'de aynı. Kalan:
   PostGIS'te çok tablolu işlem ve bağlantı tablosu, ayrı dosyalar arası işlem, arayüzün lookup'ının `cad.records.page`'e bağlanması,
   bulutta izinlere göre süzme (CBS-38). — **19 Ekim, [ADR 0532](docs/adr/0532-forms-and-sources-transaction.md).**
+  PostGIS'te çoktan çoğa başvurunun bağlantı tablosu (`base_id`, `related_id`, `position`; iki yabancı anahtar `ON DELETE CASCADE`,
+  yorumu `kentos_references`): `cad.sources.relate` veritabanında (check, map, unmap; başkasının bağlantı tablosu `foreign`, üzerine
+  yazılmaz), satırları tabloların işleminde aynı kilit sırasıyla, yeni kaydın satırı işlemin verdiği anahtarla, okuma `position`
+  sırasıyla; masaüstünde İlişkiler'in Veritabanında bölümü. Kalan: arayüzün lookup'ının `cad.records.page`'e bağlanması, bulutta
+  izinlere göre süzme (CBS-38), ayrı dosyalar arası işlem. — **22 Ekim, [ADR 0590](docs/adr/0590-junction-tables-in-postgis.md).**
 - [ ] `CBS-21` atlas PDF'i (dilim): `file.export.atlas` (sayfalar paftanın atlas kurallarıyla, her sayfa kendi nesnesinin haritası, tablosu
   ve lejantıyla; GeoPDF), çıktı çizimin parçalarının damgalarına, katmanların özetine ve bağlı kaynağın SHA-256'sına sabitlenir
   (`pin_mismatch`, `source_changed`, `source_stale`, `source_unsaved`), tema, zaman ve sistem açık, süzgeç dışı nesne ve formda `redact`

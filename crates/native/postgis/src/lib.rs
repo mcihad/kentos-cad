@@ -14,11 +14,13 @@ use std::time::Duration;
 use kentos_contracts::encoding::sha256_hex;
 use kentos_geopackage::{self as gpkg, ColumnKind, DataType, Value};
 use kentos_native_application::provider::{
-    Edited, Param, ProviderError, ProviderRead, ProviderScan, ProviderShape, ProviderTable, RowCheck, TableEdit,
-    TableProvider, register_postgis,
+    DbRelation, Edited, MapWrite, Param, ProviderError, ProviderRead, ProviderScan, ProviderShape, ProviderTable,
+    RowCheck, TableEdit, TableProvider, register_postgis,
 };
 use sqlx::postgres::{PgConnectOptions, PgConnection, PgRow};
 use sqlx::{Connection, Executor, Row};
+
+mod junctions;
 
 /// How long a connection may take before the database counts as unreachable.
 const CONNECT: Duration = Duration::from_secs(15);
@@ -1092,18 +1094,30 @@ impl TableProvider for PostGis {
         address: &str,
         items: Vec<TableEdit<'_, '_>>,
     ) -> Result<Vec<Edited>, (usize, ProviderError)> {
+        self.edit_many_mapped(address, items, &[])
+    }
+
+    fn edit_many_mapped(
+        &self,
+        address: &str,
+        items: Vec<TableEdit<'_, '_>>,
+        maps: &[MapWrite],
+    ) -> Result<Vec<Edited>, (usize, ProviderError)> {
         self.runtime.block_on(async {
             let mut conn = connect(address).await.map_err(|e| (0, e))?;
             let mut tx = conn.begin().await.map_err(|e| (0, unreachable(e)))?;
             // Every table locked first, in its name's order, so two writers of the same tables cannot wait on each
-            // other (docs/adr/0584 §1).
-            let mut order: Vec<(String, usize)> = Vec::with_capacity(items.len());
+            // other (docs/adr/0584 §1); the junction tables of their references with them (docs/adr/0590 §3).
+            let mut order: Vec<(String, usize)> = Vec::with_capacity(items.len() + maps.len());
             for (i, t) in items.iter().enumerate() {
                 let s = shape(&mut tx, t.table).await.map_err(|e| (i, e))?;
                 if !s.writable {
                     return Err((i, refused(format!("{} salt okunur", s.layer.name))));
                 }
                 order.push((s.from.clone(), i));
+            }
+            for (m, w) in maps.iter().enumerate() {
+                order.push((qualified(&w.mapping).0, items.len() + m));
             }
             order.sort();
             order.dedup_by(|a, b| a.0 == b.0);
@@ -1112,13 +1126,64 @@ impl TableProvider for PostGis {
                     .await
                     .map_err(|e| (*i, refused(e)))?;
             }
-            let mut out = Vec::with_capacity(items.len());
+            let n = items.len();
+            let mut out = Vec::with_capacity(n);
             for (i, t) in items.into_iter().enumerate() {
                 out.push(edit_in(&mut tx, t.table, t.area, t.revision, t.check, t.edits).await.map_err(|e| (i, e))?);
+            }
+            for (m, w) in maps.iter().enumerate() {
+                junctions::write(&mut tx, w, &out).await.map_err(|e| (n + m, e))?;
             }
             tx.commit().await.map_err(|e| (0, refused(e)))?;
             let _ = conn.close().await;
             Ok(out)
+        })
+    }
+
+    fn relation(&self, address: &str, child: &str, parent: &str) -> Result<DbRelation, ProviderError> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await?;
+            let found = junctions::relation(&mut conn, child, parent).await;
+            let _ = conn.close().await;
+            found
+        })
+    }
+
+    fn mapping_rows(&self, address: &str, mapping: &str) -> Result<Vec<(i64, i64)>, ProviderError> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await?;
+            let rows = junctions::rows(&mut conn, mapping).await;
+            let _ = conn.close().await;
+            rows
+        })
+    }
+
+    fn map(
+        &self,
+        address: &str,
+        child: &str,
+        parent: &str,
+        mapping: &str,
+        pairs: &[(i64, i64)],
+    ) -> Result<(), ProviderError> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await?;
+            let mut tx = conn.begin().await.map_err(unreachable)?;
+            junctions::map(&mut tx, child, parent, mapping, pairs).await?;
+            tx.commit().await.map_err(refused)?;
+            let _ = conn.close().await;
+            Ok(())
+        })
+    }
+
+    fn unmap(&self, address: &str, mapping: &str) -> Result<(), ProviderError> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await?;
+            let mut tx = conn.begin().await.map_err(unreachable)?;
+            junctions::unmap(&mut tx, mapping).await?;
+            tx.commit().await.map_err(refused)?;
+            let _ = conn.close().await;
+            Ok(())
         })
     }
 }
