@@ -1041188,6 +1041188,57 @@
               },
               {
                 "additionalProperties": false,
+                "description": "A paper-space pan and anchor-preserving zoom; model geometry is never scaled.",
+                "properties": {
+                  "anchor": {
+                    "description": "Absolute paper µm; absent: the content centre.",
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "x-unit": "paper-um"
+                  },
+                  "delta": {
+                    "description": "Screen-right/down displacement expressed as paper µm, after frame rotation.",
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array",
+                    "x-unit": "paper-um"
+                  },
+                  "factor": {
+                    "description": "Greater than one zooms in.",
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "op": {
+                    "const": "navigateViewport",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "op",
+                  "id",
+                  "delta",
+                  "factor"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
                 "properties": {
                   "id": {
                     "type": "string"
@@ -1043861,7 +1043912,7 @@
       "id": "cad.changeset.apply",
       "version": 1,
       "title": "Değişiklik kümesi",
-      "summary": "Birden çok komutu tek iş olarak yazar: steps sırayla, aynı adımın içinde çalışır; biri reddederse hepsi geri alınır, proje ayarları, stil kitaplığı ve pafta kitabı da. Sonraki adım önceki bir adımın çıktısını tam değer olan bir metinle adlar: \"$ad\" o adımın uid'i, \"$ad[2]\" created[2]'si, \"$ad.layer\" layer'ı (ad, adımın as'i). Bağlı yazılar, taramalar ve ölçüler son adımdan sonra bir kez izler, çizimin bütünlüğü o zaman denetlenir. Nesneler, katmanlar ve bloklar label adlı tek geri alma adımıdır; ayarlar, stiller ve pafta kitabı geri alma adımı değildir, özet hangisinin değiştiğini söyler. İç içe küme ve dosyaya yazan komut girmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Birden çok komutu tek iş olarak yazar: steps sırayla, aynı adımın içinde çalışır; biri reddederse hepsi geri alınır, proje ayarları, stil kitaplığı ve pafta kitabı da. Sonraki adım önceki bir adımın çıktısını tam değer olan bir metinle adlar: \"$ad\" o adımın uid'i, \"$ad[2]\" created[2]'si, \"$ad.layer\" layer'ı (ad, adımın as'i). Bağlı yazılar, taramalar ve ölçüler son adımdan sonra bir kez izler, çizimin bütünlüğü o zaman denetlenir. Nesneler, katmanlar, bloklar ve pafta kitabı label adlı tek geri alma adımıdır; ayarlar ve stil kitaplığı ayrı politikalarını korur, özet hangisinin değiştiğini söyler. İsteğe bağlı modelScope={sheet,item}, paftaya ait sabit ve yerleştirilmiş model görünümünü açıkça doğrular; model koordinatları yine metredir. Bu kapsamda pafta, görünüm, proje ayarı ve history komutları reddedilir. İç içe küme ve dosyaya yazan komut girmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [
         "degisiklik kumesi",
         "changeset"
@@ -1043912,6 +1043963,23 @@
               "input"
             ],
             "type": "object"
+          },
+          "SheetModelScope": {
+            "additionalProperties": false,
+            "description": "Explicit viewport context for model commands; all command coordinates remain canonical metres.",
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "sheet": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sheet",
+              "item"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1043931,6 +1043999,17 @@
               "string",
               "null"
             ]
+          },
+          "modelScope": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetModelScope"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional explicit paper viewport context. Restricts the set to model commands."
           },
           "steps": {
             "description": "At least one.",

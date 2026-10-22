@@ -240,3 +240,25 @@ impl Clip {
         true
     }
 }
+
+impl Clip {
+    /// Pieces of a line inside this boundary, in normalized frame coordinates.
+    /// Splitting at every edge also handles concave voids; no convex-only fallback.
+    pub fn segments(&self,a:[f64;2],b:[f64;2])->Vec<[[f64;2];2]> {
+        let points=self.points();
+        let cross=|a:[f64;2],b:[f64;2]| a[0]*b[1]-a[1]*b[0];
+        let d=[b[0]-a[0],b[1]-a[1]];
+        let mut cuts=vec![0.,1.];
+        for i in 0..points.len() {
+            let p=points[i].map(|v|f64::from(v)/f64::from(FULL));
+            let q=points[(i+1)%points.len()].map(|v|f64::from(v)/f64::from(FULL));
+            let edge=[q[0]-p[0],q[1]-p[1]]; let den=cross(d,edge);
+            if den==0. { continue; }
+            let offset=[p[0]-a[0],p[1]-a[1]]; let t=cross(offset,edge)/den; let u=cross(offset,d)/den;
+            if (0. ..=1.).contains(&t) && (0. ..=1.).contains(&u) { cuts.push(t); }
+        }
+        cuts.sort_by(f64::total_cmp); cuts.dedup();
+        let at=|t:f64|[a[0]+t*d[0],a[1]+t*d[1]];
+        cuts.windows(2).filter_map(|w|{ let p=at((w[0]+w[1])/2.); self.contains(p[0],p[1]).then(||[at(w[0]),at(w[1])]) }).collect()
+    }
+}

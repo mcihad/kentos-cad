@@ -100,6 +100,21 @@ fn dragged<'a>(n: NumberInput<'a, Message>) -> NumberInput<'a, Message> {
 impl Designer {
     /// The inspector: its tabs and the open one.
     pub fn inspector_panel(&self) -> Element<'_, Message> {
+        if let Some(view)=self.active_viewport() {
+            let item=self.book.item(&view.item);
+            let locked=item.is_some_and(|i|matches!(&i.kind,kentos_sheet::ItemKind::Map(m) if m.view_locked));
+            let body=column![
+                label::body("Model düzenleme"),
+                label::caption(item.map_or("Görünüm",|i|i.name.as_str())),
+                label::body(format!("Ölçek 1:{}",view.denominator)),
+                label::body("Çizim araçları bu görünümdeki gerçek model üzerinde çalışır. Tekerlek yakınlaştırır; orta tuş kaydırır."),
+                label::caption(if locked {"Kamera kilitli. Model nesneleri düzenlenebilir; görünüm kaydırılamaz ve ölçeği değişmez."} else {"Kaydırma ve yakınlaşma yalnız bu görünümün kamerasını değiştirir."}),
+                label::caption("Geri al model geçmişini kullanır. Kâğıda dönünce pafta öğeleri yeniden düzenlenir."),
+                button(label::body("Kâğıda dön")).on_press(Message::ReturnPaper).padding([6,12]).style(style::button::primary),
+            ].spacing(14);
+            return container(scrollable(body).height(Fill)).padding(16).width(WIDTH).height(Fill).into();
+        }
+
         let errors = self
             .findings
             .iter()
@@ -998,6 +1013,7 @@ impl Designer {
                     ),
             };
             let current = labels[selected].clone();
+            let edit_model_id=id.clone();
             let kept = views.clone();
             let source: Element<'_, Message> = if camera_editable {
                 Select::new(
@@ -1117,6 +1133,7 @@ impl Designer {
             column![
                 lock,
                 frame_plot,
+                action("Modeli bu görünümde düzenle", crate::icons::LAYOUT, Some(Message::EnterModel(edit_model_id))),
                 clipping,
                 labelled(
                     "Kaynak",

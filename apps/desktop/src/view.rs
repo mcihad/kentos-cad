@@ -946,7 +946,7 @@ impl App {
         .into()
     }
 
-    fn panel_body(&self, panel: Panel) -> Element<'_, Message> {
+    pub(crate) fn panel_body(&self, panel: Panel) -> Element<'_, Message> {
         let Some(doc) = &self.document else {
             return container(label::muted("Açık çizim yok."))
                 .padding(12)

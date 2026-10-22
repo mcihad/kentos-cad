@@ -6617,6 +6617,7 @@ class PaperOp(_Union):
     - :class:`SetFramesPaperOp` (``op: setFrames``)
     - :class:`SetItemPropsPaperOp` (``op: setItemProps``)
     - :class:`SetViewportPaperOp` (``op: setViewport``)
+    - :class:`NavigateViewportPaperOp` (``op: navigateViewport``)
     - :class:`RenameItemPaperOp` (``op: renameItem``)
     - :class:`ReorderPaperOp` (``op: reorder``)
     - :class:`SetOrderPaperOp` (``op: setOrder``)
@@ -11106,10 +11107,12 @@ class ChangesetApply(_Model):
             text. When given and the document is no longer at it, nothing is
             written and the answer is `conflict`.
         label: The undo step's name; “Değişiklik kümesi” when absent.
+        model_scope: Optional explicit paper viewport context. Restricts the set to model commands.
     """
     steps: list[ChangesetStep]
     expected_revision: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    model_scope: SheetModelScope | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -11118,6 +11121,8 @@ class ChangesetApply(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.model_scope is not UNSET:
+            out["modelScope"] = None if self.model_scope is None else self.model_scope.to_json()
         return out
 
     @classmethod
@@ -11126,6 +11131,7 @@ class ChangesetApply(_Model):
             steps=[ChangesetStep.from_json(e0) for e0 in data["steps"]],
             expected_revision=data.get("expectedRevision", UNSET),
             label=data.get("label", UNSET),
+            model_scope=UNSET if "modelScope" not in data else None if data["modelScope"] is None else SheetModelScope.from_json(data["modelScope"]),
         )
 
 
@@ -43523,6 +43529,26 @@ class SheetMapInfo(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetModelScope(_Model):
+    """Explicit viewport context for model commands; all command coordinates remain canonical metres."""
+    sheet: str
+    item: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sheet"] = self.sheet
+        out["item"] = self.item
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetModelScope:
+        return cls(
+            sheet=data["sheet"],
+            item=data["item"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetPicture(_Model):
     """A picture's bytes under the SHA-256 the book names it by.
     Attributes:
@@ -61225,6 +61251,39 @@ class SetViewportPaperOp(PaperOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class NavigateViewportPaperOp(PaperOp):
+    """A paper-space pan and anchor-preserving zoom; model geometry is never scaled.
+    Attributes:
+        delta: Screen-right/down displacement expressed as paper µm, after frame rotation. Unit: paper-um.
+        factor: Greater than one zooms in. Unit: 1.
+        anchor: Absolute paper µm; absent: the content centre. Unit: paper-um.
+    """
+    TAG_VALUE: ClassVar[str] = "navigateViewport"
+    id: str
+    delta: list[float]
+    factor: float
+    anchor: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "navigateViewport"}
+        out["id"] = self.id
+        out["delta"] = [float(e0) for e0 in self.delta]
+        out["factor"] = float(self.factor)
+        if self.anchor is not UNSET:
+            out["anchor"] = None if self.anchor is None else [float(e0) for e0 in self.anchor]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NavigateViewportPaperOp:
+        return cls(
+            id=data["id"],
+            delta=[float(e0) for e0 in data["delta"]],
+            factor=float(data["factor"]),
+            anchor=UNSET if "anchor" not in data else None if data["anchor"] is None else [float(e0) for e0 in data["anchor"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RenameItemPaperOp(PaperOp):
     TAG_VALUE: ClassVar[str] = "renameItem"
     id: str
@@ -65735,7 +65794,7 @@ _PAPER_MAP_LAYERS: dict[str, type[PaperMapLayers]] = {"all": AllPaperMapLayers, 
 _PAPER_MAP_VIEW: dict[str, type[PaperMapView]] = {"fixed": FixedPaperMapView, "atlas": AtlasPaperMapView}
 
 
-_PAPER_OP: dict[str, type[PaperOp]] = {"addSheet": AddSheetPaperOp, "removeSheet": RemoveSheetPaperOp, "renameSheet": RenameSheetPaperOp, "moveSheet": MoveSheetPaperOp, "duplicateSheet": DuplicateSheetPaperOp, "replaceSheet": ReplaceSheetPaperOp, "setPage": SetPagePaperOp, "addMaster": AddMasterPaperOp, "removeMaster": RemoveMasterPaperOp, "replaceMaster": ReplaceMasterPaperOp, "setSheetMaster": SetSheetMasterPaperOp, "detachMaster": DetachMasterPaperOp, "addItems": AddItemsPaperOp, "insertItems": InsertItemsPaperOp, "removeItems": RemoveItemsPaperOp, "moveItems": MoveItemsPaperOp, "resizeItem": ResizeItemPaperOp, "rotateItems": RotateItemsPaperOp, "setFrames": SetFramesPaperOp, "setItemProps": SetItemPropsPaperOp, "setViewport": SetViewportPaperOp, "renameItem": RenameItemPaperOp, "reorder": ReorderPaperOp, "setOrder": SetOrderPaperOp, "group": GroupPaperOp, "ungroup": UngroupPaperOp, "setItems": SetItemsPaperOp, "lock": LockPaperOp, "hide": HidePaperOp, "align": AlignPaperOp, "distribute": DistributePaperOp, "matchSize": MatchSizePaperOp, "addGuide": AddGuidePaperOp, "moveGuide": MoveGuidePaperOp, "removeGuide": RemoveGuidePaperOp, "setSnapGrid": SetSnapGridPaperOp, "setAtlas": SetAtlasPaperOp, "setExport": SetExportPaperOp, "applyTemplate": ApplyTemplatePaperOp, "saveVariables": SaveVariablesPaperOp, "addAssets": AddAssetsPaperOp, "removeAssets": RemoveAssetsPaperOp, "addVariant": AddVariantPaperOp, "removeVariant": RemoveVariantPaperOp, "setVariant": SetVariantPaperOp}
+_PAPER_OP: dict[str, type[PaperOp]] = {"addSheet": AddSheetPaperOp, "removeSheet": RemoveSheetPaperOp, "renameSheet": RenameSheetPaperOp, "moveSheet": MoveSheetPaperOp, "duplicateSheet": DuplicateSheetPaperOp, "replaceSheet": ReplaceSheetPaperOp, "setPage": SetPagePaperOp, "addMaster": AddMasterPaperOp, "removeMaster": RemoveMasterPaperOp, "replaceMaster": ReplaceMasterPaperOp, "setSheetMaster": SetSheetMasterPaperOp, "detachMaster": DetachMasterPaperOp, "addItems": AddItemsPaperOp, "insertItems": InsertItemsPaperOp, "removeItems": RemoveItemsPaperOp, "moveItems": MoveItemsPaperOp, "resizeItem": ResizeItemPaperOp, "rotateItems": RotateItemsPaperOp, "setFrames": SetFramesPaperOp, "setItemProps": SetItemPropsPaperOp, "setViewport": SetViewportPaperOp, "navigateViewport": NavigateViewportPaperOp, "renameItem": RenameItemPaperOp, "reorder": ReorderPaperOp, "setOrder": SetOrderPaperOp, "group": GroupPaperOp, "ungroup": UngroupPaperOp, "setItems": SetItemsPaperOp, "lock": LockPaperOp, "hide": HidePaperOp, "align": AlignPaperOp, "distribute": DistributePaperOp, "matchSize": MatchSizePaperOp, "addGuide": AddGuidePaperOp, "moveGuide": MoveGuidePaperOp, "removeGuide": RemoveGuidePaperOp, "setSnapGrid": SetSnapGridPaperOp, "setAtlas": SetAtlasPaperOp, "setExport": SetExportPaperOp, "applyTemplate": ApplyTemplatePaperOp, "saveVariables": SaveVariablesPaperOp, "addAssets": AddAssetsPaperOp, "removeAssets": RemoveAssetsPaperOp, "addVariant": AddVariantPaperOp, "removeVariant": RemoveVariantPaperOp, "setVariant": SetVariantPaperOp}
 
 
 _PAPER_OVERFLOW: dict[str, type[PaperOverflow]] = {"clip": ClipPaperOverflow, "continueIn": ContinueInPaperOverflow}
@@ -66961,6 +67020,7 @@ __all__ = [
     "NamedUcs",
     "NamedUcsTo",
     "NamedView",
+    "NavigateViewportPaperOp",
     "NetworkClosures",
     "NetworkConnect",
     "NetworkConnectName",
@@ -67636,6 +67696,7 @@ __all__ = [
     "SharpRectangleCorners",
     "SheetInfo",
     "SheetMapInfo",
+    "SheetModelScope",
     "SheetPicture",
     "SheetSeries",
     "SheetTemplateSource",

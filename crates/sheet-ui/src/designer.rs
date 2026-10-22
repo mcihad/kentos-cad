@@ -36,6 +36,9 @@ use crate::view_math::View;
 /// What the host is told to do after a message.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Effect {
+    /// A model pointer resolved through the explicitly active paper viewport.
+    ModelPointer(crate::model_scope::ModelPointer),
+    ModelScope(bool),
     /// The drawing is in front again.
     ShowModel,
     /// A sheet is in front.
@@ -229,6 +232,7 @@ pub struct Designer {
     /// The sheet in front; none: the drawing (the model tab).
     pub(crate) open: Option<SheetId>,
     pub(crate) selection: Vec<ItemId>,
+    pub(crate) model_scope: Option<ItemId>,
     pub(crate) tool: Tool,
     pub(crate) ctx: Context,
     /// The host's data for legends, tables and coordinate lists.
@@ -322,6 +326,7 @@ impl Designer {
             book: SheetBook::default(),
             open: None,
             selection: Vec::new(),
+            model_scope: None,
             tool: Tool::Select,
             ctx,
             data: empty_inputs(),
@@ -526,6 +531,7 @@ impl Designer {
         self.pictures.borrow_mut().clear();
         self.asset_bytes = pictures.into_iter().collect();
         self.open = None;
+        self.model_scope=None;
         self.load(book);
     }
 
@@ -683,6 +689,7 @@ impl Designer {
     /// findings, the guides and the inspector's values; the caches whose
     /// content changed are emptied.
     pub fn refresh(&mut self) {
+        if self.model_scope.is_some() && self.active_viewport().is_none() { self.model_scope=None; }
         if self
             .open
             .as_ref()

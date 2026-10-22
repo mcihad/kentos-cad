@@ -576,7 +576,7 @@ impl App {
         }
         // A sheet in front: its keys (docs/sheet/design.md §11, sheets.rs); what would type
         // into the hidden drawing's command line or reach its tools stays here.
-        if self.sheets.is_active() {
+        if self.sheets.is_active() && self.sheets.model_scope().is_none() {
             if let Some(m) = self.sheets.key(&press.key, press.modifiers) {
                 return self.sheet_message(m);
             }

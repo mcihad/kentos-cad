@@ -231,6 +231,16 @@ fn within(error: CommandError, at: &str, i: usize) -> CommandError {
 
 /// The set's own checks, in order (see the contract).
 fn check(doc: &kentos_domain::Document, input: &ChangesetApply) -> Result<(), Stop> {
+    if let Some(scope) = &input.model_scope {
+        let book = doc.sheets().ok_or_else(|| Stop::failed(error("scope_mismatch", "Projede pafta kitabı yok.".into(), Some("modelScope".into()))))?;
+        let (book,_) = kentos_sheet::project::read_project_sheets(book).map_err(|e|Stop::failed(error(&e.code,e.message,Some("modelScope".into()))))?;
+        kentos_sheet::model_scope::Viewport::resolve(&book,&scope.sheet,&scope.item).map_err(|e|Stop::failed(error(&e.code,e.message,Some("modelScope".into()))))?;
+        for (i,step) in input.steps.iter().enumerate() {
+            if !step.command.starts_with("cad.") || ["cad.sheets.","cad.views.","cad.settings.","cad.units.","cad.project.","cad.plot."].iter().any(|p| step.command.starts_with(p)) {
+                return Err(Stop::failed(error("model_scope_command", "Bu komut model düzenleme kapsamında kullanılamaz.".into(), Some(format!("steps[{i}].command")))));
+            }
+        }
+    }
     if input.steps.is_empty() {
         return Err(Stop::failed(error(
             codes::NO_STEPS,

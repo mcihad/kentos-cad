@@ -16,3 +16,5 @@ mod viewports;
 mod projection;
 
 mod clips;
+
+mod model_scope;

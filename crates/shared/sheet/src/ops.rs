@@ -711,6 +711,7 @@ pub enum Op {
     SetFrames(SetFrames),
     SetItemProps(SetItemProps),
     SetViewport(crate::viewport::SetViewport),
+    NavigateViewport(crate::model_scope::NavigateViewport),
     RenameItem(Rename),
     Reorder(Reorder),
     SetOrder(SetOrder),
@@ -992,6 +993,7 @@ fn layout_owner(b: &SheetBook, op: &Op) -> Option<(Owner, bool)> {
         Op::SetFrames(s) => of(s.frames.first().map(|f| &f.id)),
         Op::SetItemProps(s) => of(Some(&s.id)),
         Op::SetViewport(s) => of(Some(&s.id)),
+        Op::NavigateViewport(s) => of(Some(&s.id)),
         Op::Group(g) => of(g.ids.first()),
         Op::Ungroup(u) => of(Some(&u.id)),
         Op::Lock(f) | Op::Hide(f) => of(f.ids.first()),
@@ -1250,6 +1252,11 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
             Ok(vec![Op::SetFrames(SetFrames { frames: old })])
         }
         Op::SetItemProps(s) => set_props(b, s),
+        Op::NavigateViewport(s) => {
+            let (owner, i) = b.find_item(&s.id).ok_or_else(|| unknown_item(&s.id))?;
+            let op = crate::model_scope::navigate(&items_mut(b, &owner)?[i], s)?;
+            if let Op::SetItemProps(patch) = op { set_props(b, &patch) } else { Err(SheetError::new("bad_patch", "Görünüm kaydırılamadı.")) }
+        }
         Op::SetViewport(s) => {
             let (owner, i) = b.find_item(&s.id).ok_or_else(|| unknown_item(&s.id))?;
             let op = crate::viewport::configure(&items_mut(b, &owner)?[i], s)?;
@@ -2220,6 +2227,7 @@ pub fn describe(b: &SheetBook, op: &Op) -> String {
             "Yerleştir: {}",
             named(&s.frames.iter().map(|f| f.id.clone()).collect::<Vec<_>>())
         ),
+        Op::NavigateViewport(s) => format!("Model görünümünü kaydır: {}", s.id),
         Op::SetViewport(s) => format!("Görünüm penceresi: {}", s.id),
         Op::SetItemProps(s) => format!("Değiştir: {}", named(std::slice::from_ref(&s.id))),
         Op::RenameItem(r) => format!("Ad ver: {}", r.name),

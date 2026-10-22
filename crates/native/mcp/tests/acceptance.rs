@@ -584,3 +584,60 @@ fn an_agent_configures_a_fractional_viewport_and_the_view_lock_is_enforced() {
     );
     assert_eq!(undone["output"]["book"], before["output"]["book"]);
 }
+
+#[test]
+fn explicitly_scoped_viewport_model_commands_and_navigation_replay_independent_cases() {
+    let data: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/viewport-navigation.json"
+    ))
+    .unwrap();
+    for case in data["cases"].as_array().unwrap() {
+        let mut server = Server::new();
+        let opened = call(
+            &mut server,
+            "drawing.open",
+            json!({"path":concat!(env!("CARGO_MANIFEST_DIR"),"/../../../fixtures/kcad/v2/sheets.kcad")}),
+        );
+        let drawing = opened["drawing"].as_str().unwrap();
+        let setup = call(
+            &mut server,
+            "cad.sheets.edit",
+            json!({"drawing":drawing,"ops":[{"op":"addSheet","sheet":case["sheet"]}]}),
+        );
+        assert_eq!(setup["status"], "completed", "{setup}");
+        let nav = call(
+            &mut server,
+            "cad.sheets.edit",
+            json!({"drawing":drawing,"ops":[case["operation"]]}),
+        );
+        assert_eq!(nav["status"], "completed", "{nav}");
+        let layer = call(
+            &mut server,
+            "cad.layers.edit",
+            json!({"drawing":drawing,"operation":"add","name":"Model kapsamı"}),
+        );
+        let layer = layer["output"]["layer"].as_str().unwrap();
+        let scoped = call(
+            &mut server,
+            "cad.changeset.apply",
+            json!({"drawing":drawing,"modelScope":{"sheet":"page","item":"viewport"},"steps":[{"command":"cad.line.create","input":{"layerId":layer,"a":{"x":0.,"y":0.},"b":{"x":5.,"y":0.}}}]}),
+        );
+        assert_eq!(scoped["status"], "completed", "{scoped}");
+        let uid = &scoped["output"]["steps"][0]["output"]["uid"];
+        let measure = call(
+            &mut server,
+            "drawing.measure",
+            json!({"drawing":drawing,"uid":uid}),
+        );
+        assert_eq!(measure["length"], 5.);
+        let bad = tool_result(
+            &mut server,
+            "cad.changeset.apply",
+            json!({"drawing":drawing,"modelScope":{"sheet":"absent","item":"viewport"},"steps":[{"command":"cad.line.create","input":{}}]}),
+        );
+        assert_eq!(
+            bad["structuredContent"]["error"]["code"], "unknown_sheet",
+            "{bad}"
+        );
+    }
+}

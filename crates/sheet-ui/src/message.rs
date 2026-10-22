@@ -51,6 +51,7 @@ pub enum StageEvent {
         ctrl: bool,
         alt: bool,
     },
+    RightClick { at: [f64;2] },
     DoubleClick {
         at: [f64; 2],
     },
@@ -279,6 +280,8 @@ pub enum Message {
     ViewportClip(crate::viewport_clip::ClipMessage),
     MapFitView,
     MapFitDrawing,
+    EnterModel(String),
+    ReturnPaper,
     MapFitSelection,
     MapCentreFromView,
     /// The chosen map's own layers (docs/adr/0314 §1): a layer state of the project by its name (none: the

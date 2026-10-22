@@ -190,7 +190,7 @@ fn on_map(
 
 /// The objects to highlight, a block's insert by its pieces (docs/adr/0144),
 /// which `pieces` holds.
-fn objects_of<'a>(
+pub(crate) fn objects_of<'a>(
     doc: &'a Document,
     spatial: Option<&Spatial>,
     ids: &mut dyn Iterator<Item = Slot>,

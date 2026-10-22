@@ -14,6 +14,7 @@ from .types import (  # noqa: F401
     ChangesetApplied,
     ChangesetApply,
     ChangesetStep,
+    SheetModelScope,
 )
 
 if TYPE_CHECKING:
@@ -27,10 +28,13 @@ class _ChangesetApply(LocalCommand[ChangesetApply, ChangesetApplied, ChangesetAp
     çıktısını tam değer olan bir metinle adlar: "$ad" o adımın uid'i, "$ad[2]"
     created[2]'si, "$ad.layer" layer'ı (ad, adımın as'i). Bağlı yazılar, taramalar ve
     ölçüler son adımdan sonra bir kez izler, çizimin bütünlüğü o zaman denetlenir.
-    Nesneler, katmanlar ve bloklar label adlı tek geri alma adımıdır; ayarlar, stiller
-    ve pafta kitabı geri alma adımı değildir, özet hangisinin değiştiğini söyler. İç içe
-    küme ve dosyaya yazan komut girmez. expectedRevision verilmişse ve çizim o sürümde
-    değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    Nesneler, katmanlar, bloklar ve pafta kitabı label adlı tek geri alma adımıdır;
+    ayarlar ve stil kitaplığı ayrı politikalarını korur, özet hangisinin değiştiğini
+    söyler. İsteğe bağlı modelScope={sheet,item}, paftaya ait sabit ve yerleştirilmiş
+    model görünümünü açıkça doğrular; model koordinatları yine metredir. Bu kapsamda
+    pafta, görünüm, proje ayarı ve history komutları reddedilir. İç içe küme ve dosyaya
+    yazan komut girmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir
+    şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.changeset.apply"
@@ -49,6 +53,7 @@ class _ChangesetApply(LocalCommand[ChangesetApply, ChangesetApplied, ChangesetAp
         steps: Sequence[ChangesetStep],
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ChangesetApplied:
@@ -57,11 +62,13 @@ class _ChangesetApply(LocalCommand[ChangesetApply, ChangesetApplied, ChangesetAp
         pafta kitabı da. Sonraki adım önceki bir adımın çıktısını tam değer olan bir metinle
         adlar: "$ad" o adımın uid'i, "$ad[2]" created[2]'si, "$ad.layer" layer'ı (ad, adımın
         as'i). Bağlı yazılar, taramalar ve ölçüler son adımdan sonra bir kez izler, çizimin
-        bütünlüğü o zaman denetlenir. Nesneler, katmanlar ve bloklar label adlı tek geri
-        alma adımıdır; ayarlar, stiller ve pafta kitabı geri alma adımı değildir, özet
-        hangisinin değiştiğini söyler. İç içe küme ve dosyaya yazan komut girmez.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur.
+        bütünlüğü o zaman denetlenir. Nesneler, katmanlar, bloklar ve pafta kitabı label
+        adlı tek geri alma adımıdır; ayarlar ve stil kitaplığı ayrı politikalarını korur,
+        özet hangisinin değiştiğini söyler. İsteğe bağlı modelScope={sheet,item}, paftaya
+        ait sabit ve yerleştirilmiş model görünümünü açıkça doğrular; model koordinatları
+        yine metredir. Bu kapsamda pafta, görünüm, proje ayarı ve history komutları
+        reddedilir. İç içe küme ve dosyaya yazan komut girmez. expectedRevision verilmişse
+        ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -70,6 +77,7 @@ class _ChangesetApply(LocalCommand[ChangesetApply, ChangesetApplied, ChangesetAp
                 text. When given and the document is no longer at it, nothing is
                 written and the answer is `conflict`.
             label: The undo step's name; “Değişiklik kümesi” when absent.
+            model_scope: Optional explicit paper viewport context. Restricts the set to model commands.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -86,6 +94,7 @@ class _ChangesetApply(LocalCommand[ChangesetApply, ChangesetApplied, ChangesetAp
             steps=list(steps),
             expected_revision=expected_revision,
             label=label,
+            model_scope=model_scope,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -96,6 +105,7 @@ class _ChangesetApply(LocalCommand[ChangesetApply, ChangesetApplied, ChangesetAp
         steps: Sequence[ChangesetStep],
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
     ) -> ChangesetApplied:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -104,6 +114,7 @@ class _ChangesetApply(LocalCommand[ChangesetApply, ChangesetApplied, ChangesetAp
             steps=list(steps),
             expected_revision=expected_revision,
             label=label,
+            model_scope=model_scope,
         ))
 
     def validate(
@@ -114,6 +125,7 @@ class _ChangesetApply(LocalCommand[ChangesetApply, ChangesetApplied, ChangesetAp
         steps: Sequence[ChangesetStep],
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -122,6 +134,7 @@ class _ChangesetApply(LocalCommand[ChangesetApply, ChangesetApplied, ChangesetAp
             steps=list(steps),
             expected_revision=expected_revision,
             label=label,
+            model_scope=model_scope,
         ))
 
     def answer(
@@ -132,6 +145,7 @@ class _ChangesetApply(LocalCommand[ChangesetApply, ChangesetApplied, ChangesetAp
         steps: Sequence[ChangesetStep],
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -145,6 +159,7 @@ class _ChangesetApply(LocalCommand[ChangesetApply, ChangesetApplied, ChangesetAp
             steps=list(steps),
             expected_revision=expected_revision,
             label=label,
+            model_scope=model_scope,
         ), op=op, request_id=request_id, expected=expected)
 
 

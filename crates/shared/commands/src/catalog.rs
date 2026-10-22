@@ -7866,8 +7866,8 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             title: "Değişiklik kümesi".into(),
             summary: "Birden çok komutu tek iş olarak yazar: steps sırayla, aynı adımın içinde çalışır; biri reddederse hepsi geri alınır, proje ayarları, stil kitaplığı ve pafta kitabı da. \
                       Sonraki adım önceki bir adımın çıktısını tam değer olan bir metinle adlar: \"$ad\" o adımın uid'i, \"$ad[2]\" created[2]'si, \"$ad.layer\" layer'ı (ad, adımın as'i). \
-                      Bağlı yazılar, taramalar ve ölçüler son adımdan sonra bir kez izler, çizimin bütünlüğü o zaman denetlenir. Nesneler, katmanlar ve bloklar label adlı tek geri alma adımıdır; ayarlar, stiller ve pafta kitabı geri alma adımı değildir, özet hangisinin değiştiğini söyler. \
-                      İç içe küme ve dosyaya yazan komut girmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                      Bağlı yazılar, taramalar ve ölçüler son adımdan sonra bir kez izler, çizimin bütünlüğü o zaman denetlenir. Nesneler, katmanlar, bloklar ve pafta kitabı label adlı tek geri alma adımıdır; ayarlar ve stil kitaplığı ayrı politikalarını korur, özet hangisinin değiştiğini söyler. \
+                      İsteğe bağlı modelScope={sheet,item}, paftaya ait sabit ve yerleştirilmiş model görünümünü açıkça doğrular; model koordinatları yine metredir. Bu kapsamda pafta, görünüm, proje ayarı ve history komutları reddedilir. İç içe küme ve dosyaya yazan komut girmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec!["degisiklik kumesi".into(), "changeset".into()],
             effect: CommandEffect::Document,

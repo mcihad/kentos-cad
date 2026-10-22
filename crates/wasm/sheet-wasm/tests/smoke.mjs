@@ -405,6 +405,20 @@ for (const f of files('kpafta/invalid')) {
   }
 }
 
+// CAD-SHEET-13: navigation uses the same existing operation boundary.
+{
+ const root=json('ops/book.json');
+ for(const c of json('viewport-navigation.json').cases){
+  const before=bookText({...root,sheets:[c.sheet],masters:[],assets:[],variables:[]},c.name);
+  const result=ok(engine.applyOp(before,JSON.stringify(c.operation)),c.name);
+  const v=result.book.sheets[0].items[0].kind.view;
+  ['x','y'].forEach((k,i)=>assert.ok(Math.abs(v.center[k]-c.expected.center[i])<1e-8,c.name));
+  assert.equal(v.ratio?v.ratio.model/v.ratio.paper:v.scale,c.expected.denominator,c.name);
+  assert.equal(digest(ok(engine.applyOps(JSON.stringify(result.book),JSON.stringify(result.inverse)),c.name).book,c.name),digest(before,c.name));
+  count('viewport-navigation');
+ }
+}
+
 const info = ok(engine.engineInfo(), 'engineInfo');
 console.log(
   `Pafta çekirdeği WASM ${info.version} (${info.bookSchema}): ` +

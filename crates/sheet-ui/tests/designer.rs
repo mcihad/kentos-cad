@@ -1827,3 +1827,57 @@ fn clipping_cases_replay_in_the_designer_without_changing_camera_or_bypassing_it
         }
     }
 }
+
+#[test]
+fn model_scope_replays_twenty_four_rotated_paper_probes_and_navigation_keeps_paper_view() {
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/viewport-navigation.json"
+    ))
+    .unwrap();
+    for case in data["cases"].as_array().unwrap() {
+        let mut book = kentos_sheet::SheetBook::default();
+        book.sheets
+            .push(serde_json::from_value(case["sheet"].clone()).unwrap());
+        let mut d = Designer::new(context());
+        d.load(book.clone());
+        d.update(Message::Tab(1));
+        assert_eq!(
+            d.update(Message::EnterModel("viewport".into())),
+            vec![Effect::ModelScope(true)]
+        );
+        let at: [f64; 2] = serde_json::from_value(case["paper"].clone()).unwrap();
+        let effects = d.update(Message::Stage(StageEvent::Press {
+            at,
+            px: Point::ORIGIN,
+            size: STAGE,
+            shift: false,
+            ctrl: false,
+            alt: false,
+        }));
+        let [Effect::ModelPointer(p)] = effects.as_slice() else {
+            panic!("{effects:?}")
+        };
+        for j in 0..2 {
+            assert!((p.world[j] - case["world"][j].as_f64().unwrap()).abs() < 1e-8);
+        }
+        assert_eq!(
+            d.book(),
+            &book,
+            "enter and pointer never duplicate model/paper objects"
+        );
+        assert!(d.apply(
+            vec![serde_json::from_value(case["operation"].clone()).unwrap()],
+            "Görünüm"
+        ));
+        assert_eq!(d.model_scope(), Some("viewport"));
+        d.update(Message::Undo);
+        assert_eq!(d.book(), &book);
+        assert_eq!(
+            d.update(Message::Stage(StageEvent::DoubleClick {
+                at: [-100000., -100000.]
+            })),
+            vec![Effect::ModelScope(false)]
+        );
+        assert!(d.model_scope().is_none());
+    }
+}

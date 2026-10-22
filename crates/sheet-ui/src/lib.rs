@@ -49,6 +49,7 @@ pub mod store;
 pub mod text;
 mod update;
 pub mod viewport_clip;
+pub mod model_scope;
 pub mod variables;
 pub mod view;
 pub mod view_math;

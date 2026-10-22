@@ -1325,3 +1325,179 @@ fn sheet12_clipping_screens() {
         assert!(app.sheets.error().is_none());
     }
 }
+
+fn model_scope_app(theme: &str, text: u32) -> App {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/commands/v1/cad.sheets.fit.json"
+    ))
+    .unwrap();
+    let mut snapshot: kentos_commands::DocumentSnapshotV1 =
+        serde_json::from_value(fixture["setup"].clone()).unwrap();
+    snapshot.entities.clear();
+    let mut model = kentos_domain::Document::from_snapshot(snapshot).unwrap();
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/viewport-navigation.json"
+    ))
+    .unwrap();
+    let mut page: kentos_sheet::Sheet =
+        serde_json::from_value(data["cases"][0]["sheet"].clone()).unwrap();
+    page.name = "A-101 · Görünümden model düzenleme".into();
+    let kentos_sheet::ItemKind::Map(map) = &mut page.items[0].kind else {
+        panic!()
+    };
+    let kentos_sheet::MapView::Fixed(f) = &mut map.view else {
+        panic!()
+    };
+    f.center = Some(kentos_sheet::GroundPoint { x: 2.5, y: 1.5 });
+    f.rotation = 0;
+    page.items[0].frame = kentos_sheet::units::RectUm::new(40000, 40000, 310000, 190000);
+    let mut book = kentos_sheet::SheetBook::default();
+    book.sheets.push(page);
+    model
+        .set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
+        .unwrap();
+    let (mut app, _store) = app_with_store("sheet13-model");
+    app.settings.choose(&[
+        ("appearance.theme", serde_json::json!(theme)),
+        ("appearance.textSize", serde_json::json!(text)),
+    ]);
+    app.apply_settings();
+    let doc = Document::from_v2(model.to_snapshot_v2(), None).unwrap();
+    let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    drive(&mut app, task);
+    sheet(&mut app, Sheet::Tab(1));
+    app
+}
+fn model_click(app: &mut App, world: [f64; 2], release: bool) {
+    let at = app.sheets.active_viewport().unwrap().paper_point(world);
+    let stage = if release {
+        kentos_sheet_ui::StageEvent::Release {
+            at,
+            shift: false,
+            ctrl: false,
+            alt: false,
+        }
+    } else {
+        kentos_sheet_ui::StageEvent::Press {
+            at,
+            px: iced::Point::ORIGIN,
+            size: iced::Size::new(1000., 700.),
+            shift: false,
+            ctrl: false,
+            alt: false,
+        }
+    };
+    sheet(app, Sheet::Stage(stage));
+}
+#[test]
+fn model_scope_uses_real_drawing_tools_and_model_history_then_restores_camera() {
+    let mut app = model_scope_app("light", 13);
+    let camera = app.viewport.camera;
+    let before = app.sheets.book().clone();
+    sheet(&mut app, Sheet::EnterModel("viewport".into()));
+    assert!(app.sheets.model_scope().is_some());
+    let _ = app.run("tool.line");
+    model_click(&mut app, [0., 0.], false);
+    model_click(&mut app, [0., 0.], true);
+    model_click(&mut app, [5., 0.], false);
+    model_click(&mut app, [5., 0.], true);
+    let doc = app.document.as_ref().unwrap();
+    assert_eq!(doc.model.entities().count(), 1);
+    let e = doc.model.entities().next().unwrap();
+    let kentos_commands::Entity::Line(l) = e else {
+        panic!("{e:?}")
+    };
+    assert!((l.a.x).abs() < 1e-6);
+    assert!((l.b.x - 5.).abs() < 1e-6);
+    assert_eq!(app.sheets.book(), &before);
+    app.cancel();
+    app.undo();
+    assert_eq!(app.document.as_ref().unwrap().model.entities().count(), 0);
+    sheet(&mut app, Sheet::ReturnPaper);
+    assert_eq!(app.viewport.camera, camera);
+    assert!(app.sheets.is_active());
+}
+#[test]
+#[ignore="GPU images, run alone"]
+fn sheet13_model_scope_screens() {
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme, text, w, h) in [
+        ("light", 13, 1440., 900.),
+        ("dark", 13, 1440., 900.),
+        ("dark", 18, 1100., 650.),
+    ] {
+        let mut app = model_scope_app(theme, text);
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(w, h)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        sheet(&mut app, Sheet::EnterModel("viewport".into()));
+        let _ = app.run("tool.line");
+        model_click(&mut app, [0., 0.], false);
+        model_click(&mut app, [0., 0.], true);
+        model_click(&mut app, [5., 0.], false);
+        model_click(&mut app, [5., 0.], true);
+        let at = app.sheets.active_viewport().unwrap().paper_point([5., 3.]);
+        sheet(
+            &mut app,
+            Sheet::Stage(kentos_sheet_ui::StageEvent::Move {
+                at,
+                size: iced::Size::new(1000., 700.),
+                shift: false,
+                ctrl: false,
+                alt: false,
+            }),
+        );
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet13-model-scope-{theme}-{text}.png")))
+            .unwrap();
+        assert_eq!(app.document.as_ref().unwrap().model.entities().count(), 1);
+        assert!(app.session.preview(&app.format()).is_some());
+        app.cancel();
+        app.session.exit();
+        model_click(&mut app, [2.5, 0.], false);
+        model_click(&mut app, [2.5, 0.], true);
+        assert_eq!(
+            app.selection.len(),
+            1,
+            "a press through the viewport chooses the original model object"
+        );
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet13-model-properties-{theme}-{text}.png")))
+            .unwrap();
+        if text == 18 {
+            snap.input(
+                &mut app,
+                App::view,
+                &mut update,
+                kentos_ui::snapshot::Input::Scroll(iced::Point::new(w - 100., h - 170.), -7.),
+            );
+            snap.settle(&mut app, App::view, &mut update);
+            snap.render(app.view(), &app.theme())
+                .save(out.join("sheet13-model-properties-scrolled.png"))
+                .unwrap();
+            let task = app.update(Message::Run("tool.text"));
+            drive(&mut app, task);
+            model_click(&mut app, [1., 1.5], false);
+            assert!(app.text_field.is_some());
+            let task = app.update(Message::TextField(crate::text_field::Event::Input(
+                "Model yazısı".into(),
+            )));
+            drive(&mut app, task);
+            snap.settle(&mut app, App::view, &mut update);
+            snap.render(app.view(), &app.theme())
+                .save(out.join("sheet13-model-text-field.png"))
+                .unwrap();
+            let task = app.update(Message::TextField(crate::text_field::Event::Keep));
+            drive(&mut app, task);
+            assert!(app.document.as_ref().unwrap().model.entities().any(
+                |e| matches!(e,kentos_commands::Entity::Text(t) if t.text=="Model yazısı")
+            ));
+        }
+    }
+}

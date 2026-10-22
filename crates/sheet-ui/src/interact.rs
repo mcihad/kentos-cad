@@ -49,6 +49,7 @@ impl Designer {
         let Some(paper) = self.open_sheet().map(|s| s.page.size) else {
             return Vec::new();
         };
+        if self.model_scope.is_some() { return self.model_stage(e); }
         match e {
             StageEvent::Move {
                 at,
@@ -87,9 +88,11 @@ impl Designer {
                 ctrl,
                 alt,
             } => return self.release(at, Keys { shift, ctrl, alt }),
+            StageEvent::RightClick {..} => {},
             StageEvent::DoubleClick { at } => {
                 // Into a group: the item under the pointer itself.
                 if let Some((item, _)) = self.hit(at) {
+                    if self.book.item(&item).is_some_and(|i| matches!(i.kind,kentos_sheet::ItemKind::Map(_))) { return self.enter_model(&item); }
                     self.select(vec![item]);
                 }
             }

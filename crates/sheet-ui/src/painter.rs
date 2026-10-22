@@ -89,6 +89,8 @@ impl<'a> MapRequest<'a> {
 
 /// Paints the content of map frames.
 pub trait MapPainter {
+    /// Ephemeral model tool aids. Never part of preview/export content or its cache.
+    fn interaction(&self,_request:&MapRequest<'_>,_frame:&mut Frame) {}
     /// Paints the content into `frame`, whose origin is the content's top-left
     /// corner; what it draws keeps inside [`MapRequest::bounds`] ([`clip_segment`],
     /// [`clip_polygon`]; a text wholly inside or not at all). False when there
@@ -137,6 +139,7 @@ pub fn lend<'a>(painter: &'a dyn MapPainter) -> Painter<'a> {
 struct Lent<'a>(&'a dyn MapPainter);
 
 impl MapPainter for Lent<'_> {
+    fn interaction(&self,r:&MapRequest<'_>,f:&mut Frame) {self.0.interaction(r,f)}
     fn paint(&self, request: &MapRequest<'_>, frame: &mut Frame) -> bool {
         self.0.paint(request, frame)
     }

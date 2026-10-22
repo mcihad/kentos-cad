@@ -18,6 +18,14 @@ pub const CAD_CHANGESET_APPLY_VERSION: u32 = 1;
 /// The undo step's name when the input gives none.
 pub const CHANGESET_LABEL: &str = "Değişiklik kümesi";
 
+/// Explicit viewport context for model commands; all command coordinates remain canonical metres.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature="ts", derive(TS))]
+#[cfg_attr(feature="schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature="ts",ts(export))]
+#[serde(rename_all="camelCase", deny_unknown_fields)]
+pub struct SheetModelScope { pub sheet:String, pub item:String }
+
 /// Input of `cad.changeset.apply` v1: the steps, in order, each a command of
 /// this host with its input as its catalog says. A later step names an
 /// earlier one's output by a text that is the whole value: `"$ad"` its
@@ -45,6 +53,10 @@ pub const CHANGESET_LABEL: &str = "Değişiklik kümesi";
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ChangesetApply {
+    /// Optional explicit paper viewport context. Restricts the set to model commands.
+    #[serde(default, skip_serializing_if="Option::is_none")]
+    #[cfg_attr(feature="ts",ts(optional))]
+    pub model_scope: Option<SheetModelScope>,
     /// At least one.
     pub steps: Vec<ChangesetStep>,
     /// The undo step's name; “Değişiklik kümesi” when absent.

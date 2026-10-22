@@ -28,8 +28,12 @@ fn mm(v: f64) -> Um {
 
 impl Designer {
     pub fn update(&mut self, m: Message) -> Vec<Effect> {
+        if matches!(&m,Message::Select(_)|Message::Tool(_)|Message::NewSheet|Message::Gallery(_)) { self.model_scope=None; }
         match m {
+            Message::EnterModel(id) => { return self.enter_model(&id); }
+            Message::ReturnPaper => { self.model_scope=None; self.reset_caches(); return vec![Effect::ModelScope(false)]; }
             Message::Tab(0) | Message::Model => {
+                self.model_scope=None;
                 self.open = None;
                 self.drag = None;
                 self.preview = None;
@@ -37,6 +41,7 @@ impl Designer {
                 return vec![Effect::ShowModel];
             }
             Message::Tab(i) => {
+                self.model_scope=None;
                 if let Some(s) = self.book.sheets.get(i - 1) {
                     if self.open.as_deref() != Some(s.id.as_str()) {
                         self.open = Some(s.id.clone());

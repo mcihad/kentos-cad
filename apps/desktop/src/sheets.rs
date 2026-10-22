@@ -439,6 +439,7 @@ fn color(c: [u8; 4]) -> iced::Color {
 /// what the drawing area writes, labels.rs), as the web's map frames draw
 /// them. It borrows the open drawing for as long as the view lives.
 pub(crate) struct SheetPainter<'a> {
+    interaction: Option<&'a App>,
     maps: &'a SheetMaps,
     doc: Option<&'a kentos_domain::Document>,
     /// The open drawing as the drawing pipeline reads it (a PDF's vectors).
@@ -454,6 +455,7 @@ pub(crate) struct SheetPainter<'a> {
 }
 
 impl MapPainter for SheetPainter<'_> {
+    fn interaction(&self,r:&MapRequest<'_>,frame:&mut Frame) { crate::sheet_model::paint(self.interaction,r,frame); }
     fn paint(&self, r: &MapRequest<'_>, frame: &mut Frame) -> bool {
         if let Some(primitive) = r.primitive
             && !primitive.clip_shape.is_frame()
@@ -574,6 +576,7 @@ pub(crate) fn painter_of<'a>(
     images: &'a crate::style::images::Images,
 ) -> SheetPainter<'a> {
     SheetPainter {
+        interaction:None,
         maps,
         doc: doc.map(|d| &d.model),
         drawing: doc,
@@ -1063,7 +1066,8 @@ impl App {
         let painter: Painter<'_> = Rc::new(self.sheet_painter());
         let base = container(column![
             self.ribbon(false),
-            self.sheets.body(painter.clone()).map(Message::Sheet),
+            self.sheet_body(painter.clone()),
+            if self.sheets.model_scope().is_some() { self.command_line() } else { iced::widget::space().height(0).into() },
             self.sheets.tabs().map(Message::Sheet),
             self.status_bar(),
         ])
@@ -1082,15 +1086,71 @@ impl App {
         iced::widget::Stack::with_children(layers).into()
     }
 
+    fn sheet_body<'a>(&'a self, painter: Painter<'a>) -> iced::Element<'a, Message> {
+        use iced::widget::{column, container, row, stack, button, scrollable, pin};
+        use kentos_ui::{label, style};
+        if self.sheets.model_scope().is_none() {
+            return self.sheets.body(painter).map(Message::Sheet);
+        }
+        let ruler = kentos_ui::widget::rulers::thickness();
+        let stage = stack![self.sheets.stage(painter).map(Message::Sheet)]
+            .extend(
+                self.text_field_view()
+                    .map(|e| pin(e).x(ruler).y(ruler).into()),
+            )
+            .extend(
+                self.paragraph_view()
+                    .map(|e| pin(e).x(ruler).y(ruler).into()),
+            );
+        let stage = kentos_ui::widget::ContextMenu::controlled(
+            stage,
+            self.drawing_menu
+                .map(|o| Point::new(o.at.x + ruler, o.at.y + ruler)),
+            move |_| self.drawing_menu_items(),
+            Message::DrawingMenu(crate::drawing_menus::Event::Closed),
+        );
+        let side = column![
+            container(
+                column![
+                    label::body("Model düzenleme"),
+                    label::caption(
+                        "Çizim araçları modelde; tekerlek ve orta tuş bu görünümde çalışır."
+                    ),
+                    button(label::body("Kâğıda dön"))
+                        .on_press(Message::Sheet(kentos_sheet_ui::Message::ReturnPaper))
+                        .style(style::button::primary)
+                ]
+                .spacing(8)
+            )
+            .padding(12),
+            scrollable(self.panel_body(crate::app::Panel::Properties)).height(iced::Fill)
+        ]
+        .width(kentos_sheet_ui::inspector_view::WIDTH)
+        .height(iced::Fill);
+        row![
+            container(self.sheets.left_panel().map(Message::Sheet))
+                .height(iced::Fill)
+                .style(style::container::surface),
+            container(stage).width(iced::Fill).height(iced::Fill),
+            container(side)
+                .height(iced::Fill)
+                .style(style::container::surface)
+        ]
+        .height(iced::Fill)
+        .into()
+    }
+
     /// The maps' painter of the open drawing (its scene and its text).
     pub(crate) fn sheet_painter(&self) -> SheetPainter<'_> {
-        painter_of(
+        let mut painter=painter_of(
             &self.sheet_maps,
             self.document.as_ref(),
             &self.spatial,
             &self.styles.library,
             &self.styles.images,
-        )
+        );
+        painter.interaction=Some(self);
+        painter
     }
 
     /// The project as the sheet mode sees it: its mode and type, whether it
@@ -1208,6 +1268,7 @@ impl App {
             self.sheets.attach(store);
         }
         self.follow_sheet_book();
+        self.sync_sheet_model_camera();
         // The gallery over the drawing reads the project too (what a template needs that it lacks).
         if !self.sheets.is_active() && !self.sheets.gallery_open() {
             return;
@@ -1365,7 +1426,27 @@ impl App {
             self.sheet_maps.sync(self.document.as_ref());
         }
         let effects = self.sheets.update(m);
+        if self.sheets.model_scope().is_none() && let Some(camera)=self.viewport.sheet_saved_camera.take() { self.cancel(); self.viewport.camera=camera; }
         self.sheet_effects(effects)
+    }
+
+    pub(crate) fn sync_sheet_model_camera(&mut self) {
+        if let Some(v) = self.sheets.model_camera() {
+            self.viewport
+                .sheet_saved_camera
+                .get_or_insert(self.viewport.camera);
+            self.viewport.camera = Camera {
+                center: Vec2::new(v.center[0], v.center[1]),
+                scale: v.resolution,
+                width: v.size[0],
+                height: v.size[1],
+                twist: f64::from(v.rotation).to_radians() / 1000.,
+                ..Default::default()
+            };
+        } else if let Some(camera) = self.viewport.sheet_saved_camera.take() {
+            self.cancel();
+            self.viewport.camera = camera;
+        }
     }
 
     /// What the sheet mode asks of the desktop.
@@ -1374,11 +1455,25 @@ impl App {
         for effect in effects {
             let mut task = Task::none();
             match effect {
+                Effect::ModelScope(active) => {
+                    self.cancel();
+                    self.sheet_tab = !active;
+                    self.sync_sheet_model_camera();
+                }
+                Effect::ModelPointer(p) => {
+                    use kentos_sheet_ui::model_scope::PointerAction;
+                    self.sync_sheet_model_camera();
+                    let screen=self.viewport.camera.world_to_screen(Vec2::new(p.world[0],p.world[1]));
+                    let at=Point::new(screen[0] as f32,screen[1] as f32);
+                    let event=match p.action {PointerAction::Move=>crate::viewport::Event::Moved(at),PointerAction::Press=>crate::viewport::Event::Pressed(at),PointerAction::Release=>crate::viewport::Event::Released(at),PointerAction::Leave=>crate::viewport::Event::Left,PointerAction::RightClick=>crate::viewport::Event::RightClick(at)};
+                    task=self.pointer(event);
+                    self.sheet_maps.sync(self.document.as_ref());
+                }
                 Effect::ShowSheet => {
                     self.sheet_tab = true;
                     self.sheet_maps.sync(self.document.as_ref());
                 }
-                Effect::ShowModel => self.sheet_tab = false,
+                Effect::ShowModel => { self.sheet_tab = false; if let Some(camera)=self.viewport.sheet_saved_camera.take() { self.cancel(); self.viewport.camera=camera; } },
                 Effect::AskExportPath { kind, suggested } => {
                     let (name, ext) = match kind {
                         ExportKind::Pdf => ("PDF belgesi", "pdf"),
