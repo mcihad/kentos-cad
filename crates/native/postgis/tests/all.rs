@@ -524,6 +524,134 @@ fn views_queries_and_areas() {
 /// `generate_series` (a 1000 × 1000 grid of 20 m squares, a GiST index): the first map by the view's area, the area's
 /// state, a row written with its check, a question's first page and the whole table's statistics. Run in release:
 /// `KENTOS_PG_TIMING=1`.
+/// Binds `table` and returns its layer and its first object's lasting id.
+fn bind(d: &mut Document, url: &str, table: &str) -> (String, String) {
+    let linked = ok(&run(
+        d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": table } }),
+    ))
+    .clone();
+    let layer = linked["link"]["layer"].as_str().expect("layer").to_owned();
+    let uid = d
+        .by_layer_with_uids(&layer)
+        .map(|(u, _)| u.to_string())
+        .next()
+        .expect("a row");
+    (layer, uid)
+}
+
+fn rename(d: &mut Document, uid: &str, ad: &str) {
+    ok(&run(
+        d,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [uid], "attrs": { "ad": ad }, "operation": "attributes" }),
+    ));
+}
+
+/// The value of `ad` in `table`'s first row as a fresh drawing reads it.
+fn ad_in(url: &str, table: &str) -> String {
+    let mut d = doc();
+    let (layer, _) = bind(&mut d, url, table);
+    d.by_layer_with_uids(&layer)
+        .next()
+        .and_then(|(_, e)| e.base().attrs.get("ad").cloned())
+        .unwrap_or_default()
+}
+
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn layers_of_one_database_go_in_together() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    let mut d = doc();
+    let (duz, duz_uid) = bind(&mut d, &url, "boyut.duz");
+    let (cizgi, cizgi_uid) = bind(&mut d, &url, "boyut.cizgi");
+    // Both changed, written in one transaction (docs/adr/0584 §1).
+    rename(&mut d, &duz_uid, "birlikte");
+    rename(&mut d, &cizgi_uid, "birlikte");
+    let written = ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": duz, "direction": "write", "with": [cizgi] }),
+    ))
+    .clone();
+    assert_eq!(written["modified"], json!(2), "{written}");
+    assert_eq!(
+        written["layers"].as_array().map(Vec::len),
+        Some(2),
+        "{written}"
+    );
+    assert_eq!(ad_in(&url, "boyut.duz"), "birlikte");
+    assert_eq!(ad_in(&url, "boyut.cizgi"), "birlikte");
+    // Someone else changes the line's row; the next write of both is refused whole.
+    let mut other = doc();
+    let (other_cizgi, other_uid) = bind(&mut other, &url, "boyut.cizgi");
+    rename(&mut other, &other_uid, "baskasi");
+    ok(&run(
+        &mut other,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": other_cizgi, "direction": "write" }),
+    ));
+    rename(&mut d, &duz_uid, "ikinci");
+    rename(&mut d, &cizgi_uid, "ikinci");
+    let refused = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": duz, "direction": "write", "with": [cizgi] }),
+    );
+    assert_eq!(refused["status"], "conflict", "{refused}");
+    assert_eq!(refused["error"]["code"], "source_changed", "{refused}");
+    assert_eq!(refused["error"]["path"], "with", "{refused}");
+    assert_eq!(refused["error"]["uids"], json!([cizgi_uid]), "{refused}");
+    assert_eq!(
+        ad_in(&url, "boyut.duz"),
+        "birlikte",
+        "the plane's table is not written either"
+    );
+    assert_eq!(ad_in(&url, "boyut.cizgi"), "baskasi");
+    // A file and a database: no transaction spans two sources.
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/geopackage/v1/boyut.gpkg");
+    let copy = std::env::temp_dir().join(format!("kentos-birlikte-{}.gpkg", std::process::id()));
+    std::fs::copy(&file, &copy).expect("a copy");
+    let (kotlu_file, _) = bind(&mut d, copy.to_str().expect("path"), "kotlu");
+    let split = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": duz, "direction": "write", "with": [kotlu_file] }),
+    );
+    let _ = std::fs::remove_file(&copy);
+    assert_eq!(split["error"]["code"], "transaction_split", "{split}");
+    // A Z column takes no object without elevations (docs/adr/0584 §2).
+    let (kotlu, kotlu_uid) = bind(&mut d, &url, "boyut.kotlu");
+    let flat = json!({ "kind": "polygon", "pts": [
+        { "x": 487000.0, "y": 4420000.0 }, { "x": 487010.0, "y": 4420000.0 },
+        { "x": 487010.0, "y": 4420010.0 }, { "x": 487000.0, "y": 4420010.0 }],
+        "zs": [null, null, null, null] });
+    ok(&run(
+        &mut d,
+        "cad.entities.edit",
+        CallOp::Execute,
+        json!({ "operation": "elevation", "changes": [{ "kind": "update", "uid": kotlu_uid, "geometry": flat }] }),
+    ));
+    let z = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": kotlu, "direction": "write" }),
+    );
+    assert_eq!(z["error"]["code"], "geometry_mismatch", "{z}");
+}
+
 #[test]
 #[ignore = "a measurement on the throwaway PostGIS of scripts/fixtures/postgis_cases.py --timing"]
 fn postgis_timing() {

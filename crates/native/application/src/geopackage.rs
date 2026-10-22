@@ -1085,19 +1085,14 @@ struct Plan {
 pub fn write(doc: &Document, layers: &[String], path: &Path) -> Result<Written, String> {
     let mut gp = GeoPackage::create(path).map_err(|e| e.0)?;
     let session = gp.session().map_err(|e| e.0)?;
-    let out = write_in(
-        doc,
-        layers,
-        &session,
-        None,
-        BATCH_ROWS,
-        &Flow::none(),
-    )
-    .map_err(|stop| match stop {
-        WriteStop::Failed(why) | WriteStop::Srs(why) => why,
-        WriteStop::Cancelled => "yazma durduruldu".to_owned(),
-        WriteStop::Taken { table, .. } => format!("“{table}” tablosu var"),
-    })?;
+    let out =
+        write_in(doc, layers, &session, None, BATCH_ROWS, &Flow::none()).map_err(
+            |stop| match stop {
+                WriteStop::Failed(why) | WriteStop::Srs(why) => why,
+                WriteStop::Cancelled => "yazma durduruldu".to_owned(),
+                WriteStop::Taken { table, .. } => format!("“{table}” tablosu var"),
+            },
+        )?;
     session.commit().map_err(|e| e.0)?;
     gp.close().map_err(|e| e.0)?;
     Ok(out)
@@ -1580,6 +1575,36 @@ pub fn fit_one(g: Geometry, name: &str) -> Result<Geometry, String> {
         });
     }
     one[0].take().ok_or_else(|| "geometri yok".to_owned())
+}
+
+/// Why a geometry cannot go into a geometry column whose Z and M are prohibited (0), mandatory (1) or optional (2)
+/// (docs/adr/0584 §2): elevations or measures where the column takes none, none where it takes them always, or some
+/// vertices with and some without (a WKB has one dimension: the rest would be made up or dropped). None when it fits;
+/// nothing is dropped or made up on the way.
+pub fn dims_problem(g: &Geometry, z: u8, m: u8) -> Option<String> {
+    let [(any_z, all_z), (any_m, all_m)] = g.dims_of_all();
+    if any_z && z == 0 {
+        return Some("nesnenin kotları var, tablonun geometri sütunu Z almaz; kotları silin (Kot ver › Sıfırla) ya da Z'li bir tabloya yazın".into());
+    }
+    if any_z && !all_z {
+        return Some("bazı köşelerin kotu var, bazılarının yok; tabloya ya her köşe kotuyla ya hiçbiri kotsuz yazılır (Kot ver)".into());
+    }
+    if !any_z && z == 1 {
+        return Some("nesnenin kotu yok, tablonun geometri sütunu her köşede Z ister; köşelere kot verin (Kot ver)".into());
+    }
+    if any_m && m == 0 {
+        return Some(
+            "nesnenin ölçüleri (M) var, tablonun geometri sütunu M almaz; M'li bir tabloya yazın"
+                .into(),
+        );
+    }
+    if any_m && !all_m {
+        return Some("bazı köşelerin ölçüsü (M) var, bazılarının yok; rotayı kalibre edin".into());
+    }
+    if !any_m && m == 1 {
+        return Some("nesnenin ölçüsü (M) yok, tablonun geometri sütunu her köşede M ister; rotayı kalibre edin".into());
+    }
+    None
 }
 
 /// An object as a row of a table with `columns` and a geometry column of type `geometry`: its geometry fitted, its

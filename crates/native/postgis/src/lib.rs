@@ -14,7 +14,7 @@ use std::time::Duration;
 use kentos_contracts::encoding::sha256_hex;
 use kentos_geopackage::{self as gpkg, ColumnKind, DataType, Value};
 use kentos_native_application::provider::{
-    Edited, Param, ProviderError, ProviderRead, ProviderScan, ProviderShape, ProviderTable, RowCheck,
+    Edited, Param, ProviderError, ProviderRead, ProviderScan, ProviderShape, ProviderTable, RowCheck, TableEdit,
     TableProvider, register_postgis,
 };
 use sqlx::postgres::{PgConnectOptions, PgConnection, PgRow};
@@ -323,6 +323,10 @@ async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, ProviderEr
     .await
     .map_err(unreachable)?;
     let gname = geometry.as_ref().map(|g| g.0.clone());
+    // An untyped `geometry` column takes any dimension: Z and M optional (docs/adr/0584 §2).
+    let untyped = gname
+        .as_ref()
+        .is_some_and(|g| attributes.iter().any(|(n, d, ..)| n == g && !d.contains('(')));
     let columns = columns_of(attributes, &fid, gname.as_ref());
     let writable: bool = !view
         && sqlx::query_scalar("SELECT has_table_privilege($1::regclass, 'INSERT,UPDATE,DELETE')")
@@ -334,7 +338,13 @@ async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, ProviderEr
         .as_ref()
         .and_then(|g| u32::try_from(g.2).ok())
         .filter(|&s| s > 0);
-    let geometry = geometry.map(|(column, kind, _, dims)| geometry_column(column, &kind, dims));
+    let geometry = geometry.map(|(column, kind, _, dims)| {
+        let mut g = geometry_column(column, &kind, dims);
+        if untyped {
+            (g.z, g.m) = (2, 2);
+        }
+        g
+    });
     Ok(Shape {
         layer: layer_of(full, geometry, srid, fid, columns),
         srid,
@@ -731,6 +741,177 @@ async fn uids_of(conn: &mut PgConnection, s: &Shape) -> Result<HashMap<i64, Stri
     }
 }
 
+/// One table's edits inside an open transaction (docs/adr/0582 §2, 0584 §1): the table locked, the rows the edits touch
+/// checked (or the area's revision), the edits written, the area's revision before and after.
+async fn edit_in(
+    tx: &mut PgConnection,
+    table: &str,
+    area: Option<[f64; 4]>,
+    revision: &str,
+    check: Option<&mut RowCheck<'_>>,
+    edits: &gpkg::Edits,
+) -> Result<Edited, ProviderError> {
+    let s = shape(&mut *tx, table).await?;
+    if !s.writable {
+        return Err(refused(format!("{} salt okunur", s.layer.name)));
+    }
+    let sql_name = s.from.clone();
+    let full = s.layer.name.clone();
+    let schema = s.schema.clone().unwrap_or_default();
+    tx.execute(sqlx::AssertSqlSafe(format!("LOCK TABLE {sql_name} IN SHARE ROW EXCLUSIVE MODE")))
+        .await
+        .map_err(refused)?;
+    // The rows the edits touch, as they now are, against the layer's base (docs/adr/0582 §2).
+    let checked = check.is_some();
+    if let Some(check) = check {
+        let mut touched: Vec<i64> = edits.update.iter().map(|(fid, _)| *fid).collect();
+        touched.extend(edits.delete.iter().copied());
+        touched.sort_unstable();
+        touched.dedup();
+        if !touched.is_empty() {
+            let now = rows_by_keys(&mut *tx, &s, &touched).await?;
+            if let Err(changed) = check(&s.layer, &now) {
+                return Err(ProviderError::RowsChanged(changed));
+            }
+        }
+    }
+    let (_, before) = rows(&mut *tx, &s, area).await?;
+    if !checked && before != revision {
+        return Err(ProviderError::Changed);
+    }
+    for c in &edits.add_columns {
+        tx.execute(sqlx::AssertSqlSafe(format!("ALTER TABLE {sql_name} ADD COLUMN {} {}", quote(&c.name), pg_type(c))))
+            .await
+            .map_err(refused)?;
+    }
+    // The columns written, in the rows' order: the table's, then those added.
+    let mut columns: Vec<(String, String, bool)> = s
+        .layer
+        .columns
+        .iter()
+        .map(|c| (quote(&c.name), c.decl.clone(), matches!(c.kind, ColumnKind::Blob(_))))
+        .collect();
+    columns.extend(
+        edits
+            .add_columns
+            .iter()
+            .map(|c| (quote(&c.name), pg_type(c), matches!(c.kind, ColumnKind::Blob(_)))),
+    );
+    let srid = s.srid.unwrap_or(0);
+    let geom = s.layer.geometry.as_ref().map(|g| quote(&g.name));
+    let mut targets: Vec<String> = Vec::new();
+    let mut slots: Vec<String> = Vec::new();
+    let mut n = 0usize;
+    if let Some(g) = &geom {
+        n += 1;
+        targets.push(g.clone());
+        slots.push(format!("ST_SetSRID(ST_GeomFromWKB(${n}), {srid})"));
+    }
+    for (q, decl, bytes) in &columns {
+        n += 1;
+        targets.push(q.clone());
+        slots.push(if *bytes { format!("${n}") } else { format!("CAST(${n} AS {decl})") });
+    }
+    let width = columns.len();
+    let bind_row = |row: &gpkg::NewRow| -> Result<(Option<Vec<u8>>, Vec<Bound>), ProviderError> {
+        if row.values.len() != width {
+            return Err(refused(format!("satırda {} değer var, {width} sütun bekleniyor", row.values.len())));
+        }
+        Ok((
+            row.geometry.as_ref().map(gpkg::write_wkb),
+            row.values.iter().map(bound).collect(),
+        ))
+    };
+    macro_rules! with_values {
+        ($q:expr, $wkb:expr, $vals:expr) => {{
+            let mut q = $q;
+            if geom.is_some() {
+                q = q.bind($wkb);
+            }
+            for v in $vals {
+                q = match v {
+                    Bound::Text(t) => q.bind(t),
+                    Bound::Bytes(b) => q.bind(b),
+                };
+            }
+            q
+        }};
+    }
+    if !edits.update.is_empty() && !targets.is_empty() {
+        let sets: Vec<String> = targets.iter().zip(&slots).map(|(t, s)| format!("{t} = {s}")).collect();
+        let sql = format!(
+            "UPDATE {sql_name} SET {} WHERE {} = ${}",
+            sets.join(", "),
+            quote(&s.layer.fid),
+            n + 1
+        );
+        for (fid, row) in &edits.update {
+            let (wkb, vals) = bind_row(row)?;
+            let q = with_values!(sqlx::query(sqlx::AssertSqlSafe(sql.as_str())), wkb, vals).bind(*fid);
+            let done = q.execute(&mut *tx).await.map_err(refused)?;
+            if done.rows_affected() != 1 {
+                return Err(refused(format!("{full} tablosunda {fid} anahtarlı satır yok")));
+            }
+        }
+    }
+    let mut inserted = Vec::with_capacity(edits.insert.len());
+    if !edits.insert.is_empty() {
+        let sql = if targets.is_empty() {
+            format!("INSERT INTO {sql_name} DEFAULT VALUES RETURNING {}::bigint", quote(&s.layer.fid))
+        } else {
+            format!(
+                "INSERT INTO {sql_name} ({}) VALUES ({}) RETURNING {}::bigint",
+                targets.join(", "),
+                slots.join(", "),
+                quote(&s.layer.fid)
+            )
+        };
+        for (_, row) in &edits.insert {
+            let (wkb, vals) = bind_row(row)?;
+            let q = with_values!(sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(sql.as_str())), wkb, vals);
+            inserted.push(q.fetch_one(&mut *tx).await.map_err(refused)?);
+        }
+    }
+    if !edits.delete.is_empty() {
+        let sql = format!("DELETE FROM {sql_name} WHERE {} = $1", quote(&s.layer.fid));
+        for fid in &edits.delete {
+            sqlx::query(sqlx::AssertSqlSafe(sql.as_str())).bind(*fid).execute(&mut *tx).await.map_err(refused)?;
+        }
+    }
+    if !edits.insert.is_empty() || !edits.delete.is_empty() {
+        let side = format!("{}.kentos_uids", quote(&schema));
+        tx.execute(sqlx::AssertSqlSafe(format!(
+            "CREATE TABLE IF NOT EXISTS {side} (table_name text NOT NULL, pk bigint NOT NULL, uid uuid NOT NULL,
+             PRIMARY KEY (table_name, pk))"
+        )))
+        .await
+        .map_err(|e| refused(format!("kalıcı kimliklerin tablosu ({side}) açılamadı: {e}")))?;
+        let put = format!(
+            "INSERT INTO {side} VALUES ($1, $2, CAST($3 AS uuid)) ON CONFLICT (table_name, pk) DO UPDATE SET uid = EXCLUDED.uid"
+        );
+        for (pk, (uid, _)) in inserted.iter().zip(&edits.insert) {
+            sqlx::query(sqlx::AssertSqlSafe(put.as_str()))
+                .bind(&full)
+                .bind(*pk)
+                .bind(uid)
+                .execute(&mut *tx)
+                .await
+                .map_err(refused)?;
+        }
+        let gone = format!("DELETE FROM {side} WHERE table_name = $1 AND pk = $2");
+        for fid in &edits.delete {
+            sqlx::query(sqlx::AssertSqlSafe(gone.as_str())).bind(&full).bind(*fid).execute(&mut *tx).await.map_err(refused)?;
+        }
+    }
+    let s = shape(&mut *tx, table).await?;
+    let (_, after) = rows(&mut *tx, &s, area).await?;
+    Ok(Edited {
+        inserted,
+        before,
+        after,
+    })
+}
+
 impl TableProvider for PostGis {
     fn tables(&self, address: &str) -> Result<Vec<ProviderTable>, ProviderError> {
         self.runtime.block_on(async {
@@ -848,167 +1029,45 @@ impl TableProvider for PostGis {
         self.runtime.block_on(async {
             let mut conn = connect(address).await?;
             let mut tx = conn.begin().await.map_err(unreachable)?;
-            let s = shape(&mut tx, table).await?;
-            if !s.writable {
-                return Err(refused(format!("{} salt okunur", s.layer.name)));
-            }
-            let sql_name = s.from.clone();
-            let full = s.layer.name.clone();
-            let schema = s.schema.clone().unwrap_or_default();
-            tx.execute(sqlx::AssertSqlSafe(format!("LOCK TABLE {sql_name} IN SHARE ROW EXCLUSIVE MODE")))
-                .await
-                .map_err(refused)?;
-            // The rows the edits touch, as they now are, against the layer's base (docs/adr/0582 §2).
-            let checked = check.is_some();
-            if let Some(check) = check {
-                let mut touched: Vec<i64> = edits.update.iter().map(|(fid, _)| *fid).collect();
-                touched.extend(edits.delete.iter().copied());
-                touched.sort_unstable();
-                touched.dedup();
-                if !touched.is_empty() {
-                    let now = rows_by_keys(&mut tx, &s, &touched).await?;
-                    if let Err(changed) = check(&s.layer, &now) {
-                        return Err(ProviderError::RowsChanged(changed));
-                    }
-                }
-            }
-            let (_, before) = rows(&mut tx, &s, area).await?;
-            if !checked && before != revision {
-                return Err(ProviderError::Changed);
-            }
-            for c in &edits.add_columns {
-                tx.execute(sqlx::AssertSqlSafe(format!("ALTER TABLE {sql_name} ADD COLUMN {} {}", quote(&c.name), pg_type(c))))
-                    .await
-                    .map_err(refused)?;
-            }
-            // The columns written, in the rows' order: the table's, then those added.
-            let mut columns: Vec<(String, String, bool)> = s
-                .layer
-                .columns
-                .iter()
-                .map(|c| (quote(&c.name), c.decl.clone(), matches!(c.kind, ColumnKind::Blob(_))))
-                .collect();
-            columns.extend(
-                edits
-                    .add_columns
-                    .iter()
-                    .map(|c| (quote(&c.name), pg_type(c), matches!(c.kind, ColumnKind::Blob(_)))),
-            );
-            let srid = s.srid.unwrap_or(0);
-            let geom = s.layer.geometry.as_ref().map(|g| quote(&g.name));
-            let mut targets: Vec<String> = Vec::new();
-            let mut slots: Vec<String> = Vec::new();
-            let mut n = 0usize;
-            if let Some(g) = &geom {
-                n += 1;
-                targets.push(g.clone());
-                slots.push(format!("ST_SetSRID(ST_GeomFromWKB(${n}), {srid})"));
-            }
-            for (q, decl, bytes) in &columns {
-                n += 1;
-                targets.push(q.clone());
-                slots.push(if *bytes { format!("${n}") } else { format!("CAST(${n} AS {decl})") });
-            }
-            let width = columns.len();
-            let bind_row = |row: &gpkg::NewRow| -> Result<(Option<Vec<u8>>, Vec<Bound>), ProviderError> {
-                if row.values.len() != width {
-                    return Err(refused(format!("satırda {} değer var, {width} sütun bekleniyor", row.values.len())));
-                }
-                Ok((
-                    row.geometry.as_ref().map(gpkg::write_wkb),
-                    row.values.iter().map(bound).collect(),
-                ))
-            };
-            macro_rules! with_values {
-                ($q:expr, $wkb:expr, $vals:expr) => {{
-                    let mut q = $q;
-                    if geom.is_some() {
-                        q = q.bind($wkb);
-                    }
-                    for v in $vals {
-                        q = match v {
-                            Bound::Text(t) => q.bind(t),
-                            Bound::Bytes(b) => q.bind(b),
-                        };
-                    }
-                    q
-                }};
-            }
-            if !edits.update.is_empty() && !targets.is_empty() {
-                let sets: Vec<String> = targets.iter().zip(&slots).map(|(t, s)| format!("{t} = {s}")).collect();
-                let sql = format!(
-                    "UPDATE {sql_name} SET {} WHERE {} = ${}",
-                    sets.join(", "),
-                    quote(&s.layer.fid),
-                    n + 1
-                );
-                for (fid, row) in &edits.update {
-                    let (wkb, vals) = bind_row(row)?;
-                    let q = with_values!(sqlx::query(sqlx::AssertSqlSafe(sql.as_str())), wkb, vals).bind(*fid);
-                    let done = q.execute(&mut *tx).await.map_err(refused)?;
-                    if done.rows_affected() != 1 {
-                        return Err(refused(format!("{full} tablosunda {fid} anahtarlı satır yok")));
-                    }
-                }
-            }
-            let mut inserted = Vec::with_capacity(edits.insert.len());
-            if !edits.insert.is_empty() {
-                let sql = if targets.is_empty() {
-                    format!("INSERT INTO {sql_name} DEFAULT VALUES RETURNING {}::bigint", quote(&s.layer.fid))
-                } else {
-                    format!(
-                        "INSERT INTO {sql_name} ({}) VALUES ({}) RETURNING {}::bigint",
-                        targets.join(", "),
-                        slots.join(", "),
-                        quote(&s.layer.fid)
-                    )
-                };
-                for (_, row) in &edits.insert {
-                    let (wkb, vals) = bind_row(row)?;
-                    let q = with_values!(sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(sql.as_str())), wkb, vals);
-                    inserted.push(q.fetch_one(&mut *tx).await.map_err(refused)?);
-                }
-            }
-            if !edits.delete.is_empty() {
-                let sql = format!("DELETE FROM {sql_name} WHERE {} = $1", quote(&s.layer.fid));
-                for fid in &edits.delete {
-                    sqlx::query(sqlx::AssertSqlSafe(sql.as_str())).bind(*fid).execute(&mut *tx).await.map_err(refused)?;
-                }
-            }
-            if !edits.insert.is_empty() || !edits.delete.is_empty() {
-                let side = format!("{}.kentos_uids", quote(&schema));
-                tx.execute(sqlx::AssertSqlSafe(format!(
-                    "CREATE TABLE IF NOT EXISTS {side} (table_name text NOT NULL, pk bigint NOT NULL, uid uuid NOT NULL,
-                     PRIMARY KEY (table_name, pk))"
-                )))
-                .await
-                .map_err(|e| refused(format!("kalıcı kimliklerin tablosu ({side}) açılamadı: {e}")))?;
-                let put = format!(
-                    "INSERT INTO {side} VALUES ($1, $2, CAST($3 AS uuid)) ON CONFLICT (table_name, pk) DO UPDATE SET uid = EXCLUDED.uid"
-                );
-                for (pk, (uid, _)) in inserted.iter().zip(&edits.insert) {
-                    sqlx::query(sqlx::AssertSqlSafe(put.as_str()))
-                        .bind(&full)
-                        .bind(*pk)
-                        .bind(uid)
-                        .execute(&mut *tx)
-                        .await
-                        .map_err(refused)?;
-                }
-                let gone = format!("DELETE FROM {side} WHERE table_name = $1 AND pk = $2");
-                for fid in &edits.delete {
-                    sqlx::query(sqlx::AssertSqlSafe(gone.as_str())).bind(&full).bind(*fid).execute(&mut *tx).await.map_err(refused)?;
-                }
-            }
-            let s = shape(&mut tx, table).await?;
-            let (_, after) = rows(&mut tx, &s, area).await?;
+            let edited = edit_in(&mut tx, table, area, revision, check, edits).await?;
             tx.commit().await.map_err(refused)?;
             let _ = conn.close().await;
-            Ok(Edited {
-                inserted,
-                before,
-                after,
-            })
+            Ok(edited)
+        })
+    }
+
+    fn edit_many(
+        &self,
+        address: &str,
+        items: Vec<TableEdit<'_, '_>>,
+    ) -> Result<Vec<Edited>, (usize, ProviderError)> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await.map_err(|e| (0, e))?;
+            let mut tx = conn.begin().await.map_err(|e| (0, unreachable(e)))?;
+            // Every table locked first, in its name's order, so two writers of the same tables cannot wait on each
+            // other (docs/adr/0584 §1).
+            let mut order: Vec<(String, usize)> = Vec::with_capacity(items.len());
+            for (i, t) in items.iter().enumerate() {
+                let s = shape(&mut tx, t.table).await.map_err(|e| (i, e))?;
+                if !s.writable {
+                    return Err((i, refused(format!("{} salt okunur", s.layer.name))));
+                }
+                order.push((s.from.clone(), i));
+            }
+            order.sort();
+            order.dedup_by(|a, b| a.0 == b.0);
+            for (from, i) in &order {
+                tx.execute(sqlx::AssertSqlSafe(format!("LOCK TABLE {from} IN SHARE ROW EXCLUSIVE MODE")))
+                    .await
+                    .map_err(|e| (*i, refused(e)))?;
+            }
+            let mut out = Vec::with_capacity(items.len());
+            for (i, t) in items.into_iter().enumerate() {
+                out.push(edit_in(&mut tx, t.table, t.area, t.revision, t.check, t.edits).await.map_err(|e| (i, e))?);
+            }
+            tx.commit().await.map_err(|e| (0, refused(e)))?;
+            let _ = conn.close().await;
+            Ok(out)
         })
     }
 }

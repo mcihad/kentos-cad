@@ -110,6 +110,12 @@ def check(c, seen, before):
         uid = [r[0] for r in cur.fetchall()]
         if uid != [seen["drawn"]]:
             problems.append(f"üçgenin kalıcı kimliği {uid} ≠ {seen['drawn']}")
+    # Written together, then refused together (docs/adr/0584 §1); the Z column kept its elevations (§2).
+    cur.execute("SELECT (SELECT ad FROM boyut.duz), (SELECT ad FROM boyut.cizgi), "
+                "(SELECT ST_ZMax(geom) FROM boyut.kotlu)")
+    together = cur.fetchone()
+    if together != ("birlikte", "baskasi", 101.0):
+        problems.append(f"birlikte yazılan tablolar {together} ≠ ('birlikte', 'baskasi', 101.0)")
     cur.execute("SELECT data_type FROM information_schema.columns WHERE table_schema = 'kadastro' "
                 "AND table_name = 'parsel' AND column_name = 'durum'")
     if [r[0] for r in cur.fetchall()] != ["text"]:
@@ -141,6 +147,14 @@ def main():
         # A view keyed by fid and one without a key (docs/adr/0582 §3).
         c.cursor().execute("CREATE VIEW sorgu.nokta_v AS SELECT fid, ad, tur, geom FROM sorgu.nokta WHERE fid <= 50")
         c.cursor().execute("CREATE VIEW sorgu.anahtarsiz AS SELECT ad, geom FROM sorgu.nokta")
+        # The tables written together and the Z and M columns (docs/adr/0584).
+        c.cursor().execute("CREATE SCHEMA boyut")
+        for table in ("duz", "cizgi", "kotlu"):
+            gdal.VectorTranslate(pg, str(ROOT / "fixtures/geopackage/v1/boyut.gpkg"),
+                                 options=gdal.VectorTranslateOptions(
+                                     layers=[table],
+                                     layerCreationOptions=["SCHEMA=boyut", "FID=fid", "GEOMETRY_NAME=geom"],
+                                     preserveFID=True))
         before = catalogue(c)
         out = Path(tempfile.mkstemp(suffix=".json")[1])
         env = dict(os.environ, KENTOS_PG_URL=f"postgresql://postgres@127.0.0.1:{port}/postgres",

@@ -110,6 +110,19 @@ impl Geometry {
         )
     }
 
+    /// Whether some and whether all of its positions have Z, and the same for M: `[(any z, all z), (any m, all m)]`
+    /// (none of an empty geometry's).
+    pub fn dims_of_all(&self) -> [(bool, bool); 2] {
+        let mut c = Vec::new();
+        self.coords(&mut c);
+        let all = |f: fn(&Coord) -> bool| !c.is_empty() && c.iter().all(|p| f(p));
+        let any = |f: fn(&Coord) -> bool| c.iter().any(|p| f(p));
+        [
+            (any(|p| p.z.is_some()), all(|p| p.z.is_some())),
+            (any(|p| p.m.is_some()), all(|p| p.m.is_some())),
+        ]
+    }
+
     /// Its box (min x, min y, max x, max y) through its positions; arcs bulge past them, so for an arc the box of its
     /// points is a bound only when the arc's middle is one of them (as the spatial index's GDAL writes it too).
     pub fn bounds(&self) -> Option<[f64; 4]> {

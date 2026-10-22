@@ -22,7 +22,7 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{entity_bounds, entity_vertices};
 use kentos_geometry_core::geometry::is_empty_bounds;
 use kentos_geometry_core::ops::pin_match::{self, Found};
-use kentos_geopackage::{self as gpkg, DataType, Edits, GeoPackage, Geometry, Query, Value};
+use kentos_geopackage::{self as gpkg, DataType, GeoPackage, Geometry, Query, Value};
 use serde_json::json;
 
 use crate::ExecutionContext;
@@ -32,6 +32,7 @@ use crate::geopackage as gp;
 use crate::provider;
 
 mod base;
+mod database;
 mod merge;
 pub mod reconcile;
 pub mod relate;
@@ -942,6 +943,14 @@ fn diff_skipping(
                 continue;
             }
         };
+        // Z and M as the column takes them (docs/adr/0584 §2): the object is still a change the layer has, the write
+        // refuses it before anything is written.
+        if d.mismatch.is_none()
+            && let (Some(g), Some(col)) = (row.geometry.as_ref(), s.layer.geometry.as_ref())
+            && let Some(why) = gp::dims_problem(g, col.z, col.m)
+        {
+            d.mismatch = Some((uid, why));
+        }
         // A mapped reference's column keeps what the table holds (nothing, in a new row).
         for &i in &kept_cells {
             if let Some(cell) = row.values.get_mut(i) {
@@ -2524,18 +2533,16 @@ fn sync_run(
         .iter()
         .find(|s| s.layer == input.layer)
         .map(|s| s.kind);
-    // A GeoPackage is written through `together`, one layer or several, one transaction (docs/adr/0532 §1).
-    if input.direction == SyncDirection::Write && primary != Some(SourceKind::Postgis) {
+    // A write is one transaction, one layer or several: a GeoPackage's through `together` (docs/adr/0532 §1), a
+    // PostGIS database's through `database` (docs/adr/0584 §1).
+    if input.direction == SyncDirection::Write {
         let mut ids = vec![input.layer.clone()];
         ids.extend(input.with.iter().cloned());
-        return together::write(doc, &ids, write, input.topology);
-    }
-    if !input.with.is_empty() {
-        return Err(refuse(
-            codes::TRANSACTION_SPLIT,
-            "PostGIS kaynağı bir işlemde bir tablo yazar; birden çok katman birlikte yazılamaz. Katmanları ayrı ayrı yazın.",
-            "with",
-        ));
+        return if primary == Some(SourceKind::Postgis) {
+            database::write(doc, &ids, write, input.topology)
+        } else {
+            together::write(doc, &ids, write, input.topology)
+        };
     }
     let Some(mut link) = doc
         .settings()
@@ -2606,189 +2613,8 @@ fn sync_run(
     let mut stored = load_at(source, &link.table, at_one("layer"), area)?;
     stored.reachable(mover.as_ref());
     match input.direction {
-        SyncDirection::Write => {
-            if !link.writable || !stored.writable {
-                return Err(refuse(
-                    codes::SOURCE_READONLY,
-                    format!(
-                        "{} dosyasının “{}” tablosuna yazılamaz (salt okunur).",
-                        link.path, link.table
-                    ),
-                    "layer",
-                ));
-            }
-            // A database table is written row by row against the layer's base (docs/adr/0582 §2); a file, or a layer
-            // without a base, as a whole against its revision.
-            let rows_base = match source {
-                Origin::Database(_) => base::of(doc, &link),
-                Origin::File(_) => None,
-            };
-            if rows_base.is_none() && stored.sha256 != link.revision {
-                return Err(conflict(
-                    codes::SOURCE_CHANGED,
-                    format!(
-                        "{} katman onunla son eşleştiğinden beri değişti; üzerine yazılmadı. İki yanı cad.sources.reconcile ile uzlaştırın, tablodan okuyun (direction read) ya da dosyanın kopyasını bağlayın.",
-                        link.path
-                    ),
-                    "layer",
-                ));
-            }
-            let mut d = diff(doc, &link.layer, &stored, mover.as_ref());
-            let mut others = stored.sha256 != link.revision;
-            if let Some(b) = &rows_base {
-                others |= mine_only(doc, &link.layer, &stored, b, &mut d)?;
-            }
-            if let Some((uid, why)) = &d.mismatch {
-                return Err(refuse(
-                    codes::GEOMETRY_MISMATCH,
-                    format!("{uid} kimlikli nesne tabloya yazılamaz: {why}."),
-                    "layer",
-                ));
-            }
-            let mut warnings = Vec::new();
-            let mut losses = Vec::new();
-            if d.left > 0 {
-                losses.push(format!(
-                    "tablonun geometri tutmadığı {} nesne (yazı, ölçü …) yalnız çizimde kaldı",
-                    d.left
-                ));
-            }
-            if !d.lost.is_empty() {
-                losses.push(format!(
-                    "katmanın alanı olmayan öznitelikler yazılmadı ({}); Alanlar penceresinden alan yapın",
-                    d.lost.iter().cloned().collect::<Vec<_>>().join(", ")
-                ));
-            }
-            if !losses.is_empty() {
-                warnings.push(CommandWarning {
-                    code: codes::EXPORT_LOSSES.into(),
-                    message: format!("{}: {}.", link.table, losses.join("; ")),
-                    path: Some("layer".into()),
-                });
-            }
-            if others && rows_base.is_some() {
-                warnings.push(CommandWarning {
-                    code: codes::SOURCE_OTHERS.into(),
-                    message: format!(
-                        "“{}” tablosunda başka birinin değiştirdiği satırlar var; onlara dokunulmadı. Katmana almak için tablodan okuyun (direction read).",
-                        link.table
-                    ),
-                    path: Some("layer".into()),
-                });
-            }
-            let followed = match input.topology {
-                None => Followed::default(),
-                Some(profile) => {
-                    let mut columns = stored.layer.columns.clone();
-                    columns.extend(d.added_columns.iter().cloned());
-                    follow_outside(
-                        doc,
-                        &link,
-                        source,
-                        area,
-                        &stored,
-                        &columns,
-                        mover.as_ref(),
-                        profile,
-                    )?
-                }
-            };
-            if followed.left > 0 {
-                warnings.push(CommandWarning {
-                    code: codes::NEIGHBOURS_LEFT.into(),
-                    message: format!(
-                        "Alanın dışındaki {} komşu kayıt ortak köşeyi izleyince geçersiz kalacağı için olduğu gibi kaldı.",
-                        followed.left
-                    ),
-                    path: Some("topology".into()),
-                });
-            }
-            let mut out = SourcesSynced {
-                added: d.insert.len() as u32,
-                modified: d.update.len() as u32,
-                removed: d.delete.len() as u32,
-                columns: d.added_columns.iter().map(|c| c.name.clone()).collect(),
-                source: stored.sha256.clone(),
-                pins: None,
-                revision: doc.revision().to_string(),
-                layers: Vec::new(),
-                relations: Vec::new(),
-                followed: followed.rows.len() as u32,
-                left: followed.left,
-            };
-            if !write {
-                return Ok((out, warnings));
-            }
-            if !d.is_empty() || !d.added_columns.is_empty() || !followed.rows.is_empty() {
-                let mut update = d.update;
-                update.extend(followed.rows);
-                update.sort_by_key(|(fid, _)| *fid);
-                let edits = Edits {
-                    add_columns: d.added_columns,
-                    update,
-                    insert: d.insert,
-                    delete: d.delete,
-                };
-                match source {
-                    // A GeoPackage was written by `together` above.
-                    Origin::File(_) => {}
-                    // In one transaction, after checking under a lock that the table is still at the revision.
-                    Origin::Database(address) => {
-                        let p = database_provider("layer")?;
-                        let fid_uid: HashMap<i64, Uuid> =
-                            stored.rows.iter().map(|(u, (f, ..))| (*f, *u)).collect();
-                        let mut changed: Vec<Uuid> = Vec::new();
-                        let mut check = |layer: &gpkg::Layer, rows: &[gpkg::Row]| {
-                            let mut keys: Vec<i64> = edits.update.iter().map(|(f, _)| *f).collect();
-                            keys.extend(edits.delete.iter().copied());
-                            let bad = rows_changed(
-                                rows_base.as_ref(),
-                                layer,
-                                rows,
-                                &keys,
-                                &fid_uid,
-                                mover.as_ref(),
-                            );
-                            changed = bad.iter().filter_map(|f| fid_uid.get(f).copied()).collect();
-                            if bad.is_empty() { Ok(()) } else { Err(bad) }
-                        };
-                        let check: Option<&mut provider::RowCheck<'_>> = rows_base
-                            .is_some()
-                            .then_some(&mut check as &mut provider::RowCheck<'_>);
-                        let edited = p
-                            .edit(address, &link.table, area, &link.revision, check, &edits)
-                            .map_err(|e| match e {
-                                provider::ProviderError::RowsChanged(_) => conflict_on(
-                                    codes::SOURCE_CHANGED,
-                                    format!(
-                                        "“{}” tablosunun {} satırını, katman onlarla son eşleştiğinden beri başka biri değiştirdi; hiçbir şey yazılmadı. Tablodan okuyun (direction read) ya da o nesnelerdeki değişikliği bırakın.",
-                                        link.table,
-                                        changed.len()
-                                    ),
-                                    "layer",
-                                    &changed,
-                                ),
-                                e => provider_stop(e, address, at_one("layer")),
-                            })?;
-                        others |= edited.before != link.revision;
-                        // Someone else's rows in the area keep the link “changed” until a read takes them.
-                        if !others || rows_base.is_none() {
-                            link.revision = edited.after;
-                        }
-                    }
-                }
-            }
-            if let Origin::File(path) = source {
-                link.revision =
-                    file_sha(path).map_err(|why| refuse(codes::FILE_UNWRITABLE, why, "layer"))?;
-            }
-            link.digest = layer_digest(doc, &link.layer);
-            out.source = link.revision.clone();
-            set_link(doc, Some(link.clone()), None);
-            base::after_write(doc, &link);
-            out.revision = doc.revision().to_string();
-            Ok((out, warnings))
-        }
+        // Written above.
+        SyncDirection::Write => database::write(doc, &[link.layer], write, input.topology),
         SyncDirection::Read => {
             if input.topology.is_some() {
                 return Err(refuse(

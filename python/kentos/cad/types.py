@@ -42325,7 +42325,8 @@ class SourcesSync(_Model):
         discard: Reading: take the table's rows though the layer differs (one undo step brings the layer back).
         topology: Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners
             and edges follow in the same transaction. Reading refuses it (`topology_on_read`).
-        with_: Writing: more bound layers (by id) written in the same transaction.
+        with_: Writing: more bound layers (by id) written in the same transaction: of the same GeoPackage file or the same
+            PostGIS database (docs/adr/0532 §1, 0584 §1); layers of two sources are `transaction_split`.
     """
     layer: str
     direction: SyncDirection | SyncDirectionName

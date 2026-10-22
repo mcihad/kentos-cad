@@ -74,6 +74,15 @@ pub struct Edited {
     pub after: String,
 }
 
+/// One table's edits in a transaction of several (docs/adr/0584 §1): what [`TableProvider::edit`] takes for one.
+pub struct TableEdit<'a, 'c> {
+    pub table: &'a str,
+    pub area: Option<[f64; 4]>,
+    pub revision: &'a str,
+    pub check: Option<&'a mut RowCheck<'c>>,
+    pub edits: &'a gpkg::Edits,
+}
+
 /// A table's shape for a question (docs/adr/0581 §2): its definition (`indexed` when its geometry has a spatial
 /// index), its system and the lasting ids KentOS keeps for some of its rows.
 #[derive(Clone, Debug, PartialEq)]
@@ -121,9 +130,38 @@ pub trait TableProvider: Send + Sync {
         check: Option<&mut RowCheck<'_>>,
         edits: &gpkg::Edits,
     ) -> Result<Edited, ProviderError>;
+    /// Several tables of one database in one transaction (docs/adr/0584 §1): the tables locked in their names' order,
+    /// each checked and written as [`TableProvider::edit`] does; one refusal and nothing is written. The error names
+    /// the table (its index in `items`) that refused. A provider without transactions over tables writes one alone.
+    fn edit_many(
+        &self,
+        address: &str,
+        items: Vec<TableEdit<'_, '_>>,
+    ) -> Result<Vec<Edited>, (usize, ProviderError)> {
+        let mut items = items;
+        match items.len() {
+            1 => {
+                let Some(t) = items.pop() else {
+                    return Ok(Vec::new());
+                };
+                self.edit(address, t.table, t.area, t.revision, t.check, t.edits)
+                    .map(|e| vec![e])
+                    .map_err(|e| (0, e))
+            }
+            0 => Ok(Vec::new()),
+            _ => Err((
+                1,
+                ProviderError::Refused(
+                    "bu sağlayıcı birden çok tabloyu bir işlemde yazamaz".into(),
+                ),
+            )),
+        }
+    }
     /// The table's shape for a question.
     fn describe(&self, _address: &str, table: &str) -> Result<ProviderShape, ProviderError> {
-        Err(ProviderError::Refused(format!("{table}: bu sağlayıcı sorgulanamaz")))
+        Err(ProviderError::Refused(format!(
+            "{table}: bu sağlayıcı sorgulanamaz"
+        )))
     }
     /// The rows `s` asks for, handed to `f` a part at a time in key order; `f` returns false to stop. Returns how many
     /// rows the database handed over.
@@ -134,7 +172,9 @@ pub trait TableProvider: Send + Sync {
         _s: &ProviderScan<'_>,
         _f: &mut dyn FnMut(Vec<gpkg::Row>) -> bool,
     ) -> Result<u64, ProviderError> {
-        Err(ProviderError::Refused(format!("{table}: bu sağlayıcı sorgulanamaz")))
+        Err(ProviderError::Refused(format!(
+            "{table}: bu sağlayıcı sorgulanamaz"
+        )))
     }
 }
 

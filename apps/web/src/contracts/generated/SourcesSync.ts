@@ -32,7 +32,8 @@ layer: string, direction: SyncDirection,
  */
 discard?: boolean, 
 /**
- * Writing: more bound layers (by id) written in the same transaction.
+ * Writing: more bound layers (by id) written in the same transaction: of the same GeoPackage file or the same
+ * PostGIS database (docs/adr/0532 §1, 0584 §1); layers of two sources are `transaction_split`.
  */
 with?: Array<string>, 
 /**

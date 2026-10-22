@@ -853,26 +853,30 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
     silinir, katmanın tabloda olmayan alanları sütun olarak eklenir; mekânsal dizin
     kendi tetikleyicileriyle izler, tanımadığı tablolara dokunulmaz. Dosya katman onunla
     son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi
-    tablonun sütununa uymayan nesne geometry_mismatch; tablonun tutmadığı nesneler
-    (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır (export_losses). Yazma geri
-    alma adımı değildir: dosya yazılır. read: tablonun satırlarını katmana alır, tek
-    geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni
-    satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse
-    discard olmadan okunmaz (pending_changes, conflict). PostGIS tablosu da aynı
-    kurallarla, tek veritabanı işleminde yazılır: tablo yazarlara kilitlenir, sürümü
-    yeniden denetlenir, kalıcı kimlikler şemanın kentos_uids tablosunda; ulaşılamayan
-    veritabanı source_unreachable. with (yalnız write) başka bağlı katmanları aynı
-    işlemde yazar: üst kayıt ile alt kayıtları ya hep birlikte ya hiç (docs/adr/0532):
-    her katman önce denetlenir, biri reddedilirse (source_readonly, geometry_mismatch,
-    source_changed, relation_dangling) hiçbiri yazılmaz; katmanlar tek GeoPackage
-    dosyasında olmalıdır (transaction_split: ayrı dosya ya da bir tablo bir işlemde
-    yazan veritabanı); cevabın layers'ı her katmanın payı, relations'ı eşli ilişkilerin
-    eşleme satırlarıdır. cad.sources.relate ile eşlenen çoktan çoğa ilişki katmanlarıyla
-    birlikte yazılır: eşleme tablosunun satırları alt katmanın çok değerli alanını
-    izler, alan metin sütunu olarak yazılmaz; eşlenmemiş çoktan çoğa başvuru “; ” ile
-    birleşmiş metin olarak kalır ve relation_unmapped ile söylenir, dosyanın tanınmayan
-    temsilli ilişkisi metne çevrilmez. read eşli ilişkinin alanını eşleme satırlarından
-    doldurur. plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler.
+    tablonun sütununa uymayan nesne geometry_mismatch (Z ve M de: Z'yi yasaklayan sütuna
+    kotlu, isteyene kotsuz, hiçbirine kısmen kotlu nesne yazılmaz; M için de aynı,
+    docs/adr/0584 §2); tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan
+    öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya
+    yazılır. read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan
+    oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda
+    olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz
+    (pending_changes, conflict). PostGIS tablosu da aynı kurallarla, tek veritabanı
+    işleminde yazılır: tablo yazarlara kilitlenir, sürümü yeniden denetlenir, kalıcı
+    kimlikler şemanın kentos_uids tablosunda; ulaşılamayan veritabanı
+    source_unreachable. with (yalnız write) başka bağlı katmanları aynı işlemde yazar:
+    üst kayıt ile alt kayıtları ya hep birlikte ya hiç (docs/adr/0532): her katman önce
+    denetlenir, biri reddedilirse (source_readonly, geometry_mismatch, source_changed,
+    relation_dangling) hiçbiri yazılmaz; katmanlar tek GeoPackage dosyasında ya da tek
+    PostGIS veritabanında olmalıdır (docs/adr/0584 §1: veritabanında tablolar adlarının
+    sırasıyla kilitlenir, her birinin satırları tabanına karşı denetlenir; iki kaynağa
+    birden tek işlem olmaz, transaction_split); cevabın layers'ı her katmanın payı,
+    relations'ı eşli ilişkilerin eşleme satırlarıdır. cad.sources.relate ile eşlenen
+    çoktan çoğa ilişki katmanlarıyla birlikte yazılır: eşleme tablosunun satırları alt
+    katmanın çok değerli alanını izler, alan metin sütunu olarak yazılmaz; eşlenmemiş
+    çoktan çoğa başvuru “; ” ile birleşmiş metin olarak kalır ve relation_unmapped ile
+    söylenir, dosyanın tanınmayan temsilli ilişkisi metne çevrilmez. read eşli ilişkinin
+    alanını eşleme satırlarından doldurur. plan dosyayı okur, hiçbir şey yazmaz ve
+    sayıları söyler.
     """
     __slots__ = ()
     id = "cad.sources.sync"
@@ -902,26 +906,30 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
         tabloda olmayan alanları sütun olarak eklenir; mekânsal dizin kendi
         tetikleyicileriyle izler, tanımadığı tablolara dokunulmaz. Dosya katman onunla son
         eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi
-        tablonun sütununa uymayan nesne geometry_mismatch; tablonun tutmadığı nesneler
-        (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır (export_losses). Yazma geri
-        alma adımı değildir: dosya yazılır. read: tablonun satırlarını katmana alır, tek
-        geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni
-        satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse
-        discard olmadan okunmaz (pending_changes, conflict). PostGIS tablosu da aynı
-        kurallarla, tek veritabanı işleminde yazılır: tablo yazarlara kilitlenir, sürümü
-        yeniden denetlenir, kalıcı kimlikler şemanın kentos_uids tablosunda; ulaşılamayan
-        veritabanı source_unreachable. with (yalnız write) başka bağlı katmanları aynı
-        işlemde yazar: üst kayıt ile alt kayıtları ya hep birlikte ya hiç (docs/adr/0532):
-        her katman önce denetlenir, biri reddedilirse (source_readonly, geometry_mismatch,
-        source_changed, relation_dangling) hiçbiri yazılmaz; katmanlar tek GeoPackage
-        dosyasında olmalıdır (transaction_split: ayrı dosya ya da bir tablo bir işlemde
-        yazan veritabanı); cevabın layers'ı her katmanın payı, relations'ı eşli ilişkilerin
-        eşleme satırlarıdır. cad.sources.relate ile eşlenen çoktan çoğa ilişki katmanlarıyla
-        birlikte yazılır: eşleme tablosunun satırları alt katmanın çok değerli alanını
-        izler, alan metin sütunu olarak yazılmaz; eşlenmemiş çoktan çoğa başvuru “; ” ile
-        birleşmiş metin olarak kalır ve relation_unmapped ile söylenir, dosyanın tanınmayan
-        temsilli ilişkisi metne çevrilmez. read eşli ilişkinin alanını eşleme satırlarından
-        doldurur. plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler.
+        tablonun sütununa uymayan nesne geometry_mismatch (Z ve M de: Z'yi yasaklayan sütuna
+        kotlu, isteyene kotsuz, hiçbirine kısmen kotlu nesne yazılmaz; M için de aynı,
+        docs/adr/0584 §2); tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan
+        öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya
+        yazılır. read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan
+        oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda
+        olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz
+        (pending_changes, conflict). PostGIS tablosu da aynı kurallarla, tek veritabanı
+        işleminde yazılır: tablo yazarlara kilitlenir, sürümü yeniden denetlenir, kalıcı
+        kimlikler şemanın kentos_uids tablosunda; ulaşılamayan veritabanı
+        source_unreachable. with (yalnız write) başka bağlı katmanları aynı işlemde yazar:
+        üst kayıt ile alt kayıtları ya hep birlikte ya hiç (docs/adr/0532): her katman önce
+        denetlenir, biri reddedilirse (source_readonly, geometry_mismatch, source_changed,
+        relation_dangling) hiçbiri yazılmaz; katmanlar tek GeoPackage dosyasında ya da tek
+        PostGIS veritabanında olmalıdır (docs/adr/0584 §1: veritabanında tablolar adlarının
+        sırasıyla kilitlenir, her birinin satırları tabanına karşı denetlenir; iki kaynağa
+        birden tek işlem olmaz, transaction_split); cevabın layers'ı her katmanın payı,
+        relations'ı eşli ilişkilerin eşleme satırlarıdır. cad.sources.relate ile eşlenen
+        çoktan çoğa ilişki katmanlarıyla birlikte yazılır: eşleme tablosunun satırları alt
+        katmanın çok değerli alanını izler, alan metin sütunu olarak yazılmaz; eşlenmemiş
+        çoktan çoğa başvuru “; ” ile birleşmiş metin olarak kalır ve relation_unmapped ile
+        söylenir, dosyanın tanınmayan temsilli ilişkisi metne çevrilmez. read eşli ilişkinin
+        alanını eşleme satırlarından doldurur. plan dosyayı okur, hiçbir şey yazmaz ve
+        sayıları söyler.
 
         Args:
             doc: The drawing it works on.
@@ -930,7 +938,8 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
             discard: Reading: take the table's rows though the layer differs (one undo step brings the layer back).
             topology: Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners
                 and edges follow in the same transaction. Reading refuses it (`topology_on_read`).
-            with_: Writing: more bound layers (by id) written in the same transaction.
+            with_: Writing: more bound layers (by id) written in the same transaction: of the same GeoPackage file or the same
+                PostGIS database (docs/adr/0532 §1, 0584 §1); layers of two sources are `transaction_split`.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's

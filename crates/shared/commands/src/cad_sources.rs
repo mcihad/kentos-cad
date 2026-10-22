@@ -491,7 +491,8 @@ pub struct SourcesSync {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub discard: bool,
-    /// Writing: more bound layers (by id) written in the same transaction.
+    /// Writing: more bound layers (by id) written in the same transaction: of the same GeoPackage file or the same
+    /// PostGIS database (docs/adr/0532 §1, 0584 §1); layers of two sources are `transaction_split`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub with: Vec<String>,
