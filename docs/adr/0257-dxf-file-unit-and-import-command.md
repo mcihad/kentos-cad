@@ -83,6 +83,11 @@ Uyarıların sözleri (`UnitDecision::warnings`; `path` `fileUnit`):
 
 ### 2. Blok birimi
 
+> 22 Ekim 2026: Aşağıdaki ilk uygulamanın bütün tanımları dosyanın birimiyle çevirme kuralı
+> [ADR 0589](0589-cad-paper-frames-and-block-units.md) ile değişti. Tanımlar kendi açık birimleriyle
+> normalize edilir; INSERT X/Y ölçekleri sahibi/hedef oranıyla telafi edilerek mevcut dünya boyu korunur.
+> `block_units_differ` artık bu davranışı bildirir. Eski kural aşağıda tarihsel gerekçe olarak durur.
+
 `BLOCK_RECORD`'un 70. grubu okunur. AutoCAD bir bloğu başka birimdeki çizime eklerken birimlerin oranını yerleştirmenin ölçeğine
 yazar; dosyadaki yerleştirmenin ölçeği bu oranı içerir. Bu yüzden:
 

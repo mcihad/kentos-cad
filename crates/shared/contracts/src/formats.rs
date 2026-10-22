@@ -1173,7 +1173,7 @@ impl UnitDecision {
             out.push((
                 crate::codes::BLOCK_UNITS_DIFFER,
                 format!(
-                    "Bazı blokların birimi dosyanınkinden başka: {}. Yerleştirmelerin ölçeği bu oranı taşır; bloklar ayrıca ölçeklenmedi.",
+                    "Bazı blokların birimi dosyanınkinden başka: {}. Bloklar kendi birimleriyle metreye çevrildi; mevcut yerleştirmelerin boyu korundu.",
                     listed.join(", ")
                 ),
             ));

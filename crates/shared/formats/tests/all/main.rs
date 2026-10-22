@@ -5,6 +5,7 @@
 mod coords;
 mod dxf;
 mod cad_io;
+mod cad_sheet;
 mod dxf_units;
 mod exif;
 mod field_csv;

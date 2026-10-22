@@ -9,8 +9,8 @@ expectations from the ADR's rule, without KentOS code:
 - a file that declares none, or a code AutoCAD does not define: the numbers are not scaled, the project's unit
   (metres with a system) is taken and said (`unit_assumed`);
 - a block whose record names another unit than the file's is said (`block_units_differ`), AutoCAD's own blocks
-  (`*Model_Space`, `*Paper_Space`, a dimension's `*D…`) aside; its objects are in the file's unit, its inserts' scale
-  holds the ratio;
+  (`*Model_Space`, `*Paper_Space`, a dimension's `*D…`) aside; its objects use its own declared unit and insert
+  factors compensate the change, keeping existing world geometry (ADR 0589);
 - a length in a unit is turned into metres with the unit's exact ratio: ×1000 ÷ 1 000 000 is not used, one whole
   factor or $INSUNITS's fraction (an inch ×254 ÷10000, a US survey foot ×1200 ÷3937), one float64 multiplication then
   one division, as the reader turns a typed value into metres.
@@ -145,16 +145,17 @@ FILES = {
 }
 
 
-def room(unit: int):
+def room(unit: int, block_unit: int | None = None):
     """The room's measures in metres when its numbers are in the unit of $INSUNITS code `unit`."""
     k = lambda v: metres(v, unit)
+    own = unit if block_unit is None else block_unit
     return {
         "line": [[k(0.0), k(0.0)], [k(4000.0), k(0.0)]],
         "circle": {"c": [k(1000.0), k(500.0)], "r": k(250.0)},
         "text": {"p": [k(100.0), k(3000.0)], "height": k(250.0)},
         "mtext": {"p": [k(100.0), k(2500.0)], "height": k(200.0), "boxWidth": k(3000.0)},
-        "insert": {"p": [k(1000.0), k(0.0)], "scale": 1.0},
-        "block": {"KAPI": [[k(0.0), k(0.0)], [k(900.0), k(0.0)]]},
+        "insert": {"p": [k(1000.0), k(0.0)], "scale": factor(unit) / factor(own)},
+        "block": {"KAPI": [[0.0, 0.0], [metres(900.0, own), 0.0]]},
     }
 
 
@@ -194,7 +195,7 @@ def expect(file: str, project: str, file_unit: str | None):
         unit["blocks"] = differ
     out = {"unit": unit, "warnings": warnings}
     if file in ("mm.dxf", "unitless.dxf", "no-header.dxf", "unknown-code.dxf"):
-        out["room"] = room(used)
+        out["room"] = room(used, 4 if file == "mm.dxf" else None)
     elif file == "inches.dxf":
         out["line"] = [[0.0, 0.0], [metres(100.0, used), 0.0]]
         out["circle"] = {"c": [metres(10.0, used), metres(10.0, used)], "r": metres(5.0, used)}
@@ -202,8 +203,8 @@ def expect(file: str, project: str, file_unit: str | None):
         out["line"] = [[0.0, 0.0], [metres(3937.0, used), 0.0]]
     elif file == "block-units.dxf":
         out["line"] = [[0.0, 0.0], [metres(12.5, used), 0.0]]
-        out["insert"] = {"p": [metres(5.0, used), metres(5.0, used)], "scale": 0.001}
-        out["block"] = {"PANO": [[metres(0.0, used), 0.0], [metres(900.0, used), 0.0]]}
+        out["insert"] = {"p": [metres(5.0, used), metres(5.0, used)], "scale": factor(used)}
+        out["block"] = {"PANO": [[0.0, 0.0], [0.9, 0.0]]}
     elif file == "micrometres.dxf":
         out["line"] = [[0.0, 0.0], [metres(2_500_000.0, used), 0.0]]
     return out

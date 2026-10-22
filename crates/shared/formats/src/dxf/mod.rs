@@ -14,6 +14,7 @@
 //! what a KentOS export could not say in DXF.
 
 pub mod aci;
+mod block_units;
 mod dimension;
 mod diagnostics;
 mod emit;
@@ -128,7 +129,8 @@ fn units_name(u: i64) -> &'static str {
 ///
 /// `records` are the block records' units (BLOCK_RECORD's group 70, docs/adr/0257
 /// §2): those other than the file's are listed; an insert's scale holds the
-/// ratio, so a block is scaled with the drawing alone.
+/// ratio. Definitions are normalised in their own units and insert factors
+/// compensated, preserving the source drawing while making blocks reusable.
 fn decide_units(
     declared: Option<i64>,
     opts: &DxfReadOptions,
@@ -219,7 +221,7 @@ fn decide_units(
         report.about(
             "Blok birimi",
             &format!(
-                "{}: bloğun birimi dosyanınkinden başka; yerleştirmelerin ölçeği oranı taşır, blok ayrıca ölçeklenmedi",
+                "{}: blok kendi birimiyle metreye çevrildi; mevcut yerleştirmelerin boyu ölçek oranı düzeltilerek korundu",
                 listed.join(", ")
             ),
         );
@@ -976,17 +978,9 @@ fn read_once(
             _ => None,
         };
     }
-    if !scale.is_one() {
-        // The drawing in metres: every object, every definition, the extent (docs/adr/0165 §2).
-        for e in &mut out.entities {
-            units::entity(e, scale);
-        }
-        for b in &mut blocks {
-            units::block(b, scale);
-        }
-        if let Some(b) = &mut out.bounds {
-            units::bounds(b, scale);
-        }
+    block_units::normalize(&mut out.entities, &mut blocks, scale, &lib.block_units);
+    if !scale.is_one() && let Some(b) = &mut out.bounds {
+        units::bounds(b, scale);
     }
     // The styles the objects follow (docs/adr/0183 §7): their sizes paper mm at the project's scale.
     let plot = opts

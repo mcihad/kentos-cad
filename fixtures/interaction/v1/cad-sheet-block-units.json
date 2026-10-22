@@ -1,0 +1,21 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "cad-sheet-block-units",
+  "title": "Dosyanın birimini değiştirmek blok tanımının gerçek boyunu değiştirmez",
+  "source": "docs/adr/0589",
+  "covers": ["CAD-BLOCK-04"],
+  "document": "exchange.kcad",
+  "view": {"center": [487000, 4420000], "metresPerPixel": 0.125},
+  "clickTolerance": 0.2,
+  "openFile": "../../formats/v1/cad-sheet/units-25.dxf",
+  "steps": [
+    {"run": "file.import.dxf", "expect": {"dialog": "DXF içe aktar"}},
+    {"shot": "dosyaya-gore"},
+    {"dialog": "DXF içe aktar", "pick": {"Dosyanın birimi": "Santimetre (cm)"}},
+    {"shot": "santimetre"},
+    {"dialog": "DXF içe aktar", "press": "İçe aktar", "expect": {"entities": 6}},
+    {"shot": "alindi"},
+    {"key": "Ctrl+Z", "expect": {"entities": 4}}
+  ]
+}

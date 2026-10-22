@@ -8,6 +8,7 @@ mod gpkg_tiles_files;
 mod profile_files;
 mod break_join_ties;
 mod capabilities;
+mod cad_sheet;
 mod catalog;
 mod change_effects;
 mod cleanup_cmd;

@@ -61,3 +61,7 @@ DXF yazma: ASCII AC1021, UTF-8; hedef DWG bunun üzerinden açıkça seçilen ye
 - Diğer Rust hedefleri için derleme kontrolü ve CI işi, runtime denemesi yerine geçmez. İlan edilen sağlayıcı platformu ile KentOS'ta çalıştırılan platform ayrı tutulur.
 - UI klavye/fare, açık/koyu tema ve yazı ölçeği kendi kabul kaydıyla doğrulanır. Arayüz eklenmesi tek başına kabul değildir.
 - CAD-IO-20, 22 Ekim'de kullanıcının açık isteğiyle kapsam dışında bırakıldı; AutoCAD kontrolü yapılmış sayılmaz.
+
+## Kâğıt çizgileri ve blok birimleri (22 Ekim 2026)
+
+Yatay/düşey ve 1 mm altı çizgi/poligonun pafta seçme çerçevesi geometri büyütülmeden tamamlanır. Blok tanımları kendi açık birimleriyle metreye çevrilir; mevcut ve iç içe INSERT X/Y faktörleri telafi edilerek dünya geometrisi korunur. Dosyanın birimini seçmek, birimli blok tanımını ikinci kez büyütmez. Kaynağın yanlış `$INSUNITS` bildirimi tahminle düzeltilmez; açık dosya birimi seçilir. [ADR 0589](../adr/0589-cad-paper-frames-and-block-units.md) sınırları ve 20 kâğıt / 28 birim örneğini belgeler.

@@ -541,7 +541,7 @@
                   "x": 1000.0,
                   "y": 0.0
                 },
-                "scale": 1.0
+                "scale": 1000.0
               }
             },
             "revision": "changed",
@@ -1942,7 +1942,7 @@
               {
                 "code": "block_units_differ",
                 "path": "fileUnit",
-                "message": "Bazı blokların birimi dosyanınkinden başka: PANO (milimetre). Yerleştirmelerin ölçeği bu oranı taşır; bloklar ayrıca ölçeklenmedi."
+                "message": "Bazı blokların birimi dosyanınkinden başka: PANO (milimetre). Bloklar kendi birimleriyle metreye çevrildi; mevcut yerleştirmelerin boyu korundu."
               }
             ]
           },
@@ -1973,7 +1973,7 @@
                   "x": 5.0,
                   "y": 5.0
                 },
-                "scale": 0.001
+                "scale": 1.0
               }
             },
             "revision": "changed",

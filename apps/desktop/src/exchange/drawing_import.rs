@@ -1472,6 +1472,15 @@ impl State {
             Control::Press("Vazgeç") => Ok(Some(event(Event::Cancel))),
             Control::Press("İçe aktar") => Ok(Some(event(Event::Run))),
             Control::Check("Raporlanan çoklu çizgi kaybını kabul et", checked) => Ok((self.allow_polyline_loss != checked).then(|| event(Event::AllowPolylineLoss))),
+            Control::Pick(FILE_UNIT, value) => {
+                let unit = if value.starts_with("Dosyaya göre") {
+                    None
+                } else {
+                    Some(FileUnit::ALL.iter().copied().find(|u| unit_label(*u) == value)
+                        .ok_or_else(|| format!("Dosyanın birimi: “{value}” seçeneği yok"))?)
+                };
+                Ok((self.file_unit != unit).then(|| event(Event::FileUnit(unit))))
+            }
             _ => Err(format!("{}: {control} denetimi yok", self.trace_title())),
         }
     }

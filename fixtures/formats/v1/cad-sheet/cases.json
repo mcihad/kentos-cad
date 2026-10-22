@@ -1,0 +1,1345 @@
+{
+  "format": "kentos.cad-sheet-cases",
+  "version": 1,
+  "note": "Independent physical coordinates; scripts/fixtures/cad_sheet_cases.py, ADR 0589.",
+  "units": [
+    {
+      "file": "units-00.dxf",
+      "drawing": "mm",
+      "child": "mm",
+      "parent": "cm",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-01.dxf",
+      "drawing": "mm",
+      "child": "cm",
+      "parent": "m",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-02.dxf",
+      "drawing": "mm",
+      "child": "m",
+      "parent": "in",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-03.dxf",
+      "drawing": "mm",
+      "child": "in",
+      "parent": "ft",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-04.dxf",
+      "drawing": "mm",
+      "child": "ft",
+      "parent": "mm",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-05.dxf",
+      "drawing": "cm",
+      "child": "mm",
+      "parent": "cm",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-06.dxf",
+      "drawing": "cm",
+      "child": "cm",
+      "parent": "m",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-07.dxf",
+      "drawing": "cm",
+      "child": "m",
+      "parent": "in",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-08.dxf",
+      "drawing": "cm",
+      "child": "in",
+      "parent": "ft",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-09.dxf",
+      "drawing": "cm",
+      "child": "ft",
+      "parent": "mm",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-10.dxf",
+      "drawing": "m",
+      "child": "mm",
+      "parent": "cm",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-11.dxf",
+      "drawing": "m",
+      "child": "cm",
+      "parent": "m",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-12.dxf",
+      "drawing": "m",
+      "child": "m",
+      "parent": "in",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-13.dxf",
+      "drawing": "m",
+      "child": "in",
+      "parent": "ft",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-14.dxf",
+      "drawing": "m",
+      "child": "ft",
+      "parent": "mm",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-15.dxf",
+      "drawing": "in",
+      "child": "mm",
+      "parent": "cm",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-16.dxf",
+      "drawing": "in",
+      "child": "cm",
+      "parent": "m",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-17.dxf",
+      "drawing": "in",
+      "child": "m",
+      "parent": "in",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-18.dxf",
+      "drawing": "in",
+      "child": "in",
+      "parent": "ft",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-19.dxf",
+      "drawing": "in",
+      "child": "ft",
+      "parent": "mm",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-20.dxf",
+      "drawing": "ft",
+      "child": "mm",
+      "parent": "cm",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-21.dxf",
+      "drawing": "ft",
+      "child": "cm",
+      "parent": "m",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-22.dxf",
+      "drawing": "ft",
+      "child": "m",
+      "parent": "in",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-23.dxf",
+      "drawing": "ft",
+      "child": "in",
+      "parent": "ft",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-24.dxf",
+      "drawing": "ft",
+      "child": "ft",
+      "parent": "mm",
+      "fileUnit": null,
+      "multiplier": 1.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          10.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.1
+        ]
+      ],
+      "nested": [
+        [
+          13.0,
+          24.0
+        ],
+        [
+          15.0,
+          26.1
+        ]
+      ]
+    },
+    {
+      "file": "units-25.dxf",
+      "drawing": "mm",
+      "child": "mm",
+      "parent": "cm",
+      "fileUnit": "cm",
+      "multiplier": 10.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          100.0,
+          200.0
+        ],
+        [
+          120.0,
+          221.0
+        ]
+      ],
+      "nested": [
+        [
+          130.0,
+          240.0
+        ],
+        [
+          150.0,
+          261.0
+        ]
+      ]
+    },
+    {
+      "file": "units-26.dxf",
+      "drawing": "mm",
+      "child": "in",
+      "parent": "m",
+      "fileUnit": "cm",
+      "multiplier": 10.0,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          100.0,
+          200.0
+        ],
+        [
+          120.0,
+          221.0
+        ]
+      ],
+      "nested": [
+        [
+          130.0,
+          240.0
+        ],
+        [
+          150.0,
+          261.0
+        ]
+      ]
+    },
+    {
+      "file": "units-27.dxf",
+      "drawing": "m",
+      "child": "ft",
+      "parent": "in",
+      "fileUnit": "mm",
+      "multiplier": 0.001,
+      "childBase": [
+        0.25,
+        0.5
+      ],
+      "childEnd": [
+        2.25,
+        1.55
+      ],
+      "direct": [
+        [
+          0.01,
+          0.02
+        ],
+        [
+          0.012,
+          0.0221
+        ]
+      ],
+      "nested": [
+        [
+          0.013,
+          0.024
+        ],
+        [
+          0.015,
+          0.0261
+        ]
+      ]
+    }
+  ],
+  "paper": [
+    {
+      "id": "paper-00",
+      "kind": "line",
+      "pointsUm": [
+        [
+          10000,
+          20000
+        ],
+        [
+          30000,
+          20000
+        ]
+      ]
+    },
+    {
+      "id": "paper-01",
+      "kind": "line",
+      "pointsUm": [
+        [
+          30000,
+          20000
+        ],
+        [
+          10000,
+          20000
+        ]
+      ]
+    },
+    {
+      "id": "paper-02",
+      "kind": "line",
+      "pointsUm": [
+        [
+          10000,
+          20000
+        ],
+        [
+          10000,
+          40000
+        ]
+      ]
+    },
+    {
+      "id": "paper-03",
+      "kind": "line",
+      "pointsUm": [
+        [
+          10000,
+          40000
+        ],
+        [
+          10000,
+          20000
+        ]
+      ]
+    },
+    {
+      "id": "paper-04",
+      "kind": "line",
+      "pointsUm": [
+        [
+          0,
+          0
+        ],
+        [
+          500,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "paper-05",
+      "kind": "line",
+      "pointsUm": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          500
+        ]
+      ]
+    },
+    {
+      "id": "paper-06",
+      "kind": "line",
+      "pointsUm": [
+        [
+          0,
+          0
+        ],
+        [
+          500,
+          500
+        ]
+      ]
+    },
+    {
+      "id": "paper-07",
+      "kind": "line",
+      "pointsUm": [
+        [
+          -1000,
+          -1000
+        ],
+        [
+          -501,
+          -999
+        ]
+      ]
+    },
+    {
+      "id": "paper-08",
+      "kind": "line",
+      "pointsUm": [
+        [
+          10000,
+          20000
+        ],
+        [
+          10001,
+          40000
+        ]
+      ]
+    },
+    {
+      "id": "paper-09",
+      "kind": "line",
+      "pointsUm": [
+        [
+          10000,
+          20000
+        ],
+        [
+          30000,
+          20001
+        ]
+      ]
+    },
+    {
+      "id": "paper-10",
+      "kind": "polyline",
+      "pointsUm": [
+        [
+          0,
+          0
+        ],
+        [
+          500,
+          0
+        ],
+        [
+          999,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "paper-11",
+      "kind": "polyline",
+      "pointsUm": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          500
+        ],
+        [
+          1,
+          999
+        ]
+      ]
+    },
+    {
+      "id": "paper-12",
+      "kind": "polyline",
+      "pointsUm": [
+        [
+          0,
+          0
+        ],
+        [
+          1000,
+          0
+        ],
+        [
+          2000,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "paper-13",
+      "kind": "polyline",
+      "pointsUm": [
+        [
+          0,
+          2000
+        ],
+        [
+          0,
+          1000
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "paper-14",
+      "kind": "polygon",
+      "pointsUm": [
+        [
+          0,
+          0
+        ],
+        [
+          20000,
+          0
+        ],
+        [
+          20000,
+          100
+        ],
+        [
+          0,
+          100
+        ]
+      ]
+    },
+    {
+      "id": "paper-15",
+      "kind": "polygon",
+      "pointsUm": [
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          0
+        ],
+        [
+          100,
+          20000
+        ],
+        [
+          0,
+          20000
+        ]
+      ]
+    },
+    {
+      "id": "paper-16",
+      "kind": "polygon",
+      "pointsUm": [
+        [
+          10000,
+          10000
+        ],
+        [
+          10500,
+          10000
+        ],
+        [
+          10500,
+          10500
+        ],
+        [
+          10000,
+          10500
+        ]
+      ]
+    },
+    {
+      "id": "paper-17",
+      "kind": "polygon",
+      "pointsUm": [
+        [
+          -1000,
+          -1000
+        ],
+        [
+          -1,
+          -1000
+        ],
+        [
+          -1,
+          -500
+        ]
+      ]
+    },
+    {
+      "id": "paper-18",
+      "kind": "polyline",
+      "pointsUm": [
+        [
+          0,
+          0
+        ],
+        [
+          999,
+          999
+        ],
+        [
+          1,
+          998
+        ]
+      ]
+    },
+    {
+      "id": "paper-19",
+      "kind": "line",
+      "pointsUm": [
+        [
+          1000,
+          1000
+        ],
+        [
+          2000,
+          2000
+        ]
+      ]
+    }
+  ]
+}

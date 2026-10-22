@@ -1134,6 +1134,7 @@ impl<'a> Player<'a> {
             .collect();
         let checks = step.check.iter().flat_map(|c| c.0.iter());
         controls.extend(checks.map(|(words, on)| Control::Check(words, *on)));
+        controls.extend(step.pick.iter().flat_map(|p| p.0.iter()).map(|(name, item)| Control::Pick(name, item)));
         controls.extend(step.press.as_deref().map(Control::Press));
         for control in controls {
             if let Some(message) = self.app.dialog_control(control)? {

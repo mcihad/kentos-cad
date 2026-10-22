@@ -225,11 +225,14 @@ fn paper_item(e: &Entity, height_mm: f64) -> Option<Item> {
     }
     let left = pts.iter().map(|p| um(p.x)).min()?;
     let top = pts.iter().map(|p| um(y(p.y))).min()?;
+    // The designer needs a selectable frame of at least 1 mm on each side.
+    // Pad that frame, then encode the original points inside it: stretching
+    // a horizontal/vertical/short CAD line would change its physical length.
     let width = (i64::from(pts.iter().map(|p| um(p.x)).max()?) - i64::from(left))
-        .max(1)
+        .max(i64::from(kentos_sheet::validate::ITEM_MIN))
         .min(i32::MAX as i64) as i32;
     let height = (i64::from(pts.iter().map(|p| um(y(p.y))).max()?) - i64::from(top))
-        .max(1)
+        .max(i64::from(kentos_sheet::validate::ITEM_MIN))
         .min(i32::MAX as i64) as i32;
     let relative: Vec<_> = pts
         .iter()

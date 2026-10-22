@@ -185,8 +185,8 @@ def decision(rel: str, project: str, file_unit: str | None) -> tuple[dict, list]
     if differ:
         listed = ", ".join(f"{b['name']} ({units.AUTOCAD.get(b['code'], (None, 'bilinmeyen birim'))[1]})" for b in differ)
         warnings.append({"code": "block_units_differ", "path": "fileUnit", "message":
-                         f"Bazı blokların birimi dosyanınkinden başka: {listed}. Yerleştirmelerin ölçeği bu oranı taşır; "
-                         "bloklar ayrıca ölçeklenmedi."})
+                         f"Bazı blokların birimi dosyanınkinden başka: {listed}. Bloklar kendi birimleriyle metreye çevrildi; "
+                         "mevcut yerleştirmelerin boyu korundu."})
     return out, warnings
 
 
@@ -211,7 +211,7 @@ def objects(rel: str, used: int, target: str, explode: bool, block: str, lines: 
         # Exploded, the door's line (on the block's layer 0) is on the insert's layer, placed by it.
         out["6"] = (line(1000.0, 0.0, 1900.0, 0.0) if explode else
                     {"kind": "insert", "layerId": target, "block": f"$blockOf:{block}", "p": p(k(1000.0), k(0.0)),
-                     "scale": 1.0})
+                     "scale": units.factor(used) / units.factor(4) if name == "mm.dxf" else 1.0})
         return out
     if name == "inches.dxf":
         return {"2": line(0.0, 0.0, 100.0, 0.0),
@@ -220,7 +220,7 @@ def objects(rel: str, used: int, target: str, explode: bool, block: str, lines: 
         return {"2": line(0.0, 0.0, 3937.0, 0.0)}
     if name == "block-units.dxf":
         return {"2": line(0.0, 0.0, 12.5, 0.0),
-                "3": {"kind": "insert", "layerId": target, "block": "$blockOf:PANO", "p": p(k(5.0), k(5.0)), "scale": 0.001}}
+                "3": {"kind": "insert", "layerId": target, "block": "$blockOf:PANO", "p": p(k(5.0), k(5.0)), "scale": units.factor(used)}}
     if name == "micrometres.dxf":
         return {"2": line(0.0, 0.0, 2_500_000.0, 0.0)}
     if name == "losses.dxf":

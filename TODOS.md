@@ -52,6 +52,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
 - CAD-IO 2B pafta/viewport, xref ve zengin kayıp raporu: shared sözleşmeler hazır; masaüstü/headless kabulü ADR 0587, web penceresi/işleyicisi web yeniden başladığında eklenecek.
+- CAD-SHEET kâğıt çizgisinin geometriden ayrı seçme çerçevesi ve DXF/DWG bloklarının kendi birimleriyle normalizasyonu ortak/native yolda düzeltildi (ADR 0589). Web'in kendi içe aktarma belge/pafta işleyicisi ve ortak fixture beklentileri web yeniden açıldığında uyarlanacak; web kabulü yapılmış sayılmaz.
 - DWG içe/dışa aktarma: `file.import.dwg` / `file.export.dwg` masaüstü ve başsız yolda; web işleyicisi, dosya penceresi ve WASM bağlayıcısı web yeniden başladığında eklenecek (ADR 0586).
 
 Web'in son hâli `1aad00d0`'dır (12 Ekim 2026). Bu liste web'e dönüşün planıdır. Şunlar buraya bir satır yazar:
