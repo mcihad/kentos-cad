@@ -776,3 +776,70 @@ fn twenty_agent_viewport_queries_return_source_uids_and_ignore_clipped_snap_poin
     }
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn an_agent_creates_a_six_page_architectural_set_and_exports_each_shared_master_at_its_page_size()
+ {
+    let data: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/multipage-sets.json"
+    ))
+    .unwrap();
+    let c = &data["cases"][8];
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-sheet17-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let source = dir.join("source.kcad");
+    std::fs::write(&source, serde_json::to_vec(&c["model"]).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    let ops = c["book"]["masters"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|m| json!({"op":"addMaster","master":m}))
+        .chain(
+            c["book"]["sheets"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|s| json!({"op":"addSheet","sheet":s})),
+        )
+        .collect::<Vec<_>>();
+    call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":ops}),
+    );
+    let path = dir.join("set.pdf");
+    call(
+        &mut server,
+        "drawing.exportPdf",
+        json!({"drawing":drawing,"path":path}),
+    );
+    let read = std::process::Command::new("pdftotext")
+        .args(["-layout"])
+        .arg(&path)
+        .arg("-")
+        .output()
+        .unwrap();
+    assert!(read.status.success());
+    let text = String::from_utf8(read.stdout).unwrap();
+    let pages = text.split('\u{c}').collect::<Vec<_>>();
+    assert!(!pages[0].contains("FAR"));
+    for (i, word) in [
+        (1, "FAR"),
+        (2, "PLAN"),
+        (3, "ELEV"),
+        (4, "SECT"),
+        (5, "DETAIL"),
+    ] {
+        assert!(pages[i].contains(word), "page {} {text}", i + 1);
+    }
+    let set = call(
+        &mut server,
+        "cad.sheets.set",
+        json!({"drawing":drawing,"details":true}),
+    );
+    assert_eq!(set["output"]["sheets"].as_array().unwrap().len(), 6);
+    std::fs::remove_dir_all(dir).unwrap();
+}

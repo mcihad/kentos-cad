@@ -206,7 +206,7 @@ impl Designer {
                 let Prim::Map(m) = p else {
                     continue;
                 };
-                if m.view.center.is_none() || maps.iter().any(|x| x.item == m.item) {
+                if m.view.center.is_none() || maps.iter().any(|x| x.item == m.item && x.sheet.as_ref()==Some(id)) {
                     continue;
                 }
                 // At the paper's own size: a millimetre is 96/25.4 pixels.
@@ -223,6 +223,7 @@ impl Designer {
                     }),
                 };
                 maps.push(PdfMap {
+                    sheet:Some(id.clone()),
                     item: m.item.clone(),
                     content,
                     corners: None,

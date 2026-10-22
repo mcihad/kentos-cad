@@ -138,8 +138,8 @@ pub fn list(catalog: &Value) -> Vec<Value> {
             "Paftaları PDF olarak yaz",
             "Projenin pafta kitabını PDF olarak yazar: verilen paftalar (yoksa hepsi, kitabın sırasıyla), her biri \
              bir sayfa; öğeleriyle, haritalar ölçeklerinde katmanların çizgileri, alanları ve taramalarıyla; \
-             sistemi TM olan projede GeoPDF. Başsız çıktının yazamadıkları (haritaların yazıları) cevabın \
-             notes'unda, çekirdeğin bulguları findings'tedir. Pafta cad.sheets.edit ile eklenir.",
+             sistemi TM olan projede GeoPDF. Resme dönüştürülen haritalar ve kaynak sınırları cevabın \
+             notes'unda, ön denetim bulguları findings'tedir. Pafta cad.sheets.edit ile eklenir.",
             object(
                 json!({
                     "drawing": drawing_arg(),

@@ -69,6 +69,7 @@ fn inputs_for(book: &SheetBook) -> PdfInputs {
         .iter()
         .filter_map(|p| match p {
             Prim::Map(m) => map_vector(m).map(|content| PdfMap {
+                sheet:None,
                 item: m.item.clone(),
                 content,
                 corners: None,
@@ -597,6 +598,7 @@ fn an_atlas_sheet_is_a_page_for_each_object_with_its_own_maps() {
         .map(|(k, p)| PdfAtlasPage {
             atlas: p.clone(),
             maps: vec![PdfMap {
+                sheet:None,
                 item: map_item.clone(),
                 content: MapContent::Vector(VectorMap {
                     layers: vec![layer(k)],
@@ -650,4 +652,71 @@ fn an_atlas_sheet_is_a_page_for_each_object_with_its_own_maps() {
         one.matches("/Type /Page\n").count() + one.matches("/Type /Page ").count(),
         1
     );
+}
+
+#[test]
+fn two_raster_versions_of_a_shared_master_map_are_selected_and_embedded_per_sheet() {
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/multipage-sets.json"
+    ))
+    .unwrap();
+    let mut book: SheetBook = serde_json::from_value(data["cases"][0]["book"].clone()).unwrap();
+    book.sheets.truncate(2);
+    let png = |rgb: [u8; 3]| {
+        let mut bytes = Vec::new();
+        {
+            let mut encoder = png::Encoder::new(&mut bytes, 1, 1);
+            encoder.set_color(png::ColorType::Rgb);
+            encoder.set_depth(png::BitDepth::Eight);
+            encoder
+                .write_header()
+                .unwrap()
+                .write_image_data(&rgb)
+                .unwrap();
+        }
+        bytes
+    };
+    let mut inputs = PdfInputs::default();
+    for (sheet, rgb) in [("small", [240, 20, 40]), ("large", [20, 40, 240])] {
+        inputs.maps.push(PdfMap {
+            sheet: Some(sheet.into()),
+            item: "shared-map".into(),
+            content: MapContent::Raster(RasterMap { png: png(rgb) }),
+            corners: None,
+        });
+    }
+    let bytes = to_pdf(&book, &inputs, &PdfOptions::default()).unwrap();
+    let dir =
+        std::env::temp_dir().join(format!("kentos-sheet17-raster-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("master.pdf");
+    std::fs::write(&path, bytes).unwrap();
+    let prefix = dir.join("page");
+    let status = std::process::Command::new("pdftoppm")
+        .args(["-r", "25.4", "-png"])
+        .arg(&path)
+        .arg(&prefix)
+        .status()
+        .expect("Poppler required to verify page raster resource identity");
+    assert!(status.success());
+    for (page, x) in [(1, 105), (2, 210)] {
+        let file = std::fs::File::open(dir.join(format!("page-{page}.png"))).unwrap();
+        let mut reader = png::Decoder::new(std::io::BufReader::new(file))
+            .read_info()
+            .unwrap();
+        let mut rgba = vec![0; reader.output_buffer_size().unwrap()];
+        let info = reader.next_frame(&mut rgba).unwrap();
+        let channels = info.color_type.samples();
+        let offset = (130 * info.width as usize + x) * channels;
+        let pixel = &rgba[offset..offset + 3];
+        if page == 1 {
+            assert!(pixel[0] > 200 && pixel[2] < 80, "{pixel:?}");
+        } else {
+            assert!(
+                pixel[2] > 200 && pixel[0] < 80,
+                "second sheet reused first sheet raster: {pixel:?}"
+            );
+        }
+    }
+    std::fs::remove_dir_all(dir).unwrap();
 }

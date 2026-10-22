@@ -248,6 +248,7 @@ impl<'a> MapDrawer<'a> {
             }
         };
         Some(PdfMap {
+            sheet:None,
             item: m.item.clone(),
             content,
             corners: None,
@@ -326,10 +327,11 @@ pub fn book_pdf_at(
             let Prim::Map(m) = p else {
                 continue;
             };
-            if m.view.center.is_none() || maps.iter().any(|x| x.item == m.item) {
+            if m.view.center.is_none() || maps.iter().any(|x| x.item == m.item && x.sheet.as_ref()==Some(id)) {
                 continue;
             }
-            if let Some(map) = drawer.draw(&book, m) {
+            if let Some(mut map) = drawer.draw(&book, m) {
+                map.sheet=Some(id.clone());
                 maps.push(map);
             }
         }

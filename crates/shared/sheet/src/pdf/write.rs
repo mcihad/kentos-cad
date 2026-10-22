@@ -93,18 +93,35 @@ pub(super) fn lists(
 }
 
 /// The map items' content for one page: the atlas page's own first, then the file's.
-fn map_of<'a>(inputs: &'a PdfInputs, page: Option<usize>, item: &str) -> Option<&'a super::PdfMap> {
+fn map_of<'a>(
+    inputs: &'a PdfInputs,
+    page: Option<usize>,
+    sheet: &str,
+    item: &str,
+) -> Option<&'a super::PdfMap> {
     page.and_then(|k| inputs.atlas.as_ref().and_then(|a| a.pages.get(k)))
         .and_then(|p| p.maps.iter().find(|m| m.item == item))
-        .or_else(|| inputs.maps.iter().find(|m| m.item == item))
+        .or_else(|| {
+            inputs
+                .maps
+                .iter()
+                .find(|m| m.item == item && m.sheet.as_deref() == Some(sheet))
+        })
+        .or_else(|| {
+            inputs
+                .maps
+                .iter()
+                .find(|m| m.item == item && m.sheet.is_none())
+        })
 }
 
 fn content_of<'a>(
     inputs: &'a PdfInputs,
     page: Option<usize>,
+    sheet: &str,
     item: &str,
 ) -> Option<&'a MapContent> {
-    map_of(inputs, page, item).map(|m| &m.content)
+    map_of(inputs, page, sheet, item).map(|m| &m.content)
 }
 
 /// The text every page writes, by face: the sheets', the maps' and the empty maps' “harita”.
@@ -114,7 +131,7 @@ fn usage_of(lists: &[Listed], inputs: &PdfInputs) -> Usage {
         for p in &l.prims {
             match p {
                 Prim::Text(t) => u.add(&t.font, t.weight, t.italic, &t.text),
-                Prim::Map(m) => match content_of(inputs, l.page, &m.item) {
+                Prim::Map(m) => match content_of(inputs, l.page, &l.sheet, &m.item) {
                     Some(MapContent::Vector(v)) if m.view.center.is_some() => {
                         for layer in &v.layers {
                             for t in &layer.texts {
@@ -252,7 +269,7 @@ pub(super) fn document(
 
     // The pictures, each once, in the order the pages first show them.
     let mut images: BTreeMap<String, Option<(String, Ref)>> = BTreeMap::new();
-    let mut rasters: BTreeMap<(Option<usize>, String), (String, Ref)> = BTreeMap::new();
+    let mut rasters: BTreeMap<(String,Option<usize>, String), (String, Ref)> = BTreeMap::new();
     let mut layers: BTreeMap<String, (String, Ref)> = BTreeMap::new();
     let mut layer_order: Vec<(Ref, String)> = Vec::new();
     for l in &lists {
@@ -278,9 +295,9 @@ pub(super) fn document(
                     });
                     images.insert(i.asset.clone(), named);
                 }
-                Prim::Map(m) => match content_of(inputs, l.page, &m.item) {
+                Prim::Map(m) => match content_of(inputs, l.page, &l.sheet, &m.item) {
                     Some(MapContent::Raster(r))
-                        if !rasters.contains_key(&(l.page, m.item.clone())) =>
+                        if !rasters.contains_key(&(l.sheet.clone(),l.page, m.item.clone())) =>
                     {
                         let pic = picture(&r.png).ok_or_else(|| {
                             SheetError::at(
@@ -291,7 +308,7 @@ pub(super) fn document(
                         })?;
                         let id = write_picture(&mut doc, &pic);
                         rasters.insert(
-                            (l.page, m.item.clone()),
+                            (l.sheet.clone(),l.page, m.item.clone()),
                             (format!("Im{}", images.len() + rasters.len() + 1), id),
                         );
                     }
@@ -347,11 +364,11 @@ pub(super) fn document(
                     page.image(i, named.map(|(n, r)| (n.as_str(), *r)));
                 }
                 Prim::Map(m) => {
-                    match content_of(inputs, l.page, &m.item) {
+                    match content_of(inputs, l.page, &l.sheet, &m.item) {
                         Some(MapContent::Vector(v)) => {
                             maps::vector(&mut page, m, v, options.layers.then_some(&layers));
                         }
-                        Some(MapContent::Raster(_)) => match rasters.get(&(l.page, m.item.clone()))
+                        Some(MapContent::Raster(_)) => match rasters.get(&(l.sheet.clone(),l.page, m.item.clone()))
                         {
                             Some((n, r)) => maps::raster(&mut page, m, (n.as_str(), *r)),
                             None => maps::placeholder(&mut page, m),
@@ -359,7 +376,7 @@ pub(super) fn document(
                         None => maps::placeholder(&mut page, m),
                     }
                     if options.geo && inputs.crs.is_some() {
-                        let host = map_of(inputs, l.page, &m.item).and_then(|x| x.corners.as_ref());
+                        let host = map_of(inputs, l.page, &l.sheet, &m.item).and_then(|x| x.corners.as_ref());
                         if let Some(v) = geo::viewport(l.size.height, m, tm, host) {
                             viewports.push(v);
                         }

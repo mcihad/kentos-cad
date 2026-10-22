@@ -1949,3 +1949,109 @@ fn a_lost_active_source_returns_to_paper_instead_of_using_an_unscoped_model_came
     app.sheets.load(book);app.sheets.update(Sheet::Tab(1));app.sheets.update(Sheet::EnterModel("viewport".into()));app.sync_sheet_model_camera();assert!(app.spatial.has_sheet_view());
     ctx.named_views.clear();app.sheets.set_context(ctx);app.sync_sheet_model_camera();assert!(app.sheets.model_scope().is_none());assert!(!app.spatial.has_sheet_view());assert_eq!(app.viewport.camera,camera);
 }
+
+fn multipage_set_app(theme: &str, text: u32) -> App {
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/multipage-sets.json"
+    ))
+    .unwrap();
+    let c = &data["cases"][8];
+    let mut model = kentos_domain::Document::from_snapshot(
+        serde_json::from_value(c["model"].clone()).unwrap(),
+    )
+    .unwrap();
+    let book: kentos_sheet::SheetBook = serde_json::from_value(c["book"].clone()).unwrap();
+    model
+        .set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
+        .unwrap();
+    let (mut app, _store) = app_with_store("sheet17-sets");
+    app.settings.choose(&[
+        ("appearance.theme", serde_json::json!(theme)),
+        ("appearance.textSize", serde_json::json!(text)),
+    ]);
+    app.apply_settings();
+    let doc = Document::from_v2(model.to_snapshot_v2(), None).unwrap();
+    let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    drive(&mut app, task);
+    sheet(&mut app, Sheet::Tab(1));
+    sheet(
+        &mut app,
+        Sheet::Pdf(kentos_sheet_ui::message::PdfMessage::Scope(
+            kentos_sheet_ui::message::PdfScope::All,
+        )),
+    );
+    app
+}
+#[test]
+fn desktop_set_pdf_resolves_each_master_map_and_the_four_named_architectural_views() {
+    let app = multipage_set_app("light", 13);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let painter = app.sheet_painter();
+    let (bytes, _) = app
+        .sheets
+        .pdf_and_findings(&painter, app.sheet_pdf_host())
+        .unwrap();
+    let dir = std::env::temp_dir().join(format!("kentos-sheet17-ui-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("set.pdf");
+    std::fs::write(&path, bytes).unwrap();
+    let read = std::process::Command::new("pdftotext")
+        .args(["-layout"])
+        .arg(&path)
+        .arg("-")
+        .output()
+        .unwrap();
+    assert!(read.status.success());
+    let words = String::from_utf8(read.stdout).unwrap();
+    let pages = words.split('\u{c}').collect::<Vec<_>>();
+    assert!(!pages[0].contains("FAR"));
+    for (n, word) in [
+        (0, "CENTER"),
+        (1, "FAR"),
+        (2, "PLAN"),
+        (3, "ELEV"),
+        (4, "SECT"),
+        (5, "DETAIL"),
+    ] {
+        assert!(pages[n].contains(word), "page {} {words}", n + 1);
+    }
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}
+#[test]
+#[ignore="GPU images and PDF, run alone"]
+fn sheet17_multipage_set_screens() {
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme, text, w, h) in [
+        ("light", 13, 1440., 900.),
+        ("dark", 13, 1440., 900.),
+        ("dark", 18, 1100., 650.),
+    ] {
+        let mut app = multipage_set_app(theme, text);
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(w, h)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        for (tab, label) in [(1, "small"), (2, "large"), (3, "plan"), (5, "section")] {
+            sheet(&mut app, Sheet::Tab(tab));
+            snap.settle(&mut app, App::view, &mut update);
+            snap.render(app.view(), &app.theme())
+                .save(out.join(format!("sheet17-{label}-{theme}-{text}.png")))
+                .unwrap();
+        }
+        if theme == "light" {
+            let painter = app.sheet_painter();
+            std::fs::write(
+                out.join("sheet17-set.pdf"),
+                app.sheets.pdf(&painter, app.sheet_pdf_host()).unwrap(),
+            )
+            .unwrap();
+        }
+    }
+}
