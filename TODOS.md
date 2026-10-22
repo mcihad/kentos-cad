@@ -65,6 +65,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - CAD-SHEET-18 (ADR 0608): adlı sayfa düzenleri ve kâğıt→çıktı dönüşümü; pafta 1:1, pencere/tüm öğeler oranı veya sığdırma, ortak kırpma ve GeoPDF kutuları. Web dönüşünde kayıt/yükle/sil/uygula ve aynı baskı planı bağlanmalı; 20 bağımsız durum korunmalı.
 - CAD-SHEET-19 (ADR 0609): ayrı ACI/adlı stil anahtarları, yerel kplot modeli ve açık binary CTB/STB stratejisi; ayarlarda yakalanan profil, kaynak kitaplıkların korunması ve kategori bazında kimlik yenileme. Web dönüşünde aynı seçici, şablon/kopya ve kpafta taşıması bağlanmalı.
 - CAD-SHEET-20 (ADR 0610): ortak baskı mürekkebi/kalem çözücüsü, PDF ve CPU raster yolu, profil düzenleyicisi. Web dönüşünde aynı tipli işlemlerle profil ekranı ve pafta sahibi bilgisi bağlanmalı.
+- CAD-SHEET-21 (ADR 0611): karşılaştırmalı renkli/tek renk/gri baskı paftaları; PDF altlığı dolgu/beyaz boya ve özyinelemeli görünüş düzeltmesi. Web dönüşünde blok parçalarının PDF dolgu boyası style bağında da taşınmalı; aynı karşılaştırmalar oynatılmalı.
 
 - CAD-SHEET-06 (ADR 0591): ortak ops şeması ve asset/inversePictures sözleşmesi hazır. Web yeniden açılınca pafta komut işleyicisi baytların birleştirme/tam değiştirme ve ters bayt politikasını izlemeli; harita yazısı ve zengin stil çıktı eşdeğerliği kendi çıktı yolunda sınanmalı. Native CPU/SVG rasterizer web'e taşınmış sayılmaz.
 

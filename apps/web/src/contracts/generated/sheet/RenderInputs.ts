@@ -11,23 +11,23 @@ import type { ProjectInfo } from "./ProjectInfo";
 import type { RenderMode } from "./RenderMode";
 import type { TableInput } from "./TableInput";
 
-export type RenderInputs = { 
+export type RenderInputs = {
 /**
  * Current model view registry; live links resolve by stable id, never by the capture's name.
  */
-namedViews?: Array<NamedView>, mode: RenderMode, project: ProjectInfo, capabilities: Capabilities, crs?: CrsInfo, maps: Array<MapInput>, legends: Array<LegendInput>, tables: Array<TableInput>, coordinates: Array<CoordinateInput>, atlas?: AtlasPageInput, 
+namedViews?: Array<NamedView>, mode: RenderMode, project: ProjectInfo, capabilities: Capabilities, crs?: CrsInfo, maps: Array<MapInput>, legends: Array<LegendInput>, tables: Array<TableInput>, coordinates: Array<CoordinateInput>, atlas?: AtlasPageInput,
 /**
  * `@sayfa` and `@sayfa_sayisi`; none: the sheet's place in the book.
  */
-page?: PageNumber, 
+page?: PageNumber,
 /**
  * The typefaces the host can draw; none: all of the table's.
  */
-fonts?: Array<string>, 
+fonts?: Array<string>,
 /**
  * The assets whose bytes the host has; none: all.
  */
-assets?: Array<string>, 
+assets?: Array<string>,
 /**
  * The export's resolution (the preflight's pictures); none: the sheet's.
  */

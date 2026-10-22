@@ -4,11 +4,11 @@ import type { GroundPoint } from "./GroundPoint";
 /**
  * What a map frame shows: the host paints its content into the clip with this view.
  */
-export type MapViewPrim = { annotationScale?: number, 
+export type MapViewPrim = { annotationScale?: number,
 /**
  * None: the map has no place yet (a template's).
  */
-center?: GroundPoint, scale: number, 
+center?: GroundPoint, scale: number,
 /**
  * The content's turn in the frame (the frame's own turn is the primitive's).
  */

@@ -3,8 +3,7 @@
 //! corner, so the reference's loading, reload, kept local ids, layer group and packaging are the drawing's. Its
 //! optional content groups are its layers (“PDF” for what is in none; a group off in the PDF's default view is a
 //! hidden layer). A stroke is a polyline in its colour, width and dash; a fill an area; a text a text with its height
-//! and turn. Black is the drawing's ink (it shows on a dark screen as on paper); a white fill is the paper and is left
-//! out.
+//! and turn. Black is the drawing's ink; white fills remain knockout paint over earlier paths.
 
 use kentos_commands::DocumentSnapshotV2;
 use kentos_formats::pdf::{PdfLeft, PdfPage};
@@ -51,9 +50,7 @@ pub fn drawing(page: &PdfPage, name: &str) -> Result<(DocumentSnapshotV2, PdfLef
     for path in &page.paths {
         let lid = layer_id(path.layer);
         used_plain |= path.layer.is_none();
-        if let Some(fill) = path.fill
-            && fill != [255, 255, 255]
-        {
+        if let Some(fill) = path.fill {
             for (pts, _) in &path.parts {
                 let mut ring: Vec<[f64; 2]> = pts.clone();
                 if ring.len() > 1 && ring.first() == ring.last() {

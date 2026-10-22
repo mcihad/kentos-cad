@@ -5,15 +5,15 @@ import type { PaperScaleRatio } from "./PaperScaleRatio";
 /**
  * A map at a fixed place and scale. A template's map has no centre: it keeps its scale, not a place.
  */
-export type FixedView = { center?: GroundPoint, 
+export type FixedView = { center?: GroundPoint,
 /**
  * Denominator: 1000 is 1/1000.
  */
-scale: number, 
+scale: number,
 /**
  * Exact paper:model ratio; overrides the legacy 1:scale denominator.
  */
-ratio?: PaperScaleRatio, 
+ratio?: PaperScaleRatio,
 /**
  * The map's content turned clockwise on the paper.
  */

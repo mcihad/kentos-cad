@@ -1103,12 +1103,12 @@ pub fn core_dynamic(
     ))
 }
 
-/// A PDF underlay's look as the core draws its pieces (docs/adr/0351 §2); none for another block or the default look.
+/// A PDF underlay's look as the core draws its pieces (docs/adr/0351 §2); none for another block.
 pub fn core_underlay(b: &BlockDefinition) -> Option<kentos_geometry_core::block::Underlay> {
     let x = b.xref.as_ref().filter(|x| x.page.is_some())?;
     let u = x.underlay.clone().unwrap_or_default();
     let fade = f64::from(u.fade.min(kentos_contracts::MAX_UNDERLAY_FADE)) / 100.0;
-    (fade > 0.0 || u.monochrome).then_some(kentos_geometry_core::block::Underlay {
+    Some(kentos_geometry_core::block::Underlay {
         fade,
         monochrome: u.monochrome,
     })

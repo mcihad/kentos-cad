@@ -3,15 +3,15 @@
 /**
  * A paper-space pan and anchor-preserving zoom; model geometry is never scaled.
  */
-export type NavigateViewport = { id: string, 
+export type NavigateViewport = { id: string,
 /**
  * Screen-right/down displacement expressed as paper µm, after frame rotation.
  */
-delta: [number, number], 
+delta: [number, number],
 /**
  * Greater than one zooms in.
  */
-factor: number, 
+factor: number,
 /**
  * Absolute paper µm; absent: the content centre.
  */

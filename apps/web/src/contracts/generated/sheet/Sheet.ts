@@ -14,31 +14,31 @@ import type { Variable } from "./Variable";
 /**
  * One sheet (pafta): its paper, items, guides and how it is exported.
  */
-export type Sheet = { plot?: AppliedPageSetup, id: string, name: string, page: Page, 
+export type Sheet = { plot?: AppliedPageSetup, id: string, name: string, page: Page,
 /**
  * The master page drawn under this sheet's items.
  */
-master?: string, 
+master?: string,
 /**
  * Drawing order: the first is at the bottom.
  */
-items: Array<Item>, guides: Array<Guide>, snapGrid: SnapGrid, atlas?: Atlas, export: ExportDefaults, 
+items: Array<Item>, guides: Array<Guide>, snapGrid: SnapGrid, atlas?: Atlas, export: ExportDefaults,
 /**
  * The template and revision it was made from.
  */
-origin?: TemplateOrigin, 
+origin?: TemplateOrigin,
 /**
  * The sheet's own variables (ada, parsel, mahalle …): before the project's in the lookup order (design §7).
  */
-variables: Array<Variable>, 
+variables: Array<Variable>,
 /**
  * Layouts for other papers (design §3.2a): the first whose condition the paper meets is used.
  */
-variants: Array<LayoutVariant>, 
+variants: Array<LayoutVariant>,
 /**
  * The layout in force on this paper; none: the base layout.
  */
-activeVariant?: string, 
+activeVariant?: string,
 /**
  * The base layout, kept while a variant is in force.
  */
