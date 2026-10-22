@@ -1,0 +1,5904 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.sources.query",
+ "commandVersion": 1,
+ "title": "Kaynağı sorgula: kutu, sütunlar ve süzgeç kaynağa, satırlar burada denetlenir",
+ "note": "ADR 0581. Dosyayı GDAL yazar (--files); satırlar sqlite3 ile dosyanın kendisinden okunur, kalıcı kimlikler ADR 0502'nin UUIDv5'i, süzgeçler dilin kurallarıyla elle, gönderilen SQL ve kaynağın verdiği satır sayısı ADR 0581 §3'ün kapsayan kuralıyla, istatistik kentos.statistics/1 (spatial_query_cases.py). WGS 84 noktaları osr'la projenin sistemine çevrilir; kutu her noktadan yarım adım uzakta. Bağımsız başvuru: scripts/fixtures/source_query_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Kaynağı sorgula",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {
+     "tur": "direk",
+     "kot": "12.5"
+    },
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "dosyanın tablosu: ilk 100 kayıt anahtar sırasıyla, sonraki sayfanın imleci",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "5ce8f619-8129-5551-a5e6-ea0c29175c3e",
+         "attrs": {
+          "ad": "N1",
+          "tur": "direk",
+          "kot": "100.25",
+          "no": "3"
+         },
+         "key": 1
+        },
+        {
+         "uid": "2b12bdbd-bcb3-5f29-8948-1dd485f26b0a",
+         "attrs": {
+          "ad": "N2",
+          "tur": "rögar",
+          "kot": "100.5",
+          "no": "6"
+         },
+         "key": 2
+        },
+        {
+         "uid": "83c03b44-bd73-5ef7-b040-723a3014b54d",
+         "attrs": {
+          "ad": "N3",
+          "tur": "ağaç",
+          "kot": "100.75",
+          "no": "9"
+         },
+         "key": 3
+        },
+        {
+         "uid": "b182455d-9c7c-5e13-b970-90bd3f9a2693",
+         "attrs": {
+          "ad": "N4",
+          "kot": "101",
+          "no": "12"
+         },
+         "key": 4
+        },
+        {
+         "uid": "ff3e68b0-d8b5-5364-941c-000c5166112a",
+         "attrs": {
+          "ad": "N5",
+          "tur": "",
+          "kot": "101.25",
+          "no": "15"
+         },
+         "key": 5
+        },
+        {
+         "uid": "a4b48fcc-db5e-5cb5-8cbc-9109d7092663",
+         "attrs": {
+          "ad": "N6",
+          "tur": "direk",
+          "kot": "101.5",
+          "no": "18"
+         },
+         "key": 6
+        },
+        {
+         "uid": "f89a9d58-2e07-565d-b61e-7e08fec0cd90",
+         "attrs": {
+          "ad": "N7",
+          "tur": "rögar",
+          "kot": "101.75",
+          "no": "21"
+         },
+         "key": 7
+        },
+        {
+         "uid": "cc4d2326-22fc-51cf-b6bc-dd725918c80c",
+         "attrs": {
+          "ad": "N8",
+          "tur": "ağaç",
+          "kot": "102",
+          "no": "24"
+         },
+         "key": 8
+        },
+        {
+         "uid": "c1cd8d27-4a1e-55f4-94fa-a89bc7fbbfbc",
+         "attrs": {
+          "ad": "N9",
+          "kot": "102.25",
+          "no": "27"
+         },
+         "key": 9
+        },
+        {
+         "uid": "93de07ab-a9ff-56a8-b351-3c85f2885c2a",
+         "attrs": {
+          "ad": "N10",
+          "tur": "",
+          "kot": "102.5",
+          "no": "30"
+         },
+         "key": 10
+        },
+        {
+         "uid": "db1c8be1-b5ff-5eaa-b4d8-38f6bfacf403",
+         "attrs": {
+          "ad": "N11",
+          "tur": "direk",
+          "kot": "102.75",
+          "no": "33"
+         },
+         "key": 11
+        },
+        {
+         "uid": "671a6407-d38f-5f59-8946-2f1f4f2c1346",
+         "attrs": {
+          "ad": "N12",
+          "tur": "rögar",
+          "kot": "103",
+          "no": "36"
+         },
+         "key": 12
+        },
+        {
+         "uid": "1eac5298-064b-53a8-a1d2-2ffba383a943",
+         "attrs": {
+          "ad": "N13",
+          "tur": "ağaç",
+          "kot": "103.25",
+          "no": "39"
+         },
+         "key": 13
+        },
+        {
+         "uid": "72f9e65f-c63e-56a4-acf2-4573fc20335a",
+         "attrs": {
+          "ad": "N14",
+          "kot": "103.5",
+          "no": "42"
+         },
+         "key": 14
+        },
+        {
+         "uid": "fe137caf-b663-5625-bbef-f0df819bcd3c",
+         "attrs": {
+          "ad": "N15",
+          "tur": "",
+          "kot": "103.75",
+          "no": "45"
+         },
+         "key": 15
+        },
+        {
+         "uid": "bde59792-9fe6-5966-9a3e-d611c573d583",
+         "attrs": {
+          "ad": "N16",
+          "tur": "direk",
+          "kot": "104",
+          "no": "48"
+         },
+         "key": 16
+        },
+        {
+         "uid": "a07cd2a4-2ffb-546e-934d-56e64c0e8210",
+         "attrs": {
+          "ad": "N17",
+          "tur": "rögar",
+          "no": "51"
+         },
+         "key": 17
+        },
+        {
+         "uid": "d8ce3bbc-98dd-583d-894d-1a471132f317",
+         "attrs": {
+          "ad": "N18",
+          "tur": "ağaç",
+          "kot": "104.5",
+          "no": "54"
+         },
+         "key": 18
+        },
+        {
+         "uid": "5b4f95f3-ef96-5110-a0dd-864494736319",
+         "attrs": {
+          "ad": "N19",
+          "kot": "104.75",
+          "no": "57"
+         },
+         "key": 19
+        },
+        {
+         "uid": "2c61b2b2-3702-53cf-bb75-ca67a4cfa04d",
+         "attrs": {
+          "ad": "N20",
+          "tur": "",
+          "kot": "105",
+          "no": "60"
+         },
+         "key": 20
+        },
+        {
+         "uid": "0a857ec8-9947-5e56-9d63-ade989b5cb31",
+         "attrs": {
+          "ad": "N21",
+          "tur": "direk",
+          "kot": "105.25",
+          "no": "63"
+         },
+         "key": 21
+        },
+        {
+         "uid": "de606c0a-2d02-5c6a-9c27-29db243dd505",
+         "attrs": {
+          "ad": "N22",
+          "tur": "rögar",
+          "kot": "105.5",
+          "no": "66"
+         },
+         "key": 22
+        },
+        {
+         "uid": "1e757555-65f8-5dc0-9f37-6de04c1d354e",
+         "attrs": {
+          "ad": "N23",
+          "tur": "ağaç",
+          "kot": "105.75",
+          "no": "69"
+         },
+         "key": 23
+        },
+        {
+         "uid": "5e5e2723-583c-5567-9769-ff5d9b4aa097",
+         "attrs": {
+          "ad": "N24",
+          "kot": "106",
+          "no": "72"
+         },
+         "key": 24
+        },
+        {
+         "uid": "3f2d93b7-a7b7-5fa7-9d8e-e26fe1de6b66",
+         "attrs": {
+          "ad": "N25",
+          "tur": "",
+          "kot": "106.25",
+          "no": "75"
+         },
+         "key": 25
+        },
+        {
+         "uid": "4abdc4ae-45fd-5336-bd10-4a95c0e438db",
+         "attrs": {
+          "ad": "N26",
+          "tur": "direk",
+          "kot": "106.5",
+          "no": "78"
+         },
+         "key": 26
+        },
+        {
+         "uid": "d00b814c-0994-56c4-a494-a723d2fb53f6",
+         "attrs": {
+          "ad": "N27",
+          "tur": "rögar",
+          "kot": "106.75",
+          "no": "81"
+         },
+         "key": 27
+        },
+        {
+         "uid": "0730435b-868d-5b4d-9a5a-6be4a5a72a5b",
+         "attrs": {
+          "ad": "N28",
+          "tur": "ağaç",
+          "kot": "107",
+          "no": "84"
+         },
+         "key": 28
+        },
+        {
+         "uid": "df84820d-c1d5-58e6-805a-fb20518aa64d",
+         "attrs": {
+          "ad": "N29",
+          "kot": "107.25",
+          "no": "87"
+         },
+         "key": 29
+        },
+        {
+         "uid": "42b0fbf4-ff45-5c61-82c7-0661a582ab54",
+         "attrs": {
+          "ad": "N30",
+          "tur": "",
+          "kot": "107.5",
+          "no": "90"
+         },
+         "key": 30
+        },
+        {
+         "uid": "99ae23af-6cfd-5d7b-8b75-2ecac8a5ba2d",
+         "attrs": {
+          "ad": "N31",
+          "tur": "direk",
+          "kot": "107.75",
+          "no": "93"
+         },
+         "key": 31
+        },
+        {
+         "uid": "b1046b8d-d254-5dc0-a0f6-8c01839e64b2",
+         "attrs": {
+          "ad": "N32",
+          "tur": "rögar",
+          "kot": "108",
+          "no": "96"
+         },
+         "key": 32
+        },
+        {
+         "uid": "92bed169-2174-55c3-9056-8d7713d74534",
+         "attrs": {
+          "ad": "N33",
+          "tur": "ağaç",
+          "kot": "108.25",
+          "no": "99"
+         },
+         "key": 33
+        },
+        {
+         "uid": "3d425f29-6235-5ea7-84e1-1de403f6b2d5",
+         "attrs": {
+          "ad": "N34",
+          "no": "1"
+         },
+         "key": 34
+        },
+        {
+         "uid": "f3a1475e-060a-5df0-a041-ab1dcb5bc4d4",
+         "attrs": {
+          "ad": "N35",
+          "tur": "",
+          "kot": "108.75",
+          "no": "4"
+         },
+         "key": 35
+        },
+        {
+         "uid": "f08f9df3-7a7a-5f23-9151-5d55cf3e477f",
+         "attrs": {
+          "ad": "N36",
+          "tur": "direk",
+          "kot": "109",
+          "no": "7"
+         },
+         "key": 36
+        },
+        {
+         "uid": "63a4e24f-bbff-56a5-91bc-be49bcd4aaa1",
+         "attrs": {
+          "ad": "N37",
+          "tur": "rögar",
+          "kot": "109.25",
+          "no": "10"
+         },
+         "key": 37
+        },
+        {
+         "uid": "3f3fb522-fa38-5d99-aee1-969f21d33252",
+         "attrs": {
+          "ad": "N38",
+          "tur": "ağaç",
+          "kot": "109.5",
+          "no": "13"
+         },
+         "key": 38
+        },
+        {
+         "uid": "d5e7ad99-d0f5-54d6-8d70-a94a3e4698ca",
+         "attrs": {
+          "ad": "N39",
+          "kot": "109.75",
+          "no": "16"
+         },
+         "key": 39
+        },
+        {
+         "uid": "9cda7e95-65c6-5d00-ae07-5f7195c7a64b",
+         "attrs": {
+          "ad": "N40",
+          "tur": "",
+          "kot": "110",
+          "no": "19"
+         },
+         "key": 40
+        },
+        {
+         "uid": "440dc4f1-21d3-523a-a8f6-9d5dbd26b71f",
+         "attrs": {
+          "ad": "N41",
+          "tur": "direk",
+          "kot": "110.25",
+          "no": "22"
+         },
+         "key": 41
+        },
+        {
+         "uid": "7522e72e-536e-5247-b598-090f819e136a",
+         "attrs": {
+          "ad": "N42",
+          "tur": "rögar",
+          "kot": "110.5",
+          "no": "25"
+         },
+         "key": 42
+        },
+        {
+         "uid": "96a29d83-bc01-5651-95e3-c1ec45408e90",
+         "attrs": {
+          "ad": "N43",
+          "tur": "ağaç",
+          "kot": "110.75",
+          "no": "28"
+         },
+         "key": 43
+        },
+        {
+         "uid": "24c8666b-57b5-56dc-beec-ce4de348c9e1",
+         "attrs": {
+          "ad": "N44",
+          "kot": "111",
+          "no": "31"
+         },
+         "key": 44
+        },
+        {
+         "uid": "ad45e8ae-8dc8-574b-a8ce-3be722d412b9",
+         "attrs": {
+          "ad": "N45",
+          "tur": "",
+          "kot": "111.25",
+          "no": "34"
+         },
+         "key": 45
+        },
+        {
+         "uid": "48b261fe-ebf3-5657-b807-f141bf40429d",
+         "attrs": {
+          "ad": "N46",
+          "tur": "direk",
+          "kot": "111.5",
+          "no": "37"
+         },
+         "key": 46
+        },
+        {
+         "uid": "e46c9c8e-96ce-5e74-ba7b-6f0f92b93b08",
+         "attrs": {
+          "ad": "N47",
+          "tur": "rögar",
+          "kot": "111.75",
+          "no": "40"
+         },
+         "key": 47
+        },
+        {
+         "uid": "60ac6415-30d1-50d4-a07b-de2abbe468ab",
+         "attrs": {
+          "ad": "N48",
+          "tur": "ağaç",
+          "kot": "112",
+          "no": "43"
+         },
+         "key": 48
+        },
+        {
+         "uid": "630ed2ea-745b-54ac-9ddd-4cd7560f12d9",
+         "attrs": {
+          "ad": "N49",
+          "kot": "112.25",
+          "no": "46"
+         },
+         "key": 49
+        },
+        {
+         "uid": "1254dd62-9bdc-5415-88de-dea5c800d9b4",
+         "attrs": {
+          "ad": "N50",
+          "tur": "",
+          "kot": "112.5",
+          "no": "49"
+         },
+         "key": 50
+        },
+        {
+         "uid": "d3302c24-cacc-54e6-af8b-531995a62af7",
+         "attrs": {
+          "ad": "N51",
+          "tur": "direk",
+          "no": "52"
+         },
+         "key": 51
+        },
+        {
+         "uid": "629e18ac-1984-55b5-8a41-770c38530216",
+         "attrs": {
+          "ad": "N52",
+          "tur": "rögar",
+          "kot": "113",
+          "no": "55"
+         },
+         "key": 52
+        },
+        {
+         "uid": "b4152dc3-fe28-56dc-9119-3f27b1eab9f2",
+         "attrs": {
+          "ad": "N53",
+          "tur": "ağaç",
+          "kot": "113.25",
+          "no": "58"
+         },
+         "key": 53
+        },
+        {
+         "uid": "78df5d4e-2645-59a1-9ca8-d30a38b1d015",
+         "attrs": {
+          "ad": "N54",
+          "kot": "113.5",
+          "no": "61"
+         },
+         "key": 54
+        },
+        {
+         "uid": "8ef4d022-4236-54be-842a-129bf86bf62c",
+         "attrs": {
+          "ad": "N55",
+          "tur": "",
+          "kot": "113.75",
+          "no": "64"
+         },
+         "key": 55
+        },
+        {
+         "uid": "c07a28bd-d740-5489-a111-523d58c43874",
+         "attrs": {
+          "ad": "N56",
+          "tur": "direk",
+          "kot": "114",
+          "no": "67"
+         },
+         "key": 56
+        },
+        {
+         "uid": "5e006f17-80e2-59ba-bb69-6dc1fdfca0c4",
+         "attrs": {
+          "ad": "N57",
+          "tur": "rögar",
+          "kot": "114.25",
+          "no": "70"
+         },
+         "key": 57
+        },
+        {
+         "uid": "050a3ded-4474-53bd-87b3-3d636df66573",
+         "attrs": {
+          "ad": "N58",
+          "tur": "ağaç",
+          "kot": "114.5",
+          "no": "73"
+         },
+         "key": 58
+        },
+        {
+         "uid": "08e9b437-8af6-5e72-8250-30995a978c70",
+         "attrs": {
+          "ad": "N59",
+          "kot": "114.75",
+          "no": "76"
+         },
+         "key": 59
+        },
+        {
+         "uid": "747a3ffe-bd5e-5bac-929e-a718fc593f1b",
+         "attrs": {
+          "ad": "N60",
+          "tur": "",
+          "kot": "ölçülmedi",
+          "no": "79"
+         },
+         "key": 60
+        },
+        {
+         "uid": "df66b901-8f92-5537-a935-b727cb757bb1",
+         "attrs": {
+          "ad": "N61",
+          "tur": "direk",
+          "kot": "115.25",
+          "no": "82"
+         },
+         "key": 61
+        },
+        {
+         "uid": "8a5510fc-824b-5218-8f76-965e72942168",
+         "attrs": {
+          "ad": "N62",
+          "tur": "rögar",
+          "kot": "115.5",
+          "no": "85"
+         },
+         "key": 62
+        },
+        {
+         "uid": "f2c8d6f0-8c9f-5500-9b98-63fd180da4b8",
+         "attrs": {
+          "ad": "N63",
+          "tur": "ağaç",
+          "kot": "115.75",
+          "no": "88"
+         },
+         "key": 63
+        },
+        {
+         "uid": "68abe38c-f7bf-5886-868f-3e4584b1abb4",
+         "attrs": {
+          "ad": "N64",
+          "kot": "116",
+          "no": "91"
+         },
+         "key": 64
+        },
+        {
+         "uid": "3acf144e-7302-5fbe-95dd-7dbeac4aaab5",
+         "attrs": {
+          "ad": "N65",
+          "tur": "",
+          "kot": "116.25",
+          "no": "94"
+         },
+         "key": 65
+        },
+        {
+         "uid": "828fc603-efaa-5805-8925-f03e299f7c2b",
+         "attrs": {
+          "ad": "N66",
+          "tur": "direk",
+          "kot": "116.5",
+          "no": "97"
+         },
+         "key": 66
+        },
+        {
+         "uid": "fb9c7e7d-6c8c-5a71-89e6-aa8cca2b6fab",
+         "attrs": {
+          "ad": "N67",
+          "tur": "rögar",
+          "kot": "116.75",
+          "no": "100"
+         },
+         "key": 67
+        },
+        {
+         "uid": "24290b70-85e0-5031-b87a-e4cf9315189b",
+         "attrs": {
+          "ad": "N68",
+          "tur": "ağaç",
+          "no": "2"
+         },
+         "key": 68
+        },
+        {
+         "uid": "96f42831-0d5f-54f7-9413-bad8efef5240",
+         "attrs": {
+          "ad": "N69",
+          "kot": "117.25",
+          "no": "5"
+         },
+         "key": 69
+        },
+        {
+         "uid": "60275fdc-c232-5f6a-96f0-449dbfef79d8",
+         "attrs": {
+          "ad": "N70",
+          "tur": "",
+          "kot": "117.5",
+          "no": "8"
+         },
+         "key": 70
+        },
+        {
+         "uid": "418a5b4d-5ecd-54aa-9420-48b309f757c8",
+         "attrs": {
+          "ad": "N71",
+          "tur": "direk",
+          "kot": "117.75",
+          "no": "11"
+         },
+         "key": 71
+        },
+        {
+         "uid": "30371573-a018-5964-81ea-1279a9d8207c",
+         "attrs": {
+          "ad": "N72",
+          "tur": "rögar",
+          "kot": "118",
+          "no": "14"
+         },
+         "key": 72
+        },
+        {
+         "uid": "d555a2aa-aa34-5e84-b361-c00daa4dc541",
+         "attrs": {
+          "ad": "N73",
+          "tur": "ağaç",
+          "kot": "118.25",
+          "no": "17"
+         },
+         "key": 73
+        },
+        {
+         "uid": "3b3e955a-2ee0-5d48-b769-6d9e5dc574d8",
+         "attrs": {
+          "ad": "N74",
+          "kot": "118.5",
+          "no": "20"
+         },
+         "key": 74
+        },
+        {
+         "uid": "d3191623-98d1-5398-93f2-94d9ef9fd52a",
+         "attrs": {
+          "ad": "N75",
+          "tur": "",
+          "kot": "118.75",
+          "no": "23"
+         },
+         "key": 75
+        },
+        {
+         "uid": "95b45220-965c-5424-8f64-b3d622356e6a",
+         "attrs": {
+          "ad": "N76",
+          "tur": "direk",
+          "kot": "119",
+          "no": "26"
+         },
+         "key": 76
+        },
+        {
+         "uid": "7bfe62f1-eeac-5b5a-9fd1-188d476ae67b",
+         "attrs": {
+          "ad": "N77",
+          "tur": "rögar",
+          "kot": "119.25",
+          "no": "29"
+         },
+         "key": 77
+        },
+        {
+         "uid": "fe106033-8962-574e-b6d1-5f2da1729c87",
+         "attrs": {
+          "ad": "N78",
+          "tur": "ağaç",
+          "kot": "119.5",
+          "no": "32"
+         },
+         "key": 78
+        },
+        {
+         "uid": "fe54406c-6274-5835-974b-c08c6fb1adc2",
+         "attrs": {
+          "ad": "N79",
+          "kot": "119.75",
+          "no": "35"
+         },
+         "key": 79
+        },
+        {
+         "uid": "001eae1b-a911-53f2-b747-518a504e81ed",
+         "attrs": {
+          "ad": "N80",
+          "tur": "",
+          "kot": "120",
+          "no": "38"
+         },
+         "key": 80
+        },
+        {
+         "uid": "dad99bb6-6658-55de-98bb-eb38e4eac623",
+         "attrs": {
+          "ad": "N81",
+          "tur": "direk",
+          "kot": "120.25",
+          "no": "41"
+         },
+         "key": 81
+        },
+        {
+         "uid": "a1435173-a269-5bb2-a720-5004c259fa3b",
+         "attrs": {
+          "ad": "N82",
+          "tur": "rögar",
+          "kot": "120.5",
+          "no": "44"
+         },
+         "key": 82
+        },
+        {
+         "uid": "23e8638d-613a-5b49-a3c7-dd6865733899",
+         "attrs": {
+          "ad": "N83",
+          "tur": "ağaç",
+          "kot": "120.75",
+          "no": "47"
+         },
+         "key": 83
+        },
+        {
+         "uid": "5da0a177-e446-57d1-afee-2fd6b184124d",
+         "attrs": {
+          "ad": "N84",
+          "kot": "121",
+          "no": "50"
+         },
+         "key": 84
+        },
+        {
+         "uid": "3d07e050-cebc-555f-bb74-a3be3093b6df",
+         "attrs": {
+          "ad": "N85",
+          "tur": "",
+          "no": "53"
+         },
+         "key": 85
+        },
+        {
+         "uid": "f7a2dd25-b1ce-52ea-bc30-7d3ded6b196c",
+         "attrs": {
+          "ad": "N86",
+          "tur": "direk",
+          "kot": "121.5",
+          "no": "56"
+         },
+         "key": 86
+        },
+        {
+         "uid": "de4eed18-47a2-5713-933e-61c6fd55dddd",
+         "attrs": {
+          "ad": "N87",
+          "tur": "rögar",
+          "kot": "121.75",
+          "no": "59"
+         },
+         "key": 87
+        },
+        {
+         "uid": "0c2a089c-fbec-5cd3-9bf3-44248f919548",
+         "attrs": {
+          "ad": "N88",
+          "tur": "ağaç",
+          "kot": "122",
+          "no": "62"
+         },
+         "key": 88
+        },
+        {
+         "uid": "5be59850-0203-5db7-85c4-b27a7fac3768",
+         "attrs": {
+          "ad": "N89",
+          "kot": "122.25",
+          "no": "65"
+         },
+         "key": 89
+        },
+        {
+         "uid": "374556ab-765b-5d5d-86a7-350d0bca39c3",
+         "attrs": {
+          "ad": "N90",
+          "tur": "",
+          "kot": "122.5",
+          "no": "68"
+         },
+         "key": 90
+        },
+        {
+         "uid": "ca0067cf-0e37-5233-91ee-21acc4509c9d",
+         "attrs": {
+          "ad": "N91",
+          "tur": "direk",
+          "kot": "122.75",
+          "no": "71"
+         },
+         "key": 91
+        },
+        {
+         "uid": "d6b553ba-cb40-5f08-a732-860bac1ecd1d",
+         "attrs": {
+          "ad": "N92",
+          "tur": "rögar",
+          "kot": "123",
+          "no": "74"
+         },
+         "key": 92
+        },
+        {
+         "uid": "44a0dc7c-102c-5f17-b50c-b5522320dfe0",
+         "attrs": {
+          "ad": "N93",
+          "tur": "ağaç",
+          "kot": "123.25",
+          "no": "77"
+         },
+         "key": 93
+        },
+        {
+         "uid": "8779ed23-cbb9-50a0-ae31-ed92a97e63d9",
+         "attrs": {
+          "ad": "N94",
+          "kot": "123.5",
+          "no": "80"
+         },
+         "key": 94
+        },
+        {
+         "uid": "db4f3461-cd38-5ca2-b9c3-384e12b6ec60",
+         "attrs": {
+          "ad": "N95",
+          "tur": "",
+          "kot": "123.75",
+          "no": "83"
+         },
+         "key": 95
+        },
+        {
+         "uid": "1fbc56ac-5afc-5f8a-919f-4797d7afcd5f",
+         "attrs": {
+          "ad": "N96",
+          "tur": "direk",
+          "kot": "124",
+          "no": "86"
+         },
+         "key": 96
+        },
+        {
+         "uid": "cac9fe9d-6e07-55ae-b4d1-0381f54dc22a",
+         "attrs": {
+          "ad": "N97",
+          "tur": "rögar",
+          "kot": "124.25",
+          "no": "89"
+         },
+         "key": 97
+        },
+        {
+         "uid": "e7a25fdc-40e6-57ac-b192-fd3e8ddab626",
+         "attrs": {
+          "ad": "N98",
+          "tur": "ağaç",
+          "kot": "124.5",
+          "no": "92"
+         },
+         "key": 98
+        },
+        {
+         "uid": "774054d8-7e52-5a20-a659-69d6f8ab55c3",
+         "attrs": {
+          "ad": "N99",
+          "kot": "124.75",
+          "no": "95"
+         },
+         "key": 99
+        },
+        {
+         "uid": "276834ea-c86d-51fb-a3ce-e20a2ded974a",
+         "attrs": {
+          "ad": "N100",
+          "tur": "",
+          "kot": "125",
+          "no": "98"
+         },
+         "key": 100
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "tur",
+         "kot",
+         "no"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "key"
+       },
+       "partial": false,
+       "read": 250,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "k:100"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "imleçten sonraki sayfa: 101. kayıttan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "cursor": "k:100"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "92d298c7-ab05-5f7f-a1be-781779206102",
+         "attrs": {
+          "ad": "N101",
+          "tur": "direk",
+          "kot": "125.25",
+          "no": "0"
+         },
+         "key": 101
+        },
+        {
+         "uid": "7deb767d-e671-5a51-be0f-a95303d8568c",
+         "attrs": {
+          "ad": "N102",
+          "tur": "rögar",
+          "no": "3"
+         },
+         "key": 102
+        },
+        {
+         "uid": "3faf2221-9449-585c-a9c9-d4337a11f19b",
+         "attrs": {
+          "ad": "N103",
+          "tur": "ağaç",
+          "kot": "125.75",
+          "no": "6"
+         },
+         "key": 103
+        },
+        {
+         "uid": "df6b201c-8861-505a-8c8f-3a65db8b080b",
+         "attrs": {
+          "ad": "N104",
+          "kot": "126",
+          "no": "9"
+         },
+         "key": 104
+        },
+        {
+         "uid": "1a4ecbd7-2133-5f59-94ba-eb4f01732c5b",
+         "attrs": {
+          "ad": "N105",
+          "tur": "",
+          "kot": "126.25",
+          "no": "12"
+         },
+         "key": 105
+        },
+        {
+         "uid": "116684bb-7ff2-5dc3-8ca1-257386d33a52",
+         "attrs": {
+          "ad": "N106",
+          "tur": "direk",
+          "kot": "126.5",
+          "no": "15"
+         },
+         "key": 106
+        },
+        {
+         "uid": "9108a480-47e8-5054-8ab8-3741a7ccb381",
+         "attrs": {
+          "ad": "N107",
+          "tur": "rögar",
+          "kot": "126.75",
+          "no": "18"
+         },
+         "key": 107
+        },
+        {
+         "uid": "3e21d5e8-ff73-5b4d-8d6c-8b7f78ee4e77",
+         "attrs": {
+          "ad": "N108",
+          "tur": "ağaç",
+          "kot": "127",
+          "no": "21"
+         },
+         "key": 108
+        },
+        {
+         "uid": "593cafeb-bde2-5c5f-acf6-b763312fec5c",
+         "attrs": {
+          "ad": "N109",
+          "kot": "127.25",
+          "no": "24"
+         },
+         "key": 109
+        },
+        {
+         "uid": "a9b3e23d-d34c-57b4-835c-f6bbbabc0ebe",
+         "attrs": {
+          "ad": "N110",
+          "tur": "",
+          "kot": "127.5",
+          "no": "27"
+         },
+         "key": 110
+        },
+        {
+         "uid": "7b41f1c2-d607-58aa-9a6d-7ebdb1af6222",
+         "attrs": {
+          "ad": "N111",
+          "tur": "direk",
+          "kot": "127.75",
+          "no": "30"
+         },
+         "key": 111
+        },
+        {
+         "uid": "37d22e0b-9002-50fe-9458-fd2cc371b90b",
+         "attrs": {
+          "ad": "N112",
+          "tur": "rögar",
+          "kot": "128",
+          "no": "33"
+         },
+         "key": 112
+        },
+        {
+         "uid": "0ab43ed6-55b6-56c8-a663-41e8bb0cc8c3",
+         "attrs": {
+          "ad": "N113",
+          "tur": "ağaç",
+          "kot": "128.25",
+          "no": "36"
+         },
+         "key": 113
+        },
+        {
+         "uid": "212f2452-0bad-59ca-ba89-0750d2d2a454",
+         "attrs": {
+          "ad": "N114",
+          "kot": "128.5",
+          "no": "39"
+         },
+         "key": 114
+        },
+        {
+         "uid": "254ab724-c9a5-5a99-b350-c41469ec9aee",
+         "attrs": {
+          "ad": "N115",
+          "tur": "",
+          "kot": "128.75",
+          "no": "42"
+         },
+         "key": 115
+        },
+        {
+         "uid": "1f16d984-379f-5d4c-ac01-632bd8a1087a",
+         "attrs": {
+          "ad": "N116",
+          "tur": "direk",
+          "kot": "129",
+          "no": "45"
+         },
+         "key": 116
+        },
+        {
+         "uid": "ebd70540-b170-58d0-884f-0794718d7f3f",
+         "attrs": {
+          "ad": "N117",
+          "tur": "rögar",
+          "kot": "129.25",
+          "no": "48"
+         },
+         "key": 117
+        },
+        {
+         "uid": "869d01d6-3124-5aab-a23b-d03cb8cf3608",
+         "attrs": {
+          "ad": "N118",
+          "tur": "ağaç",
+          "kot": "129.5",
+          "no": "51"
+         },
+         "key": 118
+        },
+        {
+         "uid": "6cd2c35d-1670-5bfc-9730-5309dcdeb30e",
+         "attrs": {
+          "ad": "N119",
+          "no": "54"
+         },
+         "key": 119
+        },
+        {
+         "uid": "24fb5a46-fc6b-5219-960b-e6654837203d",
+         "attrs": {
+          "ad": "N120",
+          "tur": "",
+          "kot": "130",
+          "no": "57"
+         },
+         "key": 120
+        },
+        {
+         "uid": "3dc547e2-9ea1-58f4-ab19-c593a71d97b1",
+         "attrs": {
+          "ad": "N121",
+          "tur": "direk",
+          "kot": "130.25",
+          "no": "60"
+         },
+         "key": 121
+        },
+        {
+         "uid": "b04b2318-d741-50e6-b3b8-5aec9926fab4",
+         "attrs": {
+          "ad": "N122",
+          "tur": "rögar",
+          "kot": "130.5",
+          "no": "63"
+         },
+         "key": 122
+        },
+        {
+         "uid": "0949ebfd-f72a-5fe9-9381-53042890187c",
+         "attrs": {
+          "ad": "N123",
+          "tur": "ağaç",
+          "kot": "130.75",
+          "no": "66"
+         },
+         "key": 123
+        },
+        {
+         "uid": "65bfb0b2-6f81-538f-85d3-fb912e078ad0",
+         "attrs": {
+          "ad": "N124",
+          "kot": "131",
+          "no": "69"
+         },
+         "key": 124
+        },
+        {
+         "uid": "827d1d8c-b94d-528a-89b7-3a0a5950c1c7",
+         "attrs": {
+          "ad": "N125",
+          "tur": "",
+          "kot": "131.25",
+          "no": "72"
+         },
+         "key": 125
+        },
+        {
+         "uid": "ffc6c06e-7384-5190-af62-8410ba41621c",
+         "attrs": {
+          "ad": "N126",
+          "tur": "direk",
+          "kot": "131.5",
+          "no": "75"
+         },
+         "key": 126
+        },
+        {
+         "uid": "2af8e641-a30d-5028-9aca-4d5c3f976bf1",
+         "attrs": {
+          "ad": "N127",
+          "tur": "rögar",
+          "kot": "131.75",
+          "no": "78"
+         },
+         "key": 127
+        },
+        {
+         "uid": "5754002b-4634-589f-a191-84ae1f699a39",
+         "attrs": {
+          "ad": "N128",
+          "tur": "ağaç",
+          "kot": "132",
+          "no": "81"
+         },
+         "key": 128
+        },
+        {
+         "uid": "e385dda2-fce2-52fc-bb2d-b8ff338fb770",
+         "attrs": {
+          "ad": "N129",
+          "kot": "132.25",
+          "no": "84"
+         },
+         "key": 129
+        },
+        {
+         "uid": "a021c065-d3fe-5710-b0fb-fbbce718faeb",
+         "attrs": {
+          "ad": "N130",
+          "tur": "",
+          "kot": "132.5",
+          "no": "87"
+         },
+         "key": 130
+        },
+        {
+         "uid": "cd59bddc-dd11-5afd-88d0-edbc03fc86a9",
+         "attrs": {
+          "ad": "N131",
+          "tur": "direk",
+          "kot": "132.75",
+          "no": "90"
+         },
+         "key": 131
+        },
+        {
+         "uid": "dfa5e15d-23e1-599f-bbc8-84cc73780e1b",
+         "attrs": {
+          "ad": "N132",
+          "tur": "rögar",
+          "kot": "133",
+          "no": "93"
+         },
+         "key": 132
+        },
+        {
+         "uid": "570dbf07-784a-5b6c-bb17-fa88bc22a95e",
+         "attrs": {
+          "ad": "N133",
+          "tur": "ağaç",
+          "kot": "133.25",
+          "no": "96"
+         },
+         "key": 133
+        },
+        {
+         "uid": "514e9649-8a57-5e03-bd24-aacae24f036b",
+         "attrs": {
+          "ad": "N134",
+          "kot": "133.5",
+          "no": "99"
+         },
+         "key": 134
+        },
+        {
+         "uid": "3b1f4908-29d4-567b-a28d-0b68f4e544bd",
+         "attrs": {
+          "ad": "N135",
+          "tur": "",
+          "kot": "133.75",
+          "no": "1"
+         },
+         "key": 135
+        },
+        {
+         "uid": "eb1c4970-1e89-5e1c-813a-1b2d59e3bd12",
+         "attrs": {
+          "ad": "N136",
+          "tur": "direk",
+          "no": "4"
+         },
+         "key": 136
+        },
+        {
+         "uid": "afc5d74b-6f04-50f8-90ff-54192c792de0",
+         "attrs": {
+          "ad": "N137",
+          "tur": "rögar",
+          "kot": "134.25",
+          "no": "7"
+         },
+         "key": 137
+        },
+        {
+         "uid": "3abcdccf-622c-50de-a735-d1e56c11fde2",
+         "attrs": {
+          "ad": "N138",
+          "tur": "ağaç",
+          "kot": "134.5",
+          "no": "10"
+         },
+         "key": 138
+        },
+        {
+         "uid": "f52a553f-a647-5cbc-85bf-4a4a6c83ce9e",
+         "attrs": {
+          "ad": "N139",
+          "kot": "134.75",
+          "no": "13"
+         },
+         "key": 139
+        },
+        {
+         "uid": "c9e36f18-6e77-5068-b6cc-6e878268a353",
+         "attrs": {
+          "ad": "N140",
+          "tur": "",
+          "kot": "135",
+          "no": "16"
+         },
+         "key": 140
+        },
+        {
+         "uid": "98e5992d-aedb-5b6d-bbe8-ffa63c98d9d9",
+         "attrs": {
+          "ad": "N141",
+          "tur": "direk",
+          "kot": "135.25",
+          "no": "19"
+         },
+         "key": 141
+        },
+        {
+         "uid": "9d94c4d0-161f-5134-a36b-b14983b3273d",
+         "attrs": {
+          "ad": "N142",
+          "tur": "rögar",
+          "kot": "135.5",
+          "no": "22"
+         },
+         "key": 142
+        },
+        {
+         "uid": "603c59ef-f1de-5493-a600-43c60a26b18a",
+         "attrs": {
+          "ad": "N143",
+          "tur": "ağaç",
+          "kot": "135.75",
+          "no": "25"
+         },
+         "key": 143
+        },
+        {
+         "uid": "4e3b18f7-4c2c-5904-888c-c0a49264965d",
+         "attrs": {
+          "ad": "N144",
+          "kot": "136",
+          "no": "28"
+         },
+         "key": 144
+        },
+        {
+         "uid": "4da5097a-1b85-594d-a70b-c4d5ddf91f84",
+         "attrs": {
+          "ad": "N145",
+          "tur": "",
+          "kot": "136.25",
+          "no": "31"
+         },
+         "key": 145
+        },
+        {
+         "uid": "3495b542-e15f-5340-be15-2a23260d0a61",
+         "attrs": {
+          "ad": "N146",
+          "tur": "direk",
+          "kot": "136.5",
+          "no": "34"
+         },
+         "key": 146
+        },
+        {
+         "uid": "7396703a-a9b4-52e8-a124-e78591d2f3bf",
+         "attrs": {
+          "ad": "N147",
+          "tur": "rögar",
+          "kot": "136.75",
+          "no": "37"
+         },
+         "key": 147
+        },
+        {
+         "uid": "b3d7b33e-909e-5cd6-b4b7-36153cfd8ac1",
+         "attrs": {
+          "ad": "N148",
+          "tur": "ağaç",
+          "kot": "137",
+          "no": "40"
+         },
+         "key": 148
+        },
+        {
+         "uid": "e2873535-fec7-5af5-9850-f100ecb69cc3",
+         "attrs": {
+          "ad": "N149",
+          "kot": "137.25",
+          "no": "43"
+         },
+         "key": 149
+        },
+        {
+         "uid": "a20a0986-3aaa-5bf4-b0b3-fbb0df600c19",
+         "attrs": {
+          "ad": "N150",
+          "tur": "",
+          "kot": "137.5",
+          "no": "46"
+         },
+         "key": 150
+        },
+        {
+         "uid": "36119cc2-0a53-5189-bcb0-327dc81c8179",
+         "attrs": {
+          "ad": "N151",
+          "tur": "direk",
+          "kot": "137.75",
+          "no": "49"
+         },
+         "key": 151
+        },
+        {
+         "uid": "7d01e2be-ca08-5237-9b29-a76f50571a45",
+         "attrs": {
+          "ad": "N152",
+          "tur": "rögar",
+          "kot": "138",
+          "no": "52"
+         },
+         "key": 152
+        },
+        {
+         "uid": "9ca35088-056a-5d57-bee8-2c0ae17d80e9",
+         "attrs": {
+          "ad": "N153",
+          "tur": "ağaç",
+          "no": "55"
+         },
+         "key": 153
+        },
+        {
+         "uid": "0469f10c-67e8-5ee7-ae94-fffb1e8d8d03",
+         "attrs": {
+          "ad": "N154",
+          "kot": "138.5",
+          "no": "58"
+         },
+         "key": 154
+        },
+        {
+         "uid": "f984ec41-d70c-531e-a463-8fbf841221d3",
+         "attrs": {
+          "ad": "N155",
+          "tur": "",
+          "kot": "138.75",
+          "no": "61"
+         },
+         "key": 155
+        },
+        {
+         "uid": "7708986b-46e2-5d01-bf0b-e1a077c82db4",
+         "attrs": {
+          "ad": "N156",
+          "tur": "direk",
+          "kot": "139",
+          "no": "64"
+         },
+         "key": 156
+        },
+        {
+         "uid": "21c111e4-fae0-5ad2-bee7-7e6036c8d949",
+         "attrs": {
+          "ad": "N157",
+          "tur": "rögar",
+          "kot": "139.25",
+          "no": "67"
+         },
+         "key": 157
+        },
+        {
+         "uid": "2de6e701-6895-5f02-8bda-22b324063b23",
+         "attrs": {
+          "ad": "N158",
+          "tur": "ağaç",
+          "kot": "139.5",
+          "no": "70"
+         },
+         "key": 158
+        },
+        {
+         "uid": "498de488-0ab2-5fe2-9b11-620256e4e1e4",
+         "attrs": {
+          "ad": "N159",
+          "kot": "139.75",
+          "no": "73"
+         },
+         "key": 159
+        },
+        {
+         "uid": "90a5cb56-e0ae-5670-8a5c-7e92bdaeaa83",
+         "attrs": {
+          "ad": "N160",
+          "tur": "",
+          "kot": "140",
+          "no": "76"
+         },
+         "key": 160
+        },
+        {
+         "uid": "82a6a7e6-ae2f-583e-9ddf-560f6c4140dc",
+         "attrs": {
+          "ad": "N161",
+          "tur": "direk",
+          "kot": "140.25",
+          "no": "79"
+         },
+         "key": 161
+        },
+        {
+         "uid": "a4a2c63b-7c72-53c5-8490-670ffbc6c7cc",
+         "attrs": {
+          "ad": "N162",
+          "tur": "rögar",
+          "kot": "140.5",
+          "no": "82"
+         },
+         "key": 162
+        },
+        {
+         "uid": "e542824f-5629-5da3-aec6-073eecb1f6c3",
+         "attrs": {
+          "ad": "N163",
+          "tur": "ağaç",
+          "kot": "140.75",
+          "no": "85"
+         },
+         "key": 163
+        },
+        {
+         "uid": "54b3b8f6-74fc-5474-993a-cca4f1fcb47a",
+         "attrs": {
+          "ad": "N164",
+          "kot": "141",
+          "no": "88"
+         },
+         "key": 164
+        },
+        {
+         "uid": "532c21d9-2021-5d43-9a11-e827714c1894",
+         "attrs": {
+          "ad": "N165",
+          "tur": "",
+          "kot": "141.25",
+          "no": "91"
+         },
+         "key": 165
+        },
+        {
+         "uid": "1409df24-683f-576d-bb24-2295cefe86bc",
+         "attrs": {
+          "ad": "N166",
+          "tur": "direk",
+          "kot": "141.5",
+          "no": "94"
+         },
+         "key": 166
+        },
+        {
+         "uid": "0790a942-b38d-5f99-8ca8-d468378f8e2a",
+         "attrs": {
+          "ad": "N167",
+          "tur": "rögar",
+          "kot": "141.75",
+          "no": "97"
+         },
+         "key": 167
+        },
+        {
+         "uid": "b99178fe-5602-5084-9587-fb58511a8cbb",
+         "attrs": {
+          "ad": "N168",
+          "tur": "ağaç",
+          "kot": "142",
+          "no": "100"
+         },
+         "key": 168
+        },
+        {
+         "uid": "2a2d0680-11a8-579c-b4de-f943597af850",
+         "attrs": {
+          "ad": "N169",
+          "kot": "142.25",
+          "no": "2"
+         },
+         "key": 169
+        },
+        {
+         "uid": "39648b7b-2dfa-5445-b694-6e9f6c44bd0a",
+         "attrs": {
+          "ad": "N170",
+          "tur": "",
+          "no": "5"
+         },
+         "key": 170
+        },
+        {
+         "uid": "29abf984-0fbb-50ca-91f2-4452ce3c5f04",
+         "attrs": {
+          "ad": "N171",
+          "tur": "direk",
+          "kot": "142.75",
+          "no": "8"
+         },
+         "key": 171
+        },
+        {
+         "uid": "fd3ca4ae-3cf9-5fe4-92c6-b7b952dc7b7c",
+         "attrs": {
+          "ad": "N172",
+          "tur": "rögar",
+          "kot": "143",
+          "no": "11"
+         },
+         "key": 172
+        },
+        {
+         "uid": "bc10054e-310e-5411-9b90-747a59626cd7",
+         "attrs": {
+          "ad": "N173",
+          "tur": "ağaç",
+          "kot": "143.25",
+          "no": "14"
+         },
+         "key": 173
+        },
+        {
+         "uid": "be18f4da-5a3b-5f64-aeb1-7dfd218a7f3c",
+         "attrs": {
+          "ad": "N174",
+          "kot": "143.5",
+          "no": "17"
+         },
+         "key": 174
+        },
+        {
+         "uid": "73e54272-5471-514c-95d8-0891eec2b219",
+         "attrs": {
+          "ad": "N175",
+          "tur": "",
+          "kot": "143.75",
+          "no": "20"
+         },
+         "key": 175
+        },
+        {
+         "uid": "5f5bf7ab-fed3-5c6d-a8c9-45878c1687ab",
+         "attrs": {
+          "ad": "N176",
+          "tur": "direk",
+          "kot": "144",
+          "no": "23"
+         },
+         "key": 176
+        },
+        {
+         "uid": "c9e1c2f7-4391-52f1-9353-ebcbc7d5e965",
+         "attrs": {
+          "ad": "N177",
+          "tur": "rögar",
+          "kot": "144.25",
+          "no": "26"
+         },
+         "key": 177
+        },
+        {
+         "uid": "0a5c4be1-7885-565d-a40e-b02550b52140",
+         "attrs": {
+          "ad": "N178",
+          "tur": "ağaç",
+          "kot": "144.5",
+          "no": "29"
+         },
+         "key": 178
+        },
+        {
+         "uid": "8cc48196-ee25-5016-b4ee-dcda4fd1cf5f",
+         "attrs": {
+          "ad": "N179",
+          "kot": "144.75",
+          "no": "32"
+         },
+         "key": 179
+        },
+        {
+         "uid": "9ba2f780-9fd6-5005-bd58-cb7ce779008a",
+         "attrs": {
+          "ad": "N180",
+          "tur": "",
+          "kot": "145",
+          "no": "35"
+         },
+         "key": 180
+        },
+        {
+         "uid": "3c20aa6d-09be-5f38-bd9c-1970bee97ee6",
+         "attrs": {
+          "ad": "N181",
+          "tur": "direk",
+          "kot": "145.25",
+          "no": "38"
+         },
+         "key": 181
+        },
+        {
+         "uid": "b0e124d7-33eb-592c-8cb0-3d37dc56a94b",
+         "attrs": {
+          "ad": "N182",
+          "tur": "rögar",
+          "kot": "145.5",
+          "no": "41"
+         },
+         "key": 182
+        },
+        {
+         "uid": "c7a74b65-ed49-5645-8469-ff91662c461d",
+         "attrs": {
+          "ad": "N183",
+          "tur": "ağaç",
+          "kot": "145.75",
+          "no": "44"
+         },
+         "key": 183
+        },
+        {
+         "uid": "34135c4a-7b5b-575a-9c02-a3e53e53c52f",
+         "attrs": {
+          "ad": "N184",
+          "kot": "146",
+          "no": "47"
+         },
+         "key": 184
+        },
+        {
+         "uid": "2aa75355-375a-58a5-9f51-79dda9163663",
+         "attrs": {
+          "ad": "N185",
+          "tur": "",
+          "kot": "146.25",
+          "no": "50"
+         },
+         "key": 185
+        },
+        {
+         "uid": "896cc3ff-7af5-55a7-b666-79e01c68ddd1",
+         "attrs": {
+          "ad": "N186",
+          "tur": "direk",
+          "kot": "146.5",
+          "no": "53"
+         },
+         "key": 186
+        },
+        {
+         "uid": "60127d93-f295-5e8c-bb03-ea5f17e5a800",
+         "attrs": {
+          "ad": "N187",
+          "tur": "rögar",
+          "no": "56"
+         },
+         "key": 187
+        },
+        {
+         "uid": "3a0bcc5b-3c6c-58a0-97bb-bbae6b552fd2",
+         "attrs": {
+          "ad": "N188",
+          "tur": "ağaç",
+          "kot": "147",
+          "no": "59"
+         },
+         "key": 188
+        },
+        {
+         "uid": "b115e6d9-0e5d-57ce-8df3-96c7ae14b145",
+         "attrs": {
+          "ad": "N189",
+          "kot": "147.25",
+          "no": "62"
+         },
+         "key": 189
+        },
+        {
+         "uid": "7fb16f91-6bdb-5d58-af48-81fdb4f8e73b",
+         "attrs": {
+          "ad": "N190",
+          "tur": "",
+          "kot": "147.5",
+          "no": "65"
+         },
+         "key": 190
+        },
+        {
+         "uid": "50b87948-5ff7-581f-ae45-59f3dc4290e5",
+         "attrs": {
+          "ad": "N191",
+          "tur": "direk",
+          "kot": "147.75",
+          "no": "68"
+         },
+         "key": 191
+        },
+        {
+         "uid": "69639111-31b0-596b-8735-7963a98da89a",
+         "attrs": {
+          "ad": "N192",
+          "tur": "rögar",
+          "kot": "148",
+          "no": "71"
+         },
+         "key": 192
+        },
+        {
+         "uid": "38ad7bff-c047-5aa8-94a9-f89acb689cf7",
+         "attrs": {
+          "ad": "N193",
+          "tur": "ağaç",
+          "kot": "148.25",
+          "no": "74"
+         },
+         "key": 193
+        },
+        {
+         "uid": "e9cbfc4b-5095-545f-84d7-d36dbf7df0cd",
+         "attrs": {
+          "ad": "N194",
+          "kot": "148.5",
+          "no": "77"
+         },
+         "key": 194
+        },
+        {
+         "uid": "4b15a696-5b75-5350-8efd-67ce1d3d2b0a",
+         "attrs": {
+          "ad": "N195",
+          "tur": "",
+          "kot": "148.75",
+          "no": "80"
+         },
+         "key": 195
+        },
+        {
+         "uid": "c3a4578c-6e04-50c6-a8d8-6664ac4c38b9",
+         "attrs": {
+          "ad": "N196",
+          "tur": "direk",
+          "kot": "149",
+          "no": "83"
+         },
+         "key": 196
+        },
+        {
+         "uid": "bd525a95-29be-5bf6-95bc-8cb5173817ab",
+         "attrs": {
+          "ad": "N197",
+          "tur": "rögar",
+          "kot": "149.25",
+          "no": "86"
+         },
+         "key": 197
+        },
+        {
+         "uid": "4ee9968e-d1d8-59a5-9b9e-375509341b50",
+         "attrs": {
+          "ad": "N198",
+          "tur": "ağaç",
+          "kot": "149.5",
+          "no": "89"
+         },
+         "key": 198
+        },
+        {
+         "uid": "1e6645ba-67c7-5c63-9daf-35a57117d255",
+         "attrs": {
+          "ad": "N199",
+          "kot": "149.75",
+          "no": "92"
+         },
+         "key": 199
+        },
+        {
+         "uid": "94561a48-dafe-594f-a93c-6679bf55acf2",
+         "attrs": {
+          "ad": "N200",
+          "tur": "",
+          "kot": "150",
+          "no": "95"
+         },
+         "key": 200
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "tur",
+         "kot",
+         "no"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "key"
+       },
+       "partial": false,
+       "read": 150,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "k:200"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "son sayfa: sonraki imleç yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "cursor": "k:200"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "3edfa936-c145-5ec8-80a1-d0f6695e3ff2",
+         "attrs": {
+          "ad": "N201",
+          "tur": "direk",
+          "kot": "150.25",
+          "no": "98"
+         },
+         "key": 201
+        },
+        {
+         "uid": "6432c943-c2ad-507e-b868-ab6bd5907d29",
+         "attrs": {
+          "ad": "N202",
+          "tur": "rögar",
+          "kot": "150.5",
+          "no": "0"
+         },
+         "key": 202
+        },
+        {
+         "uid": "77d48795-da9b-568f-a26d-b49c066a4350",
+         "attrs": {
+          "ad": "N203",
+          "tur": "ağaç",
+          "kot": "150.75",
+          "no": "3"
+         },
+         "key": 203
+        },
+        {
+         "uid": "cda50721-a5f4-53fd-8840-134a3cd8263d",
+         "attrs": {
+          "ad": "N204",
+          "no": "6"
+         },
+         "key": 204
+        },
+        {
+         "uid": "68a13fcf-a448-571b-905d-b6774944779c",
+         "attrs": {
+          "ad": "N205",
+          "tur": "",
+          "kot": "151.25",
+          "no": "9"
+         },
+         "key": 205
+        },
+        {
+         "uid": "4cc02457-879c-568f-8ad9-b3a9d29b9193",
+         "attrs": {
+          "ad": "N206",
+          "tur": "direk",
+          "kot": "151.5",
+          "no": "12"
+         },
+         "key": 206
+        },
+        {
+         "uid": "e664448f-23f3-5113-bd27-36323dfe64a4",
+         "attrs": {
+          "ad": "N207",
+          "tur": "rögar",
+          "kot": "151.75",
+          "no": "15"
+         },
+         "key": 207
+        },
+        {
+         "uid": "37be12d9-e448-5f38-91c2-431a263f600e",
+         "attrs": {
+          "ad": "N208",
+          "tur": "ağaç",
+          "kot": "152",
+          "no": "18"
+         },
+         "key": 208
+        },
+        {
+         "uid": "35a4ba99-ddc5-5789-ba88-c8f179dbad66",
+         "attrs": {
+          "ad": "N209",
+          "kot": "152.25",
+          "no": "21"
+         },
+         "key": 209
+        },
+        {
+         "uid": "90499ddc-4359-51bd-acab-367697f45f27",
+         "attrs": {
+          "ad": "N210",
+          "tur": "",
+          "kot": "152.5",
+          "no": "24"
+         },
+         "key": 210
+        },
+        {
+         "uid": "0af05a21-1618-5754-b279-29bc6c55e4f8",
+         "attrs": {
+          "ad": "N211",
+          "tur": "direk",
+          "kot": "152.75",
+          "no": "27"
+         },
+         "key": 211
+        },
+        {
+         "uid": "1cd780cf-ee5e-582b-86ba-ad03349bd629",
+         "attrs": {
+          "ad": "N212",
+          "tur": "rögar",
+          "kot": "153",
+          "no": "30"
+         },
+         "key": 212
+        },
+        {
+         "uid": "49a3ef66-2ca1-5881-a8a9-6f4312a47d0a",
+         "attrs": {
+          "ad": "N213",
+          "tur": "ağaç",
+          "kot": "153.25",
+          "no": "33"
+         },
+         "key": 213
+        },
+        {
+         "uid": "237df4e7-cc24-5f37-b404-d4557385cc5f",
+         "attrs": {
+          "ad": "N214",
+          "kot": "153.5",
+          "no": "36"
+         },
+         "key": 214
+        },
+        {
+         "uid": "4e71f0c1-2e9e-5848-8661-aa1ccdb8ba7a",
+         "attrs": {
+          "ad": "N215",
+          "tur": "",
+          "kot": "153.75",
+          "no": "39"
+         },
+         "key": 215
+        },
+        {
+         "uid": "d68ba861-6e09-5a3a-9fb3-8cbbb5710a16",
+         "attrs": {
+          "ad": "N216",
+          "tur": "direk",
+          "kot": "154",
+          "no": "42"
+         },
+         "key": 216
+        },
+        {
+         "uid": "98ed8935-96df-5f9b-aec7-946d8bfe6d5b",
+         "attrs": {
+          "ad": "N217",
+          "tur": "rögar",
+          "kot": "154.25",
+          "no": "45"
+         },
+         "key": 217
+        },
+        {
+         "uid": "e66b2ed3-9be2-5946-9b4a-32763b631b8b",
+         "attrs": {
+          "ad": "N218",
+          "tur": "ağaç",
+          "kot": "154.5",
+          "no": "48"
+         },
+         "key": 218
+        },
+        {
+         "uid": "3c18838e-5797-5091-af35-383d46949a14",
+         "attrs": {
+          "ad": "N219",
+          "kot": "154.75",
+          "no": "51"
+         },
+         "key": 219
+        },
+        {
+         "uid": "209f9afd-4240-51ac-8f2f-da5f8199216a",
+         "attrs": {
+          "ad": "N220",
+          "tur": "",
+          "kot": "155",
+          "no": "54"
+         },
+         "key": 220
+        },
+        {
+         "uid": "fe9903b4-e72f-540f-894d-853e8e99e974",
+         "attrs": {
+          "ad": "N221",
+          "tur": "direk",
+          "no": "57"
+         },
+         "key": 221
+        },
+        {
+         "uid": "27686e94-d355-5554-897c-d1efb86e3179",
+         "attrs": {
+          "ad": "N222",
+          "tur": "rögar",
+          "kot": "155.5",
+          "no": "60"
+         },
+         "key": 222
+        },
+        {
+         "uid": "5abf1d13-aa56-5822-bca8-28cd95533de6",
+         "attrs": {
+          "ad": "N223",
+          "tur": "ağaç",
+          "kot": "155.75",
+          "no": "63"
+         },
+         "key": 223
+        },
+        {
+         "uid": "fda483f5-b283-5156-9c06-639ccd4e4b94",
+         "attrs": {
+          "ad": "N224",
+          "kot": "156",
+          "no": "66"
+         },
+         "key": 224
+        },
+        {
+         "uid": "4500fcc5-1dd6-5bee-b8b9-46a5a56142b1",
+         "attrs": {
+          "ad": "N225",
+          "tur": "",
+          "kot": "156.25",
+          "no": "69"
+         },
+         "key": 225
+        },
+        {
+         "uid": "92514efb-0d46-5007-a72b-24b1c2b2413c",
+         "attrs": {
+          "ad": "N226",
+          "tur": "direk",
+          "kot": "156.5",
+          "no": "72"
+         },
+         "key": 226
+        },
+        {
+         "uid": "a0207802-2f2e-5f78-a06c-4c1643729ef9",
+         "attrs": {
+          "ad": "N227",
+          "tur": "rögar",
+          "kot": "156.75",
+          "no": "75"
+         },
+         "key": 227
+        },
+        {
+         "uid": "0df4425a-ed4c-55da-958b-826b7322771a",
+         "attrs": {
+          "ad": "N228",
+          "tur": "ağaç",
+          "kot": "157",
+          "no": "78"
+         },
+         "key": 228
+        },
+        {
+         "uid": "32ed6a7c-757f-5adb-8021-36c40c5e4f92",
+         "attrs": {
+          "ad": "N229",
+          "kot": "157.25",
+          "no": "81"
+         },
+         "key": 229
+        },
+        {
+         "uid": "b2914eb0-a1b0-5ab4-850b-4f382bdf7095",
+         "attrs": {
+          "ad": "N230",
+          "tur": "",
+          "kot": "157.5",
+          "no": "84"
+         },
+         "key": 230
+        },
+        {
+         "uid": "cc6df587-e225-5956-9c03-1a64bf08ccf5",
+         "attrs": {
+          "ad": "N231",
+          "tur": "direk",
+          "kot": "157.75",
+          "no": "87"
+         },
+         "key": 231
+        },
+        {
+         "uid": "bb271d36-5097-5408-b0aa-5638eeb6eb87",
+         "attrs": {
+          "ad": "N232",
+          "tur": "rögar",
+          "kot": "158",
+          "no": "90"
+         },
+         "key": 232
+        },
+        {
+         "uid": "6f8f74f4-6837-5863-96ac-d09afe071e22",
+         "attrs": {
+          "ad": "N233",
+          "tur": "ağaç",
+          "kot": "158.25",
+          "no": "93"
+         },
+         "key": 233
+        },
+        {
+         "uid": "11630636-0b26-5b40-9c28-1e3318a0dc0e",
+         "attrs": {
+          "ad": "N234",
+          "kot": "158.5",
+          "no": "96"
+         },
+         "key": 234
+        },
+        {
+         "uid": "e311dd3d-3674-5c57-b5f1-04f57754da14",
+         "attrs": {
+          "ad": "N235",
+          "tur": "",
+          "kot": "158.75",
+          "no": "99"
+         },
+         "key": 235
+        },
+        {
+         "uid": "895a6806-8971-5f33-8c1a-4168c0c1d33b",
+         "attrs": {
+          "ad": "N236",
+          "tur": "direk",
+          "kot": "159",
+          "no": "1"
+         },
+         "key": 236
+        },
+        {
+         "uid": "4177daf1-9c6d-53a9-983e-d72493815553",
+         "attrs": {
+          "ad": "N237",
+          "tur": "rögar",
+          "kot": "159.25",
+          "no": "4"
+         },
+         "key": 237
+        },
+        {
+         "uid": "d5376c26-09b3-53db-a8b2-026db845e7b6",
+         "attrs": {
+          "ad": "N238",
+          "tur": "ağaç",
+          "no": "7"
+         },
+         "key": 238
+        },
+        {
+         "uid": "46cfad28-f945-5d62-b7b7-d7f31e786b8d",
+         "attrs": {
+          "ad": "N239",
+          "kot": "159.75",
+          "no": "10"
+         },
+         "key": 239
+        },
+        {
+         "uid": "adfca7cd-786e-51f1-a4c0-0f118f8ad6fb",
+         "attrs": {
+          "ad": "N240",
+          "tur": "",
+          "kot": "160",
+          "no": "13"
+         },
+         "key": 240
+        },
+        {
+         "uid": "735fc508-f307-52d2-a13b-53c7467b0077",
+         "attrs": {
+          "ad": "N241",
+          "tur": "direk",
+          "kot": "160.25",
+          "no": "16"
+         },
+         "key": 241
+        },
+        {
+         "uid": "be4337c3-3f58-58db-9c06-b4e9d9b13d60",
+         "attrs": {
+          "ad": "N242",
+          "tur": "rögar",
+          "kot": "160.5",
+          "no": "19"
+         },
+         "key": 242
+        },
+        {
+         "uid": "e1fc868e-ee37-5aa3-bb42-d7128462a784",
+         "attrs": {
+          "ad": "N243",
+          "tur": "ağaç",
+          "kot": "160.75",
+          "no": "22"
+         },
+         "key": 243
+        },
+        {
+         "uid": "7ed57d3b-5f33-5abf-b434-f3211badea13",
+         "attrs": {
+          "ad": "N244",
+          "kot": "161",
+          "no": "25"
+         },
+         "key": 244
+        },
+        {
+         "uid": "bfb07821-c4a4-5b4f-b8ae-211288abf512",
+         "attrs": {
+          "ad": "N245",
+          "tur": "",
+          "kot": "161.25",
+          "no": "28"
+         },
+         "key": 245
+        },
+        {
+         "uid": "75fc22b9-27a4-544b-87f9-b31e61a10f93",
+         "attrs": {
+          "ad": "N246",
+          "tur": "direk",
+          "kot": "161.5",
+          "no": "31"
+         },
+         "key": 246
+        },
+        {
+         "uid": "2b33e0ca-8654-5cbf-9c13-06d9565dfd5e",
+         "attrs": {
+          "ad": "N247",
+          "tur": "rögar",
+          "kot": "161.75",
+          "no": "34"
+         },
+         "key": 247
+        },
+        {
+         "uid": "02f30e9e-32d3-5819-822a-e64aa75c6b49",
+         "attrs": {
+          "ad": "N248",
+          "tur": "ağaç",
+          "kot": "162",
+          "no": "37"
+         },
+         "key": 248
+        },
+        {
+         "uid": "f8d5e110-3ac6-5ee3-a4be-bd53b481893a",
+         "attrs": {
+          "ad": "N249",
+          "kot": "162.25",
+          "no": "40"
+         },
+         "key": 249
+        },
+        {
+         "uid": "af26e939-8a80-59cc-aed8-5e2cd0b25f71",
+         "attrs": {
+          "ad": "N250",
+          "tur": "",
+          "kot": "162.5",
+          "no": "43"
+         },
+         "key": 250
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "tur",
+         "kot",
+         "no"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "key"
+       },
+       "partial": false,
+       "read": 50,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız istenen sütunlar okunur ve verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "fields": [
+       "ad",
+       "no"
+      ],
+      "limit": 5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "5ce8f619-8129-5551-a5e6-ea0c29175c3e",
+         "attrs": {
+          "ad": "N1",
+          "no": "3"
+         },
+         "key": 1
+        },
+        {
+         "uid": "2b12bdbd-bcb3-5f29-8948-1dd485f26b0a",
+         "attrs": {
+          "ad": "N2",
+          "no": "6"
+         },
+         "key": 2
+        },
+        {
+         "uid": "83c03b44-bd73-5ef7-b040-723a3014b54d",
+         "attrs": {
+          "ad": "N3",
+          "no": "9"
+         },
+         "key": 3
+        },
+        {
+         "uid": "b182455d-9c7c-5e13-b970-90bd3f9a2693",
+         "attrs": {
+          "ad": "N4",
+          "no": "12"
+         },
+         "key": 4
+        },
+        {
+         "uid": "ff3e68b0-d8b5-5364-941c-000c5166112a",
+         "attrs": {
+          "ad": "N5",
+          "no": "15"
+         },
+         "key": 5
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "no"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "key"
+       },
+       "partial": false,
+       "read": 250,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "k:5"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sayı sütununda sıralama kaynağa gider; metin tutan satır da gelir, burada düşer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "filter": "kot > 150",
+      "fields": [
+       "ad"
+      ],
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "747a3ffe-bd5e-5bac-929e-a718fc593f1b",
+         "attrs": {
+          "ad": "N60"
+         },
+         "key": 60
+        },
+        {
+         "uid": "3edfa936-c145-5ec8-80a1-d0f6695e3ff2",
+         "attrs": {
+          "ad": "N201"
+         },
+         "key": 201
+        },
+        {
+         "uid": "6432c943-c2ad-507e-b868-ab6bd5907d29",
+         "attrs": {
+          "ad": "N202"
+         },
+         "key": 202
+        },
+        {
+         "uid": "77d48795-da9b-568f-a26d-b49c066a4350",
+         "attrs": {
+          "ad": "N203"
+         },
+         "key": 203
+        },
+        {
+         "uid": "68a13fcf-a448-571b-905d-b6774944779c",
+         "attrs": {
+          "ad": "N205"
+         },
+         "key": 205
+        },
+        {
+         "uid": "4cc02457-879c-568f-8ad9-b3a9d29b9193",
+         "attrs": {
+          "ad": "N206"
+         },
+         "key": 206
+        },
+        {
+         "uid": "e664448f-23f3-5113-bd27-36323dfe64a4",
+         "attrs": {
+          "ad": "N207"
+         },
+         "key": 207
+        },
+        {
+         "uid": "37be12d9-e448-5f38-91c2-431a263f600e",
+         "attrs": {
+          "ad": "N208"
+         },
+         "key": 208
+        },
+        {
+         "uid": "35a4ba99-ddc5-5789-ba88-c8f179dbad66",
+         "attrs": {
+          "ad": "N209"
+         },
+         "key": 209
+        },
+        {
+         "uid": "90499ddc-4359-51bd-acab-367697f45f27",
+         "attrs": {
+          "ad": "N210"
+         },
+         "key": 210
+        },
+        {
+         "uid": "0af05a21-1618-5754-b279-29bc6c55e4f8",
+         "attrs": {
+          "ad": "N211"
+         },
+         "key": 211
+        },
+        {
+         "uid": "1cd780cf-ee5e-582b-86ba-ad03349bd629",
+         "attrs": {
+          "ad": "N212"
+         },
+         "key": 212
+        },
+        {
+         "uid": "49a3ef66-2ca1-5881-a8a9-6f4312a47d0a",
+         "attrs": {
+          "ad": "N213"
+         },
+         "key": 213
+        },
+        {
+         "uid": "237df4e7-cc24-5f37-b404-d4557385cc5f",
+         "attrs": {
+          "ad": "N214"
+         },
+         "key": 214
+        },
+        {
+         "uid": "4e71f0c1-2e9e-5848-8661-aa1ccdb8ba7a",
+         "attrs": {
+          "ad": "N215"
+         },
+         "key": 215
+        },
+        {
+         "uid": "d68ba861-6e09-5a3a-9fb3-8cbbb5710a16",
+         "attrs": {
+          "ad": "N216"
+         },
+         "key": 216
+        },
+        {
+         "uid": "98ed8935-96df-5f9b-aec7-946d8bfe6d5b",
+         "attrs": {
+          "ad": "N217"
+         },
+         "key": 217
+        },
+        {
+         "uid": "e66b2ed3-9be2-5946-9b4a-32763b631b8b",
+         "attrs": {
+          "ad": "N218"
+         },
+         "key": 218
+        },
+        {
+         "uid": "3c18838e-5797-5091-af35-383d46949a14",
+         "attrs": {
+          "ad": "N219"
+         },
+         "key": 219
+        },
+        {
+         "uid": "209f9afd-4240-51ac-8f2f-da5f8199216a",
+         "attrs": {
+          "ad": "N220"
+         },
+         "key": 220
+        },
+        {
+         "uid": "27686e94-d355-5554-897c-d1efb86e3179",
+         "attrs": {
+          "ad": "N222"
+         },
+         "key": 222
+        },
+        {
+         "uid": "5abf1d13-aa56-5822-bca8-28cd95533de6",
+         "attrs": {
+          "ad": "N223"
+         },
+         "key": 223
+        },
+        {
+         "uid": "fda483f5-b283-5156-9c06-639ccd4e4b94",
+         "attrs": {
+          "ad": "N224"
+         },
+         "key": 224
+        },
+        {
+         "uid": "4500fcc5-1dd6-5bee-b8b9-46a5a56142b1",
+         "attrs": {
+          "ad": "N225"
+         },
+         "key": 225
+        },
+        {
+         "uid": "92514efb-0d46-5007-a72b-24b1c2b2413c",
+         "attrs": {
+          "ad": "N226"
+         },
+         "key": 226
+        },
+        {
+         "uid": "a0207802-2f2e-5f78-a06c-4c1643729ef9",
+         "attrs": {
+          "ad": "N227"
+         },
+         "key": 227
+        },
+        {
+         "uid": "0df4425a-ed4c-55da-958b-826b7322771a",
+         "attrs": {
+          "ad": "N228"
+         },
+         "key": 228
+        },
+        {
+         "uid": "32ed6a7c-757f-5adb-8021-36c40c5e4f92",
+         "attrs": {
+          "ad": "N229"
+         },
+         "key": 229
+        },
+        {
+         "uid": "b2914eb0-a1b0-5ab4-850b-4f382bdf7095",
+         "attrs": {
+          "ad": "N230"
+         },
+         "key": 230
+        },
+        {
+         "uid": "cc6df587-e225-5956-9c03-1a64bf08ccf5",
+         "attrs": {
+          "ad": "N231"
+         },
+         "key": 231
+        },
+        {
+         "uid": "bb271d36-5097-5408-b0aa-5638eeb6eb87",
+         "attrs": {
+          "ad": "N232"
+         },
+         "key": 232
+        },
+        {
+         "uid": "6f8f74f4-6837-5863-96ac-d09afe071e22",
+         "attrs": {
+          "ad": "N233"
+         },
+         "key": 233
+        },
+        {
+         "uid": "11630636-0b26-5b40-9c28-1e3318a0dc0e",
+         "attrs": {
+          "ad": "N234"
+         },
+         "key": 234
+        },
+        {
+         "uid": "e311dd3d-3674-5c57-b5f1-04f57754da14",
+         "attrs": {
+          "ad": "N235"
+         },
+         "key": 235
+        },
+        {
+         "uid": "895a6806-8971-5f33-8c1a-4168c0c1d33b",
+         "attrs": {
+          "ad": "N236"
+         },
+         "key": 236
+        },
+        {
+         "uid": "4177daf1-9c6d-53a9-983e-d72493815553",
+         "attrs": {
+          "ad": "N237"
+         },
+         "key": 237
+        },
+        {
+         "uid": "46cfad28-f945-5d62-b7b7-d7f31e786b8d",
+         "attrs": {
+          "ad": "N239"
+         },
+         "key": 239
+        },
+        {
+         "uid": "adfca7cd-786e-51f1-a4c0-0f118f8ad6fb",
+         "attrs": {
+          "ad": "N240"
+         },
+         "key": 240
+        },
+        {
+         "uid": "735fc508-f307-52d2-a13b-53c7467b0077",
+         "attrs": {
+          "ad": "N241"
+         },
+         "key": 241
+        },
+        {
+         "uid": "be4337c3-3f58-58db-9c06-b4e9d9b13d60",
+         "attrs": {
+          "ad": "N242"
+         },
+         "key": 242
+        },
+        {
+         "uid": "e1fc868e-ee37-5aa3-bb42-d7128462a784",
+         "attrs": {
+          "ad": "N243"
+         },
+         "key": 243
+        },
+        {
+         "uid": "7ed57d3b-5f33-5abf-b434-f3211badea13",
+         "attrs": {
+          "ad": "N244"
+         },
+         "key": 244
+        },
+        {
+         "uid": "bfb07821-c4a4-5b4f-b8ae-211288abf512",
+         "attrs": {
+          "ad": "N245"
+         },
+         "key": 245
+        },
+        {
+         "uid": "75fc22b9-27a4-544b-87f9-b31e61a10f93",
+         "attrs": {
+          "ad": "N246"
+         },
+         "key": 246
+        },
+        {
+         "uid": "2b33e0ca-8654-5cbf-9c13-06d9565dfd5e",
+         "attrs": {
+          "ad": "N247"
+         },
+         "key": 247
+        },
+        {
+         "uid": "02f30e9e-32d3-5819-822a-e64aa75c6b49",
+         "attrs": {
+          "ad": "N248"
+         },
+         "key": 248
+        },
+        {
+         "uid": "f8d5e110-3ac6-5ee3-a4be-bd53b481893a",
+         "attrs": {
+          "ad": "N249"
+         },
+         "key": 249
+        },
+        {
+         "uid": "af26e939-8a80-59cc-aed8-5e2cd0b25f71",
+         "attrs": {
+          "ad": "N250"
+         },
+         "key": 250
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "kot"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "filter"
+        ],
+        "order": "key",
+        "pushed": "(\"kot\" > 150 OR typeof(\"kot\") = 'text')"
+       },
+       "partial": false,
+       "read": 48,
+       "stamp": "$any",
+       "revision": "$current",
+       "total": 48
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "metin eşitliği kaynağa tam gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "filter": "tur = 'rögar'",
+      "fields": [
+       "ad"
+      ],
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "2b12bdbd-bcb3-5f29-8948-1dd485f26b0a",
+         "attrs": {
+          "ad": "N2"
+         },
+         "key": 2
+        },
+        {
+         "uid": "f89a9d58-2e07-565d-b61e-7e08fec0cd90",
+         "attrs": {
+          "ad": "N7"
+         },
+         "key": 7
+        },
+        {
+         "uid": "671a6407-d38f-5f59-8946-2f1f4f2c1346",
+         "attrs": {
+          "ad": "N12"
+         },
+         "key": 12
+        },
+        {
+         "uid": "a07cd2a4-2ffb-546e-934d-56e64c0e8210",
+         "attrs": {
+          "ad": "N17"
+         },
+         "key": 17
+        },
+        {
+         "uid": "de606c0a-2d02-5c6a-9c27-29db243dd505",
+         "attrs": {
+          "ad": "N22"
+         },
+         "key": 22
+        },
+        {
+         "uid": "d00b814c-0994-56c4-a494-a723d2fb53f6",
+         "attrs": {
+          "ad": "N27"
+         },
+         "key": 27
+        },
+        {
+         "uid": "b1046b8d-d254-5dc0-a0f6-8c01839e64b2",
+         "attrs": {
+          "ad": "N32"
+         },
+         "key": 32
+        },
+        {
+         "uid": "63a4e24f-bbff-56a5-91bc-be49bcd4aaa1",
+         "attrs": {
+          "ad": "N37"
+         },
+         "key": 37
+        },
+        {
+         "uid": "7522e72e-536e-5247-b598-090f819e136a",
+         "attrs": {
+          "ad": "N42"
+         },
+         "key": 42
+        },
+        {
+         "uid": "e46c9c8e-96ce-5e74-ba7b-6f0f92b93b08",
+         "attrs": {
+          "ad": "N47"
+         },
+         "key": 47
+        },
+        {
+         "uid": "629e18ac-1984-55b5-8a41-770c38530216",
+         "attrs": {
+          "ad": "N52"
+         },
+         "key": 52
+        },
+        {
+         "uid": "5e006f17-80e2-59ba-bb69-6dc1fdfca0c4",
+         "attrs": {
+          "ad": "N57"
+         },
+         "key": 57
+        },
+        {
+         "uid": "8a5510fc-824b-5218-8f76-965e72942168",
+         "attrs": {
+          "ad": "N62"
+         },
+         "key": 62
+        },
+        {
+         "uid": "fb9c7e7d-6c8c-5a71-89e6-aa8cca2b6fab",
+         "attrs": {
+          "ad": "N67"
+         },
+         "key": 67
+        },
+        {
+         "uid": "30371573-a018-5964-81ea-1279a9d8207c",
+         "attrs": {
+          "ad": "N72"
+         },
+         "key": 72
+        },
+        {
+         "uid": "7bfe62f1-eeac-5b5a-9fd1-188d476ae67b",
+         "attrs": {
+          "ad": "N77"
+         },
+         "key": 77
+        },
+        {
+         "uid": "a1435173-a269-5bb2-a720-5004c259fa3b",
+         "attrs": {
+          "ad": "N82"
+         },
+         "key": 82
+        },
+        {
+         "uid": "de4eed18-47a2-5713-933e-61c6fd55dddd",
+         "attrs": {
+          "ad": "N87"
+         },
+         "key": 87
+        },
+        {
+         "uid": "d6b553ba-cb40-5f08-a732-860bac1ecd1d",
+         "attrs": {
+          "ad": "N92"
+         },
+         "key": 92
+        },
+        {
+         "uid": "cac9fe9d-6e07-55ae-b4d1-0381f54dc22a",
+         "attrs": {
+          "ad": "N97"
+         },
+         "key": 97
+        },
+        {
+         "uid": "7deb767d-e671-5a51-be0f-a95303d8568c",
+         "attrs": {
+          "ad": "N102"
+         },
+         "key": 102
+        },
+        {
+         "uid": "9108a480-47e8-5054-8ab8-3741a7ccb381",
+         "attrs": {
+          "ad": "N107"
+         },
+         "key": 107
+        },
+        {
+         "uid": "37d22e0b-9002-50fe-9458-fd2cc371b90b",
+         "attrs": {
+          "ad": "N112"
+         },
+         "key": 112
+        },
+        {
+         "uid": "ebd70540-b170-58d0-884f-0794718d7f3f",
+         "attrs": {
+          "ad": "N117"
+         },
+         "key": 117
+        },
+        {
+         "uid": "b04b2318-d741-50e6-b3b8-5aec9926fab4",
+         "attrs": {
+          "ad": "N122"
+         },
+         "key": 122
+        },
+        {
+         "uid": "2af8e641-a30d-5028-9aca-4d5c3f976bf1",
+         "attrs": {
+          "ad": "N127"
+         },
+         "key": 127
+        },
+        {
+         "uid": "dfa5e15d-23e1-599f-bbc8-84cc73780e1b",
+         "attrs": {
+          "ad": "N132"
+         },
+         "key": 132
+        },
+        {
+         "uid": "afc5d74b-6f04-50f8-90ff-54192c792de0",
+         "attrs": {
+          "ad": "N137"
+         },
+         "key": 137
+        },
+        {
+         "uid": "9d94c4d0-161f-5134-a36b-b14983b3273d",
+         "attrs": {
+          "ad": "N142"
+         },
+         "key": 142
+        },
+        {
+         "uid": "7396703a-a9b4-52e8-a124-e78591d2f3bf",
+         "attrs": {
+          "ad": "N147"
+         },
+         "key": 147
+        },
+        {
+         "uid": "7d01e2be-ca08-5237-9b29-a76f50571a45",
+         "attrs": {
+          "ad": "N152"
+         },
+         "key": 152
+        },
+        {
+         "uid": "21c111e4-fae0-5ad2-bee7-7e6036c8d949",
+         "attrs": {
+          "ad": "N157"
+         },
+         "key": 157
+        },
+        {
+         "uid": "a4a2c63b-7c72-53c5-8490-670ffbc6c7cc",
+         "attrs": {
+          "ad": "N162"
+         },
+         "key": 162
+        },
+        {
+         "uid": "0790a942-b38d-5f99-8ca8-d468378f8e2a",
+         "attrs": {
+          "ad": "N167"
+         },
+         "key": 167
+        },
+        {
+         "uid": "fd3ca4ae-3cf9-5fe4-92c6-b7b952dc7b7c",
+         "attrs": {
+          "ad": "N172"
+         },
+         "key": 172
+        },
+        {
+         "uid": "c9e1c2f7-4391-52f1-9353-ebcbc7d5e965",
+         "attrs": {
+          "ad": "N177"
+         },
+         "key": 177
+        },
+        {
+         "uid": "b0e124d7-33eb-592c-8cb0-3d37dc56a94b",
+         "attrs": {
+          "ad": "N182"
+         },
+         "key": 182
+        },
+        {
+         "uid": "60127d93-f295-5e8c-bb03-ea5f17e5a800",
+         "attrs": {
+          "ad": "N187"
+         },
+         "key": 187
+        },
+        {
+         "uid": "69639111-31b0-596b-8735-7963a98da89a",
+         "attrs": {
+          "ad": "N192"
+         },
+         "key": 192
+        },
+        {
+         "uid": "bd525a95-29be-5bf6-95bc-8cb5173817ab",
+         "attrs": {
+          "ad": "N197"
+         },
+         "key": 197
+        },
+        {
+         "uid": "6432c943-c2ad-507e-b868-ab6bd5907d29",
+         "attrs": {
+          "ad": "N202"
+         },
+         "key": 202
+        },
+        {
+         "uid": "e664448f-23f3-5113-bd27-36323dfe64a4",
+         "attrs": {
+          "ad": "N207"
+         },
+         "key": 207
+        },
+        {
+         "uid": "1cd780cf-ee5e-582b-86ba-ad03349bd629",
+         "attrs": {
+          "ad": "N212"
+         },
+         "key": 212
+        },
+        {
+         "uid": "98ed8935-96df-5f9b-aec7-946d8bfe6d5b",
+         "attrs": {
+          "ad": "N217"
+         },
+         "key": 217
+        },
+        {
+         "uid": "27686e94-d355-5554-897c-d1efb86e3179",
+         "attrs": {
+          "ad": "N222"
+         },
+         "key": 222
+        },
+        {
+         "uid": "a0207802-2f2e-5f78-a06c-4c1643729ef9",
+         "attrs": {
+          "ad": "N227"
+         },
+         "key": 227
+        },
+        {
+         "uid": "bb271d36-5097-5408-b0aa-5638eeb6eb87",
+         "attrs": {
+          "ad": "N232"
+         },
+         "key": 232
+        },
+        {
+         "uid": "4177daf1-9c6d-53a9-983e-d72493815553",
+         "attrs": {
+          "ad": "N237"
+         },
+         "key": 237
+        },
+        {
+         "uid": "be4337c3-3f58-58db-9c06-b4e9d9b13d60",
+         "attrs": {
+          "ad": "N242"
+         },
+         "key": 242
+        },
+        {
+         "uid": "2b33e0ca-8654-5cbf-9c13-06d9565dfd5e",
+         "attrs": {
+          "ad": "N247"
+         },
+         "key": 247
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "tur"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [
+         "filter"
+        ],
+        "order": "key",
+        "pushed": "\"tur\" = 'rögar'"
+       },
+       "partial": false,
+       "read": 50,
+       "stamp": "$any",
+       "revision": "$current",
+       "total": 50
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sayı eşitliği kaynağa pencere olarak gider, tam değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "filter": "no = 50",
+      "fields": [
+       "ad",
+       "no"
+      ],
+      "limit": 10
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "5da0a177-e446-57d1-afee-2fd6b184124d",
+         "attrs": {
+          "ad": "N84",
+          "no": "50"
+         },
+         "key": 84
+        },
+        {
+         "uid": "2aa75355-375a-58a5-9f51-79dda9163663",
+         "attrs": {
+          "ad": "N185",
+          "no": "50"
+         },
+         "key": 185
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "no"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "filter"
+        ],
+        "order": "key",
+        "pushed": "(\"no\" BETWEEN 49.9999995 AND 50.0000005 OR typeof(\"no\") = 'text')"
+       },
+       "partial": false,
+       "read": 2,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ve'nin gönderilemeyen yanı kalır, gönderilebilen kaynağa gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "filter": "kot >= 160 and ad gibi '%5'",
+      "fields": [
+       "ad"
+      ],
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "bfb07821-c4a4-5b4f-b8ae-211288abf512",
+         "attrs": {
+          "ad": "N245"
+         },
+         "key": 245
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "kot"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "filter"
+        ],
+        "order": "key",
+        "pushed": "(\"kot\" >= 160 OR typeof(\"kot\") = 'text')"
+       },
+       "partial": false,
+       "read": 12,
+       "stamp": "$any",
+       "revision": "$current",
+       "total": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "veya'nın bir yanı gönderilemezse hiçbir şey gönderilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "filter": "kot >= 160 or ad gibi '%5'",
+      "fields": [
+       "ad"
+      ],
+      "count": true,
+      "limit": 3
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "ff3e68b0-d8b5-5364-941c-000c5166112a",
+         "attrs": {
+          "ad": "N5"
+         },
+         "key": 5
+        },
+        {
+         "uid": "fe137caf-b663-5625-bbef-f0df819bcd3c",
+         "attrs": {
+          "ad": "N15"
+         },
+         "key": 15
+        },
+        {
+         "uid": "3f2d93b7-a7b7-5fa7-9d8e-e26fe1de6b66",
+         "attrs": {
+          "ad": "N25"
+         },
+         "key": 25
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "kot"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "filter"
+        ],
+        "order": "key"
+       },
+       "partial": false,
+       "read": 250,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "k:25",
+       "total": 36
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş: NULL ya da boş metin, kaynağa tam gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "filter": "tur boş",
+      "fields": [
+       "ad"
+      ],
+      "count": true,
+      "limit": 4
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "b182455d-9c7c-5e13-b970-90bd3f9a2693",
+         "attrs": {
+          "ad": "N4"
+         },
+         "key": 4
+        },
+        {
+         "uid": "ff3e68b0-d8b5-5364-941c-000c5166112a",
+         "attrs": {
+          "ad": "N5"
+         },
+         "key": 5
+        },
+        {
+         "uid": "c1cd8d27-4a1e-55f4-94fa-a89bc7fbbfbc",
+         "attrs": {
+          "ad": "N9"
+         },
+         "key": 9
+        },
+        {
+         "uid": "93de07ab-a9ff-56a8-b351-3c85f2885c2a",
+         "attrs": {
+          "ad": "N10"
+         },
+         "key": 10
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "tur"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [
+         "filter"
+        ],
+        "order": "key",
+        "pushed": "(\"tur\" IS NULL OR \"tur\" = '')"
+       },
+       "partial": false,
+       "read": 100,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "k:10",
+       "total": 100
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "içinde: metin eşitliklerinin veyası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "filter": "tur içinde ('direk', 'ağaç')",
+      "fields": [
+       "tur"
+      ],
+      "count": true,
+      "limit": 2
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "5ce8f619-8129-5551-a5e6-ea0c29175c3e",
+         "attrs": {
+          "tur": "direk"
+         },
+         "key": 1
+        },
+        {
+         "uid": "83c03b44-bd73-5ef7-b040-723a3014b54d",
+         "attrs": {
+          "tur": "ağaç"
+         },
+         "key": 3
+        }
+       ],
+       "plan": {
+        "columns": [
+         "tur"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [
+         "filter"
+        ],
+        "order": "key",
+        "pushed": "(\"tur\" = 'direk' OR \"tur\" = 'ağaç')"
+       },
+       "partial": false,
+       "read": 100,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "k:3",
+       "total": 100
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "arasında: sayı sütununda kaynağa gider, uçlar dahil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "filter": "kot arasında 110 ve 112",
+      "fields": [
+       "kot"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "9cda7e95-65c6-5d00-ae07-5f7195c7a64b",
+         "attrs": {
+          "kot": "110"
+         },
+         "key": 40
+        },
+        {
+         "uid": "440dc4f1-21d3-523a-a8f6-9d5dbd26b71f",
+         "attrs": {
+          "kot": "110.25"
+         },
+         "key": 41
+        },
+        {
+         "uid": "7522e72e-536e-5247-b598-090f819e136a",
+         "attrs": {
+          "kot": "110.5"
+         },
+         "key": 42
+        },
+        {
+         "uid": "96a29d83-bc01-5651-95e3-c1ec45408e90",
+         "attrs": {
+          "kot": "110.75"
+         },
+         "key": 43
+        },
+        {
+         "uid": "24c8666b-57b5-56dc-beec-ce4de348c9e1",
+         "attrs": {
+          "kot": "111"
+         },
+         "key": 44
+        },
+        {
+         "uid": "ad45e8ae-8dc8-574b-a8ce-3be722d412b9",
+         "attrs": {
+          "kot": "111.25"
+         },
+         "key": 45
+        },
+        {
+         "uid": "48b261fe-ebf3-5657-b807-f141bf40429d",
+         "attrs": {
+          "kot": "111.5"
+         },
+         "key": 46
+        },
+        {
+         "uid": "e46c9c8e-96ce-5e74-ba7b-6f0f92b93b08",
+         "attrs": {
+          "kot": "111.75"
+         },
+         "key": 47
+        },
+        {
+         "uid": "60ac6415-30d1-50d4-a07b-de2abbe468ab",
+         "attrs": {
+          "kot": "112"
+         },
+         "key": 48
+        }
+       ],
+       "plan": {
+        "columns": [
+         "kot"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "filter"
+        ],
+        "order": "key",
+        "pushed": "(\"kot\" BETWEEN 110 AND 112 OR typeof(\"kot\") = 'text')"
+       },
+       "partial": false,
+       "read": 10,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sayı gibi okunan metin sayı olarak gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "filter": "kot < '101'",
+      "fields": [
+       "kot"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "5ce8f619-8129-5551-a5e6-ea0c29175c3e",
+         "attrs": {
+          "kot": "100.25"
+         },
+         "key": 1
+        },
+        {
+         "uid": "2b12bdbd-bcb3-5f29-8948-1dd485f26b0a",
+         "attrs": {
+          "kot": "100.5"
+         },
+         "key": 2
+        },
+        {
+         "uid": "83c03b44-bd73-5ef7-b040-723a3014b54d",
+         "attrs": {
+          "kot": "100.75"
+         },
+         "key": 3
+        }
+       ],
+       "plan": {
+        "columns": [
+         "kot"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "filter"
+        ],
+        "order": "key",
+        "pushed": "(\"kot\" < 101 OR typeof(\"kot\") = 'text')"
+       },
+       "partial": false,
+       "read": 4,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kutu kaynağın mekânsal dizininden",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "bbox": [
+       487090.0,
+       4420030.0,
+       487150.0,
+       4420070.0
+      ],
+      "fields": [
+       "ad"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "c07a28bd-d740-5489-a111-523d58c43874",
+         "attrs": {
+          "ad": "N56"
+         },
+         "key": 56
+        },
+        {
+         "uid": "5e006f17-80e2-59ba-bb69-6dc1fdfca0c4",
+         "attrs": {
+          "ad": "N57"
+         },
+         "key": 57
+        },
+        {
+         "uid": "050a3ded-4474-53bd-87b3-3d636df66573",
+         "attrs": {
+          "ad": "N58"
+         },
+         "key": 58
+        },
+        {
+         "uid": "dad99bb6-6658-55de-98bb-eb38e4eac623",
+         "attrs": {
+          "ad": "N81"
+         },
+         "key": 81
+        },
+        {
+         "uid": "a1435173-a269-5bb2-a720-5004c259fa3b",
+         "attrs": {
+          "ad": "N82"
+         },
+         "key": 82
+        },
+        {
+         "uid": "23e8638d-613a-5b49-a3c7-dd6865733899",
+         "attrs": {
+          "ad": "N83"
+         },
+         "key": 83
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad"
+        ],
+        "geometry": true,
+        "exact": true,
+        "local": [
+         "box"
+        ],
+        "order": "key",
+        "box": "index"
+       },
+       "partial": false,
+       "read": 6,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geometri WKT olarak verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "bbox": [
+       487090.0,
+       4420030.0,
+       487150.0,
+       4420070.0
+      ],
+      "fields": [
+       "ad"
+      ],
+      "geometry": true,
+      "limit": 3
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "c07a28bd-d740-5489-a111-523d58c43874",
+         "attrs": {
+          "ad": "N56"
+         },
+         "key": 56,
+         "wkt": "POINT (487100 4420040)"
+        },
+        {
+         "uid": "5e006f17-80e2-59ba-bb69-6dc1fdfca0c4",
+         "attrs": {
+          "ad": "N57"
+         },
+         "key": 57,
+         "wkt": "POINT (487120 4420040)"
+        },
+        {
+         "uid": "050a3ded-4474-53bd-87b3-3d636df66573",
+         "attrs": {
+          "ad": "N58"
+         },
+         "key": 58,
+         "wkt": "POINT (487140 4420040)"
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad"
+        ],
+        "geometry": true,
+        "exact": true,
+        "local": [
+         "box"
+        ],
+        "order": "key",
+        "box": "index"
+       },
+       "partial": false,
+       "read": 6,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "k:58"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yer ve tolerans: kutusu kaynağa, uzaklığı burada",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "near": {
+       "at": [
+        487100.0,
+        4420100.0
+       ],
+       "tolerance": 25.0
+      },
+      "fields": [
+       "ad"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "116684bb-7ff2-5dc3-8ca1-257386d33a52",
+         "attrs": {
+          "ad": "N106"
+         },
+         "key": 106
+        },
+        {
+         "uid": "a021c065-d3fe-5710-b0fb-fbbce718faeb",
+         "attrs": {
+          "ad": "N130"
+         },
+         "key": 130
+        },
+        {
+         "uid": "cd59bddc-dd11-5afd-88d0-edbc03fc86a9",
+         "attrs": {
+          "ad": "N131"
+         },
+         "key": 131
+        },
+        {
+         "uid": "dfa5e15d-23e1-599f-bbc8-84cc73780e1b",
+         "attrs": {
+          "ad": "N132"
+         },
+         "key": 132
+        },
+        {
+         "uid": "7708986b-46e2-5d01-bf0b-e1a077c82db4",
+         "attrs": {
+          "ad": "N156"
+         },
+         "key": 156
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad"
+        ],
+        "geometry": true,
+        "exact": true,
+        "local": [
+         "near"
+        ],
+        "order": "key",
+        "box": "index"
+       },
+       "partial": false,
+       "read": 9,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dizinsiz tabloda kutu: her satır gelir, geometrisiyle süzülür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "bina",
+      "bbox": [
+       487055.0,
+       4420595.0,
+       487125.0,
+       4420640.0
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "b1559f25-c5fd-5a11-b4df-615f5ae3f43a",
+         "attrs": {
+          "kat": "3",
+          "ad": "B3"
+         },
+         "key": 3
+        },
+        {
+         "uid": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "attrs": {
+          "kat": "4",
+          "ad": "B4"
+         },
+         "key": 4
+        },
+        {
+         "uid": "6b4646d3-b4fc-5ac4-85e8-f09d219f2d46",
+         "attrs": {
+          "kat": "1",
+          "ad": "B5"
+         },
+         "key": 5
+        }
+       ],
+       "plan": {
+        "columns": [
+         "kat",
+         "ad"
+        ],
+        "geometry": true,
+        "exact": true,
+        "local": [
+         "box"
+        ],
+        "order": "key",
+        "box": "geometry"
+       },
+       "partial": false,
+       "read": 12,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geometriyi okuyan süzgeç: kaynağa bir şey gitmez, şekiller burada",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "bina",
+      "filter": "($alan > 150)",
+      "count": true,
+      "fields": [
+       "ad"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "4db2d4ff-40b6-5cff-9476-02a8b19f2930",
+         "attrs": {
+          "ad": "B8"
+         },
+         "key": 8
+        },
+        {
+         "uid": "bf8c48db-714b-52a9-94a7-76b7ff328fbf",
+         "attrs": {
+          "ad": "B9"
+         },
+         "key": 9
+        },
+        {
+         "uid": "6cc3529a-f2a4-537a-9cd4-1782ce32a86f",
+         "attrs": {
+          "ad": "B10"
+         },
+         "key": 10
+        },
+        {
+         "uid": "3bfa8639-84da-5149-8c8a-ef675a99994f",
+         "attrs": {
+          "ad": "B11"
+         },
+         "key": 11
+        },
+        {
+         "uid": "270655af-af88-5d76-8c5d-5f6435dc1efb",
+         "attrs": {
+          "ad": "B12"
+         },
+         "key": 12
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad"
+        ],
+        "geometry": true,
+        "exact": false,
+        "local": [
+         "filter"
+        ],
+        "order": "key"
+       },
+       "partial": false,
+       "read": 12,
+       "stamp": "$any",
+       "revision": "$current",
+       "total": 5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "istatistik: kesin toplam, ortalama, en az, en çok, sapma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "kayit",
+      "statistics": [
+       "tutar"
+      ],
+      "limit": 0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "kayit"
+       },
+       "rows": [],
+       "plan": {
+        "columns": [
+         "ad",
+         "tutar"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [
+         "statistics"
+        ],
+        "order": "key"
+       },
+       "partial": false,
+       "read": 30,
+       "stamp": "$any",
+       "revision": "$current",
+       "total": 30,
+       "statistics": [
+        {
+         "field": "tutar",
+         "read": 26,
+         "skipped": 0,
+         "sum": "4840.00",
+         "mean": "186.1538",
+         "min": "8.75",
+         "max": "371.25",
+         "std": "111.3564"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "süzgeçli istatistik ve sayı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "kayit",
+      "filter": "tutar > 100",
+      "statistics": [
+       "tutar"
+      ],
+      "limit": 2,
+      "fields": [
+       "ad"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "kayit"
+       },
+       "rows": [
+        {
+         "uid": "ee7280c1-c065-52f0-b526-e2cb8969c0f4",
+         "attrs": {
+          "ad": "K9"
+         },
+         "key": 9
+        },
+        {
+         "uid": "48a1767d-1e15-56dc-9771-986d84c9041c",
+         "attrs": {
+          "ad": "K10"
+         },
+         "key": 10
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "tutar"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "filter",
+         "statistics"
+        ],
+        "order": "key",
+        "pushed": "(\"tutar\" > 100 OR typeof(\"tutar\") = 'text')"
+       },
+       "partial": false,
+       "read": 19,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "k:10",
+       "total": 19,
+       "statistics": [
+        {
+         "field": "tutar",
+         "read": 19,
+         "skipped": 0,
+         "sum": "4503.75",
+         "mean": "237.0395",
+         "min": "108.75",
+         "max": "371.25",
+         "std": "82.2684"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başka sistemdeki tablo: kutu tablonun sistemine çevrilip gider, satırlar projenin sisteminde denetlenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "wgs",
+      "bbox": [
+       487150.0,
+       4421050.0,
+       487350.0,
+       4421250.0
+      ],
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "wgs",
+        "srid": 4326
+       },
+       "rows": [
+        {
+         "uid": "5026796e-0b4a-5461-83a3-66af9bf4605c",
+         "attrs": {
+          "ad": "W8"
+         },
+         "key": 8
+        },
+        {
+         "uid": "9db301dc-32c3-5b27-8eb5-0bec8268ae6d",
+         "attrs": {
+          "ad": "W9"
+         },
+         "key": 9
+        },
+        {
+         "uid": "ad2a20b5-6ee4-5fb7-b996-093e50f50843",
+         "attrs": {
+          "ad": "W13"
+         },
+         "key": 13
+        },
+        {
+         "uid": "13c9632c-741d-522d-9ed5-e38aed0bf223",
+         "attrs": {
+          "ad": "W14"
+         },
+         "key": 14
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad"
+        ],
+        "geometry": true,
+        "exact": true,
+        "local": [
+         "box"
+        ],
+        "order": "key",
+        "box": "index"
+       },
+       "partial": false,
+       "read": "$any",
+       "stamp": "$any",
+       "revision": "$current",
+       "total": 4
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimin katmanı: nesneleri kalıcı kimlik sırasıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "cizim"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "drawing",
+        "layer": "cizim",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "$uidOf:1",
+         "attrs": {
+          "tur": "direk",
+          "kot": "12.5"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "uid"
+       },
+       "partial": false,
+       "read": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "parçalı bağlı katman, yüklenen kapsam: parçanın nesneleri ve partial_scope",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:sources/v1/sorgu.gpkg",
+       "table": "nokta",
+       "extent": [
+        486995.0,
+        4419995.0,
+        487105.0,
+        4420045.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-nokta",
+      "filter": "tur = 'direk'",
+      "fields": [
+       "ad"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "drawing",
+        "layer": "import-nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "4abdc4ae-45fd-5336-bd10-4a95c0e438db",
+         "attrs": {
+          "ad": "N26"
+         }
+        },
+        {
+         "uid": "5ce8f619-8129-5551-a5e6-ea0c29175c3e",
+         "attrs": {
+          "ad": "N1"
+         }
+        },
+        {
+         "uid": "99ae23af-6cfd-5d7b-8b75-2ecac8a5ba2d",
+         "attrs": {
+          "ad": "N31"
+         }
+        },
+        {
+         "uid": "a4b48fcc-db5e-5cb5-8cbc-9109d7092663",
+         "attrs": {
+          "ad": "N6"
+         }
+        },
+        {
+         "uid": "c07a28bd-d740-5489-a111-523d58c43874",
+         "attrs": {
+          "ad": "N56"
+         }
+        },
+        {
+         "uid": "d3302c24-cacc-54e6-af8b-531995a62af7",
+         "attrs": {
+          "ad": "N51"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "filter"
+        ],
+        "order": "uid"
+       },
+       "partial": true,
+       "read": 18,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "partial_scope",
+        "message": "“nokta” katmanı kaynağının yalnız bir parçası; yanıt o parçanın. Bütün tablo için kapsamı kaynak yapın (scope: source).",
+        "path": "scope"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "parçalı bağlı katman, kaynak kapsamı: bütün tablo",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:sources/v1/sorgu.gpkg",
+       "table": "nokta",
+       "extent": [
+        486995.0,
+        4419995.0,
+        487105.0,
+        4420045.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-nokta",
+      "scope": "source",
+      "filter": "tur = 'direk'",
+      "fields": [
+       "ad"
+      ],
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "layer": "import-nokta",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "5ce8f619-8129-5551-a5e6-ea0c29175c3e",
+         "attrs": {
+          "ad": "N1"
+         },
+         "key": 1
+        },
+        {
+         "uid": "a4b48fcc-db5e-5cb5-8cbc-9109d7092663",
+         "attrs": {
+          "ad": "N6"
+         },
+         "key": 6
+        },
+        {
+         "uid": "db1c8be1-b5ff-5eaa-b4d8-38f6bfacf403",
+         "attrs": {
+          "ad": "N11"
+         },
+         "key": 11
+        },
+        {
+         "uid": "bde59792-9fe6-5966-9a3e-d611c573d583",
+         "attrs": {
+          "ad": "N16"
+         },
+         "key": 16
+        },
+        {
+         "uid": "0a857ec8-9947-5e56-9d63-ade989b5cb31",
+         "attrs": {
+          "ad": "N21"
+         },
+         "key": 21
+        },
+        {
+         "uid": "4abdc4ae-45fd-5336-bd10-4a95c0e438db",
+         "attrs": {
+          "ad": "N26"
+         },
+         "key": 26
+        },
+        {
+         "uid": "99ae23af-6cfd-5d7b-8b75-2ecac8a5ba2d",
+         "attrs": {
+          "ad": "N31"
+         },
+         "key": 31
+        },
+        {
+         "uid": "f08f9df3-7a7a-5f23-9151-5d55cf3e477f",
+         "attrs": {
+          "ad": "N36"
+         },
+         "key": 36
+        },
+        {
+         "uid": "440dc4f1-21d3-523a-a8f6-9d5dbd26b71f",
+         "attrs": {
+          "ad": "N41"
+         },
+         "key": 41
+        },
+        {
+         "uid": "48b261fe-ebf3-5657-b807-f141bf40429d",
+         "attrs": {
+          "ad": "N46"
+         },
+         "key": 46
+        },
+        {
+         "uid": "d3302c24-cacc-54e6-af8b-531995a62af7",
+         "attrs": {
+          "ad": "N51"
+         },
+         "key": 51
+        },
+        {
+         "uid": "c07a28bd-d740-5489-a111-523d58c43874",
+         "attrs": {
+          "ad": "N56"
+         },
+         "key": 56
+        },
+        {
+         "uid": "df66b901-8f92-5537-a935-b727cb757bb1",
+         "attrs": {
+          "ad": "N61"
+         },
+         "key": 61
+        },
+        {
+         "uid": "828fc603-efaa-5805-8925-f03e299f7c2b",
+         "attrs": {
+          "ad": "N66"
+         },
+         "key": 66
+        },
+        {
+         "uid": "418a5b4d-5ecd-54aa-9420-48b309f757c8",
+         "attrs": {
+          "ad": "N71"
+         },
+         "key": 71
+        },
+        {
+         "uid": "95b45220-965c-5424-8f64-b3d622356e6a",
+         "attrs": {
+          "ad": "N76"
+         },
+         "key": 76
+        },
+        {
+         "uid": "dad99bb6-6658-55de-98bb-eb38e4eac623",
+         "attrs": {
+          "ad": "N81"
+         },
+         "key": 81
+        },
+        {
+         "uid": "f7a2dd25-b1ce-52ea-bc30-7d3ded6b196c",
+         "attrs": {
+          "ad": "N86"
+         },
+         "key": 86
+        },
+        {
+         "uid": "ca0067cf-0e37-5233-91ee-21acc4509c9d",
+         "attrs": {
+          "ad": "N91"
+         },
+         "key": 91
+        },
+        {
+         "uid": "1fbc56ac-5afc-5f8a-919f-4797d7afcd5f",
+         "attrs": {
+          "ad": "N96"
+         },
+         "key": 96
+        },
+        {
+         "uid": "92d298c7-ab05-5f7f-a1be-781779206102",
+         "attrs": {
+          "ad": "N101"
+         },
+         "key": 101
+        },
+        {
+         "uid": "116684bb-7ff2-5dc3-8ca1-257386d33a52",
+         "attrs": {
+          "ad": "N106"
+         },
+         "key": 106
+        },
+        {
+         "uid": "7b41f1c2-d607-58aa-9a6d-7ebdb1af6222",
+         "attrs": {
+          "ad": "N111"
+         },
+         "key": 111
+        },
+        {
+         "uid": "1f16d984-379f-5d4c-ac01-632bd8a1087a",
+         "attrs": {
+          "ad": "N116"
+         },
+         "key": 116
+        },
+        {
+         "uid": "3dc547e2-9ea1-58f4-ab19-c593a71d97b1",
+         "attrs": {
+          "ad": "N121"
+         },
+         "key": 121
+        },
+        {
+         "uid": "ffc6c06e-7384-5190-af62-8410ba41621c",
+         "attrs": {
+          "ad": "N126"
+         },
+         "key": 126
+        },
+        {
+         "uid": "cd59bddc-dd11-5afd-88d0-edbc03fc86a9",
+         "attrs": {
+          "ad": "N131"
+         },
+         "key": 131
+        },
+        {
+         "uid": "eb1c4970-1e89-5e1c-813a-1b2d59e3bd12",
+         "attrs": {
+          "ad": "N136"
+         },
+         "key": 136
+        },
+        {
+         "uid": "98e5992d-aedb-5b6d-bbe8-ffa63c98d9d9",
+         "attrs": {
+          "ad": "N141"
+         },
+         "key": 141
+        },
+        {
+         "uid": "3495b542-e15f-5340-be15-2a23260d0a61",
+         "attrs": {
+          "ad": "N146"
+         },
+         "key": 146
+        },
+        {
+         "uid": "36119cc2-0a53-5189-bcb0-327dc81c8179",
+         "attrs": {
+          "ad": "N151"
+         },
+         "key": 151
+        },
+        {
+         "uid": "7708986b-46e2-5d01-bf0b-e1a077c82db4",
+         "attrs": {
+          "ad": "N156"
+         },
+         "key": 156
+        },
+        {
+         "uid": "82a6a7e6-ae2f-583e-9ddf-560f6c4140dc",
+         "attrs": {
+          "ad": "N161"
+         },
+         "key": 161
+        },
+        {
+         "uid": "1409df24-683f-576d-bb24-2295cefe86bc",
+         "attrs": {
+          "ad": "N166"
+         },
+         "key": 166
+        },
+        {
+         "uid": "29abf984-0fbb-50ca-91f2-4452ce3c5f04",
+         "attrs": {
+          "ad": "N171"
+         },
+         "key": 171
+        },
+        {
+         "uid": "5f5bf7ab-fed3-5c6d-a8c9-45878c1687ab",
+         "attrs": {
+          "ad": "N176"
+         },
+         "key": 176
+        },
+        {
+         "uid": "3c20aa6d-09be-5f38-bd9c-1970bee97ee6",
+         "attrs": {
+          "ad": "N181"
+         },
+         "key": 181
+        },
+        {
+         "uid": "896cc3ff-7af5-55a7-b666-79e01c68ddd1",
+         "attrs": {
+          "ad": "N186"
+         },
+         "key": 186
+        },
+        {
+         "uid": "50b87948-5ff7-581f-ae45-59f3dc4290e5",
+         "attrs": {
+          "ad": "N191"
+         },
+         "key": 191
+        },
+        {
+         "uid": "c3a4578c-6e04-50c6-a8d8-6664ac4c38b9",
+         "attrs": {
+          "ad": "N196"
+         },
+         "key": 196
+        },
+        {
+         "uid": "3edfa936-c145-5ec8-80a1-d0f6695e3ff2",
+         "attrs": {
+          "ad": "N201"
+         },
+         "key": 201
+        },
+        {
+         "uid": "4cc02457-879c-568f-8ad9-b3a9d29b9193",
+         "attrs": {
+          "ad": "N206"
+         },
+         "key": 206
+        },
+        {
+         "uid": "0af05a21-1618-5754-b279-29bc6c55e4f8",
+         "attrs": {
+          "ad": "N211"
+         },
+         "key": 211
+        },
+        {
+         "uid": "d68ba861-6e09-5a3a-9fb3-8cbbb5710a16",
+         "attrs": {
+          "ad": "N216"
+         },
+         "key": 216
+        },
+        {
+         "uid": "fe9903b4-e72f-540f-894d-853e8e99e974",
+         "attrs": {
+          "ad": "N221"
+         },
+         "key": 221
+        },
+        {
+         "uid": "92514efb-0d46-5007-a72b-24b1c2b2413c",
+         "attrs": {
+          "ad": "N226"
+         },
+         "key": 226
+        },
+        {
+         "uid": "cc6df587-e225-5956-9c03-1a64bf08ccf5",
+         "attrs": {
+          "ad": "N231"
+         },
+         "key": 231
+        },
+        {
+         "uid": "895a6806-8971-5f33-8c1a-4168c0c1d33b",
+         "attrs": {
+          "ad": "N236"
+         },
+         "key": 236
+        },
+        {
+         "uid": "735fc508-f307-52d2-a13b-53c7467b0077",
+         "attrs": {
+          "ad": "N241"
+         },
+         "key": 241
+        },
+        {
+         "uid": "75fc22b9-27a4-544b-87f9-b31e61a10f93",
+         "attrs": {
+          "ad": "N246"
+         },
+         "key": 246
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "tur"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [
+         "filter"
+        ],
+        "order": "key",
+        "pushed": "\"tur\" = 'direk'"
+       },
+       "partial": false,
+       "read": 50,
+       "stamp": "$any",
+       "revision": "$current",
+       "total": 50
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geometrisi okunamayan satır atlanır ve söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "bozuk",
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bozuk",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "5c2f6de6-f191-5f5b-a756-494b8ea154e6",
+         "attrs": {
+          "ad": "Z1"
+         },
+         "key": 1,
+         "wkt": "POINT (487010 4419900)"
+        },
+        {
+         "uid": "78dd0559-9d4d-5584-a405-ec7f53aed846",
+         "attrs": {
+          "ad": "Z3"
+         },
+         "key": 3,
+         "wkt": "POINT (487030 4419900)"
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad"
+        ],
+        "geometry": true,
+        "exact": true,
+        "local": [],
+        "order": "key"
+       },
+       "partial": false,
+       "read": 3,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "rows_unreadable",
+        "message": "“bozuk” tablosunun 1 kaydının geometrisi okunamadı ya da projenin sistemine çevrilemedi; atlandı.",
+        "path": "table"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: ne katman ne dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Bir katman (layer) ya da bir dosya veya adres ve tablo (path, table) verin; ikisi birden ya da hiçbiri olmaz.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: katman ve dosya birden",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "cizim",
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Bir katman (layer) ya da bir dosya veya adres ve tablo (path, table) verin; ikisi birden ya da hiçbiri olmaz.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: dosyasız tablo",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "table": "nokta"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Tablo (table) bir dosya ya da adresle (path) verilir.",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: tablosuz dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Dosyanın ya da veritabanının tablosunu (table) verin.",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: dosyayla kapsam",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "scope": "source"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Kapsam (scope) bir katmanla (layer) verilir.",
+       "path": "scope"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: sayfa sınırı aşılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "limit": 10001
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_count",
+       "message": "Bir sayfada en çok 10000 kayıt okunur; 10001 verildi.",
+       "path": "limit"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: ters kutu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "bbox": [
+       10,
+       0,
+       0,
+       10
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_extent",
+       "message": "Kutu [batı, güney, doğu, kuzey] olmalı: sonlu sayılar, batı doğudan, güney kuzeyden büyük değil.",
+       "path": "bbox"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: eksi tolerans",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "near": {
+       "at": [
+        0,
+        0
+       ],
+       "tolerance": -1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tolerance",
+       "message": "Tolerans sıfır ya da sıfırdan büyük, sonlu bir uzaklık olmalı.",
+       "path": "near.tolerance"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: bozuk imleç",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "cursor": "k:01"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cursor",
+       "message": "“k:01” bu sorunun sayfa imleci değil; bir önceki cevabın next'ini verin.",
+       "path": "cursor"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: çizimin imleci kaynağa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "cursor": "u:00000000-0000-0000-0000-000000000000"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cursor",
+       "message": "Bu imleç çizimin; bir kaynağın kayıtları anahtarlarıyla sayfalanır.",
+       "path": "cursor"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: kaynağın imleci çizime",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "cizim",
+      "cursor": "k:5"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cursor",
+       "message": "Bu imleç bir kaynağın; çizimin nesneleri kalıcı kimlikleriyle sayfalanır.",
+       "path": "cursor"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: derlenmeyen süzgeç",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "filter": "kot >"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_expression",
+       "message": "$any",
+       "path": "filter"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: süzgeçte $sıra",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "filter": "($sıra > 3)"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_expression",
+       "message": "Süzgeç: Süzgeçte $sıra kullanılamaz: süzgeç çalıştırmaya göre değişmemeli.",
+       "path": "filter"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: bağsız katmanda kaynak kapsamı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "cizim",
+      "scope": "source"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“Çizim” katmanı bir kaynağa bağlı değil; kapsamı kaynak yapılamaz.",
+       "path": "scope"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: olmayan tablo",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "table_not_found",
+       "message": "“yok” tablosu dosyada yok; dosyanın tablolarından birinin adını verin (cad.sources.describe listeler).",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: olmayan sütun",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "fields": [
+       "ad",
+       "yok"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "field_not_found",
+       "message": "“yok” sütunu “nokta” tablosunda yok.",
+       "path": "fields.1"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: istatistikte olmayan sütun",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nokta",
+      "statistics": [
+       "yok"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "field_not_found",
+       "message": "“yok” sütunu “nokta” tablosunda yok.",
+       "path": "statistics.0"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: dosya GeoPackage değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/cases.json",
+      "table": "nokta"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: parolalı adres",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "postgresql://kentos:gizli@localhost/vt",
+      "table": "nokta"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: ulaşılamayan veritabanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "postgresql://kentos@127.0.0.1:1/vt",
+      "table": "public.nokta"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_unreachable",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: projenin sistemine çevrilemeyen tablo",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sorgu.gpkg",
+      "table": "nz",
+      "bbox": [
+       0,
+       0,
+       1,
+       1
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "$any",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/yok.gpkg",
+      "table": "nokta"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

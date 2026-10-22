@@ -108,7 +108,7 @@ dönüşüm yoktur. Küçük dilimlerle devam etmek madde kapatmaz.
 
 **Sıradaki iş, bu sırayla:**
 
-1. **CBS-02, ortak sağlayıcı sözleşmesi:** genel `Source`/`Dataset` arayüzü; kaynağa itilen kutu, sütun ve süzgeç sorgusu; kararlı sayfa ve akış;
+1. **CBS-02, ortak sağlayıcı sözleşmesi** (bitti, 22 Ekim, ADR 0581)**:** genel `Source`/`Dataset` arayüzü; kaynağa itilen kutu, sütun ve süzgeç sorgusu; kararlı sayfa ve akış;
    sorgu planının açıklaması. Önce GeoPackage'la (`kentos-geopackage`), sonra PostGIS'le (`kentos-postgis`). Önce ADR'yi yazın, çünkü bu karar
    çizimi, keneti, seçimi, tabloyu ve analizleri etkiler.
 2. **CBS-04, PostGIS'e itilen sorgu:** sayfa sayfa ilk harita, view ve SQL katmanı, milyon satır ölçümü, QGIS'le eşzamanlı düzenleme.
@@ -148,7 +148,10 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/03/36. Bir belediye çalışanı dosyanın katmanlarını veriyi içe aktarmadan görebilsin, doğru katmanı ekleyebilsin ve kapatıp açınca bağlantıyı korusun. Taşınan kaynak için yeniden konumlandırma sunulsun; erişilemeyen kaynak boş katman diye kaydedilmesin. İlk dilimde yerel kaynaklar yeterli; STAC ve kurumsal katalog CBS-10/31'de genişler.
 
-- [ ] **CBS-02 — Dış dataset'ler için ortak provider sözleşmesini uygula — P0**
+- [x] **CBS-02 — Dış dataset'ler için ortak provider sözleşmesini uygula — P0**
+
+  *Bitti (22 Ekim 2026; [ADR 0581](../docs/adr/0581-source-query.md)): ortak sorgu `cad.sources.query`: GeoPackage tablosu, PostGIS tablosu ve çizimin katmanı aynı sözleşmeyle (`GeoPackage::scan`, sağlayıcının `describe` ve `scan`'i, çizim uyarlayıcısı). Kutu, yer, sütunlar ve süzgecin kaynağın denetleyebildiği kısmı kaynağa gider; kural kapsayıcıdır, her kayıt projenin sisteminde ifadeyle yeniden sınanır. Anahtar sırasıyla kararlı sayfa ve imleç, kalıcı kimlikler, sayı ve `kentos.statistics/1` istatistikleri, sorgu planı (kutu dizin, geometri ya da yerel; okunan sütunlar; giden SQL ve tam olup olmadığı; yerelde yapılanlar). Parçası bağlı katmanda yüklenen kapsam `partial_scope` der; kaynak kapsamı bütün tabloyu tarar, İstatistik'in Kapsam'ı Kaynağın tümü'nü iş parçacığında Durdur'la sorar. 48 ortak durum GDAL'ın dosyasından KentOS kodu olmadan; itmenin özellik testi 400 rastgele koşulda; PostGIS aynı soruları aynı satırlarla cevaplar. Çizim, kenet ve seçimin bağlı katmanı görünüme göre kaynaktan sayfa sayfa okuması CBS-04'tedir.*
+
 
   *Kısmen (18 Ekim 2026; [ADR 0510](../docs/adr/0510-bound-layer-of-a-part.md)): GeoPackage tablosunun bir alanı çalışma kopyası olur (`cad.sources.edit`'in `extent`'i, `.kcad`'de bağla): yalnız kutusu alana değen satırlar okunur (mekânsal dizinle; dizinsiz tabloda geometrinin kutusuyla, eskiden sessizce bütün tablo dönüyordu), eşitleme alanın dışını silmez, dışarı taşınan nesne kendi satırına yazılır. 1 milyon parselde 400 × 300 m'lik alan 372 ms ve 24 MB. Kalan: alanı değiştirmek, görünüme göre kendiliğinden okuma, PostGIS'te alan, sürüm damgasının dosyanın tamamından ucuzlaması.*
 

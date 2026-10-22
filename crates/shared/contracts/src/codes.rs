@@ -1651,6 +1651,10 @@ codes! {
     INVALID_PDF_REGION = "invalid_pdf_region", Failed, false, "PDF'ten alınacak bölge sayfaya değen, eni ve boyu sıfırdan büyük bir dikdörtgen olmalı.";
     /// What a PDF page holds that an underlay does not take (pictures, shadings, texts it cannot read).
     PDF_LEFT_OUT = "pdf_left_out", Warning, false, "PDF sayfasındaki bazı içerik altlığa alınmadı (resimler, gölgelemeler, okunamayan yazılar).";
+    /// A question answered from a bound layer's part (docs/adr/0581 §5).
+    PARTIAL_SCOPE = "partial_scope", Warning, false, "Yanıt bağlı katmanın yüklenen parçasından; bütün veri kümesi için kapsamı kaynak yapın (scope: source).";
+    /// Records a source handed over that could not be read (docs/adr/0581 §4).
+    ROWS_UNREADABLE = "rows_unreadable", Warning, false, "Geometrisi okunamayan kayıtlar atlandı; iletisi kaçını söyler.";
     /// A point snapped or measured on a PDF underlay: a picture of a drawing, not its geometry.
     UNDERLAY_MEASURE = "underlay_measure", Warning, false, "Nokta bir PDF altlığından alındı; altlık bir çizimin resmidir, ölçüsü kanıtlanmış CAD geometrisi değildir.";
     /// A pasted block or style whose name this drawing has, renamed.

@@ -3081,6 +3081,16 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.sources.query",
+        refusals: &[
+            &["invalid_input", "invalid_count", "invalid_extent", "invalid_tolerance", "invalid_cursor"],
+            &["invalid_expression", "layer_not_found", "file_not_found", "import_unreadable", "table_not_found"],
+            &["field_not_found", "source_unreachable", "invalid_address", "crs_mismatch"],
+        ],
+        warnings: &["partial_scope", "rows_unreadable"],
+        targets: none,
+    },
+    Entry {
         id: "file.import.gpkg",
         refusals: &[
             &["invalid_file_path", "file_not_found", "import_unreadable", "table_not_found"],

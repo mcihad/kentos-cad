@@ -7475,6 +7475,44 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // A question asked of a data set where it is (docs/adr/0581), held together by
+        // fixtures/commands/v1/cad.sources.query.json.
+        CommandDescriptor {
+            id: crate::CAD_SOURCES_QUERY.into(),
+            version: crate::CAD_SOURCES_QUERY_VERSION,
+            title: "Kaynağı sorgula".into(),
+            summary: "Bir veri kümesini bulunduğu yerde sorgular: path ve table ile bir GeoPackage dosyasının ya da bir PostGIS adresinin (postgresql://…, parolasız) tablosunu, layer ile çizimin bir katmanını (scope loaded: çizimin nesneleri, bağlı katmanda çalışma kopyası; scope source: bağlı katmanın kaynağının bütün tablosu). \
+                      bbox (projenin sisteminde; kaynağın sistemi başkaysa ona çevrilir) kutusu değen kayıtları, near (at, tolerance) yere tolerans içindeki kayıtları (tanımlama), filter İfadeyle seç'in dilinde koşulu tutan kayıtları verir. fields döndürülecek alanları, geometry kaydın geometrisini projenin sisteminde ISO WKT olarak seçer. \
+                      Kayıtlar anahtar sırasıyla sayfa sayfadır (limit 0–10 000, varsayılan 100; cursor önceki sayfanın next'i); anahtar sırası ekleme ve silmede kararlıdır. count sorunun tuttuğu bütün kayıtları sayar; statistics alanların istatistiğini (kentos.statistics/1: okunan, atlanan, toplam, ortalama, en az, en çok, standart sapma; kesin ondalık metinler) sayfadan değil bütün kayıtlardan verir. \
+                      Kutu, sütunlar ve süzgecin kaynağın denetleyebildiği kısmı kaynağa gider: koşul ifadenin tuttuğu her kaydı tutar, kaynaktan gelen her kayıt ifadeyle burada yeniden sınanır; sonuç kaynağın kurallarından bağımsızdır. plan ne yapıldığını söyler: kutu (index, geometry, local), okunan sütunlar, kaynağa giden koşul değerleriyle ve tam olup olmadığı, burada yapılanlar, sıra. \
+                      Kayıtların kalıcı kimliği (uid) aynı kaynağı açan her pencerede ve bağlı katmanın çalışma kopyasında aynıdır. Parçası bağlı katmanın çalışma kopyası tam veri kümesi değildir: partial ve partial_scope uyarısı. Çizimi değiştirmez."
+                .into(),
+            aliases: vec!["kaynaksorgu".into(), "sourcequery".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::SourcesQuery>(),
+            output: schema::<crate::SourcesQueried>(),
+            plan: Some(schema::<crate::SourcesQueried>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Büyük parsellerin ilk sayfası, dosyadan".into(),
+                    input: json!({ "path": "/veri/kadastro.gpkg", "table": "parsel", "filter": "alan > 1000",
+                                   "fields": ["ada", "parsel_no", "alan"], "limit": 50 }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bağlı katmanın kaynağındaki bütün parsellerin alan istatistiği".into(),
+                    input: json!({ "layer": "parsel", "scope": "source", "limit": 0, "count": true, "statistics": ["alan"] }),
+                    output: None,
+                },
+            ],
+        },
         // A PDF page into the drawing (docs/adr/0352), held together by fixtures/commands/v1/file.import.pdf.json.
         CommandDescriptor {
             id: crate::FILE_IMPORT_PDF.into(),
@@ -9523,6 +9561,9 @@ mod tests {
                     }
                     crate::CAD_RECORDS_PAGE => {
                         serde_json::from_value::<crate::RecordsPage>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SOURCES_QUERY => {
+                        serde_json::from_value::<crate::SourcesQuery>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_FIELDS_WRITE => {
                         serde_json::from_value::<crate::FieldsWrite>(e.input.clone()).map(|_| ())

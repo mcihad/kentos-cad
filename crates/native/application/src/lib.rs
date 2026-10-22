@@ -285,6 +285,7 @@ pub mod forms;
 pub mod forms_audit;
 pub mod records;
 pub mod records_page;
+pub mod sources_query;
 pub mod records_duplicate;
 pub mod forms_compare;
 pub mod forms_edit;
@@ -1148,6 +1149,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_RECORDS_PAGE,
         kentos_commands::CAD_RECORDS_PAGE_VERSION,
+    ),
+    // A data set asked where it is: the box, the columns and the filter sent to the source ([`sources_query`], docs/adr/0581).
+    (
+        kentos_commands::CAD_SOURCES_QUERY,
+        kentos_commands::CAD_SOURCES_QUERY_VERSION,
     ),
     // A GeoPackage into the drawing ([`file_import_gpkg`], docs/adr/0502).
     (

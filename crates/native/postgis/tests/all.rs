@@ -254,3 +254,66 @@ fn state_of_layer(doc: &mut Document, layer: &str) -> Value {
         .cloned()
         .unwrap_or(Value::Null)
 }
+
+/// The same questions of `fixtures/sources/v1/sorgu.gpkg` and of its tables loaded into the schema `sorgu` by
+/// ogr2ogr (fids kept; `nokta`'s one text in a number column, which PostgreSQL cannot hold, made NULL): the same rows,
+/// keys, values, pages, counts and statistics (docs/adr/0581 §2). The questions leave that one value out of their
+/// answers.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn the_queries_answer_alike_from_postgis() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        eprintln!("KENTOS_PG_URL yok: atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/sources/v1/sorgu.gpkg")
+        .display()
+        .to_string();
+    let questions = [
+        json!({ "table": "nokta", "fields": ["ad", "tur", "no"], "limit": 100 }),
+        json!({ "table": "nokta", "fields": ["ad", "no"], "limit": 100, "cursor": "k:100" }),
+        json!({ "table": "nokta", "filter": "tur = 'rögar'", "count": true, "fields": ["ad"] }),
+        json!({ "table": "nokta", "filter": "no = 50", "fields": ["ad", "no"] }),
+        json!({ "table": "nokta", "filter": "kot arasında 110 ve 112", "fields": ["kot"], "count": true }),
+        json!({ "table": "nokta", "filter": "kot < '101'", "fields": ["kot"] }),
+        json!({ "table": "nokta", "filter": "tur boş", "fields": ["ad"], "count": true, "limit": 5 }),
+        json!({ "table": "nokta", "filter": "tur içinde ('direk', 'ağaç') and no > 40", "fields": ["tur", "no"],
+                "count": true, "limit": 7 }),
+        json!({ "table": "nokta", "filter": "tur = 'direk' veya no <= 3", "fields": ["ad"], "statistics": ["no"] }),
+        json!({ "table": "nokta", "bbox": [487090.0, 4420030.0, 487150.0, 4420070.0], "fields": ["ad"],
+                "geometry": true }),
+        json!({ "table": "nokta", "near": { "at": [487100.0, 4420100.0], "tolerance": 25.0 }, "fields": ["ad"] }),
+        json!({ "table": "bina", "bbox": [487055.0, 4420595.0, 487125.0, 4420640.0] }),
+        json!({ "table": "bina", "filter": "($alan > 150)", "count": true, "fields": ["ad"] }),
+        json!({ "table": "kayit", "statistics": ["tutar"], "limit": 0 }),
+        json!({ "table": "kayit", "filter": "tutar > 100", "statistics": ["tutar"], "limit": 3, "fields": ["ad"] }),
+    ];
+    let mut d = doc();
+    for (k, q) in questions.iter().enumerate() {
+        let table = q["table"].as_str().expect("a table");
+        let mut on_file = q.clone();
+        on_file["path"] = json!(file);
+        let mut on_db = q.clone();
+        on_db["path"] = json!(url);
+        on_db["table"] = json!(format!("sorgu.{table}"));
+        let a = run(&mut d, "cad.sources.query", CallOp::Execute, on_file);
+        let b = run(&mut d, "cad.sources.query", CallOp::Execute, on_db);
+        let (a, b) = (ok(&a), ok(&b));
+        let rows = |v: &Value| -> Vec<Value> {
+            v["rows"]
+                .as_array()
+                .expect("rows")
+                .iter()
+                .map(|r| json!([r["key"], r["attrs"], r["wkt"]]))
+                .collect()
+        };
+        assert_eq!(rows(a), rows(b), "{k}: {q}");
+        for part in ["total", "next", "statistics"] {
+            assert_eq!(a[part], b[part], "{k}: {q}: {part}");
+        }
+        assert_eq!(b["source"]["kind"], "postgis");
+        eprintln!("{k}: {} satır; PostGIS planı {}", rows(b).len(), b["plan"]);
+    }
+}

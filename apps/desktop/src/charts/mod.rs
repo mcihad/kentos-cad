@@ -265,6 +265,8 @@ pub(crate) struct ChartsPanel {
     pub(crate) chart: RefCell<now::ChartNow>,
     /// İstatistik's summaries and the chosen field's statistics.
     pub(crate) stats: RefCell<crate::statistics::StatsNow>,
+    /// İstatistik's Kaynağın tümü (a bound layer's whole source).
+    pub(crate) whole: crate::statistics::Whole,
     /// The chart's picture as last painted.
     pub(crate) painted: canvas::Painted,
 }

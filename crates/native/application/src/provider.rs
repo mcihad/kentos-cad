@@ -53,6 +53,32 @@ pub enum ProviderError {
     Refused(String),
 }
 
+/// A table's shape for a question (docs/adr/0581 §2): its definition (`indexed` when its geometry has a spatial
+/// index), its system and the lasting ids KentOS keeps for some of its rows.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ProviderShape {
+    pub layer: gpkg::Layer,
+    pub srid: Option<u32>,
+    pub uids: HashMap<i64, String>,
+}
+
+/// A value a question's condition binds (docs/adr/0581 §3).
+pub use kentos_expression::pushdown::Param;
+
+/// A table read a part at a time (docs/adr/0581 §2): rows whose geometry's box meets `bbox` (in the table's system),
+/// of which `filter`'s condition holds (its columns named `"name"`, its placeholders `$1` …), after the key `after`,
+/// in key order; their values are `columns`' (indices into the shape's columns; none: all), their geometry read when
+/// `geometry`. At most `chunk` rows a part.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ProviderScan<'a> {
+    pub bbox: Option<[f64; 4]>,
+    pub columns: Option<&'a [usize]>,
+    pub geometry: bool,
+    pub filter: Option<(&'a str, &'a [Param])>,
+    pub after: Option<i64>,
+    pub chunk: usize,
+}
+
 /// A provider of database tables.
 pub trait TableProvider: Send + Sync {
     fn tables(&self, address: &str) -> Result<Vec<ProviderTable>, ProviderError>;
@@ -66,6 +92,21 @@ pub trait TableProvider: Send + Sync {
         revision: &str,
         edits: &gpkg::Edits,
     ) -> Result<(Vec<i64>, String), ProviderError>;
+    /// The table's shape for a question.
+    fn describe(&self, _address: &str, table: &str) -> Result<ProviderShape, ProviderError> {
+        Err(ProviderError::Refused(format!("{table}: bu sağlayıcı sorgulanamaz")))
+    }
+    /// The rows `s` asks for, handed to `f` a part at a time in key order; `f` returns false to stop. Returns how many
+    /// rows the database handed over.
+    fn scan(
+        &self,
+        _address: &str,
+        table: &str,
+        _s: &ProviderScan<'_>,
+        _f: &mut dyn FnMut(Vec<gpkg::Row>) -> bool,
+    ) -> Result<u64, ProviderError> {
+        Err(ProviderError::Refused(format!("{table}: bu sağlayıcı sorgulanamaz")))
+    }
 }
 
 static POSTGIS: OnceLock<Box<dyn TableProvider>> = OnceLock::new();

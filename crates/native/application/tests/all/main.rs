@@ -41,6 +41,7 @@ mod reassociate;
 mod reconcile;
 mod source_relations;
 mod sources;
+mod sources_query;
 mod standards_cmd;
 mod rasters_georef;
 mod stretch_ties;

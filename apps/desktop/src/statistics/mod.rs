@@ -19,7 +19,12 @@ use crate::bottom::BottomTab;
 use crate::charts::now::LayerKey;
 use crate::features::Show;
 
+mod source;
+#[cfg(test)]
+mod source_tests;
 mod view;
+
+pub(crate) use source::Whole;
 
 /// The tab's words (the web's `STATISTICS_TEXTS`).
 pub mod texts {
@@ -74,6 +79,12 @@ pub enum Event {
     Copy,
     /// A frame: a few more summaries counted.
     Count,
+    /// Kapsam: Kaynağın tümü (true) or Çalışma kopyası.
+    Scope(bool),
+    /// Durdur: the source's question stops.
+    WholeStop,
+    /// The source's answer for a layer and a field.
+    WholeAnswered(String, String, Box<Result<kentos_commands::SourcesQueried, String>>),
 }
 
 /// Göster's rows as they depend on the selection and the view.
@@ -240,10 +251,15 @@ impl App {
 
     pub(crate) fn statistics_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::Layer(id) => return self.charts_event(crate::charts::Event::Layer(id)),
+            Event::Layer(id) => {
+                let task = self.charts_event(crate::charts::Event::Layer(id));
+                let whole = self.stats_whole();
+                return Task::batch([task, whole]);
+            }
             Event::Show(show) => return self.charts_event(crate::charts::Event::Show(show)),
             Event::Field(key) => {
                 self.charts.field = Some(key);
+                return self.stats_whole();
             }
             Event::Value(i) => {
                 let rows = self
@@ -280,6 +296,9 @@ impl App {
                 return iced::clipboard::write(text);
             }
             Event::Count => self.count_summaries(),
+            e @ (Event::Scope(_) | Event::WholeStop | Event::WholeAnswered(..)) => {
+                return self.stats_whole_event(e);
+            }
         }
         Task::none()
     }

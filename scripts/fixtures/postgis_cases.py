@@ -127,6 +127,17 @@ def main():
         c = wait(port)
         c.cursor().execute("CREATE SCHEMA kadastro")
         load(port)
+        # The query cases' file (docs/adr/0581): its tables in the schema sorgu; the one text in nokta's number
+        # column cannot be a number in PostgreSQL and is made NULL (the shared questions leave it out).
+        c.cursor().execute("CREATE SCHEMA sorgu")
+        pg = f"PG:host=127.0.0.1 port={port} user=postgres password={PASSWORD} dbname=postgres"
+        for table in ("nokta", "bina", "kayit"):
+            gdal.VectorTranslate(pg, str(ROOT / "fixtures/sources/v1/sorgu.gpkg"),
+                                 options=gdal.VectorTranslateOptions(
+                                     layers=[table],
+                                     layerCreationOptions=["SCHEMA=sorgu", "FID=fid", "GEOMETRY_NAME=geom"],
+                                     preserveFID=True))
+        c.cursor().execute("UPDATE sorgu.nokta SET kot = NULL WHERE fid = 60")
         before = catalogue(c)
         out = Path(tempfile.mkstemp(suffix=".json")[1])
         env = dict(os.environ, KENTOS_PG_URL=f"postgresql://postgres@127.0.0.1:{port}/postgres",

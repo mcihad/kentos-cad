@@ -43,10 +43,10 @@ const SAME: f64 = 1e-6;
 const SAME_DEGREES: f64 = 1e-11;
 
 /// How a bound layer's objects move between the project's system and its table's (docs/adr/0504 §1).
-struct Mover {
-    project: kentos_geometry_core::crs::System,
-    source: kentos_geometry_core::crs::System,
-    choices: Vec<kentos_geometry_core::crs::Choice>,
+pub(crate) struct Mover {
+    pub(crate) project: kentos_geometry_core::crs::System,
+    pub(crate) source: kentos_geometry_core::crs::System,
+    pub(crate) choices: Vec<kentos_geometry_core::crs::Choice>,
 }
 
 /// The move between the project and a table of `srid`: none in the same system or for a table that declares none;
@@ -56,7 +56,7 @@ fn mover_for(doc: &Document, srid: Option<u32>) -> Result<Option<Mover>, String>
 }
 
 /// [`mover_for`] from the project's settings alone.
-fn mover_in(settings: &kentos_commands::ProjectSettings, srid: Option<u32>) -> Result<Option<Mover>, String> {
+pub(crate) fn mover_in(settings: &kentos_commands::ProjectSettings, srid: Option<u32>) -> Result<Option<Mover>, String> {
     let Some(srid) = srid.filter(|&s| s != settings.srid) else {
         return Ok(None);
     };
@@ -85,7 +85,7 @@ fn derived_message(table: &str, rec: &kentos_commands::DerivationRecord) -> Stri
     )
 }
 
-fn refuse(code: &str, message: impl Into<String>, path: &str) -> Stop {
+pub(crate) fn refuse(code: &str, message: impl Into<String>, path: &str) -> Stop {
     Stop::failed(error(code, message.into(), Some(path.into())))
 }
 
@@ -339,7 +339,7 @@ fn stored_of(layer: gpkg::Layer, raw: &mut HashMap<i64, gpkg::Row>, t: gp::Table
 
 /// Where a source is: a GeoPackage file or a database.
 #[derive(Clone, Copy)]
-enum Origin<'a> {
+pub(crate) enum Origin<'a> {
     File(&'a Path),
     Database(&'a str),
 }
@@ -354,7 +354,7 @@ impl Origin<'_> {
 }
 
 /// The source at `address`: a database's address (no password in it) or a GeoPackage's path.
-fn origin<'a>(address: &'a str, at: &str) -> Result<Origin<'a>, Stop> {
+pub(crate) fn origin<'a>(address: &'a str, at: &str) -> Result<Origin<'a>, Stop> {
     if provider::is_database(address) {
         if let Some(why) = provider::address_problem(address) {
             return Err(refuse(
@@ -380,7 +380,7 @@ fn origin_from(kind: SourceKind, path: &str) -> Origin<'_> {
     }
 }
 
-fn database_provider(at: &str) -> Result<&'static dyn provider::TableProvider, Stop> {
+pub(crate) fn database_provider(at: &str) -> Result<&'static dyn provider::TableProvider, Stop> {
     provider::postgis().ok_or_else(|| {
         refuse(
             codes::SOURCE_UNREACHABLE,
@@ -392,19 +392,19 @@ fn database_provider(at: &str) -> Result<&'static dyn provider::TableProvider, S
 
 /// Where a refusal points: the address's field and the table's (the same field when one names both).
 #[derive(Clone, Copy)]
-struct At<'a> {
-    address: &'a str,
-    table: &'a str,
+pub(crate) struct At<'a> {
+    pub(crate) address: &'a str,
+    pub(crate) table: &'a str,
 }
 
-const fn at_one(field: &str) -> At<'_> {
+pub(crate) const fn at_one(field: &str) -> At<'_> {
     At {
         address: field,
         table: field,
     }
 }
 
-fn provider_stop(e: provider::ProviderError, address: &str, at: At<'_>) -> Stop {
+pub(crate) fn provider_stop(e: provider::ProviderError, address: &str, at: At<'_>) -> Stop {
     match e {
         provider::ProviderError::Unreachable(why) => refuse(
             codes::SOURCE_UNREACHABLE,
@@ -434,7 +434,7 @@ fn provider_stop(e: provider::ProviderError, address: &str, at: At<'_>) -> Stop 
 }
 
 /// A database's name in its address, for the lasting ids of its rows.
-fn database_name(address: &str) -> &str {
+pub(crate) fn database_name(address: &str) -> &str {
     let rest = address
         .split_once("://")
         .map(|(_, r)| r)
@@ -522,7 +522,7 @@ fn load_or_refuse(
 
 /// A bound layer's area in its table's system (docs/adr/0510): the project's box moved across, its sides densified;
 /// none for the whole table, or when the box does not reach the table's system.
-fn table_area(area: Option<[f64; 4]>, mover: Option<&Mover>) -> Result<Option<[f64; 4]>, ()> {
+pub(crate) fn table_area(area: Option<[f64; 4]>, mover: Option<&Mover>) -> Result<Option<[f64; 4]>, ()> {
     let Some(a) = area else { return Ok(None) };
     match mover {
         None => Ok(Some(a)),

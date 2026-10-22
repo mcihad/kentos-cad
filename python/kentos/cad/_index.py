@@ -162,6 +162,7 @@ COMMANDS: dict[str, Any] = {
     "cad.snap.find": snap.find,
     "cad.sources.describe": sources.describe,
     "cad.sources.edit": sources.edit,
+    "cad.sources.query": sources.query,
     "cad.sources.reconcile": sources.reconcile,
     "cad.sources.relate": sources.relate,
     "cad.sources.sync": sources.sync,

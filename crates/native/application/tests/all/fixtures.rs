@@ -52,6 +52,7 @@ use kentos_native_application::gpkg_tiles::{read as gpkg_tiles_read, write as gp
 use kentos_native_application::{assets_check, images_edit, rasters_mosaic, rasters_georef, inserts_clip, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
 use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile, relate as sources_relate, sync as sources_sync};
 use kentos_native_application::records_page;
+use kentos_native_application::sources_query;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, annotations_scales, arc, array, blocks_define, blocks_edit,
     circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit,
@@ -2396,6 +2397,23 @@ impl Input for kentos_commands::RecordsPage {
     }
 }
 
+impl Input for kentos_commands::SourcesQuery {
+    /// The box's and the place's numbers.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let at = |rest: &str| rest.parse::<usize>().ok();
+        if let Some(i) = path.strip_prefix("bbox.").and_then(at) {
+            return self.bbox.as_mut()?.get_mut(i);
+        }
+        if let Some(i) = path.strip_prefix("near.at.").and_then(at) {
+            return self.near.as_mut()?.at.get_mut(i);
+        }
+        if path == "near.tolerance" {
+            return Some(&mut self.near.as_mut()?.tolerance);
+        }
+        None
+    }
+}
+
 impl Input for kentos_commands::SubnetworksFind {
     /// No number: a network's id.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -3465,6 +3483,7 @@ fn run_op(
         kentos_commands::CAD_SOURCES_RECONCILE => run!(sources_reconcile, kentos_commands::SourcesReconcile),
         kentos_commands::CAD_SOURCES_RELATE => run!(sources_relate, kentos_commands::SourcesRelate),
         kentos_commands::CAD_RECORDS_PAGE => run!(records_page, kentos_commands::RecordsPage),
+        kentos_commands::CAD_SOURCES_QUERY => run!(sources_query, kentos_commands::SourcesQuery),
         kentos_commands::CAD_FIELDS_WRITE => run!(fields_write, kentos_commands::FieldsWrite),
         kentos_commands::CAD_PROCESSING_TOOLS => run!(processing_tools, kentos_commands::ProcessingTools),
         kentos_commands::CAD_PROCESSING_RUN => run!(processing_run, kentos_commands::ProcessingRun),

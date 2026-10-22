@@ -14,7 +14,8 @@ use std::time::Duration;
 use kentos_contracts::encoding::sha256_hex;
 use kentos_geopackage::{self as gpkg, ColumnKind, DataType, Value};
 use kentos_native_application::provider::{
-    ProviderError, ProviderRead, ProviderTable, TableProvider, register_postgis,
+    Param, ProviderError, ProviderRead, ProviderScan, ProviderShape, ProviderTable, TableProvider,
+    register_postgis,
 };
 use sqlx::postgres::{PgConnectOptions, PgConnection, PgRow};
 use sqlx::{Connection, Executor, Row};
@@ -277,35 +278,10 @@ async fn rows(
                 None
             }
         };
-        let mut values = Vec::with_capacity(s.layer.columns.len());
-        for (i, c) in s.layer.columns.iter().enumerate() {
-            let at = i + 2;
-            let v = match c.kind {
-                ColumnKind::Integer => r
-                    .try_get::<Option<i64>, _>(at)
-                    .map_err(unreachable)?
-                    .map(Value::Integer),
-                ColumnKind::Real => r
-                    .try_get::<Option<f64>, _>(at)
-                    .map_err(unreachable)?
-                    .map(Value::Real),
-                ColumnKind::Boolean => r
-                    .try_get::<Option<bool>, _>(at)
-                    .map_err(unreachable)?
-                    .map(|b| Value::Integer(i64::from(b))),
-                ColumnKind::Blob(_) => r
-                    .try_get::<Option<Vec<u8>>, _>(at)
-                    .map_err(unreachable)?
-                    .map(Value::Blob),
-                _ => r
-                    .try_get::<Option<String>, _>(at)
-                    .map_err(unreachable)?
-                    .map(Value::Text),
-            }
-            .unwrap_or(Value::Null);
+        let values = values_of(r, &s.layer.columns, 2)?;
+        for v in &values {
             digest.extend_from_slice(format!("{v:?}").as_bytes());
             digest.push(0);
-            values.push(v);
         }
         out.push(gpkg::Row {
             fid,
@@ -314,6 +290,155 @@ async fn rows(
         });
     }
     Ok((out, sha256_hex(&digest)))
+}
+
+/// A row's values for `columns`, read from `first` on.
+fn values_of(r: &PgRow, columns: &[gpkg::Column], first: usize) -> Result<Vec<Value>, ProviderError> {
+    let mut values = Vec::with_capacity(columns.len());
+    for (i, c) in columns.iter().enumerate() {
+        let at = i + first;
+        let v = match c.kind {
+            ColumnKind::Integer => r
+                .try_get::<Option<i64>, _>(at)
+                .map_err(unreachable)?
+                .map(Value::Integer),
+            ColumnKind::Real => r
+                .try_get::<Option<f64>, _>(at)
+                .map_err(unreachable)?
+                .map(Value::Real),
+            ColumnKind::Boolean => r
+                .try_get::<Option<bool>, _>(at)
+                .map_err(unreachable)?
+                .map(|b| Value::Integer(i64::from(b))),
+            ColumnKind::Blob(_) => r
+                .try_get::<Option<Vec<u8>>, _>(at)
+                .map_err(unreachable)?
+                .map(Value::Blob),
+            _ => r
+                .try_get::<Option<String>, _>(at)
+                .map_err(unreachable)?
+                .map(Value::Text),
+        }
+        .unwrap_or(Value::Null);
+        values.push(v);
+    }
+    Ok(values)
+}
+
+/// Whether the table's geometry column has a spatial index (a box is then found through it, docs/adr/0581 §2).
+async fn indexed(conn: &mut PgConnection, s: &Shape) -> Result<bool, ProviderError> {
+    let Some(g) = &s.layer.geometry else {
+        return Ok(false);
+    };
+    let (sql_name, ..) = qualified(&s.layer.name);
+    sqlx::query_scalar(
+        "SELECT EXISTS (SELECT 1 FROM pg_index i JOIN pg_class c ON c.oid = i.indexrelid
+         JOIN pg_am am ON am.oid = c.relam
+         JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+         WHERE i.indrelid = $1::regclass AND am.amname IN ('gist', 'spgist', 'brin') AND a.attname = $2)",
+    )
+    .bind(&sql_name)
+    .bind(&g.name)
+    .fetch_one(&mut *conn)
+    .await
+    .map_err(unreachable)
+}
+
+/// The rows a question asks for, a part at a time in key order (docs/adr/0581 §2): the box through `&&` (the index
+/// when there is one), the condition as the application sent it, the key after the last part's.
+async fn scan(
+    conn: &mut PgConnection,
+    s: &Shape,
+    q: &ProviderScan<'_>,
+    f: &mut dyn FnMut(Vec<gpkg::Row>) -> bool,
+) -> Result<u64, ProviderError> {
+    let (sql_name, ..) = qualified(&s.layer.name);
+    let columns: Vec<gpkg::Column> = match q.columns {
+        None => s.layer.columns.clone(),
+        Some(list) => list
+            .iter()
+            .map(|&i| {
+                s.layer
+                    .columns
+                    .get(i)
+                    .cloned()
+                    .ok_or_else(|| refused(format!("{}: {i}. sütun yok", s.layer.name)))
+            })
+            .collect::<Result<_, _>>()?,
+    };
+    let key = quote(&s.layer.fid);
+    let mut select = vec![format!("{key}::bigint")];
+    select.push(match (&s.layer.geometry, q.geometry) {
+        (Some(g), true) => format!("ST_AsBinary({})", quote(&g.name)),
+        _ => "NULL::bytea".into(),
+    });
+    select.extend(columns.iter().map(read_as));
+    let params = q.filter.map_or(&[][..], |(_, p)| p);
+    let mut wheres = Vec::new();
+    if let Some((sql, _)) = q.filter {
+        wheres.push(format!("({sql})"));
+    }
+    let mut next = params.len();
+    let boxed = match (&s.layer.geometry, q.bbox) {
+        (Some(g), Some(_)) => {
+            let srid = s.srid.unwrap_or(0);
+            wheres.push(format!(
+                "{} && ST_MakeEnvelope(${}, ${}, ${}, ${}, {srid})",
+                quote(&g.name),
+                next + 1,
+                next + 2,
+                next + 3,
+                next + 4
+            ));
+            next += 4;
+            q.bbox
+        }
+        _ => None,
+    };
+    wheres.push(format!("{key} > ${}", next + 1));
+    let sql = format!(
+        "SELECT {} FROM {sql_name} WHERE {} ORDER BY {key} LIMIT {}",
+        select.join(", "),
+        wheres.join(" AND "),
+        q.chunk.max(1)
+    );
+    let mut after = q.after.unwrap_or(i64::MIN);
+    let mut handed = 0u64;
+    loop {
+        let mut query = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()));
+        for p in params {
+            query = match p {
+                Param::Number(x) => query.bind(*x),
+                Param::Text(t) => query.bind(t.clone()),
+            };
+        }
+        if let Some(b) = boxed {
+            for v in b {
+                query = query.bind(v);
+            }
+        }
+        let found: Vec<PgRow> = query
+            .bind(after)
+            .fetch_all(&mut *conn)
+            .await
+            .map_err(unreachable)?;
+        let done = found.len() < q.chunk.max(1);
+        let mut part = Vec::with_capacity(found.len());
+        for r in &found {
+            let fid: i64 = r.try_get(0).map_err(unreachable)?;
+            let wkb: Option<Vec<u8>> = r.try_get(1).map_err(unreachable)?;
+            part.push(gpkg::Row {
+                fid,
+                geometry: wkb.as_deref().map(gpkg::read_wkb),
+                values: values_of(r, &columns, 2)?,
+            });
+            after = fid;
+        }
+        handed += part.len() as u64;
+        if part.is_empty() || !f(part) || done {
+            return Ok(handed);
+        }
+    }
 }
 
 async fn uids(
@@ -413,6 +538,38 @@ impl TableProvider for PostGis {
                 writable: s.writable,
                 revision,
             })
+        })
+    }
+
+    fn describe(&self, address: &str, table: &str) -> Result<ProviderShape, ProviderError> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await?;
+            let mut s = shape(&mut conn, table).await?;
+            s.layer.indexed = indexed(&mut conn, &s).await?;
+            let (_, schema, name) = qualified(table);
+            let uids = uids(&mut conn, &schema, &format!("{schema}.{name}")).await?;
+            let _ = conn.close().await;
+            Ok(ProviderShape {
+                layer: s.layer,
+                srid: s.srid,
+                uids,
+            })
+        })
+    }
+
+    fn scan(
+        &self,
+        address: &str,
+        table: &str,
+        q: &ProviderScan<'_>,
+        f: &mut dyn FnMut(Vec<gpkg::Row>) -> bool,
+    ) -> Result<u64, ProviderError> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await?;
+            let s = shape(&mut conn, table).await?;
+            let handed = scan(&mut conn, &s, q, f).await?;
+            let _ = conn.close().await;
+            Ok(handed)
         })
     }
 

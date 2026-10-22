@@ -1018367,6 +1018367,874 @@
       ]
     },
     {
+      "id": "cad.sources.query",
+      "version": 1,
+      "title": "Kaynağı sorgula",
+      "summary": "Bir veri kümesini bulunduğu yerde sorgular: path ve table ile bir GeoPackage dosyasının ya da bir PostGIS adresinin (postgresql://…, parolasız) tablosunu, layer ile çizimin bir katmanını (scope loaded: çizimin nesneleri, bağlı katmanda çalışma kopyası; scope source: bağlı katmanın kaynağının bütün tablosu). bbox (projenin sisteminde; kaynağın sistemi başkaysa ona çevrilir) kutusu değen kayıtları, near (at, tolerance) yere tolerans içindeki kayıtları (tanımlama), filter İfadeyle seç'in dilinde koşulu tutan kayıtları verir. fields döndürülecek alanları, geometry kaydın geometrisini projenin sisteminde ISO WKT olarak seçer. Kayıtlar anahtar sırasıyla sayfa sayfadır (limit 0–10 000, varsayılan 100; cursor önceki sayfanın next'i); anahtar sırası ekleme ve silmede kararlıdır. count sorunun tuttuğu bütün kayıtları sayar; statistics alanların istatistiğini (kentos.statistics/1: okunan, atlanan, toplam, ortalama, en az, en çok, standart sapma; kesin ondalık metinler) sayfadan değil bütün kayıtlardan verir. Kutu, sütunlar ve süzgecin kaynağın denetleyebildiği kısmı kaynağa gider: koşul ifadenin tuttuğu her kaydı tutar, kaynaktan gelen her kayıt ifadeyle burada yeniden sınanır; sonuç kaynağın kurallarından bağımsızdır. plan ne yapıldığını söyler: kutu (index, geometry, local), okunan sütunlar, kaynağa giden koşul değerleriyle ve tam olup olmadığı, burada yapılanlar, sıra. Kayıtların kalıcı kimliği (uid) aynı kaynağı açan her pencerede ve bağlı katmanın çalışma kopyasında aynıdır. Parçası bağlı katmanın çalışma kopyası tam veri kümesi değildir: partial ve partial_scope uyarısı. Çizimi değiştirmez.",
+      "aliases": [
+        "kaynaksorgu",
+        "sourcequery"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "QueryNear": {
+            "additionalProperties": false,
+            "description": "Records near a place (what a click identifies).",
+            "properties": {
+              "at": {
+                "description": "The place, in the project's system: east, north.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "length"
+              },
+              "tolerance": {
+                "description": "How far from it a record's geometry may be.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "at",
+              "tolerance"
+            ],
+            "type": "object"
+          },
+          "QueryScope": {
+            "description": "What a layer's question is asked of.",
+            "oneOf": [
+              {
+                "const": "loaded",
+                "description": "The drawing's objects of the layer: a bound layer's working copy (of a part, a part only).",
+                "type": "string"
+              },
+              {
+                "const": "source",
+                "description": "A bound layer's source, the whole table.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.sources.query` v1: `layer`, or `path` and `table`.\n\nRefusals, checked in this order: `invalid_input` (neither or both of `layer` and `path`, `table` without `path`,\n`path` without `table`, `scope` without `layer`), `invalid_count` (`limit` past 10 000), `invalid_extent` (a box that\nis reversed or not finite), `invalid_tolerance`, `invalid_cursor` (not a cursor of this question), `invalid_expression`\n(the filter does not compile, reads `$sıra` or `$ölçek`, or looks at another layer), `layer_not_found`, `invalid_input`\n(`scope: source` on a layer that is not bound), `file_not_found`, `import_unreadable`, `table_not_found`,\n`field_not_found` (in `fields` or `statistics`), `source_unreachable`. A job stopped answers `cancelled`.",
+        "properties": {
+          "bbox": {
+            "description": "Records whose box meets this one, in the project's system: west, south, east, north.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "count": {
+            "description": "Count every record the question keeps.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "cursor": {
+            "description": "The page after the one whose `next` this is.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fields": {
+            "description": "The fields returned, by name; none: all of them.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "filter": {
+            "description": "A condition in İfadeyle seç's language: the records it holds for.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "geometry": {
+            "description": "Return each record's geometry in the project's system (ISO WKT).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "A layer of the drawing (its id).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "limit": {
+            "description": "How many records a page holds, 0–10 000; none: 100. 0 returns none (for a count or statistics).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "near": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryNear"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Records near a place."
+          },
+          "path": {
+            "description": "A GeoPackage file's path, or a database's address (`postgresql://…`, no password).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryScope"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `layer`: its working copy (the default) or its source's whole table."
+          },
+          "statistics": {
+            "description": "Fields whose statistics are of every record the question keeps (`kentos.statistics/1`).",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "table": {
+            "description": "With `path`: the table (`schema.table` in a database).",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "SourcesQuery",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "PlanBox": {
+            "description": "How the box was applied.",
+            "oneOf": [
+              {
+                "const": "index",
+                "description": "By the source's spatial index.",
+                "type": "string"
+              },
+              {
+                "const": "geometry",
+                "description": "By each geometry's box, in the source (no index).",
+                "type": "string"
+              },
+              {
+                "const": "local",
+                "description": "Here, over the drawing's objects.",
+                "type": "string"
+              }
+            ]
+          },
+          "QueriedKind": {
+            "description": "What a question was asked of.",
+            "oneOf": [
+              {
+                "const": "drawing",
+                "description": "The drawing's objects.",
+                "type": "string"
+              },
+              {
+                "const": "geopackage",
+                "description": "A GeoPackage file.",
+                "type": "string"
+              },
+              {
+                "const": "postgis",
+                "description": "A PostGIS database.",
+                "type": "string"
+              }
+            ]
+          },
+          "QueriedRow": {
+            "description": "A record a question returned.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The fields asked for, as the drawing's attributes read them (an empty value left out).",
+                "type": "object"
+              },
+              "key": {
+                "description": "Its key in the source (fid, primary key); none for a drawing's object.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "id"
+              },
+              "uid": {
+                "description": "Its lasting id: the same in every window and in a bound layer's working copy.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "Its geometry in the project's system, ISO WKT (with `geometry`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "uid",
+              "attrs"
+            ],
+            "type": "object"
+          },
+          "QueriedSource": {
+            "description": "The source a question read.",
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/QueriedKind"
+              },
+              "layer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "path": {
+                "description": "The file's path or the database's address.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The source's system (EPSG), when it is known.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "table": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "QueriedStatistic": {
+            "description": "A field's statistics over every record a question keeps: exact decimals as text.",
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "max": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "mean": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "problem": {
+                "description": "Why the sums are not given (too large to sum exactly).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "read": {
+                "description": "Values read as numbers.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Values given but not numbers.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "std": {
+                "description": "The sample standard deviation.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sum": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "field",
+              "read",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "QueryPlan": {
+            "description": "What the source did and what was done here (docs/adr/0581 §4).",
+            "properties": {
+              "box": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PlanBox"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "columns": {
+                "description": "The columns the source read.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "exact": {
+                "description": "Whether that condition is the whole filter and keeps exactly what it keeps.",
+                "type": "boolean"
+              },
+              "geometry": {
+                "description": "Whether the source read the geometry.",
+                "type": "boolean"
+              },
+              "local": {
+                "description": "What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,\n`statistics`.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "order": {
+                "description": "The order of the records: `key` (the source's) or `uid` (the drawing's).",
+                "type": "string"
+              },
+              "pushed": {
+                "description": "The condition the source checked, its values written in.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "columns",
+              "geometry",
+              "exact",
+              "local",
+              "order"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sources.query` v1, and its plan.",
+        "properties": {
+          "next": {
+            "description": "The cursor of the page after this one; none on the last.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "partial": {
+            "description": "The answer is of a bound layer's part, not of the whole data set.",
+            "type": "boolean"
+          },
+          "plan": {
+            "$ref": "#/$defs/QueryPlan"
+          },
+          "read": {
+            "description": "How many records the source handed over.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/QueriedRow"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/$defs/QueriedSource"
+          },
+          "stamp": {
+            "description": "A cheap mark of a file's state (its size and modification time); none for a database or the drawing.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "statistics": {
+            "items": {
+              "$ref": "#/$defs/QueriedStatistic"
+            },
+            "type": "array"
+          },
+          "total": {
+            "description": "How many records the question keeps (with `count` or `statistics`).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "source",
+          "rows",
+          "plan",
+          "partial",
+          "read",
+          "revision"
+        ],
+        "title": "SourcesQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "PlanBox": {
+            "description": "How the box was applied.",
+            "oneOf": [
+              {
+                "const": "index",
+                "description": "By the source's spatial index.",
+                "type": "string"
+              },
+              {
+                "const": "geometry",
+                "description": "By each geometry's box, in the source (no index).",
+                "type": "string"
+              },
+              {
+                "const": "local",
+                "description": "Here, over the drawing's objects.",
+                "type": "string"
+              }
+            ]
+          },
+          "QueriedKind": {
+            "description": "What a question was asked of.",
+            "oneOf": [
+              {
+                "const": "drawing",
+                "description": "The drawing's objects.",
+                "type": "string"
+              },
+              {
+                "const": "geopackage",
+                "description": "A GeoPackage file.",
+                "type": "string"
+              },
+              {
+                "const": "postgis",
+                "description": "A PostGIS database.",
+                "type": "string"
+              }
+            ]
+          },
+          "QueriedRow": {
+            "description": "A record a question returned.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The fields asked for, as the drawing's attributes read them (an empty value left out).",
+                "type": "object"
+              },
+              "key": {
+                "description": "Its key in the source (fid, primary key); none for a drawing's object.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "id"
+              },
+              "uid": {
+                "description": "Its lasting id: the same in every window and in a bound layer's working copy.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "Its geometry in the project's system, ISO WKT (with `geometry`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "uid",
+              "attrs"
+            ],
+            "type": "object"
+          },
+          "QueriedSource": {
+            "description": "The source a question read.",
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/QueriedKind"
+              },
+              "layer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "path": {
+                "description": "The file's path or the database's address.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The source's system (EPSG), when it is known.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "table": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "QueriedStatistic": {
+            "description": "A field's statistics over every record a question keeps: exact decimals as text.",
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "max": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "mean": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "problem": {
+                "description": "Why the sums are not given (too large to sum exactly).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "read": {
+                "description": "Values read as numbers.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Values given but not numbers.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "std": {
+                "description": "The sample standard deviation.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sum": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "field",
+              "read",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "QueryPlan": {
+            "description": "What the source did and what was done here (docs/adr/0581 §4).",
+            "properties": {
+              "box": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PlanBox"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "columns": {
+                "description": "The columns the source read.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "exact": {
+                "description": "Whether that condition is the whole filter and keeps exactly what it keeps.",
+                "type": "boolean"
+              },
+              "geometry": {
+                "description": "Whether the source read the geometry.",
+                "type": "boolean"
+              },
+              "local": {
+                "description": "What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,\n`statistics`.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "order": {
+                "description": "The order of the records: `key` (the source's) or `uid` (the drawing's).",
+                "type": "string"
+              },
+              "pushed": {
+                "description": "The condition the source checked, its values written in.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "columns",
+              "geometry",
+              "exact",
+              "local",
+              "order"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sources.query` v1, and its plan.",
+        "properties": {
+          "next": {
+            "description": "The cursor of the page after this one; none on the last.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "partial": {
+            "description": "The answer is of a bound layer's part, not of the whole data set.",
+            "type": "boolean"
+          },
+          "plan": {
+            "$ref": "#/$defs/QueryPlan"
+          },
+          "read": {
+            "description": "How many records the source handed over.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/QueriedRow"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/$defs/QueriedSource"
+          },
+          "stamp": {
+            "description": "A cheap mark of a file's state (its size and modification time); none for a database or the drawing.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "statistics": {
+            "items": {
+              "$ref": "#/$defs/QueriedStatistic"
+            },
+            "type": "array"
+          },
+          "total": {
+            "description": "How many records the question keeps (with `count` or `statistics`).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "source",
+          "rows",
+          "plan",
+          "partial",
+          "read",
+          "revision"
+        ],
+        "title": "SourcesQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "invalid_count",
+          "invalid_extent",
+          "invalid_tolerance",
+          "invalid_cursor",
+          "invalid_expression",
+          "layer_not_found",
+          "file_not_found",
+          "import_unreadable",
+          "table_not_found",
+          "field_not_found",
+          "source_unreachable",
+          "invalid_address",
+          "crs_mismatch"
+        ],
+        "warnings": [
+          "partial_scope",
+          "rows_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Büyük parsellerin ilk sayfası, dosyadan",
+          "input": {
+            "fields": [
+              "ada",
+              "parsel_no",
+              "alan"
+            ],
+            "filter": "alan > 1000",
+            "limit": 50,
+            "path": "/veri/kadastro.gpkg",
+            "table": "parsel"
+          }
+        },
+        {
+          "title": "Bağlı katmanın kaynağındaki bütün parsellerin alan istatistiği",
+          "input": {
+            "count": true,
+            "layer": "parsel",
+            "limit": 0,
+            "scope": "source",
+            "statistics": [
+              "alan"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "file.import.pdf",
       "version": 1,
       "title": "PDF içe aktar",
@@ -1070639,6 +1071507,18 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "PDF sayfasındaki bazı içerik altlığa alınmadı (resimler, gölgelemeler, okunamayan yazılar)."
+    },
+    {
+      "code": "partial_scope",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Yanıt bağlı katmanın yüklenen parçasından; bütün veri kümesi için kapsamı kaynak yapın (scope: source)."
+    },
+    {
+      "code": "rows_unreadable",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Geometrisi okunamayan kayıtlar atlandı; iletisi kaçını söyler."
     },
     {
       "code": "underlay_measure",

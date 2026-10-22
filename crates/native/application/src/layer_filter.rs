@@ -80,6 +80,11 @@ pub(crate) fn vertex_count(e: &Entity) -> Option<f64> {
 }
 
 impl CompiledFilter {
+    /// Its condition compiled (what a source can be sent of it, docs/adr/0581 §3).
+    pub fn expr(&self) -> Option<&Expr> {
+        self.expr.as_ref()
+    }
+
     /// The objects its list names, by persistent id; none without a list.
     pub fn listed(&self) -> Option<&HashSet<EntityId>> {
         self.objects.as_ref()
