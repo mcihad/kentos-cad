@@ -19,4 +19,4 @@ sheets: Array<SetSheet>,
 /**
  * With `uids`: the frames affected, in the book's order; their sheets are the ones to print again.
  */
-affected?: Array<AffectedFrame>, revision: string, book?: unknown, templates?: Array<unknown>, pictures?: Array<SheetPicture>, };
+affected?: Array<AffectedFrame>, revision: string, book?: unknown, templates?: Array<unknown>, pictures?: Array<SheetPicture>, standardRatios?: Array<{paper: number; model: number}>, };

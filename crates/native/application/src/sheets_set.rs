@@ -180,6 +180,7 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
         book: input.details.then(|| serde_json::to_value(book.as_ref().cloned().unwrap_or_default()).unwrap_or_default()),
         templates: input.details.then(|| kentos_sheet::template::system_templates().iter().map(|t|serde_json::to_value(t).unwrap_or_default()).collect()),
         pictures: input.pictures.then(|| cx_pictures(doc)),
+        standard_ratios: input.details.then(|| kentos_sheet::viewport::standard_ratios().to_vec()),
         series,
         sheets,
         affected,

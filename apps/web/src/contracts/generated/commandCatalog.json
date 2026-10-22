@@ -558486,6 +558486,15 @@
             },
             "type": "array"
           },
+          "standardRatios": {
+            "items": {
+              "$ref": "#/$defs/PaperScaleRatio"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "templates": {
             "items": {
               "$ref": "#/$defs/PaperTemplate"
@@ -563051,6 +563060,15 @@
               "$ref": "#/$defs/SetSheet"
             },
             "type": "array"
+          },
+          "standardRatios": {
+            "items": {
+              "$ref": "#/$defs/PaperScaleRatio"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "templates": {
             "items": {

@@ -33,6 +33,23 @@ fn independent_viewport_cases_and_inverse_keep_the_camera_and_source_exact() {
             panic!()
         };
         let expected = &case["expected"];
+        if let Some(pair) = expected.get("ratio") {
+            for (got, key) in [
+                (view.ratio.unwrap().paper, "paper"),
+                (view.ratio.unwrap().model, "model"),
+            ] {
+                assert_eq!(
+                    got.to_bits(),
+                    pair[key].as_f64().unwrap().to_bits(),
+                    "explicit ratio pair"
+                );
+            }
+            let bytes = serde_json::to_vec(&done.book).unwrap();
+            assert_eq!(
+                serde_json::from_slice::<SheetBook>(&bytes).unwrap(),
+                done.book
+            );
+        }
         assert!(
             (view.denominator() - expected["denominator"].as_f64().unwrap()).abs() < 1e-9,
             "{}",

@@ -197,6 +197,10 @@ pub struct SheetsSetResult {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub pictures: Option<Vec<crate::SheetPicture>>,
+    // With details: CAD preset ratios, using the same table as the viewport inspector.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional, type = "Array<{paper: number; model: number}>"))]
+    pub standard_ratios: Option<Vec<kentos_sheet::viewport::ScaleRatio>>,
 
 }
 

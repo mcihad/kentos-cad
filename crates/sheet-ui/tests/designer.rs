@@ -1692,10 +1692,99 @@ fn common_viewport_cases_replay_through_the_designer_and_undo() {
 
 #[test]
 fn drawing_scale_button_keeps_the_exact_fractional_project_denominator() {
-    let mut d=designer();let mut ctx=context();ctx.exact_plot_scale=Some(37.5);ctx.capabilities.plot_scale=Some(38);d.set_context(ctx);
-    let id=d.book().sheets[0].items.iter().find(|i|matches!(i.kind,ItemKind::Map(_))).unwrap().id.clone();
-    d.update(Message::Select(vec![id.clone()]));d.update(Message::MapScaleFromDrawing);
-    assert!(d.error().is_none(),"{:?}",d.error());
-    let ItemKind::Map(map)=&d.book().item(&id).unwrap().kind else{panic!()};
-    let kentos_sheet::MapView::Fixed(view)=&map.view else{panic!()};assert_eq!(view.denominator(),37.5);
+    let mut d = designer();
+    let mut ctx = context();
+    ctx.exact_plot_scale = Some(37.5);
+    ctx.capabilities.plot_scale = Some(38);
+    d.set_context(ctx);
+    let id = d.book().sheets[0]
+        .items
+        .iter()
+        .find(|i| matches!(i.kind, ItemKind::Map(_)))
+        .unwrap()
+        .id
+        .clone();
+    d.update(Message::Select(vec![id.clone()]));
+    d.update(Message::MapScaleFromDrawing);
+    assert!(d.error().is_none(), "{:?}", d.error());
+    let ItemKind::Map(map) = &d.book().item(&id).unwrap().kind else {
+        panic!()
+    };
+    let kentos_sheet::MapView::Fixed(view) = &map.view else {
+        panic!()
+    };
+    assert_eq!(view.denominator(), 37.5);
+}
+
+#[test]
+fn exact_scale_text_and_presets_keep_the_pair_and_unrelated_changes_do_not_round_it() {
+    use kentos_sheet::ops::Op;
+    use kentos_sheet::viewport::SetViewport;
+    use kentos_ui::{attribute::Value, widget::inspector::Event};
+    let data: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/sheet/v1/viewports.json")).unwrap();
+    for case in data["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|c| c["expected"].get("ratio").is_some())
+    {
+        let mut book = kentos_sheet::SheetBook::default();
+        book.sheets
+            .push(serde_json::from_value(case["sheet"].clone()).unwrap());
+        let op: Op = serde_json::from_value(case["operation"].clone()).unwrap();
+        let book = kentos_sheet::ops::apply_all(&book, &[op]).unwrap().book;
+        let mut d = Designer::new(context());
+        d.load(book.clone());
+        d.update(Message::Tab(1));
+        d.update(Message::Select(vec!["viewport".into()]));
+        let n = case["expected"]["denominator"].as_f64().unwrap();
+        let index = d
+            .kind_field_names()
+            .iter()
+            .position(|p| *p == "Ölçek (1:…)")
+            .unwrap();
+        d.update(Message::Inspector(Event::Set {
+            id: index,
+            value: Value::Text(n.to_string()),
+        }));
+        assert!(d.error().is_none(), "{:?}", d.error());
+        let ItemKind::Map(map) = &d.book().sheets[0].items[0].kind else {
+            panic!()
+        };
+        let kentos_sheet::MapView::Fixed(v) = &map.view else {
+            panic!()
+        };
+        assert_eq!(v.denominator(), n);
+        d.update(Message::Undo);
+        assert_eq!(d.book(), &book);
+        d.update(Message::Opacity(73.));
+        let ItemKind::Map(map) = &d.book().sheets[0].items[0].kind else {
+            panic!()
+        };
+        let kentos_sheet::MapView::Fixed(v) = &map.view else {
+            panic!()
+        };
+        assert_eq!(
+            serde_json::to_value(v.ratio).unwrap()["paper"].as_f64(),
+            case["expected"]["ratio"]["paper"].as_f64()
+        );
+        assert_eq!(v.denominator(), n);
+    }
+    for ratio in kentos_sheet::viewport::standard_ratios() {
+        let mut d = designer();
+        let id = item(&d, "Harita").id.clone();
+        d.update(Message::MapConfigure(SetViewport {
+            id: id.clone(),
+            ratio: Some(*ratio),
+            ..Default::default()
+        }));
+        let ItemKind::Map(map) = &d.book().item(&id).unwrap().kind else {
+            panic!()
+        };
+        let kentos_sheet::MapView::Fixed(v) = &map.view else {
+            panic!()
+        };
+        assert_eq!(v.ratio, Some(*ratio));
+    }
 }

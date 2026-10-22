@@ -814,6 +814,11 @@ impl Designer {
             let maps = crate::inspect::maps_of(self.items());
             if let Some(patch) = crate::inspect::write(&kf.prop, &value, &maps) {
                 self.patch_chosen(patch);
+            } else if matches!(
+                kf.prop.conv,
+                crate::inspect::Conv::Scale | crate::inspect::Conv::ExactReal
+            ) {
+                self.error = Some("Ölçek için sonlu bir sayı yazın; örnek: 37.5.".into());
             }
         }
     }

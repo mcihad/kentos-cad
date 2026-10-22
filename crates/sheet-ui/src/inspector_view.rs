@@ -1032,19 +1032,90 @@ impl Designer {
             let exact = view.ratio.is_some();
             let ratio = SetViewport {
                 id: one.id.clone(),
-                ratio: (!exact).then_some(ScaleRatio {
+                ratio: Some(ScaleRatio {
                     paper: 1.,
                     model: view.denominator(),
                 }),
-                scale: exact.then_some(view.denominator().round().clamp(1., 1e8) as u32),
                 ..Default::default()
             };
-            let lock_id=one.id.clone();
-            let lock=if editable&&!one.locked {Switch::new(map.view_locked,move|on|Message::MapConfigure(SetViewport{id:lock_id.clone(),locked:Some(on),..Default::default()}))}else{Switch::disabled(map.view_locked)}.label("Görünüm kilidi");
-            let shown_ratio=view.ratio.map_or_else(||format!("1:{}",view.scale),|r|format!("{}:{}",r.paper,r.model));
-            column![lock,labelled("Kaynak",source,"Görünüm değişse de bu kopya korunur.".into()),
-                    action(if exact{"1:N kullan"}else{"Oran belirt"},crate::icons::PLOT_SCALE,camera_editable.then_some(Message::MapConfigure(ratio))),
-                    label::caption(format!("Ölçek {shown_ratio} · Dikdörtgen kırpma"))].spacing(6).into()
+            let presets = kentos_sheet::viewport::standard_ratios();
+            let mut scale_names = presets
+                .iter()
+                .map(|r| format!("{}:{}", r.paper, r.model))
+                .collect::<Vec<_>>();
+            let picked = presets
+                .iter()
+                .position(|r| r.denominator() == view.denominator())
+                .unwrap_or_else(|| {
+                    scale_names.push("Özel oran".into());
+                    scale_names.len() - 1
+                });
+            let preset_id = one.id.clone();
+            let preset: Element<'_, Message> = if camera_editable {
+                Select::new(
+                    scale_names.into_iter().enumerate().map(|(i, name)| {
+                        if i < presets.len() {
+                            Choice::new(name)
+                        } else {
+                            Choice::new(name).disabled()
+                        }
+                    }),
+                    Some(picked),
+                    move |index| {
+                        Message::MapConfigure(SetViewport {
+                            id: preset_id.clone(),
+                            ratio: presets.get(index).copied(),
+                            ..Default::default()
+                        })
+                    },
+                )
+                .searchable(false)
+                .into()
+            } else {
+                label::caption(scale_names[picked].clone()).into()
+            };
+            let lock_id = one.id.clone();
+            let lock = if editable && !one.locked {
+                Switch::new(map.view_locked, move |on| {
+                    Message::MapConfigure(SetViewport {
+                        id: lock_id.clone(),
+                        locked: Some(on),
+                        ..Default::default()
+                    })
+                })
+            } else {
+                Switch::disabled(map.view_locked)
+            }
+            .label("Görünüm kilidi");
+            let shown_ratio = view.ratio.map_or_else(
+                || format!("1:{}", view.scale),
+                |r| format!("{}:{}", r.paper, r.model),
+            );
+            column![
+                lock,
+                labelled(
+                    "Kaynak",
+                    source,
+                    "Görünüm değişse de bu kopya korunur.".into()
+                ),
+                labelled(
+                    "Standart ölçek",
+                    preset,
+                    "Özel oranlar aşağıdaki alanlarda tam saklanır.".into()
+                ),
+                action(
+                    if exact {
+                        "Oranı 1:N yaz"
+                    } else {
+                        "Oran belirt"
+                    },
+                    crate::icons::PLOT_SCALE,
+                    camera_editable.then_some(Message::MapConfigure(ratio))
+                ),
+                label::caption(format!("Ölçek {shown_ratio}"))
+            ]
+            .spacing(6)
+            .into()
         } else {
             space::vertical().height(0).into()
         };

@@ -33,6 +33,85 @@ impl ScaleRatio {
             && crate::projection::Scale::new(self.denominator()).is_some()
     }
 }
+/// CAD presets are independent of the GIS atlas fitting table. Custom ratios remain valid.
+pub fn standard_ratios() -> &'static [ScaleRatio] {
+    const RATIOS: &[ScaleRatio] = &[
+        ScaleRatio {
+            paper: 10.,
+            model: 1.,
+        },
+        ScaleRatio {
+            paper: 5.,
+            model: 1.,
+        },
+        ScaleRatio {
+            paper: 2.,
+            model: 1.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 1.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 2.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 5.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 10.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 20.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 25.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 50.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 75.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 100.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 200.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 250.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 500.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 1000.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 2000.,
+        },
+        ScaleRatio {
+            paper: 1.,
+            model: 5000.,
+        },
+    ];
+    RATIOS
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

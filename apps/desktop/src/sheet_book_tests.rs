@@ -991,3 +991,164 @@ fn sheet10_precision_screens() {
         }
     }
 }
+
+#[test]
+#[ignore = "GPU pictures, run alone"]
+fn sheet11_exact_scale_screens() {
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/commands/v1/cad.sheets.fit.json"
+    ))
+    .unwrap();
+    let mut snapshot: kentos_commands::DocumentSnapshotV1 =
+        serde_json::from_value(fixture["setup"].clone()).unwrap();
+    for value in [
+        serde_json::json!({"kind":"polygon","id":2,"layerId":"cizim","attrs":{},"pts":[{"x":0,"y":0},{"x":5,"y":0},{"x":5,"y":3},{"x":0,"y":3}]}),
+        serde_json::json!({"kind":"text","id":3,"layerId":"cizim","attrs":{},"p":{"x":1.4,"y":1.5},"text":"ODA 15 m²","height":0.15,"rotation":0}),
+    ] {
+        snapshot
+            .entities
+            .push(serde_json::from_value(value).unwrap());
+    }
+    let named = kentos_commands::NamedView {
+        id: "view-room".into(),
+        name: "Zemin kat".into(),
+        center: kentos_commands::Vec2 { x: 2.5, y: 1.5 },
+        width: 5.5,
+        height: 3.3,
+        twist: std::f64::consts::PI / 12.,
+    };
+    snapshot.settings.named_views = vec![named.clone()];
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).unwrap();
+    for (theme, text, width, height) in [
+        ("light", 13, 1440., 900.),
+        ("dark", 13, 1440., 900.),
+        ("dark", 18, 1100., 650.),
+    ] {
+        let (mut app, _store) = app_with_store("sheet11-exact-scale");
+        app.settings.choose(&[
+            ("appearance.theme", serde_json::json!(theme)),
+            ("appearance.textSize", serde_json::json!(text)),
+        ]);
+        app.apply_settings();
+        let doc = Document::new(snapshot.clone(), None).unwrap();
+        let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        drive(&mut app, task);
+        app.selection.set([kentos_domain::Slot(2)]);
+        sheet(&mut app, Sheet::NewSheet);
+        if app.sheets.questions().is_some() {
+            sheet(
+                &mut app,
+                Sheet::Questions(kentos_sheet_ui::questions::QuestionsMessage::Make),
+            );
+        }
+        app.follow_sheets();
+        assert_eq!(
+            app.sheets.context().selection_bounds,
+            Some([0., 0., 5., 3.])
+        );
+        let map = app
+            .sheets
+            .open_sheet()
+            .unwrap()
+            .items
+            .iter()
+            .find(|i| matches!(i.kind, kentos_sheet::ItemKind::Map(_)))
+            .unwrap()
+            .id
+            .clone();
+        sheet(&mut app, Sheet::Select(vec![map.clone()]));
+        sheet(&mut app, Sheet::MapFitDrawing);
+        assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
+        sheet(&mut app, Sheet::MapFitSelection);
+        assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
+        sheet(
+            &mut app,
+            Sheet::MapConfigure(kentos_sheet::viewport::SetViewport {
+                id: map.clone(),
+                source: Some(kentos_sheet::viewport::Source::ViewSnapshot {
+                    view: named.clone(),
+                }),
+                ratio: Some(kentos_sheet::viewport::ScaleRatio {
+                    paper: 1.,
+                    model: 37.123456789123,
+                }),
+                locked: Some(false),
+                ..Default::default()
+            }),
+        );
+        assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
+        let item = app
+            .sheets
+            .open_sheet()
+            .unwrap()
+            .items
+            .iter()
+            .find(|i| i.id == map)
+            .unwrap();
+        let kentos_sheet::ItemKind::Map(m) = &item.kind else {
+            panic!()
+        };
+        let kentos_sheet::MapView::Fixed(v) = &m.view else {
+            panic!()
+        };
+        assert_eq!(v.center, Some(kentos_sheet::GroundPoint { x: 2.5, y: 1.5 }));
+        for section in ["frame", "constraints"] {
+            sheet(&mut app, Sheet::Section(section));
+        }
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(width, height)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        sheet(&mut app, Sheet::ZoomPage);
+        snap.settle(&mut app, App::view, &mut update);
+        let path = out.join(format!("sheet11-exact-scale-{theme}-{text}.png"));
+        let image = snap.render(app.view(), &app.theme());
+        let (x0, y0, x1, y1, least) = if text == 13 {
+            (560, 340, 855, 570, 900)
+        } else {
+            (458, 310, 615, 430, 400)
+        };
+        let mut ink = 0;
+        for y in y0..y1 {
+            for x in x0..x1 {
+                let at = (y * width as usize + x) * 4;
+                if image.rgba[at..at + 3].iter().all(|c| *c < 220) {
+                    ink += 1;
+                }
+            }
+        }
+        assert!(
+            ink > least,
+            "{theme}-{text}: viewport geometry missing ({ink})"
+        );
+        image.save(&path).unwrap();
+        println!("{}", path.display());
+        if text==18 {
+            snap.input(&mut app,App::view,&mut update,kentos_ui::snapshot::Input::Scroll(iced::Point::new(width-100.,height-140.),-9.));
+            snap.render(app.view(),&app.theme()).save(out.join("sheet11-exact-scale-dark-18-scrolled.png")).unwrap();
+        }
+        if theme=="light" {
+            let before=app.sheets.book().clone();
+            snap.input(&mut app,App::view,&mut update,kentos_ui::snapshot::Input::Click(iced::Point::new(1150.,357.)));
+            let item=app.sheets.book().item(&map).unwrap();
+            let kentos_sheet::ItemKind::Map(m)=&item.kind else{panic!()};
+            assert!(m.view_locked,"a real mouse press locks the viewport");
+            let kentos_sheet::MapView::Fixed(v)=&m.view else{panic!()};assert_eq!(v.denominator(),37.123456789123);
+            sheet(&mut app,Sheet::Undo);assert_eq!(app.sheets.book(),&before);
+        }
+        if theme == "light" {
+            let pdf = kentos_plot::book::book_pdf(
+                &app.document.as_ref().unwrap().model,
+                &[],
+                "Test",
+                "2026-10-22",
+            )
+            .unwrap();
+            std::fs::write(out.join("sheet11-exact-scale.pdf"), pdf.bytes).unwrap();
+        }
+    }
+}

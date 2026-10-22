@@ -20,6 +20,9 @@ pub(crate) enum Conv {
     /// A whole number.
     Int,
     Real,
+    /// Lossless numeric text; viewport ratios must not inherit display precision.
+    ExactReal,
+    Scale,
     /// Micrometres shown as millimetres.
     Mm,
     /// Thousandths of a degree shown as degrees.
@@ -118,16 +121,16 @@ fn font_choices() -> &'static [(&'static str, &'static str)] {
 pub(crate) fn props_of(kind: &str) -> Vec<Prop> {
     match kind {
         "map" => vec![
-            prop(&["kind", "view", "scale"], "Ölçek (1:…)", Conv::Int),
+            prop(&["kind", "view", "scale"], "Ölçek (1:…)", Conv::Scale),
             prop(
                 &["kind", "view", "ratio", "paper"],
                 "Oran: kâğıt",
-                Conv::Real,
+                Conv::ExactReal,
             ),
             prop(
                 &["kind", "view", "ratio", "model"],
                 "Oran: model",
-                Conv::Real,
+                Conv::ExactReal,
             ),
             prop(&["kind", "view", "center", "x"], "Merkez Y (m)", Conv::Real),
             prop(&["kind", "view", "center", "y"], "Merkez X (m)", Conv::Real),
@@ -277,6 +280,14 @@ pub(crate) fn read(item_json: &Json, p: &Prop, maps: &[(String, String)]) -> Val
                 .unwrap_or(false),
         );
     }
+    if p.conv == Conv::Scale {
+        let view = at(item_json, &["kind", "view"]);
+        let ratio = view.and_then(|v| v.get("ratio"));
+        let denominator = ratio
+            .and_then(|r| Some(r.get("model")?.as_f64()? / r.get("paper")?.as_f64()?))
+            .or_else(|| view?.get("scale")?.as_f64());
+        return denominator.map_or(Value::Null, |n| Value::Text(n.to_string()));
+    }
     let Some(v) = at(item_json, p.path) else {
         return Value::Null;
     };
@@ -284,6 +295,9 @@ pub(crate) fn read(item_json: &Json, p: &Prop, maps: &[(String, String)]) -> Val
         Conv::Text | Conv::Optional => v
             .as_str()
             .map_or(Value::Null, |s| Value::Text(s.to_owned())),
+        Conv::Scale | Conv::ExactReal => v
+            .as_f64()
+            .map_or(Value::Null, |n| Value::Text(n.to_string())),
         Conv::Real => v.as_f64().map_or(Value::Null, Value::Real),
         Conv::Int => v.as_i64().map_or(Value::Null, Value::Integer),
         Conv::Mm => v.as_f64().map_or(Value::Null, |x| Value::Real(x / 1000.0)),
@@ -319,7 +333,14 @@ pub(crate) fn write(p: &Prop, value: &Value, maps: &[(String, String)]) -> Optio
         (Conv::Text, Value::Null) => json!(""),
         (Conv::Optional, Value::Text(s)) if !s.trim().is_empty() => json!(s),
         (Conv::Optional, Value::Text(_) | Value::Null) => Json::Null,
-        (Conv::Real, v) => json!(v.as_f64()?),
+        (Conv::Scale | Conv::ExactReal, Value::Text(s)) => {
+            let n = s.trim().replace(',', ".").parse::<f64>().ok()?;
+            if !n.is_finite() {
+                return None;
+            }
+            json!(n)
+        }
+        (Conv::Scale | Conv::ExactReal | Conv::Real, v) => json!(v.as_f64()?),
         (Conv::Int, v) => json!(v.as_f64()?.round() as i64),
         (Conv::Mm | Conv::Deg | Conv::Deg2, v) => json!((v.as_f64()? * 1000.0).round() as i64),
         (Conv::Bool, Value::Bool(b)) => json!(b),
@@ -335,13 +356,15 @@ pub(crate) fn write(p: &Prop, value: &Value, maps: &[(String, String)]) -> Optio
         _ => return None,
     };
     // {"kind": {"style": {"size": 2500}}}: a merge that changes only that leaf.
-    let mut patch = p
+    let patch = p
         .path
         .iter()
         .rev()
         .fold(leaf, |inner, key| json!({ *key: inner }));
-    if p.path == ["kind", "view", "scale"] {
-        patch["kind"]["view"]["ratio"] = Json::Null;
+    if p.conv == Conv::Scale {
+        let n = patch["kind"]["view"]["scale"].as_f64()?;
+        // The integer field stays a compatibility fallback; the explicit ratio is authoritative.
+        return Some(json!({"kind":{"view":{"ratio":{"paper":1.,"model":n}}}}));
     }
     Some(patch)
 }
@@ -350,6 +373,7 @@ pub(crate) fn write(p: &Prop, value: &Value, maps: &[(String, String)]) -> Optio
 pub(crate) fn field_of(p: &Prop, maps: &[(String, String)]) -> Field {
     let mut f = match p.conv {
         Conv::Text | Conv::Optional => Field::text(p.label),
+        Conv::Scale | Conv::ExactReal => Field::text(p.label),
         Conv::Real => Field::real(p.label, 6).point(),
         Conv::Int => Field::integer(p.label),
         // The display rule (ADR 0149): a point, never a comma.
@@ -427,8 +451,6 @@ pub(crate) fn refresh_fields(d: &mut Designer) {
         {
             continue;
         }
-
-        if p.path==["kind","view","scale"] && chosen.iter().all(|i|matches!(&i.kind,kentos_sheet::ItemKind::Map(m)if matches!(&m.view,kentos_sheet::MapView::Fixed(v)if v.ratio.is_some()))){continue;}
 
         let typed = matches!(
             p.path,
@@ -706,6 +728,49 @@ mod tests {
                 &[]
             ),
             None
+        );
+    }
+
+    #[test]
+    fn exact_viewport_values_survive_unrelated_edits_and_denominator_text_roundtrips() {
+        let cases: Json =
+            serde_json::from_str(include_str!("../../../fixtures/sheet/v1/viewports.json"))
+                .unwrap();
+        for case in cases["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|c| c["expected"].get("ratio").is_some())
+        {
+            let ratio = &case["expected"]["ratio"];
+            let mut item = case["sheet"]["items"][0].clone();
+            item["kind"]["view"]["ratio"] = ratio.clone();
+            let props = props_of("map");
+            for key in ["paper", "model"] {
+                let p = props
+                    .iter()
+                    .find(|p| p.path == ["kind", "view", "ratio", key])
+                    .unwrap();
+                let value = read(&item, p, &[]);
+                let patch = write(p, &value, &[]).unwrap();
+                assert_eq!(
+                    at(&patch, p.path).and_then(Json::as_f64),
+                    ratio.get(key).and_then(Json::as_f64)
+                );
+            }
+            let scale = props.iter().find(|p| p.conv == Conv::Scale).unwrap();
+            let value = read(&item, scale, &[]);
+            let patch = write(scale, &value, &[]).unwrap();
+            assert_eq!(
+                patch["kind"]["view"]["ratio"]["model"].as_f64().unwrap(),
+                ratio["model"].as_f64().unwrap() / ratio["paper"].as_f64().unwrap()
+            );
+        }
+        let p = prop(&["kind", "view", "scale"], "Ölçek", Conv::Scale);
+        assert!(write(&p, &Value::Text("NaN".into()), &[]).is_none());
+        assert_eq!(
+            write(&p, &Value::Text("37,5".into()), &[]).unwrap()["kind"]["view"]["ratio"]["model"],
+            37.5
         );
     }
 

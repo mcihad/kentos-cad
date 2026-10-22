@@ -43771,6 +43771,7 @@ class SheetsSetResult(_Model):
     affected: list[AffectedFrame] | None | Unset = UNSET
     book: PaperSheetBook | None | Unset = UNSET
     pictures: list[SheetPicture] | None | Unset = UNSET
+    standard_ratios: list[PaperScaleRatio] | None | Unset = UNSET
     templates: list[PaperTemplate] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -43784,6 +43785,8 @@ class SheetsSetResult(_Model):
             out["book"] = None if self.book is None else self.book.to_json()
         if self.pictures is not UNSET:
             out["pictures"] = None if self.pictures is None else [e0.to_json() for e0 in self.pictures]
+        if self.standard_ratios is not UNSET:
+            out["standardRatios"] = None if self.standard_ratios is None else [e0.to_json() for e0 in self.standard_ratios]
         if self.templates is not UNSET:
             out["templates"] = None if self.templates is None else [e0.to_json() for e0 in self.templates]
         return out
@@ -43797,6 +43800,7 @@ class SheetsSetResult(_Model):
             affected=UNSET if "affected" not in data else None if data["affected"] is None else [AffectedFrame.from_json(e0) for e0 in data["affected"]],
             book=UNSET if "book" not in data else None if data["book"] is None else PaperSheetBook.from_json(data["book"]),
             pictures=UNSET if "pictures" not in data else None if data["pictures"] is None else [SheetPicture.from_json(e0) for e0 in data["pictures"]],
+            standard_ratios=UNSET if "standardRatios" not in data else None if data["standardRatios"] is None else [PaperScaleRatio.from_json(e0) for e0 in data["standardRatios"]],
             templates=UNSET if "templates" not in data else None if data["templates"] is None else [PaperTemplate.from_json(e0) for e0 in data["templates"]],
         )
 

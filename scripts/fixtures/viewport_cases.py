@@ -44,4 +44,8 @@ add('Oran ve 1:N çelişir',dict(scale=50,ratio=dict(paper=1,model=100)),error='
 add('Ters kapsam',dict(bounds=[1,1,0,0]),error='invalid_extent')
 add('Nokta kapsamı',dict(bounds=[1,1,1,1]),error='invalid_extent')
 add('Görünüm ve merkez çelişir',dict(source=dict(type='viewSnapshot',view=view),center=dict(x=0,y=0)),error='ambiguous_source')
+# CAD-SHEET-11: retain the explicit pair, including more digits than UI display precision.
+for paper,model in [(10,1),(5,1),(2,1),(1,1),(1,2),(1,5),(1,10),(1,20),(1,25),(1,50),(1,75),(1,100),(1,200),(1,250),(1,500),(1,1000),(1,2000),(1,5000),(1,37.123456789123),(3,2),(7,13),(0.123456789,17.987654321),(1,1e-6),(1,1e8)]:
+    add(f'Tam saklanan CAD oranı {paper}:{model}',dict(ratio=dict(paper=paper,model=model)))
+    out[-1]['expected']['ratio']=dict(paper=paper,model=model)
 Path('fixtures/sheet/v1/viewports.json').write_text(json.dumps(dict(schema='kentos.sheet.viewports/1',cases=out),ensure_ascii=False,indent=2)+'\n')

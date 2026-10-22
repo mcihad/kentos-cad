@@ -22,6 +22,8 @@ class Viewports(unittest.TestCase):
                 current=cad.sheets.set(doc,details=True)
                 for a,b in zip(current.sheets[0].frames[0].bounds,case['expected']['bounds']):self.assertAlmostEqual(a,b,places=8)
                 item=current.book.to_json()['sheets'][0]['items'][0]
+                if 'ratio' in case['expected']:self.assertEqual(item['kind']['view']['ratio'],case['expected']['ratio'])
+                self.assertTrue(any(r.paper==1 and r.model==20 for r in current.standard_ratios))
                 self.assertEqual(item['kind'].get('source',dict(type='drawing')),case['expected']['source'])
                 reopened=cad.Document.from_bytes(doc.to_bytes())
                 self.assertEqual(cad.sheets.set(reopened,details=True).book.to_json(),current.book.to_json())

@@ -3901,6 +3901,3150 @@
       "expected": {
         "error": "ambiguous_source"
       }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 10:1",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 10,
+          "model": 1
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 0.1,
+        "rotation": 0,
+        "corners": [
+          [
+            2.481,
+            0.011
+          ],
+          [
+            2.519,
+            0.011
+          ],
+          [
+            2.519,
+            -0.011
+          ],
+          [
+            2.481,
+            -0.011
+          ]
+        ],
+        "bounds": [
+          2.481,
+          -0.011,
+          2.519,
+          0.011
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 10,
+          "model": 1
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 5:1",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 5,
+          "model": 1
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 0.2,
+        "rotation": 0,
+        "corners": [
+          [
+            2.462,
+            0.022
+          ],
+          [
+            2.538,
+            0.022
+          ],
+          [
+            2.538,
+            -0.022
+          ],
+          [
+            2.462,
+            -0.022
+          ]
+        ],
+        "bounds": [
+          2.462,
+          -0.022,
+          2.538,
+          0.022
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 5,
+          "model": 1
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 2:1",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 2,
+          "model": 1
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 0.5,
+        "rotation": 0,
+        "corners": [
+          [
+            2.405,
+            0.055
+          ],
+          [
+            2.595,
+            0.055
+          ],
+          [
+            2.595,
+            -0.055
+          ],
+          [
+            2.405,
+            -0.055
+          ]
+        ],
+        "bounds": [
+          2.405,
+          -0.055,
+          2.595,
+          0.055
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 2,
+          "model": 1
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:1",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 1
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 1.0,
+        "rotation": 0,
+        "corners": [
+          [
+            2.31,
+            0.11
+          ],
+          [
+            2.69,
+            0.11
+          ],
+          [
+            2.69,
+            -0.11
+          ],
+          [
+            2.31,
+            -0.11
+          ]
+        ],
+        "bounds": [
+          2.31,
+          -0.11,
+          2.69,
+          0.11
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 1
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:2",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 2
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 2.0,
+        "rotation": 0,
+        "corners": [
+          [
+            2.12,
+            0.22
+          ],
+          [
+            2.88,
+            0.22
+          ],
+          [
+            2.88,
+            -0.22
+          ],
+          [
+            2.12,
+            -0.22
+          ]
+        ],
+        "bounds": [
+          2.12,
+          -0.22,
+          2.88,
+          0.22
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 2
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:5",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 5
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 5.0,
+        "rotation": 0,
+        "corners": [
+          [
+            1.55,
+            0.55
+          ],
+          [
+            3.45,
+            0.55
+          ],
+          [
+            3.45,
+            -0.55
+          ],
+          [
+            1.55,
+            -0.55
+          ]
+        ],
+        "bounds": [
+          1.55,
+          -0.55,
+          3.45,
+          0.55
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 5
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:10",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 10
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 10.0,
+        "rotation": 0,
+        "corners": [
+          [
+            0.6000000000000001,
+            1.1
+          ],
+          [
+            4.4,
+            1.1
+          ],
+          [
+            4.4,
+            -1.1
+          ],
+          [
+            0.6000000000000001,
+            -1.1
+          ]
+        ],
+        "bounds": [
+          0.6000000000000001,
+          -1.1,
+          4.4,
+          1.1
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 10
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:20",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 20
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 20.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -1.2999999999999998,
+            2.2
+          ],
+          [
+            6.3,
+            2.2
+          ],
+          [
+            6.3,
+            -2.2
+          ],
+          [
+            -1.2999999999999998,
+            -2.2
+          ]
+        ],
+        "bounds": [
+          -1.2999999999999998,
+          -2.2,
+          6.3,
+          2.2
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 20
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:25",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 25
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 25.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -2.25,
+            2.75
+          ],
+          [
+            7.25,
+            2.75
+          ],
+          [
+            7.25,
+            -2.75
+          ],
+          [
+            -2.25,
+            -2.75
+          ]
+        ],
+        "bounds": [
+          -2.25,
+          -2.75,
+          7.25,
+          2.75
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 25
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:50",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 50
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 50.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -7.0,
+            5.5
+          ],
+          [
+            12.0,
+            5.5
+          ],
+          [
+            12.0,
+            -5.5
+          ],
+          [
+            -7.0,
+            -5.5
+          ]
+        ],
+        "bounds": [
+          -7.0,
+          -5.5,
+          12.0,
+          5.5
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 50
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:75",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 75
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 75.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -11.75,
+            8.25
+          ],
+          [
+            16.75,
+            8.25
+          ],
+          [
+            16.75,
+            -8.25
+          ],
+          [
+            -11.75,
+            -8.25
+          ]
+        ],
+        "bounds": [
+          -11.75,
+          -8.25,
+          16.75,
+          8.25
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 75
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:100",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 100
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 100.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -16.5,
+            11.0
+          ],
+          [
+            21.5,
+            11.0
+          ],
+          [
+            21.5,
+            -11.0
+          ],
+          [
+            -16.5,
+            -11.0
+          ]
+        ],
+        "bounds": [
+          -16.5,
+          -11.0,
+          21.5,
+          11.0
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 100
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:200",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 200
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 200.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -35.5,
+            22.0
+          ],
+          [
+            40.5,
+            22.0
+          ],
+          [
+            40.5,
+            -22.0
+          ],
+          [
+            -35.5,
+            -22.0
+          ]
+        ],
+        "bounds": [
+          -35.5,
+          -22.0,
+          40.5,
+          22.0
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 200
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:250",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 250
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 250.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -45.0,
+            27.5
+          ],
+          [
+            50.0,
+            27.5
+          ],
+          [
+            50.0,
+            -27.5
+          ],
+          [
+            -45.0,
+            -27.5
+          ]
+        ],
+        "bounds": [
+          -45.0,
+          -27.5,
+          50.0,
+          27.5
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 250
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:500",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 500
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 500.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -92.5,
+            55.0
+          ],
+          [
+            97.5,
+            55.0
+          ],
+          [
+            97.5,
+            -55.0
+          ],
+          [
+            -92.5,
+            -55.0
+          ]
+        ],
+        "bounds": [
+          -92.5,
+          -55.0,
+          97.5,
+          55.0
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 500
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:1000",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 1000
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 1000.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -187.5,
+            110.0
+          ],
+          [
+            192.5,
+            110.0
+          ],
+          [
+            192.5,
+            -110.0
+          ],
+          [
+            -187.5,
+            -110.0
+          ]
+        ],
+        "bounds": [
+          -187.5,
+          -110.0,
+          192.5,
+          110.0
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 1000
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:2000",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 2000
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 2000.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -377.5,
+            220.0
+          ],
+          [
+            382.5,
+            220.0
+          ],
+          [
+            382.5,
+            -220.0
+          ],
+          [
+            -377.5,
+            -220.0
+          ]
+        ],
+        "bounds": [
+          -377.5,
+          -220.0,
+          382.5,
+          220.0
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 2000
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:5000",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 5000
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 5000.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -947.5,
+            550.0
+          ],
+          [
+            952.5,
+            550.0
+          ],
+          [
+            952.5,
+            -550.0
+          ],
+          [
+            -947.5,
+            -550.0
+          ]
+        ],
+        "bounds": [
+          -947.5,
+          -550.0,
+          952.5,
+          550.0
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 5000
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:37.123456789123",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 37.123456789123
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 37.123456789123,
+        "rotation": 0,
+        "corners": [
+          [
+            -4.553456789933369,
+            4.083580246803529
+          ],
+          [
+            9.553456789933369,
+            4.083580246803529
+          ],
+          [
+            9.553456789933369,
+            -4.083580246803529
+          ],
+          [
+            -4.553456789933369,
+            -4.083580246803529
+          ]
+        ],
+        "bounds": [
+          -4.553456789933369,
+          -4.083580246803529,
+          9.553456789933369,
+          4.083580246803529
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 37.123456789123
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 3:2",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 3,
+          "model": 2
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 0.6666666666666666,
+        "rotation": 0,
+        "corners": [
+          [
+            2.3733333333333335,
+            0.07333333333333333
+          ],
+          [
+            2.6266666666666665,
+            0.07333333333333333
+          ],
+          [
+            2.6266666666666665,
+            -0.07333333333333333
+          ],
+          [
+            2.3733333333333335,
+            -0.07333333333333333
+          ]
+        ],
+        "bounds": [
+          2.3733333333333335,
+          -0.07333333333333333,
+          2.6266666666666665,
+          0.07333333333333333
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 3,
+          "model": 2
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 7:13",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 7,
+          "model": 13
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 1.8571428571428572,
+        "rotation": 0,
+        "corners": [
+          [
+            2.1471428571428572,
+            0.2042857142857143
+          ],
+          [
+            2.8528571428571428,
+            0.2042857142857143
+          ],
+          [
+            2.8528571428571428,
+            -0.2042857142857143
+          ],
+          [
+            2.1471428571428572,
+            -0.2042857142857143
+          ]
+        ],
+        "bounds": [
+          2.1471428571428572,
+          -0.2042857142857143,
+          2.8528571428571428,
+          0.2042857142857143
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 7,
+          "model": 13
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 0.123456789:17.987654321",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 0.123456789,
+          "model": 17.987654321
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 145.70000132597002,
+        "rotation": 0,
+        "corners": [
+          [
+            -25.183000251934306,
+            16.027000145856704
+          ],
+          [
+            30.183000251934306,
+            16.027000145856704
+          ],
+          [
+            30.183000251934306,
+            -16.027000145856704
+          ],
+          [
+            -25.183000251934306,
+            -16.027000145856704
+          ]
+        ],
+        "bounds": [
+          -25.183000251934306,
+          -16.027000145856704,
+          30.183000251934306,
+          16.027000145856704
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 0.123456789,
+          "model": 17.987654321
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:1e-06",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 1e-06
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 1e-06,
+        "rotation": 0,
+        "corners": [
+          [
+            2.49999981,
+            1.1e-07
+          ],
+          [
+            2.50000019,
+            1.1e-07
+          ],
+          [
+            2.50000019,
+            -1.1e-07
+          ],
+          [
+            2.49999981,
+            -1.1e-07
+          ]
+        ],
+        "bounds": [
+          2.49999981,
+          -1.1e-07,
+          2.50000019,
+          1.1e-07
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 1e-06
+        }
+      }
+    },
+    {
+      "name": "Tam saklanan CAD oranı 1:100000000.0",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 100000000.0
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 100000000.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -18999997.5,
+            11000000.0
+          ],
+          [
+            19000002.5,
+            11000000.0
+          ],
+          [
+            19000002.5,
+            -11000000.0
+          ],
+          [
+            -18999997.5,
+            -11000000.0
+          ]
+        ],
+        "bounds": [
+          -18999997.5,
+          -11000000.0,
+          19000002.5,
+          11000000.0
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 100000000.0
+        }
+      }
     }
   ]
 }
