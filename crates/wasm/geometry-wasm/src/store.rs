@@ -1280,7 +1280,11 @@ impl GeometryStore {
             Vec2::new(origin_x, origin_y),
             plot_scale,
             screen,
-            View { fills, area_edges },
+            View {
+                fills,
+                area_edges,
+                map: None,
+            },
             frame,
         )
         .map_err(|e| JsError::new(&e))?;

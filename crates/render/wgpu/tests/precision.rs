@@ -18,6 +18,8 @@ const N: f64 = 4_420_187.521;
 
 fn camera(center: Vec2, scale: f64) -> Camera {
     Camera {
+        map: None,
+        map_ratio: 1.0,
         center,
         scale,
         width: 1600.0,

@@ -51,6 +51,8 @@ pub struct ImportPlan {
     /// A group at the top of the tree the new layers go into (made if
     /// missing); without it they go to the top of the tree.
     pub group: Option<String>,
+    /// The system the file's objects came from, when it declared one (docs/adr/0583 §1): the new layers record it.
+    pub source_srid: Option<u32>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -494,6 +496,7 @@ fn make_layers(
             compose: None,
             filter: None,
             plot: *plot,
+            source_crs: plan.source_srid.and_then(kentos_project::wkt2::source_crs),
         };
         let id = doc
             .add_layer(new, parent.as_deref(), false)
@@ -642,7 +645,9 @@ fn tie_placeholders(doc: &mut Document, placed: &[(usize, Slot)]) {
                 x.opening.host = host;
                 Entity::Opening(x)
             }),
-            Some(Entity::Column(c)) if c.column.grids.iter().flatten().any(|g| text(g).is_some()) => {
+            Some(Entity::Column(c))
+                if c.column.grids.iter().flatten().any(|g| text(g).is_some()) =>
+            {
                 let mut x = c.clone();
                 for g in x.column.grids.iter_mut().flatten() {
                     if let Some(t) = text(g) {
@@ -910,10 +915,16 @@ fn finite(e: &Entity) -> bool {
             Entity::Spline(e) => ps(&e.pts),
             Entity::Wall(e) => ps(&e.wall.pts) && fs(&[e.wall.width, e.wall.offset]),
             Entity::Opening(e) => ps(&e.opening.place) && fs(&[e.opening.at, e.opening.width]),
-            Entity::Space(e) => e.space.parts.iter().all(|p| ps(&p.outer.pts) && p.holes.iter().all(|h| ps(&h.pts))),
+            Entity::Space(e) => e
+                .space
+                .parts
+                .iter()
+                .all(|p| ps(&p.outer.pts) && p.holes.iter().all(|h| ps(&h.pts))),
             Entity::Grid(e) => ps(&e.grid.pts),
             Entity::Column(e) => p(&e.column.at) && fs(&[e.column.width, e.column.rotation]),
-            Entity::Stair(e) => ps(&e.stair.pts) && fs(&[e.stair.width, e.stair.tread, e.stair.riser_height]),
+            Entity::Stair(e) => {
+                ps(&e.stair.pts) && fs(&[e.stair.width, e.stair.tread, e.stair.riser_height])
+            }
             Entity::Ramp(e) => ps(&e.ramp.pts) && fs(&[e.ramp.width, e.ramp.rise]),
             Entity::Tag(e) => p(&e.tag.at),
             Entity::ViewMark(e) => ps(&e.mark.points),
@@ -1073,6 +1084,7 @@ mod tests {
             .collect();
         let target = layer_named(&doc, "NOKTALAR").expect("found").id.clone();
         let plan = ImportPlan {
+            source_srid: None,
             label: "Koordinat listesi: a.ncn".into(),
             layers: vec![("0".into(), LayerTarget::Existing(target))],
             group: None,
@@ -1096,6 +1108,7 @@ mod tests {
     fn new_layers_go_into_the_named_group_and_unchosen_layers_stay_out() {
         let mut doc = doc();
         let plan = ImportPlan {
+            source_srid: None,
             label: "DXF: plan.dxf".into(),
             layers: vec![
                 (
@@ -1187,6 +1200,7 @@ mod tests {
             vec![line("PARSEL")],
             Vec::new(),
             &ImportPlan {
+                source_srid: None,
                 label: "DXF: plan.dxf".into(),
                 layers: vec![("PARSEL".into(), LayerTarget::Existing(parsel))],
                 group: Some("plan.dxf".into()),
@@ -1211,6 +1225,7 @@ mod tests {
             vec![point("0", 1.0, 2.0)],
             Vec::new(),
             &ImportPlan {
+                source_srid: None,
                 label: "x".into(),
                 layers: vec![("0".into(), LayerTarget::Existing("k".into()))],
                 group: None,
@@ -1227,6 +1242,7 @@ mod tests {
             vec![point("0", 1.0, 2.0)],
             Vec::new(),
             &ImportPlan {
+                source_srid: None,
                 label: "x".into(),
                 layers: vec![
                     (
@@ -1304,6 +1320,7 @@ mod tests {
         })
         .expect("the drawing's own");
         let plan = ImportPlan {
+            source_srid: None,
             label: "DXF: plan.dxf".into(),
             layers: vec![("0".into(), LayerTarget::Existing("a".into()))],
             group: None,
@@ -1351,6 +1368,7 @@ mod tests {
     fn a_large_import_adds_its_blocks_first_and_durdur_takes_them_back() {
         let mut doc = doc();
         let plan = ImportPlan {
+            source_srid: None,
             label: "DXF: büyük.dxf".into(),
             layers: vec![("0".into(), LayerTarget::Existing("a".into()))],
             group: None,
@@ -1395,6 +1413,7 @@ mod tests {
     fn an_insert_of_a_block_the_file_did_not_bring_is_refused() {
         let mut doc = doc();
         let plan = ImportPlan {
+            source_srid: None,
             label: "DXF: plan.dxf".into(),
             layers: vec![("0".into(), LayerTarget::Existing("a".into()))],
             group: None,
@@ -1545,6 +1564,7 @@ mod tests {
         settings.text_styles = vec![text_style("0192f1a0-0000-7000-8000-000000000001", "Ada no")];
         doc.set_settings(settings);
         let plan = ImportPlan {
+            source_srid: None,
             label: "DXF: stiller.dxf".into(),
             layers: vec![("0".into(), LayerTarget::Existing("a".into()))],
             group: None,

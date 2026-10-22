@@ -12,8 +12,8 @@ use std::path::Path;
 
 use kentos_commands::encoding::sha256_hex;
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, ImportPdf, ImportedLayer, LayerNodeType, PdfCurveOutput, PdfImported,
-    PdfLeftOut, PdfTaken,
+    CommandResult, CommandWarning, Entity, ImportPdf, ImportedLayer, LayerNodeType, PdfCurveOutput,
+    PdfImported, PdfLeftOut, PdfTaken,
 };
 use kentos_domain::Document;
 use kentos_formats::pdf::content::flatten_cubic;
@@ -104,7 +104,9 @@ fn check_numbers(input: &ImportPdf) -> Result<(), Stop> {
     {
         return Err(refuse(
             codes::INVALID_SCALE,
-            format!("Ölçek 1:{s} olamaz; sayfanın basıldığı ölçeğin paydasını verin (1 ile 1 000 000 arası, 50 → 1:50)."),
+            format!(
+                "Ölçek 1:{s} olamaz; sayfanın basıldığı ölçeğin paydasını verin (1 ile 1 000 000 arası, 50 → 1:50)."
+            ),
             "scale",
         ));
     }
@@ -113,7 +115,9 @@ fn check_numbers(input: &ImportPdf) -> Result<(), Stop> {
     {
         return Err(refuse(
             codes::INVALID_TOLERANCE,
-            format!("Eğrinin toleransı {t} mm olamaz; kâğıtta sıfırdan büyük, en çok 100 mm bir uzaklık verin."),
+            format!(
+                "Eğrinin toleransı {t} mm olamaz; kâğıtta sıfırdan büyük, en çok 100 mm bir uzaklık verin."
+            ),
             "tolerance",
         ));
     }
@@ -149,7 +153,10 @@ fn read_file(input: &ImportPdf) -> Result<Read, Stop> {
     let bytes = std::fs::read(path).map_err(|e| {
         refuse(
             codes::IMPORT_UNREADABLE,
-            format!("{} okunamadı: {e}. Dosyanın izinlerini denetleyin.", input.path),
+            format!(
+                "{} okunamadı: {e}. Dosyanın izinlerini denetleyin.",
+                input.path
+            ),
             "path",
         )
     })?;
@@ -160,10 +167,16 @@ fn read_file(input: &ImportPdf) -> Result<Read, Stop> {
     let page = kentos_formats::pdf::read_page(&bytes, number).map_err(|e| match e {
         PdfError::NoPage { count } => refuse(
             codes::PDF_PAGE_NOT_FOUND,
-            format!("{file} dosyasında {number}. sayfa yok; 1 ile {count} arasında bir sayfa verin."),
+            format!(
+                "{file} dosyasında {number}. sayfa yok; 1 ile {count} arasında bir sayfa verin."
+            ),
             "page",
         ),
-        e => refuse(codes::IMPORT_UNREADABLE, format!("{file} PDF olarak okunamadı: {e}."), "path"),
+        e => refuse(
+            codes::IMPORT_UNREADABLE,
+            format!("{file} PDF olarak okunamadı: {e}."),
+            "path",
+        ),
     })?;
     Ok(Read {
         page,
@@ -252,7 +265,9 @@ fn runs(points: &[[f64; 2]], curves: &[PdfCurve], closed: bool) -> Vec<Run> {
         }
         straight.clear();
         match out.last_mut() {
-            Some(Run::Curved(pieces)) if pieces.last().is_some_and(|l| l[3] == c.c[0]) => pieces.push(c.c),
+            Some(Run::Curved(pieces)) if pieces.last().is_some_and(|l| l[3] == c.c[0]) => {
+                pieces.push(c.c)
+            }
             _ => out.push(Run::Curved(vec![c.c])),
         }
         i = c.at + c.n + 1;
@@ -321,7 +336,8 @@ struct Made {
 }
 
 fn layer_name(page: &PdfPage, i: Option<usize>) -> String {
-    i.and_then(|i| page.layers.get(i).cloned()).unwrap_or_else(|| PLAIN.to_owned())
+    i.and_then(|i| page.layers.get(i).cloned())
+        .unwrap_or_else(|| PLAIN.to_owned())
 }
 
 fn made(page: &PdfPage, input: &ImportPdf, region: Option<&Region>, place: &Place) -> Made {
@@ -407,7 +423,11 @@ fn made(page: &PdfPage, input: &ImportPdf, region: Option<&Region>, place: &Plac
             }
             let e = json!({ "kind": "text", "p": place.json(t.p), "text": t.text, "height": t.height * place.k,
                             "rotation": t.angle.to_degrees() });
-            push(&mut out, &layer_name(page, t.layer), with_look(e, color(t.color), None, false));
+            push(
+                &mut out,
+                &layer_name(page, t.layer),
+                with_look(e, color(t.color), None, false),
+            );
         }
     }
     out
@@ -422,8 +442,11 @@ fn plan_of(
     used: &[String],
     file: &str,
 ) -> Result<ImportPlan, Stop> {
-    let routes: HashMap<String, (&String, &String)> =
-        input.layers.iter().map(|(s, id)| (fold_turkish(s), (s, id))).collect();
+    let routes: HashMap<String, (&String, &String)> = input
+        .layers
+        .iter()
+        .map(|(s, id)| (fold_turkish(s), (s, id)))
+        .collect();
     let mut layers = Vec::new();
     for name in used {
         let target = if let Some((source, id)) = routes.get(&fold_turkish(name)) {
@@ -432,21 +455,29 @@ fn plan_of(
                 None => {
                     return Err(refuse(
                         codes::LAYER_NOT_FOUND,
-                        format!("“{id}” kimlikli katman çizimde yok; “{name}” katmanının nesnelerini var olan bir katmanın kimliğine yönlendirin."),
+                        format!(
+                            "“{id}” kimlikli katman çizimde yok; “{name}” katmanının nesnelerini var olan bir katmanın kimliğine yönlendirin."
+                        ),
                         &at,
                     ));
                 }
                 Some(node) if node.kind != LayerNodeType::Layer => {
                     return Err(refuse(
                         codes::NOT_A_LAYER,
-                        format!("“{}” bir grup; nesneler yalnız katmana konur. Grubun altındaki bir katmanı verin.", node.name),
+                        format!(
+                            "“{}” bir grup; nesneler yalnız katmana konur. Grubun altındaki bir katmanı verin.",
+                            node.name
+                        ),
                         &at,
                     ));
                 }
                 Some(node) if doc.layers().is_locked(id) => {
                     return Err(refuse(
                         codes::LAYER_LOCKED,
-                        format!("“{}” katmanı kilitli; kilidi Katmanlar panelinden açın ya da başka bir katman verin.", node.name),
+                        format!(
+                            "“{}” katmanı kilitli; kilidi Katmanlar panelinden açın ya da başka bir katman verin.",
+                            node.name
+                        ),
                         &at,
                     ));
                 }
@@ -488,6 +519,7 @@ fn plan_of(
         Some(name) => Some(name.trim().to_owned()),
     };
     Ok(ImportPlan {
+        source_srid: None,
         label: step_name(file),
         layers,
         group,
@@ -527,7 +559,10 @@ fn losses(left: &PdfLeftOut) -> Option<String> {
         parts.push(format!("{} gölgeleme", left.shadings));
     }
     if left.unreadable > 0 {
-        parts.push(format!("{} okunamayan harf (yazı tipinin harf eşlemesi yok)", left.unreadable));
+        parts.push(format!(
+            "{} okunamayan harf (yazı tipinin harf eşlemesi yok)",
+            left.unreadable
+        ));
     }
     if left.white > 0 {
         parts.push(format!("{} beyaz dolgu (kâğıt sayıldı)", left.white));
@@ -573,7 +608,8 @@ fn run(doc: &mut Document, input: &ImportPdf) -> Result<(PdfImported, Vec<Comman
     };
     let skip: HashSet<String> = input.skip_layers.iter().map(|n| fold_turkish(n)).collect();
     let mut made = made(page, input, region.as_ref(), &place);
-    made.objects.retain(|(l, _)| !skip.contains(&fold_turkish(l)));
+    made.objects
+        .retain(|(l, _)| !skip.contains(&fold_turkish(l)));
     if made.objects.is_empty() {
         return Err(refuse(
             codes::NOTHING_TO_IMPORT,
@@ -581,7 +617,11 @@ fn run(doc: &mut Document, input: &ImportPdf) -> Result<(PdfImported, Vec<Comman
                 "{} dosyasının {}. sayfasında seçilenlerden alınacak nesne yok; bölgeyi, katmanları ve alınacakları denetleyin.",
                 read.file, page.number
             ),
-            if input.skip_layers.is_empty() { "path" } else { "skipLayers" },
+            if input.skip_layers.is_empty() {
+                "path"
+            } else {
+                "skipLayers"
+            },
         ));
     }
     // The source layers in the page's order: what is in no group first.
@@ -601,12 +641,16 @@ fn run(doc: &mut Document, input: &ImportPdf) -> Result<(PdfImported, Vec<Comman
             e["layerId"] = json!(layer);
             e["attrs"] = json!({});
             serde_json::from_value::<Entity>(e).map_err(|why| {
-                refuse(codes::IMPORT_UNREADABLE, format!("{} sayfasından bir nesne kurulamadı: {why}.", read.file), "path")
+                refuse(
+                    codes::IMPORT_UNREADABLE,
+                    format!("{} sayfasından bir nesne kurulamadı: {why}.", read.file),
+                    "path",
+                )
             })
         })
         .collect::<Result<Vec<_>, _>>()?;
-    let applied =
-        apply_import(doc, entities, Vec::new(), &plan).map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "path"))?;
+    let applied = apply_import(doc, entities, Vec::new(), &plan)
+        .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "path"))?;
     let mut warnings = Vec::new();
     if let Some(words) = losses(&made.left) {
         warnings.push(CommandWarning {

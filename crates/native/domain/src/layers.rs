@@ -69,6 +69,9 @@ pub struct NewLayer {
     /// A layer's composition (docs/adr/0226 §3, §4), kept by the node it makes;
     /// a group keeps none.
     pub compose: Option<kentos_contracts::LayerCompose>,
+    /// The system a layer's objects came from (docs/adr/0583 §1): an import's file or a bound table says it;
+    /// a group keeps none.
+    pub source_crs: Option<kentos_contracts::LayerSourceCrs>,
 }
 
 impl NewLayer {
@@ -94,6 +97,7 @@ impl NewLayer {
             card: None,
             compose: None,
             filter: None,
+            source_crs: None,
         }
     }
 
@@ -634,6 +638,17 @@ impl LayerTree {
     }
 
     /// A layer's composition, as an undo or a redo puts it (docs/adr/0226 §3, §4).
+    /// A layer's source system record, as an undo or a redo puts it (docs/adr/0583 §1).
+    pub(crate) fn replace_source_crs(
+        &mut self,
+        id: &str,
+        crs: Option<&kentos_contracts::LayerSourceCrs>,
+    ) {
+        if let Some(node) = self.node_mut(id) {
+            node.source_crs = crs.cloned();
+        }
+    }
+
     pub(crate) fn replace_compose(
         &mut self,
         id: &str,
@@ -704,6 +719,10 @@ impl LayerTree {
             None => self.next_id(),
         };
         LayerNode {
+            source_crs: new
+                .source_crs
+                .clone()
+                .filter(|_| new.kind == LayerNodeType::Layer),
             table_styles: Vec::new(),
             subtypes: None,
             contingents: Vec::new(),

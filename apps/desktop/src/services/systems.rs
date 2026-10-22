@@ -45,6 +45,24 @@ impl ProjectSystem {
             key: h.finish(),
         }
     }
+
+    /// The system the drawing area draws in: the map's when the project has one (docs/adr/0583 §3), the tiles
+    /// meshed to it.
+    pub fn of_map(settings: &ProjectSettings) -> ProjectSystem {
+        let mut s = ProjectSystem::of(settings);
+        if let Some(m) = kentos_project::systems::map_projection(settings)
+            && let Some(code) = settings.map_srid
+        {
+            let mut h = DefaultHasher::new();
+            s.key.hash(&mut h);
+            code.hash(&mut h);
+            s.srid = code;
+            s.custom = false;
+            s.system = Some(m.map.clone());
+            s.key = h.finish();
+        }
+        s
+    }
 }
 
 /// The two ways between the project and a service's system.

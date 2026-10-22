@@ -9842,6 +9842,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -9958,6 +9969,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerState": {
@@ -13766,6 +13822,16 @@
                   "$ref": "#/$defs/EventLink"
                 },
                 "type": "array"
+              },
+              "mapSrid": {
+                "description": "The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:\nthe project's own. Changing it changes no coordinate.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
               },
               "namedUcs": {
                 "description": "The project's named UCSs, in the order they were kept.",
@@ -25053,6 +25119,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -25169,6 +25246,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerState": {
@@ -26995,6 +27117,16 @@
                   "$ref": "#/$defs/EventLink"
                 },
                 "type": "array"
+              },
+              "mapSrid": {
+                "description": "The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:\nthe project's own. Changing it changes no coordinate.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
               },
               "namedUcs": {
                 "description": "The project's named UCSs, in the order they were kept.",
@@ -38897,6 +39029,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -39013,6 +39156,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerState": {
@@ -42859,6 +43047,16 @@
                   "$ref": "#/$defs/EventLink"
                 },
                 "type": "array"
+              },
+              "mapSrid": {
+                "description": "The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:\nthe project's own. Changing it changes no coordinate.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
               },
               "namedUcs": {
                 "description": "The project's named UCSs, in the order they were kept.",
@@ -238257,6 +238455,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -238373,6 +238582,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -251903,6 +252157,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -252019,6 +252284,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -265675,6 +265985,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -265791,6 +266112,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -937693,6 +938059,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -937809,6 +938186,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -945522,6 +945944,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -945638,6 +946071,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -948320,6 +948798,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -948436,6 +948925,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -949244,6 +949778,528 @@
           "title": "Süzgeci kaldır",
           "input": {
             "layer": "parsel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.layers.crs",
+      "version": 1,
+      "title": "Sistem ata",
+      "summary": "Katmanın kaynak sistemi kaydını yazar ya da siler (srid verilmezse ya da null ise): nesnelerinin hangi koordinat sisteminden geldiği; adı, WKT2'si, EPSG eksen sırası, birimi ve kullanım alanı kayıttan. Nesneler her zaman projenin sistemindedir; atama hiçbir koordinatı değiştirmez (yanlış sistemde alınmış veriyi çevirmek için cad.layers.reproject). Katman ağacının değişikliğidir: tek geri alma adımı “Sistem ata”; kayıt aynıysa hiçbir şey yazılmaz. Kilitli katmanda da çalışır, veri değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "sistemata",
+        "assigncrs"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.layers.crs` v1.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The layer's id.",
+            "type": "string"
+          },
+          "srid": {
+            "description": "The system its objects came from (an EPSG code the registry knows); absent or null clears the record.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "title": "LayersCrs",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.crs` v1.",
+        "properties": {
+          "changed": {
+            "description": "Whether it differed (an undo step was written).",
+            "type": "boolean"
+          },
+          "crs": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerSourceCrs"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The record now; absent when cleared."
+          },
+          "layer": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "changed",
+          "revision"
+        ],
+        "title": "LayersCrsSet",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.crs` v1.",
+        "properties": {
+          "changed": {
+            "description": "Whether it differed (an undo step was written).",
+            "type": "boolean"
+          },
+          "crs": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerSourceCrs"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The record now; absent when cleared."
+          },
+          "layer": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "changed",
+          "revision"
+        ],
+        "title": "LayersCrsSet",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "layer_not_found",
+          "not_a_layer",
+          "unknown_srid",
+          "layer_refused",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Katmanın verisi WGS 84'ten geldi",
+          "input": {
+            "layer": "gps",
+            "srid": 4326
+          }
+        },
+        {
+          "title": "Kaydı sil",
+          "input": {
+            "layer": "gps"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.layers.reproject",
+      "version": 1,
+      "title": "Yeniden izdüşür",
+      "summary": "Katmanın nesnelerini verilen sistemden (from; verilmezse katmanın kaynak sistemi) projenin sistemine çevirir: projenin sisteminde sanılarak alınmış veriyi düzeltir. Kotlar ve ölçüler kalır; yay ve eğriler dönüşümün kuralıyla çevrilir. Çevrilemeyen nesne varsa hiçbir şey yazılmaz (crs_unreached, uids). Katmanın kaynak sistemi from olur. Tek geri alma adımı “Yeniden izdüşür”. Kilitli katman reddedilir; projenin sistemi yoksa ya da from projeninkiyse crs_mismatch. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "izdusur",
+        "reproject"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.layers.reproject` v1.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "description": "The system the objects are in now (an EPSG code the registry knows); absent: the layer's recorded one.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "layer": {
+            "description": "The layer's id.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "title": "LayersReproject",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.reproject` v1.",
+        "properties": {
+          "crs": {
+            "$ref": "#/$defs/LayerSourceCrs",
+            "description": "The layer's record now."
+          },
+          "from": {
+            "description": "The system the objects came from.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "moved": {
+            "description": "The objects moved.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "type": "string"
+          },
+          "to": {
+            "description": "The project's system they are in now.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "via": {
+            "description": "The way and its accuracy (“EPSG:1311, ±1 m”), as the transforms say it.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "from",
+          "to",
+          "moved",
+          "via",
+          "crs",
+          "revision"
+        ],
+        "title": "LayersReprojected",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.reproject` v1.",
+        "properties": {
+          "crs": {
+            "$ref": "#/$defs/LayerSourceCrs",
+            "description": "The layer's record now."
+          },
+          "from": {
+            "description": "The system the objects came from.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "moved": {
+            "description": "The objects moved.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "type": "string"
+          },
+          "to": {
+            "description": "The project's system they are in now.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "via": {
+            "description": "The way and its accuracy (“EPSG:1311, ±1 m”), as the transforms say it.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "from",
+          "to",
+          "moved",
+          "via",
+          "crs",
+          "revision"
+        ],
+        "title": "LayersReprojected",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_input",
+          "unknown_srid",
+          "crs_mismatch",
+          "crs_unreached",
+          "layer_refused",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "ED50 / TM36'da sanılan katmanı projenin sistemine çevir",
+          "input": {
+            "from": 2322,
+            "layer": "eski-pafta"
           }
         }
       ]
@@ -950845,6 +951901,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -950961,6 +952028,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -953340,6 +954452,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -953456,6 +954579,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -955894,6 +957062,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -956010,6 +957189,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -958464,6 +959688,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -958580,6 +959815,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -961000,6 +962280,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -961116,6 +962407,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -963534,6 +964870,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -963650,6 +964997,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -966844,6 +968236,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -966960,6 +968363,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -970216,6 +971664,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -970332,6 +971791,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -980796,6 +982300,16 @@
               }
             ],
             "description": "How lengths are written (docs/adr/0262 §2): decimal, or architectural,\nengineering and fractional feet and inches in an inch or foot drawing."
+          },
+          "mapSrid": {
+            "description": "The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
           },
           "name": {
             "type": [
@@ -1071524,6 +1073038,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Geometrisi okunamayan kayıtlar atlandı; iletisi kaçını söyler."
+    },
+    {
+      "code": "crs_unreached",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bazı nesneler projenin sistemine çevrilemiyor (sistemin dışında); hiçbir şey yazılmadı. uids onları söyler."
     },
     {
       "code": "no_row_key",

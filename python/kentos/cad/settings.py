@@ -77,6 +77,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         heights: HeightReference | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
         length_style: LengthStyle | LengthStyleName | None | Unset = UNSET,
+        map_srid: int | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         plot_scale: float | None | Unset = UNSET,
         project_type: Workspace | WorkspaceName | None | Unset = UNSET,
@@ -116,6 +117,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             length_decimals: Unit: count.
             length_style: How lengths are written (docs/adr/0262 §2): decimal, or architectural,
                 engineering and fractional feet and inches in an inch or foot drawing.
+            map_srid: The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes. Unit: epsg.
             name:
             plot_scale: Unit: scale.
             project_type:
@@ -145,6 +147,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             heights=heights,
             length_decimals=length_decimals,
             length_style=length_style,
+            map_srid=map_srid,
             name=name,
             plot_scale=plot_scale,
             project_type=project_type,
@@ -168,6 +171,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         heights: HeightReference | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
         length_style: LengthStyle | LengthStyleName | None | Unset = UNSET,
+        map_srid: int | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         plot_scale: float | None | Unset = UNSET,
         project_type: Workspace | WorkspaceName | None | Unset = UNSET,
@@ -189,6 +193,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             heights=heights,
             length_decimals=length_decimals,
             length_style=length_style,
+            map_srid=map_srid,
             name=name,
             plot_scale=plot_scale,
             project_type=project_type,
@@ -212,6 +217,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         heights: HeightReference | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
         length_style: LengthStyle | LengthStyleName | None | Unset = UNSET,
+        map_srid: int | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         plot_scale: float | None | Unset = UNSET,
         project_type: Workspace | WorkspaceName | None | Unset = UNSET,
@@ -233,6 +239,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             heights=heights,
             length_decimals=length_decimals,
             length_style=length_style,
+            map_srid=map_srid,
             name=name,
             plot_scale=plot_scale,
             project_type=project_type,
@@ -256,6 +263,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         heights: HeightReference | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
         length_style: LengthStyle | LengthStyleName | None | Unset = UNSET,
+        map_srid: int | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         plot_scale: float | None | Unset = UNSET,
         project_type: Workspace | WorkspaceName | None | Unset = UNSET,
@@ -282,6 +290,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             heights=heights,
             length_decimals=length_decimals,
             length_style=length_style,
+            map_srid=map_srid,
             name=name,
             plot_scale=plot_scale,
             project_type=project_type,

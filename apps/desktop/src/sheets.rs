@@ -743,6 +743,8 @@ impl SheetPainter<'_> {
         let up = |v: f64| ((v * 1000.0).round() / 1000.0).ceil();
         let (bw, bh) = (up(w * co + h * s), up(w * s + h * co));
         let camera = Camera {
+            map: None,
+            map_ratio: 1.0,
             center: Vec2::new(c.x, c.y),
             // CSS pixels per ground metre on the paper.
             scale: 1000.0 / (crate::sheet_pdf::PX_MM * scale),
@@ -1054,7 +1056,7 @@ impl App {
         let crs = settings
             .filter(|s| s.has_system())
             .map(crate::crs::project_name);
-        let c = self.viewport.camera.center;
+        let c = self.viewport.camera.world_center();
         Context {
             // The type the interface shows: a project not asked its type is CBS (docs/adr/0165).
             workspace: doc.map(|_| self.work_mode()),

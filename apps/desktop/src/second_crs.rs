@@ -172,6 +172,9 @@ impl App {
         }
         menu.submenu("İkinci sistem", self.second_menu())
             .icon(crate::icons::from_web(Some("crsSecond")))
+            // The system the drawing is shown in (docs/adr/0583 §3).
+            .submenu("Harita sistemi", self.map_menu())
+            .icon(crate::icons::from_web(Some("mapCrs")))
     }
 
     /// The second system's values at `cursor`, as the status bar writes

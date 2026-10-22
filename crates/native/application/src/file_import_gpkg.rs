@@ -394,6 +394,7 @@ pub(crate) fn run_read(
         ));
     }
     let plan = ImportPlan {
+        source_srid: srid,
         label: format!("{word}: {}", read.file),
         layers,
         group: Some(read.file.trim_end_matches(ext).to_owned()),

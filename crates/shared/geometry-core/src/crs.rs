@@ -13,6 +13,7 @@
 
 mod datum;
 pub mod ground;
+pub mod map;
 pub mod measure;
 pub mod ntv2;
 pub mod operation;

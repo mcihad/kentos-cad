@@ -35,10 +35,10 @@ mod views;
 
 use kentos_contracts::{
     AnnotationHeights, AnnotationKind, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
-    DimensionStyle, DimensionStyleDef, DocumentSnapshotV2, Entity, LayerField, LayerNode,
-    LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, LengthStyle, MigrationSource,
-    HeightKind, HeightReference, ProjectSettings, SurveySettings, TopologySettings, Vec2, layer_fields_problem,
-    layer_states_problem,
+    DimensionStyle, DimensionStyleDef, DocumentSnapshotV2, Entity, HeightKind, HeightReference,
+    LayerField, LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle,
+    LengthStyle, MigrationSource, ProjectSettings, SurveySettings, TopologySettings, Vec2,
+    layer_fields_problem, layer_states_problem,
 };
 use serde_json::Value;
 
@@ -342,8 +342,11 @@ impl<'d> Encoder<'d> {
         if !doc.constraints.is_empty() {
             self.key("constraints");
             self.at(Seg::Name("constraints"), |e| {
-                let uids: std::collections::HashSet<kentos_contracts::EntityId> = doc.uids.iter().copied().collect();
-                if let Some((at, problem)) = kentos_contracts::constraints_problem(&doc.constraints, Some(&uids)) {
+                let uids: std::collections::HashSet<kentos_contracts::EntityId> =
+                    doc.uids.iter().copied().collect();
+                if let Some((at, problem)) =
+                    kentos_contracts::constraints_problem(&doc.constraints, Some(&uids))
+                {
                     return Err(e.fail(Code::BadValue, &format!("{at}: {problem}")));
                 }
                 let value = serde_json::to_value(&doc.constraints)
@@ -393,6 +396,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.relations.is_empty())
             + usize::from(!s.join_views.is_empty())
             + usize::from(!s.linear_events.is_empty())
+            + usize::from(s.map_srid.is_some())
             + usize::from(!s.sources.is_empty())
             + usize::from(!s.source_bases.is_empty())
             + usize::from(!s.line_types.is_empty())
@@ -449,6 +453,17 @@ impl<'d> Encoder<'d> {
         if let Some(h) = &s.heights {
             self.key("heights");
             self.at(Seg::Name("heights"), |e| e.heights(s, h))?;
+        }
+        // Schema 98 (docs/adr/0583 §3): the map's system (between the 7-letter keys).
+        if let Some(srid) = s.map_srid {
+            self.key("mapSrid");
+            if srid == 0 || srid == s.srid || s.srid == 0 {
+                return Err(self.fail(
+                    Code::BadValue,
+                    "mapSrid yerel sistem ya da projenin kendi sistemi olamaz; projeninki için alan yazılmaz",
+                ));
+            }
+            self.w.uint(u64::from(srid));
         }
         // Schema 74 (docs/adr/0503): the layers bound to their sources, written whole and checked.
         if !s.sources.is_empty() {
@@ -613,7 +628,8 @@ impl<'d> Encoder<'d> {
         if !s.source_bases.is_empty() {
             self.key("sourceBases");
             self.at(Seg::Name("sourceBases"), |e| {
-                if let Some(problem) = kentos_contracts::bases_problem(&s.source_bases, &s.sources) {
+                if let Some(problem) = kentos_contracts::bases_problem(&s.source_bases, &s.sources)
+                {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(&s.source_bases)
@@ -627,7 +643,11 @@ impl<'d> Encoder<'d> {
         if !s.leader_styles.is_empty() {
             self.key("leaderStyles");
             self.at(Seg::Name("leaderStyles"), |e| {
-                if let Some((field, words)) = s.leader_styles.iter().find_map(kentos_contracts::LeaderStyleDef::problem) {
+                if let Some((field, words)) = s
+                    .leader_styles
+                    .iter()
+                    .find_map(kentos_contracts::LeaderStyleDef::problem)
+                {
                     return Err(e.fail(Code::BadValue, &format!("{field}: {words}")));
                 }
                 e.json(&serde_json::to_value(&s.leader_styles).unwrap_or_default())
@@ -685,7 +705,10 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &why));
                 }
                 if !s.has_system() {
-                    return Err(e.fail(Code::BadValue, "koordinat epoku bir koordinat sistemi ister"));
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "koordinat epoku bir koordinat sistemi ister",
+                    ));
                 }
                 e.float(epoch)
             })?;
@@ -1032,7 +1055,10 @@ impl<'d> Encoder<'d> {
             HeightKind::Ellipsoidal => "ellipsoidal",
             HeightKind::Orthometric => "orthometric",
             HeightKind::Unknown => {
-                return Err(self.fail(Code::BadValue, "bilinmeyen yükseklik yazılmaz; alan yazılmaz"));
+                return Err(self.fail(
+                    Code::BadValue,
+                    "bilinmeyen yükseklik yazılmaz; alan yazılmaz",
+                ));
             }
         };
         if h.kind == HeightKind::Ellipsoidal && !s.has_system() {
@@ -1041,7 +1067,10 @@ impl<'d> Encoder<'d> {
                 "elipsoit yüksekliği bir koordinat sistemi ister; yerel projede yalnız ortometrik yükseklik olur",
             ));
         }
-        self.open(1 + usize::from(h.geoid.is_some()) + usize::from(h.vertical_srid.is_some()), true)?;
+        self.open(
+            1 + usize::from(h.geoid.is_some()) + usize::from(h.vertical_srid.is_some()),
+            true,
+        )?;
         self.key("kind");
         self.w.text(kind);
         if let Some(g) = &h.geoid {
@@ -1156,7 +1185,8 @@ impl<'d> Encoder<'d> {
                 + usize::from(!n.table_styles.is_empty())
                 + usize::from(n.subtypes.is_some())
                 + usize::from(!n.contingents.is_empty())
-                + usize::from(!n.rules.is_empty()),
+                + usize::from(!n.rules.is_empty())
+                + usize::from(n.source_crs.is_some()),
             true,
         )?;
         // id (2), card feed name plot snap time type (4), style (5), fields filter locked (6),
@@ -1212,9 +1242,14 @@ impl<'d> Encoder<'d> {
             self.key("rules");
             self.at(Seg::Name("rules"), |e| {
                 if n.kind == LayerNodeType::Group {
-                    return Err(e.fail(Code::BadValue, "grubun kayıt kuralları olmaz; yalnız katmanın olur"));
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "grubun kayıt kuralları olmaz; yalnız katmanın olur",
+                    ));
                 }
-                if let Some((_, problem)) = kentos_contracts::layer_rules_problem(&n.fields, &n.rules) {
+                if let Some((_, problem)) =
+                    kentos_contracts::layer_rules_problem(&n.fields, &n.rules)
+                {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(&n.rules)
@@ -1281,12 +1316,34 @@ impl<'d> Encoder<'d> {
             self.key("subtypes");
             self.at(Seg::Name("subtypes"), |e| {
                 if n.kind == LayerNodeType::Group {
-                    return Err(e.fail(Code::BadValue, "grubun alt türleri olmaz; yalnız katmanın olur"));
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "grubun alt türleri olmaz; yalnız katmanın olur",
+                    ));
                 }
-                if let Some((_, problem)) = kentos_contracts::subtypes_problem(&n.fields, subtypes) {
+                if let Some((_, problem)) = kentos_contracts::subtypes_problem(&n.fields, subtypes)
+                {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(subtypes)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
+        // Schema 98 (docs/adr/0583 §1): the system its objects came from, as its JSON (the only 9-letter key).
+        if let Some(c) = &n.source_crs {
+            self.key("sourceCrs");
+            self.at(Seg::Name("sourceCrs"), |e| {
+                if n.kind == LayerNodeType::Group {
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "grubun kaynak sistemi olmaz; yalnız katmanın olur",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::layer_crs_problem(c) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(c)
                     .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
@@ -1296,11 +1353,16 @@ impl<'d> Encoder<'d> {
             self.key("contingents");
             self.at(Seg::Name("contingents"), |e| {
                 if n.kind == LayerNodeType::Group {
-                    return Err(e.fail(Code::BadValue, "grubun değer bileşimleri olmaz; yalnız katmanın olur"));
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "grubun değer bileşimleri olmaz; yalnız katmanın olur",
+                    ));
                 }
-                if let Some((_, problem)) =
-                    kentos_contracts::contingents_problem(&n.fields, n.subtypes.as_ref(), &n.contingents)
-                {
+                if let Some((_, problem)) = kentos_contracts::contingents_problem(
+                    &n.fields,
+                    n.subtypes.as_ref(),
+                    &n.contingents,
+                ) {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(&n.contingents)
@@ -1318,8 +1380,7 @@ impl<'d> Encoder<'d> {
                         "grubun koşullu biçimi olmaz; yalnız katmanın olur",
                     ));
                 }
-                if let Some((_, problem)) =
-                    kentos_contracts::table_styles_problem(&n.table_styles)
+                if let Some((_, problem)) = kentos_contracts::table_styles_problem(&n.table_styles)
                 {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
@@ -1814,6 +1875,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || recorded(&n.children)
         })
     }
+    // Schema 98 (docs/adr/0583): a layer's source system, the map's system.
+    fn source_crs(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| n.source_crs.is_some() || source_crs(&n.children))
+    }
+    if doc.settings.map_srid.is_some() || source_crs(&doc.layers) {
+        return crate::SCHEMA_WITH_SOURCE_CRS;
+    }
     // Schema 97 (docs/adr/0569): the project's links of event layers to their routes.
     if !doc.settings.linear_events.is_empty() {
         return crate::SCHEMA_WITH_LINEAR_EVENTS;
@@ -1839,10 +1909,11 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     }
     // Schema 94 (docs/adr/0562): a device's configurations, the subnetworks' keepCurrent.
     if doc.settings.networks.iter().any(|n| {
-        n.terminals
-            .as_ref()
-            .is_some_and(|t| t.devices.iter().any(|d| d.by.is_some() || !d.configs.is_empty()))
-            || n.subnetworks.as_ref().is_some_and(|s| s.keep_current)
+        n.terminals.as_ref().is_some_and(|t| {
+            t.devices
+                .iter()
+                .any(|d| d.by.is_some() || !d.configs.is_empty())
+        }) || n.subnetworks.as_ref().is_some_and(|s| s.keep_current)
     }) {
         return crate::SCHEMA_WITH_NETWORK_CONFIGS;
     }
@@ -1870,7 +1941,11 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_JOIN_VIEWS;
     }
     // Schema 88 (docs/adr/0518 §1): a raster's georeference record.
-    if doc.entities.iter().any(|e| matches!(e, Entity::Raster(r) if r.raster.georef.is_some())) {
+    if doc
+        .entities
+        .iter()
+        .any(|e| matches!(e, Entity::Raster(r) if r.raster.georef.is_some()))
+    {
         return crate::SCHEMA_WITH_GEOREF;
     }
     // Schema 87 (docs/adr/0521): a network's turns or levels, a speed cost's time profile.
@@ -1884,10 +1959,16 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_HEIGHTS;
     }
     // Schema 85 (docs/adr/0351): an insert's clipping, a PDF underlay.
-    let clipped = |es: &[Entity]| es.iter().any(|e| matches!(e, Entity::Insert(i) if i.clipping.is_some()));
+    let clipped = |es: &[Entity]| {
+        es.iter()
+            .any(|e| matches!(e, Entity::Insert(i) if i.clipping.is_some()))
+    };
     if clipped(&doc.entities)
         || doc.blocks.iter().any(|b| {
-            clipped(&b.entities) || b.xref.as_ref().is_some_and(|x| x.page.is_some() || x.underlay.is_some())
+            clipped(&b.entities)
+                || b.xref
+                    .as_ref()
+                    .is_some_and(|x| x.page.is_some() || x.underlay.is_some())
         })
     {
         return crate::SCHEMA_WITH_CLIPPING;
@@ -1901,11 +1982,19 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_XREFS;
     }
     // Schema 82 (docs/adr/0346 §2): the project's phase view.
-    if doc.settings.arch.as_ref().is_some_and(|a| a.phase_view.is_some()) {
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.phase_view.is_some())
+    {
         return crate::SCHEMA_WITH_PHASES;
     }
     // Schema 81 (docs/adr/0345): a view mark, or a named view with its own id.
-    if doc.entities.iter().any(|e| matches!(e, Entity::ViewMark(_)))
+    if doc
+        .entities
+        .iter()
+        .any(|e| matches!(e, Entity::ViewMark(_)))
         || doc.settings.named_views.iter().any(|v| !v.id.is_empty())
     {
         return crate::SCHEMA_WITH_VIEWMARKS;
@@ -1931,7 +2020,11 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     }
     // Schema 78 (docs/adr/0342): a space, or the project's space method.
     if doc.entities.iter().any(|e| matches!(e, Entity::Space(_)))
-        || doc.settings.arch.as_ref().is_some_and(|a| a.space_method.is_some())
+        || doc
+            .settings
+            .arch
+            .as_ref()
+            .is_some_and(|a| a.space_method.is_some())
     {
         return crate::SCHEMA_WITH_SPACES;
     }
@@ -1966,7 +2059,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             f.id.is_some()
                 || f.multiple
                 || f.domain.is_some()
-                || f.values.as_ref().is_some_and(|v| v.iter().any(|c| c.retired))
+                || f.values
+                    .as_ref()
+                    .is_some_and(|v| v.iter().any(|c| c.retired))
                 || f.split.is_some()
                 || f.merge.is_some()
                 || f.unique
@@ -2019,9 +2114,11 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_HATCH_EXTRAS;
     }
     // Schema 70 (docs/adr/0329 §3): a face's tie closed across gaps.
-    if doc.entities.iter().any(|e| {
-        matches!(e, Entity::Hatch(h) if h.assoc.as_ref().is_some_and(|a| a.gap.is_some()))
-    }) {
+    if doc
+        .entities
+        .iter()
+        .any(|e| matches!(e, Entity::Hatch(h) if h.assoc.as_ref().is_some_and(|a| a.gap.is_some())))
+    {
         return crate::SCHEMA_WITH_HATCH_GAPS;
     }
     // Schema 69 (docs/adr/0328): a hatch's exact boundary or a tie to a face's line work.
@@ -2064,7 +2161,8 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     }
     // Schema 66 (docs/adr/0325): a text's fields (of the drawing or of a block).
     let fielded = |list: &[Entity]| {
-        list.iter().any(|e| matches!(e, Entity::Text(t) if !t.paragraph.fields.is_empty()))
+        list.iter()
+            .any(|e| matches!(e, Entity::Text(t) if !t.paragraph.fields.is_empty()))
     };
     if fielded(&doc.entities) || doc.blocks.iter().any(|b| fielded(&b.entities)) {
         return crate::SCHEMA_WITH_TEXT_FIELDS;
@@ -2074,7 +2172,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         list.iter().any(|e| match e {
             Entity::Text(t) => {
                 t.paragraph.layout.is_some()
-                    || t.paragraph.runs.iter().any(|r| r.script == Some(kentos_contracts::TextScript::Stack))
+                    || t.paragraph
+                        .runs
+                        .iter()
+                        .any(|r| r.script == Some(kentos_contracts::TextScript::Stack))
             }
             _ => false,
         })
@@ -2083,7 +2184,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_PARAGRAPH_LAYOUT;
     }
     // Schema 64 (docs/adr/0323): an annotative text, dimension or leader (of the drawing or of a block).
-    let scaled = |list: &[Entity]| list.iter().any(|e| kentos_contracts::annotative_of(e).is_some());
+    let scaled = |list: &[Entity]| {
+        list.iter()
+            .any(|e| kentos_contracts::annotative_of(e).is_some())
+    };
     if scaled(&doc.entities) || doc.blocks.iter().any(|b| scaled(&b.entities)) {
         return crate::SCHEMA_WITH_ANNOTATIVE;
     }
@@ -2671,9 +2775,25 @@ mod tests {
             &["off", "kinds"],
             // A layer's field and its value list's entry (docs/adr/0199 §1).
             &[
-                "id", "max", "min", "kind", "name", "unit", "alias", "merge", "scale", "split",
-                "domain", "length", "unique", "values", "default", "multiple", "required",
-                "maxExclusive", "minExclusive",
+                "id",
+                "max",
+                "min",
+                "kind",
+                "name",
+                "unit",
+                "alias",
+                "merge",
+                "scale",
+                "split",
+                "domain",
+                "length",
+                "unique",
+                "values",
+                "default",
+                "multiple",
+                "required",
+                "maxExclusive",
+                "minExclusive",
             ],
             &["code", "from", "label", "until", "retired", "description"],
             &[

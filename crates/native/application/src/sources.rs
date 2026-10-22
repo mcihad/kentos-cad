@@ -13,9 +13,10 @@ use std::path::Path;
 
 use kentos_commands::{
     CommandResult, CommandWarning, ImportGpkg, ImportedLayer, LabelPin, LayerNodeType, LostPin,
-    MAX_PARKED, MAX_SOURCES, ParkedPin, PinLoss, PinMatch, PinMove, SourceCapabilities, SourceColumn, SourceKind, SourceLink,
-    SourceNext, SourceState, SourceTable, SourcesDescribe, SourcesDescribed, SourcesEdit, SourcesEditOp,
-    SourcesEdited, SourcesSync, SourcesSynced, SyncDirection, SyncTopology, SyncedPins,
+    MAX_PARKED, MAX_SOURCES, ParkedPin, PinLoss, PinMatch, PinMove, SourceCapabilities,
+    SourceColumn, SourceKind, SourceLink, SourceNext, SourceState, SourceTable, SourcesDescribe,
+    SourcesDescribed, SourcesEdit, SourcesEditOp, SourcesEdited, SourcesSync, SourcesSynced,
+    SyncDirection, SyncTopology, SyncedPins,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{entity_bounds, entity_vertices};
@@ -56,7 +57,10 @@ fn mover_for(doc: &Document, srid: Option<u32>) -> Result<Option<Mover>, String>
 }
 
 /// [`mover_for`] from the project's settings alone.
-pub(crate) fn mover_in(settings: &kentos_commands::ProjectSettings, srid: Option<u32>) -> Result<Option<Mover>, String> {
+pub(crate) fn mover_in(
+    settings: &kentos_commands::ProjectSettings,
+    srid: Option<u32>,
+) -> Result<Option<Mover>, String> {
     let Some(srid) = srid.filter(|&s| s != settings.srid) else {
         return Ok(None);
     };
@@ -447,7 +451,9 @@ pub(crate) fn provider_stop(e: provider::ProviderError, address: &str, at: At<'_
         ),
         provider::ProviderError::NoKey(name) => refuse(
             codes::NO_ROW_KEY,
-            format!("“{name}” view ya da sorgusunda tam sayı bir anahtar sütunu (fid, id, gid ya da ogc_fid) yok; sorguya ekleyin."),
+            format!(
+                "“{name}” view ya da sorgusunda tam sayı bir anahtar sütunu (fid, id, gid ya da ogc_fid) yok; sorguya ekleyin."
+            ),
             at.table,
         ),
         provider::ProviderError::Unreadable(why) => refuse(
@@ -457,7 +463,9 @@ pub(crate) fn provider_stop(e: provider::ProviderError, address: &str, at: At<'_
         ),
         provider::ProviderError::KeyRepeats(name, key) => refuse(
             codes::ROW_KEY_NOT_UNIQUE,
-            format!("“{name}” view ya da sorgusunda {key} anahtarı birden çok satırda; anahtar her satırda farklı olmalı."),
+            format!(
+                "“{name}” view ya da sorgusunda {key} anahtarı birden çok satırda; anahtar her satırda farklı olmalı."
+            ),
             at.table,
         ),
     }
@@ -596,7 +604,10 @@ fn load_or_refuse(
 
 /// A bound layer's area in its table's system (docs/adr/0510): the project's box moved across, its sides densified;
 /// none for the whole table, or when the box does not reach the table's system.
-pub(crate) fn table_area(area: Option<[f64; 4]>, mover: Option<&Mover>) -> Result<Option<[f64; 4]>, ()> {
+pub(crate) fn table_area(
+    area: Option<[f64; 4]>,
+    mover: Option<&Mover>,
+) -> Result<Option<[f64; 4]>, ()> {
     let Some(a) = area else { return Ok(None) };
     match mover {
         None => Ok(Some(a)),
@@ -813,15 +824,23 @@ fn rows_changed(
     let found: HashMap<i64, &gpkg::Row> = rows.iter().map(|r| (r.fid, r)).collect();
     let mut out = Vec::new();
     for key in keys {
-        let Some(uid) = fid_uid.get(key) else { continue };
+        let Some(uid) = fid_uid.get(key) else {
+            continue;
+        };
         let same = found.get(key).is_some_and(|row| {
-            let Ok(t) = gp::table_of_rows(layer, std::slice::from_ref(*row), &HashMap::new(), &|_| *uid)
+            let Ok(t) =
+                gp::table_of_rows(layer, std::slice::from_ref(*row), &HashMap::new(), &|_| {
+                    *uid
+                })
             else {
                 return false;
             };
             t.objects.into_iter().next().is_some_and(|(_, mut e)| {
                 if let Some(m) = mover
-                    && kentos_formats::reproject::move_entity(&mut e, &m.source, &m.project, &m.choices).is_err()
+                    && kentos_formats::reproject::move_entity(
+                        &mut e, &m.source, &m.project, &m.choices,
+                    )
+                    .is_err()
                 {
                     return false;
                 }
@@ -1288,7 +1307,10 @@ fn follow_pins(
         let mut parts = Vec::new();
         for (r, what) in [
             (PinLoss::Deleted, "satırı tabloda yok"),
-            (PinLoss::Outside, "satırı katmanın alanının dışında (park yeri dolu)"),
+            (
+                PinLoss::Outside,
+                "satırı katmanın alanının dışında (park yeri dolu)",
+            ),
             (
                 PinLoss::Rebound,
                 "satır kimliği artık başka bir kayıt (anahtar değeri değişmiş)",
@@ -1688,18 +1710,18 @@ fn describe_run(
         None => {
             let ties = relations::ties(doc);
             Ok((
-            SourcesDescribed {
-                tables: Vec::new(),
-                links: doc
-                    .settings()
-                    .sources
-                    .iter()
-                    .map(|l| state_of(doc, l, &ties))
-                    .collect(),
-                revision,
-            },
-            Vec::new(),
-        ))
+                SourcesDescribed {
+                    tables: Vec::new(),
+                    links: doc
+                        .settings()
+                        .sources
+                        .iter()
+                        .map(|l| state_of(doc, l, &ties))
+                        .collect(),
+                    revision,
+                },
+                Vec::new(),
+            ))
         }
     }
 }
@@ -2013,6 +2035,7 @@ fn link_database_layer(
     let objects = stored.in_project(mover);
     let count = objects.len() as u32;
     let plan = crate::import_apply::ImportPlan {
+        source_srid: stored.srid,
         label: format!("PostGIS: {source}"),
         layers: vec![(
             source.clone(),
@@ -2307,7 +2330,10 @@ pub fn edit_plan(cx: &ExecutionContext<'_>, input: &SourcesEdit) -> CommandResul
     }))
 }
 
-pub fn edit_execute(cx: &mut ExecutionContext<'_>, input: SourcesEdit) -> CommandResult<SourcesEdited> {
+pub fn edit_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SourcesEdit,
+) -> CommandResult<SourcesEdited> {
     // One step of the drawing and its own row in the journal (docs/adr/0253 §3, 0548 §4).
     crate::call::recorded(
         cx,
@@ -2319,7 +2345,10 @@ pub fn edit_execute(cx: &mut ExecutionContext<'_>, input: SourcesEdit) -> Comman
 }
 
 /// [`edit_execute`]'s write; `call::recorded` runs it as one step and journals it.
-fn written_edit_execute(cx: &mut ExecutionContext<'_>, input: SourcesEdit) -> CommandResult<SourcesEdited> {
+fn written_edit_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SourcesEdit,
+) -> CommandResult<SourcesEdited> {
     completed(edit_run(cx.doc, &input))
 }
 
@@ -2712,12 +2741,20 @@ fn sync_run(
                         let mut check = |layer: &gpkg::Layer, rows: &[gpkg::Row]| {
                             let mut keys: Vec<i64> = edits.update.iter().map(|(f, _)| *f).collect();
                             keys.extend(edits.delete.iter().copied());
-                            let bad = rows_changed(rows_base.as_ref(), layer, rows, &keys, &fid_uid, mover.as_ref());
+                            let bad = rows_changed(
+                                rows_base.as_ref(),
+                                layer,
+                                rows,
+                                &keys,
+                                &fid_uid,
+                                mover.as_ref(),
+                            );
                             changed = bad.iter().filter_map(|f| fid_uid.get(f).copied()).collect();
                             if bad.is_empty() { Ok(()) } else { Err(bad) }
                         };
-                        let check: Option<&mut provider::RowCheck<'_>> =
-                            rows_base.is_some().then_some(&mut check as &mut provider::RowCheck<'_>);
+                        let check: Option<&mut provider::RowCheck<'_>> = rows_base
+                            .is_some()
+                            .then_some(&mut check as &mut provider::RowCheck<'_>);
                         let edited = p
                             .edit(address, &link.table, area, &link.revision, check, &edits)
                             .map_err(|e| match e {
@@ -2799,8 +2836,11 @@ fn sync_run(
                             || old.base().layer_id != link.layer;
                         let pinned = pins.set.get(&uid);
                         if (changed || pinned.is_some())
-                            && let Some(mut next) =
-                                if changed { gp::with_essence(old, &e) } else { Some(old.clone()) }
+                            && let Some(mut next) = if changed {
+                                gp::with_essence(old, &e)
+                            } else {
+                                Some(old.clone())
+                            }
                         {
                             next.base_mut().layer_id = link.layer.clone();
                             if let Some(p) = pinned {
@@ -2916,7 +2956,10 @@ pub fn sync_plan(cx: &ExecutionContext<'_>, input: &SourcesSync) -> CommandResul
     completed(sync_run(&mut copy, input, false))
 }
 
-pub fn sync_execute(cx: &mut ExecutionContext<'_>, input: SourcesSync) -> CommandResult<SourcesSynced> {
+pub fn sync_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SourcesSync,
+) -> CommandResult<SourcesSynced> {
     // One step of the drawing and its own row in the journal (docs/adr/0253 §3, 0548 §4).
     crate::call::recorded(
         cx,
@@ -2928,7 +2971,10 @@ pub fn sync_execute(cx: &mut ExecutionContext<'_>, input: SourcesSync) -> Comman
 }
 
 /// [`sync_execute`]'s write; `call::recorded` runs it as one step and journals it.
-fn written_sync_execute(cx: &mut ExecutionContext<'_>, input: SourcesSync) -> CommandResult<SourcesSynced> {
+fn written_sync_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SourcesSync,
+) -> CommandResult<SourcesSynced> {
     // A plan through the protocol runs this on a reading copy: it writes no file then (docs/adr/0532 §4).
     let write = !(cx.dry() && input.direction == SyncDirection::Write);
     completed(sync_run(cx.doc, &input, write))

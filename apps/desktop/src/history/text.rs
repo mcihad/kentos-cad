@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 217] = [
+pub(crate) const TITLES: [(&str, &str); 219] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -69,7 +69,10 @@ pub(crate) const TITLES: [(&str, &str); 217] = [
     ("cad.rasters.georef", "Raster oturt"),
     ("cad.rasters.mosaic", "Sanal mozaik"),
     ("cad.rasters.gpkgread", "GeoPackage karolarını oku"),
-    ("cad.rasters.gpkgwrite", "Rasteri GeoPackage karosu olarak yaz"),
+    (
+        "cad.rasters.gpkgwrite",
+        "Rasteri GeoPackage karosu olarak yaz",
+    ),
     ("cad.time.query", "Zamanda sorgu"),
     ("cad.pointclouds.describe", "Nokta bulutunun bilgisi"),
     ("cad.pointclouds.query", "XYZ sor"),
@@ -130,6 +133,8 @@ pub(crate) const TITLES: [(&str, &str); 217] = [
     ("cad.layers.time", "Katmanın zamanı"),
     ("cad.scenarios.edit", "Senaryo"),
     ("cad.layers.filter", "Katman süzgeci"),
+    ("cad.layers.crs", "Sistem ata"),
+    ("cad.layers.reproject", "Yeniden izdüşür"),
     ("cad.layers.table", "Koşullu biçim"),
     ("cad.layers.rules", "Kayıt kuralları"),
     ("cad.layers.contingents", "Değer bileşimleri"),
@@ -224,7 +229,10 @@ pub(crate) const TITLES: [(&str, &str); 217] = [
     ("file.import.sld", "SLD'den görünüş al"),
     ("file.export.qml", "Görünüşü QML olarak dışa aktar"),
     ("file.import.qml", "QML'den görünüş al"),
-    ("file.export.maplibre", "Görünüşü MapLibre stili olarak dışa aktar"),
+    (
+        "file.export.maplibre",
+        "Görünüşü MapLibre stili olarak dışa aktar",
+    ),
     ("file.import.maplibre", "MapLibre stilinden görünüş al"),
     ("file.export.dxf", "DXF dışa aktar"),
     ("file.export.block", "Bloğu dosyaya yaz"),

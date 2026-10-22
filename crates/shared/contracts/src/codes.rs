@@ -1655,6 +1655,8 @@ codes! {
     PARTIAL_SCOPE = "partial_scope", Warning, false, "Yanıt bağlı katmanın yüklenen parçasından; bütün veri kümesi için kapsamı kaynak yapın (scope: source).";
     /// Records a source handed over that could not be read (docs/adr/0581 §4).
     ROWS_UNREADABLE = "rows_unreadable", Warning, false, "Geometrisi okunamayan kayıtlar atlandı; iletisi kaçını söyler.";
+    /// Objects a reprojection cannot move into the project's system (docs/adr/0583 §2).
+    CRS_UNREACHED = "crs_unreached", Failed, false, "Bazı nesneler projenin sistemine çevrilemiyor (sistemin dışında); hiçbir şey yazılmadı. uids onları söyler.";
     /// A view or a query without an integer key column (docs/adr/0582 §3).
     NO_ROW_KEY = "no_row_key", Failed, false, "View ya da sorgu katmanında tam sayı bir anahtar sütunu (fid, id, gid, ogc_fid) yok.";
     /// A view or a query whose key repeats (docs/adr/0582 §3).

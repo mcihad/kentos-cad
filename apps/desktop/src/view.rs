@@ -1382,7 +1382,8 @@ impl App {
             // The message's room holds the second system's values too (docs/adr/0167 §2): the
             // cells give way until it is as wide as they are; they show while no message does,
             // or there is room for both. The steps do not follow the message: the bar stays still.
-            let second_width = self.second_width();
+            // The map system's cell goes with the second system's (docs/adr/0583 §3).
+            let second_width = self.second_width() + self.map_width();
             // The widths are estimates: room for a few letters more keeps the bar's end in view.
             let need = least.max(second_width + 4.0 * kentos_ui::theme::typography::body());
             let fit = (0..=STATUS_STEPS)
@@ -1448,6 +1449,9 @@ impl App {
                 }),
         );
         // The second coordinate system's values, before the message (docs/adr/0167 §2).
+        if second && let Some(cell) = self.map_cell(cursor) {
+            bar = bar.separator().push(cell);
+        }
         if second && let Some(cell) = self.second_cell(cursor) {
             bar = bar.separator().push(cell);
         }
@@ -1615,8 +1619,7 @@ impl App {
         let mut layers_menu = Menu::new();
         if let Some(doc) = &self.document {
             let layers = doc.model.layers();
-            let mut stack: Vec<&kentos_commands::LayerNode> =
-                layers.nodes().iter().rev().collect();
+            let mut stack: Vec<&kentos_commands::LayerNode> = layers.nodes().iter().rev().collect();
             while let Some(node) = stack.pop() {
                 if node.kind == kentos_commands::LayerNodeType::Group {
                     layers_menu =

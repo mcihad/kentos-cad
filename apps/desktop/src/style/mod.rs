@@ -145,6 +145,8 @@ impl Styles {
             view_build: kentos_native_style::View {
                 fills: settings.bool("graphics.fills"),
                 area_edges: settings.bool("graphics.areaEdges"),
+                // The drawing area puts its map's system in (docs/adr/0583 §3).
+                map: None,
             },
             view_colors: kentos_native_style::color::ViewColors {
                 mode: kentos_native_style::color::ColorMode::from_key(

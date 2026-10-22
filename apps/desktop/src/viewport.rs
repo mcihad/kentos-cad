@@ -298,7 +298,10 @@ type KeptPhasing = (
     (u64, u64),
     std::sync::Arc<kentos_native_style::phases::Phasing>,
 );
-type KeptLineTypes = ((u64, u64), std::sync::Arc<kentos_native_style::line_types::LineTypes>);
+type KeptLineTypes = (
+    (u64, u64),
+    std::sync::Arc<kentos_native_style::line_types::LineTypes>,
+);
 
 /// The drawing area's state in the app.
 pub struct Viewport {
@@ -465,8 +468,13 @@ impl Viewport {
     /// zooming inside it upload nothing; else new lines three views wide
     /// around the view (the web's `gridExtent`).
     fn grid(&self, canvas: Canvas, origin: Vec2, frame: (Vec2, f64)) -> Arc<ScenePart> {
-        let view = self.camera.visible_bounds();
-        let spacing = scene::grid_spacing(self.camera.scale, GRID_MIN_PX);
+        // On a map of another system the grid is the map's (docs/adr/0583 §3).
+        let view = Camera {
+            map: None,
+            ..self.camera
+        }
+        .visible_bounds();
+        let spacing = scene::grid_spacing(self.camera.map_px(), GRID_MIN_PX);
         let mut cache = self.grid.borrow_mut();
         let covers = cache.as_ref().is_some_and(|g| {
             g.spacing == spacing
@@ -508,6 +516,43 @@ impl Viewport {
     /// What the view shows is another drawing now (docs/adr/0576 §3): its scene is built afresh, its camera stays.
     pub(crate) fn rebuild(&mut self) {
         self.generation += 1;
+    }
+
+    /// The map's system the view draws in (docs/adr/0583 §3): the scene is built afresh in it, the world point in
+    /// the middle and the pointer stay where they are; whether it changed.
+    pub(crate) fn set_map(
+        &mut self,
+        map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
+    ) -> bool {
+        let same = match (self.camera.map, map) {
+            (Some(a), Some(b)) => std::ptr::eq(a, b),
+            (None, None) => true,
+            _ => false,
+        };
+        if same {
+            return false;
+        }
+        let at = self.cursor.map(|c| self.camera.world_to_screen(c));
+        self.camera = self.camera.with_map(map);
+        self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
+        self.generation += 1;
+        true
+    }
+
+    /// The origin the scene's numbers are relative to: the drawing's, in the map's system when it has one.
+    pub(crate) fn draw_origin(&self, doc: &Document) -> Vec2 {
+        let o = scene::scene_origin(doc);
+        match self.camera.map {
+            Some(_) => {
+                let m = self.camera.to_map(o);
+                if m.x.is_finite() && m.y.is_finite() {
+                    m
+                } else {
+                    o
+                }
+            }
+            None => o,
+        }
     }
 
     /// A drawing was opened: its scene is built afresh and the view goes to
@@ -631,7 +676,11 @@ impl Viewport {
         // The grid under everything (Izgara, F7).
         let grid = if self.grid_shown {
             let u = doc.settings().ucs.unwrap_or(kentos_commands::Ucs::WORLD);
-            self.grid(canvas, origin, (Vec2::new(u.origin.x, u.origin.y), u.angle))
+            let at = match self.camera.map {
+                Some(_) => self.camera.to_map(Vec2::new(u.origin.x, u.origin.y)),
+                None => Vec2::new(u.origin.x, u.origin.y),
+            };
+            self.grid(canvas, origin, (at, u.angle))
         } else {
             Arc::default()
         };
@@ -673,7 +722,10 @@ impl Viewport {
 
     /// The tree the view shows (docs/adr/0523 §1): the theme's, made again only when the drawing or the theme
     /// changed; none without a theme.
-    pub(crate) fn themed_tree(&self, doc: &Document) -> Option<std::sync::Arc<kentos_domain::LayerTree>> {
+    pub(crate) fn themed_tree(
+        &self,
+        doc: &Document,
+    ) -> Option<std::sync::Arc<kentos_domain::LayerTree>> {
         let theme = self.theme.as_ref()?;
         let key = (doc.session, doc.model.generation());
         let mut kept = self.themed.borrow_mut();
@@ -683,7 +735,10 @@ impl Viewport {
         {
             return Some(std::sync::Arc::clone(tree));
         }
-        let tree = std::sync::Arc::new(kentos_domain::layer_states::themed(doc.model.layers(), theme));
+        let tree = std::sync::Arc::new(kentos_domain::layer_states::themed(
+            doc.model.layers(),
+            theme,
+        ));
         *kept = Some((key, theme.clone(), std::sync::Arc::clone(&tree)));
         Some(tree)
     }
@@ -731,11 +786,15 @@ impl Viewport {
                 ink: hex(palette.ink),
                 paper: hex(palette.background),
             },
-            symbol_scale: self.symbol_scale(doc, s.screen_symbols),
+            // Widths and sizes in the map's units: a map unit is `map_ratio` world units (docs/adr/0583 §3).
+            symbol_scale: self.symbol_scale(doc, s.screen_symbols) / self.camera.map_ratio,
             screen: s.screen_symbols,
             hairlines: !s.line_weights,
-            origin: scene::scene_origin(doc),
-            view_build: s.view_build,
+            origin: self.draw_origin(doc),
+            view_build: kentos_native_style::View {
+                map: self.camera.map,
+                ..s.view_build
+            },
             view_colors: s.view_colors,
             // What a renderer compares is read in the project's drawing unit, as Katman stili listed it.
             reading_unit: kentos_native_style::reading_unit(doc.model.settings()),
@@ -812,7 +871,7 @@ impl Viewport {
         if !shown.is_empty() || crate::services::in_use() {
             let settings = doc.model.settings();
             let project =
-                std::sync::Arc::new(crate::services::systems::ProjectSystem::of(settings));
+                std::sync::Arc::new(crate::services::systems::ProjectSystem::of_map(settings));
             let hub = crate::services::hub();
             let mut keys = std::collections::HashSet::new();
             for service in shown {
@@ -926,7 +985,7 @@ impl Viewport {
             })
         };
         if !current {
-            let origin = scene::scene_origin(doc);
+            let origin = self.draw_origin(doc);
             let clip = construction_clip(&view);
             *cache = Some(if plain {
                 Cached {
@@ -1059,7 +1118,8 @@ impl Viewport {
     /// Where the camera stands, for the view history (docs/adr/0141).
     pub fn viewpoint(&self) -> Viewpoint {
         Viewpoint {
-            center: self.camera.center,
+            // The world's point, whatever system the map is in (docs/adr/0583 §3).
+            center: self.camera.world_center(),
             scale: self.camera.scale,
             twist: self.camera.twist,
         }
@@ -1097,9 +1157,9 @@ impl Viewport {
         kentos_commands::NamedView {
             id: String::new(),
             name: name.to_owned(),
-            center: kentos_commands::Vec2 {
-                x: self.camera.center.x,
-                y: self.camera.center.y,
+            center: {
+                let c = self.camera.world_center();
+                kentos_commands::Vec2 { x: c.x, y: c.y }
             },
             width,
             height,

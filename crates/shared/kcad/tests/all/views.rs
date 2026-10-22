@@ -53,7 +53,10 @@ fn the_sample_reads_to_the_contracts_value() {
         .map(|v| v.name.as_str())
         .collect();
     assert_eq!(names, ["Bina girişi", "Bütün çizim", "Yol ekseni"]);
-    assert_eq!(doc.settings.named_views[0].twist, std::f64::consts::PI / 6.0);
+    assert_eq!(
+        doc.settings.named_views[0].twist,
+        std::f64::consts::PI / 6.0
+    );
 }
 
 #[test]
@@ -130,20 +133,44 @@ fn the_writer_refuses_what_the_reader_would() {
 #[test]
 fn the_readers_errors_name_their_places() {
     for (file, code, place) in [
-        ("broken/views-in-schema-51.kcad", Code::UnknownField, "namedViews"),
+        (
+            "broken/views-in-schema-51.kcad",
+            Code::UnknownField,
+            "namedViews",
+        ),
         ("broken/named-views-empty.kcad", Code::BadValue, "boş"),
-        ("broken/named-views-twice.kcad", Code::BadValue, "iki görünüm"),
-        ("broken/named-views-blank.kcad", Code::BadValue, "görünüm adı"),
-        ("broken/named-views-width-zero.kcad", Code::BadValue, "eni ve boyu"),
-        ("broken/named-views-twist-tau.kcad", Code::BadValue, "dönüşü"),
+        (
+            "broken/named-views-twice.kcad",
+            Code::BadValue,
+            "iki görünüm",
+        ),
+        (
+            "broken/named-views-blank.kcad",
+            Code::BadValue,
+            "görünüm adı",
+        ),
+        (
+            "broken/named-views-width-zero.kcad",
+            Code::BadValue,
+            "eni ve boyu",
+        ),
+        (
+            "broken/named-views-twist-tau.kcad",
+            Code::BadValue,
+            "dönüşü",
+        ),
         ("broken/named-views-far.kcad", Code::BadValue, "10 000 km"),
         (
             "broken/named-views-unknown-field.kcad",
             Code::UnknownField,
             "namedViews/0/note",
         ),
-        ("broken/named-views-no-twist.kcad", Code::MissingField, "twist"),
-        ("broken/schema-version-98.kcad", Code::SchemaVersion, ""),
+        (
+            "broken/named-views-no-twist.kcad",
+            Code::MissingField,
+            "twist",
+        ),
+        ("broken/schema-version-99.kcad", Code::SchemaVersion, ""),
     ] {
         let err = kentos_kcad::decode(&read(file)).expect_err(file);
         assert_eq!(err.code, code, "{file}: {err}");

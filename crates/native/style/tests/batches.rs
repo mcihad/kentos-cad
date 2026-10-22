@@ -192,6 +192,7 @@ fn builds_the_web_s_batches() {
             view: View {
                 fills: view["fills"] != false,
                 area_edges: view["areaEdges"] != false,
+                map: None,
             },
             frame: None,
             reading_unit: ReadingUnit::METRE,

@@ -90,6 +90,11 @@ pub struct SettingsSet {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub second_srid: Option<u32>,
+    /// The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub map_srid: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_unit: Option<DrawingUnit>,

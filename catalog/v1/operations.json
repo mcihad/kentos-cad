@@ -2080,6 +2080,25 @@
         "cad.rasters.gpkgwrite"
       ],
       "note": "Pencere karo piramidinin planını gösterir, GeoPackage'ı komut yazar (ADR 0556 §5)."
+    },
+    "layer.crs": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.crs"
+      ]
+    },
+    "layer.reproject": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.reproject"
+      ]
+    },
+    "view.mapCrs": {
+      "level": "semantic",
+      "via": [
+        "cad.settings.set"
+      ],
+      "note": "Harita sistemi projenin ayarıdır (mapSrid); nesneler değişmez, çizim görünümde dönüştürülür (ADR 0583)."
     }
   },
   "tools": {

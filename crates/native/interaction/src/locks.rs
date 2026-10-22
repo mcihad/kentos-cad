@@ -311,6 +311,7 @@ mod tests {
     /// A CBS project in grads.
     fn cbs() -> Format {
         Format::of(&kentos_commands::ProjectSettings {
+            map_srid: None,
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,

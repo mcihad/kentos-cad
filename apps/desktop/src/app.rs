@@ -698,6 +698,10 @@ pub enum Message {
     /// İkinci sistem: the project's second coordinate system, how geographic
     /// values are written (second_crs.rs, docs/adr/0167 §1).
     SecondCrs(crate::second_crs::Event),
+    /// Harita sistemi chosen (docs/adr/0583 §3).
+    MapCrs(crate::map_crs::Choose),
+    /// A layer's source system (docs/adr/0583 §1–§2).
+    LayerCrs(crate::layer_crs::Event),
     /// A notice closed, by its ×, its time or Tümünü kapat (toasts.rs).
     ToastClosed(kentos_ui::widget::toast::Id),
 }
@@ -1014,10 +1018,8 @@ pub struct App {
     /// The designer's copied item with its layer's fields (docs/adr/0437): pasted into this or another form.
     /// The designer's section library and kept drafts on this device (forms/library.rs, docs/adr/0441).
     pub(crate) form_files: crate::forms::library::FormFiles,
-    pub(crate) form_clipboard: Option<(
-        kentos_commands::FormItem,
-        Vec<kentos_commands::LayerField>,
-    )>,
+    pub(crate) form_clipboard:
+        Option<(kentos_commands::FormItem, Vec<kentos_commands::LayerField>)>,
     /// Formla düzenle (forms/entry.rs, docs/adr/0401).
     pub(crate) form_entry: Option<crate::forms::entry::Entry>,
     /// The records whose forms wait under a child's (docs/adr/0440 §7): their drafts kept, the
@@ -1735,6 +1737,38 @@ impl App {
         self.time_refresh();
         // A new object its layer's filter leaves out is said (docs/adr/0211 §3).
         self.say_hidden_new();
+        self.follow_map();
+    }
+
+    /// The drawing area draws in the project's map system (docs/adr/0583 §3); what it does not draw there is said
+    /// once, when the map's system is set.
+    fn follow_map(&mut self) {
+        use kentos_commands::Entity;
+        let Some(doc) = &self.document else {
+            return;
+        };
+        let settings = doc.model.settings();
+        let map = kentos_project::systems::map_projection(settings);
+        let unseen = map.is_some()
+            && doc.model.entities().any(|e| {
+                matches!(
+                    e,
+                    Entity::Image(_) | Entity::Raster(_) | Entity::PointCloud(_)
+                )
+            });
+        let code = settings.map_srid;
+        if let Some(split) = self.split.as_mut() {
+            split.viewport.set_map(map);
+        }
+        if !self.viewport.set_map(map) {
+            return;
+        }
+        if unseen && let Some(code) = code {
+            self.warn(format!(
+                "Harita sistemi EPSG:{code}: resimler, rasterler ve nokta bulutları bu sistemde çizilmez. \
+                 Onları görmek için harita sistemini projenin sistemine döndürün."
+            ));
+        }
     }
 
     fn handle(&mut self, message: Message) -> Task<Message> {
@@ -2166,6 +2200,8 @@ impl App {
             Message::Snap(event) => self.snap_event(event),
             Message::ScreenScale(event) => return self.screen_scale_event(event),
             Message::SecondCrs(event) => self.second_crs_event(event),
+            Message::MapCrs(choose) => self.choose_map(choose),
+            Message::LayerCrs(event) => self.layer_crs_event(event),
             Message::ToastClosed(id) => {
                 self.toasts.dismiss(id);
             }
@@ -2718,6 +2754,10 @@ impl App {
             "address.search" => return self.open_address_search(),
             "address.reverse" => return self.start_tool(kentos_interaction::address_reverse::ID),
             "address.data" => return self.open_address_data(),
+            // docs/adr/0583: a layer's source system and the map's.
+            "layer.crs" => self.layer_crs_run(false),
+            "layer.reproject" => self.layer_crs_run(true),
+            "view.mapCrs" => self.map_crs_run(),
             "address.providers" => return self.open_address_providers(),
             // Gevşeterek düzenle: the next write relaxes the constraints (docs/adr/0337 §1); again, it does not.
             "constraint.relaxNext" => self.relax_next(),
@@ -2985,7 +3025,10 @@ impl App {
         Some(match id {
             "draft.ortho" => self.draft.ortho,
             "view.split" => self.split.is_some(),
-            "view.splitLink" => self.split.as_ref().is_some_and(|s| s.link != kentos_geometry_core::tools::view_link::Link::Off),
+            "view.splitLink" => self
+                .split
+                .as_ref()
+                .is_some_and(|s| s.link != kentos_geometry_core::tools::view_link::Link::Off),
             "view.swipe" => self.split.as_ref().is_some_and(|s| s.swipe.is_some()),
             "draft.rightAngle" => self.draft.right_angle,
             "draft.polar" => self.draft.polar.is_some(),
@@ -3001,7 +3044,9 @@ impl App {
             id if id.starts_with("edit.selectFilter.") => {
                 self.select_kind_checked(&id["edit.selectFilter.".len()..])
             }
-            id if id.starts_with("arch.phase.") => self.phase_view().name() == &id["arch.phase.".len()..],
+            id if id.starts_with("arch.phase.") => {
+                self.phase_view().name() == &id["arch.phase.".len()..]
+            }
             "draft.lock.keep" => self.locks.keep,
             "draft.lock.construction" => self.session.construction(),
             "draft.overlap.allow" => self.draft.overlap == kentos_interaction::Overlap::Allow,

@@ -191,7 +191,7 @@ fn the_readers_errors_name_their_places() {
             Code::UnknownField,
             "pictures/0/name",
         ),
-        ("broken/schema-version-98.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-99.kcad", Code::SchemaVersion, ""),
     ] {
         let e = refused(file);
         assert_eq!(e.code, code, "{file}: {e}");

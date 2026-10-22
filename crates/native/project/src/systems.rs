@@ -309,6 +309,19 @@ fn datum_fields(d: &core::Datum) -> (Option<RegistryDatum>, Option<Box<CustomDat
     }
 }
 
+/// The view of the project in its map's system (docs/adr/0583 §3); none without a map system, with the project's own
+/// as the map's, and when either system is not known.
+pub fn map_projection(
+    settings: &ProjectSettings,
+) -> Option<&'static kentos_geometry_core::crs::map::MapProjection> {
+    let map = settings.map_srid.filter(|m| *m != settings.srid)?;
+    let project = own(settings)?.system?;
+    let map = system(map)?.transform_system()?;
+    Some(kentos_geometry_core::crs::map::interned(
+        kentos_geometry_core::crs::map::MapProjection::new(project, map, choices(settings)),
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

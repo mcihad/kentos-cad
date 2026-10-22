@@ -25713,6 +25713,7 @@ class LayerNode(_Model):
             objects. Only a layer has it, never a group.
         snap: A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;
             absent, the general kinds. Only a layer has it, never a group.
+        source_crs: The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group.
         subtypes: Alt türler (docs/adr/0422): the field that sorts the records and what each kind narrows.
             Only a layer holding objects has them.
         table_styles: Koşullu biçim (docs/adr/0413 §1): how the attribute table paints its rows and cells by
@@ -25742,6 +25743,7 @@ class LayerNode(_Model):
     scenario: ScenarioInfo | None | Unset = UNSET
     service: ServiceLayer | None | Unset = UNSET
     snap: LayerSnap | None | Unset = UNSET
+    source_crs: LayerSourceCrs | None | Unset = UNSET
     subtypes: LayerSubtypes | None | Unset = UNSET
     table_styles: list[TableStyle] | Unset = UNSET
     time: LayerTime | None | Unset = UNSET
@@ -25784,6 +25786,8 @@ class LayerNode(_Model):
             out["service"] = None if self.service is None else self.service.to_json()
         if self.snap is not UNSET:
             out["snap"] = None if self.snap is None else self.snap.to_json()
+        if self.source_crs is not UNSET:
+            out["sourceCrs"] = None if self.source_crs is None else self.source_crs.to_json()
         if self.subtypes is not UNSET:
             out["subtypes"] = None if self.subtypes is None else self.subtypes.to_json()
         if self.table_styles is not UNSET:
@@ -25817,6 +25821,7 @@ class LayerNode(_Model):
             scenario=UNSET if "scenario" not in data else None if data["scenario"] is None else ScenarioInfo.from_json(data["scenario"]),
             service=UNSET if "service" not in data else None if data["service"] is None else ServiceLayer.from_json(data["service"]),
             snap=UNSET if "snap" not in data else None if data["snap"] is None else LayerSnap.from_json(data["snap"]),
+            source_crs=UNSET if "sourceCrs" not in data else None if data["sourceCrs"] is None else LayerSourceCrs.from_json(data["sourceCrs"]),
             subtypes=UNSET if "subtypes" not in data else None if data["subtypes"] is None else LayerSubtypes.from_json(data["subtypes"]),
             table_styles=[TableStyle.from_json(e0) for e0 in data["tableStyles"]] if "tableStyles" in data else UNSET,
             time=UNSET if "time" not in data else None if data["time"] is None else LayerTime.from_json(data["time"]),
@@ -25893,6 +25898,47 @@ class LayerSnap(_Model):
         return cls(
             kinds=UNSET if "kinds" not in data else None if data["kinds"] is None else list(data["kinds"]),
             off=data.get("off", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerSourceCrs(_Model):
+    """The system a layer's objects came from.
+    Attributes:
+        wkt: WKT2 (ISO 19162:2019).
+        axis_order: `en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).
+        unit: `metre` or `degree`.
+        area: Where the system is meant for, in the registry's words.
+        srid: Its EPSG code, when the registry knows it. Unit: epsg.
+    """
+    name: str
+    wkt: str
+    axis_order: str
+    unit: str
+    area: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["wkt"] = self.wkt
+        out["axisOrder"] = self.axis_order
+        out["unit"] = self.unit
+        if self.area is not UNSET:
+            out["area"] = self.area
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerSourceCrs:
+        return cls(
+            name=data["name"],
+            wkt=data["wkt"],
+            axis_order=data["axisOrder"],
+            unit=data["unit"],
+            area=data.get("area", UNSET),
+            srid=data.get("srid", UNSET),
         )
 
 
@@ -26417,6 +26463,68 @@ class LayersContingents(_Model):
             layer=data["layer"],
             expected_revision=data.get("expectedRevision", UNSET),
             groups=[FieldGroup.from_json(e0) for e0 in data["groups"]] if "groups" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersCrs(_Model):
+    """Input of `cad.layers.crs` v1.
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        srid: The system its objects came from (an EPSG code the registry knows); absent or null clears the record. Unit: epsg.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersCrs:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersCrsSet(_Model):
+    """Output of `cad.layers.crs` v1.
+    Attributes:
+        changed: Whether it differed (an undo step was written).
+        revision: The document's revision after the write, as decimal text.
+        crs: The record now; absent when cleared.
+    """
+    layer: str
+    changed: bool
+    revision: str
+    crs: LayerSourceCrs | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        if self.crs is not UNSET:
+            out["crs"] = None if self.crs is None else self.crs.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersCrsSet:
+        return cls(
+            layer=data["layer"],
+            changed=data["changed"],
+            revision=data["revision"],
+            crs=UNSET if "crs" not in data else None if data["crs"] is None else LayerSourceCrs.from_json(data["crs"]),
         )
 
 
@@ -27114,6 +27222,79 @@ class LayersRendererPlan(_Model):
         return cls(
             node=LayerNode.from_json(data["node"]),
             changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersReproject(_Model):
+    """Input of `cad.layers.reproject` v1.
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        from_: The system the objects are in now (an EPSG code the registry knows); absent: the layer's recorded one. Unit: epsg.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    from_: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersReproject:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            from_=data.get("from", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersReprojected(_Model):
+    """Output of `cad.layers.reproject` v1.
+    Attributes:
+        from_: The system the objects came from. Unit: epsg.
+        to: The project's system they are in now. Unit: epsg.
+        moved: The objects moved. Unit: count.
+        via: The way and its accuracy (“EPSG:1311, ±1 m”), as the transforms say it.
+        crs: The layer's record now.
+        revision: The document's revision after the write, as decimal text.
+    """
+    layer: str
+    from_: int
+    to: int
+    moved: int
+    via: str
+    crs: LayerSourceCrs
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["moved"] = self.moved
+        out["via"] = self.via
+        out["crs"] = self.crs.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersReprojected:
+        return cls(
+            layer=data["layer"],
+            from_=data["from"],
+            to=data["to"],
+            moved=data["moved"],
+            via=data["via"],
+            crs=LayerSourceCrs.from_json(data["crs"]),
             revision=data["revision"],
         )
 
@@ -36393,6 +36574,8 @@ class ProjectSettings(_Model):
             absent: 1. Unit: 1.
         line_types: The project's line types with patterns (docs/adr/0313 §1).
         linear_events: The project's links of event layers to their routes (docs/adr/0569), in the list's order.
+        map_srid: The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:
+            the project's own. Changing it changes no coordinate. Unit: epsg.
         named_ucs: The project's named UCSs, in the order they were kept.
         named_views: The project's named views, in the order they were kept (docs/adr/0285 §1).
         networks: The project's networks (docs/adr/0209 §2).
@@ -36446,6 +36629,7 @@ class ProjectSettings(_Model):
     line_type_scale: float | None | Unset = UNSET
     line_types: list[LineTypeDef] | Unset = UNSET
     linear_events: list[EventLink] | Unset = UNSET
+    map_srid: int | None | Unset = UNSET
     named_ucs: list[NamedUcs] | Unset = UNSET
     named_views: list[NamedView] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
@@ -36513,6 +36697,8 @@ class ProjectSettings(_Model):
             out["lineTypes"] = [e0.to_json() for e0 in self.line_types]
         if self.linear_events is not UNSET:
             out["linearEvents"] = [e0.to_json() for e0 in self.linear_events]
+        if self.map_srid is not UNSET:
+            out["mapSrid"] = self.map_srid
         if self.named_ucs is not UNSET:
             out["namedUcs"] = [e0.to_json() for e0 in self.named_ucs]
         if self.named_views is not UNSET:
@@ -36577,6 +36763,7 @@ class ProjectSettings(_Model):
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_types=[LineTypeDef.from_json(e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
             linear_events=[EventLink.from_json(e0) for e0 in data["linearEvents"]] if "linearEvents" in data else UNSET,
+            map_srid=data.get("mapSrid", UNSET),
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             named_views=[NamedView.from_json(e0) for e0 in data["namedViews"]] if "namedViews" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
@@ -40478,6 +40665,7 @@ class SettingsSet(_Model):
         length_decimals: Unit: count.
         length_style: How lengths are written (docs/adr/0262 §2): decimal, or architectural,
             engineering and fractional feet and inches in an inch or foot drawing.
+        map_srid: The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes. Unit: epsg.
         plot_scale: Unit: scale.
         second_srid: Unit: epsg.
         srid: Unit: epsg.
@@ -40493,6 +40681,7 @@ class SettingsSet(_Model):
     heights: HeightReference | None | Unset = UNSET
     length_decimals: int | None | Unset = UNSET
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
+    map_srid: int | None | Unset = UNSET
     name: str | None | Unset = UNSET
     plot_scale: float | None | Unset = UNSET
     project_type: Workspace | WorkspaceName | None | Unset = UNSET
@@ -40523,6 +40712,8 @@ class SettingsSet(_Model):
             out["lengthDecimals"] = self.length_decimals
         if self.length_style is not UNSET:
             out["lengthStyle"] = None if self.length_style is None else _enum_out(self.length_style)
+        if self.map_srid is not UNSET:
+            out["mapSrid"] = self.map_srid
         if self.name is not UNSET:
             out["name"] = self.name
         if self.plot_scale is not UNSET:
@@ -40549,6 +40740,7 @@ class SettingsSet(_Model):
             heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
             length_decimals=data.get("lengthDecimals", UNSET),
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
+            map_srid=data.get("mapSrid", UNSET),
             name=data.get("name", UNSET),
             plot_scale=UNSET if "plotScale" not in data else None if data["plotScale"] is None else float(data["plotScale"]),
             project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(Workspace, data["projectType"]),
@@ -61032,6 +61224,7 @@ __all__ = [
     "LayerSetOperation",
     "LayerSetOperationName",
     "LayerSnap",
+    "LayerSourceCrs",
     "LayerState",
     "LayerStateNode",
     "LayerStatesDone",
@@ -61047,6 +61240,8 @@ __all__ = [
     "LayersComposePlan",
     "LayersComposed",
     "LayersContingents",
+    "LayersCrs",
+    "LayersCrsSet",
     "LayersEdit",
     "LayersEdited",
     "LayersFilter",
@@ -61063,6 +61258,8 @@ __all__ = [
     "LayersRendered",
     "LayersRenderer",
     "LayersRendererPlan",
+    "LayersReproject",
+    "LayersReprojected",
     "LayersRules",
     "LayersService",
     "LayersServicePlan",

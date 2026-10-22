@@ -481,6 +481,7 @@ impl App {
             LayerTarget::Existing(id) => self.layer_name(id),
         };
         let plan = ImportPlan {
+            source_srid: None,
             label: format!("Koordinat listesi: {name}"),
             layers: vec![(String::new(), target)],
             group: None,

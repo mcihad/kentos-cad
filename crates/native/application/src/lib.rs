@@ -286,6 +286,7 @@ pub mod forms_audit;
 pub mod records;
 pub mod records_page;
 pub mod sources_query;
+pub mod layers_crs;
 pub mod records_duplicate;
 pub mod forms_compare;
 pub mod forms_edit;
@@ -1149,6 +1150,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_RECORDS_PAGE,
         kentos_commands::CAD_RECORDS_PAGE_VERSION,
+    ),
+    // A layer's source system and its objects moved from it ([`layers_crs`], docs/adr/0583).
+    (
+        kentos_commands::CAD_LAYERS_CRS,
+        kentos_commands::CAD_LAYERS_CRS_VERSION,
+    ),
+    (
+        kentos_commands::CAD_LAYERS_REPROJECT,
+        kentos_commands::CAD_LAYERS_REPROJECT_VERSION,
     ),
     // A data set asked where it is: the box, the columns and the filter sent to the source ([`sources_query`], docs/adr/0581).
     (

@@ -206,7 +206,10 @@ pub struct ProjectSettings {
     pub line_types: Vec<crate::LineTypeDef>,
     /// The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::HatchPatternDef>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::HatchPatternDef>>")
+    )]
     pub hatch_patterns: Vec<crate::HatchPatternDef>,
     /// The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -236,6 +239,12 @@ pub struct ProjectSettings {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub second_srid: Option<u32>,
+    /// The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:
+    /// the project's own. Changing it changes no coordinate.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub map_srid: Option<u32>,
     /// The project's own coordinate system when it is a definition
     /// (docs/adr/0168 §1); `srid` is then 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -271,7 +280,10 @@ pub struct ProjectSettings {
     pub dimension_styles: Vec<crate::DimensionStyleDef>,
     /// The project's named leader styles (docs/adr/0326 §4).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::LeaderStyleDef>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::LeaderStyleDef>>", optional)
+    )]
     pub leader_styles: Vec<crate::LeaderStyleDef>,
     /// The project's named wall styles (docs/adr/0339 §2), in the order they were made.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -975,8 +987,14 @@ pub struct DocumentSnapshotV2 {
     pub arrays: Vec<crate::assoc_array::AssocArray>,
     /// The geometric and dimensional constraints and the parameter table (docs/adr/0334); none when the drawing
     /// has none.
-    #[serde(default, skip_serializing_if = "crate::constraints::ConstraintSet::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<crate::constraints::ConstraintSet>"))]
+    #[serde(
+        default,
+        skip_serializing_if = "crate::constraints::ConstraintSet::is_empty"
+    )]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<crate::constraints::ConstraintSet>")
+    )]
     pub constraints: crate::constraints::ConstraintSet,
     /// The requests the drawing executed (docs/adr/0253 §6), oldest first,
     /// the last `REQUEST_LEDGER`; none when it executed none.

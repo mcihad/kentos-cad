@@ -799,6 +799,7 @@ fn write_checked(
         &opts.skip_layers,
     )?;
     let plan = ImportPlan {
+        source_srid: said.srid,
         label: step_name(format, &file),
         layers,
         group: group_of(routing.group, &file),

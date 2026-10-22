@@ -57,7 +57,11 @@ import type { Workspace } from "./Workspace";
  * `level_in_use` (a level a wall names taken away), `heights_need_system` (ellipsoidal heights or an epoch for a
  * project without a system).
  */
-export type SettingsSet = { name?: string, projectType?: Workspace, srid?: number, secondSrid?: number, drawingUnit?: DrawingUnit, 
+export type SettingsSet = { name?: string, projectType?: Workspace, srid?: number, secondSrid?: number, 
+/**
+ * The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes.
+ */
+mapSrid?: number, drawingUnit?: DrawingUnit, 
 /**
  * How lengths are written (docs/adr/0262 §2): decimal, or architectural,
  * engineering and fractional feet and inches in an inch or foot drawing.
