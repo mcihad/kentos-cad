@@ -47,6 +47,7 @@ impl App {
             return;
         };
         let query = EntitiesSelect {
+            model_scope:self.spatial.sheet_model_scope(),
             region: SelectRegion::All,
             kinds: Some(kinds.to_vec()),
             layers: None,

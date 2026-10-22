@@ -28,6 +28,7 @@ pub mod json;
 pub mod kinds;
 pub mod kpafta;
 pub mod layout;
+pub mod layers;
 pub mod model;
 pub mod ops;
 pub mod paper;

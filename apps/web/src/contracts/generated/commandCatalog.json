@@ -1076180,6 +1076180,23 @@
               }
             ]
           },
+          "SheetModelScope": {
+            "additionalProperties": false,
+            "description": "Explicit viewport context for model commands; all command coordinates remain canonical metres.",
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "sheet": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sheet",
+              "item"
+            ],
+            "type": "object"
+          },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
             "properties": {
@@ -1076216,6 +1076233,17 @@
               "array",
               "null"
             ]
+          },
+          "modelScope": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetModelScope"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit paper viewport; results keep original model identities."
           },
           "tolerance": {
             "description": "How far from `at` an object may be, metres (a tool's is its pixels at the view's scale).",
@@ -1078087,7 +1078115,7 @@
       "id": "cad.entities.select",
       "version": 1,
       "title": "Nesne seç",
-      "summary": "Bir bölgenin, listenin ya da benzerliğin nesnelerini kalıcı kimlikleriyle verir: pencere, kesişen kutu, çit, çokgen (içindekiler, kesişenler, dışındakiler), daire, noktayı içeren alanlar (küçükten büyüğe), bir tıklamanın adayları, hepsi, verilenler (önceki seçim), ters çevir ve benzerleri (tür, katman, renk, sembol). Seçim süzgecinin türleri ve katman listesiyle süzülür, dışarıda kalanlar sayılır. Yalnız gösterilen nesneler sayılır (gizli katman, katman süzgeci ve zaman penceresi dışarıda); kilitli katmanınkiler seçilir. Araçlar aynı sorguyla seçer. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "summary": "Bir bölgenin, listenin ya da benzerliğin nesnelerini kalıcı kimlikleriyle verir: pencere, kesişen kutu, çit, çokgen (içindekiler, kesişenler, dışındakiler), daire, noktayı içeren alanlar (küçükten büyüğe), bir tıklamanın adayları, hepsi, verilenler (önceki seçim), ters çevir ve benzerleri (tür, katman, renk, sembol). Seçim süzgecinin türleri ve katman listesiyle süzülür, dışarıda kalanlar sayılır. Yalnız gösterilen nesneler sayılır (gizli katman, katman süzgeci ve zaman penceresi dışarıda); kilitli katmanınkiler seçilir. Araçlar aynı sorguyla seçer. modelScope verilirse pafta viewport katmanları, açıklama temsili ve kırpması uygulanır; uid modelin özgün kimliğidir. Çizimi değiştirmez; plan aynı cevabı verir.",
       "aliases": [
         "sec",
         "select"
@@ -1078444,6 +1078472,23 @@
               }
             ]
           },
+          "SheetModelScope": {
+            "additionalProperties": false,
+            "description": "Explicit viewport context for model commands; all command coordinates remain canonical metres.",
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "sheet": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sheet",
+              "item"
+            ],
+            "type": "object"
+          },
           "SimilarCriteria": {
             "description": "What Benzerini seç compares (docs/adr/0187 §4): an object is like an example when it equals it in every\ncriterion that is on; none on: every object.",
             "properties": {
@@ -1078513,6 +1078558,17 @@
               "array",
               "null"
             ]
+          },
+          "modelScope": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetModelScope"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit paper viewport context; world coordinates and returned ids remain those of the one model."
           },
           "region": {
             "$ref": "#/$defs/SelectRegion"
@@ -1078707,7 +1078763,7 @@
       "id": "cad.snap.find",
       "version": 1,
       "title": "Kenet bul",
-      "summary": "Bir tıklamanın kenetleneceği noktayı verir: türü, noktası, nesnenin kalıcı kimliği, nesnedeki yeri (uç, köşe, kenar ortası, merkez, düğüm, kenar üstü) ve blok içindeyse parçanın yolu; all ile bütün adaylar en iyiden (Tab'ın sırası). Cevabın uid, place ve path'i cad.dimensions.create'in place noktasına olduğu gibi verilir: ölçü o yere bağlanır. Araçlar aynı kenet kuralıyla alır; gizli katmanlar kenetlenmez. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "summary": "Bir tıklamanın kenetleneceği noktayı verir: türü, noktası, nesnenin kalıcı kimliği, nesnedeki yeri (uç, köşe, kenar ortası, merkez, düğüm, kenar üstü) ve blok içindeyse parçanın yolu; all ile bütün adaylar en iyiden (Tab'ın sırası). Cevabın uid, place ve path'i cad.dimensions.create'in place noktasına olduğu gibi verilir: ölçü o yere bağlanır. Araçlar aynı kenet kuralıyla alır; gizli katmanlar kenetlenmez. modelScope ile viewport katman/temsil/kırpması aday sırasından önce uygulanır; kaynak uid değişmez. Çizimi değiştirmez; plan aynı cevabı verir.",
       "aliases": [
         "kenetbul",
         "snap"
@@ -1078725,6 +1078781,23 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "SheetModelScope": {
+            "additionalProperties": false,
+            "description": "Explicit viewport context for model commands; all command coordinates remain canonical metres.",
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "sheet": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sheet",
+              "item"
+            ],
+            "type": "object"
+          },
           "SnapKindName": {
             "description": "A snap kind a command can ask for: the drawing's own points (Uzantı, Paralel and Karelaj belong to a running\ncommand's session and are not asked here).",
             "enum": [
@@ -1078800,6 +1078873,17 @@
               "array",
               "null"
             ]
+          },
+          "modelScope": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetModelScope"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit paper viewport context; world coordinates and returned ids remain those of the one model."
           }
         },
         "required": [

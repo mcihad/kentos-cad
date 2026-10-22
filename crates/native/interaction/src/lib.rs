@@ -300,3 +300,6 @@ pub use tool::{
     Tag, TextField, Tone, Tool, View, ViewChange, default_snap_kinds, screen_scale, snap_kinds,
 };
 pub use view_history::{ViewHistory, Viewpoint};
+
+#[cfg(test)]
+mod sheet_view_tests;

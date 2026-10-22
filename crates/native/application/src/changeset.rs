@@ -130,10 +130,15 @@ fn write_steps(
     let mut warnings = Vec::new();
     for (i, step) in input.steps.iter().enumerate() {
         let at = format!("steps[{i}].input");
-        let filled = match fill(&step.input, &outputs, &input, i, &at) {
+        let mut filled = match fill(&step.input, &outputs, &input, i, &at) {
             Ok(v) => v,
             Err(stop) => return stop.into(),
         };
+        if let Some(scope)=&input.model_scope && matches!(step.command.as_str(),"cad.entities.select"|"cad.entities.pick"|"cad.snap.find") {
+            let scope=serde_json::json!(scope);
+            if filled.get("modelScope").is_some_and(|s|!s.is_null() && s!=&scope) {return Stop::failed(error("scope_mismatch","Adımın model kapsamı değişiklik kümesinin kapsamıyla aynı olmalı.".into(),Some(at))).into();}
+            if let Some(object)=filled.as_object_mut() {object.insert("modelScope".into(),scope);}
+        }
         let answer = match registry::run(cx, &step.command, CallOp::Execute, filled) {
             Ok(v) => v,
             Err(unrun) => {

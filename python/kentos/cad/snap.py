@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    SheetModelScope,
     SnapFind,
     SnapFound,
     SnapKindName,
@@ -29,7 +30,9 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
     düğüm, kenar üstü) ve blok içindeyse parçanın yolu; all ile bütün adaylar en iyiden
     (Tab'ın sırası). Cevabın uid, place ve path'i cad.dimensions.create'in place
     noktasına olduğu gibi verilir: ölçü o yere bağlanır. Araçlar aynı kenet kuralıyla
-    alır; gizli katmanlar kenetlenmez. Çizimi değiştirmez; plan aynı cevabı verir.
+    alır; gizli katmanlar kenetlenmez. modelScope ile viewport katman/temsil/kırpması
+    aday sırasından önce uygulanır; kaynak uid değişmez. Çizimi değiştirmez; plan aynı
+    cevabı verir.
     """
     __slots__ = ()
     id = "cad.snap.find"
@@ -50,6 +53,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
         all: bool | Unset = UNSET,
         from_: Vec2Like | None | Unset = UNSET,
         kinds: Sequence[SnapKindName | SnapKindNameName] | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> SnapFound:
@@ -58,7 +62,8 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
         ve blok içindeyse parçanın yolu; all ile bütün adaylar en iyiden (Tab'ın sırası).
         Cevabın uid, place ve path'i cad.dimensions.create'in place noktasına olduğu gibi
         verilir: ölçü o yere bağlanır. Araçlar aynı kenet kuralıyla alır; gizli katmanlar
-        kenetlenmez. Çizimi değiştirmez; plan aynı cevabı verir.
+        kenetlenmez. modelScope ile viewport katman/temsil/kırpması aday sırasından önce
+        uygulanır; kaynak uid değişmez. Çizimi değiştirmez; plan aynı cevabı verir.
 
         Args:
             doc: The drawing it works on.
@@ -67,6 +72,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
             all: Every candidate best first (Tab's order, docs/adr/0271), not only the snap.
             from_: The running command's last point: Dik's foot and Teğet's point are measured from it. Unit: length.
             kinds: The kinds that apply; absent: the settings' kinds on at first (all but Yakın and Ağırlık merkezi).
+            model_scope: Explicit paper viewport context; world coordinates and returned ids remain those of the one model.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -85,6 +91,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
             all=all,
             from_=_opt(from_, lambda x: Vec2.of(x)),
             kinds=_opt(kinds, lambda x: list(x)),
+            model_scope=model_scope,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -97,6 +104,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
         all: bool | Unset = UNSET,
         from_: Vec2Like | None | Unset = UNSET,
         kinds: Sequence[SnapKindName | SnapKindNameName] | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
     ) -> SnapFound:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -107,6 +115,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
             all=all,
             from_=_opt(from_, lambda x: Vec2.of(x)),
             kinds=_opt(kinds, lambda x: list(x)),
+            model_scope=model_scope,
         ))
 
     def validate(
@@ -119,6 +128,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
         all: bool | Unset = UNSET,
         from_: Vec2Like | None | Unset = UNSET,
         kinds: Sequence[SnapKindName | SnapKindNameName] | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -129,6 +139,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
             all=all,
             from_=_opt(from_, lambda x: Vec2.of(x)),
             kinds=_opt(kinds, lambda x: list(x)),
+            model_scope=model_scope,
         ))
 
     def answer(
@@ -141,6 +152,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
         all: bool | Unset = UNSET,
         from_: Vec2Like | None | Unset = UNSET,
         kinds: Sequence[SnapKindName | SnapKindNameName] | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -156,6 +168,7 @@ class _SnapFind(LocalCommand[SnapFind, SnapFound, SnapFound]):
             all=all,
             from_=_opt(from_, lambda x: Vec2.of(x)),
             kinds=_opt(kinds, lambda x: list(x)),
+            model_scope=model_scope,
         ), op=op, request_id=request_id, expected=expected)
 
 

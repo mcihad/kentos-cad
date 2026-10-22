@@ -80,6 +80,7 @@ pub fn query_in(
     region: SelectRegion,
 ) -> Option<Selected> {
     let input = EntitiesSelect {
+            model_scope:spatial.sheet_model_scope(),
         region,
         kinds: kinds.map(entities_select::kinds_of_mask),
         layers: None,

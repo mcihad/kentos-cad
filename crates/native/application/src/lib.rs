@@ -181,6 +181,7 @@ mod cad_source;
 pub mod file_import;
 pub mod file_import_dwg;
 pub mod geometry_store;
+pub mod viewport_scope;
 pub mod import_apply;
 pub mod layer_filter;
 pub mod layers_compose;

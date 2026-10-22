@@ -3,12 +3,16 @@ use crate::{GroundPoint, Item, ItemKind, MapView, Result, SheetError, SheetBook}
 use crate::projection::Transform;
 use crate::units::{RectUm, sin_cos};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Viewport {
+    pub sheet: Option<String>,
     pub item: String,
     pub content: RectUm,
     pub center: GroundPoint,
     pub denominator: f64,
+    pub annotation_scale: f64,
+    pub layers: crate::kinds::MapLayers,
+    pub layer_overrides: Vec<crate::kinds::LayerOverride>,
     pub rotation: i32,
     pivot: [f64; 2],
     frame_rotation: i32,
@@ -34,7 +38,9 @@ impl Viewport {
             .iter()
             .find(|i| i.id == id)
             .ok_or_else(|| SheetError::new("scope_mismatch", "Görünüm bu paftada değil."))?;
-        Self::of_with_views(item, views)
+        let mut viewport = Self::of_with_views(item, views)?;
+        viewport.sheet = Some(sheet.to_owned());
+        Ok(viewport)
     }
     pub fn of(item: &Item) -> Result<Self> {
         Self::of_with_views(item, &[])
@@ -57,15 +63,34 @@ impl Viewport {
             .center
             .ok_or_else(|| SheetError::new("unplaced_viewport", "Görünümün model merkezi yok."))?;
         Ok(Self {
+            sheet: None,
             item: item.id.clone(),
             content: crate::display::map::content_rect(item, map),
             center,
             denominator: view.denominator(),
+            annotation_scale: map.annotation_scale.unwrap_or(view.denominator()),
+            layers: map.layers.clone(),
+            layer_overrides: map.layer_overrides.clone(),
             rotation: view.rotation,
             pivot: item.frame.center(),
             frame_rotation: item.rotation,
             clip: map.clip.clone(),
         })
+    }
+    /// The model boundary, unrotated from the paper's frame. Original model coordinates are retained.
+    pub fn model_boundary(&self) -> Vec<[f64; 2]> {
+        self.clip
+            .paper_points(&self.content)
+            .into_iter()
+            .map(|p| self.transform().inverse(p))
+            .collect()
+    }
+    pub fn contains_model(&self, point: [f64; 2]) -> bool {
+        let p = self.transform().point(point);
+        self.clip.contains(
+            (p[0] - f64::from(self.content.left)) / f64::from(self.content.width),
+            (p[1] - f64::from(self.content.top)) / f64::from(self.content.height),
+        )
     }
     fn rotate(&self, point: [f64; 2], angle: i32) -> [f64; 2] {
         let (s, c) = sin_cos(angle);

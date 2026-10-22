@@ -1773,3 +1773,179 @@ fn sheet15_annotation_layer_screens() {
             .unwrap();
     }
 }
+
+fn identity_scope_app(index: usize, theme: &str, text: u32) -> App {
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/viewport-identities.json"
+    ))
+    .unwrap();
+    let c = &data["cases"][index];
+    let snapshot: kentos_commands::DocumentSnapshotV1 =
+        serde_json::from_value(c["model"].clone()).unwrap();
+    let mut model = kentos_domain::Document::from_snapshot(snapshot).unwrap();
+    let answer = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(&mut model),
+        "cad.sheets.edit",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"ops":[{"op":"addSheet","sheet":c["sheet"]},c["operation"]]}),
+    )
+    .unwrap();
+    assert_eq!(answer["status"], "completed");
+    let (mut app, _store) = app_with_store("sheet16-identities");
+    app.settings.choose(&[
+        ("appearance.theme", serde_json::json!(theme)),
+        ("appearance.textSize", serde_json::json!(text)),
+    ]);
+    app.apply_settings();
+    let doc = Document::from_v2(model.to_snapshot_v2(), None).unwrap();
+    let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    drive(&mut app, task);
+    sheet(&mut app, Sheet::Tab(1));
+    app
+}
+#[test]
+fn sheet_model_scope_uses_visible_source_ids_and_new_text_takes_the_physical_paper_scale() {
+    let mut app = identity_scope_app(8, "light", 13);
+    sheet(&mut app, Sheet::EnterModel("viewport".into()));
+    assert_eq!(app.document.as_ref().unwrap().model.entities().count(), 5);
+    let at = app
+        .document
+        .as_ref()
+        .unwrap()
+        .model
+        .get(kentos_domain::Slot(5))
+        .unwrap();
+    let kentos_commands::Entity::Point(p) = at else {
+        panic!()
+    };
+    let p = [p.p.x, p.p.y];
+    model_click(&mut app, p, false);
+    model_click(&mut app, p, true);
+    assert!(app.selection.contains(kentos_domain::Slot(5)));
+    app.cancel();
+    app.draft.snap = false;
+    let task = app.update(Message::Run("tool.text"));
+    drive(&mut app, task);
+    model_click(&mut app, [-1., 0.], false);
+    assert!(app.text_field.is_some());
+    let task = app.update(Message::TextField(crate::text_field::Event::Input(
+        "PAPER37".into(),
+    )));
+    drive(&mut app, task);
+    let task = app.update(Message::TextField(crate::text_field::Event::Keep));
+    drive(&mut app, task);
+    let doc = app.document.as_ref().unwrap();
+    let t = doc
+        .model
+        .entities()
+        .find_map(|e| match e {
+            kentos_commands::Entity::Text(t) if t.text == "PAPER37" => Some(t),
+            _ => None,
+        })
+        .unwrap();
+    assert!(
+        (t.height
+            - 37.5
+                * doc
+                    .model
+                    .settings()
+                    .annotation_mm(kentos_commands::AnnotationKind::Text)
+                / 1000.)
+            .abs()
+            < 1e-12
+    );
+    app.undo();
+    assert_eq!(app.document.as_ref().unwrap().model.entities().count(), 5);
+    sheet(&mut app, Sheet::ReturnPaper);
+    app.sync_sheet_model_index();
+    assert!(
+        app.spatial
+            .store()
+            .shown(app.spatial.store().get(4.).unwrap())
+    );
+}
+#[test]
+#[ignore="GPU images, run alone"]
+fn sheet16_original_identity_screens() {
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme, text, w, h) in [
+        ("light", 13, 1440., 900.),
+        ("dark", 13, 1440., 900.),
+        ("dark", 18, 1100., 650.),
+    ] {
+        let mut app = identity_scope_app(12, theme, text);
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(w, h)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        sheet(&mut app, Sheet::EnterModel("viewport".into()));
+        let point = app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .get(kentos_domain::Slot(5))
+            .unwrap();
+        let kentos_commands::Entity::Point(p) = point else {
+            panic!()
+        };
+        let at = [p.p.x, p.p.y];
+        model_click(&mut app, at, false);
+        model_click(&mut app, at, true);
+        snap.settle(&mut app, App::view, &mut update);
+        assert!(app.selection.contains(kentos_domain::Slot(5)));
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet16-source-selection-{theme}-{text}.png")))
+            .unwrap();
+        assert_eq!(app.document.as_ref().unwrap().model.entities().count(), 5);
+    }
+}
+
+#[test]
+fn an_active_viewport_index_cannot_hide_source_objects_in_another_map_or_export() {
+    use kentos_sheet_ui::MapPainter;
+    let mut app = identity_scope_app(12, "light", 13);
+    let mut map = app
+        .sheets
+        .export_list()
+        .unwrap()
+        .prims
+        .into_iter()
+        .find_map(|p| match p {
+            kentos_sheet::display::Prim::Map(m) => Some(m),
+            _ => None,
+        })
+        .unwrap();
+    map.item = "other-unclipped-source-view".into();
+    map.clip_shape = kentos_sheet::clip::Clip::Frame;
+    map.layer_overrides.clear();
+    map.layers = Default::default();
+    let content = |app: &App| {
+        let request =
+            kentos_sheet_ui::MapRequest::of(&map, iced::Size::new(1000., 600.), 0.003, true);
+        app.sheet_painter()
+            .vector(&request)
+            .expect("source vector content")
+    };
+    let before = content(&app);
+    sheet(&mut app, Sheet::EnterModel("viewport".into()));
+    assert!(!app.spatial.store().view_shown(4.));
+    assert_eq!(
+        content(&app),
+        before,
+        "the model interaction scope must not become another viewport's data source"
+    );
+    assert_eq!(app.document.as_ref().unwrap().model.entities().count(), 5);
+}
+
+#[test]
+fn a_lost_active_source_returns_to_paper_instead_of_using_an_unscoped_model_camera() {
+    let mut app=identity_scope_app(12,"light",13);let camera=app.viewport.camera;
+    let view=kentos_commands::NamedView{id:"lost-view".into(),name:"Plan".into(),center:kentos_commands::Vec2{x:0.,y:0.},width:19.5,height:11.5,twist:0.};
+    let mut ctx=app.sheets.context().clone();ctx.named_views=vec![view.clone()];app.sheets.set_context(ctx.clone());let mut book=app.sheets.book().clone();if let kentos_sheet::ItemKind::Map(m)=&mut book.sheets[0].items[0].kind {m.source=kentos_sheet::viewport::Source::ViewLink{view};}
+    app.sheets.load(book);app.sheets.update(Sheet::Tab(1));app.sheets.update(Sheet::EnterModel("viewport".into()));app.sync_sheet_model_camera();assert!(app.spatial.has_sheet_view());
+    ctx.named_views.clear();app.sheets.set_context(ctx);app.sync_sheet_model_camera();assert!(app.sheets.model_scope().is_none());assert!(!app.spatial.has_sheet_view());assert_eq!(app.viewport.camera,camera);
+}

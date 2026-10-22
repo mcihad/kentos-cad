@@ -716,3 +716,63 @@ fn twenty_viewport_annotation_and_layer_operations_use_the_catalog_and_undo() {
         let back=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));assert_eq!(back["output"]["book"],before["output"]["book"]);
     }
 }
+
+#[test]
+fn twenty_agent_viewport_queries_return_source_uids_and_ignore_clipped_snap_points() {
+    let data: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/viewport-identities.json"
+    ))
+    .unwrap();
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-sheet16-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    for (index, c) in data["cases"].as_array().unwrap().iter().enumerate() {
+        let path = dir.join(format!("{index}.kcad"));
+        std::fs::write(&path, serde_json::to_vec(&c["model"]).unwrap()).unwrap();
+        let mut server = Server::new();
+        let opened = call(&mut server, "drawing.open", json!({"path":path}));
+        let drawing = opened["drawing"].as_str().unwrap();
+        let normal = call(
+            &mut server,
+            "cad.entities.select",
+            json!({"drawing":drawing,"region":{"kind":"all"}}),
+        );
+        let ids = normal["output"]["uids"].as_array().unwrap();
+        assert_eq!(ids.len(), 5);
+        call(
+            &mut server,
+            "cad.sheets.edit",
+            json!({"drawing":drawing,"ops":[{"op":"addSheet","sheet":c["sheet"]},c["operation"]]}),
+        );
+        let scope = json!({"sheet":"page","item":"viewport"});
+        let selected = call(
+            &mut server,
+            "cad.entities.select",
+            json!({"drawing":drawing,"modelScope":scope,"region":{"kind":"all"}}),
+        );
+        let expected = c["expected"]["selectedSlots"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|n| ids[n.as_u64().unwrap() as usize - 1].clone())
+            .collect::<Vec<_>>();
+        assert_eq!(selected["output"]["uids"], json!(expected));
+        let mut input = c["snap"].clone();
+        input.as_object_mut().unwrap().remove("expectedSlot");
+        input["drawing"] = json!(drawing);
+        input["modelScope"] = scope.clone();
+        let answer = call(&mut server, "cad.snap.find", input);
+        assert_eq!(answer["output"]["snaps"][0]["uid"], ids[4]);
+        let inherited = call(
+            &mut server,
+            "cad.changeset.apply",
+            json!({"drawing":drawing,"modelScope":scope,"steps":[{"command":"cad.entities.select","input":{"region":{"kind":"all"}}}]}),
+        );
+        assert_eq!(
+            inherited["output"]["steps"][0]["output"]["uids"],
+            json!(expected)
+        );
+        let summary = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+        assert_eq!(summary["objects"], 5);
+    }
+    std::fs::remove_dir_all(dir).unwrap();
+}

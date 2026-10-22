@@ -82,7 +82,7 @@ const STYLED_KEPT: usize = 4;
 /// texts, dimensions and leaders as that scale says, and its geometry store; none when that is the drawing.
 struct Scaled {
     /// The drawing (its session and state) and the scale.
-    key: (u64, u64, u64, u64),
+    key: (u64, u64, u64, u64, bool),
     view: Option<(Document, Spatial)>,
 }
 
@@ -132,9 +132,21 @@ impl SheetMaps {
 impl SheetMaps {
     /// The drawing as the maps at `scale` draw it (docs/adr/0323 §2), from the copies kept; none when
     /// that is the drawing itself (no annotative object draws otherwise there).
-    fn scaled(&self, drawing: &Document, view:&kentos_sheet::display::MapViewPrim) -> Option<Rc<Scaled>> {
-        let scale=view.scale; let annotation=view.annotation_denominator();
-        let key = (drawing.session, drawing.model.generation(), scale.to_bits(),annotation.to_bits());
+    fn scaled(
+        &self,
+        drawing: &Document,
+        view: &kentos_sheet::display::MapViewPrim,
+        unscoped: bool,
+    ) -> Option<Rc<Scaled>> {
+        let scale = view.scale;
+        let annotation = view.annotation_denominator();
+        let key = (
+            drawing.session,
+            drawing.model.generation(),
+            scale.to_bits(),
+            annotation.to_bits(),
+            unscoped,
+        );
         let kept = self.scaled.borrow().iter().find(|s| s.key == key).cloned();
         let at = kept.unwrap_or_else(|| {
             let at = scale.max(1e-6);
@@ -145,7 +157,7 @@ impl SheetMaps {
                 .has_annotative()
                 .then(|| drawing.model.at_scale(annotation))
                 .flatten()
-                .or_else(|| walls.then(|| drawing.model.reading_copy()))
+                .or_else(|| (walls || unscoped).then(|| drawing.model.reading_copy()))
                 .map(|model| {
                     let mut spatial = Spatial::new();
                     spatial.set_wall_scale(Some(at));
@@ -601,8 +613,14 @@ type Source<'s> = (Option<&'s Document>, &'s Spatial);
 impl SheetPainter<'_> {
     /// The drawing and store a map at `scale` draws from (docs/adr/0323 §2): the copy at that scale
     /// when an annotative object draws otherwise there; `keep` holds the copy while it is used.
-    fn source<'s>(&'s self, view:&kentos_sheet::display::MapViewPrim, keep: &'s mut Option<Rc<Scaled>>) -> Source<'s> {
-        *keep = self.drawing.and_then(|d| self.maps.scaled(d, view));
+    fn source<'s>(
+        &'s self,
+        view: &kentos_sheet::display::MapViewPrim,
+        keep: &'s mut Option<Rc<Scaled>>,
+    ) -> Source<'s> {
+        *keep = self
+            .drawing
+            .and_then(|d| self.maps.scaled(d, view, self.spatial.has_sheet_view()));
         match keep.as_ref().and_then(|s| s.view.as_ref()) {
             Some((d, sp)) => (Some(d), sp),
             None => (self.drawing, self.spatial),
@@ -1302,6 +1320,7 @@ impl App {
         };
         if !same {
             self.sheets.set_context(ctx);
+            self.sync_sheet_model_camera();
         }
         self.follow_sheet_data();
     }
@@ -1353,9 +1372,10 @@ impl App {
             return;
         }
         self.sheet_data_key = Some(key);
+        let unscoped=self.spatial.has_sheet_view().then(||Spatial::of(&doc.model));
         let data = kentos_plot::inputs::sheet_data(
             &doc.model,
-            &self.spatial,
+            unscoped.as_ref().unwrap_or(&self.spatial),
             &self.styles.library,
             self.selection.ids(),
             book,
@@ -1433,7 +1453,21 @@ impl App {
         self.sheet_effects(effects)
     }
 
+    pub(crate) fn sync_sheet_model_index(&mut self) {
+        if let Some(doc) = &self.document {
+            self.spatial
+                .set_sheet_view(&doc.model, self.sheets.active_viewport());
+            self.spatial.sync(&doc.model);
+        }
+    }
+
     pub(crate) fn sync_sheet_model_camera(&mut self) {
+        if self.sheets.model_scope().is_some() && self.sheets.active_viewport().is_none() {
+            let _=self.sheets.update(kentos_sheet_ui::Message::ReturnPaper);
+            self.sheet_tab=true;
+            self.output("Görünüm kaynağı artık çözülemiyor; model düzenlemesi kapatıldı. Kaynak bağını onarın.");
+        }
+        self.sync_sheet_model_index();
         if let Some(v) = self.sheets.model_camera() {
             self.viewport
                 .sheet_saved_camera

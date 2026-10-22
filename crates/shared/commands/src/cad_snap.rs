@@ -51,6 +51,10 @@ pub enum SnapKindName {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SnapFind {
+    /// Explicit paper viewport context; world coordinates and returned ids remain those of the one model.
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    #[cfg_attr(feature="ts",ts(optional))]
+    pub model_scope:Option<crate::SheetModelScope>,
     /// Where the click is.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,

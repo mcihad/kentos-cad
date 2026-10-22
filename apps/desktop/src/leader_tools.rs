@@ -256,6 +256,7 @@ impl App {
                 let aperture = 10.0 / self.viewport.camera.scale.max(1e-9);
                 let tip = self.document.as_ref().and_then(|d| {
                     let input = SnapFind {
+            model_scope:self.spatial.sheet_model_scope(),
                         at: p,
                         aperture,
                         kinds: None,

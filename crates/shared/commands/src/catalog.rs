@@ -8082,7 +8082,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             version: crate::CAD_ENTITIES_SELECT_VERSION,
             title: "Nesne seç".into(),
             summary: "Bir bölgenin, listenin ya da benzerliğin nesnelerini kalıcı kimlikleriyle verir: pencere, kesişen kutu, çit, çokgen (içindekiler, kesişenler, dışındakiler), daire, noktayı içeren alanlar (küçükten büyüğe), bir tıklamanın adayları, hepsi, verilenler (önceki seçim), ters çevir ve benzerleri (tür, katman, renk, sembol). \
-                      Seçim süzgecinin türleri ve katman listesiyle süzülür, dışarıda kalanlar sayılır. Yalnız gösterilen nesneler sayılır (gizli katman, katman süzgeci ve zaman penceresi dışarıda); kilitli katmanınkiler seçilir. Araçlar aynı sorguyla seçer. Çizimi değiştirmez; plan aynı cevabı verir."
+                      Seçim süzgecinin türleri ve katman listesiyle süzülür, dışarıda kalanlar sayılır. Yalnız gösterilen nesneler sayılır (gizli katman, katman süzgeci ve zaman penceresi dışarıda); kilitli katmanınkiler seçilir. Araçlar aynı sorguyla seçer. modelScope verilirse pafta viewport katmanları, açıklama temsili ve kırpması uygulanır; uid modelin özgün kimliğidir. Çizimi değiştirmez; plan aynı cevabı verir."
                 .into(),
             aliases: vec!["sec".into(), "select".into()],
             effect: CommandEffect::Query,
@@ -8118,7 +8118,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             version: crate::CAD_SNAP_FIND_VERSION,
             title: "Kenet bul".into(),
             summary: "Bir tıklamanın kenetleneceği noktayı verir: türü, noktası, nesnenin kalıcı kimliği, nesnedeki yeri (uç, köşe, kenar ortası, merkez, düğüm, kenar üstü) ve blok içindeyse parçanın yolu; all ile bütün adaylar en iyiden (Tab'ın sırası). \
-                      Cevabın uid, place ve path'i cad.dimensions.create'in place noktasına olduğu gibi verilir: ölçü o yere bağlanır. Araçlar aynı kenet kuralıyla alır; gizli katmanlar kenetlenmez. Çizimi değiştirmez; plan aynı cevabı verir."
+                      Cevabın uid, place ve path'i cad.dimensions.create'in place noktasına olduğu gibi verilir: ölçü o yere bağlanır. Araçlar aynı kenet kuralıyla alır; gizli katmanlar kenetlenmez. modelScope ile viewport katman/temsil/kırpması aday sırasından önce uygulanır; kaynak uid değişmez. Çizimi değiştirmez; plan aynı cevabı verir."
                 .into(),
             aliases: vec!["kenetbul".into(), "snap".into()],
             effect: CommandEffect::Query,

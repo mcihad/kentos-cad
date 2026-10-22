@@ -76,6 +76,8 @@ impl Pointer {
 
 /// The drawing area as a tool needs it: the camera's mapping, nothing else.
 pub trait View {
+    /// Physical viewport denominator when editing through paper, independent of screen zoom.
+    fn paper_scale(&self)->Option<f64> {None}
     /// Where a world point is on the area, in logical pixels.
     fn to_screen(&self, p: Vec2) -> [f64; 2];
     /// How much world `px` logical pixels span at the current zoom.
@@ -1309,7 +1311,7 @@ impl Context<'_> {
     /// The same in the drawing at the plot scale, metres (`mm / 1000 ×
     /// scale`, the expression every tool writes with).
     pub fn annotation_height(&self, kind: AnnotationKind) -> f64 {
-        kentos_commands::paper_height(self.annotation_mm(kind), self.doc.settings().plot_scale)
+        kentos_commands::paper_height(self.annotation_mm(kind), self.view.paper_scale().unwrap_or(self.doc.settings().plot_scale))
     }
 
     /// The symbol a new object takes: its object template's (docs/adr/0176

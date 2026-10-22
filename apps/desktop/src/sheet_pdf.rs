@@ -37,6 +37,7 @@ impl App {
         let open = self.sheets.open_sheet().map(|s| s.id.clone());
         if let Some(doc) = &self.document {
             let book = self.sheets.book();
+            let unscoped=self.spatial.has_sheet_view().then(||kentos_interaction::Spatial::of(&doc.model));
             for id in self.sheets.pdf_sheets() {
                 if Some(&id) == open.as_ref() {
                     continue;
@@ -47,7 +48,7 @@ impl App {
                 let list = kentos_sheet::display::display_list(book, &id, &render).ok();
                 let data = kentos_plot::inputs::sheet_data(
                     &doc.model,
-                    &self.spatial,
+                    unscoped.as_ref().unwrap_or(&self.spatial),
                     &self.styles.library,
                     self.selection.ids(),
                     book,

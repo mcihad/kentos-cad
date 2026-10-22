@@ -201,9 +201,10 @@ pub(crate) fn objects_of<'a>(
         let Some(e) = doc.model.get(slot) else {
             continue;
         };
-        match spatial.and_then(|s| s.pieces(e)) {
-            Some(placed) => pieces.extend(placed),
-            None => objects.push(e),
+        match spatial.map(|s|s.represented(e)).unwrap_or_else(||Some(std::borrow::Cow::Borrowed(e))) {
+            None=>{},
+            Some(std::borrow::Cow::Owned(e))=>pieces.push(e),
+            Some(std::borrow::Cow::Borrowed(e))=>match spatial.and_then(|s|s.pieces(e)) {Some(placed)=>pieces.extend(placed),None=>objects.push(e)},
         }
     }
     let pieces: &'a Vec<Entity> = pieces;

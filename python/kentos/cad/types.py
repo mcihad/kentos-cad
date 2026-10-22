@@ -17446,10 +17446,12 @@ class EntitiesPick(_Model):
         at: Where the click is. Unit: length.
         tolerance: How far from `at` an object may be, metres (a tool's is its pixels at the view's scale). Unit: length.
         kinds: Seçim süzgeci: only these kinds; absent: every kind.
+        model_scope: Explicit paper viewport; results keep original model identities.
     """
     at: Vec2
     tolerance: float
     kinds: list[SelectKind | SelectKindName] | None | Unset = UNSET
+    model_scope: SheetModelScope | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -17457,6 +17459,8 @@ class EntitiesPick(_Model):
         out["tolerance"] = float(self.tolerance)
         if self.kinds is not UNSET:
             out["kinds"] = None if self.kinds is None else [_enum_out(e0) for e0 in self.kinds]
+        if self.model_scope is not UNSET:
+            out["modelScope"] = None if self.model_scope is None else self.model_scope.to_json()
         return out
 
     @classmethod
@@ -17465,6 +17469,7 @@ class EntitiesPick(_Model):
             at=Vec2.from_json(data["at"]),
             tolerance=float(data["tolerance"]),
             kinds=UNSET if "kinds" not in data else None if data["kinds"] is None else [_enum_in(SelectKind, e0) for e0 in data["kinds"]],
+            model_scope=UNSET if "modelScope" not in data else None if data["modelScope"] is None else SheetModelScope.from_json(data["modelScope"]),
         )
 
 
@@ -17653,10 +17658,12 @@ class EntitiesSelect(_Model):
     Attributes:
         kinds: Seçim süzgeci: only these kinds; absent: every kind.
         layers: Only on these layers (their ids); absent: every layer.
+        model_scope: Explicit paper viewport context; world coordinates and returned ids remain those of the one model.
     """
     region: SelectRegion
     kinds: list[SelectKind | SelectKindName] | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
+    model_scope: SheetModelScope | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -17665,6 +17672,8 @@ class EntitiesSelect(_Model):
             out["kinds"] = None if self.kinds is None else [_enum_out(e0) for e0 in self.kinds]
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else list(self.layers)
+        if self.model_scope is not UNSET:
+            out["modelScope"] = None if self.model_scope is None else self.model_scope.to_json()
         return out
 
     @classmethod
@@ -17673,6 +17682,7 @@ class EntitiesSelect(_Model):
             region=SelectRegion.from_json(data["region"]),
             kinds=UNSET if "kinds" not in data else None if data["kinds"] is None else [_enum_in(SelectKind, e0) for e0 in data["kinds"]],
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            model_scope=UNSET if "modelScope" not in data else None if data["modelScope"] is None else SheetModelScope.from_json(data["modelScope"]),
         )
 
 
@@ -44301,12 +44311,14 @@ class SnapFind(_Model):
         all: Every candidate best first (Tab's order, docs/adr/0271), not only the snap.
         from_: The running command's last point: Dik's foot and Teğet's point are measured from it. Unit: length.
         kinds: The kinds that apply; absent: the settings' kinds on at first (all but Yakın and Ağırlık merkezi).
+        model_scope: Explicit paper viewport context; world coordinates and returned ids remain those of the one model.
     """
     at: Vec2
     aperture: float
     all: bool | Unset = UNSET
     from_: Vec2 | None | Unset = UNSET
     kinds: list[SnapKindName | SnapKindNameName] | None | Unset = UNSET
+    model_scope: SheetModelScope | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -44318,6 +44330,8 @@ class SnapFind(_Model):
             out["from"] = None if self.from_ is None else _vec2_out(self.from_)
         if self.kinds is not UNSET:
             out["kinds"] = None if self.kinds is None else [_enum_out(e0) for e0 in self.kinds]
+        if self.model_scope is not UNSET:
+            out["modelScope"] = None if self.model_scope is None else self.model_scope.to_json()
         return out
 
     @classmethod
@@ -44328,6 +44342,7 @@ class SnapFind(_Model):
             all=data.get("all", UNSET),
             from_=UNSET if "from" not in data else None if data["from"] is None else Vec2.from_json(data["from"]),
             kinds=UNSET if "kinds" not in data else None if data["kinds"] is None else [_enum_in(SnapKindName, e0) for e0 in data["kinds"]],
+            model_scope=UNSET if "modelScope" not in data else None if data["modelScope"] is None else SheetModelScope.from_json(data["modelScope"]),
         )
 
 
