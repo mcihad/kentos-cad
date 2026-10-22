@@ -568,11 +568,14 @@ pub const SCHEMA_WITH_LINEAR_EVENTS: u32 = 97;
 /// Schema 98 (docs/adr/0583): a layer's `sourceCrs` (the system its objects came from) and the settings' `mapSrid`
 /// (the map's system), written only when a layer has one or the project has one.
 pub const SCHEMA_WITH_SOURCE_CRS: u32 = 98;
+/// Schema 99 (docs/adr/0589): a topology exception's `digest`, its objects' geometry when it was marked, written only
+/// when an exception has one.
+pub const SCHEMA_WITH_EXCEPTION_DIGESTS: u32 = 99;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 97] = [
+pub const SCHEMAS: [u32; 98] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -670,6 +673,7 @@ pub const SCHEMAS: [u32; 97] = [
     SCHEMA_WITH_TIMED_CLOSURES,
     SCHEMA_WITH_LINEAR_EVENTS,
     SCHEMA_WITH_SOURCE_CRS,
+    SCHEMA_WITH_EXCEPTION_DIGESTS,
 ];
 
 /// The file a drawing is saved as.

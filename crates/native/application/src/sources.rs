@@ -1520,6 +1520,45 @@ impl BandJob {
     }
 }
 
+/// The rows round a bound layer's part (its band) with their lasting ids, in the project's system, that the layer
+/// holds no object for (docs/adr/0589 §1): a file's from the version the layer matches, a database's as the table
+/// now holds them; none for a layer without a part; why they could not be read.
+pub(crate) fn band_rows(
+    doc: &Document,
+    link: &SourceLink,
+) -> Option<Result<Vec<(Uuid, kentos_commands::Entity)>, String>> {
+    let extent = link.extent?;
+    let held: HashSet<Uuid> = doc
+        .by_layer_with_uids(&link.layer)
+        .map(|(u, _)| u)
+        .collect();
+    let read = || -> Result<Vec<(Uuid, kentos_commands::Entity)>, String> {
+        let mover = mover_in(doc.settings(), link.srid)?;
+        let area = table_area(Some(band_of(&extent)), mover.as_ref())
+            .map_err(|()| "bant tablonun sistemine çevrilemedi".to_owned())?;
+        let stored = match origin_of(link) {
+            Origin::File(path) => {
+                if !path.is_file() {
+                    return Err(format!("“{}” dosyası yok", path.display()));
+                }
+                let stored = load(path, &link.table, area)?;
+                if stored.sha256 != link.revision {
+                    return Err("dosya katmanın son eşleştiği sürümden farklı".into());
+                }
+                stored
+            }
+            Origin::Database(address) => load_database(address, &link.table, at_one("layer"), area)
+                .map_err(|stop| stop.into_error().message)?,
+        };
+        Ok(stored
+            .in_project(mover.as_ref())
+            .into_iter()
+            .filter(|(u, _)| !held.contains(u))
+            .collect())
+    };
+    Some(read())
+}
+
 /// The rows a band read gave, or why it could not.
 pub type BandRows = Result<Vec<kentos_commands::Entity>, String>;
 

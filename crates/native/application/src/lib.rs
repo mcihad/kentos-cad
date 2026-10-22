@@ -278,6 +278,8 @@ pub mod subnetworks;
 pub mod subnetworks_update;
 pub mod style_tables;
 pub mod styles_edit;
+pub mod topology_check;
+pub mod topology_exceptions;
 pub mod topology_follow;
 pub mod transform;
 pub mod trim;
@@ -803,6 +805,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_SUBNETWORKS_UPDATE,
         kentos_commands::CAD_SUBNETWORKS_UPDATE_VERSION,
+    ),
+    // Topolojiyi denetle ve istisnalar ([`topology_check`], [`topology_exceptions`], docs/adr/0589).
+    (
+        kentos_commands::CAD_TOPOLOGY_CHECK,
+        kentos_commands::CAD_TOPOLOGY_CHECK_VERSION,
+    ),
+    (
+        kentos_commands::CAD_TOPOLOGY_EXCEPTIONS,
+        kentos_commands::CAD_TOPOLOGY_EXCEPTIONS_VERSION,
     ),
     // Adres verisini denetle ([`addresses_check`], docs/adr/0579).
     (

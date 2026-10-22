@@ -4306,6 +4306,20 @@ ToleranceKindName = Literal["symmetric", "deviation", "limits"]
 """The names of :class:`ToleranceKind`, for a plain string."""
 
 
+class TopologyExceptionOperation(_StrEnum):
+    """What `cad.topology.exceptions` does to the findings it names.
+
+    - ``mark``: İstisna yap: the finding left on purpose, bound to its objects' geometry as it is now (a lapsed exception is
+    - ``unmark``: İstisnayı kaldır.
+    """
+    MARK = "mark"
+    UNMARK = "unmark"
+
+
+TopologyExceptionOperationName = Literal["mark", "unmark"]
+"""The names of :class:`TopologyExceptionOperation`, for a plain string."""
+
+
 class TopologyRuleKind(_StrEnum):
     """The thirteen kinds (docs/adr/0202 §1–§2).
 
@@ -47348,6 +47362,113 @@ class ToolParameter(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TopologyCheck(_Model):
+    """Input of `cad.topology.check` v1: the project's rules (`rules`: some of them by id; none: all) over the objects of
+    the layers they name. A bound layer's part (docs/adr/0510) takes the rows of its source round the area as
+    neighbours (the band, docs/adr/0578). The findings listed are the first `limit` (1–100 000, default 1 000) in the
+    rules' order; `preview` previews one fix of one finding without writing it.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_limit`, `topology_rule_not_found` (`rules[i]`),
+    `finding_not_found` (`preview.key`), `fix_unavailable` (`preview.fix`: the finding does not offer it, the fix has
+    no answer, or it would change a row outside the part). Warnings: `topology_incomplete` (a part's neighbours could
+    not all be read: the check is not complete, no layer of it is said to be clean), `exception_lapsed` (an exception
+    whose objects' geometry changed: its finding is open again).
+    Attributes:
+        limit: Unit: count.
+    """
+    limit: int | None | Unset = UNSET
+    preview: TopologyFixAsk | None | Unset = UNSET
+    rules: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.preview is not UNSET:
+            out["preview"] = None if self.preview is None else self.preview.to_json()
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else list(self.rules)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyCheck:
+        return cls(
+            limit=data.get("limit", UNSET),
+            preview=UNSET if "preview" not in data else None if data["preview"] is None else TopologyFixAsk.from_json(data["preview"]),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else list(data["rules"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyChecked(_Model):
+    """Output of `cad.topology.check` v1, and its plan.
+    Attributes:
+        total: All the findings, the open ones, the exceptions and the lapsed exceptions. Unit: count.
+        open: Unit: count.
+        exceptions: Unit: count.
+        rules: The rules checked, and those whose layer (or other layer) the project does not have. Unit: count.
+        objects: The drawing's objects the rules looked at, and the rows read round bound parts. Unit: count.
+        complete: Whether every neighbour a rule needs was read: false, no layer of `incomplete` is said to be clean.
+        lapsed: Unit: count.
+        missing: Unit: count.
+        neighbours: Unit: count.
+    """
+    findings: list[TopologyFinding]
+    total: int
+    open: int
+    exceptions: int
+    rules: int
+    objects: int
+    complete: bool
+    stamp: TopologyStamp
+    incomplete: list[TopologyGap] | Unset = UNSET
+    lapsed: int | Unset = UNSET
+    missing: int | Unset = UNSET
+    neighbours: int | Unset = UNSET
+    preview: TopologyFixPreview | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["total"] = self.total
+        out["open"] = self.open
+        out["exceptions"] = self.exceptions
+        out["rules"] = self.rules
+        out["objects"] = self.objects
+        out["complete"] = self.complete
+        out["stamp"] = self.stamp.to_json()
+        if self.incomplete is not UNSET:
+            out["incomplete"] = [e0.to_json() for e0 in self.incomplete]
+        if self.lapsed is not UNSET:
+            out["lapsed"] = self.lapsed
+        if self.missing is not UNSET:
+            out["missing"] = self.missing
+        if self.neighbours is not UNSET:
+            out["neighbours"] = self.neighbours
+        if self.preview is not UNSET:
+            out["preview"] = None if self.preview is None else self.preview.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyChecked:
+        return cls(
+            findings=[TopologyFinding.from_json(e0) for e0 in data["findings"]],
+            total=data["total"],
+            open=data["open"],
+            exceptions=data["exceptions"],
+            rules=data["rules"],
+            objects=data["objects"],
+            complete=data["complete"],
+            stamp=TopologyStamp.from_json(data["stamp"]),
+            incomplete=[TopologyGap.from_json(e0) for e0 in data["incomplete"]] if "incomplete" in data else UNSET,
+            lapsed=data.get("lapsed", UNSET),
+            missing=data.get("missing", UNSET),
+            neighbours=data.get("neighbours", UNSET),
+            preview=UNSET if "preview" not in data else None if data["preview"] is None else TopologyFixPreview.from_json(data["preview"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TopologyException(_Model):
     """A finding marked as left on purpose: its rule, its objects' persistent
     ids in the finding's order, and its place.
@@ -47355,16 +47476,22 @@ class TopologyException(_Model):
         rule: The rule's id.
         objects: At least one.
         at: Unit: length.
+        digest: The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry
+            changed since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while
+            the rule, the objects and the place are the same.
     """
     rule: str
     objects: list[str]
     at: Vec2
+    digest: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["rule"] = self.rule
         out["objects"] = list(self.objects)
         out["at"] = _vec2_out(self.at)
+        if self.digest is not UNSET:
+            out["digest"] = self.digest
         return out
 
     @classmethod
@@ -47373,6 +47500,272 @@ class TopologyException(_Model):
             rule=data["rule"],
             objects=list(data["objects"]),
             at=Vec2.from_json(data["at"]),
+            digest=data.get("digest", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyExceptions(_Model):
+    """Input of `cad.topology.exceptions` v1: the findings of `keys` (lasting keys a check gave) marked or unmarked. The
+    exceptions are the project's settings: writing them makes the drawing dirty and is no undo step.
+
+    Refusals, in this order: `invalid_input` (no key, or one twice), `finding_not_found` (`keys[i]`: no finding of the
+    drawing as it is now has it). `expectedRevision` given and the drawing not at it: nothing is written, a conflict.
+    """
+    operation: TopologyExceptionOperation | TopologyExceptionOperationName
+    keys: list[str]
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        out["keys"] = list(self.keys)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyExceptions:
+        return cls(
+            operation=_enum_in(TopologyExceptionOperation, data["operation"]),
+            keys=list(data["keys"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyExceptionsEdited(_Model):
+    """Output of `cad.topology.exceptions` v1, and its plan: how many findings were marked or unmarked (those already so
+    are not counted), the project's exceptions after it and the revision after it (a plan: before it).
+    Attributes:
+        changed: Unit: count.
+        exceptions: Unit: count.
+    """
+    changed: int
+    exceptions: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["exceptions"] = self.exceptions
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyExceptionsEdited:
+        return cls(
+            changed=data["changed"],
+            exceptions=data["exceptions"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyFinding(_Model):
+    """One finding (docs/adr/0202 §3).
+    Attributes:
+        key: Its lasting key (docs/adr/0524 §1): the same finding found again keeps it.
+        rule: The rule's id, and its kind's key.
+        problem: The problem's key (`overlap`, `gap`, `sliver` …).
+        uids: Its objects' persistent ids, in the order the finding says them.
+        at: Unit: length.
+        fixes: The fixes it offers, by key.
+        exception: Marked as left on purpose.
+        lapsed: An exception was marked on it, but its objects' geometry changed since: open again (docs/adr/0589 §3).
+        measure: Its measure (an area, a length, a distance, an angle; `measureKind` says which), in metres, square metres or
+            radians. Unit: value.
+        outside: Of those, the rows outside a bound layer's part (read from its source, not in the drawing).
+    """
+    key: str
+    rule: str
+    kind: str
+    problem: str
+    uids: list[str]
+    at: Vec2
+    fixes: list[str]
+    exception: bool
+    lapsed: bool | Unset = UNSET
+    measure: float | None | Unset = UNSET
+    measure_kind: str | None | Unset = UNSET
+    outside: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["rule"] = self.rule
+        out["kind"] = self.kind
+        out["problem"] = self.problem
+        out["uids"] = list(self.uids)
+        out["at"] = _vec2_out(self.at)
+        out["fixes"] = list(self.fixes)
+        out["exception"] = self.exception
+        if self.lapsed is not UNSET:
+            out["lapsed"] = self.lapsed
+        if self.measure is not UNSET:
+            out["measure"] = None if self.measure is None else float(self.measure)
+        if self.measure_kind is not UNSET:
+            out["measureKind"] = self.measure_kind
+        if self.outside is not UNSET:
+            out["outside"] = list(self.outside)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyFinding:
+        return cls(
+            key=data["key"],
+            rule=data["rule"],
+            kind=data["kind"],
+            problem=data["problem"],
+            uids=list(data["uids"]),
+            at=Vec2.from_json(data["at"]),
+            fixes=list(data["fixes"]),
+            exception=data["exception"],
+            lapsed=data.get("lapsed", UNSET),
+            measure=UNSET if "measure" not in data else None if data["measure"] is None else float(data["measure"]),
+            measure_kind=data.get("measureKind", UNSET),
+            outside=list(data["outside"]) if "outside" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyFixAsk(_Model):
+    """A fix asked to be previewed: the finding's lasting key and the fix's key (`subtractFirst`, `mergeNeighbour` …)."""
+    key: str
+    fix: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["fix"] = self.fix
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyFixAsk:
+        return cls(
+            key=data["key"],
+            fix=data["fix"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyFixChange(_Model):
+    """An object a fix would change: its area or length before and after; `removed` when the fix deletes it.
+    Attributes:
+        area_after: Unit: area.
+        area_before: Unit: area.
+        length_after: Unit: length.
+        length_before: Unit: length.
+    """
+    uid: str
+    layer: str
+    area_after: float | None | Unset = UNSET
+    area_before: float | None | Unset = UNSET
+    length_after: float | None | Unset = UNSET
+    length_before: float | None | Unset = UNSET
+    removed: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["layer"] = self.layer
+        if self.area_after is not UNSET:
+            out["areaAfter"] = None if self.area_after is None else float(self.area_after)
+        if self.area_before is not UNSET:
+            out["areaBefore"] = None if self.area_before is None else float(self.area_before)
+        if self.length_after is not UNSET:
+            out["lengthAfter"] = None if self.length_after is None else float(self.length_after)
+        if self.length_before is not UNSET:
+            out["lengthBefore"] = None if self.length_before is None else float(self.length_before)
+        if self.removed is not UNSET:
+            out["removed"] = self.removed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyFixChange:
+        return cls(
+            uid=data["uid"],
+            layer=data["layer"],
+            area_after=UNSET if "areaAfter" not in data else None if data["areaAfter"] is None else float(data["areaAfter"]),
+            area_before=UNSET if "areaBefore" not in data else None if data["areaBefore"] is None else float(data["areaBefore"]),
+            length_after=UNSET if "lengthAfter" not in data else None if data["lengthAfter"] is None else float(data["lengthAfter"]),
+            length_before=UNSET if "lengthBefore" not in data else None if data["lengthBefore"] is None else float(data["lengthBefore"]),
+            removed=data.get("removed", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyFixPreview(_Model):
+    """What a fix would do (docs/adr/0589 §4): the objects it changes and the bound layers' sources it touches. Nothing
+    is written; `cad.entities.edit`'s `topologyFix` writes it.
+    """
+    key: str
+    fix: str
+    changes: list[TopologyFixChange]
+    sources: list[TopologyFixSource] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["fix"] = self.fix
+        out["changes"] = [e0.to_json() for e0 in self.changes]
+        if self.sources is not UNSET:
+            out["sources"] = [e0.to_json() for e0 in self.sources]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyFixPreview:
+        return cls(
+            key=data["key"],
+            fix=data["fix"],
+            changes=[TopologyFixChange.from_json(e0) for e0 in data["changes"]],
+            sources=[TopologyFixSource.from_json(e0) for e0 in data["sources"]] if "sources" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyFixSource(_Model):
+    """A bound layer a fix would leave with changes to write to its source.
+    Attributes:
+        rows: Unit: count.
+    """
+    layer: str
+    table: str
+    rows: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["table"] = self.table
+        out["rows"] = self.rows
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyFixSource:
+        return cls(
+            layer=data["layer"],
+            table=data["table"],
+            rows=data["rows"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyGap(_Model):
+    """A bound layer's part whose neighbours could not all be read, and why."""
+    layer: str
+    reason: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["reason"] = self.reason
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyGap:
+        return cls(
+            layer=data["layer"],
+            reason=data["reason"],
         )
 
 
@@ -47443,6 +47836,58 @@ class TopologySettings(_Model):
             exceptions=[TopologyException.from_json(e0) for e0 in data["exceptions"]] if "exceptions" in data else UNSET,
             rules=[TopologyRule.from_json(e0) for e0 in data["rules"]] if "rules" in data else UNSET,
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologySourceStamp(_Model):
+    """A bound layer's source as the check saw it: the revision the layer last matched and, of a part, the digest of the
+    band's rows read.
+    """
+    layer: str
+    revision: str
+    band: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["revision"] = self.revision
+        if self.band is not UNSET:
+            out["band"] = self.band
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologySourceStamp:
+        return cls(
+            layer=data["layer"],
+            revision=data["revision"],
+            band=data.get("band", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyStamp(_Model):
+    """The state a check saw (docs/adr/0589 §2): the drawing's revision, a digest of the rules, the tolerance and the
+    exceptions, and each bound layer's source. A later check with the same stamp would find the same.
+    """
+    revision: str
+    rules: str
+    sources: list[TopologySourceStamp] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["revision"] = self.revision
+        out["rules"] = self.rules
+        if self.sources is not UNSET:
+            out["sources"] = [e0.to_json() for e0 in self.sources]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyStamp:
+        return cls(
+            revision=data["revision"],
+            rules=data["rules"],
+            sources=[TopologySourceStamp.from_json(e0) for e0 in data["sources"]] if "sources" in data else UNSET,
         )
 
 
@@ -62276,11 +62721,25 @@ __all__ = [
     "ToleranceKindName",
     "ToolNote",
     "ToolParameter",
+    "TopologyCheck",
+    "TopologyChecked",
     "TopologyException",
+    "TopologyExceptionOperation",
+    "TopologyExceptionOperationName",
+    "TopologyExceptions",
+    "TopologyExceptionsEdited",
+    "TopologyFinding",
+    "TopologyFixAsk",
+    "TopologyFixChange",
+    "TopologyFixPreview",
+    "TopologyFixSource",
+    "TopologyGap",
     "TopologyRule",
     "TopologyRuleKind",
     "TopologyRuleKindName",
     "TopologySettings",
+    "TopologySourceStamp",
+    "TopologyStamp",
     "TotalLengthenChange",
     "TrackPointConstruction",
     "Transform",

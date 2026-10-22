@@ -148,8 +148,50 @@ fn the_writer_refuses_what_the_reader_refuses() {
             rule: "q".into(),
             objects: vec![EntityId([1; 16])],
             at: Vec2 { x: 0.0, y: 0.0 },
+            digest: None,
         }],
         ..Default::default()
     });
     assert!(e.message.contains("istisnanın kuralı “q” yok"), "{e}");
+    let e = refused(TopologySettings {
+        rules: vec![rule("r", TopologyRuleKind::MustNotOverlap, None, None)],
+        exceptions: vec![TopologyException {
+            rule: "r".into(),
+            objects: vec![EntityId([1; 16])],
+            at: Vec2 { x: 0.0, y: 0.0 },
+            digest: Some("00FF00FF00FF00FF".into()),
+        }],
+        ..Default::default()
+    });
+    assert!(e.message.contains("16 küçük onaltılık"), "{e}");
+}
+
+// docs/adr/0589 §3: an exception's geometry digest is schema 99's; a project whose exceptions have none keeps its
+// schema and its bytes; the schema 98 file with a digest is an unknown field.
+#[test]
+fn exception_digests_are_schema_99_and_come_back() {
+    let doc = content("topology-digests.json");
+    let written = kentos_kcad::encode(&doc).expect("writes");
+    assert_eq!(schema(&written), 99);
+    assert!(written == read("topology-digests.kcad"), "the reference's bytes");
+    let back = kentos_kcad::decode(&written).expect("reads");
+    assert_eq!(back.settings.topology, doc.settings.topology);
+    let t = back.settings.topology.expect("topology");
+    assert_eq!(t.exceptions[0].digest.as_deref(), Some("3f9a0c12d4e5b678"));
+    assert_eq!(t.exceptions[1].digest, None);
+    let mut plain = doc.clone();
+    if let Some(t) = plain.settings.topology.as_mut() {
+        for x in &mut t.exceptions {
+            x.digest = None;
+        }
+    }
+    assert_eq!(schema(&kentos_kcad::encode(&plain).expect("writes")), 27);
+    for (name, code) in [
+        ("broken/topology-digest-in-schema-98.kcad", Code::UnknownField),
+        ("broken/topology-digest-upper.kcad", Code::BadValue),
+        ("broken/topology-digest-short.kcad", Code::BadValue),
+    ] {
+        let e = kentos_kcad::decode(&read(name)).expect_err(name);
+        assert_eq!(e.code, code, "{name}: {e}");
+    }
 }

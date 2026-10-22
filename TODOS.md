@@ -352,6 +352,7 @@ Liste:
 - [ ] `CBS-04` PostGIS'te alan, view ve sorgu katmanı, satır düzeyinde çakışma (ADR 0582, 22 Ekim): web'de gerekenler: web'in PostGIS'e bağlanması yok (sunucunun vekiliyle ayrı karar); masaüstündeki PostGIS'e bağlan'ın view, sorgu ve alan seçenekleri.
 - [ ] `CBS-07` Katmanın kaynak sistemi ve harita sistemi (ADR 0583, 22 Ekim): web'de gerekenler: `.kcad` şema 98'in `sourceCrs` ve `mapSrid`'inin okunup yazılması (TS türleri üretildi); web'in çizim hatlarında (WebGL2, WebGPU) stil toplayıcısının izdüşümü (`View.map`, WASM `styledBatches`'e harita sistemi), kameranın harita sistemi (`map_ratio`, ters dönüşümlü imleç), durum çubuğunda harita hücresi, koordinat sistemi menüsünde Harita sistemi ▸, katmanın sağ tık menüsünde Koordinat sistemi ▸ (Sistem ata, Yeniden izdüşür) ve `cad.layers.crs`, `cad.layers.reproject` işleyicileri; içe aktarmaların `sourceCrs`'i.
 - [ ] `CBS-12` Veritabanında alanın dışındaki komşular, yetki ve tam geçerlilik (ADR 0585, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; GeoPackage parçasının yazması web'e gelince komşunun geçerliliği Geçerliliği denetle'nin sorunlarıyla (yinelenen köşe hariç, önceden geçersiz komşu engel değil).
+- [ ] `CBS-14` Kaynağa bağlı topoloji denetimi (ADR 0589, 22 Ekim): web'de gerekenler: `.kcad` şema 99'un TS kodeği (istisnanın `digest`'i), Topoloji panelinde düşen istisnanın “(istisna düştü)” işareti ve uyarısı, Düzelt ▾'de önizlemenin ikinci satırı (`cad.topology.check`'in `preview`'u WASM'la), İstisna yap'ın `cad.topology.exceptions` ile yazması; bağlı parça web'de yok.
 - [ ] `CBS-11` Aynı kaynağa birlikte yazma ve yazmada Z ile M (ADR 0584, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; GeoPackage'a yazan web yolunda (yoksa) Z ve M denetimi `dims_problem`'in kuralıyla, Kaynağa birlikte yaz'ın aynı kaynağın değişen katmanlarını toplaması.
 - [ ] `CBS-02` kaynağı sorgula (ADR 0581, 22 Ekim): web'de gerekenler: `cad.sources.query`'nin işleyicisi (web'in GeoPackage'ı yok; WASM'da itme kuralı ve yerel sınama), İstatistik panelinde Kapsam; TS türleri üretildi.
 - [ ] `CBS-34` adres verisini denetle (ADR 0579, 21 Ekim): web'de gerekenler: `cad.addresses.check`'in işleyicisi (WASM'da
@@ -2429,6 +2430,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   kuralların erimi ve bağlantıları, boşluk kuralında kümeler ve adaları; tam denetimle aynı, rastgele düzenlemelerle sınanır),
   Değişenleri denetle ve Düzelt'in artımlı yeniden denetimi. Kalan: dış sağlayıcıda revizyon ve görünüm dışı komşular (G2),
   istisnanın geometri özeti, düzeltmenin etki önizlemesi. — **19 Ekim, [ADR 0524](docs/adr/0524-incremental-topology-findings.md).**
+  Salt okunur `cad.topology.check` (bağlı parçanın bandındaki satırlar komşu, eksik denetim temiz demez, damga, düzeltmenin
+  önizlemesi), istisnanın geometri özeti (`.kcad` şema 99, düşen istisna söylenir), `cad.topology.exceptions`; Python, MCP,
+  masaüstünün sekmesi aynı çekirdekle. Kalan: yazmanın denetimin damgasını istemesi, kaynaklar arası kuralda bandın komşuları. —
+  **22 Ekim, [ADR 0589](docs/adr/0589-topology-check-bound-to-sources.md).**
 - [ ] `CBS-19` bağlı görünümler ve tema (dilim): görünümün teması projenin katman durumu (görünürlük, dondurma, stiller ağacın
   kopyasında, çizim ve revizyon değişmez; `layer_states::themed`), stilli çizim görünümün önbelleğinde temayla
   (`scene_themed`), etkin görünümün teması seçme ve kenet (`Spatial::set_theme`), etiketler görünümün temasıyla

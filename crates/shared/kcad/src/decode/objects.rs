@@ -239,6 +239,8 @@ pub(super) struct Features {
     pub(super) linear_events: bool,
     /// Schema 98: a layer's source system and the map's system (docs/adr/0583).
     pub(super) source_crs: bool,
+    /// Schema 99: a topology exception's geometry digest (docs/adr/0589).
+    pub(super) exception_digests: bool,
     /// Schema 90: a layer time's system time attributes (docs/adr/0537).
     pub(super) recorded_time: bool,
     pub(super) source_bases: bool,
@@ -408,6 +410,7 @@ impl Features {
             join_views: schema >= crate::SCHEMA_WITH_JOIN_VIEWS,
             linear_events: schema >= crate::SCHEMA_WITH_LINEAR_EVENTS,
             source_crs: schema >= crate::SCHEMA_WITH_SOURCE_CRS,
+            exception_digests: schema >= crate::SCHEMA_WITH_EXCEPTION_DIGESTS,
             recorded_time: schema >= crate::SCHEMA_WITH_RECORDED_TIME,
             source_bases: schema >= crate::SCHEMA_WITH_SOURCE_BASES,
             source_field_bases: schema >= crate::SCHEMA_WITH_SOURCE_FIELD_BASES,

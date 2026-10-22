@@ -14,4 +14,10 @@ rule: string,
 /**
  * At least one.
  */
-objects: Array<EntityId>, at: Vec2, };
+objects: Array<EntityId>, at: Vec2, 
+/**
+ * The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry
+ * changed since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while
+ * the rule, the objects and the place are the same.
+ */
+digest?: string, };

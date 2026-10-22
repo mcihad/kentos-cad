@@ -18397,6 +18397,13 @@
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
               },
+              "digest": {
+                "description": "The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry\nchanged since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while\nthe rule, the objects and the place are the same.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "objects": {
                 "description": "At least one.",
                 "items": {
@@ -28720,6 +28727,13 @@
               "at": {
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
+              },
+              "digest": {
+                "description": "The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry\nchanged since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while\nthe rule, the objects and the place are the same.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "objects": {
                 "description": "At least one.",
@@ -47673,6 +47687,13 @@
               "at": {
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
+              },
+              "digest": {
+                "description": "The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry\nchanged since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while\nthe rule, the objects and the place are the same.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "objects": {
                 "description": "At least one.",
@@ -943012,6 +943033,988 @@
       ]
     },
     {
+      "id": "cad.topology.check",
+      "version": 1,
+      "title": "Topolojiyi denetle",
+      "summary": "Projenin topoloji kurallarını (rules: bazılarının kimlikleri; verilmezse hepsi) çizimde çalıştırır; çizimi değiştirmez. Bağlı katmanın alan sınırlı parçasında (ADR 0510) alanın çevresindeki bant kaynağından okunur (dosyanın katmanın son eşleştiği sürümünden, veritabanının bugünkü hâlinden) ve komşu sayılır: parçanın nesnesiyle dışarıdaki satır arasındaki bulgu bulunur, dışarıdakilerin kendi aralarındaki bulgu parçanın değildir, verilmez. Komşular tam okunamazsa (dosya yok ya da başka sürümde, veritabanına ulaşılamıyor, parçanın nesnesi bandın dışına uzanıyor) complete false olur, incomplete nedenini söyler ve topology_incomplete uyarısı verilir: o katman temiz sayılmaz. Her bulgu kalıcı anahtarıyla (key), kuralıyla, sorunuyla, nesnelerinin kalıcı kimlikleriyle (dışarıdakiler outside'ta), yeri, ölçüsü, düzeltmeleri ve istisna durumuyla gelir; ilk limit tanesi (1–100 000, varsayılan 1 000) listelenir, sayılar hepsinindir. Geometri özetiyle yapılmış istisna, nesnelerin geometrisi değişince düşer: bulgu açık ve lapsed olur (exception_lapsed uyarısı). stamp denetimin gördüğü durumdur: çizimin revizyonu, kuralların, toleransın ve istisnaların özeti, bağlı katmanların kaynak sürümü ve okunan bandın özeti. preview bir bulgunun bir düzeltmesini yazmadan önizler: değişecek nesneler alanları ya da uzunluklarıyla önce ve sonra, silinecekler, kaynağına yazılacak bağlı katmanlar (yazmak cad.entities.edit'in topologyFix'idir). Retler: invalid_limit, topology_rule_not_found, finding_not_found, fix_unavailable.",
+      "aliases": [
+        "topolojidenetle"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "TopologyFixAsk": {
+            "description": "A fix asked to be previewed: the finding's lasting key and the fix's key (`subtractFirst`, `mergeNeighbour` …).",
+            "properties": {
+              "fix": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "key",
+              "fix"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.topology.check` v1: the project's rules (`rules`: some of them by id; none: all) over the objects of\nthe layers they name. A bound layer's part (docs/adr/0510) takes the rows of its source round the area as\nneighbours (the band, docs/adr/0578). The findings listed are the first `limit` (1–100 000, default 1 000) in the\nrules' order; `preview` previews one fix of one finding without writing it.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_limit`, `topology_rule_not_found` (`rules[i]`),\n`finding_not_found` (`preview.key`), `fix_unavailable` (`preview.fix`: the finding does not offer it, the fix has\nno answer, or it would change a row outside the part). Warnings: `topology_incomplete` (a part's neighbours could\nnot all be read: the check is not complete, no layer of it is said to be clean), `exception_lapsed` (an exception\nwhose objects' geometry changed: its finding is open again).",
+        "properties": {
+          "limit": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "preview": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TopologyFixAsk"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rules": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "TopologyCheck",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "TopologyFinding": {
+            "description": "One finding (docs/adr/0202 §3).",
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "exception": {
+                "description": "Marked as left on purpose.",
+                "type": "boolean"
+              },
+              "fixes": {
+                "description": "The fixes it offers, by key.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "key": {
+                "description": "Its lasting key (docs/adr/0524 §1): the same finding found again keeps it.",
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "lapsed": {
+                "description": "An exception was marked on it, but its objects' geometry changed since: open again (docs/adr/0589 §3).",
+                "type": "boolean"
+              },
+              "measure": {
+                "description": "Its measure (an area, a length, a distance, an angle; `measureKind` says which), in metres, square metres or\nradians.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "measureKind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "outside": {
+                "description": "Of those, the rows outside a bound layer's part (read from its source, not in the drawing).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "problem": {
+                "description": "The problem's key (`overlap`, `gap`, `sliver` …).",
+                "type": "string"
+              },
+              "rule": {
+                "description": "The rule's id, and its kind's key.",
+                "type": "string"
+              },
+              "uids": {
+                "description": "Its objects' persistent ids, in the order the finding says them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "key",
+              "rule",
+              "kind",
+              "problem",
+              "uids",
+              "at",
+              "fixes",
+              "exception"
+            ],
+            "type": "object"
+          },
+          "TopologyFixChange": {
+            "description": "An object a fix would change: its area or length before and after; `removed` when the fix deletes it.",
+            "properties": {
+              "areaAfter": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "area"
+              },
+              "areaBefore": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "area"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "lengthAfter": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "lengthBefore": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "removed": {
+                "type": "boolean"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "layer"
+            ],
+            "type": "object"
+          },
+          "TopologyFixPreview": {
+            "description": "What a fix would do (docs/adr/0589 §4): the objects it changes and the bound layers' sources it touches. Nothing\nis written; `cad.entities.edit`'s `topologyFix` writes it.",
+            "properties": {
+              "changes": {
+                "items": {
+                  "$ref": "#/$defs/TopologyFixChange"
+                },
+                "type": "array"
+              },
+              "fix": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/TopologyFixSource"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "key",
+              "fix",
+              "changes"
+            ],
+            "type": "object"
+          },
+          "TopologyFixSource": {
+            "description": "A bound layer a fix would leave with changes to write to its source.",
+            "properties": {
+              "layer": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "table",
+              "rows"
+            ],
+            "type": "object"
+          },
+          "TopologyGap": {
+            "description": "A bound layer's part whose neighbours could not all be read, and why.",
+            "properties": {
+              "layer": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "TopologySourceStamp": {
+            "description": "A bound layer's source as the check saw it: the revision the layer last matched and, of a part, the digest of the\nband's rows read.",
+            "properties": {
+              "band": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "revision"
+            ],
+            "type": "object"
+          },
+          "TopologyStamp": {
+            "description": "The state a check saw (docs/adr/0589 §2): the drawing's revision, a digest of the rules, the tolerance and the\nexceptions, and each bound layer's source. A later check with the same stamp would find the same.",
+            "properties": {
+              "revision": {
+                "pattern": "^(0|[1-9][0-9]*)$",
+                "type": "string"
+              },
+              "rules": {
+                "type": "string"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/TopologySourceStamp"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "revision",
+              "rules"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.topology.check` v1, and its plan.",
+        "properties": {
+          "complete": {
+            "description": "Whether every neighbour a rule needs was read: false, no layer of `incomplete` is said to be clean.",
+            "type": "boolean"
+          },
+          "exceptions": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/TopologyFinding"
+            },
+            "type": "array"
+          },
+          "incomplete": {
+            "items": {
+              "$ref": "#/$defs/TopologyGap"
+            },
+            "type": "array"
+          },
+          "lapsed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "missing": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "neighbours": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "objects": {
+            "description": "The drawing's objects the rules looked at, and the rows read round bound parts.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "open": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "preview": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TopologyFixPreview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rules": {
+            "description": "The rules checked, and those whose layer (or other layer) the project does not have.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "stamp": {
+            "$ref": "#/$defs/TopologyStamp"
+          },
+          "total": {
+            "description": "All the findings, the open ones, the exceptions and the lapsed exceptions.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "findings",
+          "total",
+          "open",
+          "exceptions",
+          "rules",
+          "objects",
+          "complete",
+          "stamp"
+        ],
+        "title": "TopologyChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "TopologyFinding": {
+            "description": "One finding (docs/adr/0202 §3).",
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "exception": {
+                "description": "Marked as left on purpose.",
+                "type": "boolean"
+              },
+              "fixes": {
+                "description": "The fixes it offers, by key.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "key": {
+                "description": "Its lasting key (docs/adr/0524 §1): the same finding found again keeps it.",
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "lapsed": {
+                "description": "An exception was marked on it, but its objects' geometry changed since: open again (docs/adr/0589 §3).",
+                "type": "boolean"
+              },
+              "measure": {
+                "description": "Its measure (an area, a length, a distance, an angle; `measureKind` says which), in metres, square metres or\nradians.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "measureKind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "outside": {
+                "description": "Of those, the rows outside a bound layer's part (read from its source, not in the drawing).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "problem": {
+                "description": "The problem's key (`overlap`, `gap`, `sliver` …).",
+                "type": "string"
+              },
+              "rule": {
+                "description": "The rule's id, and its kind's key.",
+                "type": "string"
+              },
+              "uids": {
+                "description": "Its objects' persistent ids, in the order the finding says them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "key",
+              "rule",
+              "kind",
+              "problem",
+              "uids",
+              "at",
+              "fixes",
+              "exception"
+            ],
+            "type": "object"
+          },
+          "TopologyFixChange": {
+            "description": "An object a fix would change: its area or length before and after; `removed` when the fix deletes it.",
+            "properties": {
+              "areaAfter": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "area"
+              },
+              "areaBefore": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "area"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "lengthAfter": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "lengthBefore": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "removed": {
+                "type": "boolean"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "layer"
+            ],
+            "type": "object"
+          },
+          "TopologyFixPreview": {
+            "description": "What a fix would do (docs/adr/0589 §4): the objects it changes and the bound layers' sources it touches. Nothing\nis written; `cad.entities.edit`'s `topologyFix` writes it.",
+            "properties": {
+              "changes": {
+                "items": {
+                  "$ref": "#/$defs/TopologyFixChange"
+                },
+                "type": "array"
+              },
+              "fix": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/TopologyFixSource"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "key",
+              "fix",
+              "changes"
+            ],
+            "type": "object"
+          },
+          "TopologyFixSource": {
+            "description": "A bound layer a fix would leave with changes to write to its source.",
+            "properties": {
+              "layer": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "table",
+              "rows"
+            ],
+            "type": "object"
+          },
+          "TopologyGap": {
+            "description": "A bound layer's part whose neighbours could not all be read, and why.",
+            "properties": {
+              "layer": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "TopologySourceStamp": {
+            "description": "A bound layer's source as the check saw it: the revision the layer last matched and, of a part, the digest of the\nband's rows read.",
+            "properties": {
+              "band": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "revision"
+            ],
+            "type": "object"
+          },
+          "TopologyStamp": {
+            "description": "The state a check saw (docs/adr/0589 §2): the drawing's revision, a digest of the rules, the tolerance and the\nexceptions, and each bound layer's source. A later check with the same stamp would find the same.",
+            "properties": {
+              "revision": {
+                "pattern": "^(0|[1-9][0-9]*)$",
+                "type": "string"
+              },
+              "rules": {
+                "type": "string"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/TopologySourceStamp"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "revision",
+              "rules"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.topology.check` v1, and its plan.",
+        "properties": {
+          "complete": {
+            "description": "Whether every neighbour a rule needs was read: false, no layer of `incomplete` is said to be clean.",
+            "type": "boolean"
+          },
+          "exceptions": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/TopologyFinding"
+            },
+            "type": "array"
+          },
+          "incomplete": {
+            "items": {
+              "$ref": "#/$defs/TopologyGap"
+            },
+            "type": "array"
+          },
+          "lapsed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "missing": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "neighbours": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "objects": {
+            "description": "The drawing's objects the rules looked at, and the rows read round bound parts.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "open": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "preview": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TopologyFixPreview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rules": {
+            "description": "The rules checked, and those whose layer (or other layer) the project does not have.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "stamp": {
+            "$ref": "#/$defs/TopologyStamp"
+          },
+          "total": {
+            "description": "All the findings, the open ones, the exceptions and the lapsed exceptions.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "findings",
+          "total",
+          "open",
+          "exceptions",
+          "rules",
+          "objects",
+          "complete",
+          "stamp"
+        ],
+        "title": "TopologyChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_limit",
+          "topology_rule_not_found",
+          "finding_not_found",
+          "fix_unavailable"
+        ],
+        "warnings": [
+          "topology_incomplete",
+          "exception_lapsed"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Projenin bütün topoloji kurallarını denetle",
+          "input": {}
+        },
+        {
+          "title": "Bir kuralı denetle, ilk 50 bulgu",
+          "input": {
+            "limit": 50,
+            "rules": [
+              "kural-1"
+            ]
+          }
+        },
+        {
+          "title": "Bir bulgunun düzeltmesini önizle",
+          "input": {
+            "preview": {
+              "fix": "subtractFirst",
+              "key": "3f9a0c12d4e5b678"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.topology.exceptions",
+      "version": 1,
+      "title": "Topoloji istisnaları",
+      "summary": "Bulguları istisna yapar (mark) ya da istisnalarını kaldırır (unmark); bulgular cad.topology.check'in verdiği kalıcı anahtarlarla (keys) ve çizimin bugünkü hâliyle anılır. İstisna bulgunun kuralını, nesnelerini, yerini ve nesnelerin geometrisinin özetini tutar: geometri değişince istisna düşer, bulgu yeniden açılır; düşmüş istisnanın bulgusunu mark bugünkü geometriyle yeniden istisna yapar, unmark kaldırır. Zaten istisna olan (mark) ya da istisnası olmayan (unmark) bulgu sayılmaz. İstisnalar proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. Retler: invalid_input (anahtar yok ya da iki kez), finding_not_found; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "TopologyExceptionOperation": {
+            "description": "What `cad.topology.exceptions` does to the findings it names.",
+            "oneOf": [
+              {
+                "const": "mark",
+                "description": "İstisna yap: the finding left on purpose, bound to its objects' geometry as it is now (a lapsed exception is\nmarked again, on the new geometry).",
+                "type": "string"
+              },
+              {
+                "const": "unmark",
+                "description": "İstisnayı kaldır.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.topology.exceptions` v1: the findings of `keys` (lasting keys a check gave) marked or unmarked. The\nexceptions are the project's settings: writing them makes the drawing dirty and is no undo step.\n\nRefusals, in this order: `invalid_input` (no key, or one twice), `finding_not_found` (`keys[i]`: no finding of the\ndrawing as it is now has it). `expectedRevision` given and the drawing not at it: nothing is written, a conflict.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "operation": {
+            "$ref": "#/$defs/TopologyExceptionOperation"
+          }
+        },
+        "required": [
+          "operation",
+          "keys"
+        ],
+        "title": "TopologyExceptions",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.topology.exceptions` v1, and its plan: how many findings were marked or unmarked (those already so\nare not counted), the project's exceptions after it and the revision after it (a plan: before it).",
+        "properties": {
+          "changed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "exceptions": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "exceptions",
+          "revision"
+        ],
+        "title": "TopologyExceptionsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.topology.exceptions` v1, and its plan: how many findings were marked or unmarked (those already so\nare not counted), the project's exceptions after it and the revision after it (a plan: before it).",
+        "properties": {
+          "changed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "exceptions": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "exceptions",
+          "revision"
+        ],
+        "title": "TopologyExceptionsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "finding_not_found",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki bulguyu istisna yap",
+          "input": {
+            "keys": [
+              "3f9a0c12d4e5b678",
+              "0a1b2c3d4e5f6071"
+            ],
+            "operation": "mark"
+          }
+        },
+        {
+          "title": "Bir bulgunun istisnasını kaldır",
+          "input": {
+            "keys": [
+              "3f9a0c12d4e5b678"
+            ],
+            "operation": "unmark"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.addresses.check",
       "version": 1,
       "title": "Adres verisini denetle",
@@ -1073089,6 +1074092,36 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi."
+    },
+    {
+      "code": "topology_rule_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte topoloji kuralı yok."
+    },
+    {
+      "code": "finding_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çizimin bugünkü denetiminde bu anahtarla bulgu yok; önce cad.topology.check ile denetleyin."
+    },
+    {
+      "code": "fix_unavailable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu düzeltme bu bulguya uygulanamaz."
+    },
+    {
+      "code": "topology_incomplete",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bağlı parçanın komşuları tam okunamadı; denetim eksik, katman temiz sayılmaz."
+    },
+    {
+      "code": "exception_lapsed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "İstisnanın nesnelerinin geometrisi değişti; bulgu yeniden açık."
     },
     {
       "code": "rows_denied",

@@ -12504,11 +12504,13 @@
    "kind": "command",
    "title": "Topolojiyi denetle",
    "level": "query",
-   "via": [],
+   "via": [
+    "cad.topology.check"
+   ],
    "operation": null,
    "python": null,
    "mcp": null,
-   "note": null,
+   "note": "Sekme cad.topology.check'in çekirdeğinden okur (topology_check::gather, run); bağlı parçanın bandındaki satırlar komşudur, okunamayan band denetimi eksik bırakır; Düzelt ▾ düzeltmenin önizlemesini söyler. İstisna yap ve İstisnayı kaldır cad.topology.exceptions ile yazar, istisna nesnelerinin geometrisine bağlıdır (ADR 0589).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1

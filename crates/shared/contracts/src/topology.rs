@@ -194,6 +194,19 @@ pub struct TopologyException {
     pub objects: Vec<EntityId>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
+    /// The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry
+    /// changed since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while
+    /// the rule, the objects and the place are the same.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub digest: Option<String>,
+}
+
+/// Whether `d` is an exception's geometry digest: 16 lowercase hexadecimal digits.
+pub fn exception_digest_holds(d: &str) -> bool {
+    d.len() == 16
+        && d.bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
 impl TopologySettings {
@@ -280,6 +293,12 @@ impl TopologySettings {
             if !(x.at.x.is_finite() && x.at.y.is_finite()) {
                 return Some("istisnanın yeri sonlu değil".to_owned());
             }
+            if x.digest
+                .as_deref()
+                .is_some_and(|d| !exception_digest_holds(d))
+            {
+                return Some("istisnanın geometri özeti 16 küçük onaltılık rakam değil".to_owned());
+            }
         }
         None
     }
@@ -316,6 +335,7 @@ impl TopologySettings {
                     && !x.objects.is_empty()
                     && x.at.x.is_finite()
                     && x.at.y.is_finite()
+                    && x.digest.as_deref().is_none_or(exception_digest_holds)
             })
             .collect();
         let kept = Self {

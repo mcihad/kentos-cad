@@ -1169,6 +1169,16 @@ codes! {
     TOPOLOGY_ON_READ = "topology_on_read", Failed, false, "Komşuların izlemesi yalnız yazarken olur.";
     /// A loose write's neighbours outside the area that kept their shape (docs/adr/0531).
     NEIGHBOURS_LEFT = "neighbours_left", Warning, false, "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi.";
+    /// A rule id `cad.topology.check` was given that the project does not have (docs/adr/0589).
+    TOPOLOGY_RULE_NOT_FOUND = "topology_rule_not_found", Failed, false, "Projede bu kimlikte topoloji kuralı yok.";
+    /// A finding's lasting key no finding of the drawing as it is now has (docs/adr/0589).
+    FINDING_NOT_FOUND = "finding_not_found", Failed, false, "Çizimin bugünkü denetiminde bu anahtarla bulgu yok; önce cad.topology.check ile denetleyin.";
+    /// A fix the finding does not offer, that has no answer, or that would change a row outside a bound part (docs/adr/0589).
+    FIX_UNAVAILABLE = "fix_unavailable", Failed, false, "Bu düzeltme bu bulguya uygulanamaz.";
+    /// A topology check whose bound part's neighbours could not all be read (docs/adr/0589 §1).
+    TOPOLOGY_INCOMPLETE = "topology_incomplete", Warning, false, "Bağlı parçanın komşuları tam okunamadı; denetim eksik, katman temiz sayılmaz.";
+    /// An exception whose objects' geometry changed since it was marked (docs/adr/0589 §3).
+    EXCEPTION_LAPSED = "exception_lapsed", Warning, false, "İstisnanın nesnelerinin geometrisi değişti; bulgu yeniden açık.";
     /// Rows a write would change that the account sees but may not change: no privilege or a row security policy
     /// (docs/adr/0585 §2).
     ROWS_DENIED = "rows_denied", Failed, false, "Hesap tablonun bazı satırlarını görür ama değiştiremez (yetki ya da satır güvenliği); hiçbir şey yazılmadı.";

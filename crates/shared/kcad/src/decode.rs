@@ -905,7 +905,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "layerStates" if has.layer_states => {
                 layer_states = layer_states_list(r, has.labels, has.frozen, has.patterns)?
             }
-            "topology" if has.topology => topology = Some(topology_settings(r)?),
+            "topology" if has.topology => {
+                topology = Some(topology_settings(r, has.exception_digests)?)
+            }
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
             "connections" if has.services => connections = services::connections(r)?,
             "networks" if has.networks => {
@@ -1174,9 +1176,9 @@ fn annotation_heights(r: &mut Reader<'_>) -> Result<AnnotationHeights, KcadError
 
 /// Schema 27's topology settings (docs/adr/0202 §7): the tolerance, the
 /// rules (`id`, `kind`, `layer`, `other`, `value`) and the exceptions (`at`,
-/// `rule`, `objects`), checked whole as the contract checks them
+/// `rule`, `objects`; from schema 99 `digest`), checked whole as the contract checks them
 /// (`TopologySettings::problem`).
-fn topology_settings(r: &mut Reader<'_>) -> Result<TopologySettings, KcadError> {
+fn topology_settings(r: &mut Reader<'_>, digests: bool) -> Result<TopologySettings, KcadError> {
     let at = r.position();
     let mut t = TopologySettings::default();
     map(r, |r, key| {
@@ -1218,7 +1220,7 @@ fn topology_settings(r: &mut Reader<'_>) -> Result<TopologySettings, KcadError> 
             "tolerance" => t.tolerance = Some(r.float()?),
             "exceptions" => {
                 t.exceptions = list(r, |r, _| {
-                    let (mut at, mut rule, mut objects) = (None, None, None);
+                    let (mut at, mut rule, mut objects, mut digest) = (None, None, None, None);
                     map(r, |r, key| {
                         match key {
                             "at" => at = Some(point(r)?),
@@ -1227,6 +1229,7 @@ fn topology_settings(r: &mut Reader<'_>) -> Result<TopologySettings, KcadError> 
                                 objects =
                                     Some(list(r, |r, _| id16(r).map(kentos_contracts::EntityId))?)
                             }
+                            "digest" if digests => digest = Some(text(r)?),
                             _ => return Err(unknown(r)),
                         }
                         Ok(())
@@ -1235,6 +1238,7 @@ fn topology_settings(r: &mut Reader<'_>) -> Result<TopologySettings, KcadError> 
                         rule: required(r, rule, "rule")?,
                         objects: required(r, objects, "objects")?,
                         at: required(r, at, "at")?,
+                        digest,
                     })
                 })?
             }

@@ -183,7 +183,7 @@ CBS'ye özgü olmayan 638 satırdan 132'i: geometry 74, none 17, processing 13, 
 | `tool.measure` | Mesafe ölç | shared | — | İki nokta arası uzunluk: noktalardan hesap; ölçme API'si nesne ister. |
 | `tool.measureAngle` | Açı ölç | shared | — |  |
 | `tool.stationOffset` | Dik ayak ölç | shared | — |  |
-| `topology.check` | Topolojiyi denetle | shared | — |  |
+| `topology.check` | Topolojiyi denetle | shared | cad.topology.check | Sekme cad.topology.check'in çekirdeğinden okur (topology_check::gather, run); bağlı parçanın bandındaki satırlar komşudur, okunamayan band denetimi eksik bırakır; Düzelt ▾ düzeltmenin önizlemesini söyler. İstisna yap ve İstisnayı kaldır cad.topology.exceptions ile yazar, istisna nesnelerinin geometrisine bağlıdır (ADR 0589). |
 
 ## Masaüstünde olmayan CAD tarafı öğeleri — 7
 

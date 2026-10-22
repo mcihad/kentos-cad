@@ -5199,6 +5199,86 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Topolojiyi denetle (docs/adr/0589), held together by fixtures/commands/v1/cad.topology.check.json.
+        CommandDescriptor {
+            id: crate::CAD_TOPOLOGY_CHECK.into(),
+            version: crate::CAD_TOPOLOGY_CHECK_VERSION,
+            title: "Topolojiyi denetle".into(),
+            summary: "Projenin topoloji kurallarını (rules: bazılarının kimlikleri; verilmezse hepsi) çizimde çalıştırır; çizimi değiştirmez. \
+                      Bağlı katmanın alan sınırlı parçasında (ADR 0510) alanın çevresindeki bant kaynağından okunur (dosyanın katmanın son eşleştiği sürümünden, veritabanının bugünkü hâlinden) ve komşu sayılır: parçanın nesnesiyle dışarıdaki satır arasındaki bulgu bulunur, dışarıdakilerin kendi aralarındaki bulgu parçanın değildir, verilmez. \
+                      Komşular tam okunamazsa (dosya yok ya da başka sürümde, veritabanına ulaşılamıyor, parçanın nesnesi bandın dışına uzanıyor) complete false olur, incomplete nedenini söyler ve topology_incomplete uyarısı verilir: o katman temiz sayılmaz. \
+                      Her bulgu kalıcı anahtarıyla (key), kuralıyla, sorunuyla, nesnelerinin kalıcı kimlikleriyle (dışarıdakiler outside'ta), yeri, ölçüsü, düzeltmeleri ve istisna durumuyla gelir; ilk limit tanesi (1–100 000, varsayılan 1 000) listelenir, sayılar hepsinindir. \
+                      Geometri özetiyle yapılmış istisna, nesnelerin geometrisi değişince düşer: bulgu açık ve lapsed olur (exception_lapsed uyarısı). \
+                      stamp denetimin gördüğü durumdur: çizimin revizyonu, kuralların, toleransın ve istisnaların özeti, bağlı katmanların kaynak sürümü ve okunan bandın özeti. \
+                      preview bir bulgunun bir düzeltmesini yazmadan önizler: değişecek nesneler alanları ya da uzunluklarıyla önce ve sonra, silinecekler, kaynağına yazılacak bağlı katmanlar (yazmak cad.entities.edit'in topologyFix'idir). \
+                      Retler: invalid_limit, topology_rule_not_found, finding_not_found, fix_unavailable."
+                .into(),
+            aliases: vec!["topolojidenetle".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::TopologyCheck>(),
+            output: schema::<crate::TopologyChecked>(),
+            plan: Some(schema::<crate::TopologyChecked>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Projenin bütün topoloji kurallarını denetle".into(),
+                    input: json!({}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir kuralı denetle, ilk 50 bulgu".into(),
+                    input: json!({ "rules": ["kural-1"], "limit": 50 }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir bulgunun düzeltmesini önizle".into(),
+                    input: json!({ "preview": { "key": "3f9a0c12d4e5b678", "fix": "subtractFirst" } }),
+                    output: None,
+                },
+            ],
+        },
+        // Topoloji istisnaları (docs/adr/0589 §3), held together by fixtures/commands/v1/cad.topology.exceptions.json.
+        CommandDescriptor {
+            id: crate::CAD_TOPOLOGY_EXCEPTIONS.into(),
+            version: crate::CAD_TOPOLOGY_EXCEPTIONS_VERSION,
+            title: "Topoloji istisnaları".into(),
+            summary: "Bulguları istisna yapar (mark) ya da istisnalarını kaldırır (unmark); bulgular cad.topology.check'in verdiği kalıcı anahtarlarla (keys) ve çizimin bugünkü hâliyle anılır. \
+                      İstisna bulgunun kuralını, nesnelerini, yerini ve nesnelerin geometrisinin özetini tutar: geometri değişince istisna düşer, bulgu yeniden açılır; düşmüş istisnanın bulgusunu mark bugünkü geometriyle yeniden istisna yapar, unmark kaldırır. \
+                      Zaten istisna olan (mark) ya da istisnası olmayan (unmark) bulgu sayılmaz. \
+                      İstisnalar proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. \
+                      Retler: invalid_input (anahtar yok ya da iki kez), finding_not_found; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::TopologyExceptions>(),
+            output: schema::<crate::TopologyExceptionsEdited>(),
+            plan: Some(schema::<crate::TopologyExceptionsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "İki bulguyu istisna yap".into(),
+                    input: json!({ "operation": "mark", "keys": ["3f9a0c12d4e5b678", "0a1b2c3d4e5f6071"] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir bulgunun istisnasını kaldır".into(),
+                    input: json!({ "operation": "unmark", "keys": ["3f9a0c12d4e5b678"] }),
+                    output: None,
+                },
+            ],
+        },
         // Adres verisini denetle (docs/adr/0579), held together by fixtures/commands/v1/cad.addresses.check.json.
         CommandDescriptor {
             id: crate::CAD_ADDRESSES_CHECK.into(),
@@ -9520,6 +9600,13 @@ mod tests {
                     crate::CAD_ADDRESSES_CHECK => {
                         serde_json::from_value::<crate::AddressesCheck>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_TOPOLOGY_CHECK => {
+                        serde_json::from_value::<crate::TopologyCheck>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_TOPOLOGY_EXCEPTIONS => {
+                        serde_json::from_value::<crate::TopologyExceptions>(e.input.clone())
+                            .map(|_| ())
+                    }
                     crate::CAD_LAYERS_TIME => {
                         serde_json::from_value::<crate::LayersTime>(e.input.clone()).map(|_| ())
                     }
@@ -10038,6 +10125,14 @@ mod tests {
                         }
                         crate::CAD_ADDRESSES_CHECK => {
                             serde_json::from_value::<crate::AddressesChecked>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_TOPOLOGY_CHECK => {
+                            serde_json::from_value::<crate::TopologyChecked>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_TOPOLOGY_EXCEPTIONS => {
+                            serde_json::from_value::<crate::TopologyExceptionsEdited>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_LAYERS_TIME => {

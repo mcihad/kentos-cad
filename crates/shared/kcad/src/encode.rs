@@ -990,11 +990,15 @@ impl<'d> Encoder<'d> {
                 e.open(t.exceptions.len(), false)?;
                 for (i, x) in t.exceptions.iter().enumerate() {
                     e.at(Seg::Index(i), |e| {
-                        e.open(3, true)?;
+                        e.open(3 + usize::from(x.digest.is_some()), true)?;
                         e.key("at");
                         e.at(Seg::Name("at"), |e| e.point(&x.at))?;
                         e.key("rule");
                         e.text(&x.rule)?;
+                        if let Some(d) = &x.digest {
+                            e.key("digest");
+                            e.text(d)?;
+                        }
                         e.key("objects");
                         e.at(Seg::Name("objects"), |e| {
                             e.open(x.objects.len(), false)?;
@@ -1874,6 +1878,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 .is_some_and(kentos_contracts::LayerTime::recorded)
                 || recorded(&n.children)
         })
+    }
+    // Schema 99 (docs/adr/0589): a topology exception's geometry digest.
+    if doc
+        .settings
+        .topology
+        .as_ref()
+        .is_some_and(|t| t.exceptions.iter().any(|x| x.digest.is_some()))
+    {
+        return crate::SCHEMA_WITH_EXCEPTION_DIGESTS;
     }
     // Schema 98 (docs/adr/0583): a layer's source system, the map's system.
     fn source_crs(nodes: &[LayerNode]) -> bool {

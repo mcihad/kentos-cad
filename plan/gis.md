@@ -290,9 +290,11 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** `GEO-01/02`, sayısal politika ve CBS-16/22/23. GEO-01 testi etkinleşip geçmeli; bağımsız analitik/yüksek hassasiyetli ve PostGIS/GEOS karşılaştırmaları aynı açıklanmış semantiği sağlamalı. Mevcut fixture güncellemesi tek başına kanıt değildir. Hata kapanmadan ilgili analiz kapsamı üretim için doğrulandı diye işaretlenmemeli; GEO-02 ayrı performans ölçütüyle izlenmeli.
 
-- [ ] **CBS-14 — Topoloji bulgularını artımlı ve kaynak revision'ına bağlı izle — P1**
+- [x] **CBS-14 — Topoloji bulgularını artımlı ve kaynak revision'ına bağlı izle — P1**
 
   *Kısmen (19 Ekim 2026; [ADR 0524](../docs/adr/0524-incremental-topology-findings.md)): bulgunun kalıcı anahtarı, denetimin çizimin durumuna bağlanması, yalnız değişenin, komşularının ve boşluk kümesinin yeniden denetlenmesi (rastgele düzenlemelerde tam denetimle aynı), Değişenleri denetle. Kalan: dış sağlayıcıda revizyon ve görünüm dışı komşular, istisnanın geometri bağlamı, düzeltmenin etki önizlemesi.*
+
+  *Yapıldı (22 Ekim 2026; [ADR 0589](../docs/adr/0589-topology-check-bound-to-sources.md)): salt okunur `cad.topology.check` (Python, MCP): bağlı parçanın bandındaki satırlar komşudur, yalnız dışarıdakilerin bulgusu bırakılır, banttan taşan nesne ya da okunamayan band denetimi eksik bırakır ve temiz demez; damga çizimin sürümü, kuralların özeti, kaynakların sürümü ve bandı; düzeltmenin önizlemesi (ölçüler önce ve sonra, yazılacak tablo; dışarıdaki satırı değiştiren düzeltme yapılmaz). İstisna nesnelerinin geometri özetiyle (`.kcad` şema 99), geometri değişince düşer ve söylenir; `cad.topology.exceptions`. Masaüstünün sekmesi aynı çekirdekle, Düzelt ▾ önizlemeli. Kalan: yazmanın denetimin damgasını istemesi, kaynaklar arası kuralda bandın komşuları.*
 
   **Mevcut:** 13 topoloji kuralı, bulgu paneli, düzeltme ve istisna var [K07]. ArcGIS'in Error Inspector yaklaşımındaki yararlı taraf, hatayı haritada bulup gerekçeli olarak çözme akışıdır. [A01]
 

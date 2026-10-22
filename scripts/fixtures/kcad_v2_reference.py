@@ -492,7 +492,13 @@ def topology(t):
     exceptions = []
     for x in t.get("exceptions", []):
         assert x["rule"] in ids and x["objects"], x
-        exceptions.append(cmap({"at": point(x["at"]), "rule": text(x["rule"]), "objects": array([blob(uid_bytes(u)) for u in x["objects"]])}))
+        assert set(x) <= {"at", "rule", "objects", "digest"}, x
+        # Schema 99 (docs/adr/0589 §3): the objects' geometry when marked, 16 lowercase hexadecimal digits.
+        assert "digest" not in x or (len(x["digest"]) == 16 and all(c in "0123456789abcdef" for c in x["digest"])), x
+        exc = {"at": point(x["at"]), "rule": text(x["rule"]), "objects": array([blob(uid_bytes(u)) for u in x["objects"]])}
+        if "digest" in x:
+            exc["digest"] = text(x["digest"])
+        exceptions.append(cmap(exc))
     out = {}
     if rules:
         out["rules"] = array(rules)
@@ -2199,6 +2205,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 99 (docs/adr/0589): a topology exception's geometry digest.
+    if any("digest" in x for x in (settings or {}).get("topology", {}).get("exceptions", [])):
+        return 99
     # Schema 98 (docs/adr/0583): a layer's source system, the map's system.
     def source_crs(nodes):
         return any("sourceCrs" in n or source_crs(n.get("children", [])) for n in nodes)
@@ -2775,7 +2784,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-99.kcad"] = container(root(cmap(parts), version=uint(99)))
+    files["schema-version-100.kcad"] = container(root(cmap(parts), version=uint(100)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4660,6 +4669,17 @@ def build():
     # group's record, an axis order or a unit not known, the local system's code, an empty name; a map system that is
     # the project's own, a map system of a local project.
     out["source-crs.kcad"] = container(document(load("source-crs.json")))
+    # Exception digests (docs/adr/0589 §3): schema 99's; in schema 98 an unknown field; a digest not 16 lowercase
+    # hexadecimal digits.
+    out["topology-digests.kcad"] = container(document(load("topology-digests.json")))
+    digest_payload = document(load("topology-digests.json"))
+    assert digest_payload.count(b"\x67version\x18\x63") == 1, "the exception digests are schema 99"
+    out["broken/topology-digest-in-schema-98.kcad"] = container(digest_payload.replace(b"\x67version\x18\x63", b"\x67version\x18\x62"))
+
+    good = load("topology-digests.json")["settings"]["topology"]["exceptions"][0]["digest"]
+    assert digest_payload.count(text(good)) == 1
+    for name, value in (("upper", "00FF00FF00FF00FF"), ("short", "00ff00ff")):
+        out[f"broken/topology-digest-{name}.kcad"] = container(digest_payload.replace(text(good), text(value)))
     crs_payload = document(load("source-crs.json"))
     assert crs_payload.count(b"\x67version\x18\x62") == 1, "the source systems are schema 98"
     out["broken/source-crs-in-schema-97.kcad"] = container(crs_payload.replace(b"\x67version\x18\x62", b"\x67version\x18\x61"))

@@ -708,6 +708,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.subtypes"
             | "cad.layers.contingents"
             | "cad.layers.rules"
+            // Its unmark takes the project's topology exceptions away (docs/adr/0589 §3).
+            | "cad.topology.exceptions"
             // Without srid it takes a layer's source system record away; reproject moves every object of the
             // layer (docs/adr/0583 §2).
             | "cad.layers.crs"

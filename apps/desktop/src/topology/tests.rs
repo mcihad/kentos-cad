@@ -197,6 +197,97 @@ fn a_row_types_its_value_in_the_projects_unit() {
 }
 
 /// `cargo test -p kentos-desktop topology::tests::screens -- --ignored --nocapture`: the
+/// A part bound to `fixtures/geopackage/v1/topoloji-parca.gpkg` over `extent` (docs/adr/0589 §1), the rule
+/// Çakışmamalı on its layer.
+fn part(extent: [f64; 4]) -> App {
+    let (mut app, _) = App::boot(None);
+    let setup = serde_json::json!({
+        "format": "kentos.document", "version": 1, "name": "Topoloji: bağlı parça",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
+                     "plotScale": 1000, "workspace": "gis",
+                     "topology": {"tolerance": 0.001,
+                                  "rules": [{"id": "p1", "kind": "mustNotOverlap", "layer": "import-parsel"}]}},
+        "origin": {"x": 0.0, "y": 0.0},
+        "layers": [{"id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false,
+                    "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25},
+                    "children": []}],
+        "activeLayer": "cizim", "entities": [], "styles": {"items": [], "categories": []}
+    });
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("the drawing reads");
+    let doc = crate::document::Document::new(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/geopackage/v1/topoloji-parca.gpkg");
+    let model = &mut app.document.as_mut().expect("open").model;
+    let answer = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(model),
+        "cad.sources.edit",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({ "edit": { "kind": "link", "path": file, "table": "parsel", "extent": extent } }),
+    );
+    assert!(answer.is_ok(), "{answer:?}");
+    app
+}
+
+const E: f64 = 487_000.0;
+const N: f64 = 4_420_000.0;
+const AREA: [f64; 4] = [E - 1.0, N - 1.0, E + 10.5, N + 11.0];
+const NARROW: [f64; 4] = [E - 1.0, N - 1.0, E + 2.0, N + 11.0];
+
+/// A bound part's row overlaps one outside its area: the finding names it “dışarıda”; the outside rows' own
+/// overlap is not the part's (docs/adr/0589 §1).
+#[test]
+fn a_parts_neighbour_outside_its_area_is_checked() {
+    let mut app = part(AREA);
+    let _ = app.update(Message::Run("topology.check"));
+    let (count, rows) = app.topology_seen().expect("the tab is open");
+    assert_eq!(count, "1 bulgu (açık 1, istisna 0)", "{rows:#?}");
+    assert!(rows[0].contains("| #1, dışarıda |"), "{}", rows[0]);
+    let c = app.topology_checked().expect("checked");
+    assert!(c.g.incomplete.is_empty());
+    // Düzelt ▾ says what each fix would do: the part's row may change, the outside row may not.
+    ev(&mut app, Event::Press(0));
+    let previews = app.topology.previews.clone();
+    let first = &previews.iter().find(|(k, _)| *k == "subtractFirst").expect("a preview").1;
+    assert_eq!(first.as_deref(), Ok("alan 110.00 m² → 107.50 m²; “parsel” tablosuna 1 satır"));
+    let second = &previews.iter().find(|(k, _)| *k == "subtractSecond").expect("a preview").1;
+    assert!(second.as_ref().is_err_and(|w| w.contains("alanın dışındaki bir satırı değiştirir")), "{second:?}");
+}
+
+/// A part's object reaching out of the band: the check is not complete and says so (docs/adr/0589 §1).
+#[test]
+fn a_part_reaching_out_of_its_band_is_not_said_clean() {
+    let mut app = part(NARROW);
+    let _ = app.update(Message::Run("topology.check"));
+    let c = app.topology_checked().expect("checked");
+    assert_eq!(c.g.incomplete.len(), 1);
+    assert!(c.findings.is_empty());
+    assert!(c.g.incomplete[0].reason.starts_with("parçanın 1 nesnesi okunan bandın dışına uzanıyor"));
+    assert!(plan::not_clean(1, 1).starts_with("Bulgu yok ama denetim eksik"));
+}
+
+/// An exception bound to its objects' geometry lapses once it changes: the row says it (docs/adr/0589 §3).
+#[test]
+fn a_lapsed_exception_is_said_on_its_row() {
+    let mut app = checked();
+    ev(&mut app, Event::Press(0));
+    ev(&mut app, Event::Exception(true));
+    let x = &topology(&app).exceptions[0];
+    assert_eq!(x.digest.as_ref().map(String::len), Some(16), "bound to the geometry");
+    // Its digest made old as a change of the objects' geometry would.
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let mut settings = doc.settings().clone();
+    if let Some(t) = settings.topology.as_mut() {
+        t.exceptions[0].digest = Some("0000000000000000".into());
+    }
+    doc.set_settings(settings);
+    ev(&mut app, Event::Check);
+    let (count, rows) = app.topology_seen().expect("the tab is open");
+    assert_eq!(count, "19 bulgu (açık 19, istisna 0)");
+    assert!(rows[0].contains("Çakışma (istisna düştü)"), "{}", rows[0]);
+}
+
 /// Topoloji tab after Denetle with the overlap chosen, the gap chosen, Düzelt ▾ on it,
 /// the rules window, the ribbon's Topoloji panel; `.run/shots/topoloji-*` (the web's
 /// `shots.mjs topologyrules`).
@@ -211,14 +302,21 @@ fn screens() {
     let only = std::env::var("KENTOS_SHOTS_ONLY").ok();
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for name in ["bulgular", "bosluk", "duzelt", "kurallar", "serit", "degisti", "yeniden"] {
+            for name in [
+                "bulgular", "bosluk", "duzelt", "kurallar", "serit", "degisti", "yeniden", "dustu", "parca",
+                "parca-duzelt", "eksik",
+            ] {
                 if only
                     .as_deref()
                     .is_some_and(|o| !o.split(',').any(|x| x == name))
                 {
                     continue;
                 }
-                let mut app = app();
+                let mut app = match name {
+                    "parca" | "parca-duzelt" => part(AREA),
+                    "eksik" => part(NARROW),
+                    _ => app(),
+                };
                 let _ = app
                     .settings
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
@@ -231,12 +329,26 @@ fn screens() {
                 let _ = app.update(Message::Run("view.zoomExtents"));
                 let _ = app.update(Message::Run("topology.check"));
                 snapshot.settle(&mut app, App::view, &mut update);
-                ev(
-                    &mut app,
-                    Event::Press(if name == "bulgular" { 0 } else { 1 }),
-                );
+                if name == "dustu" {
+                    // An exception whose objects' geometry changed (docs/adr/0589 §3).
+                    ev(&mut app, Event::Press(0));
+                    ev(&mut app, Event::Exception(true));
+                    let doc = &mut app.document.as_mut().expect("open").model;
+                    let mut settings = doc.settings().clone();
+                    if let Some(t) = settings.topology.as_mut() {
+                        t.exceptions[0].digest = Some("0000000000000000".into());
+                    }
+                    doc.set_settings(settings);
+                    let _ = app.update(Message::Run("topology.check"));
+                }
+                if name != "eksik" {
+                    ev(
+                        &mut app,
+                        Event::Press(if matches!(name, "bulgular" | "dustu" | "parca" | "parca-duzelt") { 0 } else { 1 }),
+                    );
+                }
                 snapshot.settle(&mut app, App::view, &mut update);
-                if name == "duzelt" {
+                if name == "duzelt" || name == "parca-duzelt" {
                     // Düzelt ▾ opened: pressed where the bar shows it.
                     let at = crate::files_testing::find_text(&mut snapshot, &app, texts::FIX)
                         .expect("Düzelt on the bar")
