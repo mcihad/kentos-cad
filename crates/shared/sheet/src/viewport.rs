@@ -30,7 +30,7 @@ impl ScaleRatio {
             && self.model.is_finite()
             && self.paper > 0.
             && self.model > 0.
-            && (1e-6..=1e8).contains(&self.denominator())
+            && crate::projection::Scale::new(self.denominator()).is_some()
     }
 }
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -176,8 +176,12 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
             view.rotation = crate::units::norm_mdeg(
                 (source_view.twist * 180_000. / core::f64::consts::PI).round() as i64,
             );
-            let scale = (source_view.width * 1e6 / f64::from(frame.width))
-                .max(source_view.height * 1e6 / f64::from(frame.height));
+            let scale = crate::projection::fitting_denominator(
+                source_view.width,
+                source_view.height,
+                &frame,
+                0,
+            );
             view.ratio = Some(ScaleRatio {
                 paper: 1.,
                 model: scale,
@@ -205,12 +209,14 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
             x: bounds[0] + (bounds[2] - bounds[0]) / 2.,
             y: bounds[1] + (bounds[3] - bounds[1]) / 2.,
         });
-        let (s, c) = crate::units::sin_cos(view.rotation);
-        let (w, h) = (bounds[2] - bounds[0], bounds[3] - bounds[1]);
         view.ratio = Some(ScaleRatio {
             paper: 1.,
-            model: ((w * c.abs() + h * s.abs()) * 1e6 / f64::from(frame.width))
-                .max((w * s.abs() + h * c.abs()) * 1e6 / f64::from(frame.height)),
+            model: crate::projection::fitting_denominator(
+                bounds[2] - bounds[0],
+                bounds[3] - bounds[1],
+                &frame,
+                view.rotation,
+            ),
         });
         changed.source = Source::Drawing;
     }

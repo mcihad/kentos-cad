@@ -53,7 +53,7 @@ fn color(c: [f64; 4], opacity: f64) -> String {
 /// Paper mm of a length in a batch's unit: metres of ground at the map's scale, or CSS px.
 pub fn paper_mm(v: f64, unit: Unit, scale: f64) -> f64 {
     match unit {
-        Unit::World => v * 1000.0 / scale,
+        Unit::World => kentos_sheet::projection::Scale::for_rendering(scale).paper_mm(v),
         Unit::Px => v * 25.4 / 96.0,
     }
 }
@@ -593,7 +593,9 @@ fn marker_paths(
     // Sizes in the batch's unit; ground metres per unit: 1 for world, a CSS px's paper mm at the scale for px.
     let per_unit = match unit {
         Unit::World => 1.0,
-        Unit::Px => 25.4 / 96.0 * o.scale / 1000.0,
+        Unit::Px => {
+            kentos_sheet::projection::Scale::for_rendering(o.scale).model_metres_from_mm(25.4 / 96.)
+        }
     };
     let (mut fills, mut strokes, mut dots) = (Vec::new(), Vec::new(), Vec::new());
     let v = layer.data.get(b.range.clone()).unwrap_or_default();

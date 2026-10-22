@@ -117,7 +117,7 @@ pub(crate) fn built_layers(
 ) -> Vec<(String, String, kentos_native_style::StyledLayer)> {
     let doc = src.doc;
     let scale = scale.max(1e-6);
-    let pad = 20.0 * scale / 1000.0;
+    let pad = kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(20.);
     let reach = [
         extent[0] - pad,
         extent[1] - pad,
@@ -207,7 +207,7 @@ pub fn vector_content(
 ) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
     let doc = src.doc;
     let scale = scale.max(1e-6);
-    let pad = 20. * scale / 1000.;
+    let pad = kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(20.);
     let reach = [
         extent[0] - pad,
         extent[1] - pad,

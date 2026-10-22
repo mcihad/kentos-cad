@@ -126,30 +126,12 @@ pub fn today() -> String {
     format!("{y:04}-{m:02}-{d:02}")
 }
 
-/// The drawing area's own local origin (`scene_origin`): the anchor, else the middle of the drawing.
-fn origin_of(doc: &Document, spatial: &Spatial) -> kentos_geometry_core::Vec2 {
-    let anchor = doc.origin();
-    if anchor.x.is_finite() && anchor.y.is_finite() {
-        kentos_geometry_core::Vec2::new(anchor.x, anchor.y)
-    } else {
-        spatial
-            .extent()
-            .map_or(kentos_geometry_core::Vec2::new(0.0, 0.0), |b| {
-                kentos_geometry_core::Vec2::new(
-                    (b.min_x + b.max_x) / 2.0,
-                    (b.min_y + b.max_y) / 2.0,
-                )
-            })
-    }
-}
-
 /// Draws the maps of a book's pages as vectors (the book PDF's and the atlas's): each map of a display
 /// list its content at its scale, what could not be said told in `finish`.
 pub(crate) struct MapDrawer<'a> {
     doc: &'a Document,
     spatial: &'a Spatial,
     library: &'a StyleLibrary,
-    origin: kentos_geometry_core::Vec2,
     /// The moment the temporal layers show at (docs/adr/0534 §3); none: no time cut.
     window: Option<kentos_geometry_core::time::Window>,
     /// The drawing as the maps at a scale draw it (docs/adr/0323 §2): a copy per scale where an annotative
@@ -172,7 +154,6 @@ impl<'a> MapDrawer<'a> {
             doc,
             spatial,
             library,
-            origin: origin_of(doc, spatial),
             window,
             annotative: doc.has_annotative(),
             scaled: std::collections::HashMap::new(),
@@ -190,6 +171,8 @@ impl<'a> MapDrawer<'a> {
     ) -> Option<PdfMap> {
         let doc = self.doc;
         let extent = m.extent?;
+        let center = m.view.center?;
+        let origin = kentos_geometry_core::Vec2::new(center.x, center.y);
         let at = m.view.scale.max(1e-6);
         let key = at.to_bits();
         // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
@@ -217,7 +200,7 @@ impl<'a> MapDrawer<'a> {
                     doc: copy,
                     store: spatial.store(),
                     library: self.library,
-                    origin: self.origin,
+                    origin,
                 };
                 &own
             }
@@ -225,7 +208,7 @@ impl<'a> MapDrawer<'a> {
                 doc,
                 store: self.spatial.store(),
                 library: self.library,
-                origin: self.origin,
+                origin,
             },
         };
         let label_spatial = match self.scaled.get(&key) {

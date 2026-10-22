@@ -49,9 +49,9 @@ pub fn default_store() -> Option<Store> {
 }
 
 /// The drawing as its maps show it: its layers through the style engine at a
-/// map's scale (built once a scale and drawing state, every map at that scale
-/// drawn from it), and the drawing pipeline's plain scene of the open
-/// document on paper's palette for a map whose layers have no vector form.
+/// map's scale and local centre (a bounded cache for each drawing state), and
+/// the drawing pipeline's plain scene of the open document on paper's palette
+/// for a map whose layers have no vector form.
 #[derive(Default)]
 pub struct SheetMaps {
     scene: RefCell<Option<MapScene>>,
@@ -67,8 +67,8 @@ pub struct SheetMaps {
 /// The shown layers through the style engine at one scale on the paper's palette.
 struct StyledAt {
     /// The drawing (its session and state), the library's version, the scale and the map's own layers (its layer
-    /// state and overrides, docs/adr/0314 §1; 0 for none).
-    key: (u64, u64, u64, u64, u64),
+    /// state and overrides, docs/adr/0314 §1; 0 for none), and the local viewport origin.
+    key: (u64, u64, u64, u64, u64, u64, u64),
     origin: Vec2,
     /// Each shown layer's id and name, and its build.
     layers: Vec<(String, String, kentos_native_style::batches::StyledLayer)>,
@@ -172,9 +172,13 @@ impl SheetMaps {
         doc: &Document,
         store: &kentos_geometry_core::store::Store,
         library: &kentos_native_style::library::StyleLibrary,
-        scale: f64,
+        view: &kentos_sheet::display::MapViewPrim,
         own: (&MapLayers, &[kentos_sheet::kinds::LayerOverride]),
     ) -> Rc<StyledAt> {
+        let scale = view.scale;
+        let origin = view
+            .center
+            .map_or_else(|| scene::scene_origin(doc), |p| Vec2::new(p.x, p.y));
         let own_key = match own {
             (MapLayers::Theme(_), _) | (_, [_, ..]) => {
                 use std::hash::{Hash, Hasher};
@@ -195,11 +199,12 @@ impl SheetMaps {
             library.version(),
             scale.to_bits(),
             own_key,
+            origin.x.to_bits(),
+            origin.y.to_bits(),
         );
         if let Some(at) = self.styled.borrow().iter().find(|a| a.key == key) {
             return Rc::clone(at);
         }
-        let origin = scene::scene_origin(doc);
         let look = crate::style::scene::Look {
             line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::of(
                 doc.model.settings(),
@@ -501,7 +506,10 @@ impl MapPainter for SheetPainter<'_> {
             doc: &drawing.model,
             store: spatial.store(),
             library: self.library,
-            origin: kentos_render_wgpu::scene::scene_origin(drawing),
+            origin: r.view.center.map_or_else(
+                || kentos_render_wgpu::scene::scene_origin(drawing),
+                |p| Vec2::new(p.x, p.y),
+            ),
         };
         kentos_plot::maps::vector_content(&src, r.layers, r.overrides, r.view.scale, extent, &texts)
             .ok()
@@ -571,11 +579,11 @@ impl SheetPainter<'_> {
             drawing,
             spatial.store(),
             self.library,
-            scale,
+            r.view,
             (r.layers, r.overrides),
         );
         let s = scale;
-        let pad = 20.0 * s / 1000.0;
+        let pad = kentos_sheet::projection::Scale::for_rendering(s).model_metres_from_mm(20.);
         let reach = [
             extent[0] - pad,
             extent[1] - pad,
@@ -591,7 +599,8 @@ impl SheetPainter<'_> {
             _ => None,
         };
         // Pixels a paper mm; a line never thinner than the screen shows (a printed one as it is).
-        let px_mm = (r.pixels_per_metre * s / 1000.0) as f32;
+        let px_mm = kentos_sheet::projection::Scale::for_rendering(s)
+            .paper_pixels_per_mm(r.pixels_per_metre) as f32;
         let thinnest = if r.export { 0.25 } else { 0.6 };
         let mut drawn = Vec::new();
         for (id, _, layer) in &at.layers {
@@ -634,18 +643,21 @@ impl SheetPainter<'_> {
             (h * f).ceil().max(1.0) as u32,
         );
         // `MapRequest::to_px`, for metres from the layers' origin, at the picture's pixels.
-        let (sn, co) = kentos_sheet::units::sin_cos(r.view.rotation);
         let ppm = r.pixels_per_metre * f;
-        let (a, b) = ((at.origin.x - c.x) * ppm, (at.origin.y - c.y) * ppm);
+        let camera = kentos_sheet::projection::Transform::at_resolution(
+            c,
+            [f64::from(pw) / 2., f64::from(ph) / 2.],
+            ppm,
+            r.view.rotation,
+        );
+        let (m, t) = camera.relative_affine([at.origin.x, at.origin.y]);
         let view = CpuView {
-            m: [co * ppm, sn * ppm, sn * ppm, -co * ppm],
-            t: [
-                f64::from(pw) / 2.0 + a * co + b * sn,
-                f64::from(ph) / 2.0 + a * sn - b * co,
-            ],
+            m,
+            t,
             px_per_m: ppm,
-            // A CSS pixel of the paper (25.4/96 mm) in the picture's pixels.
-            dpr: ppm * scale / 1000.0 * 25.4 / 96.0,
+            dpr: kentos_sheet::projection::Scale::for_rendering(scale).paper_pixels_per_mm(ppm)
+                * 25.4
+                / 96.,
             scale,
         };
         let layers: Vec<&kentos_native_style::batches::StyledLayer> = at
@@ -677,11 +689,11 @@ impl SheetPainter<'_> {
             drawing,
             spatial.store(),
             self.library,
-            scale,
+            r.view,
             (r.layers, r.overrides),
         );
         let s = scale;
-        let pad = 20.0 * s / 1000.0;
+        let pad = kentos_sheet::projection::Scale::for_rendering(s).model_metres_from_mm(20.);
         let reach = [
             extent[0] - pad,
             extent[1] - pad,
@@ -727,7 +739,8 @@ impl SheetPainter<'_> {
         let turn = kentos_sheet_ui::paint::rad(r.view.rotation) as f32;
         let scale = r.view.scale.max(1e-6);
         // The frame's pixels per paper millimetre, and per CSS pixel of the paper.
-        let px_per_mm = r.pixels_per_metre * scale / 1000.0;
+        let px_per_mm = kentos_sheet::projection::Scale::for_rendering(scale)
+            .paper_pixels_per_mm(r.pixels_per_metre);
         let k = (px_per_mm * crate::sheet_pdf::PX_MM).max(1e-6);
         let (w, h) = (f64::from(r.size.width) / k, f64::from(r.size.height) / k);
         let (s, co) = (f64::from(turn).sin().abs(), f64::from(turn).cos().abs());
@@ -741,7 +754,8 @@ impl SheetPainter<'_> {
             map_ratio: 1.0,
             center: Vec2::new(c.x, c.y),
             // CSS pixels per ground metre on the paper.
-            scale: 1000.0 / (crate::sheet_pdf::PX_MM * scale),
+            scale: kentos_sheet::projection::Scale::for_rendering(scale)
+                .pixels_per_metre(1. / (crate::sheet_pdf::PX_MM * 1000.)),
             width: bw,
             height: bh,
             twist: 0.0,

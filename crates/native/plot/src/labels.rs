@@ -143,7 +143,8 @@ pub fn labels_in_view(
         return Vec::new();
     };
     let scale = view.scale.max(1e-6);
-    let pixels = 1000. / (PX_MM * scale);
+    let pixels = kentos_sheet::projection::Scale::for_rendering(scale)
+        .pixels_per_metre(1. / (PX_MM * 1000.));
     let shown = crate::layers::map_layers(
         doc.layers().nodes(),
         &doc.settings().layer_states,
@@ -530,14 +531,15 @@ pub fn labels_in_view(
             }
             _ => continue,
         }
-        l.size = ground_height * 1000. / scale;
+        l.size = kentos_sheet::projection::Scale::for_rendering(scale).paper_mm(ground_height);
         if ground_mask != 0. {
             mask(&mut l, ground_height, ground_mask, centered);
         }
         if !l.text.is_empty() && l.size > 0. {
             if let Some(shadow) = shadow {
                 let mut sh = l.clone();
-                let k = PX_MM * scale / 1000.;
+                let k = kentos_sheet::projection::Scale::for_rendering(scale)
+                    .model_metres_from_mm(PX_MM);
                 sh.at.x += shadow.dx * k;
                 sh.at.y += shadow.dy * k;
                 sh.color = alpha(
@@ -600,7 +602,7 @@ fn backdrop(
     scale: f64,
 ) {
     let Some(back) = &s.background else { return };
-    let px = PX_MM * scale / 1000.;
+    let px = kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(PX_MM);
     let pad = back.padding.unwrap_or(2.) * px;
     let (sn, cs) = rotation.to_radians().sin_cos();
     let (hw, hh) = (w / 2. + pad, h / 2. + pad);
@@ -783,7 +785,7 @@ fn line(
                 base.at.y + s * along + c * lift,
             );
             l.text = text;
-            l.size = height * k * 1000. / scale;
+            l.size = kentos_sheet::projection::Scale::for_rendering(scale).paper_mm(height * k);
             if underline > 0. {
                 let d = height * k * 0.12;
                 let start = Vec2::new(l.at.x + s * d, l.at.y - c * d);

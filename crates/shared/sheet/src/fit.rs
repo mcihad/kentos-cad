@@ -2,7 +2,6 @@
 use crate::{
     GroundPoint, Item, ItemKind, MapView, Result, SheetError,
     ops::{Op, SetItemProps},
-    units::sin_cos,
 };
 
 /// A ground rectangle in canonical metres. The margin is a percentage of its size on each side.
@@ -49,11 +48,8 @@ pub fn map(item: &Item, bounds: [f64; 4], margin_pct: u8, standard_scales: bool)
     let frame = crate::display::map_content_rect(item, m);
     let w = bounds[2] - bounds[0];
     let h = bounds[3] - bounds[1];
-    let (s, c) = sin_cos(view.rotation);
     let factor = 1. + 2. * f64::from(margin_pct) / 100.;
-    let need = ((w * c.abs() + h * s.abs()) * 1_000_000. / f64::from(frame.width))
-        .max((w * s.abs() + h * c.abs()) * 1_000_000. / f64::from(frame.height))
-        * factor;
+    let need = crate::projection::fitting_denominator(w, h, &frame, view.rotation) * factor;
     if need > 100_000_000. {
         return Err(SheetError::at(
             "out_of_range",

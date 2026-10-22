@@ -71,7 +71,7 @@ impl Frame {
 
     /// Metres on the ground per micrometre on the paper.
     fn metres_per_um(&self) -> f64 {
-        self.view.scale.max(1e-6) / 1_000_000.0
+        crate::projection::Scale::for_rendering(self.view.scale).model_metres(1.)
     }
 }
 

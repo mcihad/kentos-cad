@@ -866,3 +866,128 @@ fn sheet09_viewport_screens() {
         }
     }
 }
+
+#[test]
+#[ignore = "GPU pictures, run alone"]
+fn sheet10_precision_screens() {
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/commands/v1/cad.sheets.fit.json"
+    ))
+    .unwrap();
+    let mut snapshot: kentos_commands::DocumentSnapshotV1 =
+        serde_json::from_value(fixture["setup"].clone()).unwrap();
+    snapshot.entities.clear();
+    for (id, x, y, color) in [(1, 0., 0., "#e5484d"), (2, 487150., 4417820., "#1747aa")] {
+        snapshot.entities.push(serde_json::from_value(serde_json::json!({"kind":"polyline","id":id,"layerId":"cizim","attrs":{},"color":color,"lineWeight":0.25,"closed":true,"pts":[{"x":x-0.025,"y":y-0.015},{"x":x+0.025,"y":y-0.015},{"x":x+0.025,"y":y+0.015},{"x":x-0.025,"y":y+0.015}]})).unwrap());
+    }
+    let mut model = kentos_domain::Document::from_snapshot(snapshot).unwrap();
+    let fixtures: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/sheet/v1/viewports.json")).unwrap();
+    let mut page = fixtures["cases"][0]["sheet"].clone();
+    page["name"] = serde_json::json!("2:1 · 5 cm model = 100 mm kâğıt");
+    page["page"]["paper"] = serde_json::json!("a4");
+    page["page"]["size"] = serde_json::json!({"width":297000,"height":210000});
+    let mut items = Vec::new();
+    for (id, left, x, y) in [("near", 20000, 0., 0.), ("far", 160000, 487150., 4417820.)] {
+        let mut item = page["items"][0].clone();
+        item["id"] = serde_json::json!(id);
+        item["name"] = serde_json::json!(id);
+        item["padding"] = serde_json::json!(0);
+        item["kind"]["labelBand"] = serde_json::json!(0);
+        item["frame"] = serde_json::json!({"left":left,"top":50000,"width":110000,"height":100000});
+        item["kind"]["view"] = serde_json::json!({"type":"fixed","center":{"x":x,"y":y},"scale":1,"ratio":{"paper":2,"model":1},"rotation":0});
+        items.push(item);
+    }
+    page["items"] = serde_json::json!(items);
+    let mut book = kentos_sheet::model::SheetBook::default();
+    book.sheets.push(serde_json::from_value(page).unwrap());
+    model
+        .set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
+        .unwrap();
+    let before = model.to_snapshot_v2();
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).unwrap();
+    let pdf = kentos_plot::book::book_pdf(&model, &[], "Test", "2026-10-22").unwrap();
+    std::fs::write(out.join("sheet10-precision.pdf"), pdf.bytes).unwrap();
+    assert_eq!(
+        model.to_snapshot_v2(),
+        before,
+        "paper export must not mutate the model or its origin"
+    );
+    for (theme, text, width, height) in [
+        ("light", 13, 1440., 900.),
+        ("dark", 13, 1440., 900.),
+        ("dark", 18, 1100., 650.),
+    ] {
+        let (mut app, _store) = app_with_store("sheet10-precision");
+        app.settings.choose(&[
+            ("appearance.theme", serde_json::json!(theme)),
+            ("appearance.textSize", serde_json::json!(text)),
+        ]);
+        app.apply_settings();
+        let doc = Document::from_v2(model.to_snapshot_v2(), None).unwrap();
+        let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        drive(&mut app, task);
+        sheet(&mut app, Sheet::Tab(1));
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(width, height)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        sheet(&mut app, Sheet::ZoomPage);
+        snap.settle(&mut app, App::view, &mut update);
+        let image = snap.render(app.view(), &app.theme());
+        let path = out.join(format!("sheet10-precision-{theme}-{text}.png"));
+        image.save(&path).unwrap();
+        println!("{}", path.display());
+        // Only each viewport's content: the page-margin guides are blue too.
+        let regions = if text == 13 {
+            [(360, 395, 645, 585), (735, 395, 1020, 585)]
+        } else {
+            [(350, 330, 510, 445), (545, 330, 705, 445)]
+        };
+        let mut boxes = [[usize::MAX, usize::MAX, 0, 0]; 2];
+        let mut counts = [0; 2];
+        for (i, (x0, y0, x1, y1)) in regions.into_iter().enumerate() {
+            for y in y0..y1 {
+                for x in x0..x1 {
+                    let at = (y * width as usize + x) * 4;
+                    let p = &image.rgba[at..at + 4];
+                    // Anti-aliased thin strokes mix with white; compare colour dominance.
+                    let colored = if i == 0 {
+                        i16::from(p[0]) > i16::from(p[1]) + 25
+                            && i16::from(p[0]) > i16::from(p[2]) + 25
+                    } else {
+                        i16::from(p[2]) > i16::from(p[0]) + 25
+                            && i16::from(p[2]) > i16::from(p[1]) + 15
+                    };
+                    if colored {
+                        counts[i] += 1;
+                        boxes[i] = [
+                            boxes[i][0].min(x),
+                            boxes[i][1].min(y),
+                            boxes[i][2].max(x),
+                            boxes[i][3].max(y),
+                        ];
+                    }
+                }
+            }
+        }
+        println!("{theme}-{text}: {boxes:?} {counts:?}");
+        for (b, n) in boxes.iter().zip(counts) {
+            assert!(n > 100, "missing model detail");
+            assert!(
+                b[2] - b[0] > 100 && b[3] - b[1] > 60,
+                "detail must be visible at the requested physical scale"
+            );
+        }
+        for j in [0, 1] {
+            assert!(
+                (boxes[0][j + 2] - boxes[0][j]).abs_diff(boxes[1][j + 2] - boxes[1][j]) <= 1,
+                "near and far details must have equal dimensions"
+            );
+        }
+    }
+}

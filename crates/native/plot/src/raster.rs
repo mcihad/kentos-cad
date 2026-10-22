@@ -34,20 +34,20 @@ pub(crate) fn map(
         return Err("Harita resmi 32 milyon pikseli aşıyor; paftanın dpi değerini düşürün.".into());
     }
     let scale = m.view.scale.max(1e-6);
-    let ppm = f64::from(w) * 1_000_000. / (f64::from(m.clip.width) * scale);
-    let (s, c) = kentos_sheet::units::sin_cos(m.view.rotation);
-    let delta = [
-        (src.origin.x - center.x) * ppm,
-        (src.origin.y - center.y) * ppm,
-    ];
+    let physical = kentos_sheet::projection::Scale::for_rendering(scale);
+    let ppm = physical.pixels_per_metre(f64::from(w) / f64::from(m.clip.width));
+    let camera = kentos_sheet::projection::Transform::at_resolution(
+        center,
+        [f64::from(w) / 2., f64::from(h) / 2.],
+        ppm,
+        m.view.rotation,
+    );
+    let (matrix, t) = camera.relative_affine([src.origin.x, src.origin.y]);
     let view = CpuView {
-        m: [c * ppm, s * ppm, s * ppm, -c * ppm],
-        t: [
-            f64::from(w) / 2. + delta[0] * c + delta[1] * s,
-            f64::from(h) / 2. + delta[0] * s - delta[1] * c,
-        ],
+        m: matrix,
+        t,
         px_per_m: ppm,
-        dpr: ppm * scale / 1000. * crate::maps::PX_MM,
+        dpr: physical.paper_pixels_per_mm(ppm) * crate::maps::PX_MM,
         scale,
     };
     let built = built_layers(src, &m.layers, &m.layer_overrides, m.view.scale, extent);
@@ -202,7 +202,9 @@ fn draw_labels(
             continue;
         };
         let (s, c) = l.rotation.to_radians().sin_cos();
-        let size = l.size * scale / 1000. / f64::from(outline.size);
+        let size = kentos_sheet::projection::Scale::for_rendering(scale)
+            .model_metres_from_mm(l.size)
+            / f64::from(outline.size);
         let along = match l.anchor {
             TextAnchor::CenterBaseline | TextAnchor::CenterMiddle => {
                 -f64::from(outline.advance) / 2.

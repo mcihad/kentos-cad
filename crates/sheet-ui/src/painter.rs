@@ -16,7 +16,6 @@ use iced::widget::canvas::{self, Frame, Path};
 use iced::{Color, Point, Rectangle, Size};
 use kentos_sheet::display::{MapPrim, MapViewPrim};
 use kentos_sheet::kinds::MapLayers;
-use kentos_sheet::units::sin_cos;
 
 /// What a map frame shows and how large it is on the screen.
 #[derive(Clone, Debug, PartialEq)]
@@ -43,7 +42,7 @@ impl<'a> MapRequest<'a> {
     /// The request of a map primitive drawn `size` pixels large at `k` pixels per micrometre.
     pub fn of(m: &'a MapPrim, size: Size, k: f64, export: bool) -> Self {
         // A metre on the ground is 1 000 000 / scale micrometres on the paper.
-        let ppm = k * 1_000_000.0 / m.view.scale.max(1e-6);
+        let ppm = kentos_sheet::projection::Scale::for_rendering(m.view.scale).pixels_per_metre(k);
         MapRequest {
             item: &m.item,
             size,
@@ -67,20 +66,22 @@ impl<'a> MapRequest<'a> {
     /// Where a ground point (east, north) falls in the content, pixels from
     /// its top-left corner: the core's own rule (its grids land on the same
     /// pixels).
-    pub fn to_px(&self, east: f64, north: f64) -> Point {
-        let c = self
-            .view
-            .center
-            .unwrap_or(kentos_sheet::kinds::GroundPoint { x: 0.0, y: 0.0 });
-        let (a, b) = (
-            (east - c.x) * self.pixels_per_metre,
-            (north - c.y) * self.pixels_per_metre,
-        );
-        let (s, co) = sin_cos(self.view.rotation);
-        Point::new(
-            (f64::from(self.size.width) / 2.0 + a * co + b * s) as f32,
-            (f64::from(self.size.height) / 2.0 + a * s - b * co) as f32,
+    pub fn transform(&self) -> kentos_sheet::projection::Transform {
+        kentos_sheet::projection::Transform::at_resolution(
+            self.view
+                .center
+                .unwrap_or(kentos_sheet::GroundPoint { x: 0., y: 0. }),
+            [
+                f64::from(self.size.width) / 2.,
+                f64::from(self.size.height) / 2.,
+            ],
+            self.pixels_per_metre,
+            self.view.rotation,
         )
+    }
+    pub fn to_px(&self, east: f64, north: f64) -> Point {
+        let p = self.transform().point([east, north]);
+        Point::new(p[0] as f32, p[1] as f32)
     }
 }
 

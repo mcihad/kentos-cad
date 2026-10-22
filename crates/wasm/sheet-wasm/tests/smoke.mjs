@@ -13,7 +13,7 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
-const PKG = join(ROOT, 'apps/web/src/product/sheet/pkg');
+const PKG = process.env.KENTOS_SHEET_WASM_PKG ?? join(ROOT, 'apps/web/src/product/sheet/pkg');
 const FX = join(ROOT, 'fixtures/sheet/v1');
 
 const engine = await import(pathToFileURL(join(PKG, 'kentos_sheet_wasm.js')).href);
@@ -327,6 +327,60 @@ for (const f of files('kpafta/invalid')) {
   const tri = (f) => `${f.severity} ${f.code} ${f.item ?? ''}`;
   assert.deepStrictEqual([...new Set(found.map(tri))].sort(), fx.expect.map(tri).sort(), 'glyphs: preflight');
   count('glyphs', 3);
+}
+
+// CAD-SHEET-09/10: same existing WASM operations and PDF surface, without a web application test.
+{
+  const root = json('ops/book.json');
+  const cameraCases = json('viewports.json').cases;
+  for (const c of cameraCases) {
+    const b = { ...root, sheets: [c.sheet], masters: [], assets: [], variables: [] };
+    const before = bookText(b, c.name);
+    const raw = engine.applyOp(before, JSON.stringify(c.operation));
+    if (c.expected.error) {
+      assert.equal(refused(raw, c.name).code, c.expected.error, c.name);
+    } else {
+      const r = ok(raw, c.name);
+      const list = ok(engine.displayList(JSON.stringify(r.book), 'page', '{}'), c.name);
+      const map = list.prims.find((p) => p.type === 'map');
+      assert.ok(Math.abs(map.view.scale - c.expected.denominator) < 1e-9, c.name);
+      map.extent.forEach((v, i) => assert.ok(Math.abs(v - c.expected.bounds[i]) < 1e-8, c.name));
+      assert.equal(digest(ok(engine.applyOps(JSON.stringify(r.book), JSON.stringify(r.inverse)), c.name).book, c.name), digest(before, c.name));
+    }
+    count('viewports');
+  }
+  const { inflateSync } = await import('node:zlib');
+  const source = cameraCases[0].sheet;
+  const number = '([-+]?(?:[0-9]*\\.[0-9]+|[0-9]+\\.?[0-9]*)(?:[eE][-+]?[0-9]+)?)';
+  for (const c of json('viewport-projection.json').cases) {
+    const sheet = structuredClone(source);
+    const item = sheet.items[0];
+    item.padding = 0; item.frame = c.frame; item.kind.labelBand = 0;
+    item.kind.view = { type: 'fixed', scale: 100, ratio: { paper: 1, model: c.denominator }, center: { x: c.center[0], y: c.center[1] }, rotation: c.rotation };
+    const book = bookText({ ...root, sheets: [sheet], masters: [], assets: [], variables: [] }, c.name);
+    const inputs = { maps: [{ item: item.id, content: { type: 'vector', layers: [{ id: 'measure', name: 'Measure', paths: [
+      { points: c.world.slice(0, 2), stroke: { color: '#ff0000', width: 0.25 } },
+      { points: [c.center, c.world[3]], stroke: { color: '#0000ff', width: 0.05 } },
+    ] }] } }] };
+    const bytes = Buffer.from(engine.toPdf(book, JSON.stringify(inputs), '{}'));
+    const streams = [...bytes.toString('latin1').matchAll(/stream\r?\n([\s\S]*?)\r?\nendstream/g)].map((m) => {
+      try { return inflateSync(Buffer.from(m[1], 'latin1')).toString('latin1'); } catch { return m[1]; }
+    });
+    for (const [rgb, expected] of [['1 0 0 RG', c.expected.paper.slice(0, 2)], ['0 0 1 RG', [[c.frame.left + c.frame.width / 2, c.frame.top + c.frame.height / 2], c.expected.paper[3]]]]) {
+      const stream = streams.find((s) => s.includes(rgb));
+      assert.ok(stream, `${c.name}: PDF colour ${rgb}`);
+      const prefix = stream.slice(0, stream.indexOf(rgb));
+      const commands = [...prefix.matchAll(new RegExp(number + '\\s+' + number + '\\s+([ml])', 'g'))];
+      const last = commands.findLastIndex((p) => p[3] === 'm');
+      const points = commands.slice(last);
+      assert.equal(points.length, 2, c.name);
+      points.forEach((p, i) => {
+        const paper = [+p[1] * 25400 / 72, 297000 - +p[2] * 25400 / 72];
+        paper.forEach((v, j) => assert.ok(Math.abs(v - expected[i][j]) < 0.25, `${c.name}: PDF coordinate ${v} != ${expected[i][j]}`));
+      });
+    }
+    count('projection');
+  }
 }
 
 const info = ok(engine.engineInfo(), 'engineInfo');

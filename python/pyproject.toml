@@ -17,6 +17,10 @@ classifiers = [
     "Typing :: Typed",
 ]
 
+[project.optional-dependencies]
+# Independent CAD interoperability acceptance reader; never required by the shipped SDK.
+test = ["ezdxf==1.4.5"]
+
 [tool.maturin]
 manifest-path = "../crates/native/python/Cargo.toml"
 module-name = "kentos._native"

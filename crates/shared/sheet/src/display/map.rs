@@ -28,51 +28,22 @@ pub(crate) struct MapFrame {
 }
 
 impl MapFrame {
-    fn k(&self) -> f64 {
-        // Micrometres on the paper per metre on the ground.
-        1_000_000.0 / self.scale.max(1e-6)
+    fn transform(&self) -> Option<crate::projection::Transform> {
+        Some(crate::projection::Transform::paper(
+            &self.content,
+            self.center?,
+            self.scale,
+            self.view_rot,
+        ))
     }
-
-    /// A ground point (east, north) in the item's own coordinates.
     pub fn to_local(&self, g: [f64; 2]) -> Option<[f64; 2]> {
-        let c = self.center?;
-        let (a, b) = ((g[0] - c.x) * self.k(), (g[1] - c.y) * self.k());
-        let (s, co) = sin_cos(self.view_rot);
-        let rc = self.content.center();
-        Some([rc[0] + a * co + b * s, rc[1] + a * s - b * co])
+        Some(self.transform()?.point(g))
     }
-
-    /// A point of the item's own coordinates on the ground.
     pub fn to_ground(&self, p: [f64; 2]) -> Option<[f64; 2]> {
-        let c = self.center?;
-        let rc = self.content.center();
-        let (x, y) = (p[0] - rc[0], p[1] - rc[1]);
-        let (s, co) = sin_cos(self.view_rot);
-        let a = x * co + y * s;
-        let b = x * s - y * co;
-        Some([c.x + a / self.k(), c.y + b / self.k()])
+        Some(self.transform()?.inverse(p))
     }
-
-    /// The ground the content covers.
     pub fn extent(&self) -> Option<[f64; 4]> {
-        let r = &self.content;
-        let corners = [
-            [f64::from(r.left), f64::from(r.top)],
-            [r.right() as f64, f64::from(r.top)],
-            [r.right() as f64, r.bottom() as f64],
-            [f64::from(r.left), r.bottom() as f64],
-        ];
-        let mut e = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
-        for c in corners {
-            let g = self.to_ground(c)?;
-            e = [
-                e[0].min(g[0]),
-                e[1].min(g[1]),
-                e[2].max(g[0]),
-                e[3].max(g[1]),
-            ];
-        }
-        Some(e)
+        Some(self.transform()?.ground_bounds(&self.content))
     }
 
     /// Where grid north points on the paper (clockwise from up).
@@ -82,19 +53,7 @@ impl MapFrame {
 
     /// The content's corners on the ground, in order (an overview draws them).
     pub fn ground_corners(&self) -> Option<[[f64; 2]; 4]> {
-        let r = &self.content;
-        let pts = [
-            [f64::from(r.left), f64::from(r.top)],
-            [r.right() as f64, f64::from(r.top)],
-            [r.right() as f64, r.bottom() as f64],
-            [f64::from(r.left), r.bottom() as f64],
-        ];
-        Some([
-            self.to_ground(pts[0])?,
-            self.to_ground(pts[1])?,
-            self.to_ground(pts[2])?,
-            self.to_ground(pts[3])?,
-        ])
+        Some(self.transform()?.ground_corners(&self.content))
     }
 }
 

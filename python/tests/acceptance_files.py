@@ -105,7 +105,12 @@ def _objects(data: bytes) -> dict[int, tuple[bytes, bytes | None]]:
         head = body[:k]
         raw = body[k + len(b"stream"):]
         raw = raw[2:] if raw.startswith(b"\r\n") else raw[1:]
-        raw = raw[: raw.rfind(b"endstream")].rstrip(b"\r\n")
+        # Stream payload is binary: a valid zlib checksum may end in CR or LF.
+        # Our writer emits a direct byte length; never strip payload whitespace.
+        length = re.search(rb"/Length\s+(\d+)\b", head)
+        if length is None:
+            raise ValueError("The acceptance PDF reader requires a direct stream /Length")
+        raw = raw[:int(length.group(1))]
         if b"/FlateDecode" in head:
             raw = zlib.decompress(raw)
         out[int(m.group(1))] = (head, raw)

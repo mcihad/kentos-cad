@@ -12,7 +12,7 @@ use kentos_sheet::{
 use serde_json::json;
 
 fn um(metres: f64) -> i32 {
-    (metres * 1_000_000.)
+    kentos_sheet::projection::paper_metres_to_um(metres)
         .round()
         .clamp(i32::MIN as f64, i32::MAX as f64) as i32
 }
@@ -195,13 +195,15 @@ pub fn merge_with_source(
             }
         }
         for (i, view) in layout.viewports.iter().enumerate() {
-            let scale = view.view_height * 1000. / view.height_mm;
-            if !scale.is_finite() || !(1e-6..=1e8).contains(&scale) {
-                return Err(format!(
-                    "{} paftasının görünüm ölçeği 0,000001–100000000 aralığı dışında: {scale}",
-                    layout.name
-                ));
-            }
+            let scale =
+                kentos_sheet::projection::Scale::from_lengths(view.view_height, view.height_mm)
+                    .ok_or_else(|| {
+                        format!(
+                            "{} paftasının görünüm ölçeği desteklenen aralıkta değil.",
+                            layout.name
+                        )
+                    })?
+                    .denominator();
             let mut kind = kinds::default_kind("map").ok_or("Pafta görünüm türü bulunamadı")?;
             if let ItemKind::Map(map) = &mut kind {
                 map.view_locked = view.locked;
@@ -210,9 +212,7 @@ pub fn merge_with_source(
                         x: view.view_center.x,
                         y: view.view_center.y,
                     }),
-                    scale: (view.view_height * 1000. / view.height_mm)
-                        .round()
-                        .clamp(1., u32::MAX as f64) as u32,
+                    scale: scale.round().clamp(1., u32::MAX as f64) as u32,
                     ratio: (scale.fract() != 0.).then_some(kentos_sheet::viewport::ScaleRatio {
                         paper: 1.,
                         model: scale,
@@ -407,13 +407,16 @@ pub fn export(doc: &Document) -> (Vec<CadLayout>, Vec<ReportItem>) {
                                 x: c.x * 1000.,
                                 y: c.y * 1000.,
                             },
-                            width_mm: f64::from(width) / 1000.,
-                            height_mm: f64::from(height) / 1000.,
+                            width_mm: kentos_sheet::projection::paper_um_to_mm(f64::from(width)),
+                            height_mm: kentos_sheet::projection::paper_um_to_mm(f64::from(height)),
                             view_center: Vec2 {
                                 x: center.x,
                                 y: center.y,
                             },
-                            view_height: f64::from(height) / 1e6 * view.denominator(),
+                            view_height: kentos_sheet::projection::Scale::for_rendering(
+                                view.denominator(),
+                            )
+                            .model_metres(f64::from(height)),
                             twist: f64::from(kentos_sheet::units::norm_mdeg(
                                 i64::from(view.rotation) + i64::from(item.rotation),
                             ))
