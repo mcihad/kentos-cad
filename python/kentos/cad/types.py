@@ -34698,12 +34698,19 @@ class ProcessingRun(_Model):
     """Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes
     its default for the drawing. A features input is `{ "scope": "all" }` (the visible layers), `{ "scope": "layer",
     "layerId": … }`, `{ "scope": "uids", "uids": [ … ] }`, `{ "scope": "selection" }` (the objects `selection` names)
-    or `{ "scope": "visible" }` (those in `view`), optionally with `kinds`; a features input's default is the
+    or `{ "scope": "visible" }` (those in `view`), optionally with `kinds`, or `{ "scope": "source", "layer": … }` (a
+    bound layer's whole table, not the part the drawing holds) or `{ "scope": "source", "path": …, "table": … }` (a
+    GeoPackage's or a PostGIS database's table), each optionally with `filter` (an expression, its part the source can
+    check sent to it) and `bbox`: the records are read a part at a time and the run is made on a copy, so a source input
+    needs a `sink` (docs/adr/0592 §1); a features input's default is the
     selection, so a run on chosen objects gives `selection`. A file parameter is `{ "path": … }` (a table file read
     as the dialog reads it) or `{ "name": …, "rows": [[…]] }`. Refusals, in order: `tools_unavailable`,
     `unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has
-    not, a value its rules refuse, a file unread, the visible scope without `view`), `tool_failed` (it ran and
-    stopped: a locked layer, nothing to do, its own refusal; nothing written).
+    not, a value its rules refuse, a file unread, the visible scope without `view`, a source input without `sink`),
+    for a source input `layer_not_found`, `invalid_input` (the layer is not bound), `invalid_address`, `file_not_found`,
+    `import_unreadable`, `table_not_found`, `source_unreachable`, `invalid_expression`, `input_too_large` (more than
+    1 000 000 records), `crs_mismatch`; `tool_failed` (it ran and stopped: a locked layer, nothing to do, its own
+    refusal; nothing written). A bound layer read by its loaded part (`scope: layer`) is said (`partial_scope`).
     Attributes:
         drawing: The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
             folder (then in the project's search paths), a result written beside it. The host gives it.
@@ -39796,11 +39803,16 @@ class RunInput(_Model):
     Attributes:
         digest: The layer's content when it was read: the SHA-256 of its objects' kinds, geometries and attributes by lasting id
             (`sources::layer_digest`; docs/adr/0511), so a result tells which state of its input it came from.
+        rows: Unit: count.
+        table: For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the
+            bound layer's) and how many of its records were read.
     """
     layer: str
     digest: str
     revision: str | None | Unset = UNSET
+    rows: int | None | Unset = UNSET
     source: str | None | Unset = UNSET
+    table: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -39808,8 +39820,12 @@ class RunInput(_Model):
         out["digest"] = self.digest
         if self.revision is not UNSET:
             out["revision"] = self.revision
+        if self.rows is not UNSET:
+            out["rows"] = self.rows
         if self.source is not UNSET:
             out["source"] = self.source
+        if self.table is not UNSET:
+            out["table"] = self.table
         return out
 
     @classmethod
@@ -39818,26 +39834,32 @@ class RunInput(_Model):
             layer=data["layer"],
             digest=data["digest"],
             revision=data.get("revision", UNSET),
+            rows=data.get("rows", UNSET),
             source=data.get("source", UNSET),
+            table=data.get("table", UNSET),
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class RunSink(_Model):
-    """A run's result written to a GeoPackage instead of the drawing (docs/adr/0508 §4, 0549): the tool runs on a copy,
+    """A run's result written to a GeoPackage or a PostGIS database instead of the drawing (docs/adr/0508 §4, 0549, 0592
+    §2): the tool runs on a copy,
     the objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the
     drawing does not change. A new file is written whole or not at all (one that is there is replaced only with
     `overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one
     transaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.
     Attributes:
-        path: The GeoPackage's path (`.gpkg`).
+        path: The GeoPackage's path (`.gpkg`), or a PostGIS database's address (`postgresql://…`, without a password; the
+            tables go in `schema`, docs/adr/0592 §2).
         mode: New file (the default), tables added to a file that is there, or tables added and same-named ones replaced.
+        schema: The database schema the tables go in (`public` when none); a GeoPackage has none.
         tables: Also write the tool's table outputs (a summary, a report) as attribute tables, each named by its output's
             label, beside the layers' tables (docs/adr/0551 §3). A tool whose result is only a table writes only that.
     """
     path: str
     mode: SinkMode | SinkModeName | Unset = UNSET
     overwrite: bool | Unset = UNSET
+    schema: str | None | Unset = UNSET
     tables: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -39847,6 +39869,8 @@ class RunSink(_Model):
             out["mode"] = _enum_out(self.mode)
         if self.overwrite is not UNSET:
             out["overwrite"] = self.overwrite
+        if self.schema is not UNSET:
+            out["schema"] = self.schema
         if self.tables is not UNSET:
             out["tables"] = self.tables
         return out
@@ -39857,6 +39881,7 @@ class RunSink(_Model):
             path=data["path"],
             mode=_enum_in(SinkMode, data["mode"]) if "mode" in data else UNSET,
             overwrite=data.get("overwrite", UNSET),
+            schema=data.get("schema", UNSET),
             tables=data.get("tables", UNSET),
         )
 

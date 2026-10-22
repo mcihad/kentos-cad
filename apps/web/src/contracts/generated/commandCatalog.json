@@ -1015093,7 +1015093,7 @@
       "input": {
         "$defs": {
           "RunSink": {
-            "description": "A run's result written to a GeoPackage instead of the drawing (docs/adr/0508 §4, 0549): the tool runs on a copy,\nthe objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the\ndrawing does not change. A new file is written whole or not at all (one that is there is replaced only with\n`overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one\ntransaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.",
+            "description": "A run's result written to a GeoPackage or a PostGIS database instead of the drawing (docs/adr/0508 §4, 0549, 0592\n§2): the tool runs on a copy,\nthe objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the\ndrawing does not change. A new file is written whole or not at all (one that is there is replaced only with\n`overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one\ntransaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.",
             "properties": {
               "mode": {
                 "$ref": "#/$defs/SinkMode",
@@ -1015103,8 +1015103,15 @@
                 "type": "boolean"
               },
               "path": {
-                "description": "The GeoPackage's path (`.gpkg`).",
+                "description": "The GeoPackage's path (`.gpkg`), or a PostGIS database's address (`postgresql://…`, without a password; the\ntables go in `schema`, docs/adr/0592 §2).",
                 "type": "string"
+              },
+              "schema": {
+                "description": "The database schema the tables go in (`public` when none); a GeoPackage has none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "tables": {
                 "description": "Also write the tool's table outputs (a summary, a report) as attribute tables, each named by its output's\nlabel, beside the layers' tables (docs/adr/0551 §3). A tool whose result is only a table writes only that.",
@@ -1015138,7 +1015145,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes\nits default for the drawing. A features input is `{ \"scope\": \"all\" }` (the visible layers), `{ \"scope\": \"layer\",\n\"layerId\": … }`, `{ \"scope\": \"uids\", \"uids\": [ … ] }`, `{ \"scope\": \"selection\" }` (the objects `selection` names)\nor `{ \"scope\": \"visible\" }` (those in `view`), optionally with `kinds`; a features input's default is the\nselection, so a run on chosen objects gives `selection`. A file parameter is `{ \"path\": … }` (a table file read\nas the dialog reads it) or `{ \"name\": …, \"rows\": [[…]] }`. Refusals, in order: `tools_unavailable`,\n`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has\nnot, a value its rules refuse, a file unread, the visible scope without `view`), `tool_failed` (it ran and\nstopped: a locked layer, nothing to do, its own refusal; nothing written).",
+        "description": "Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes\nits default for the drawing. A features input is `{ \"scope\": \"all\" }` (the visible layers), `{ \"scope\": \"layer\",\n\"layerId\": … }`, `{ \"scope\": \"uids\", \"uids\": [ … ] }`, `{ \"scope\": \"selection\" }` (the objects `selection` names)\nor `{ \"scope\": \"visible\" }` (those in `view`), optionally with `kinds`, or `{ \"scope\": \"source\", \"layer\": … }` (a\nbound layer's whole table, not the part the drawing holds) or `{ \"scope\": \"source\", \"path\": …, \"table\": … }` (a\nGeoPackage's or a PostGIS database's table), each optionally with `filter` (an expression, its part the source can\ncheck sent to it) and `bbox`: the records are read a part at a time and the run is made on a copy, so a source input\nneeds a `sink` (docs/adr/0592 §1); a features input's default is the\nselection, so a run on chosen objects gives `selection`. A file parameter is `{ \"path\": … }` (a table file read\nas the dialog reads it) or `{ \"name\": …, \"rows\": [[…]] }`. Refusals, in order: `tools_unavailable`,\n`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has\nnot, a value its rules refuse, a file unread, the visible scope without `view`, a source input without `sink`),\nfor a source input `layer_not_found`, `invalid_input` (the layer is not bound), `invalid_address`, `file_not_found`,\n`import_unreadable`, `table_not_found`, `source_unreachable`, `invalid_expression`, `input_too_large` (more than\n1 000 000 records), `crs_mismatch`; `tool_failed` (it ran and stopped: a locked layer, nothing to do, its own\nrefusal; nothing written). A bound layer read by its loaded part (`scope: layer`) is said (`partial_scope`).",
         "properties": {
           "drawing": {
             "description": "The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its\nfolder (then in the project's search paths), a result written beside it. The host gives it.",
@@ -1015635,7 +1015642,23 @@
                   "null"
                 ]
               },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "table": {
+                "description": "For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the\nbound layer's) and how many of its records were read.",
                 "type": [
                   "string",
                   "null"
@@ -1016373,7 +1016396,23 @@
                   "null"
                 ]
               },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "table": {
+                "description": "For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the\nbound layer's) and how many of its records were read.",
                 "type": [
                   "string",
                   "null"
@@ -1016688,10 +1016727,18 @@
           "import_unreadable",
           "crs_mismatch",
           "table_exists",
-          "invalid_input"
+          "invalid_input",
+          "layer_not_found",
+          "invalid_extent",
+          "table_not_found",
+          "invalid_expression",
+          "input_too_large",
+          "invalid_address",
+          "source_unreachable"
         ],
         "warnings": [
-          "export_losses"
+          "export_losses",
+          "partial_scope"
         ]
       },
       "examples": [
@@ -1017451,7 +1017498,23 @@
                   "null"
                 ]
               },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "table": {
+                "description": "For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the\nbound layer's) and how many of its records were read.",
                 "type": [
                   "string",
                   "null"
@@ -1018288,7 +1018351,23 @@
                   "null"
                 ]
               },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "table": {
+                "description": "For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the\nbound layer's) and how many of its records were read.",
                 "type": [
                   "string",
                   "null"
@@ -1074164,6 +1074243,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Metin alanına göre sıralanacak kayıt çok fazla; süzgeçle daraltın ya da sayı alanına göre sıralayın."
+    },
+    {
+      "code": "input_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kaynaktan okunacak kayıt bir çalıştırmanın alabileceğinden çok; süzgeçle ya da kutuyla daraltın."
     },
     {
       "code": "rows_denied",

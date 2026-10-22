@@ -3468,8 +3468,16 @@ const ENTRIES: &[Entry] = &[
             "crs_mismatch",
             "table_exists",
             "invalid_input",
+            // docs/adr/0592: inputs read from their source, results to a database.
+            "layer_not_found",
+            "invalid_extent",
+            "table_not_found",
+            "invalid_expression",
+            "input_too_large",
+            "invalid_address",
+            "source_unreachable",
         ]],
-        warnings: &["export_losses"],
+        warnings: &["export_losses", "partial_scope"],
         targets: none,
     },
     Entry {

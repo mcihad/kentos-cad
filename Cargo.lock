@@ -2993,6 +2993,7 @@ dependencies = [
  "kentos-domain",
  "kentos-geopackage",
  "kentos-native-application",
+ "kentos-processing",
  "serde_json",
  "sqlx",
  "tokio",

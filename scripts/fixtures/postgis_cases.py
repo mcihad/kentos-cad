@@ -157,6 +157,32 @@ def check(c, seen, before):
     cur.execute("SELECT malikler FROM iliski2.parsel WHERE fid = 3")
     if cur.fetchone()[0] != "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001":
         problems.append("başka temsilli ilişkide başvuru metin olarak yazılmamış")
+    # İşlemler's result (docs/adr/0592 §2): a new schema's table of the squares' centres, its key the fid, the lasting
+    # ids beside it, the run's lineage its comment; made again by replaceTables, so one table of 12 rows.
+    cur.execute("SELECT format_type(atttypid, atttypmod) FROM pg_attribute WHERE attrelid = 'sonuc.\"Merkezler\"'::regclass "
+                "AND attname = 'geom'")
+    kind = [r[0] for r in cur.fetchall()]
+    if kind != ["geometry(Point,5256)"]:
+        problems.append(f"sonucun geometri sütunu {kind}")
+    cur.execute('SELECT ad, kat, ST_X(geom), ST_Y(geom) FROM sonuc."Merkezler" ORDER BY fid')
+    centres = cur.fetchall()
+    sq = sqlite3.connect(f"file:{ROOT / 'fixtures/sources/v1/sorgu.gpkg'}?mode=ro", uri=True)
+    squares = {}
+    for ad, kat, ring in sq.execute("SELECT ad, kat, geom FROM bina"):
+        squares[ad] = kat
+    sq.close()
+    x0, y0 = 487000.0, 4420000.0
+    want = sorted((f"B{k + 1}", str(k % 4 + 1), x0 + k * 30 + (6 + k) / 2, y0 + 600 + (6 + k) / 2) for k in range(12))
+    if sorted(centres) != want or any(squares[ad] != int(kat) for ad, kat, _, _ in centres):
+        problems.append(f"sonucun noktaları {centres}")
+    cur.execute("SELECT count(*) FROM sonuc.kentos_uids WHERE table_name = 'sonuc.Merkezler'")
+    if cur.fetchone()[0] != 12:
+        problems.append("sonucun kalıcı kimlikleri 12 değil")
+    cur.execute("SELECT obj_description('sonuc.\"Merkezler\"'::regclass, 'pg_class')")
+    lineage = json.loads(cur.fetchone()[0] or "{}")
+    if lineage.get("format") != "kentos.lineage" or lineage.get("table") != "sonuc.Merkezler" \
+            or lineage.get("tool", {}).get("id") != "convert.toPoints" or lineage.get("inputs", [{}])[0].get("rows") != 12:
+        problems.append(f"sonucun soyu {lineage}")
     cur.execute("SELECT data_type FROM information_schema.columns WHERE table_schema = 'kadastro' "
                 "AND table_name = 'parsel' AND column_name = 'durum'")
     if [r[0] for r in cur.fetchall()] != ["text"]:

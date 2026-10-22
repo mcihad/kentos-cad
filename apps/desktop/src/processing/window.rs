@@ -69,7 +69,7 @@ impl App {
         let server = self.server_place();
         let at_server = self.processing_at_server();
         let body = row![
-            scrollable(form(window, &env))
+            scrollable(form(window, &env, at_server))
                 .id(FORM)
                 .direction(style::field::body_scrollbar())
                 .width(Fill)
@@ -98,7 +98,7 @@ impl App {
 }
 
 /// The form: Girdi, Ayarlar, Çıktı and Gelişmiş ayarlar.
-fn form<'a>(window: &'a ToolDialog, env: &Env<'a, '_>) -> Element<'a, Message> {
+fn form<'a>(window: &'a ToolDialog, env: &Env<'a, '_>, at_server: bool) -> Element<'a, Message> {
     let shown: Vec<&ParamDef> = window
         .tool
         .parameters
@@ -129,6 +129,20 @@ fn form<'a>(window: &'a ToolDialog, env: &Env<'a, '_>) -> Element<'a, Message> {
         if !params.is_empty() {
             out = out.push(group(title, params, window, env));
         }
+    }
+    // Where the result goes here: the drawing, a GeoPackage or a database (sink.rs, docs/adr/0592 §3); on the server
+    // the side column's Sonuç says it.
+    if !at_server && !window.tool.id.starts_with(MODEL_PREFIX) {
+        out = out.push(
+            column![
+                label::caption("Sonucun yeri")
+                    .font(typography::ui_strong())
+                    .style(style::text::muted),
+                horizontal_divider(),
+                container(super::sink::place_view(window)).padding([12, 0]),
+            ]
+            .spacing(6),
+        );
     }
     if !advanced.is_empty() {
         let toggle = button(
@@ -340,6 +354,10 @@ fn field_row<'a>(
         text = text.push(label::caption(d.clone()).style(style::text::muted));
     }
     let mut control_col = Column::new().spacing(6).width(Fill).push(control(def, env));
+    // A bound layer's input read whole from its source (sink.rs, docs/adr/0592 §3).
+    if let Some(whole) = super::sink::whole_row(window, &def.name) {
+        control_col = control_col.push(whole);
+    }
     if let Some(issue) = window.issue_of(&def.name) {
         control_col = control_col.push(
             row![

@@ -139,6 +139,33 @@ pub struct ProviderScan<'a> {
     pub order: Option<gpkg::ScanOrder>,
 }
 
+/// A table a run's result makes in a database (docs/adr/0592 §2): its shape as a GeoPackage table's (the geometry
+/// column's type and Z and M, the columns), its rows with their keys and lasting ids, its comment.
+#[derive(Clone, Debug)]
+pub struct NewTable {
+    /// `schema.table`.
+    pub name: String,
+    pub layer: gpkg::Layer,
+    pub srid: Option<u32>,
+    pub rows: Vec<gpkg::NewRow>,
+    pub uids: Vec<(i64, kentos_domain::Uuid)>,
+    /// What the table came from (the run's lineage document), as the table's comment.
+    pub comment: String,
+}
+
+/// What a write of new tables gives: for each table, whether one of its name was replaced, and how many batches went;
+/// none when it was stopped. The error names the table (its index) that refused.
+pub type Created = Result<Option<(Vec<bool>, u32)>, (usize, ProviderError)>;
+
+/// What a write of new tables does with a table of the same name.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TableClash {
+    /// Refused: nothing is written ([`ProviderError::Exists`]).
+    Refuse,
+    /// Taken out and made again, in the same transaction.
+    Replace,
+}
+
 /// A provider of database tables.
 pub trait TableProvider: Send + Sync {
     fn tables(&self, address: &str) -> Result<Vec<ProviderTable>, ProviderError>;
@@ -241,6 +268,23 @@ pub trait TableProvider: Send + Sync {
         Err(ProviderError::Refused(format!(
             "{mapping}: bu sağlayıcı bağlantı tablosu kaldıramaz"
         )))
+    }
+    /// Makes `tables` in one transaction, their rows a batch at a time (`batch` rows); `go` is asked before each batch
+    /// with the rows written and all of them, and stops the write (rolled back, `Ok(None)`) when it says no. Returns,
+    /// for each table, whether one of its name was replaced, and how many batches went. The error names the table (its
+    /// index) that refused.
+    fn create_tables(
+        &self,
+        _address: &str,
+        _tables: &[NewTable],
+        _clash: TableClash,
+        _batch: usize,
+        _go: &mut dyn FnMut(u64, u64) -> bool,
+    ) -> Created {
+        Err((
+            0,
+            ProviderError::Refused("bu sağlayıcı tablo oluşturamaz".into()),
+        ))
     }
     /// The table's shape for a question.
     fn describe(&self, _address: &str, table: &str) -> Result<ProviderShape, ProviderError> {

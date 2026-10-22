@@ -787,6 +787,7 @@ fn source(
     asked: &Asked,
     revision: String,
     stop: &dyn Fn() -> bool,
+    mut stage: Option<&mut Staging>,
 ) -> Result<(SourcesQueried, Vec<CommandWarning>), Stop> {
     if let Some(Cursor::Uid(_) | Cursor::After(Place::Uid(_), _)) = asked.cursor {
         return Err(fail(
@@ -985,6 +986,11 @@ fn source(
             }
         };
         g.unreadable += t.skipped.len() as u64;
+        if let Some(st) = stage.as_deref_mut()
+            && st.fields.is_none()
+        {
+            st.fields = Some(t.fields.clone());
+        }
         let mut list: Vec<(Uuid, Option<i64>, Entity)> = Vec::with_capacity(t.objects.len());
         for ((uid, mut e), key) in t.objects.into_iter().zip(t.fids) {
             if let Some(m) = &mover
@@ -999,6 +1005,16 @@ fn source(
         let pass = passing(asked, &list, &names);
         for (o, p) in list.into_iter().zip(pass) {
             if !p {
+                continue;
+            }
+            if let Some(st) = stage.as_deref_mut() {
+                // Counted as a page of none takes it, then held for the run.
+                g.take(o.0, o.1, &o.2, o.1.and_then(|k| raw.get(&k)));
+                st.objects.push((o.0, o.2));
+                if st.objects.len() > st.most {
+                    st.too_many = true;
+                    return false;
+                }
                 continue;
             }
             if here {
@@ -1081,6 +1097,15 @@ fn source(
     }
     if too_many {
         return Err(too_many_to_order());
+    }
+    if let Some(most) = stage.as_ref().filter(|st| st.too_many).map(|st| st.most) {
+        return Err(fail(
+            codes::INPUT_TOO_LARGE,
+            format!(
+                "“{table}” tablosundan {most} kayıttan çoğu okunacaktı; bir çalıştırma bu kadarını alır. Süzgeçle (filter) ya da kutuyla (bbox) daraltın."
+            ),
+            at.table,
+        ));
     }
     if let (true, Some(o)) = (here, &asked.order) {
         for (u, k, e) in order_here(held, &o.field, "text", o.descending, asked.cursor.as_ref()) {
@@ -1193,6 +1218,7 @@ fn run(
                     &asked,
                     doc.revision().to_string(),
                     stop,
+                    None,
                 )
             }
         };
@@ -1212,6 +1238,7 @@ fn run(
         &asked,
         doc.revision().to_string(),
         stop,
+        None,
     )
 }
 
@@ -1243,11 +1270,133 @@ pub fn ask_source(
             &asked,
             revision,
             stop,
+            None,
         )
     })();
     match answer {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
+    }
+}
+
+/// The most records a processing input read from its source holds (docs/adr/0592 §1).
+pub const MOST_STAGED: usize = 1_000_000;
+
+/// What a source's records read for a run come to (docs/adr/0592 §1).
+pub struct Staging {
+    pub objects: Vec<(Uuid, Entity)>,
+    /// The table's columns as fields (from its first part).
+    pub fields: Option<Vec<kentos_commands::LayerField>>,
+    too_many: bool,
+    most: usize,
+}
+
+/// Where a processing input is read from: a bound layer's source, or a table named by its file or address.
+pub enum StageFrom<'a> {
+    Layer(&'a kentos_commands::SourceLink),
+    Table { address: &'a str, table: &'a str },
+}
+
+/// A source's records read whole for a processing run (docs/adr/0592 §1): its parts in key order, `filter`'s part the
+/// source can check sent to it, `bbox` its box, every record checked here as `cad.sources.query` checks it, made the
+/// drawing's objects in the project's system with their lasting ids; the table's columns as fields. `at`: the place a
+/// refusal names (the input's parameter). At most [`MOST_STAGED`] records; a stop ends it with no error (`Err(None)`).
+pub fn stage(
+    settings: &ProjectSettings,
+    from: &StageFrom<'_>,
+    filter: Option<&str>,
+    bbox: Option<[f64; 4]>,
+    at: &str,
+    stop: &dyn Fn() -> bool,
+) -> Result<(Staging, SourcesQueried), Option<Box<kentos_commands::CommandError>>> {
+    stage_at_most(settings, from, filter, bbox, at, stop, MOST_STAGED)
+}
+
+/// [`stage`] with another cap (a test's).
+pub fn stage_at_most(
+    settings: &ProjectSettings,
+    from: &StageFrom<'_>,
+    filter: Option<&str>,
+    bbox: Option<[f64; 4]>,
+    at: &str,
+    stop: &dyn Fn() -> bool,
+    most: usize,
+) -> Result<(Staging, SourcesQueried), Option<Box<kentos_commands::CommandError>>> {
+    staged(settings, from, filter, bbox, at, stop, most).map_err(|s| match s {
+        Stop::Cancelled => None,
+        other => Some(Box::new(other.into_error())),
+    })
+}
+
+fn staged(
+    settings: &ProjectSettings,
+    from: &StageFrom<'_>,
+    filter: Option<&str>,
+    bbox: Option<[f64; 4]>,
+    at: &str,
+    stop: &dyn Fn() -> bool,
+    most: usize,
+) -> Result<(Staging, SourcesQueried), Stop> {
+    let (path, name) = match from {
+        StageFrom::Layer(link) => (link.path.as_str(), link.table.as_str()),
+        StageFrom::Table { address, table } => (*address, *table),
+    };
+    let input = SourcesQuery {
+        path: Some(path.to_owned()),
+        table: Some(name.to_owned()),
+        filter: filter.map(str::to_owned),
+        bbox,
+        limit: Some(0),
+        count: Some(true),
+        ..SourcesQuery::default()
+    };
+    let (at_path, at_table) = (format!("{at}.path"), format!("{at}.table"));
+    let mut asked = asked(&input, settings).map_err(|s| at_place(s, at))?;
+    asked.geometry = true;
+    let (origin, table) = match from {
+        StageFrom::Layer(link) => (
+            match link.kind {
+                SourceKind::Geopackage => sources::origin(&link.path, &at_path)?,
+                SourceKind::Postgis => Origin::Database(&link.path),
+            },
+            link.table.as_str(),
+        ),
+        StageFrom::Table { address, table } => (sources::origin(address, &at_path)?, *table),
+    };
+    let mut staging = Staging {
+        objects: Vec::new(),
+        fields: None,
+        too_many: false,
+        most,
+    };
+    let (out, _) = source(
+        settings,
+        origin,
+        table,
+        At {
+            address: &at_path,
+            table: &at_table,
+        },
+        None,
+        &asked,
+        String::new(),
+        stop,
+        Some(&mut staging),
+    )
+    .map_err(|s| at_place(s, at))?;
+    Ok((staging, out))
+}
+
+/// A refusal of a question's own input (`filter`, `bbox`) named at the run's parameter instead.
+fn at_place(stop: Stop, at: &str) -> Stop {
+    match stop {
+        Stop::Failed(mut e) => {
+            if let Some(p @ ("filter" | "bbox" | "table" | "path" | "layer")) = e.path.as_deref() {
+                e.path = Some(format!("{at}.{p}"));
+            }
+            Stop::Failed(e)
+        }
+        other => other,
     }
 }
 

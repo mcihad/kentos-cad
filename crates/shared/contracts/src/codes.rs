@@ -1181,6 +1181,8 @@ codes! {
     EXCEPTION_LAPSED = "exception_lapsed", Warning, false, "İstisnanın nesnelerinin geometrisi değişti; bulgu yeniden açık.";
     /// A question ordered here by a text field that keeps more records than may be ordered in memory (docs/adr/0591 §2).
     ORDER_TOO_LARGE = "order_too_large", Failed, false, "Metin alanına göre sıralanacak kayıt çok fazla; süzgeçle daraltın ya da sayı alanına göre sıralayın.";
+    /// A processing input read from its source holds more records than a run takes in memory (docs/adr/0592 §1).
+    INPUT_TOO_LARGE = "input_too_large", Failed, false, "Kaynaktan okunacak kayıt bir çalıştırmanın alabileceğinden çok; süzgeçle ya da kutuyla daraltın.";
     /// Rows a write would change that the account sees but may not change: no privilege or a row security policy
     /// (docs/adr/0585 §2).
     ROWS_DENIED = "rows_denied", Failed, false, "Hesap tablonun bazı satırlarını görür ama değiştiremez (yetki ya da satır güvenliği); hiçbir şey yazılmadı.";

@@ -29,6 +29,7 @@ pub mod panel;
 mod plan;
 pub(crate) use plan::ServerPlace;
 mod server;
+pub(crate) mod sink;
 
 /// The İşlemler panel's event as the app's message (the ribbon's model buttons send it too).
 pub(crate) fn panel_message(event: panel::Event) -> crate::app::Message {
@@ -68,6 +69,8 @@ mod remote_tests;
 mod sampling_tests;
 #[cfg(test)]
 mod server_tests;
+#[cfg(test)]
+mod sink_tests;
 #[cfg(test)]
 mod stats_tests;
 #[cfg(test)]
@@ -265,6 +268,8 @@ pub enum Event {
     ServerSink(bool),
     /// Sunucu işleri on the line after a job was asked: the catalog on the project's jobs.
     ServerJobs,
+    /// Sonuç and Bütün tablo (sink.rs, docs/adr/0592 §3).
+    Sink(sink::SinkEvent),
 }
 
 /// The app as the window reads it: the live descriptions and previews.
@@ -420,6 +425,9 @@ impl App {
             variables,
         };
         window.refresh(&self.processing.runner, &look);
+        window
+            .sink
+            .refresh(&doc.model, &window.tool, &window.values);
     }
 
     pub(crate) fn processing_event(&mut self, e: Event) -> Task<Message> {
@@ -438,6 +446,7 @@ impl App {
                 return Task::none();
             }
             Event::ServerJobs => return self.processing_open_jobs(),
+            Event::Sink(e) => return self.processing_sink_event(e),
             Event::Run => return self.run_processing(),
             Event::Stop => {
                 self.processing_stop();
@@ -600,6 +609,10 @@ impl App {
         // On the server (server.rs): the tool does not run here; a job is asked for.
         if choice == Some(plan::Choice::At(Target::Server)) {
             return self.processing_server_run();
+        }
+        // To a file or a database (sink.rs): `cad.processing.run` on a copy, on another thread.
+        if window.sink.place != sink::Place::Drawing && !tool.id.starts_with(MODEL_PREFIX) {
+            return self.processing_sink_run();
         }
         // Otomatik's answer for the whole: a tool's is taken again from its
         // job below, its locked objects left out (the web's).
@@ -865,6 +878,9 @@ impl App {
     /// drawing stays as it is; the thread is asked to stop, and what it
     /// still says is not heard.
     fn processing_stop(&mut self) {
+        if self.processing_sink_stop() {
+            return;
+        }
         let Some(id) = self.processing.dialog.as_ref().and_then(|w| w.waiting) else {
             return;
         };

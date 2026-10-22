@@ -50,6 +50,7 @@ pub mod raster_rows;
 pub mod record;
 pub mod registry;
 pub mod runner;
+pub mod source_inputs;
 pub mod text;
 pub mod types;
 pub mod values;

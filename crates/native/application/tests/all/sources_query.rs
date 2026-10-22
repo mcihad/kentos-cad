@@ -402,3 +402,51 @@ fn an_order_here_keeps_at_most_two_hundred_thousand_records() {
     );
     let _ = std::fs::remove_file(&path);
 }
+
+/// A processing input read from its source (docs/adr/0592 §1) holds at most so many records: one more and the run is
+/// refused, named at the input's parameter, before any of them goes into the run's copy.
+#[test]
+fn a_source_input_stops_at_its_cap() {
+    use kentos_native_application::sources_query::{StageFrom, stage_at_most};
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/sources/v1/sorgu.gpkg")
+        .display()
+        .to_string();
+    let doc = doc();
+    let from = StageFrom::Table {
+        address: &file,
+        table: "nokta",
+    };
+    let at = "parameters.input";
+    let refused = match stage_at_most(doc.settings(), &from, None, None, at, &|| false, 249) {
+        Err(Some(e)) => *e,
+        Ok(_) => panic!("250 records went in under a cap of 249"),
+        Err(None) => panic!("stopped"),
+    };
+    assert_eq!(refused.code, "input_too_large");
+    assert_eq!(refused.path.as_deref(), Some("parameters.input.table"));
+    let (staging, read) = match stage_at_most(doc.settings(), &from, None, None, at, &|| false, 250)
+    {
+        Ok(s) => s,
+        Err(e) => panic!("{e:?}"),
+    };
+    assert_eq!(staging.objects.len(), 250);
+    assert_eq!(read.total, Some(250));
+    let (filtered, _) = match stage_at_most(
+        doc.settings(),
+        &from,
+        Some("tur = 'rögar'"),
+        None,
+        at,
+        &|| false,
+        60,
+    ) {
+        Ok(s) => s,
+        Err(e) => panic!("{e:?}"),
+    };
+    assert_eq!(
+        filtered.objects.len(),
+        50,
+        "a filter's records count, not the table's"
+    );
+}

@@ -8,4 +8,9 @@ export type RunInput = { layer: string,
  * The layer's content when it was read: the SHA-256 of its objects' kinds, geometries and attributes by lasting id
  * (`sources::layer_digest`; docs/adr/0511), so a result tells which state of its input it came from.
  */
-digest: string, source?: string, revision?: string, };
+digest: string, source?: string, revision?: string, 
+/**
+ * For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the
+ * bound layer's) and how many of its records were read.
+ */
+table?: string, rows?: bigint, };

@@ -353,6 +353,7 @@ Liste:
 - [ ] `CBS-07` Katmanın kaynak sistemi ve harita sistemi (ADR 0583, 22 Ekim): web'de gerekenler: `.kcad` şema 98'in `sourceCrs` ve `mapSrid`'inin okunup yazılması (TS türleri üretildi); web'in çizim hatlarında (WebGL2, WebGPU) stil toplayıcısının izdüşümü (`View.map`, WASM `styledBatches`'e harita sistemi), kameranın harita sistemi (`map_ratio`, ters dönüşümlü imleç), durum çubuğunda harita hücresi, koordinat sistemi menüsünde Harita sistemi ▸, katmanın sağ tık menüsünde Koordinat sistemi ▸ (Sistem ata, Yeniden izdüşür) ve `cad.layers.crs`, `cad.layers.reproject` işleyicileri; içe aktarmaların `sourceCrs`'i.
 - [ ] `CBS-12` Veritabanında alanın dışındaki komşular, yetki ve tam geçerlilik (ADR 0585, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; GeoPackage parçasının yazması web'e gelince komşunun geçerliliği Geçerliliği denetle'nin sorunlarıyla (yinelenen köşe hariç, önceden geçersiz komşu engel değil).
 - [ ] `CBS-14` Kaynağa bağlı topoloji denetimi (ADR 0589, 22 Ekim): web'de gerekenler: `.kcad` şema 99'un TS kodeği (istisnanın `digest`'i), Topoloji panelinde düşen istisnanın “(istisna düştü)” işareti ve uyarısı, Düzelt ▾'de önizlemenin ikinci satırı (`cad.topology.check`'in `preview`'u WASM'la), İstisna yap'ın `cad.topology.exceptions` ile yazması; bağlı parça web'de yok.
+- [ ] `CBS-23` İşlemler'de kaynaktan okuma ve veritabanına yazma (ADR 0592, 22 Ekim): web'de gerekenler: `cad.processing.run`'ın `scope: source` girdisi ve `sink.schema`'sı web'in işleyicisi gelince (kaynak okuma ve PostGIS yazma sunucunun vekiliyle ya da sunucu işiyle); İşlemler penceresinde Sonucun yeri ve Bütün tablo.
 - [ ] `CBS-20` kaynakta sıralama ve sıralı sayfalar (ADR 0591, 22 Ekim): web'de gerekenler: `cad.sources.query`'nin `order`'ı ve `expectedStamp`'i web'in işleyicisi gelince (WASM'da burada sıralama `feature_table`'la); Öznitelik tablosunda Kaynağın tümü kipi (sayfalar, başlıkla sıralama, Sonraki sayfa).
 - [ ] `CBS-15` PostGIS'te bağlantı tablosu (ADR 0590, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; İlişkiler penceresinin Veritabanında bölümü ve Bağlantı tablosu kur/kaldır web'in ilişkiler penceresi gelince.
 - [ ] `CBS-11` Aynı kaynağa birlikte yazma ve yazmada Z ile M (ADR 0584, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; GeoPackage'a yazan web yolunda (yoksa) Z ve M denetimi `dims_problem`'in kuralıyla, Kaynağa birlikte yaz'ın aynı kaynağın değişen katmanlarını toplaması.
@@ -2168,6 +2169,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   kutu 0,6 ms; `docs/perf/provider-2026-10-18.md`); katmanın özeti ve dosyanın SHA-256'sı akışla, yeni katmana bağlamada satırlar
   bir kez (100 000 parselde 1,3 GB'tan 323 MB'a). Kalan: görünür küme ve sayfalar, çizim alanının süreleri, soğuk önbellek, ağ,
   stres. — **18 Ekim, [ADR 0509](docs/adr/0509-provider-baseline-and-link-memory.md).**
+- [ ] `CBS-23` girdiyi kaynağından okumak ve sonucu veritabanına yazmak (dilim): nesne girdisinin `scope: source`'u (bağlı katmanın
+  bütün tablosu ya da bir GeoPackage'ın veya PostGIS'in tablosu, süzgeç ve kutuyla, parça parça, en çok bir milyon kayıt, yalnız
+  `sink`'le), cevabın `inputs`'unda tablo, kayıt sayısı ve dosyanın SHA-256'sı; parçalı bağlı katman `partial_scope`; `sink.path`
+  veritabanı adresi ve `sink.schema`: yeni tablolar tek işlemde (`TableProvider::create_tables`, tipli geometri, `kentos_uids`,
+  soy yorumda); masaüstünde Sonucun yeri ve Bütün tablo; 29 ortak durum `processing_source_cases.py`'den. Kalan: araçların akışlı
+  hesabı, disk üstünde ara depo, modellerde kaynak ve veritabanı (CBS-24), PostGIS'te var olan tabloya ekleme. — **22 Ekim,
+  [ADR 0592](docs/adr/0592-processing-from-sources-to-databases.md).**
 - [ ] `CBS-23` var olan GeoPackage'a yazma (dilim): `sink.mode` `new`, `addTables`, `replaceTables` (öbür tablolara dokunulmaz, aynı ad
   `table_exists`); tek SQLite işleminde 5000 satırlık gruplarla, her soru noktasında iptalde dosya bayt bayt eskisi; yanıtta
   `sinkReport`; GeoPackage 1.4 dosyasına 1.4 tetikleriyle; 77 ortak durum. Kalan: girdiyi kaynaktan sayfa sayfa okuma (araçların

@@ -1184,3 +1184,103 @@ fn many_to_many_references_keep_a_junction_table() {
     let remapped = relate(&mut d, CallOp::Execute, "map");
     assert_eq!(ok(&remapped)["rows"], json!(5), "{remapped}");
 }
+
+/// İşlemler's result written to the database (docs/adr/0592 §2): Nesneden nokta on sorgu.gpkg's whole `bina` table to
+/// a new table of a new schema, in one transaction; again refused (the table is there) and with `replaceTables` made
+/// again; a plan writes nothing; then the new table read back as a source input (§1). The script checks the table,
+/// its points, its lasting ids and its comment with psycopg2.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn processing_results_go_to_postgis() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        eprintln!("KENTOS_PG_URL yok: atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    kentos_processing::command::register();
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/sources/v1/sorgu.gpkg")
+        .display()
+        .to_string();
+    let points = |sink: Value| {
+        json!({ "tool": "convert.toPoints", "parameters": {
+            "input": { "scope": "source", "path": file, "table": "bina" } }, "sink": sink })
+    };
+    let mut d = doc();
+    let made = run(
+        &mut d,
+        "cad.processing.run",
+        CallOp::Execute,
+        points(json!({ "path": url, "schema": "sonuc" })),
+    );
+    let out = ok(&made);
+    assert_eq!(out["sink"]["path"], json!(url));
+    assert_eq!(
+        out["sink"]["tables"][0]["table"], "sonuc.Merkezler",
+        "{out}"
+    );
+    assert_eq!(out["sink"]["tables"][0]["rows"], 12);
+    assert_eq!(out["sinkReport"]["ids"], "kentos_uids");
+    assert_eq!(out["sinkReport"]["tables"][0]["replaced"], Value::Null);
+    assert!(!d.can_undo(), "the drawing does not change");
+    // There now: refused, the table as it was.
+    let again = run(
+        &mut d,
+        "cad.processing.run",
+        CallOp::Execute,
+        points(json!({ "path": url, "schema": "sonuc" })),
+    );
+    assert_eq!(again["error"]["code"], "table_exists", "{again}");
+    let planned = run(
+        &mut d,
+        "cad.processing.run",
+        CallOp::Plan,
+        points(json!({ "path": url, "schema": "sonuc" })),
+    );
+    assert_eq!(
+        planned["error"]["code"], "table_exists",
+        "a plan asks the database too: {planned}"
+    );
+    let planned = run(
+        &mut d,
+        "cad.processing.run",
+        CallOp::Plan,
+        points(json!({ "path": url, "schema": "sonuc", "mode": "replaceTables" })),
+    );
+    assert_eq!(ok(&planned)["sinkReport"]["tables"][0]["replaced"], true);
+    let replaced = run(
+        &mut d,
+        "cad.processing.run",
+        CallOp::Execute,
+        points(json!({ "path": url, "schema": "sonuc", "mode": "replaceTables" })),
+    );
+    assert_eq!(
+        ok(&replaced)["sinkReport"]["tables"][0]["replaced"],
+        true,
+        "{replaced}"
+    );
+    // The table read back as a source input, its result to a file.
+    let dir = std::env::temp_dir().join(format!("kentos-pg-run-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let back = run(
+        &mut d,
+        "cad.processing.run",
+        CallOp::Execute,
+        json!({ "tool": "convert.toPoints", "parameters": {
+            "input": { "scope": "source", "path": url, "table": "sonuc.Merkezler", "filter": "kat >= 3" } },
+            "sink": { "path": dir.join("geri.gpkg").display().to_string() } }),
+    );
+    let input = &ok(&back)["inputs"][0];
+    assert_eq!(input["rows"], 6, "{back}");
+    assert!(
+        input["revision"].is_null(),
+        "a database's table has no file to hash"
+    );
+    assert!(
+        input["table"]
+            .as_str()
+            .is_some_and(|t| t.starts_with("PostGIS: ") && t.ends_with(" › sonuc.Merkezler"))
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}

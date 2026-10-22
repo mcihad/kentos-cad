@@ -18,4 +18,5 @@ tokio = { workspace = true }
 
 [dev-dependencies]
 kentos-domain = { path = "../domain" }
+kentos-processing = { path = "../processing" }
 serde_json = { workspace = true }

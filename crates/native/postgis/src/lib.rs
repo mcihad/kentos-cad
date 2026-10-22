@@ -14,12 +14,13 @@ use std::time::Duration;
 use kentos_contracts::encoding::sha256_hex;
 use kentos_geopackage::{self as gpkg, ColumnKind, DataType, Value};
 use kentos_native_application::provider::{
-    DbRelation, Edited, MapWrite, Param, ProviderError, ProviderRead, ProviderScan, ProviderShape, ProviderTable,
-    RowCheck, TableEdit, TableProvider, register_postgis,
+    Created, DbRelation, Edited, MapWrite, NewTable, Param, ProviderError, ProviderRead, ProviderScan, ProviderShape, ProviderTable,
+    RowCheck, TableClash, TableEdit, TableProvider, register_postgis,
 };
 use sqlx::postgres::{PgConnectOptions, PgConnection, PgRow};
 use sqlx::{Connection, Executor, Row};
 
+mod create;
 mod junctions;
 
 /// How long a connection may take before the database counts as unreachable.
@@ -1240,6 +1241,33 @@ impl TableProvider for PostGis {
             tx.commit().await.map_err(refused)?;
             let _ = conn.close().await;
             Ok(())
+        })
+    }
+
+    fn create_tables(
+        &self,
+        address: &str,
+        tables: &[NewTable],
+        clash: TableClash,
+        batch: usize,
+        go: &mut dyn FnMut(u64, u64) -> bool,
+    ) -> Created {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await.map_err(|e| (0, e))?;
+            let mut tx = conn.begin().await.map_err(|e| (0, unreachable(e)))?;
+            let made = create::create(&mut tx, tables, clash, batch, go).await;
+            let out = match made {
+                Ok(Some(done)) => {
+                    tx.commit().await.map_err(|e| (0, refused(e)))?;
+                    Ok(Some(done))
+                }
+                other => {
+                    let _ = tx.rollback().await;
+                    other
+                }
+            };
+            let _ = conn.close().await;
+            out
         })
     }
 }

@@ -2,7 +2,8 @@
 import type { SinkMode } from "./SinkMode";
 
 /**
- * A run's result written to a GeoPackage instead of the drawing (docs/adr/0508 §4, 0549): the tool runs on a copy,
+ * A run's result written to a GeoPackage or a PostGIS database instead of the drawing (docs/adr/0508 §4, 0549, 0592
+ * §2): the tool runs on a copy,
  * the objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the
  * drawing does not change. A new file is written whole or not at all (one that is there is replaced only with
  * `overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one
@@ -10,9 +11,14 @@ import type { SinkMode } from "./SinkMode";
  */
 export type RunSink = { 
 /**
- * The GeoPackage's path (`.gpkg`).
+ * The GeoPackage's path (`.gpkg`), or a PostGIS database's address (`postgresql://…`, without a password; the
+ * tables go in `schema`, docs/adr/0592 §2).
  */
-path: string, overwrite?: boolean, 
+path: string, 
+/**
+ * The database schema the tables go in (`public` when none); a GeoPackage has none.
+ */
+schema?: string, overwrite?: boolean, 
 /**
  * New file (the default), tables added to a file that is there, or tables added and same-named ones replaced.
  */
