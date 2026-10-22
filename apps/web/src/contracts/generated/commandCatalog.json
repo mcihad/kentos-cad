@@ -554037,6 +554037,25 @@
             ],
             "type": "object"
           },
+          "PaperAppliedPageSetup": {
+            "additionalProperties": false,
+            "description": "Applying a reusable setup captures its options; editing/removing the preset cannot silently change issued sheets.",
+            "properties": {
+              "settings": {
+                "$ref": "#/$defs/PaperPlotSettings"
+              },
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "settings"
+            ],
+            "type": "object"
+          },
           "PaperAssetKind": {
             "description": "A picture's file type.",
             "enum": [
@@ -556817,6 +556836,49 @@
             ],
             "type": "object"
           },
+          "PaperNamedPageSetup": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "page": {
+                "$ref": "#/$defs/PaperPage"
+              },
+              "settings": {
+                "$ref": "#/$defs/PaperPlotSettings",
+                "default": {
+                  "area": {
+                    "type": "layout"
+                  },
+                  "center": false,
+                  "device": {
+                    "type": "pdf"
+                  },
+                  "offset": [
+                    0,
+                    0
+                  ],
+                  "scale": {
+                    "ratio": {
+                      "model": 1.0,
+                      "paper": 1.0
+                    },
+                    "type": "ratio"
+                  }
+                }
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "page"
+            ],
+            "type": "object"
+          },
           "PaperNorthArrowStyle": {
             "oneOf": [
               {
@@ -557000,6 +557062,139 @@
               }
             ]
           },
+          "PaperPlotArea": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "layout",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "extents",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "rect": {
+                    "$ref": "#/$defs/PaperRectUm"
+                  },
+                  "type": {
+                    "const": "window",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "rect"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotScale": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ratio": {
+                    "$ref": "#/$defs/PaperScaleRatio"
+                  },
+                  "type": {
+                    "const": "ratio",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "ratio"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "fit",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotSettings": {
+            "additionalProperties": false,
+            "properties": {
+              "area": {
+                "$ref": "#/$defs/PaperPlotArea",
+                "default": {
+                  "type": "layout"
+                }
+              },
+              "center": {
+                "default": false,
+                "type": "boolean"
+              },
+              "device": {
+                "$ref": "#/$defs/PaperPrintDevice",
+                "default": {
+                  "type": "pdf"
+                }
+              },
+              "offset": {
+                "default": [
+                  0,
+                  0
+                ],
+                "items": {
+                  "format": "int32",
+                  "type": "integer"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "paper-um"
+              },
+              "profile": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "$ref": "#/$defs/PaperPlotScale",
+                "default": {
+                  "ratio": {
+                    "model": 1.0,
+                    "paper": 1.0
+                  },
+                  "type": "ratio"
+                }
+              }
+            },
+            "type": "object"
+          },
           "PaperPointNaming": {
             "description": "How points are named: their own names (the host's), or numbered.",
             "oneOf": [
@@ -557038,6 +557233,40 @@
                 },
                 "required": [
                   "type"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPrintDevice": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "pdf",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "system",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "name"
                 ],
                 "type": "object"
               }
@@ -557359,6 +557588,16 @@
               "page": {
                 "$ref": "#/$defs/PaperPage"
               },
+              "plot": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperAppliedPageSetup"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "snapGrid": {
                 "$ref": "#/$defs/PaperSnapGrid",
                 "default": {
@@ -557408,6 +557647,12 @@
                 "description": "Master pages (ana sayfalar).",
                 "items": {
                   "$ref": "#/$defs/PaperMaster"
+                },
+                "type": "array"
+              },
+              "pageSetups": {
+                "items": {
+                  "$ref": "#/$defs/PaperNamedPageSetup"
                 },
                 "type": "array"
               },
@@ -558731,6 +558976,25 @@
             ],
             "type": "object"
           },
+          "PaperAppliedPageSetup": {
+            "additionalProperties": false,
+            "description": "Applying a reusable setup captures its options; editing/removing the preset cannot silently change issued sheets.",
+            "properties": {
+              "settings": {
+                "$ref": "#/$defs/PaperPlotSettings"
+              },
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "settings"
+            ],
+            "type": "object"
+          },
           "PaperAssetKind": {
             "description": "A picture's file type.",
             "enum": [
@@ -561511,6 +561775,49 @@
             ],
             "type": "object"
           },
+          "PaperNamedPageSetup": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "page": {
+                "$ref": "#/$defs/PaperPage"
+              },
+              "settings": {
+                "$ref": "#/$defs/PaperPlotSettings",
+                "default": {
+                  "area": {
+                    "type": "layout"
+                  },
+                  "center": false,
+                  "device": {
+                    "type": "pdf"
+                  },
+                  "offset": [
+                    0,
+                    0
+                  ],
+                  "scale": {
+                    "ratio": {
+                      "model": 1.0,
+                      "paper": 1.0
+                    },
+                    "type": "ratio"
+                  }
+                }
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "page"
+            ],
+            "type": "object"
+          },
           "PaperNorthArrowStyle": {
             "oneOf": [
               {
@@ -561694,6 +562001,139 @@
               }
             ]
           },
+          "PaperPlotArea": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "layout",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "extents",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "rect": {
+                    "$ref": "#/$defs/PaperRectUm"
+                  },
+                  "type": {
+                    "const": "window",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "rect"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotScale": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ratio": {
+                    "$ref": "#/$defs/PaperScaleRatio"
+                  },
+                  "type": {
+                    "const": "ratio",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "ratio"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "fit",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotSettings": {
+            "additionalProperties": false,
+            "properties": {
+              "area": {
+                "$ref": "#/$defs/PaperPlotArea",
+                "default": {
+                  "type": "layout"
+                }
+              },
+              "center": {
+                "default": false,
+                "type": "boolean"
+              },
+              "device": {
+                "$ref": "#/$defs/PaperPrintDevice",
+                "default": {
+                  "type": "pdf"
+                }
+              },
+              "offset": {
+                "default": [
+                  0,
+                  0
+                ],
+                "items": {
+                  "format": "int32",
+                  "type": "integer"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "paper-um"
+              },
+              "profile": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "$ref": "#/$defs/PaperPlotScale",
+                "default": {
+                  "ratio": {
+                    "model": 1.0,
+                    "paper": 1.0
+                  },
+                  "type": "ratio"
+                }
+              }
+            },
+            "type": "object"
+          },
           "PaperPointNaming": {
             "description": "How points are named: their own names (the host's), or numbered.",
             "oneOf": [
@@ -561732,6 +562172,40 @@
                 },
                 "required": [
                   "type"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPrintDevice": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "pdf",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "system",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "name"
                 ],
                 "type": "object"
               }
@@ -562053,6 +562527,16 @@
               "page": {
                 "$ref": "#/$defs/PaperPage"
               },
+              "plot": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperAppliedPageSetup"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "snapGrid": {
                 "$ref": "#/$defs/PaperSnapGrid",
                 "default": {
@@ -562102,6 +562586,12 @@
                 "description": "Master pages (ana sayfalar).",
                 "items": {
                   "$ref": "#/$defs/PaperMaster"
+                },
+                "type": "array"
+              },
+              "pageSetups": {
+                "items": {
+                  "$ref": "#/$defs/PaperNamedPageSetup"
                 },
                 "type": "array"
               },
@@ -1032409,6 +1032899,25 @@
             ],
             "type": "object"
           },
+          "PaperAppliedPageSetup": {
+            "additionalProperties": false,
+            "description": "Applying a reusable setup captures its options; editing/removing the preset cannot silently change issued sheets.",
+            "properties": {
+              "settings": {
+                "$ref": "#/$defs/PaperPlotSettings"
+              },
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "settings"
+            ],
+            "type": "object"
+          },
           "PaperAssetKind": {
             "description": "A picture's file type.",
             "enum": [
@@ -1035425,6 +1035934,139 @@
               }
             ]
           },
+          "PaperPlotArea": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "layout",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "extents",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "rect": {
+                    "$ref": "#/$defs/PaperRectUm"
+                  },
+                  "type": {
+                    "const": "window",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "rect"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotScale": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ratio": {
+                    "$ref": "#/$defs/PaperScaleRatio"
+                  },
+                  "type": {
+                    "const": "ratio",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "ratio"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "fit",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotSettings": {
+            "additionalProperties": false,
+            "properties": {
+              "area": {
+                "$ref": "#/$defs/PaperPlotArea",
+                "default": {
+                  "type": "layout"
+                }
+              },
+              "center": {
+                "default": false,
+                "type": "boolean"
+              },
+              "device": {
+                "$ref": "#/$defs/PaperPrintDevice",
+                "default": {
+                  "type": "pdf"
+                }
+              },
+              "offset": {
+                "default": [
+                  0,
+                  0
+                ],
+                "items": {
+                  "format": "int32",
+                  "type": "integer"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "paper-um"
+              },
+              "profile": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "$ref": "#/$defs/PaperPlotScale",
+                "default": {
+                  "ratio": {
+                    "model": 1.0,
+                    "paper": 1.0
+                  },
+                  "type": "ratio"
+                }
+              }
+            },
+            "type": "object"
+          },
           "PaperPointNaming": {
             "description": "How points are named: their own names (the host's), or numbered.",
             "oneOf": [
@@ -1035463,6 +1036105,40 @@
                 },
                 "required": [
                   "type"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPrintDevice": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "pdf",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "system",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "name"
                 ],
                 "type": "object"
               }
@@ -1035783,6 +1036459,16 @@
               },
               "page": {
                 "$ref": "#/$defs/PaperPage"
+              },
+              "plot": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperAppliedPageSetup"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "snapGrid": {
                 "$ref": "#/$defs/PaperSnapGrid",
@@ -1037763,6 +1038449,25 @@
                 "type": "object"
               }
             ]
+          },
+          "PaperAppliedPageSetup": {
+            "additionalProperties": false,
+            "description": "Applying a reusable setup captures its options; editing/removing the preset cannot silently change issued sheets.",
+            "properties": {
+              "settings": {
+                "$ref": "#/$defs/PaperPlotSettings"
+              },
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "settings"
+            ],
+            "type": "object"
           },
           "PaperAssetKind": {
             "description": "A picture's file type.",
@@ -1040695,6 +1041400,49 @@
             ],
             "type": "object"
           },
+          "PaperNamedPageSetup": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "page": {
+                "$ref": "#/$defs/PaperPage"
+              },
+              "settings": {
+                "$ref": "#/$defs/PaperPlotSettings",
+                "default": {
+                  "area": {
+                    "type": "layout"
+                  },
+                  "center": false,
+                  "device": {
+                    "type": "pdf"
+                  },
+                  "offset": [
+                    0,
+                    0
+                  ],
+                  "scale": {
+                    "ratio": {
+                      "model": 1.0,
+                      "paper": 1.0
+                    },
+                    "type": "ratio"
+                  }
+                }
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "page"
+            ],
+            "type": "object"
+          },
           "PaperNorthArrowStyle": {
             "oneOf": [
               {
@@ -1040741,6 +1041489,75 @@
           },
           "PaperOp": {
             "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "op": {
+                    "const": "savePageSetups",
+                    "type": "string"
+                  },
+                  "setups": {
+                    "items": {
+                      "$ref": "#/$defs/PaperNamedPageSetup"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "op",
+                  "setups"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "op": {
+                    "const": "applyPageSetup",
+                    "type": "string"
+                  },
+                  "setup": {
+                    "type": "string"
+                  },
+                  "sheet": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "op",
+                  "sheet",
+                  "setup"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "op": {
+                    "const": "setSheetPlot",
+                    "type": "string"
+                  },
+                  "plot": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperAppliedPageSetup"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "sheet": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "op",
+                  "sheet"
+                ],
+                "type": "object"
+              },
               {
                 "additionalProperties": false,
                 "properties": {
@@ -1042247,6 +1043064,139 @@
               }
             ]
           },
+          "PaperPlotArea": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "layout",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "extents",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "rect": {
+                    "$ref": "#/$defs/PaperRectUm"
+                  },
+                  "type": {
+                    "const": "window",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "rect"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotScale": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ratio": {
+                    "$ref": "#/$defs/PaperScaleRatio"
+                  },
+                  "type": {
+                    "const": "ratio",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "ratio"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "fit",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPlotSettings": {
+            "additionalProperties": false,
+            "properties": {
+              "area": {
+                "$ref": "#/$defs/PaperPlotArea",
+                "default": {
+                  "type": "layout"
+                }
+              },
+              "center": {
+                "default": false,
+                "type": "boolean"
+              },
+              "device": {
+                "$ref": "#/$defs/PaperPrintDevice",
+                "default": {
+                  "type": "pdf"
+                }
+              },
+              "offset": {
+                "default": [
+                  0,
+                  0
+                ],
+                "items": {
+                  "format": "int32",
+                  "type": "integer"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "paper-um"
+              },
+              "profile": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "$ref": "#/$defs/PaperPlotScale",
+                "default": {
+                  "ratio": {
+                    "model": 1.0,
+                    "paper": 1.0
+                  },
+                  "type": "ratio"
+                }
+              }
+            },
+            "type": "object"
+          },
           "PaperPointNaming": {
             "description": "How points are named: their own names (the host's), or numbered.",
             "oneOf": [
@@ -1042285,6 +1043235,40 @@
                 },
                 "required": [
                   "type"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PaperPrintDevice": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "pdf",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "system",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "name"
                 ],
                 "type": "object"
               }
@@ -1042614,6 +1043598,16 @@
               },
               "page": {
                 "$ref": "#/$defs/PaperPage"
+              },
+              "plot": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperAppliedPageSetup"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "snapGrid": {
                 "$ref": "#/$defs/PaperSnapGrid",

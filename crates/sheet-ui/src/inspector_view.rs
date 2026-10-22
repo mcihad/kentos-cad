@@ -1316,6 +1316,17 @@ impl Designer {
         };
         let mut sheet = PropertySheet::new()
             .section(
+                "Baskı düzeni",
+                self.open_section("print-setup"),
+                Message::Section("print-setup"),
+            )
+            .row(
+                "Ayarlar",
+                button(label::body("Sayfa düzenleri…"))
+                    .on_press(Message::PageSetup(crate::page_setup::SetupMessage::Open))
+                    .style(style::button::secondary),
+            )
+            .section(
                 "Kâğıt",
                 self.open_section("paper"),
                 Message::Section("paper"),

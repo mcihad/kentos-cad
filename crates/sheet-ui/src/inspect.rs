@@ -818,7 +818,11 @@ mod tests {
                     || p.path.last() == Some(&"declinationYear")
                     || p.path.starts_with(&["kind", "view", "ratio"])
                     || p.path.starts_with(&["kind", "view", "center"])
-                    || p.path == ["kind", "viewLocked"];
+                    || p.path == ["kind", "viewLocked"]
+                    || p.path == ["kind", "annotationScale"];
+                if p.path == ["kind", "annotationScale"] {
+                    assert_eq!(read(&j, &p, &[]), Value::Null);
+                }
                 if p.path == ["kind", "viewLocked"] {
                     assert_eq!(read(&j, &p, &[]), Value::Bool(false));
                 }

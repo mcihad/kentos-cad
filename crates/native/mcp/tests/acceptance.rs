@@ -843,3 +843,39 @@ fn an_agent_creates_a_six_page_architectural_set_and_exports_each_shared_master_
     assert_eq!(set["output"]["sheets"].as_array().unwrap().len(), 6);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn an_agent_saves_applies_and_exports_a_named_page_setup() {
+    let data: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/page-setups.json"
+    ))
+    .unwrap();
+    let c = &data["cases"][3];
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-sheet18-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let source = dir.join("source.kcad");
+    std::fs::write(&source, serde_json::to_vec(&c["model"]).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    let done = call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":[{"op":"addSheet","sheet":c["sheet"]},{"op":"savePageSetups","setups":[c["setup"]]},{"op":"applyPageSetup","sheet":"page","setup":"office"}]}),
+    );
+    assert!(done["output"].get("inverse").is_some(), "{done}");
+    let path = dir.join("setup.pdf");
+    call(
+        &mut server,
+        "drawing.exportPdf",
+        json!({"drawing":drawing,"path":path}),
+    );
+    let output = std::process::Command::new("pdftotext")
+        .arg(path)
+        .arg("-")
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    assert!(String::from_utf8(output.stdout).unwrap().contains("PRINT"));
+    std::fs::remove_dir_all(dir).unwrap();
+}

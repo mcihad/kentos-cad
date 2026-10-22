@@ -64,6 +64,7 @@ impl Designer {
             Dialog::Questions(d) => self.questions_view(d),
             Dialog::Variables(d) => self.variables_view(d),
             Dialog::ViewportClip(d) => self.viewport_clip_view(d),
+            Dialog::PageSetup(d) => self.page_setup_view(d),
             Dialog::Binding(d) => self.binding_view(d),
             Dialog::Import {
                 label,

@@ -239,6 +239,7 @@ pub enum Message {
     Printable(bool),
 
     // ── The page ──
+    PageSetup(crate::page_setup::SetupMessage),
     Paper(Paper),
     Orientation(Orientation),
     Margin(Side, f64),

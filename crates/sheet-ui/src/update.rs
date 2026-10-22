@@ -337,6 +337,7 @@ impl Designer {
             Message::Padding(v) => self.patch_chosen(json!({ "padding": mm(v.max(0.0)) })),
             Message::Printable(on) => self.patch_chosen(json!({ "printable": on })),
 
+            Message::PageSetup(m) => self.page_setup_update(m),
             Message::Paper(p) => self.set_paper(Some(p), None),
             Message::Orientation(o) => self.set_paper(None, Some(o)),
             Message::Margin(side, v) => {

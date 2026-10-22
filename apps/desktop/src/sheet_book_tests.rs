@@ -2055,3 +2055,44 @@ fn sheet17_multipage_set_screens() {
         }
     }
 }
+
+#[test]
+#[ignore="GPU page setup window, run alone"]
+fn sheet18_page_setup_screens() {
+    use kentos_sheet_ui::page_setup::{SetupMessage as P, Area};
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme, text, w, h) in [
+        ("light", 13, 1440., 900.),
+        ("dark", 13, 1440., 900.),
+        ("dark", 18, 1100., 650.),
+    ] {
+        let mut app = multipage_set_app(theme, text);
+        sheet(&mut app, Sheet::Tab(3));
+        for m in [
+            P::Open,
+            P::Name("Ofis · A3 baskı".into()),
+            P::Area(Area::Window),
+            P::Window(0, 10.),
+            P::Window(1, 10.),
+            P::Window(2, 390.),
+            P::Window(3, 250.),
+            P::Fit(true),
+            P::Center(true),
+        ] {
+            sheet(&mut app, Sheet::PageSetup(m));
+        }
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(w, h)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet18-page-setup-{theme}-{text}.png")))
+            .unwrap();
+        sheet(&mut app, Sheet::PageSetup(P::Save));
+        assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
+        assert!(app.sheets.open_sheet().unwrap().plot.is_some());
+    }
+}

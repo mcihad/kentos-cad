@@ -275,6 +275,7 @@ pub fn used_assets(items: &[Item]) -> Vec<String> {
 /// The book a template stands for (its sheet, master and pictures), for the book's rules.
 fn as_book(t: &Template) -> SheetBook {
     SheetBook {
+        page_setups: Vec::new(),
         schema: BOOK_SCHEMA.to_owned(),
         sheets: vec![t.sheet.clone()],
         masters: t.master.iter().cloned().collect(),

@@ -34,6 +34,9 @@ fn full() -> u8 {
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSheetBook"))]
 pub struct SheetBook {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature="ts", ts(optional, as = "Option<Vec<crate::print_setup::NamedPageSetup>>"))]
+    pub page_setups: Vec<crate::print_setup::NamedPageSetup>,
     /// `kentos.sheet/1`.
     pub schema: String,
     #[serde(default)]
@@ -52,6 +55,7 @@ pub struct SheetBook {
 impl Default for SheetBook {
     fn default() -> Self {
         SheetBook {
+            page_setups: Vec::new(),
             schema: BOOK_SCHEMA.to_owned(),
             sheets: Vec::new(),
             masters: Vec::new(),
@@ -210,6 +214,9 @@ impl SheetBook {
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSheet"))]
 pub struct Sheet {
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    #[cfg_attr(feature="ts",ts(optional))]
+    pub plot: Option<crate::print_setup::AppliedPageSetup>,
     pub id: SheetId,
     pub name: String,
     pub page: Page,

@@ -1,0 +1,3966 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "0: layout fit=False",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "layout"
+          },
+          "scale": {
+            "type": "ratio",
+            "ratio": {
+              "paper": 1.0,
+              "model": 1.0
+            }
+          },
+          "offset": [
+            0,
+            0
+          ],
+          "center": false,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          0,
+          0,
+          420000,
+          297000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 1.0,
+        "translate": [
+          0,
+          0
+        ],
+        "box": [
+          50000.0,
+          40000.0,
+          100000.0,
+          80000.0
+        ]
+      }
+    },
+    {
+      "name": "1: window fit=False",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "window",
+            "rect": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            }
+          },
+          "scale": {
+            "type": "ratio",
+            "ratio": {
+              "paper": 1.0,
+              "model": 1.0
+            }
+          },
+          "offset": [
+            0,
+            0
+          ],
+          "center": true,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 1.0,
+        "translate": [
+          112500.0,
+          63500.0
+        ],
+        "box": [
+          162500.0,
+          103500.0,
+          100000.0,
+          80000.0
+        ]
+      }
+    },
+    {
+      "name": "2: extents fit=False",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "extents"
+          },
+          "scale": {
+            "type": "ratio",
+            "ratio": {
+              "paper": 1.0,
+              "model": 1.0
+            }
+          },
+          "offset": [
+            0,
+            0
+          ],
+          "center": false,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 1.0,
+        "translate": [
+          -30000.0,
+          -30000.0
+        ],
+        "box": [
+          20000.0,
+          10000.0,
+          100000.0,
+          80000.0
+        ]
+      }
+    },
+    {
+      "name": "3: window fit=True",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "window",
+            "rect": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            }
+          },
+          "scale": {
+            "type": "fit"
+          },
+          "offset": [
+            0,
+            0
+          ],
+          "center": true,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 3.3375,
+        "translate": [
+          -121250.0,
+          -123500.0
+        ],
+        "box": [
+          45625.0,
+          10000.0,
+          333750.0,
+          267000.0
+        ]
+      }
+    },
+    {
+      "name": "4: extents fit=True",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "extents"
+          },
+          "scale": {
+            "type": "fit"
+          },
+          "offset": [
+            0,
+            0
+          ],
+          "center": false,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 3.3375,
+        "translate": [
+          -146875.0,
+          -123500.0
+        ],
+        "box": [
+          20000.0,
+          10000.0,
+          333750.0,
+          267000.0
+        ]
+      }
+    },
+    {
+      "name": "5: layout fit=False",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "layout"
+          },
+          "scale": {
+            "type": "ratio",
+            "ratio": {
+              "paper": 0.5,
+              "model": 1.0
+            }
+          },
+          "offset": [
+            1000,
+            -500
+          ],
+          "center": true,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          0,
+          0,
+          420000,
+          297000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 1.0,
+        "translate": [
+          1000,
+          -500
+        ],
+        "box": [
+          51000.0,
+          39500.0,
+          100000.0,
+          80000.0
+        ]
+      }
+    },
+    {
+      "name": "6: window fit=False",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "window",
+            "rect": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            }
+          },
+          "scale": {
+            "type": "ratio",
+            "ratio": {
+              "paper": 0.5,
+              "model": 1.0
+            }
+          },
+          "offset": [
+            1000,
+            -500
+          ],
+          "center": false,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 0.5,
+        "translate": [
+          -4000.0,
+          -10500.0
+        ],
+        "box": [
+          21000.0,
+          9500.0,
+          50000.0,
+          40000.0
+        ]
+      }
+    },
+    {
+      "name": "7: extents fit=False",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "extents"
+          },
+          "scale": {
+            "type": "ratio",
+            "ratio": {
+              "paper": 0.5,
+              "model": 1.0
+            }
+          },
+          "offset": [
+            1000,
+            -500
+          ],
+          "center": true,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 0.5,
+        "translate": [
+          163500.0,
+          103000.0
+        ],
+        "box": [
+          188500.0,
+          123000.0,
+          50000.0,
+          40000.0
+        ]
+      }
+    },
+    {
+      "name": "8: window fit=True",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "window",
+            "rect": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            }
+          },
+          "scale": {
+            "type": "fit"
+          },
+          "offset": [
+            1000,
+            -500
+          ],
+          "center": false,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 3.3375,
+        "translate": [
+          -145875.0,
+          -124000.0
+        ],
+        "box": [
+          21000.0,
+          9500.0,
+          333750.0,
+          267000.0
+        ]
+      }
+    },
+    {
+      "name": "9: extents fit=True",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "extents"
+          },
+          "scale": {
+            "type": "fit"
+          },
+          "offset": [
+            1000,
+            -500
+          ],
+          "center": true,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 3.3375,
+        "translate": [
+          -120250.0,
+          -124000.0
+        ],
+        "box": [
+          46625.0,
+          9500.0,
+          333750.0,
+          267000.0
+        ]
+      }
+    },
+    {
+      "name": "10: layout fit=False",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "layout"
+          },
+          "scale": {
+            "type": "ratio",
+            "ratio": {
+              "paper": 1.0,
+              "model": 1.0
+            }
+          },
+          "offset": [
+            2000,
+            -1000
+          ],
+          "center": false,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          0,
+          0,
+          420000,
+          297000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 1.0,
+        "translate": [
+          2000,
+          -1000
+        ],
+        "box": [
+          52000.0,
+          39000.0,
+          100000.0,
+          80000.0
+        ]
+      }
+    },
+    {
+      "name": "11: window fit=False",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "window",
+            "rect": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            }
+          },
+          "scale": {
+            "type": "ratio",
+            "ratio": {
+              "paper": 1.0,
+              "model": 1.0
+            }
+          },
+          "offset": [
+            2000,
+            -1000
+          ],
+          "center": true,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 1.0,
+        "translate": [
+          114500.0,
+          62500.0
+        ],
+        "box": [
+          164500.0,
+          102500.0,
+          100000.0,
+          80000.0
+        ]
+      }
+    },
+    {
+      "name": "12: extents fit=False",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "extents"
+          },
+          "scale": {
+            "type": "ratio",
+            "ratio": {
+              "paper": 1.0,
+              "model": 1.0
+            }
+          },
+          "offset": [
+            2000,
+            -1000
+          ],
+          "center": false,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 1.0,
+        "translate": [
+          -28000.0,
+          -31000.0
+        ],
+        "box": [
+          22000.0,
+          9000.0,
+          100000.0,
+          80000.0
+        ]
+      }
+    },
+    {
+      "name": "13: window fit=True",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "window",
+            "rect": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            }
+          },
+          "scale": {
+            "type": "fit"
+          },
+          "offset": [
+            2000,
+            -1000
+          ],
+          "center": true,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 3.3375,
+        "translate": [
+          -119250.0,
+          -124500.0
+        ],
+        "box": [
+          47625.0,
+          9000.0,
+          333750.0,
+          267000.0
+        ]
+      }
+    },
+    {
+      "name": "14: extents fit=True",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "extents"
+          },
+          "scale": {
+            "type": "fit"
+          },
+          "offset": [
+            2000,
+            -1000
+          ],
+          "center": false,
+          "device": {
+            "type": "pdf"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 3.3375,
+        "translate": [
+          -144875.0,
+          -124500.0
+        ],
+        "box": [
+          22000.0,
+          9000.0,
+          333750.0,
+          267000.0
+        ]
+      }
+    },
+    {
+      "name": "15: layout fit=False",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "layout"
+          },
+          "scale": {
+            "type": "ratio",
+            "ratio": {
+              "paper": 1.5,
+              "model": 1.0
+            }
+          },
+          "offset": [
+            3000,
+            -1500
+          ],
+          "center": true,
+          "device": {
+            "type": "system",
+            "name": "Ofis yazıcısı"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          0,
+          0,
+          420000,
+          297000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 1.0,
+        "translate": [
+          3000,
+          -1500
+        ],
+        "box": [
+          53000.0,
+          38500.0,
+          100000.0,
+          80000.0
+        ]
+      }
+    },
+    {
+      "name": "16: window fit=False",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "window",
+            "rect": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            }
+          },
+          "scale": {
+            "type": "ratio",
+            "ratio": {
+              "paper": 1.5,
+              "model": 1.0
+            }
+          },
+          "offset": [
+            3000,
+            -1500
+          ],
+          "center": false,
+          "device": {
+            "type": "system",
+            "name": "Ofis yazıcısı"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 1.5,
+        "translate": [
+          -52000.0,
+          -51500.0
+        ],
+        "box": [
+          23000.0,
+          8500.0,
+          150000.0,
+          120000.0
+        ]
+      }
+    },
+    {
+      "name": "17: extents fit=False",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "extents"
+          },
+          "scale": {
+            "type": "ratio",
+            "ratio": {
+              "paper": 1.5,
+              "model": 1.0
+            }
+          },
+          "offset": [
+            3000,
+            -1500
+          ],
+          "center": true,
+          "device": {
+            "type": "system",
+            "name": "Ofis yazıcısı"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 1.5,
+        "translate": [
+          65500.0,
+          22000.0
+        ],
+        "box": [
+          140500.0,
+          82000.0,
+          150000.0,
+          120000.0
+        ]
+      }
+    },
+    {
+      "name": "18: window fit=True",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "window",
+            "rect": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            }
+          },
+          "scale": {
+            "type": "fit"
+          },
+          "offset": [
+            3000,
+            -1500
+          ],
+          "center": false,
+          "device": {
+            "type": "system",
+            "name": "Ofis yazıcısı"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 3.3375,
+        "translate": [
+          -143875.0,
+          -125000.0
+        ],
+        "box": [
+          23000.0,
+          8500.0,
+          333750.0,
+          267000.0
+        ]
+      }
+    },
+    {
+      "name": "19: extents fit=True",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "id": "box",
+            "name": "100 × 80 mm",
+            "frame": {
+              "left": 50000,
+              "top": 40000,
+              "width": 100000,
+              "height": 80000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "rect",
+                "radius": 0
+              },
+              "stroke": {
+                "cap": "butt",
+                "color": "#2255aa",
+                "dash": [],
+                "join": "miter",
+                "width": 350
+              }
+            }
+          },
+          {
+            "id": "mark",
+            "name": "Ölçü yazısı",
+            "frame": {
+              "left": 70000,
+              "top": 60000,
+              "width": 40000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "PRINT",
+              "style": {
+                "size": 3000
+              }
+            }
+          }
+        ],
+        "name": "Baskı kontrolü",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "setup": {
+        "id": "office",
+        "name": "Ofis baskısı",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "settings": {
+          "area": {
+            "type": "extents"
+          },
+          "scale": {
+            "type": "fit"
+          },
+          "offset": [
+            3000,
+            -1500
+          ],
+          "center": true,
+          "device": {
+            "type": "system",
+            "name": "Ofis yazıcısı"
+          }
+        }
+      },
+      "expected": {
+        "source": [
+          50000,
+          40000,
+          100000,
+          80000
+        ],
+        "clip": [
+          20000,
+          10000,
+          385000,
+          267000
+        ],
+        "factor": 3.3375,
+        "translate": [
+          -118250.0,
+          -125000.0
+        ],
+        "box": [
+          48625.0,
+          8500.0,
+          333750.0,
+          267000.0
+        ]
+      }
+    }
+  ]
+}

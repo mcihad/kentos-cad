@@ -613,7 +613,7 @@ Pafta çekirdeği, düzenleyici, PDF/SVG ve değişken/şablon altyapısı var. 
 
 ### 17.3 Plot profile, PDF ve toplu publish
 
-- [ ] **CAD-SHEET-18:** Named page setup; paper size/orientation/margins, print area, scale, plot profile ve device seçimini taşısın.
+- [x] **CAD-SHEET-18:** Named page setup; paper size/orientation/margins, print area, scale, plot profile ve device seçimini taşısın. — **23 Ekim, [ADR 0608](../docs/adr/0608-named-page-setups.md):** kayıt/yükle/sil/uygula; kâğıt ve relayout ortak işlemleri, uygulanmış ayar kopyası ve tam ters işlem. Pafta 1:1; pencere/tüm öğeler oranı veya sığdırma, ortalama/kayma ve iki kırpma; GeoPDF kutuları aynı dönüşümü izler. Profil kimliği çözülemezse çıktı reddedilir; profil modeli sonraki maddede. 20 bağımsız durum, PDF vektör köşeleri 0,002 mm tolerans, Poppler, 234 Python testi, MCP, 46+39+7 UI testi, clippy/katalog/bağımlılık/WASM geçti. Üç tema/yazı ekranı ve gerçek PDF açıldı. Fiziksel yazıcı tercihi ev sahibinde doğrulanır.
 - [ ] **CAD-SHEET-19:** CTB/STB semantiği için native plot profile modeli ve import/export stratejisi oluştur; renk ve adlı plot style birbirine karışmasın.
 - [ ] **CAD-SHEET-20:** Plot color, grayscale/screening, lineweight, linetype, transparency ve line cap/join override'larını uygula.
 - [ ] **CAD-SHEET-21:** Monochrome baskı, raster/PDF altlık, wipeout, text mask ve hatch draw order için karşılaştırmalı paftalar hazırla.

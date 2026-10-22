@@ -1956,3 +1956,46 @@ fn twenty_annotation_choices_and_layer_overrides_work_with_locked_camera_and_und
         d.update(Message::Undo);assert_eq!(d.book(),&book);
     }
 }
+
+#[test]
+fn named_page_setups_save_apply_to_another_sheet_and_undo_as_one_step() {
+    use kentos_sheet_ui::page_setup::{SetupMessage as P, Area};
+    let mut d = designer();
+    let initial = d.book().clone();
+    for message in [
+        P::Open,
+        P::Name("Ofis".into()),
+        P::Area(Area::Window),
+        P::Window(0, 30.),
+        P::Window(1, 20.),
+        P::Window(2, 100.),
+        P::Window(3, 80.),
+        P::Fit(true),
+        P::Center(true),
+        P::Offset(0, 5.),
+        P::Save,
+    ] {
+        d.update(Message::PageSetup(message));
+    }
+    assert!(d.error().is_none(), "{:?}", d.error());
+    let setup = d.book().page_setups[0].clone();
+    assert_eq!(setup.name, "Ofis");
+    assert!(d.open_sheet().unwrap().plot.is_some());
+    d.update(Message::Undo);
+    assert_eq!(d.book(), &initial);
+    d.update(Message::Redo);
+    new_sheet(&mut d);
+    let second = d.open_sheet().unwrap().id.clone();
+    for message in [P::Open, P::Load(setup.id.clone()), P::Apply] {
+        d.update(Message::PageSetup(message));
+    }
+    assert_eq!(d.open_sheet().unwrap().id, second);
+    assert_eq!(
+        d.open_sheet().unwrap().plot.as_ref().unwrap().settings,
+        setup.settings
+    );
+    d.update(Message::PageSetup(P::Open));
+    d.update(Message::PageSetup(P::Remove(setup.id)));
+    assert!(d.book().page_setups.is_empty());
+    assert!(d.open_sheet().unwrap().plot.is_some());
+}

@@ -690,6 +690,9 @@ pub struct SetVariant {
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperOp"))]
 pub enum Op {
+    SavePageSetups(crate::print_setup::SavePageSetups),
+    ApplyPageSetup(crate::print_setup::ApplyPageSetup),
+    SetSheetPlot(crate::print_setup::SetSheetPlot),
     AddSheet(AddSheet),
     RemoveSheet(IdRef),
     RenameSheet(Rename),
@@ -1070,6 +1073,47 @@ fn step(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
 
 fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
     match op {
+        Op::SavePageSetups(s) => {
+            let old = std::mem::replace(&mut b.page_setups, s.setups.clone());
+            Ok(vec![Op::SavePageSetups(
+                crate::print_setup::SavePageSetups { setups: old },
+            )])
+        }
+        Op::SetSheetPlot(s) => {
+            let sheet = sheet_mut(b, &s.sheet)?;
+            let old = std::mem::replace(&mut sheet.plot, s.plot.clone());
+            Ok(vec![Op::SetSheetPlot(crate::print_setup::SetSheetPlot {
+                sheet: s.sheet.clone(),
+                plot: old,
+            })])
+        }
+        Op::ApplyPageSetup(s) => {
+            let setup = b
+                .page_setups
+                .iter()
+                .find(|p| p.id == s.setup)
+                .cloned()
+                .ok_or_else(|| {
+                    SheetError::new("unknown_page_setup", "Sayfa düzeni bulunamadı.")
+                })?;
+            let old = b
+                .sheet(&s.sheet)
+                .cloned()
+                .ok_or_else(|| unknown_sheet(&s.sheet))?;
+            set_page(
+                b,
+                &SetPage {
+                    owner: Owner::sheet(&s.sheet),
+                    page: setup.page,
+                    relayout: true,
+                },
+            )?;
+            sheet_mut(b, &s.sheet)?.plot = Some(crate::print_setup::AppliedPageSetup {
+                source: Some(setup.id),
+                settings: setup.settings,
+            });
+            Ok(vec![Op::ReplaceSheet(ReplaceSheet { sheet: old })])
+        }
         Op::AddSheet(a) => {
             let i = clamp_index(a.index, b.sheets.len());
             b.sheets.insert(i, a.sheet.clone());
@@ -1255,7 +1299,11 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
         Op::NavigateViewport(s) => {
             let (owner, i) = b.find_item(&s.id).ok_or_else(|| unknown_item(&s.id))?;
             let op = crate::model_scope::navigate(&items_mut(b, &owner)?[i], s)?;
-            if let Op::SetItemProps(patch) = op { set_props(b, &patch) } else { Err(SheetError::new("bad_patch", "Görünüm kaydırılamadı.")) }
+            if let Op::SetItemProps(patch) = op {
+                set_props(b, &patch)
+            } else {
+                Err(SheetError::new("bad_patch", "Görünüm kaydırılamadı."))
+            }
         }
         Op::SetViewport(s) => {
             let (owner, i) = b.find_item(&s.id).ok_or_else(|| unknown_item(&s.id))?;
@@ -2209,6 +2257,9 @@ pub fn describe(b: &SheetBook, op: &Op) -> String {
         Op::DuplicateSheet(d) => format!("Paftayı çoğalt: {}", sheet_name(&d.id)),
         Op::ReplaceSheet(r) => format!("Paftayı değiştir: {}", r.sheet.name),
         Op::SetPage(_) => "Sayfa ayarları".to_owned(),
+        Op::SavePageSetups(_) => "Adlı sayfa düzenleri".into(),
+        Op::ApplyPageSetup(_) => "Sayfa düzenini uygula".into(),
+        Op::SetSheetPlot(_) => "Baskı ayarları".into(),
         Op::AddMaster(a) => format!("Ana sayfa ekle: {}", a.master.name),
         Op::RemoveMaster(_) => "Ana sayfayı sil".to_owned(),
         Op::ReplaceMaster(r) => format!("Ana sayfayı değiştir: {}", r.master.name),
@@ -2265,7 +2316,9 @@ pub fn describe(b: &SheetBook, op: &Op) -> String {
         Op::AddAssets(_) => "Resim ekle".to_owned(),
         Op::RemoveAssets(_) => "Resim kaldır".to_owned(),
         Op::AddVariant(a) => format!("Yerleşim düzeni ekle: {}", a.name),
-        Op::RemoveVariant(r) => format!("Yerleşim düzenini sil: {}", variant_name(&r.owner, &r.id)),
+        Op::RemoveVariant(r) => {
+            format!("Yerleşim düzenini sil: {}", variant_name(&r.owner, &r.id))
+        }
         Op::SetVariant(v) => format!(
             "Yerleşim düzeni: {}",
             v.name

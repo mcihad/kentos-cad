@@ -14,3 +14,5 @@ mod units;
 mod viewport_annotations;
 
 mod multipage_sets;
+
+mod page_setups;
