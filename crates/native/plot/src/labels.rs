@@ -153,11 +153,12 @@ pub fn labels_in_view(
     );
     let visible: std::collections::HashMap<_, _> =
         shown.iter().map(|n| (n.id.as_str(), n)).collect();
-    let spots = spatial.labels(
+    let spots = spatial.labels_print(
         Vec2::new(bounds[0], bounds[1]),
         Vec2::new(bounds[2], bounds[3]),
         pixels,
         Default::default(),
+        &|id|visible.contains_key(id),
     );
     let format = Format::of(doc.settings());
     let font = doc.settings().drawing_font.unwrap_or(DrawingFont::Barlow);
@@ -171,6 +172,7 @@ pub fn labels_in_view(
             continue;
         };
         let mut l = label(&layer.id, font);
+        l.color = paper_color(entity.base().color.as_deref().or(Some(&layer.style.color)));
         let ground_height;
         let mut ground_mask = 0.;
         let mut centered = false;

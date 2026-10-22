@@ -205,6 +205,11 @@ pub struct SheetsSetResult {
     #[serde(default,skip_serializing_if="Option::is_none")]
     #[cfg_attr(feature="ts",ts(optional))]
     pub named_views:Option<Vec<kentos_contracts::NamedView>>,
+    /// Available source annotation representations, ordered; with details.
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    #[cfg_attr(feature="ts",ts(optional))]
+    #[cfg_attr(feature="schema",schemars(extend("x-unit"="scale")))]
+    pub annotation_scales:Option<Vec<f64>>,
 }
 
 #[cfg(test)]

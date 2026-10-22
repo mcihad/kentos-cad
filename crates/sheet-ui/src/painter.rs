@@ -336,6 +336,7 @@ mod tests {
     fn the_demo_town_keeps_inside_the_content_s_box() {
         for rotation in [0, 30_000] {
             let view = MapViewPrim {
+                annotation_scale:None,
                 center: Some(GroundPoint {
                     x: 1_000.0,
                     y: 2_000.0,
@@ -400,6 +401,7 @@ mod tests {
     #[test]
     fn a_ground_point_lands_where_the_core_puts_it() {
         let view = MapViewPrim {
+                annotation_scale:None,
             center: Some(GroundPoint {
                 x: 500_000.0,
                 y: 4_400_000.0,
@@ -425,6 +427,7 @@ mod tests {
         assert_eq!(r.to_px(500_010.0, 4_400_005.0), Point::new(120.0, 40.0));
         // Turned a quarter clockwise: east points down.
         let turned = MapViewPrim {
+                annotation_scale:None,
             rotation: 90_000,
             ..view.clone()
         };

@@ -695,3 +695,24 @@ fn live_named_view_is_resolved_by_mcp_without_rewriting_its_capture() {
         2.5
     );
 }
+
+#[test]
+fn twenty_viewport_annotation_and_layer_operations_use_the_catalog_and_undo() {
+    let data:Value=serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/viewport-annotations.json")).unwrap();
+    for c in data["cases"].as_array().unwrap() {
+        let mut server=Server::new();
+        let opened=call(&mut server,"drawing.open",json!({"path":concat!(env!("CARGO_MANIFEST_DIR"),"/../../../fixtures/kcad/v2/sheets.kcad")}));let drawing=opened["drawing"].as_str().unwrap();
+        call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":[{"op":"addSheet","sheet":c["sheet"]}]}));
+        let before=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));
+        let changed=call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":[c["operation"]]}));
+        let after=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));
+        let page=after["output"]["book"]["sheets"].as_array().unwrap().iter().find(|s|s["id"]=="page").unwrap();
+        let mut expected=c["operation"]["layerOverrides"].clone();
+        for o in expected.as_array_mut().unwrap() {if o["frozen"]==false {o.as_object_mut().unwrap().remove("frozen");}}
+        assert_eq!(page["items"][0]["kind"]["layerOverrides"],expected);
+        assert_eq!(page["items"][0]["kind"]["viewLocked"],true);
+        assert!(after["output"]["annotationScales"].is_array());
+        call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":changed["output"]["inverse"]}));
+        let back=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));assert_eq!(back["output"]["book"],before["output"]["book"]);
+    }
+}

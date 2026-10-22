@@ -126,6 +126,7 @@ pub struct Context {
     /// (docs/adr/0206 §2).
     pub layers: Vec<(String, String)>,
     pub named_views:Vec<kentos_sheet::viewport::NamedModelView>,
+    pub annotation_scales:Vec<f64>,
     /// The project's layer states by name and its line types with patterns, for a map's own layers
     /// (docs/adr/0314 §1).
     pub layer_states: Vec<String>,

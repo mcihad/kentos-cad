@@ -1942,3 +1942,17 @@ fn twenty_live_view_links_follow_context_and_inspector_but_keep_the_capture() {
         );
     }
 }
+
+#[test]
+fn twenty_annotation_choices_and_layer_overrides_work_with_locked_camera_and_undo() {
+    let data: serde_json::Value = serde_json::from_str(include_str!("../../../fixtures/sheet/v1/viewport-annotations.json")).unwrap();
+    for c in data["cases"].as_array().unwrap() {
+        let mut book=kentos_sheet::SheetBook::default();book.sheets.push(serde_json::from_value(c["sheet"].clone()).unwrap());
+        let mut d=Designer::new(context());d.load(book.clone());d.update(Message::Tab(1));d.update(Message::Select(vec!["viewport".into()]));
+        let mut raw=c["operation"].clone();raw.as_object_mut().unwrap().remove("op");d.update(Message::MapConfigure(Box::new(serde_json::from_value(raw).unwrap())));
+        let m=d.display_list().unwrap().prims.iter().find_map(|p|match p{kentos_sheet::display::Prim::Map(m)=>Some(m),_=>None}).unwrap();
+        assert_eq!(m.view.annotation_denominator(),c["expected"]["annotation"].as_f64().unwrap());assert_eq!(m.view.scale,c["expected"]["physical"].as_f64().unwrap());
+        assert!(matches!(&d.book().item("viewport").unwrap().kind,ItemKind::Map(m) if m.view_locked));
+        d.update(Message::Undo);assert_eq!(d.book(),&book);
+    }
+}

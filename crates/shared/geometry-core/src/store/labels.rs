@@ -132,6 +132,33 @@ impl Store {
         }
     }
 
+    /// Paper text and feature labels. Source text has no screen LOD; only the supplied layers occupy room.
+    pub fn labels_print(
+        &self,
+        view: &Bounds,
+        scale: f64,
+        options: PlaceOptions,
+        shown: Option<&dyn Fn(&str) -> bool>,
+    ) -> Shown {
+        let labels = self.labels_shown_in(
+            view,
+            scale,
+            None,
+            super::legible::LabelSize::Print,
+            options,
+            shown,
+        );
+        let mut records =
+            Vec::with_capacity(labels.records.len() / LABEL_SHOWN_STRIDE * LABEL_STRIDE);
+        for r in labels.records.chunks_exact(LABEL_SHOWN_STRIDE) {
+            records.extend_from_slice(&r[..LABEL_STRIDE]);
+        }
+        Shown {
+            records,
+            texts: labels.texts,
+        }
+    }
+
     /// The drawing's own text at true size: texts, dimension values, leaders' notes, tables' cells.
     pub fn texts_only(&self, view: &Bounds, scale: f64, editing: Option<f64>) -> Vec<f64> {
         self.labels_with(view, scale, editing, TRUE_MIN_PX, TRUE_MAX_PX, None)

@@ -347,6 +347,7 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
         clip,
         rotation: pen.rot,
         view: MapViewPrim {
+                annotation_scale:m.annotation_scale,
             center: mf.center,
             scale: mf.scale,
             rotation: mf.view_rot,

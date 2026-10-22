@@ -10,3 +10,5 @@ mod book;
 mod map_layers;
 mod output;
 mod units;
+
+mod viewport_annotations;

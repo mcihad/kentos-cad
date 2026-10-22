@@ -121,7 +121,7 @@ fn an_annotative_dimension_reads_the_same_on_paper_at_1_50_and_1_100() {
         .expect("the sheets' step");
     command(&mut app, "cad.sheets.edit", sheets["input"].clone());
 
-    // One height: 2.5 mm at 1:50, 1.25 mm at 1:100 (where the drawing's smallest texts are not written).
+    // Print keeps both physical heights: 2.5 mm at 1:50 and 1.25 mm at 1:100.
     let one = dir.join("tek.pdf");
     print(&mut app, &one);
     let h50 = words(&one, 1, "4000.000")
@@ -129,6 +129,7 @@ fn an_annotative_dimension_reads_the_same_on_paper_at_1_50_and_1_100() {
         .expect("the value at 1:50")
         .0;
     let small = words(&one, 2, "4000.000");
+    assert!(!small.is_empty(), "small CAD text must remain in printed output");
     assert!(
         small.iter().all(|w| (w.0 - h50 / 2.0).abs() < 0.05 * h50),
         "one height at 1:100: {small:?}"

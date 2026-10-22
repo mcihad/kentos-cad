@@ -106,7 +106,7 @@ pub fn printed_layers(nodes: &[LayerNode]) -> Vec<&LayerNode> {
 /// The layers one map of a sheet prints, bottom first (docs/adr/0314 §1): the map's layer state (`MapLayers::Theme`,
 /// by name) in place of the drawing's visibility, freezing, printing and, when the state kept them, looks; then the
 /// map's overrides (frozen, printed or not, a colour, a line type or pattern, a weight). The drawing's layers stay as
-/// they are; a layer drawn otherwise is a copy. `MapLayers::List` is the caller's (it names the layers shown).
+/// they are; a layer drawn otherwise is a copy. `MapLayers::List` is filtered here too, including labels and their obstacles.
 pub fn map_layers<'a>(
     nodes: &'a [LayerNode],
     states: &[kentos_contracts::LayerState],
@@ -179,6 +179,7 @@ pub fn map_layers<'a>(
     let mut out = Vec::new();
     walk(&Walk { kept, overrides }, nodes, true, &mut out);
     out.reverse();
+    if let kentos_sheet::kinds::MapLayers::List(list)=layers {out.retain(|n|list.layers.contains(&n.id));}
     out
 }
 

@@ -1147,6 +1147,17 @@ impl Designer {
                 Switch::disabled(map.frame_plot)
             }
             .label("Çerçeve baskıya çıksın");
+            let annotation_id=one.id.clone();
+            let physical=view.denominator();
+            let annotation=if editable && !one.locked {
+                Switch::new(map.annotation_scale.is_none(),move |automatic|Message::MapConfigure(Box::new(SetViewport{id:annotation_id.clone(),annotation:Some(if automatic {kentos_sheet::viewport::AnnotationScale::Auto}else{kentos_sheet::viewport::AnnotationScale::Fixed{scale:physical.min(kentos_contracts::MAX_ANNOTATIVE_SCALE)}}),..Default::default()})))
+            } else {Switch::disabled(map.annotation_scale.is_none())}.label("Açıklamalar görünüm ölçeğini izlesin");
+            let representation:Element<'_,Message>=if let Some(scale)=map.annotation_scale {
+                let mut choices=self.ctx.annotation_scales.iter().map(|s|Choice::new(format!("1:{s}"))).collect::<Vec<_>>();
+                let selected=self.ctx.annotation_scales.iter().position(|s|*s==scale).unwrap_or_else(||{choices.push(Choice::new(format!("1:{scale} (temsil yok)")).disabled());choices.len()-1});
+                let scales=self.ctx.annotation_scales.clone();let id=one.id.clone();
+                if editable && !one.locked {Select::new(choices,Some(selected),move|i|Message::MapConfigure(Box::new(SetViewport{id:id.clone(),annotation:Some(kentos_sheet::viewport::AnnotationScale::Fixed{scale:scales.get(i).copied().unwrap_or(scale)}),..Default::default()}))).into()} else {label::caption(format!("Açıklama temsili 1:{scale}")).into()}
+            } else {label::caption(format!("Açıklama temsili: görünümdeki 1:{physical}")).into()};
             let clip_name = match &map.clip {
                 kentos_sheet::clip::Clip::Frame => "Tam çerçeve",
                 kentos_sheet::clip::Clip::Rectangle { .. } => "Dikdörtgen sınır",
@@ -1160,6 +1171,9 @@ impl Designer {
             column![
                 lock,
                 frame_plot,
+                annotation,
+                representation,
+                label::caption("Özel açıklama ölçeği ilgili metin/ölçü temsilini seçer; kâğıt boyu görünüm ölçeğiyle hesaplanır."),
                 button(row![icon(crate::icons::LAYOUT).size(14.),label::caption("Modeli bu görünümde düzenle")].spacing(6)).on_press_maybe(effective.is_some().then_some(Message::EnterModel(edit_model_id))).padding([3,8]).style(style::button::secondary),
                 clipping,
                 labelled(

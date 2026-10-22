@@ -725,6 +725,13 @@ impl Store {
         options: PlaceOptions,
         prior: Option<&Prior>,
     ) -> (Shown, Prior) {
+        self.place_labels_after_in(window,scale,fixed,options,prior,None)
+    }
+
+    /// View-specific layer visibility also controls obstacles, contours and ghost neighbours.
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn place_labels_after_in(&self,window:&Bounds,scale:f64,fixed:&[Vec<Vec2>],options:PlaceOptions,prior:Option<&Prior>,shown:Option<&[bool]>)->(Shown,Prior) {
+        let visible=|it:&Item|shown.and_then(|s|s.get(it.layer as usize)).copied().unwrap_or_else(||self.flags(it).visible);
         let page = Page {
             x0: window.min_x,
             y0: window.min_y,
@@ -773,8 +780,7 @@ impl Store {
             })
             .collect();
         for it in &items {
-            let flags = self.flags(it);
-            if !flags.visible {
+            if !visible(it) {
                 continue;
             }
             let layer = self
@@ -810,13 +816,12 @@ impl Store {
         }
         // The part's neighbours hold room too (docs/adr/0578 §1): no unit, no contour, no time or filter.
         for g in &self.ghosts {
-            if self.flags(g).visible && super::rtree::overlaps(&g.bounds, &query) {
+            if visible(g) && super::rtree::overlaps(&g.bounds, &query) {
                 self.room_of(g, page, &mut obstacles);
             }
         }
         for it in &items {
-            let flags = self.flags(it);
-            if !flags.visible {
+            if !visible(it) {
                 continue;
             }
             let floor = match smallest.get(it.layer as usize).copied().flatten() {

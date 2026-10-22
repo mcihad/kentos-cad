@@ -555269,6 +555269,15 @@
                 "additionalProperties": false,
                 "description": "A map frame: in CAD the “Görünüm penceresi” (profiles name it).",
                 "properties": {
+                  "annotationScale": {
+                    "description": "None: the physical viewport scale; Some: explicitly choose this annotation representation.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "scale"
+                  },
                   "clip": {
                     "anyOf": [
                       {
@@ -558536,6 +558545,18 @@
               "array",
               "null"
             ]
+          },
+          "annotationScales": {
+            "description": "Available source annotation representations, ordered; with details.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "scale"
           },
           "book": {
             "anyOf": [
@@ -559942,6 +559963,15 @@
                 "additionalProperties": false,
                 "description": "A map frame: in CAD the “Görünüm penceresi” (profiles name it).",
                 "properties": {
+                  "annotationScale": {
+                    "description": "None: the physical viewport scale; Some: explicitly choose this annotation representation.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "scale"
+                  },
                   "clip": {
                     "anyOf": [
                       {
@@ -563209,6 +563239,18 @@
               "array",
               "null"
             ]
+          },
+          "annotationScales": {
+            "description": "Available source annotation representations, ordered; with details.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "scale"
           },
           "book": {
             "anyOf": [
@@ -1033652,6 +1033694,15 @@
                 "additionalProperties": false,
                 "description": "A map frame: in CAD the “Görünüm penceresi” (profiles name it).",
                 "properties": {
+                  "annotationScale": {
+                    "description": "None: the physical viewport scale; Some: explicitly choose this annotation representation.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "scale"
+                  },
                   "clip": {
                     "anyOf": [
                       {
@@ -1037676,6 +1037727,43 @@
               }
             ]
           },
+          "PaperAnnotationScale": {
+            "description": "Annotation representation selection is independent of the physical camera and its lock.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "auto",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "scale": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "scale"
+                  },
+                  "type": {
+                    "const": "fixed",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "scale"
+                ],
+                "type": "object"
+              }
+            ]
+          },
           "PaperAssetKind": {
             "description": "A picture's file type.",
             "enum": [
@@ -1039059,6 +1039147,15 @@
                 "additionalProperties": false,
                 "description": "A map frame: in CAD the “Görünüm penceresi” (profiles name it).",
                 "properties": {
+                  "annotationScale": {
+                    "description": "None: the physical viewport scale; Some: explicitly choose this annotation representation.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "scale"
+                  },
                   "clip": {
                     "anyOf": [
                       {
@@ -1041163,6 +1041260,16 @@
               {
                 "additionalProperties": false,
                 "properties": {
+                  "annotation": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperAnnotationScale"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "bounds": {
                     "description": "Canonical metres; an unrotated model-space rectangle to fit exactly.",
                     "items": {
@@ -1041205,6 +1041312,25 @@
                   },
                   "id": {
                     "type": "string"
+                  },
+                  "layerOverrides": {
+                    "items": {
+                      "$ref": "#/$defs/PaperLayerOverride"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "layers": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperMapLayers"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "locked": {
                     "type": [

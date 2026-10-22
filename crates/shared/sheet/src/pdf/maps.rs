@@ -323,6 +323,7 @@ mod tests {
             clip: RectUm::new(20_000, 10_000, 200_000, 100_000),
             rotation,
             view: MapViewPrim {
+                annotation_scale:None,
                 center: Some(GroundPoint {
                     x: 500_000.0,
                     y: 4_420_000.0,

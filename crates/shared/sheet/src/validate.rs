@@ -524,6 +524,7 @@ fn kind(path: &str, item: &Item) -> Result<()> {
     let p = format!("{path}.kind");
     match &item.kind {
         ItemKind::Map(m) => {
+            if m.annotation_scale.is_some_and(|v|!crate::viewport::valid_annotation_scale(v)) {return Err(err("bad_annotation_scale",&format!("{p}.annotationScale"),"Açıklama ölçeği sonlu, pozitif ve en çok 1000000 olmalı."));}
             m.clip.validate()?;
             if let Some(view) = m.source.captured_view()
                 && (!kentos_contracts::view_holds(view)

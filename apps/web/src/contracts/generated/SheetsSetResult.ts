@@ -25,4 +25,8 @@ affected?: Array<AffectedFrame>, revision: string, book?: unknown, templates?: A
 /**
  * With details: the same current named-view registry the desktop source picker uses.
  */
-namedViews?: Array<NamedView>, };
+namedViews?: Array<NamedView>,
+/**
+ * Available source annotation representations, ordered; with details.
+ */
+annotationScales?: Array<number>, };

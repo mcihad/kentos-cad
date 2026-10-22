@@ -11,6 +11,12 @@ use crate::document::Document;
 use crate::store::Stored;
 
 impl Document {
+    /// Available source annotation representations, ordered and unique, without a paper/view copy.
+    pub fn annotation_scales(&self)->Vec<f64> {
+        let mut values=Vec::new();
+        for stored in self.store.iter() {if let Some(a)=annotative_of(&stored.entity) {values.push(a.at);values.extend(a.scales.iter().map(|v|v.scale));}}
+        values.sort_by(f64::total_cmp);values.dedup();values
+    }
     /// Whether an object of the drawing is annotative.
     pub fn has_annotative(&self) -> bool {
         self.store

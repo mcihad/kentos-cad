@@ -122,6 +122,7 @@ pub(crate) fn props_of(kind: &str) -> Vec<Prop> {
     match kind {
         "map" => vec![
             prop(&["kind", "view", "scale"], "Ölçek (1:…)", Conv::Scale),
+            prop(&["kind","annotationScale"],"Özel açıklama ölçeği (1:…)",Conv::ExactReal),
             prop(
                 &["kind", "view", "ratio", "paper"],
                 "Oran: kâğıt",

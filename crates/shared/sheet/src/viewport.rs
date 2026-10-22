@@ -119,6 +119,25 @@ impl Source {
 
 pub use crate::clip::Clip;
 
+/// Annotation representation selection is independent of the physical camera and its lock.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperAnnotationScale"))]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
+pub enum AnnotationScale {
+    #[default]
+    Auto,
+    Fixed {
+        #[cfg_attr(feature="schema",schemars(extend("x-unit"="scale")))]
+        scale: f64,
+    },
+}
+pub fn valid_annotation_scale(scale: f64) -> bool {
+    scale.is_finite() && scale > 0. && scale <= kentos_contracts::MAX_ANNOTATIVE_SCALE
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -126,6 +145,16 @@ pub use crate::clip::Clip;
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SetViewport {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotation: Option<AnnotationScale>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layers: Option<crate::MapLayers>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layer_overrides: Option<Vec<crate::kinds::LayerOverride>>,
+
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -310,6 +339,26 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
     if let Some(plot) = input.frame_plot {
         changed.frame_plot = plot;
     }
+    if let Some(annotation) = &input.annotation {
+        changed.annotation_scale = match annotation {
+            AnnotationScale::Auto => None,
+            AnnotationScale::Fixed { scale } => {
+                if !valid_annotation_scale(*scale) {
+                    return Err(SheetError::new(
+                        "bad_annotation_scale",
+                        "Açıklama ölçeği sonlu, pozitif ve en çok 1000000 olmalı.",
+                    ));
+                }
+                Some(*scale)
+            }
+        };
+    }
+    if let Some(layers) = &input.layers {
+        changed.layers = layers.clone();
+    }
+    if let Some(overrides) = &input.layer_overrides {
+        changed.layer_overrides = overrides.clone();
+    }
     let ratio = view.ratio;
     changed.view = MapView::Fixed(view);
     let mut patch = serde_json::json!({"kind":changed});
@@ -321,6 +370,12 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
     }
     if input.frame_plot.is_some() {
         patch["kind"]["framePlot"] = serde_json::json!(changed.frame_plot);
+    }
+    if input.annotation.is_some() {
+        patch["kind"]["annotationScale"] = serde_json::json!(changed.annotation_scale);
+    }
+    if input.layer_overrides.is_some() {
+        patch["kind"]["layerOverrides"] = serde_json::json!(changed.layer_overrides);
     }
     patch["kind"]["view"]["ratio"] = serde_json::json!(ratio);
     Ok(Op::SetItemProps(SetItemProps {

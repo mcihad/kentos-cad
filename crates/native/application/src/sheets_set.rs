@@ -214,6 +214,7 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
             .details
             .then(|| kentos_sheet::viewport::standard_ratios().to_vec()),
         named_views: input.details.then(|| doc.settings().named_views.clone()),
+        annotation_scales:input.details.then(||doc.annotation_scales()),
         series,
         sheets,
         affected,

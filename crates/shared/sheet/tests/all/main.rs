@@ -20,3 +20,5 @@ mod clips;
 mod model_scope;
 
 mod view_links;
+
+mod viewport_annotations;

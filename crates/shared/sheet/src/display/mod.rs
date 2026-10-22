@@ -146,6 +146,9 @@ pub struct ImagePrim {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapViewPrim {
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    #[cfg_attr(feature="ts",ts(optional))]
+    pub annotation_scale:Option<f64>,
     /// None: the map has no place yet (a template's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -154,6 +157,10 @@ pub struct MapViewPrim {
     pub scale: f64,
     /// The content's turn in the frame (the frame's own turn is the primitive's).
     pub rotation: Mdeg,
+}
+
+impl MapViewPrim {
+    pub fn annotation_denominator(&self)->f64 {self.annotation_scale.unwrap_or(self.scale)}
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

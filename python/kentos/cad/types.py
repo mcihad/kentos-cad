@@ -6390,6 +6390,27 @@ class OpeningsOperation(_Union):
         return _variant(_OPENINGS_OPERATION, "OpeningsOperation", "kind", data).from_json(data)
 
 
+class PaperAnnotationScale(_Union):
+    """Annotation representation selection is independent of the physical camera and its lock.
+
+    One of:
+
+    - :class:`AutoPaperAnnotationScale` (``type: auto``)
+    - :class:`FixedPaperAnnotationScale` (``type: fixed``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "type"
+
+    @property
+    def type(self) -> str:
+        """The name of the variant (``type`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperAnnotationScale:
+        return _variant(_PAPER_ANNOTATION_SCALE, "PaperAnnotationScale", "type", data).from_json(data)
+
+
 class PaperAtlasScale(_Union):
     """How an atlas map chooses its scale (design §7a).
 
@@ -43810,12 +43831,14 @@ class SheetsSetResult(_Model):
         series: The series, sorted by their letters and digit; `Diğer` last.
         sheets: The sheets, in the book's order.
         affected: With `uids`: the frames affected, in the book's order; their sheets are the ones to print again.
+        annotation_scales: Available source annotation representations, ordered; with details. Unit: scale.
         named_views: With details: the same current named-view registry the desktop source picker uses.
     """
     series: list[SheetSeries]
     sheets: list[SetSheet]
     revision: str
     affected: list[AffectedFrame] | None | Unset = UNSET
+    annotation_scales: list[float] | None | Unset = UNSET
     book: PaperSheetBook | None | Unset = UNSET
     named_views: list[NamedView] | None | Unset = UNSET
     pictures: list[SheetPicture] | None | Unset = UNSET
@@ -43829,6 +43852,8 @@ class SheetsSetResult(_Model):
         out["revision"] = self.revision
         if self.affected is not UNSET:
             out["affected"] = None if self.affected is None else [e0.to_json() for e0 in self.affected]
+        if self.annotation_scales is not UNSET:
+            out["annotationScales"] = None if self.annotation_scales is None else [float(e0) for e0 in self.annotation_scales]
         if self.book is not UNSET:
             out["book"] = None if self.book is None else self.book.to_json()
         if self.named_views is not UNSET:
@@ -43848,6 +43873,7 @@ class SheetsSetResult(_Model):
             sheets=[SetSheet.from_json(e0) for e0 in data["sheets"]],
             revision=data["revision"],
             affected=UNSET if "affected" not in data else None if data["affected"] is None else [AffectedFrame.from_json(e0) for e0 in data["affected"]],
+            annotation_scales=UNSET if "annotationScales" not in data else None if data["annotationScales"] is None else [float(e0) for e0 in data["annotationScales"]],
             book=UNSET if "book" not in data else None if data["book"] is None else PaperSheetBook.from_json(data["book"]),
             named_views=UNSET if "namedViews" not in data else None if data["namedViews"] is None else [NamedView.from_json(e0) for e0 in data["namedViews"]],
             pictures=UNSET if "pictures" not in data else None if data["pictures"] is None else [SheetPicture.from_json(e0) for e0 in data["pictures"]],
@@ -59600,6 +59626,40 @@ class CopyOpeningsOperation(OpeningsOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class AutoPaperAnnotationScale(PaperAnnotationScale):
+    TAG_VALUE: ClassVar[str] = "auto"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "auto"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AutoPaperAnnotationScale:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class FixedPaperAnnotationScale(PaperAnnotationScale):
+    """
+    Attributes:
+        scale: Unit: scale.
+    """
+    TAG_VALUE: ClassVar[str] = "fixed"
+    scale: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "fixed"}
+        out["scale"] = float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FixedPaperAnnotationScale:
+        return cls(
+            scale=float(data["scale"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FitPaperAtlasScale(PaperAtlasScale):
     """The object with a margin around it, at the largest standard scale it fits (or the exact scale).
     Attributes:
@@ -60019,6 +60079,7 @@ class ExpressionPaperGridLabelFormat(PaperGridLabelFormat):
 class MapPaperItemKind(PaperItemKind):
     """A map frame: in CAD the “Görünüm penceresi” (profiles name it).
     Attributes:
+        annotation_scale: None: the physical viewport scale; Some: explicitly choose this annotation representation. Unit: scale.
         clip: Boundary in content-frame coordinates, independent of camera scale.
         clip_to_atlas_feature: The host clips the content to the atlas object.
         crs: Another coordinate system for the map (EPSG code text); none: the project's.
@@ -60030,6 +60091,7 @@ class MapPaperItemKind(PaperItemKind):
     """
     TAG_VALUE: ClassVar[str] = "map"
     view: PaperMapView
+    annotation_scale: float | None | Unset = UNSET
     clip: PaperViewportClip | PaperViewportClipName | None | Unset = UNSET
     clip_to_atlas_feature: bool = False
     crs: str | None | Unset = UNSET
@@ -60046,6 +60108,8 @@ class MapPaperItemKind(PaperItemKind):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"type": "map"}
         out["view"] = self.view.to_json()
+        if self.annotation_scale is not UNSET:
+            out["annotationScale"] = None if self.annotation_scale is None else float(self.annotation_scale)
         if self.clip is not UNSET:
             out["clip"] = None if self.clip is None else (self.clip if isinstance(self.clip, str) else self.clip.to_json())
         out["clipToAtlasFeature"] = self.clip_to_atlas_feature
@@ -60071,6 +60135,7 @@ class MapPaperItemKind(PaperItemKind):
     def from_json(cls, data: Mapping[str, Any]) -> MapPaperItemKind:
         return cls(
             view=PaperMapView.from_json(data["view"]),
+            annotation_scale=UNSET if "annotationScale" not in data else None if data["annotationScale"] is None else float(data["annotationScale"]),
             clip=UNSET if "clip" not in data else None if data["clip"] is None else PaperViewportClip.from_json(data["clip"]),
             clip_to_atlas_feature=data["clipToAtlasFeature"] if "clipToAtlasFeature" in data else False,
             crs=data.get("crs", UNSET),
@@ -61207,10 +61272,13 @@ class SetViewportPaperOp(PaperOp):
     """
     TAG_VALUE: ClassVar[str] = "setViewport"
     id: str
+    annotation: PaperAnnotationScale | None | Unset = UNSET
     bounds: list[float] | None | Unset = UNSET
     center: PaperGroundPoint | None | Unset = UNSET
     clip: PaperViewportClip | PaperViewportClipName | None | Unset = UNSET
     frame_plot: bool | None | Unset = UNSET
+    layer_overrides: list[PaperLayerOverride] | None | Unset = UNSET
+    layers: PaperMapLayers | None | Unset = UNSET
     locked: bool | None | Unset = UNSET
     ratio: PaperScaleRatio | None | Unset = UNSET
     rotation: int | None | Unset = UNSET
@@ -61220,6 +61288,8 @@ class SetViewportPaperOp(PaperOp):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"op": "setViewport"}
         out["id"] = self.id
+        if self.annotation is not UNSET:
+            out["annotation"] = None if self.annotation is None else self.annotation.to_json()
         if self.bounds is not UNSET:
             out["bounds"] = None if self.bounds is None else [float(e0) for e0 in self.bounds]
         if self.center is not UNSET:
@@ -61228,6 +61298,10 @@ class SetViewportPaperOp(PaperOp):
             out["clip"] = None if self.clip is None else (self.clip if isinstance(self.clip, str) else self.clip.to_json())
         if self.frame_plot is not UNSET:
             out["framePlot"] = self.frame_plot
+        if self.layer_overrides is not UNSET:
+            out["layerOverrides"] = None if self.layer_overrides is None else [e0.to_json() for e0 in self.layer_overrides]
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else self.layers.to_json()
         if self.locked is not UNSET:
             out["locked"] = self.locked
         if self.ratio is not UNSET:
@@ -61244,10 +61318,13 @@ class SetViewportPaperOp(PaperOp):
     def from_json(cls, data: Mapping[str, Any]) -> SetViewportPaperOp:
         return cls(
             id=data["id"],
+            annotation=UNSET if "annotation" not in data else None if data["annotation"] is None else PaperAnnotationScale.from_json(data["annotation"]),
             bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [float(e0) for e0 in data["bounds"]],
             center=UNSET if "center" not in data else None if data["center"] is None else PaperGroundPoint.from_json(data["center"]),
             clip=UNSET if "clip" not in data else None if data["clip"] is None else PaperViewportClip.from_json(data["clip"]),
             frame_plot=data.get("framePlot", UNSET),
+            layer_overrides=UNSET if "layerOverrides" not in data else None if data["layerOverrides"] is None else [PaperLayerOverride.from_json(e0) for e0 in data["layerOverrides"]],
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else PaperMapLayers.from_json(data["layers"]),
             locked=data.get("locked", UNSET),
             ratio=UNSET if "ratio" not in data else None if data["ratio"] is None else PaperScaleRatio.from_json(data["ratio"]),
             rotation=data.get("rotation", UNSET),
@@ -65791,6 +65868,9 @@ _OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through"
 _OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "renumber": RenumberOpeningsOperation, "copy": CopyOpeningsOperation}
 
 
+_PAPER_ANNOTATION_SCALE: dict[str, type[PaperAnnotationScale]] = {"auto": AutoPaperAnnotationScale, "fixed": FixedPaperAnnotationScale}
+
+
 _PAPER_ATLAS_SCALE: dict[str, type[PaperAtlasScale]] = {"fit": FitPaperAtlasScale, "fixed": FixedPaperAtlasScale, "predefined": PredefinedPaperAtlasScale}
 
 
@@ -66077,6 +66157,7 @@ __all__ = [
     "AuthKind",
     "AuthKindName",
     "AutoCsvGeometryIn",
+    "AutoPaperAnnotationScale",
     "AutoPaperLegendEntries",
     "AutoPaperScaleBarLength",
     "AzimuthDimensionMeasure",
@@ -66571,6 +66652,7 @@ __all__ = [
     "FitPaperAtlasScale",
     "FitTableEdit",
     "FixConstraintRule",
+    "FixedPaperAnnotationScale",
     "FixedPaperAtlasScale",
     "FixedPaperMapView",
     "FixedPaperScaleBarLength",
@@ -67149,6 +67231,7 @@ __all__ = [
     "PaperAlignEdgeName",
     "PaperAlignTo",
     "PaperAlignToName",
+    "PaperAnnotationScale",
     "PaperAssetKind",
     "PaperAssetKindName",
     "PaperAssetMeta",

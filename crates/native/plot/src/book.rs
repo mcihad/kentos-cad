@@ -138,7 +138,7 @@ pub(crate) struct MapDrawer<'a> {
     /// The drawing as the maps at a scale draw it (docs/adr/0323 §2): a copy per scale where an annotative
     /// object draws otherwise there.
     annotative: bool,
-    scaled: std::collections::HashMap<u64, Option<(Document, Spatial)>>,
+    scaled: std::collections::HashMap<(u64,u64), Option<(Document, Spatial)>>,
     notes: Vec<String>,
     errors: Vec<String>,
     drawing: Option<String>,
@@ -175,13 +175,14 @@ impl<'a> MapDrawer<'a> {
         let center = m.view.center?;
         let origin = kentos_geometry_core::Vec2::new(center.x, center.y);
         let at = m.view.scale.max(1e-6);
-        let key = at.to_bits();
+        let annotation=m.view.annotation_denominator();
+        let key = (at.to_bits(),annotation.to_bits());
         // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
         let walls = Spatial::walls_differ_at(doc, at);
         if (self.annotative || walls) && !self.scaled.contains_key(&key) {
             let copy = self
                 .annotative
-                .then(|| doc.at_scale(at))
+                .then(|| doc.at_scale(annotation))
                 .flatten()
                 .or_else(|| walls.then(|| doc.reading_copy()));
             let window = self.window;

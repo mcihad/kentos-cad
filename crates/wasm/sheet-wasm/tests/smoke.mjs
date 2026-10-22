@@ -433,6 +433,20 @@ for (const f of files('kpafta/invalid')) {
  }
 }
 
+// CAD-SHEET-15: representation and per-viewport layer changes preserve the locked physical camera.
+{
+ const root=json('ops/book.json');
+ for(const c of json('viewport-annotations.json').cases){
+  const before=bookText({...root,sheets:[c.sheet],masters:[],assets:[],variables:[]},c.name);
+  const result=ok(engine.applyOp(before,JSON.stringify(c.operation)),c.name);
+  const list=ok(engine.displayList(JSON.stringify(result.book),'page','{}'),c.name);
+  const map=list.prims.find(p=>p.type==='map');assert.equal(map.view.scale,c.expected.physical,c.name);
+  assert.equal(map.view.annotationScale??map.view.scale,c.expected.annotation,c.name);
+  assert.equal(digest(ok(engine.applyOps(JSON.stringify(result.book),JSON.stringify(result.inverse)),c.name).book,c.name),digest(before,c.name));
+  count('viewport-annotations');
+ }
+}
+
 const info = ok(engine.engineInfo(), 'engineInfo');
 console.log(
   `Pafta çekirdeği WASM ${info.version} (${info.bookSchema}): ` +

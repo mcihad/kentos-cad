@@ -1088,6 +1088,29 @@ impl Spatial {
             .collect()
     }
 
+    /// Exact paper labels; a viewport's layer mask applies before placing or reserving obstacles.
+    pub fn labels_print(
+        &self,
+        min: Vec2,
+        max: Vec2,
+        scale: f64,
+        options: PlaceOptions,
+        shown: &dyn Fn(&str) -> bool,
+    ) -> Vec<LabelSpot> {
+        let view = Bounds {
+            min_x: min.x,
+            min_y: min.y,
+            max_x: max.x,
+            max_y: max.y,
+        };
+        let labels = self.store.labels_print(&view, scale, options, Some(shown));
+        labels
+            .records
+            .chunks_exact(LABEL_STRIDE)
+            .filter_map(|r| self.spot(r, &labels.texts))
+            .collect()
+    }
+
     /// The labels as the view shows them under `size` (docs/adr/0205 §5):
     /// each with how it grows (its factor, 1 as it is, and the point it grows
     /// about); a grown text that would cover another is left out. `keep`:

@@ -1524,6 +1524,7 @@ mod tests {
             clip: RectUm::new(0, 0, 100, 100),
             rotation: 0,
             view: MapViewPrim {
+                annotation_scale:None,
                 center: None,
                 scale: 1000.0,
                 rotation: 0,

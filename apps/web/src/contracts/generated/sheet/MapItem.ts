@@ -7,7 +7,11 @@ import type { MapView } from "./MapView";
 import type { Source } from "./Source";
 import type { Stroke } from "./Stroke";
 
-export type MapItem = { view: MapView, source?: Source, viewLocked?: boolean,
+export type MapItem = {
+/**
+ * None: the physical viewport scale; Some: explicitly choose this annotation representation.
+ */
+annotationScale?: number, view: MapView, source?: Source, viewLocked?: boolean,
 /**
  * Boundary in content-frame coordinates, independent of camera scale.
  */

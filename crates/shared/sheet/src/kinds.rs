@@ -316,6 +316,11 @@ fn overview_frame() -> Stroke {
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperMapItem"))]
 pub struct MapItem {
+    /// None: the physical viewport scale; Some: explicitly choose this annotation representation.
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    #[cfg_attr(feature="ts",ts(optional))]
+    #[cfg_attr(feature="schema",schemars(extend("x-unit"="scale")))]
+    pub annotation_scale:Option<f64>,
     pub view: MapView,
     #[serde(
         default,
@@ -374,7 +379,7 @@ pub struct MapItem {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub label_band: Um,
     /// Layers drawn otherwise in this map (docs/adr/0314 §1), at most one per layer.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty", deserialize_with = "crate::viewport::default_on_null")]
     pub layer_overrides: Vec<LayerOverride>,
 }
 
@@ -1807,6 +1812,7 @@ pub fn frame_point(frame: &crate::units::RectUm, p: [i32; 2]) -> [f64; 2] {
 pub fn default_kind(type_name: &str) -> Option<ItemKind> {
     Some(match type_name {
         "map" => ItemKind::Map(MapItem {
+            annotation_scale:None,
             source: Default::default(),
             view_locked: false,
             clip: Default::default(),

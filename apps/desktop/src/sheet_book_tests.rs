@@ -1664,3 +1664,112 @@ fn sheet14_named_view_screens() {
         assert_eq!(maps[1].view.scale, 100.);
     }
 }
+
+#[test]
+#[ignore = "GPU images and PDF, run alone"]
+fn sheet15_annotation_layer_screens() {
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/viewport-annotations.json"
+    ))
+    .unwrap();
+    let cases = data["cases"].as_array().unwrap();
+    let mut page: kentos_sheet::Sheet =
+        serde_json::from_value(cases[12]["sheet"].clone()).unwrap();
+    page.name = "A-101 · Katman ve açıklama temsilleri".into();
+    page.items.clear();
+    for (index, c) in cases[12..16].iter().enumerate() {
+        let mut item: kentos_sheet::Item =
+            serde_json::from_value(c["sheet"]["items"][0].clone()).unwrap();
+        let patch: kentos_sheet::ops::Op =
+            serde_json::from_value(c["operation"].clone()).unwrap();
+        let mut one = kentos_sheet::SheetBook::default();
+        let mut single = page.clone();
+        single.items.clear();
+        single.items.push(item);
+        one.sheets.push(single);
+        item = kentos_sheet::ops::apply(&one, &patch).unwrap().book.sheets[0]
+            .items
+            .remove(0);
+        item.id = format!("v{index}");
+        item.name = c["name"].as_str().unwrap().into();
+        item.padding = 0;
+        item.frame = kentos_sheet::units::RectUm::new(
+            20000 + (index as i32 % 2) * 200000,
+            30000 + (index as i32 / 2) * 125000,
+            170000,
+            85000,
+        );
+        if let kentos_sheet::ItemKind::Map(m) = &mut item.kind {
+            m.label_band = 0;
+        }
+        let left = item.frame.left;
+        let top = item.frame.top;
+        page.items.push(item);
+        let mut kind = kentos_sheet::kinds::default_kind("text").unwrap();
+        if let kentos_sheet::ItemKind::Text(t) = &mut kind {
+            t.content = c["name"].as_str().unwrap().into();
+            t.style.size = 3000;
+        }
+        page.items.push(kentos_sheet::Item::new(
+            &format!("title{index}"),
+            &format!("Başlık {index}"),
+            kentos_sheet::units::RectUm::new(left, top + 90000, 170000, 15000),
+            kind,
+        ));
+    }
+    let mut book = kentos_sheet::SheetBook::default();
+    book.sheets.push(page);
+    let snapshot: kentos_commands::DocumentSnapshotV1 =
+        serde_json::from_value(cases[12]["model"].clone()).unwrap();
+    let mut model = kentos_domain::Document::from_snapshot(snapshot).unwrap();
+    model
+        .set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
+        .unwrap();
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).unwrap();
+    std::fs::write(
+        out.join("sheet15-annotations.pdf"),
+        kentos_plot::book::book_pdf(&model, &[], "Test", "2026-10-22")
+            .unwrap()
+            .bytes,
+    )
+    .unwrap();
+    for (theme, text, w, h) in [
+        ("light", 13, 1440., 900.),
+        ("dark", 13, 1440., 900.),
+        ("dark", 18, 1100., 650.),
+    ] {
+        let (mut app, _store) = app_with_store("sheet15");
+        app.settings.choose(&[
+            ("appearance.theme", serde_json::json!(theme)),
+            ("appearance.textSize", serde_json::json!(text)),
+        ]);
+        app.apply_settings();
+        let doc = Document::from_v2(model.to_snapshot_v2(), None).unwrap();
+        let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        drive(&mut app, task);
+        sheet(&mut app, Sheet::Tab(1));
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(w, h)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        sheet(&mut app, Sheet::Select(vec!["v1".into()]));
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet15-annotations-{theme}-{text}.png")))
+            .unwrap();
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Scroll(iced::Point::new(w - 100., h - 140.), -12.),
+        );
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet15-controls-{theme}-{text}.png")))
+            .unwrap();
+    }
+}
