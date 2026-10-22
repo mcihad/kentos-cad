@@ -53,6 +53,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 - CAD-IO 2B pafta/viewport, xref ve zengin kayıp raporu: shared sözleşmeler hazır; masaüstü/headless kabulü ADR 0587, web penceresi/işleyicisi web yeniden başladığında eklenecek.
 - CAD-SHEET kâğıt çizgisinin geometriden ayrı seçme çerçevesi ve DXF/DWG bloklarının kendi birimleriyle normalizasyonu ortak/native yolda düzeltildi (ADR 0589). Web'in kendi içe aktarma belge/pafta işleyicisi ve ortak fixture beklentileri web yeniden açıldığında uyarlanacak; web kabulü yapılmış sayılmaz.
+- CAD-SHEET-05 birleşik model/pafta betik grubu ve changeset undo/redo'su native yolda (ADR 0590). Web yeniden açıldığında kendi belge geçmişi kitap/resim snapshot'larını, grup iptalini ve savepoint'i izlemeli; sonraki bağımsız pafta düzenlemesini ezmeden bütün undo/redo'yu reddetmeli. `fixtures/sheet/v1/model-transactions.json` aynı beklentileri taşır.
 - DWG içe/dışa aktarma: `file.import.dwg` / `file.export.dwg` masaüstü ve başsız yolda; web işleyicisi, dosya penceresi ve WASM bağlayıcısı web yeniden başladığında eklenecek (ADR 0586).
 
 Web'in son hâli `1aad00d0`'dır (12 Ekim 2026). Bu liste web'e dönüşün planıdır. Şunlar buraya bir satır yazar:
@@ -1894,8 +1895,10 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   kitap projeye alınır ve kaydedilince `kitaplar/tasindi/`'ye ayrılır, okunamayan kitap olduğu gibi kalır; veritabanı projesinde göç
   0017 (`project.sheets`), bilgi, oluşturma, `ProjectPatch.sheets`, görüntü, içe aktarma, kopya ve geri yükleme; masaüstünün bulut
   eşitlemesi kitabı meta olarak gönderir ve alır. Açık: pafta işlemleri katalogda ve başsız sunucuda (`CAD-SHEET-06`, `07`; ilk dilimi
-  `CADP-12`'de, ADR 0252), modeli ve
-  kâğıdı birlikte yazan betik işlemi (`CAD-SHEET-05`'in kalanı).
+  `CADP-12`'de, ADR 0252). **22 Ekim, [ADR 0590](docs/adr/0590-sheet-and-model-transactions.md):** `CAD-SHEET-05` tamamlandı;
+  açık belge/Python grubu ve changeset kitabı/resimleri modelle tek adımda geri alır/yineler; iptal/savepoint de kitabı geri getirir.
+  Sonraki bağımsız pafta düzenlemesi bütün birleşik undo/redo'yu veri değiştirmeden durdurur. 22 ortak bağımsız senaryo,
+  resimli kitap, masaüstü klavye/Python ve MCP kabulü; açık/koyu/büyük yazı GPU görüntüleri ve logo piksel denetimi.
 - [x] Plan §5'in CAD-CMD maddeleri (sahibin isteği, 13 Ekim: “CAD-CMD adımlarını tamamla”, “hepsini de bitirene kadar durma”).
   — **13 Ekim, [ADR 0253](docs/adr/0253-command-protocol.md), [ADR 0254](docs/adr/0254-semantic-stretch-break-join-divide-boundary-hatch.md),
   [ADR 0255](docs/adr/0255-semantic-dimension-create.md):** çağrı protokolü (her yürütme belgenin tek adımı; nesne, blok, katman,

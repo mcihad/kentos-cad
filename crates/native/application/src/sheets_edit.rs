@@ -4,7 +4,9 @@
 //! it (`kentos_sheet::project`), changed by the core's `apply`, checked by
 //! it, and written back with its pictures' bytes; a book left empty is no
 //! book. The book is the paper's: an edit of the project, no undo step of
-//! the drawing (docs/adr/0251 §3); the answer's `inverse` takes it back. The
+//! the drawing when standalone (docs/adr/0251 §3); an explicit group or change
+//! set includes it in model undo/redo (ADR 0590). The answer's `inverse` is
+//! also available. The
 //! shared cases are in `fixtures/commands/v1/cad.sheets.edit.json`.
 
 use kentos_commands::{CommandResult, SheetInfo, SheetMapInfo, SheetsEdit, SheetsEdited};
@@ -159,7 +161,10 @@ fn write(doc: &mut Document, next: Next) -> Result<SheetsEdited, Stop> {
 
 /// The sheet core's operations `ops` applied to the project's book, as `cad.sheets.edit` applies them, inside another
 /// command's write (Mimari şablonu's sheets, docs/adr/0346 §1).
-pub(crate) fn apply_ops(doc: &mut Document, ops: Vec<serde_json::Value>) -> Result<SheetsEdited, Stop> {
+pub(crate) fn apply_ops(
+    doc: &mut Document,
+    ops: Vec<serde_json::Value>,
+) -> Result<SheetsEdited, Stop> {
     let next = check(
         doc,
         &SheetsEdit {

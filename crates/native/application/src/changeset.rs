@@ -84,6 +84,38 @@ pub fn execute(
 }
 
 fn write(cx: &mut ExecutionContext<'_>, input: ChangesetApply) -> CommandResult<ChangesetApplied> {
+    // run_step owns atomic refusal; this scope also makes successful paper
+    // changes part of the model's undo step (ADR 0590).
+    let label = input
+        .label
+        .as_deref()
+        .filter(|label| !checks::is_blank(label))
+        .unwrap_or(CHANGESET_LABEL);
+    let group = cx.doc.begin_group(label);
+    let mut result = write_steps(cx, input);
+    if matches!(result, CommandResult::Completed { .. }) {
+        cx.doc.end_group(group);
+        if let CommandResult::Completed { output, .. } = &mut result {
+            let revision = cx.doc.revision().to_string();
+            output.revision = revision.clone();
+            for step in &mut output.steps {
+                if let Some(r) = step.output.get_mut("revision")
+                    && r.is_string()
+                {
+                    *r = Value::String(revision.clone());
+                }
+            }
+        }
+    } else {
+        cx.doc.cancel_group(group);
+    }
+    result
+}
+
+fn write_steps(
+    cx: &mut ExecutionContext<'_>,
+    input: ChangesetApply,
+) -> CommandResult<ChangesetApplied> {
     if let Err(stop) = check(cx.doc, &input) {
         return stop.into();
     }

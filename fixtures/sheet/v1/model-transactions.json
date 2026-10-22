@@ -1,0 +1,3503 @@
+{
+  "format": "kentos.sheet-transactions",
+  "version": 1,
+  "source": "ADR 0590",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Paftalar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 0,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "drawingFont": "barlow",
+      "drawingUnit": "mm"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "mixed changeset undo and redo",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.point.create",
+                "input": {
+                  "layerId": "cizim",
+                  "p": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              },
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "addSheet",
+                      "sheet": {
+                        "export": {
+                          "dpi": 300,
+                          "fileName": "[% @pafta_adi %]",
+                          "format": "svg"
+                        },
+                        "guides": [],
+                        "id": "a",
+                        "items": [
+                          {
+                            "bindings": [],
+                            "constraints": {
+                              "h": "left",
+                              "relativeTo": "margins",
+                              "v": "top"
+                            },
+                            "frame": {
+                              "height": 230000,
+                              "left": 20000,
+                              "top": 10000,
+                              "width": 390000
+                            },
+                            "hidden": false,
+                            "id": "a-harita",
+                            "kind": {
+                              "clipToAtlasFeature": false,
+                              "grids": [],
+                              "labelBand": 0,
+                              "layers": {
+                                "type": "all"
+                              },
+                              "overviewFrame": {
+                                "cap": "butt",
+                                "color": "#d0021b",
+                                "dash": [],
+                                "join": "miter",
+                                "width": 500
+                              },
+                              "type": "map",
+                              "view": {
+                                "center": {
+                                  "x": 2.5,
+                                  "y": 0.0
+                                },
+                                "rotation": 0,
+                                "scale": 50,
+                                "type": "fixed"
+                              }
+                            },
+                            "locked": false,
+                            "name": "Harita",
+                            "opacity": 100,
+                            "padding": 0,
+                            "printable": true,
+                            "rotation": 0
+                          }
+                        ],
+                        "name": "A",
+                        "page": {
+                          "margins": {
+                            "bottom": 10000,
+                            "left": 20000,
+                            "right": 10000,
+                            "top": 10000
+                          },
+                          "orientation": "landscape",
+                          "paper": "a3",
+                          "size": {
+                            "height": 297000,
+                            "width": 420000
+                          }
+                        },
+                        "snapGrid": {
+                          "enabled": false,
+                          "spacing": 5000,
+                          "visible": false
+                        },
+                        "variables": [],
+                        "variants": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "taken": true
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          },
+          "taken": true
+        }
+      ]
+    },
+    {
+      "name": "paper-only changeset undo and redo",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "addSheet",
+                      "sheet": {
+                        "export": {
+                          "dpi": 300,
+                          "fileName": "[% @pafta_adi %]",
+                          "format": "svg"
+                        },
+                        "guides": [],
+                        "id": "a",
+                        "items": [
+                          {
+                            "bindings": [],
+                            "constraints": {
+                              "h": "left",
+                              "relativeTo": "margins",
+                              "v": "top"
+                            },
+                            "frame": {
+                              "height": 230000,
+                              "left": 20000,
+                              "top": 10000,
+                              "width": 390000
+                            },
+                            "hidden": false,
+                            "id": "a-harita",
+                            "kind": {
+                              "clipToAtlasFeature": false,
+                              "grids": [],
+                              "labelBand": 0,
+                              "layers": {
+                                "type": "all"
+                              },
+                              "overviewFrame": {
+                                "cap": "butt",
+                                "color": "#d0021b",
+                                "dash": [],
+                                "join": "miter",
+                                "width": 500
+                              },
+                              "type": "map",
+                              "view": {
+                                "center": {
+                                  "x": 2.5,
+                                  "y": 0.0
+                                },
+                                "rotation": 0,
+                                "scale": 50,
+                                "type": "fixed"
+                              }
+                            },
+                            "locked": false,
+                            "name": "Harita",
+                            "opacity": 100,
+                            "padding": 0,
+                            "printable": true,
+                            "rotation": 0
+                          }
+                        ],
+                        "name": "A",
+                        "page": {
+                          "margins": {
+                            "bottom": 10000,
+                            "left": 20000,
+                            "right": 10000,
+                            "top": 10000
+                          },
+                          "orientation": "landscape",
+                          "paper": "a3",
+                          "size": {
+                            "height": 297000,
+                            "width": 420000
+                          }
+                        },
+                        "snapGrid": {
+                          "enabled": false,
+                          "spacing": 5000,
+                          "visible": false
+                        },
+                        "variables": [],
+                        "variants": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "taken": true
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          },
+          "taken": true
+        }
+      ]
+    },
+    {
+      "name": "mixed script group",
+      "actions": [
+        {
+          "action": "begin",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.point.create",
+          "input": {
+            "layerId": "cizim",
+            "p": {
+              "x": 1,
+              "y": 2
+            }
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": []
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "a",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 230000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 390000
+                      },
+                      "hidden": false,
+                      "id": "a-harita",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 2.5,
+                            "y": 0.0
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "end",
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "taken": true
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          },
+          "taken": true
+        }
+      ]
+    },
+    {
+      "name": "paper-only script group",
+      "actions": [
+        {
+          "action": "begin",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "a",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 230000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 390000
+                      },
+                      "hidden": false,
+                      "id": "a-harita",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 2.5,
+                            "y": 0.0
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "end",
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "taken": true
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          },
+          "taken": true
+        }
+      ]
+    },
+    {
+      "name": "cancel mixed script",
+      "actions": [
+        {
+          "action": "begin",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.point.create",
+          "input": {
+            "layerId": "cizim",
+            "p": {
+              "x": 1,
+              "y": 2
+            }
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": []
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "a",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 230000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 390000
+                      },
+                      "hidden": false,
+                      "id": "a-harita",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 2.5,
+                            "y": 0.0
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "cancel",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "cancel paper-only script",
+      "actions": [
+        {
+          "action": "begin",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "a",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 230000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 390000
+                      },
+                      "hidden": false,
+                      "id": "a-harita",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 2.5,
+                            "y": 0.0
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "cancel",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "cancel preserves an earlier standalone book",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "a",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 230000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 390000
+                      },
+                      "hidden": false,
+                      "id": "a-harita",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 2.5,
+                            "y": 0.0
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "begin",
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "renameSheet",
+                "id": "a",
+                "name": "B"
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "B"
+            ]
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.point.create",
+          "input": {
+            "layerId": "cizim",
+            "p": {
+              "x": 1,
+              "y": 2
+            }
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "B"
+            ]
+          }
+        },
+        {
+          "action": "cancel",
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "several book writes are one undo",
+      "actions": [
+        {
+          "action": "begin",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "a",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 230000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 390000
+                      },
+                      "hidden": false,
+                      "id": "a-harita",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 2.5,
+                            "y": 0.0
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "renameSheet",
+                "id": "a",
+                "name": "B"
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "B"
+            ]
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "b",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 230000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 390000
+                      },
+                      "hidden": false,
+                      "id": "b-harita",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 2.5,
+                            "y": 0.0
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "C",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "B",
+              "C"
+            ]
+          }
+        },
+        {
+          "action": "end",
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "B",
+              "C"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "taken": true
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "B",
+              "C"
+            ]
+          },
+          "taken": true
+        }
+      ]
+    },
+    {
+      "name": "failed point after paper refuses entire changeset",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "addSheet",
+                      "sheet": {
+                        "export": {
+                          "dpi": 300,
+                          "fileName": "[% @pafta_adi %]",
+                          "format": "svg"
+                        },
+                        "guides": [],
+                        "id": "a",
+                        "items": [
+                          {
+                            "bindings": [],
+                            "constraints": {
+                              "h": "left",
+                              "relativeTo": "margins",
+                              "v": "top"
+                            },
+                            "frame": {
+                              "height": 230000,
+                              "left": 20000,
+                              "top": 10000,
+                              "width": 390000
+                            },
+                            "hidden": false,
+                            "id": "a-harita",
+                            "kind": {
+                              "clipToAtlasFeature": false,
+                              "grids": [],
+                              "labelBand": 0,
+                              "layers": {
+                                "type": "all"
+                              },
+                              "overviewFrame": {
+                                "cap": "butt",
+                                "color": "#d0021b",
+                                "dash": [],
+                                "join": "miter",
+                                "width": 500
+                              },
+                              "type": "map",
+                              "view": {
+                                "center": {
+                                  "x": 2.5,
+                                  "y": 0.0
+                                },
+                                "rotation": 0,
+                                "scale": 50,
+                                "type": "fixed"
+                              }
+                            },
+                            "locked": false,
+                            "name": "Harita",
+                            "opacity": 100,
+                            "padding": 0,
+                            "printable": true,
+                            "rotation": 0
+                          }
+                        ],
+                        "name": "A",
+                        "page": {
+                          "margins": {
+                            "bottom": 10000,
+                            "left": 20000,
+                            "right": 10000,
+                            "top": 10000
+                          },
+                          "orientation": "landscape",
+                          "paper": "a3",
+                          "size": {
+                            "height": 297000,
+                            "width": 420000
+                          }
+                        },
+                        "snapGrid": {
+                          "enabled": false,
+                          "spacing": 5000,
+                          "visible": false
+                        },
+                        "variables": [],
+                        "variants": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "command": "cad.point.create",
+                "input": {
+                  "layerId": "absent",
+                  "p": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "status": "failed",
+          "code": "layer_not_found",
+          "unchanged": true
+        }
+      ]
+    },
+    {
+      "name": "failed paper after point refuses entire changeset",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.point.create",
+                "input": {
+                  "layerId": "cizim",
+                  "p": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              },
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "removeSheet",
+                      "id": "absent"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "status": "failed",
+          "code": "unknown_sheet",
+          "unchanged": true
+        }
+      ]
+    },
+    {
+      "name": "plan mixed writes nothing",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.point.create",
+                "input": {
+                  "layerId": "cizim",
+                  "p": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              },
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "addSheet",
+                      "sheet": {
+                        "export": {
+                          "dpi": 300,
+                          "fileName": "[% @pafta_adi %]",
+                          "format": "svg"
+                        },
+                        "guides": [],
+                        "id": "a",
+                        "items": [
+                          {
+                            "bindings": [],
+                            "constraints": {
+                              "h": "left",
+                              "relativeTo": "margins",
+                              "v": "top"
+                            },
+                            "frame": {
+                              "height": 230000,
+                              "left": 20000,
+                              "top": 10000,
+                              "width": 390000
+                            },
+                            "hidden": false,
+                            "id": "a-harita",
+                            "kind": {
+                              "clipToAtlasFeature": false,
+                              "grids": [],
+                              "labelBand": 0,
+                              "layers": {
+                                "type": "all"
+                              },
+                              "overviewFrame": {
+                                "cap": "butt",
+                                "color": "#d0021b",
+                                "dash": [],
+                                "join": "miter",
+                                "width": 500
+                              },
+                              "type": "map",
+                              "view": {
+                                "center": {
+                                  "x": 2.5,
+                                  "y": 0.0
+                                },
+                                "rotation": 0,
+                                "scale": 50,
+                                "type": "fixed"
+                              }
+                            },
+                            "locked": false,
+                            "name": "Harita",
+                            "opacity": 100,
+                            "padding": 0,
+                            "printable": true,
+                            "rotation": 0
+                          }
+                        ],
+                        "name": "A",
+                        "page": {
+                          "margins": {
+                            "bottom": 10000,
+                            "left": 20000,
+                            "right": 10000,
+                            "top": 10000
+                          },
+                          "orientation": "landscape",
+                          "paper": "a3",
+                          "size": {
+                            "height": 297000,
+                            "width": 420000
+                          }
+                        },
+                        "snapGrid": {
+                          "enabled": false,
+                          "spacing": 5000,
+                          "visible": false
+                        },
+                        "variables": [],
+                        "variants": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "op": "plan",
+          "unchanged": true
+        }
+      ]
+    },
+    {
+      "name": "validate paper writes nothing",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "addSheet",
+                      "sheet": {
+                        "export": {
+                          "dpi": 300,
+                          "fileName": "[% @pafta_adi %]",
+                          "format": "svg"
+                        },
+                        "guides": [],
+                        "id": "a",
+                        "items": [
+                          {
+                            "bindings": [],
+                            "constraints": {
+                              "h": "left",
+                              "relativeTo": "margins",
+                              "v": "top"
+                            },
+                            "frame": {
+                              "height": 230000,
+                              "left": 20000,
+                              "top": 10000,
+                              "width": 390000
+                            },
+                            "hidden": false,
+                            "id": "a-harita",
+                            "kind": {
+                              "clipToAtlasFeature": false,
+                              "grids": [],
+                              "labelBand": 0,
+                              "layers": {
+                                "type": "all"
+                              },
+                              "overviewFrame": {
+                                "cap": "butt",
+                                "color": "#d0021b",
+                                "dash": [],
+                                "join": "miter",
+                                "width": 500
+                              },
+                              "type": "map",
+                              "view": {
+                                "center": {
+                                  "x": 2.5,
+                                  "y": 0.0
+                                },
+                                "rotation": 0,
+                                "scale": 50,
+                                "type": "fixed"
+                              }
+                            },
+                            "locked": false,
+                            "name": "Harita",
+                            "opacity": 100,
+                            "padding": 0,
+                            "printable": true,
+                            "rotation": 0
+                          }
+                        ],
+                        "name": "A",
+                        "page": {
+                          "margins": {
+                            "bottom": 10000,
+                            "left": 20000,
+                            "right": 10000,
+                            "top": 10000
+                          },
+                          "orientation": "landscape",
+                          "paper": "a3",
+                          "size": {
+                            "height": 297000,
+                            "width": 420000
+                          }
+                        },
+                        "snapGrid": {
+                          "enabled": false,
+                          "spacing": 5000,
+                          "visible": false
+                        },
+                        "variables": [],
+                        "variants": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "op": "validate",
+          "unchanged": true
+        }
+      ]
+    },
+    {
+      "name": "standalone paper and model have separate undo",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "a",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 230000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 390000
+                      },
+                      "hidden": false,
+                      "id": "a-harita",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 2.5,
+                            "y": 0.0
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.point.create",
+          "input": {
+            "layerId": "cizim",
+            "p": {
+              "x": 1,
+              "y": 2
+            }
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          },
+          "taken": true
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          },
+          "taken": true
+        }
+      ]
+    },
+    {
+      "name": "later paper edit blocks entire mixed undo",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.point.create",
+                "input": {
+                  "layerId": "cizim",
+                  "p": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              },
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "addSheet",
+                      "sheet": {
+                        "export": {
+                          "dpi": 300,
+                          "fileName": "[% @pafta_adi %]",
+                          "format": "svg"
+                        },
+                        "guides": [],
+                        "id": "a",
+                        "items": [
+                          {
+                            "bindings": [],
+                            "constraints": {
+                              "h": "left",
+                              "relativeTo": "margins",
+                              "v": "top"
+                            },
+                            "frame": {
+                              "height": 230000,
+                              "left": 20000,
+                              "top": 10000,
+                              "width": 390000
+                            },
+                            "hidden": false,
+                            "id": "a-harita",
+                            "kind": {
+                              "clipToAtlasFeature": false,
+                              "grids": [],
+                              "labelBand": 0,
+                              "layers": {
+                                "type": "all"
+                              },
+                              "overviewFrame": {
+                                "cap": "butt",
+                                "color": "#d0021b",
+                                "dash": [],
+                                "join": "miter",
+                                "width": 500
+                              },
+                              "type": "map",
+                              "view": {
+                                "center": {
+                                  "x": 2.5,
+                                  "y": 0.0
+                                },
+                                "rotation": 0,
+                                "scale": 50,
+                                "type": "fixed"
+                              }
+                            },
+                            "locked": false,
+                            "name": "Harita",
+                            "opacity": 100,
+                            "padding": 0,
+                            "printable": true,
+                            "rotation": 0
+                          }
+                        ],
+                        "name": "A",
+                        "page": {
+                          "margins": {
+                            "bottom": 10000,
+                            "left": 20000,
+                            "right": 10000,
+                            "top": 10000
+                          },
+                          "orientation": "landscape",
+                          "paper": "a3",
+                          "size": {
+                            "height": 297000,
+                            "width": 420000
+                          }
+                        },
+                        "snapGrid": {
+                          "enabled": false,
+                          "spacing": 5000,
+                          "visible": false
+                        },
+                        "variables": [],
+                        "variants": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "renameSheet",
+                "id": "a",
+                "name": "B"
+              }
+            ]
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "B"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "B"
+            ]
+          },
+          "error": "sheet_history_conflict",
+          "unchanged": true
+        }
+      ]
+    },
+    {
+      "name": "later paper edit blocks entire mixed redo",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.point.create",
+                "input": {
+                  "layerId": "cizim",
+                  "p": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              },
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "addSheet",
+                      "sheet": {
+                        "export": {
+                          "dpi": 300,
+                          "fileName": "[% @pafta_adi %]",
+                          "format": "svg"
+                        },
+                        "guides": [],
+                        "id": "a",
+                        "items": [
+                          {
+                            "bindings": [],
+                            "constraints": {
+                              "h": "left",
+                              "relativeTo": "margins",
+                              "v": "top"
+                            },
+                            "frame": {
+                              "height": 230000,
+                              "left": 20000,
+                              "top": 10000,
+                              "width": 390000
+                            },
+                            "hidden": false,
+                            "id": "a-harita",
+                            "kind": {
+                              "clipToAtlasFeature": false,
+                              "grids": [],
+                              "labelBand": 0,
+                              "layers": {
+                                "type": "all"
+                              },
+                              "overviewFrame": {
+                                "cap": "butt",
+                                "color": "#d0021b",
+                                "dash": [],
+                                "join": "miter",
+                                "width": 500
+                              },
+                              "type": "map",
+                              "view": {
+                                "center": {
+                                  "x": 2.5,
+                                  "y": 0.0
+                                },
+                                "rotation": 0,
+                                "scale": 50,
+                                "type": "fixed"
+                              }
+                            },
+                            "locked": false,
+                            "name": "Harita",
+                            "opacity": 100,
+                            "padding": 0,
+                            "printable": true,
+                            "rotation": 0
+                          }
+                        ],
+                        "name": "A",
+                        "page": {
+                          "margins": {
+                            "bottom": 10000,
+                            "left": 20000,
+                            "right": 10000,
+                            "top": 10000
+                          },
+                          "orientation": "landscape",
+                          "paper": "a3",
+                          "size": {
+                            "height": 297000,
+                            "width": 420000
+                          }
+                        },
+                        "snapGrid": {
+                          "enabled": false,
+                          "spacing": 5000,
+                          "visible": false
+                        },
+                        "variables": [],
+                        "variants": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "taken": true
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "b",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 230000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 390000
+                      },
+                      "hidden": false,
+                      "id": "b-harita",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 2.5,
+                            "y": 0.0
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "B",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "B"
+            ]
+          }
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "B"
+            ]
+          },
+          "error": "sheet_history_conflict",
+          "unchanged": true
+        }
+      ]
+    },
+    {
+      "name": "restored book permits undo again",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.point.create",
+                "input": {
+                  "layerId": "cizim",
+                  "p": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              },
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "addSheet",
+                      "sheet": {
+                        "export": {
+                          "dpi": 300,
+                          "fileName": "[% @pafta_adi %]",
+                          "format": "svg"
+                        },
+                        "guides": [],
+                        "id": "a",
+                        "items": [
+                          {
+                            "bindings": [],
+                            "constraints": {
+                              "h": "left",
+                              "relativeTo": "margins",
+                              "v": "top"
+                            },
+                            "frame": {
+                              "height": 230000,
+                              "left": 20000,
+                              "top": 10000,
+                              "width": 390000
+                            },
+                            "hidden": false,
+                            "id": "a-harita",
+                            "kind": {
+                              "clipToAtlasFeature": false,
+                              "grids": [],
+                              "labelBand": 0,
+                              "layers": {
+                                "type": "all"
+                              },
+                              "overviewFrame": {
+                                "cap": "butt",
+                                "color": "#d0021b",
+                                "dash": [],
+                                "join": "miter",
+                                "width": 500
+                              },
+                              "type": "map",
+                              "view": {
+                                "center": {
+                                  "x": 2.5,
+                                  "y": 0.0
+                                },
+                                "rotation": 0,
+                                "scale": 50,
+                                "type": "fixed"
+                              }
+                            },
+                            "locked": false,
+                            "name": "Harita",
+                            "opacity": 100,
+                            "padding": 0,
+                            "printable": true,
+                            "rotation": 0
+                          }
+                        ],
+                        "name": "A",
+                        "page": {
+                          "margins": {
+                            "bottom": 10000,
+                            "left": 20000,
+                            "right": 10000,
+                            "top": 10000
+                          },
+                          "orientation": "landscape",
+                          "paper": "a3",
+                          "size": {
+                            "height": 297000,
+                            "width": 420000
+                          }
+                        },
+                        "snapGrid": {
+                          "enabled": false,
+                          "spacing": 5000,
+                          "visible": false
+                        },
+                        "variables": [],
+                        "variants": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "renameSheet",
+                "id": "a",
+                "name": "B"
+              }
+            ]
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "B"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "B"
+            ]
+          },
+          "error": "sheet_history_conflict",
+          "unchanged": true
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "renameSheet",
+                "id": "a",
+                "name": "A"
+              }
+            ]
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "taken": true
+        }
+      ]
+    },
+    {
+      "name": "restored book permits redo again",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.point.create",
+                "input": {
+                  "layerId": "cizim",
+                  "p": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              },
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "addSheet",
+                      "sheet": {
+                        "export": {
+                          "dpi": 300,
+                          "fileName": "[% @pafta_adi %]",
+                          "format": "svg"
+                        },
+                        "guides": [],
+                        "id": "a",
+                        "items": [
+                          {
+                            "bindings": [],
+                            "constraints": {
+                              "h": "left",
+                              "relativeTo": "margins",
+                              "v": "top"
+                            },
+                            "frame": {
+                              "height": 230000,
+                              "left": 20000,
+                              "top": 10000,
+                              "width": 390000
+                            },
+                            "hidden": false,
+                            "id": "a-harita",
+                            "kind": {
+                              "clipToAtlasFeature": false,
+                              "grids": [],
+                              "labelBand": 0,
+                              "layers": {
+                                "type": "all"
+                              },
+                              "overviewFrame": {
+                                "cap": "butt",
+                                "color": "#d0021b",
+                                "dash": [],
+                                "join": "miter",
+                                "width": 500
+                              },
+                              "type": "map",
+                              "view": {
+                                "center": {
+                                  "x": 2.5,
+                                  "y": 0.0
+                                },
+                                "rotation": 0,
+                                "scale": 50,
+                                "type": "fixed"
+                              }
+                            },
+                            "locked": false,
+                            "name": "Harita",
+                            "opacity": 100,
+                            "padding": 0,
+                            "printable": true,
+                            "rotation": 0
+                          }
+                        ],
+                        "name": "A",
+                        "page": {
+                          "margins": {
+                            "bottom": 10000,
+                            "left": 20000,
+                            "right": 10000,
+                            "top": 10000
+                          },
+                          "orientation": "landscape",
+                          "paper": "a3",
+                          "size": {
+                            "height": 297000,
+                            "width": 420000
+                          }
+                        },
+                        "snapGrid": {
+                          "enabled": false,
+                          "spacing": 5000,
+                          "visible": false
+                        },
+                        "variables": [],
+                        "variants": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "taken": true
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "b",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 230000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 390000
+                      },
+                      "hidden": false,
+                      "id": "b-harita",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 2.5,
+                            "y": 0.0
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "B",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "B"
+            ]
+          }
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "B"
+            ]
+          },
+          "error": "sheet_history_conflict",
+          "unchanged": true
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "removeSheet",
+                "id": "b"
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          }
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          },
+          "taken": true
+        }
+      ]
+    },
+    {
+      "name": "two mixed changesets undo sequentially",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.point.create",
+                "input": {
+                  "layerId": "cizim",
+                  "p": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              },
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "addSheet",
+                      "sheet": {
+                        "export": {
+                          "dpi": 300,
+                          "fileName": "[% @pafta_adi %]",
+                          "format": "svg"
+                        },
+                        "guides": [],
+                        "id": "a",
+                        "items": [
+                          {
+                            "bindings": [],
+                            "constraints": {
+                              "h": "left",
+                              "relativeTo": "margins",
+                              "v": "top"
+                            },
+                            "frame": {
+                              "height": 230000,
+                              "left": 20000,
+                              "top": 10000,
+                              "width": 390000
+                            },
+                            "hidden": false,
+                            "id": "a-harita",
+                            "kind": {
+                              "clipToAtlasFeature": false,
+                              "grids": [],
+                              "labelBand": 0,
+                              "layers": {
+                                "type": "all"
+                              },
+                              "overviewFrame": {
+                                "cap": "butt",
+                                "color": "#d0021b",
+                                "dash": [],
+                                "join": "miter",
+                                "width": 500
+                              },
+                              "type": "map",
+                              "view": {
+                                "center": {
+                                  "x": 2.5,
+                                  "y": 0.0
+                                },
+                                "rotation": 0,
+                                "scale": 50,
+                                "type": "fixed"
+                              }
+                            },
+                            "locked": false,
+                            "name": "Harita",
+                            "opacity": 100,
+                            "padding": 0,
+                            "printable": true,
+                            "rotation": 0
+                          }
+                        ],
+                        "name": "A",
+                        "page": {
+                          "margins": {
+                            "bottom": 10000,
+                            "left": 20000,
+                            "right": 10000,
+                            "top": 10000
+                          },
+                          "orientation": "landscape",
+                          "paper": "a3",
+                          "size": {
+                            "height": 297000,
+                            "width": 420000
+                          }
+                        },
+                        "snapGrid": {
+                          "enabled": false,
+                          "spacing": 5000,
+                          "visible": false
+                        },
+                        "variables": [],
+                        "variants": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.point.create",
+                "input": {
+                  "layerId": "cizim",
+                  "p": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              },
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "renameSheet",
+                      "id": "a",
+                      "name": "B"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 2,
+            "sheets": [
+              "B"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          },
+          "taken": true
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "taken": true
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          },
+          "taken": true
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 2,
+            "sheets": [
+              "B"
+            ]
+          },
+          "taken": true
+        }
+      ]
+    },
+    {
+      "name": "removal restores book on undo",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "a",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 230000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 390000
+                      },
+                      "hidden": false,
+                      "id": "a-harita",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 2.5,
+                            "y": 0.0
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "removeSheet",
+                      "id": "a"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          },
+          "taken": true
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "taken": true
+        }
+      ]
+    },
+    {
+      "name": "failed changeset preserves existing redo",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.point.create",
+                "input": {
+                  "layerId": "cizim",
+                  "p": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              },
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "addSheet",
+                      "sheet": {
+                        "export": {
+                          "dpi": 300,
+                          "fileName": "[% @pafta_adi %]",
+                          "format": "svg"
+                        },
+                        "guides": [],
+                        "id": "a",
+                        "items": [
+                          {
+                            "bindings": [],
+                            "constraints": {
+                              "h": "left",
+                              "relativeTo": "margins",
+                              "v": "top"
+                            },
+                            "frame": {
+                              "height": 230000,
+                              "left": 20000,
+                              "top": 10000,
+                              "width": 390000
+                            },
+                            "hidden": false,
+                            "id": "a-harita",
+                            "kind": {
+                              "clipToAtlasFeature": false,
+                              "grids": [],
+                              "labelBand": 0,
+                              "layers": {
+                                "type": "all"
+                              },
+                              "overviewFrame": {
+                                "cap": "butt",
+                                "color": "#d0021b",
+                                "dash": [],
+                                "join": "miter",
+                                "width": 500
+                              },
+                              "type": "map",
+                              "view": {
+                                "center": {
+                                  "x": 2.5,
+                                  "y": 0.0
+                                },
+                                "rotation": 0,
+                                "scale": 50,
+                                "type": "fixed"
+                              }
+                            },
+                            "locked": false,
+                            "name": "Harita",
+                            "opacity": 100,
+                            "padding": 0,
+                            "printable": true,
+                            "rotation": 0
+                          }
+                        ],
+                        "name": "A",
+                        "page": {
+                          "margins": {
+                            "bottom": 10000,
+                            "left": 20000,
+                            "right": 10000,
+                            "top": 10000
+                          },
+                          "orientation": "landscape",
+                          "paper": "a3",
+                          "size": {
+                            "height": 297000,
+                            "width": 420000
+                          }
+                        },
+                        "snapGrid": {
+                          "enabled": false,
+                          "spacing": 5000,
+                          "visible": false
+                        },
+                        "variables": [],
+                        "variants": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "taken": true
+        },
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "addSheet",
+                      "sheet": {
+                        "export": {
+                          "dpi": 300,
+                          "fileName": "[% @pafta_adi %]",
+                          "format": "svg"
+                        },
+                        "guides": [],
+                        "id": "a",
+                        "items": [
+                          {
+                            "bindings": [],
+                            "constraints": {
+                              "h": "left",
+                              "relativeTo": "margins",
+                              "v": "top"
+                            },
+                            "frame": {
+                              "height": 230000,
+                              "left": 20000,
+                              "top": 10000,
+                              "width": 390000
+                            },
+                            "hidden": false,
+                            "id": "a-harita",
+                            "kind": {
+                              "clipToAtlasFeature": false,
+                              "grids": [],
+                              "labelBand": 0,
+                              "layers": {
+                                "type": "all"
+                              },
+                              "overviewFrame": {
+                                "cap": "butt",
+                                "color": "#d0021b",
+                                "dash": [],
+                                "join": "miter",
+                                "width": 500
+                              },
+                              "type": "map",
+                              "view": {
+                                "center": {
+                                  "x": 2.5,
+                                  "y": 0.0
+                                },
+                                "rotation": 0,
+                                "scale": 50,
+                                "type": "fixed"
+                              }
+                            },
+                            "locked": false,
+                            "name": "Harita",
+                            "opacity": 100,
+                            "padding": 0,
+                            "printable": true,
+                            "rotation": 0
+                          }
+                        ],
+                        "name": "A",
+                        "page": {
+                          "margins": {
+                            "bottom": 10000,
+                            "left": 20000,
+                            "right": 10000,
+                            "top": 10000
+                          },
+                          "orientation": "landscape",
+                          "paper": "a3",
+                          "size": {
+                            "height": 297000,
+                            "width": 420000
+                          }
+                        },
+                        "snapGrid": {
+                          "enabled": false,
+                          "spacing": 5000,
+                          "visible": false
+                        },
+                        "variables": [],
+                        "variants": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "command": "cad.point.create",
+                "input": {
+                  "layerId": "absent",
+                  "p": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "status": "failed",
+          "unchanged": true
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          },
+          "taken": true
+        }
+      ]
+    },
+    {
+      "name": "empty script group is no step",
+      "actions": [
+        {
+          "action": "begin",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          }
+        },
+        {
+          "action": "end",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          }
+        },
+        {
+          "action": "undo",
+          "taken": false,
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "unchanged": true
+        }
+      ]
+    },
+    {
+      "name": "cancel preserves existing redo",
+      "actions": [
+        {
+          "action": "command",
+          "command": "cad.changeset.apply",
+          "input": {
+            "label": "Birlikte",
+            "steps": [
+              {
+                "command": "cad.point.create",
+                "input": {
+                  "layerId": "cizim",
+                  "p": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              },
+              {
+                "command": "cad.sheets.edit",
+                "input": {
+                  "ops": [
+                    {
+                      "op": "addSheet",
+                      "sheet": {
+                        "export": {
+                          "dpi": 300,
+                          "fileName": "[% @pafta_adi %]",
+                          "format": "svg"
+                        },
+                        "guides": [],
+                        "id": "a",
+                        "items": [
+                          {
+                            "bindings": [],
+                            "constraints": {
+                              "h": "left",
+                              "relativeTo": "margins",
+                              "v": "top"
+                            },
+                            "frame": {
+                              "height": 230000,
+                              "left": 20000,
+                              "top": 10000,
+                              "width": 390000
+                            },
+                            "hidden": false,
+                            "id": "a-harita",
+                            "kind": {
+                              "clipToAtlasFeature": false,
+                              "grids": [],
+                              "labelBand": 0,
+                              "layers": {
+                                "type": "all"
+                              },
+                              "overviewFrame": {
+                                "cap": "butt",
+                                "color": "#d0021b",
+                                "dash": [],
+                                "join": "miter",
+                                "width": 500
+                              },
+                              "type": "map",
+                              "view": {
+                                "center": {
+                                  "x": 2.5,
+                                  "y": 0.0
+                                },
+                                "rotation": 0,
+                                "scale": 50,
+                                "type": "fixed"
+                              }
+                            },
+                            "locked": false,
+                            "name": "Harita",
+                            "opacity": 100,
+                            "padding": 0,
+                            "printable": true,
+                            "rotation": 0
+                          }
+                        ],
+                        "name": "A",
+                        "page": {
+                          "margins": {
+                            "bottom": 10000,
+                            "left": 20000,
+                            "right": 10000,
+                            "top": 10000
+                          },
+                          "orientation": "landscape",
+                          "paper": "a3",
+                          "size": {
+                            "height": 297000,
+                            "width": 420000
+                          }
+                        },
+                        "snapGrid": {
+                          "enabled": false,
+                          "spacing": 5000,
+                          "visible": false
+                        },
+                        "variables": [],
+                        "variants": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "undo",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          },
+          "taken": true
+        },
+        {
+          "action": "begin",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "a",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 230000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 390000
+                      },
+                      "hidden": false,
+                      "id": "a-harita",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 2.5,
+                            "y": 0.0
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "objects": 0,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "command",
+          "command": "cad.point.create",
+          "input": {
+            "layerId": "cizim",
+            "p": {
+              "x": 1,
+              "y": 2
+            }
+          },
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          }
+        },
+        {
+          "action": "cancel",
+          "expect": {
+            "objects": 0,
+            "sheets": []
+          }
+        },
+        {
+          "action": "redo",
+          "expect": {
+            "objects": 1,
+            "sheets": [
+              "A"
+            ]
+          },
+          "taken": true
+        }
+      ]
+    }
+  ]
+}

@@ -104,6 +104,63 @@ fn a_run_that_ends_well_is_one_undo_step_named_python() {
 }
 
 #[test]
+fn paper_and_model_follow_the_desktop_script_success_failure_and_stop() {
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/model-transactions.json"
+    ))
+    .unwrap();
+    let paper = cases["cases"][0]["actions"][0]["input"]["steps"][1]["input"].clone();
+    for mixed in [false, true] {
+        for ending in ["success", "failure", "stop"] {
+            let mut app = app_with_drawing();
+            let before = objects(&app);
+            assert!(app.document.as_ref().unwrap().model.sheets().is_none());
+            let id = running(&mut app);
+            let answer = ask(
+                &mut app,
+                "run",
+                json!({"command":"cad.sheets.edit","op":"execute","input":paper}),
+            )
+            .unwrap();
+            assert_eq!(answer["status"], "completed");
+            if mixed {
+                polygon(&mut app);
+            }
+            let written = app
+                .document
+                .as_ref()
+                .unwrap()
+                .model
+                .sheets()
+                .unwrap()
+                .clone();
+            match ending {
+                "stop" => {
+                    let _ = app.update(Message::Python(Event::Stop));
+                }
+                other => said(
+                    &mut app,
+                    json!({"type":"done","id":id,"ok":other == "success"}),
+                ),
+            }
+            let model = &mut app.document.as_mut().unwrap().model;
+            if ending == "success" {
+                assert_eq!(model.undo().as_deref(), Some(super::STEP));
+                assert!(model.sheets().is_none());
+                assert_eq!(model.len(), before);
+                model.redo();
+                assert_eq!(model.sheets(), Some(&written));
+                assert_eq!(model.len(), before + usize::from(mixed));
+            } else {
+                assert!(model.sheets().is_none(), "{ending}, mixed={mixed}");
+                assert_eq!(model.len(), before);
+                assert!(!model.can_undo());
+            }
+        }
+    }
+}
+
+#[test]
 fn a_run_that_raises_takes_back_what_it_wrote_and_shows_the_traceback() {
     let mut app = app_with_drawing();
     let before = objects(&app);

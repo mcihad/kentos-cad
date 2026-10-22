@@ -2,7 +2,7 @@
 
 /**
  * A part of the project outside the objects, the layer tree's ops and the
- * blocks: what a command may change that is no undo step (docs/adr/0248,
- * 0251).
+ * blocks: project metadata touched by a command. `undo.outside` identifies
+ * which parts are outside its undo step (ADR 0590).
  */
 export type ProjectPart = "name" | "settings" | "styles" | "sheets" | "layerFlags" | "constraints";

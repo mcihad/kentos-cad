@@ -356,6 +356,22 @@ impl Session {
         self.doc.redo()
     }
 
+    /// Undo with an explicit conflict instead of overwriting a later paper edit.
+    pub fn try_undo(&mut self) -> Result<Option<String>, HeadlessError> {
+        if let Some(problem) = self.doc.sheet_history_problem(false) {
+            return Err(HeadlessError::new("sheet_history_conflict", problem));
+        }
+        Ok(self.undo())
+    }
+
+    /// Redo with the same paper ownership check.
+    pub fn try_redo(&mut self) -> Result<Option<String>, HeadlessError> {
+        if let Some(problem) = self.doc.sheet_history_problem(true) {
+            return Err(HeadlessError::new("sheet_history_conflict", problem));
+        }
+        Ok(self.redo())
+    }
+
     /// Opens a group: every command until [`end_group`](Self::end_group) is
     /// one undo step named `label` (TODOS.md PY-14); [`cancel_group`](Self::cancel_group)
     /// takes all of it back.

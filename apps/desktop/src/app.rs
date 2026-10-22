@@ -2999,6 +2999,14 @@ impl App {
     /// Undoes or redoes the drawing's last step, saying which (the web's
     /// “Geri alındı: Ekle”); with nothing to undo or redo, says that.
     pub(crate) fn step_history(&mut self, undo: bool) {
+        if let Some(problem) = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.sheet_history_problem(!undo))
+        {
+            self.warn(problem);
+            return;
+        }
         let Some(doc) = &mut self.document else {
             self.output("Açık çizim yok.");
             return;

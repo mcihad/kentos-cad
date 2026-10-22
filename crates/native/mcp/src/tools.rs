@@ -1319,10 +1319,11 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
         "drawing.undo" | "drawing.redo" => {
             let (s, _) = session(server, args)?;
             let step = if name == "drawing.undo" {
-                s.undo()
+                s.try_undo()
             } else {
-                s.redo()
-            };
+                s.try_redo()
+            }
+            .map_err(host)?;
             Ok(answer(json!({ "step": step }), false))
         }
         "drawing.job.start" => {

@@ -294,13 +294,13 @@ impl PySession {
     }
 
     /// Undoes the last step; its name, or None.
-    fn undo(&mut self) -> Option<String> {
-        self.inner.undo()
+    fn undo(&mut self) -> PyResult<Option<String>> {
+        self.inner.try_undo().map_err(host)
     }
 
     /// Redoes the last undone step; its name, or None.
-    fn redo(&mut self) -> Option<String> {
-        self.inner.redo()
+    fn redo(&mut self) -> PyResult<Option<String>> {
+        self.inner.try_redo().map_err(host)
     }
 
     /// Whether the writes relax the constraints (docs/adr/0337 §1).

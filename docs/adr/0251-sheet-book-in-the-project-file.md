@@ -58,11 +58,13 @@ Anahtar projeyi adlandırıyordu: `bulut/<kurum>/<proje>`, `proje/<kimlik>`, `do
 
 - Masaüstünün belgesi (`kentos_domain::Document`) kitabı paylaşılan olarak tutar (`sheets`, `sheets_shared`); okuma kopyası
   resimleri kopyalamaz.
-- `set_sheets` bir düzenlemedir, ama çizimin geri alma adımı değildir:
+- Tek başına `set_sheets` bir düzenlemedir, ama çizimin geri alma adımı değildir:
   - Kitap kâğıdındır; pafta tasarımcısının kendi geri alması vardır. Çizimin Geri al'ı paftayı geri almaz, paftanın Geri al'ı
     çizimi geri almaz.
   - Proje stil kitaplığının kuralı budur (ADR 0092).
-  - Model ile kâğıdın ayrı geçmişleri `CAD-SHEET-05`'in ilk cevabıdır. Betiğin ikisini birlikte yazan tek işlemi sonraki iştir.
+  - Model ile kâğıdın ayrı geçmişleri `CAD-SHEET-05`'in ilk cevabıdır. Birleşik betik grubu ve changeset davranışı
+    [ADR 0590](0590-sheet-and-model-transactions.md) ile tamamlandı: kitap ve resimler aynı undo/redo adımındadır;
+    sonraki bağımsız pafta değişikliği eski kitapla ezilmez.
 - Dosya biçiminin kurallarına uymayan kitap reddedilir (`sheets_problem`); açılışta da.
 
 ### 4. Masaüstünde kitap çizimle gider

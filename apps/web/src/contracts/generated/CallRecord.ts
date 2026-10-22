@@ -49,7 +49,7 @@ truncated?: boolean,
  */
 relaxConstraints?: boolean, warnings?: Array<CommandWarning>, 
 /**
- * The project's parts it changed outside the undo step.
+ * The project's metadata parts it changed, including a grouped paper book (ADR 0590).
  */
 parts?: Array<ProjectPart>, 
 /**

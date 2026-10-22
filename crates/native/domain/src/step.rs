@@ -172,8 +172,10 @@ pub struct StepReport {
     /// The block definitions it added, changed or removed: their first
     /// state before the step and their last after.
     pub block_states: Vec<BlockChange>,
-    /// The project's parts outside the undo history that it changed.
+    /// The project's parts that it changed.
     pub parts: Vec<ProjectPart>,
+    /// Parts fully restored by this step's undo operations (ADR 0590).
+    pub undo_parts: Vec<ProjectPart>,
     /// The step's name, once an edit gave it one.
     pub label: Option<String>,
     /// The undo step it became (none: inside a transaction or a group, or no
@@ -321,6 +323,7 @@ impl Document {
             self.relocated_ends.clear();
         }
         if reverted > 0 || restored {
+            self.refresh_viewmarks();
             self.mark_changed();
         }
     }
@@ -506,6 +509,7 @@ impl Document {
         }
         if let Some(sheets) = &frame.sheets
             && *sheets != self.sheets
+            && !report.parts.contains(&ProjectPart::Sheets)
         {
             report.parts.push(ProjectPart::Sheets);
         }
@@ -618,9 +622,19 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
                 }
             }
             // The unit and the value lists are settings (docs/adr/0256 §1, 0430).
+            Op::Sheets { .. } => {
+                if !report.parts.contains(&ProjectPart::Sheets) {
+                    report.parts.push(ProjectPart::Sheets);
+                    report.undo_parts.push(ProjectPart::Sheets);
+                }
+            }
             Op::ImportMetadata { .. } => {
-                for part in [ProjectPart::Settings, ProjectPart::Sheets] {
-                    if !report.parts.contains(&part) { report.parts.push(part); }
+                if !report.parts.contains(&ProjectPart::Settings) {
+                    report.parts.push(ProjectPart::Settings);
+                }
+                if op.sheet_states().is_some() && !report.parts.contains(&ProjectPart::Sheets) {
+                    report.parts.push(ProjectPart::Sheets);
+                    report.undo_parts.push(ProjectPart::Sheets);
                 }
             }
             Op::Units { .. } | Op::Domains { .. } => {

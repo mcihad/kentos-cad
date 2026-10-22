@@ -1166,15 +1166,27 @@ impl Document {
     }
 
     /// Replaces the project's sheet book and its pictures (docs/adr/0251;
-    /// none: the project has no book): an edit when it differs, never an
-    /// undo step. The book is the paper's: the sheet designer keeps its own
-    /// undo, the drawing's undo does not take a sheet back. Refused, with
+    /// none: the project has no book). Normally the sheet designer owns its
+    /// undo; inside an explicit group it belongs to that group's model undo
+    /// and cancellation (ADR 0590). Refused, with
     /// the reason, when the file format could not keep it (`sheets_problem`).
     pub fn set_sheets(&mut self, sheets: Option<ProjectSheets>) -> Result<(), String> {
         if let Some((at, why)) = sheets.as_ref().and_then(sheets_problem) {
             return Err(format!("{at}: {why}"));
         }
         if self.sheets.as_deref() != sheets.as_ref() {
+            if self.group_open() {
+                self.before_part(ProjectPart::Sheets);
+                self.record(
+                    vec![crate::history::Op::Sheets {
+                        before: self.sheets.clone(),
+                        after: sheets.map(Arc::new),
+                    }],
+                    "Pafta",
+                );
+                self.refresh_viewmarks();
+                return Ok(());
+            }
             let (framed, base) = (self.before_part(ProjectPart::Sheets), self.edits);
             self.sheets = sheets.map(Arc::new);
             self.refresh_viewmarks();

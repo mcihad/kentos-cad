@@ -62,6 +62,109 @@ fn kept(app: &App) -> Option<kentos_sheet::model::SheetBook> {
     )
 }
 
+fn history_key(app: &mut App, undo: bool) {
+    use iced::keyboard::{
+        Key, Modifiers,
+        key::{Code, Physical},
+    };
+    let task = app.update(Message::Key(crate::keys::KeyPress {
+        key: Key::Character(if undo { "z" } else { "y" }.into()),
+        physical: Physical::Code(if undo { Code::KeyZ } else { Code::KeyY }),
+        modifiers: if app.sheets.is_active() {
+            Modifiers::COMMAND
+        } else {
+            Modifiers::CTRL
+        },
+        text: None,
+        repeat: false,
+    }));
+    drive(app, task);
+    app.follow_sheet_book();
+}
+
+fn combine(app: &mut App) {
+    {
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let answer = kentos_native_application::call::call(
+            doc,
+            None,
+            kentos_commands::CallEnvelope {
+                command: "cad.changeset.apply".into(),
+                version: None,
+                op: kentos_commands::CallOp::Execute,
+                request_id: None,
+                expected: None,
+                relax_constraints: false,
+                input: serde_json::json!({"label":"Model ve pafta", "steps":[
+                    {"command":"cad.point.create","input":{"layerId":"0","p":{"x":500002,"y":4400003}}},
+                    {"command":"cad.sheets.edit","input":{"ops":[{"op":"renameSheet","id":"pafta-1","name":"Birleşik"}]}}
+                ]}),
+            },
+        );
+        assert!(
+            matches!(
+                answer.result,
+                kentos_commands::CommandResult::Completed { .. }
+            ),
+            "{answer:?}"
+        );
+    }
+}
+
+#[test]
+fn combined_model_and_paper_undo_follows_in_the_designer_and_preserves_later_edits() {
+    let (mut app, _store) = app_with_store("pafta-birlesik-geri-al");
+    open(&mut app, std::path::Path::new(SAMPLE));
+    let original = app
+        .document
+        .as_ref()
+        .unwrap()
+        .model
+        .sheets()
+        .unwrap()
+        .clone();
+    let count = app.document.as_ref().unwrap().model.len();
+    combine(&mut app);
+    app.follow_sheet_book();
+    assert_eq!(names(&app), ["Birleşik"]);
+    assert_eq!(app.document.as_ref().unwrap().model.len(), count + 1);
+    sheet(
+        &mut app,
+        Sheet::RenameSheet("pafta-1".into(), "Sonraki".into()),
+    );
+    history_key(&mut app, true);
+    app.follow_sheet_book();
+    assert!(app.log.said(Level::Warn, "ayrıca değiştirildi"));
+    assert_eq!(names(&app), ["Sonraki"]);
+    assert_eq!(app.document.as_ref().unwrap().model.len(), count + 1);
+    sheet(&mut app, Sheet::Tab(1));
+    history_key(&mut app, true);
+    sheet(&mut app, Sheet::Model);
+    assert_eq!(names(&app), ["Birleşik"]);
+    history_key(&mut app, true);
+    app.follow_sheet_book();
+    assert_eq!(names(&app), ["Büro paftası"]);
+    assert_eq!(app.document.as_ref().unwrap().model.len(), count);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.sheets(),
+        Some(&original)
+    );
+    history_key(&mut app, false);
+    app.follow_sheet_book();
+    assert_eq!(names(&app), ["Birleşik"]);
+    assert_eq!(app.document.as_ref().unwrap().model.len(), count + 1);
+    assert_eq!(
+        app.document
+            .as_ref()
+            .unwrap()
+            .model
+            .sheets()
+            .unwrap()
+            .pictures,
+        original.pictures
+    );
+}
+
 #[test]
 fn the_book_opens_from_the_file_changes_in_the_drawing_and_is_saved() {
     let (mut app, _store) = app_with_store("pafta-dosyadan");
@@ -371,4 +474,65 @@ fn screens() {
     look_at_drawing(&mut newer);
     let _ = newer.update(Message::BottomTab(crate::bottom::BottomTab::Messages));
     shoot(&mut newer, "okunamayan");
+}
+
+/// GPU evidence for the ownership warning and both undo histories in light/dark and large text.
+#[test]
+#[ignore = "GPU pictures, run alone"]
+fn transaction_screens() {
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).unwrap();
+    for (theme, text, width, height) in [
+        ("dark", 13, 1440., 900.),
+        ("light", 13, 1440., 900.),
+        ("dark", 18, 1100., 650.),
+    ] {
+        let (mut app, _store) = app_with_store(&format!("pafta-islem-resim-{theme}-{text}"));
+        app.settings.choose(&[
+            ("appearance.theme", serde_json::json!(theme)),
+            ("appearance.textSize", serde_json::json!(text)),
+        ]);
+        app.apply_settings();
+        open(&mut app, std::path::Path::new(SAMPLE));
+        combine(&mut app);
+        app.follow_sheet_book();
+        sheet(
+            &mut app,
+            Sheet::RenameSheet("pafta-1".into(), "Sonraki".into()),
+        );
+        history_key(&mut app, true);
+        app.follow_sheet_book();
+        let _ = app.update(Message::BottomTab(crate::bottom::BottomTab::Messages));
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(width, height)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        let path = out.join(format!("pafta-islem-koruma-{theme}-{text}.png"));
+        snap.render(app.view(), &app.theme()).save(&path).unwrap();
+        println!("{}", path.display());
+        let _ = app.update(Message::CommandHistoryToggled);
+        sheet(&mut app, Sheet::Undo);
+        history_key(&mut app, true);
+        app.follow_sheet_book();
+        sheet(&mut app, Sheet::Tab(1));
+        snap.settle(&mut app, App::view, &mut update);
+        let path = out.join(format!("pafta-islem-geri-{theme}-{text}.png"));
+        let image = snap.render(app.view(), &app.theme());
+        image.save(&path).unwrap();
+        // The fixture has a red embedded logo. A blank paper must fail even
+        // when the book's three items and the UI tree are still present.
+        let red = image
+            .rgba
+            .chunks_exact(4)
+            .filter(|p| p[0] > 150 && p[1] < 70 && p[2] < 70 && p[3] > 200)
+            .count();
+        assert!(
+            red > 500,
+            "{theme}-{text}: the restored embedded logo is not painted ({red} red pixels)"
+        );
+        println!("{}", path.display());
+    }
 }

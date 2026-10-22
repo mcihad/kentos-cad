@@ -17,7 +17,7 @@ mod files;
 
 const SCENARIO: &str = include_str!("../../../../fixtures/acceptance/v1/room.json");
 
-fn call(server: &mut Server, name: &str, arguments: Value) -> Value {
+fn tool_result(server: &mut Server, name: &str, arguments: Value) -> Value {
     let request = json!({
         "jsonrpc": "2.0", "id": 1, "method": "tools/call",
         "params": {
@@ -30,9 +30,57 @@ fn call(server: &mut Server, name: &str, arguments: Value) -> Value {
         }
     });
     let answer = server.handle(&request).expect("an answer");
-    let result = answer["result"].clone();
-    assert_eq!(result["isError"], false, "{name}: {answer}");
+    answer["result"].clone()
+}
+
+fn call(server: &mut Server, name: &str, arguments: Value) -> Value {
+    let result = tool_result(server, name, arguments);
+    assert_eq!(result["isError"], false, "{name}: {result}");
     result["structuredContent"].clone()
+}
+
+#[test]
+fn model_and_paper_changeset_is_undoable_and_later_paper_has_a_typed_conflict() {
+    let mut server = Server::new();
+    let opened = call(
+        &mut server,
+        "drawing.open",
+        json!({"path":concat!(env!("CARGO_MANIFEST_DIR"),"/../../../fixtures/kcad/v2/sheets.kcad")}),
+    );
+    let drawing = opened["drawing"].as_str().unwrap();
+    let before = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    let answer = call(
+        &mut server,
+        "cad.changeset.apply",
+        json!({"drawing":drawing,"label":"Birlikte","steps":[
+            {"command":"cad.point.create","input":{"layerId":"0","p":{"x":500002,"y":4400003}}},
+            {"command":"cad.sheets.edit","input":{"ops":[{"op":"renameSheet","id":"pafta-1","name":"Birleşik"}]}}
+        ]}),
+    );
+    assert_eq!(answer["status"], "completed");
+    assert_eq!(answer["summary"]["undo"]["outside"], json!([]));
+    let undo = call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(undo["step"], "Birlikte");
+    let after = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(before["objects"], after["objects"]);
+    call(&mut server, "drawing.redo", json!({"drawing":drawing}));
+    call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":[{"op":"renameSheet","id":"pafta-1","name":"Sonraki"}]}),
+    );
+    let before = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    let error = tool_result(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(error["isError"], true);
+    assert_eq!(
+        error["structuredContent"]["error"]["code"],
+        "sheet_history_conflict"
+    );
+    let after = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(
+        before, after,
+        "refusal changes no model, book, stamps or history flags"
+    );
 }
 
 /// Where `actual` differs from `expected`: only the fields `expected` names;

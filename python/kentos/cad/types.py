@@ -10223,9 +10223,10 @@ class ChangesetApply(_Model):
     code, at `steps[i].input.…`), and nothing of any step is written. The
     linked texts, hatches and dimensions follow once, after the last step;
     the document's integrity is checked then. Objects, layers and blocks are
-    one undo step named `label`; the project's settings, its style library
-    and its sheet book are no undo step (docs/adr/0248, 0251), the answer's
-    summary says which changed.
+    one undo step named `label`, with the sheet book and its pictures (ADR 0590).
+    A later independent paper edit blocks the whole undo/redo instead of being
+    overwritten. Project preferences and the style library keep their separate
+    policy; the summary says which parts are outside undo.
 
     Refusals, in this order: `no_steps`; per step, in order, `nested_changeset`
     (a change set inside), `side_effect_in_changeset` (a `file.*` command),

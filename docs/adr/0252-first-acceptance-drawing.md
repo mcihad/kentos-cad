@@ -76,6 +76,9 @@ Başlarken eksikler:
   - Kitap kâğıdındır (ADR 0251 §3): değişiklik çizimi kirli yapar, çizimin geri alma adımı değildir (`undo: none`).
   - Cevabın `inverse`'ü değişikliği geri alan işlemlerdir; bu komuta yeniden verilir.
   - Pafta tasarımcısının kendi Geri al'ı aynı terstir.
+  - **22 Ekim, [ADR 0590](0590-sheet-and-model-transactions.md):** açık belge/Python grubu veya `cad.changeset.apply`
+    içinde kitap ve resimler modelle aynı undo/redo adımına katılır; iptal ve savepoint de kitabı geri getirir. Yukarıdaki
+    `undo: none` tek başına çağrı içindir. Daha sonra bağımsız düzenlenmiş kitap, birleşik undo/redo ile ezilmez.
 - Cevap kitabın paftalarını sayar: kimlik, ad, sayfanın milimetre boyu, öğe sayısı, haritalar ve ölçekleri (`SheetInfo`). Aynı
   liste başsız sunucunun özetinde `sheets`'tir: Python `Document.sheets()`, MCP `drawing.summary`, masaüstünün ajan bağlantısı.
 - Masaüstünde ajanın değiştirdiği kitabı pafta kipi gösterir (`sheet_book.rs`'in göstericisi kitabı göstericiyle karşılaştırır).
