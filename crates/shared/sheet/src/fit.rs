@@ -34,6 +34,12 @@ pub fn map(item: &Item, bounds: [f64; 4], margin_pct: u8, standard_scales: bool)
             "Öğe sabit bir görünüm penceresi olmalı.",
         ));
     };
+    if m.view_locked {
+        return Err(SheetError::new(
+            "item_locked",
+            "Görünüm kilitli; önce görünüm kilidini açın.",
+        ));
+    }
     let MapView::Fixed(view) = &m.view else {
         return Err(SheetError::new(
             "not_fixed_map",
@@ -71,8 +77,15 @@ pub fn map(item: &Item, bounds: [f64; 4], margin_pct: u8, standard_scales: bool)
         x: bounds[0] + w / 2.,
         y: bounds[1] + h / 2.,
     };
+    let mut patch = serde_json::json!({"kind":{"view":{"center":center,"scale":scale}}});
+    if view.ratio.is_some() && (w != 0. || h != 0.) {
+        patch["kind"]["view"]["ratio"] = serde_json::Value::Null;
+    }
+    if !m.source.is_drawing() {
+        patch["kind"]["source"] = serde_json::json!({"type":"drawing"});
+    }
     Ok(Op::SetItemProps(SetItemProps {
         id: item.id.clone(),
-        patch: serde_json::json!({"kind":{"view":{"center":center,"scale":scale}}}),
+        patch,
     }))
 }

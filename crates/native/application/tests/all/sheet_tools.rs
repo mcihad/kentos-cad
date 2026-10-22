@@ -81,3 +81,64 @@ fn a_long_valid_sheet_id_does_not_overflow_derived_item_ids() {
             .all(|i| kentos_sheet::validate::valid_id(&i.id))
     );
 }
+
+#[test]
+fn viewport_cases_use_the_real_command_and_report_exact_denominators_and_bounds() {
+    use kentos_native_application::sheets_edit;
+    let data: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/viewports.json"
+    ))
+    .unwrap();
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.sheets.fit.json"
+    ))
+    .unwrap();
+    for case in data["cases"].as_array().unwrap() {
+        let mut doc =
+            Document::from_snapshot(serde_json::from_value(fixture["setup"].clone()).unwrap())
+                .unwrap();
+        let model: Vec<_> = doc.entities().cloned().collect();
+        let add = serde_json::from_value(json!({"ops":[{"op":"addSheet","sheet":case["sheet"]}]}))
+            .unwrap();
+        assert!(matches!(
+            sheets_edit::execute(&mut ExecutionContext::new(&mut doc), add),
+            CommandResult::Completed { .. }
+        ));
+        let before = doc.sheets().cloned();
+        let input = serde_json::from_value(json!({"ops":[case["operation"]]})).unwrap();
+        let result = sheets_edit::execute(&mut ExecutionContext::new(&mut doc), input);
+        if let Some(code) = case["expected"]["error"].as_str() {
+            let CommandResult::Failed { error } = result else {
+                panic!("{result:?}")
+            };
+            assert_eq!(error.code, code);
+            assert_eq!(doc.sheets().cloned(), before);
+            continue;
+        }
+        let CommandResult::Completed { output, .. } = result else {
+            panic!("{result:?}")
+        };
+        assert!(
+            (output.sheets[0].maps[0].scale.unwrap()
+                - case["expected"]["denominator"].as_f64().unwrap())
+            .abs()
+                < 1e-9
+        );
+        let CommandResult::Completed { output: query, .. } =
+            sheets_set::plan_in(&doc, &SheetsSet::default())
+        else {
+            panic!()
+        };
+        let bounds = query.sheets[0].frames[0].bounds.unwrap();
+        for (j, a) in bounds.iter().enumerate() {
+            assert!((a - case["expected"]["bounds"][j].as_f64().unwrap()).abs() < 1e-8);
+        }
+        assert_eq!(doc.entities().cloned().collect::<Vec<_>>(), model);
+        let reverse = serde_json::from_value(json!({"ops":output.inverse})).unwrap();
+        assert!(matches!(
+            sheets_edit::execute(&mut ExecutionContext::new(&mut doc), reverse),
+            CommandResult::Completed { .. }
+        ));
+        assert_eq!(doc.sheets().cloned(), before);
+    }
+}

@@ -112,11 +112,11 @@ pub(crate) fn built_layers(
     src: &MapSource<'_>,
     layers: &MapLayers,
     overrides: &[kentos_sheet::kinds::LayerOverride],
-    scale: u32,
+    scale: f64,
     extent: [f64; 4],
 ) -> Vec<(String, String, kentos_native_style::StyledLayer)> {
     let doc = src.doc;
-    let scale = f64::from(scale.max(1));
+    let scale = scale.max(1e-6);
     let pad = 20.0 * scale / 1000.0;
     let reach = [
         extent[0] - pad,
@@ -201,12 +201,12 @@ pub fn vector_content(
     src: &MapSource<'_>,
     layers: &MapLayers,
     overrides: &[kentos_sheet::kinds::LayerOverride],
-    scale: u32,
+    scale: f64,
     extent: [f64; 4],
     labels: &[MapLabel],
 ) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
     let doc = src.doc;
-    let scale = f64::from(scale.max(1));
+    let scale = scale.max(1e-6);
     let pad = 20. * scale / 1000.;
     let reach = [
         extent[0] - pad,
@@ -226,7 +226,7 @@ pub fn vector_content(
     };
     let mut shapes = Vec::new();
     let mut unsupported = Vec::new();
-    for (id, name, styled) in built_layers(src, layers, overrides, scale as u32, extent) {
+    for (id, name, styled) in built_layers(src, layers, overrides, scale, extent) {
         let (paths, missing) = layer_paths(&styled, &o, Some(reach));
         if !missing.is_empty() {
             unsupported.push((name.clone(), missing));

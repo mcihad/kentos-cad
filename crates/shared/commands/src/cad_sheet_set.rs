@@ -109,7 +109,7 @@ pub struct SetFrame {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
-    pub scale: Option<u32>,
+    pub scale: Option<f64>,
     /// The ground its content shows, its four corners clockwise from the content's top left (east, north, metres); empty
     /// for a map without a fixed view and centre (`unknown`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

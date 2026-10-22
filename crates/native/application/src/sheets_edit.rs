@@ -153,7 +153,7 @@ pub fn sheets_of(book: &SheetBook) -> Vec<SheetInfo> {
                         item: item.id.clone(),
                         name: item.name.clone(),
                         scale: match &m.view {
-                            MapView::Fixed(f) => Some(f.scale),
+                            MapView::Fixed(f) => Some(f.denominator()),
                             MapView::Atlas(_) => None,
                         },
                     }),

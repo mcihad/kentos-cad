@@ -84,7 +84,7 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                     item: item.id.clone(),
                     name: item.name.clone(),
                     scale: match &m.view {
-                        MapView::Fixed(f) => Some(f.scale),
+                        MapView::Fixed(f) => Some(f.denominator()),
                         MapView::Atlas(_) => None,
                     },
                     bounds: corners_box(&corners),

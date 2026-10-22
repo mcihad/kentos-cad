@@ -33,7 +33,7 @@ pub(crate) fn map(
     if u64::from(w) * u64::from(h) > 32_100_000 {
         return Err("Harita resmi 32 milyon pikseli aşıyor; paftanın dpi değerini düşürün.".into());
     }
-    let scale = f64::from(m.view.scale.max(1));
+    let scale = m.view.scale.max(1e-6);
     let ppm = f64::from(w) * 1_000_000. / (f64::from(m.clip.width) * scale);
     let (s, c) = kentos_sheet::units::sin_cos(m.view.rotation);
     let delta = [

@@ -301,7 +301,7 @@ const BASE: [f64; 2] = [487_000.0, 4_417_700.0];
 pub fn map_svg(m: &MapPrim) -> Option<String> {
     let c = m.view.center?;
     let (w, h) = (f64::from(m.clip.width), f64::from(m.clip.height));
-    let k = 1_000_000.0 / f64::from(m.view.scale.max(1));
+    let k = 1_000_000.0 / m.view.scale.max(1e-6);
     let rad = f64::from(m.view.rotation) / 1000.0 * std::f64::consts::PI / 180.0;
     let (s, co) = (rad.sin(), rad.cos());
     let to = |g: [f64; 2]| {
@@ -317,7 +317,7 @@ pub fn map_svg(m: &MapPrim) -> Option<String> {
     if (i1 - i0) * (j1 - j0) > 40_000 {
         return None;
     }
-    let detailed = m.view.scale <= 2_500;
+    let detailed = m.view.scale <= 2_500.0;
     let mut out = String::new();
     let _ = write!(
         out,
@@ -403,7 +403,7 @@ pub fn map_svg(m: &MapPrim) -> Option<String> {
         }
     }
     // The sample parcel, 1234 ada 7 parsel, and its corners.
-    if m.view.scale <= 2_500 {
+    if m.view.scale <= 2_500.0 {
         let pts = corners();
         let mut d = String::new();
         for (n, p) in pts.iter().enumerate() {

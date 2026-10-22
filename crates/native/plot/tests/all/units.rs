@@ -78,7 +78,7 @@ fn map_fills(doc: &Document) -> Vec<String> {
         &src,
         &MapLayers::default(),
         &[],
-        50,
+        50.0,
         [-5.0, -5.0, 20.0, 10.0],
         &[],
     )

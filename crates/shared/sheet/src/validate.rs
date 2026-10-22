@@ -524,6 +524,26 @@ fn kind(path: &str, item: &Item) -> Result<()> {
     let p = format!("{path}.kind");
     match &item.kind {
         ItemKind::Map(m) => {
+            if let crate::viewport::Source::ViewSnapshot { view } = &m.source
+                && (!kentos_contracts::view_holds(view)
+                    || !kentos_contracts::view_name_ok(&view.name))
+            {
+                return Err(err(
+                    "bad_value",
+                    &format!("{p}.source"),
+                    "Kaynak görünüm geçersiz.",
+                ));
+            }
+            if let MapView::Fixed(v) = &m.view
+                && v.ratio.is_some_and(|r| !r.valid())
+            {
+                return Err(err(
+                    "out_of_range",
+                    &format!("{p}.view.ratio"),
+                    "Ölçek oranı geçersiz.",
+                ));
+            }
+
             match &m.view {
                 MapView::Fixed(f) => {
                     range(

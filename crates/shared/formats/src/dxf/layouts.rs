@@ -232,6 +232,7 @@ pub(super) fn read(
         let (sn, cs) = (crate::math::sin(twist), crate::math::cos(twist));
         let (cx, cy) = (num(&groups, 12, 0.), num(&groups, 22, 0.));
         layout.viewports.push(CadViewport {
+            locked:flags & 16384 !=0,
             paper_center_mm: Vec2 {
                 x: num(&groups, 10, 0.) * *per,
                 y: num(&groups, 20, 0.) * *per,

@@ -196,15 +196,15 @@ pub fn merge_with_source(
         }
         for (i, view) in layout.viewports.iter().enumerate() {
             let scale = view.view_height * 1000. / view.height_mm;
-            if !scale.is_finite() || scale < 1. || scale > u32::MAX as f64 {
+            if !scale.is_finite() || !(1e-6..=1e8).contains(&scale) {
                 return Err(format!(
-                    "{} paftasının görünüm ölçeği yerel pafta modelinin 1–{} aralığı dışında: {scale}",
-                    layout.name,
-                    u32::MAX
+                    "{} paftasının görünüm ölçeği 0,000001–100000000 aralığı dışında: {scale}",
+                    layout.name
                 ));
             }
             let mut kind = kinds::default_kind("map").ok_or("Pafta görünüm türü bulunamadı")?;
             if let ItemKind::Map(map) = &mut kind {
+                map.view_locked = view.locked;
                 map.view = MapView::Fixed(kinds::FixedView {
                     center: Some(GroundPoint {
                         x: view.view_center.x,
@@ -213,6 +213,10 @@ pub fn merge_with_source(
                     scale: (view.view_height * 1000. / view.height_mm)
                         .round()
                         .clamp(1., u32::MAX as f64) as u32,
+                    ratio: (scale.fract() != 0.).then_some(kentos_sheet::viewport::ScaleRatio {
+                        paper: 1.,
+                        model: scale,
+                    }),
                     rotation: (view.twist.to_degrees() * 1000.).round() as i32,
                 });
             }
@@ -378,31 +382,44 @@ pub fn export(doc: &Document) -> (Vec<CadLayout>, Vec<ReportItem>) {
             let mut base = json!({"id": layout.entities.len() + 1, "layerId": "0", "attrs": {}});
             let raw = match &item.kind {
                 ItemKind::Map(map) => {
-                    if let MapView::Fixed(view) = &map.view {
-                        if let Some(center) = &view.center {
-                            layout.viewports.push(CadViewport {
-                                paper_center_mm: Vec2 {
-                                    x: (f64::from(item.frame.left)
-                                        + f64::from(item.frame.width) / 2.)
-                                        / 1000.,
-                                    y: layout.height_mm
-                                        - (f64::from(item.frame.top)
-                                            + f64::from(item.frame.height) / 2.)
-                                            / 1000.,
-                                },
-                                width_mm: f64::from(item.frame.width) / 1000.,
-                                height_mm: f64::from(item.frame.height) / 1000.,
-                                view_center: Vec2 {
-                                    x: center.x,
-                                    y: center.y,
-                                },
-                                view_height: f64::from(item.frame.height) / 1e6
-                                    * f64::from(view.scale),
-                                twist: f64::from(view.rotation).to_radians() / 1000.,
-                            });
+                    if !matches!(map.layers, kinds::MapLayers::All(_))
+                        || !map.layer_overrides.is_empty()
+                    {
+                        omitted += 1;
+                    }
+                    if item.rotation.rem_euclid(90000) != 0 {
+                        omitted += 1;
+                        continue;
+                    }
+                    if let MapView::Fixed(view) = &map.view
+                        && let Some(center) = &view.center
+                    {
+                        let rect = kentos_sheet::display::map_content_rect(item, map);
+                        let c = world_point(item, rect.center(), layout.height_mm);
+                        let (width, height) = if item.rotation.rem_euclid(180000) == 90000 {
+                            (rect.height, rect.width)
                         } else {
-                            omitted += 1;
-                        }
+                            (rect.width, rect.height)
+                        };
+                        layout.viewports.push(CadViewport {
+                            locked: map.view_locked,
+                            paper_center_mm: Vec2 {
+                                x: c.x * 1000.,
+                                y: c.y * 1000.,
+                            },
+                            width_mm: f64::from(width) / 1000.,
+                            height_mm: f64::from(height) / 1000.,
+                            view_center: Vec2 {
+                                x: center.x,
+                                y: center.y,
+                            },
+                            view_height: f64::from(height) / 1e6 * view.denominator(),
+                            twist: f64::from(kentos_sheet::units::norm_mdeg(
+                                i64::from(view.rotation) + i64::from(item.rotation),
+                            ))
+                            .to_radians()
+                                / 1000.,
+                        });
                     } else {
                         omitted += 1;
                     }
@@ -551,7 +568,7 @@ pub fn export(doc: &Document) -> (Vec<CadLayout>, Vec<ReportItem>) {
         Vec::new()
     } else {
         vec![ReportItem { severity: Some(ReportSeverity::Warning), details: Vec::new(), what: "Pafta dışa aktarımı".into(), count: omitted,
-        reason: "Desteklenmeyen pafta öğesi/özelliği (ana pafta, atlas, grup, dolgu, kenarlık, opaklık, veri bağlama veya iç boşluk) aktarılmadı; desteklenen metin, çizgi, çokgen ve sabit görünüm aktarıldı.".into(), lines: Vec::new() }]
+        reason: "Desteklenmeyen pafta öğesi/özelliği (ana pafta, atlas, grup, dolgu, kenarlık, opaklık, veri bağlama, iç boşluk, görünüm katman ezmesi veya eğik görünüm çerçevesi) aktarılmadı; desteklenen metin, çizgi, çokgen ve sabit görünüm aktarıldı.".into(), lines: Vec::new() }]
     };
     (result, notes)
 }

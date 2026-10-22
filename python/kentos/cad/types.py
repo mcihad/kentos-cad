@@ -3313,6 +3313,14 @@ PaperVarKindName = Literal["text", "number", "bool", "date"]
 """The names of :class:`PaperVarKind`, for a plain string."""
 
 
+class PaperViewportClip(_StrEnum):
+    FRAME = "frame"
+
+
+PaperViewportClipName = Literal["frame"]
+"""The names of :class:`PaperViewportClip`, for a plain string."""
+
+
 class ParameterKind(_StrEnum):
     """What a parameter's value is: a length in the drawing's unit, an angle in the project's angle unit, or a number."""
     LENGTH = "length"
@@ -6612,6 +6620,7 @@ class PaperOp(_Union):
     - :class:`RotateItemsPaperOp` (``op: rotateItems``)
     - :class:`SetFramesPaperOp` (``op: setFrames``)
     - :class:`SetItemPropsPaperOp` (``op: setItemProps``)
+    - :class:`SetViewportPaperOp` (``op: setViewport``)
     - :class:`RenameItemPaperOp` (``op: renameItem``)
     - :class:`ReorderPaperOp` (``op: reorder``)
     - :class:`SetOrderPaperOp` (``op: setOrder``)
@@ -6751,6 +6760,25 @@ class PaperTableSource(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> PaperTableSource:
         return _variant(_PAPER_TABLE_SOURCE, "PaperTableSource", "type", data).from_json(data)
+
+
+class PaperViewportSource(_Union):
+    """One of:
+
+    - :class:`DrawingPaperViewportSource` (``type: drawing``)
+    - :class:`ViewSnapshotPaperViewportSource` (``type: viewSnapshot``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "type"
+
+    @property
+    def type(self) -> str:
+        """The name of the variant (``type`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperViewportSource:
+        return _variant(_PAPER_VIEWPORT_SOURCE, "PaperViewportSource", "type", data).from_json(data)
 
 
 class ParameterEdit(_Union):
@@ -34102,6 +34130,30 @@ class PaperRectUm(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PaperScaleRatio(_Model):
+    """
+    Attributes:
+        paper: Paper and model lengths in the same physical unit: 2:1 enlarges twice. Unit: 1.
+        model: Unit: 1.
+    """
+    paper: float
+    model: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["paper"] = float(self.paper)
+        out["model"] = float(self.model)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperScaleRatio:
+        return cls(
+            paper=float(data["paper"]),
+            model=float(data["model"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PaperSheet(_Model):
     """One sheet (pafta): its paper, items, guides and how it is exported.
     Attributes:
@@ -43153,7 +43205,7 @@ class SetFrame(_Model):
     marks: list[str]
     bounds: list[float] | None | Unset = UNSET
     corners: list[Vec2] | Unset = UNSET
-    scale: int | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -43165,7 +43217,7 @@ class SetFrame(_Model):
         if self.corners is not UNSET:
             out["corners"] = [_vec2_out(e0) for e0 in self.corners]
         if self.scale is not UNSET:
-            out["scale"] = self.scale
+            out["scale"] = None if self.scale is None else float(self.scale)
         return out
 
     @classmethod
@@ -43176,7 +43228,7 @@ class SetFrame(_Model):
             marks=list(data["marks"]),
             bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [float(e0) for e0 in data["bounds"]],
             corners=[Vec2.from_json(e0) for e0 in data["corners"]] if "corners" in data else UNSET,
-            scale=data.get("scale", UNSET),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
         )
 
 
@@ -43432,14 +43484,14 @@ class SheetMapInfo(_Model):
     """
     item: str
     name: str
-    scale: int | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["item"] = self.item
         out["name"] = self.name
         if self.scale is not UNSET:
-            out["scale"] = self.scale
+            out["scale"] = None if self.scale is None else float(self.scale)
         return out
 
     @classmethod
@@ -43447,7 +43499,7 @@ class SheetMapInfo(_Model):
         return cls(
             item=data["item"],
             name=data["name"],
-            scale=data.get("scale", UNSET),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
         )
 
 
@@ -59912,6 +59964,7 @@ class ExpressionPaperGridLabelFormat(PaperGridLabelFormat):
 class MapPaperItemKind(PaperItemKind):
     """A map frame: in CAD the “Görünüm penceresi” (profiles name it).
     Attributes:
+        clip: Content is always clipped to its rectangular content frame. Polygon clips are CAD-SHEET-12.
         clip_to_atlas_feature: The host clips the content to the atlas object.
         crs: Another coordinate system for the map (EPSG code text); none: the project's.
         grids: Coordinate grids (karelaj).
@@ -59922,6 +59975,7 @@ class MapPaperItemKind(PaperItemKind):
     """
     TAG_VALUE: ClassVar[str] = "map"
     view: PaperMapView
+    clip: PaperViewportClip | PaperViewportClipName | None | Unset = UNSET
     clip_to_atlas_feature: bool = False
     crs: str | None | Unset = UNSET
     grids: list[PaperMapGrid] = field(default_factory=list)
@@ -59930,10 +59984,14 @@ class MapPaperItemKind(PaperItemKind):
     layers: PaperMapLayers = field(default_factory=(lambda: PaperMapLayers.from_json({'type': 'all'})))
     overview_frame: PaperStroke = field(default_factory=(lambda: PaperStroke.from_json({'cap': 'butt', 'color': '#d0021b', 'dash': [], 'join': 'miter', 'width': 500})))
     overview_of: str | None | Unset = UNSET
+    source: PaperViewportSource | None | Unset = UNSET
+    view_locked: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"type": "map"}
         out["view"] = self.view.to_json()
+        if self.clip is not UNSET:
+            out["clip"] = None if self.clip is None else _enum_out(self.clip)
         out["clipToAtlasFeature"] = self.clip_to_atlas_feature
         if self.crs is not UNSET:
             out["crs"] = self.crs
@@ -59945,12 +60003,17 @@ class MapPaperItemKind(PaperItemKind):
         out["overviewFrame"] = self.overview_frame.to_json()
         if self.overview_of is not UNSET:
             out["overviewOf"] = self.overview_of
+        if self.source is not UNSET:
+            out["source"] = None if self.source is None else self.source.to_json()
+        if self.view_locked is not UNSET:
+            out["viewLocked"] = self.view_locked
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> MapPaperItemKind:
         return cls(
             view=PaperMapView.from_json(data["view"]),
+            clip=UNSET if "clip" not in data else None if data["clip"] is None else _enum_in(PaperViewportClip, data["clip"]),
             clip_to_atlas_feature=data["clipToAtlasFeature"] if "clipToAtlasFeature" in data else False,
             crs=data.get("crs", UNSET),
             grids=[PaperMapGrid.from_json(e0) for e0 in data["grids"]] if "grids" in data else list(),
@@ -59959,6 +60022,8 @@ class MapPaperItemKind(PaperItemKind):
             layers=PaperMapLayers.from_json(data["layers"]) if "layers" in data else (lambda: PaperMapLayers.from_json({'type': 'all'}))(),
             overview_frame=PaperStroke.from_json(data["overviewFrame"]) if "overviewFrame" in data else (lambda: PaperStroke.from_json({'cap': 'butt', 'color': '#d0021b', 'dash': [], 'join': 'miter', 'width': 500}))(),
             overview_of=data.get("overviewOf", UNSET),
+            source=UNSET if "source" not in data else None if data["source"] is None else PaperViewportSource.from_json(data["source"]),
+            view_locked=data.get("viewLocked", UNSET),
         )
 
 
@@ -60561,11 +60626,13 @@ class FixedPaperMapView(PaperMapView):
     """A map at a fixed place and scale. A template's map has no centre: it keeps its scale, not a place.
     Attributes:
         scale: Denominator: 1000 is 1/1000. Unit: scale.
+        ratio: Exact paper:model ratio; overrides the legacy 1:scale denominator.
         rotation: The map's content turned clockwise on the paper. Unit: mdeg.
     """
     TAG_VALUE: ClassVar[str] = "fixed"
     scale: int
     center: PaperGroundPoint | None | Unset = UNSET
+    ratio: PaperScaleRatio | None | Unset = UNSET
     rotation: int = 0
 
     def to_json(self) -> dict[str, Any]:
@@ -60573,6 +60640,8 @@ class FixedPaperMapView(PaperMapView):
         out["scale"] = self.scale
         if self.center is not UNSET:
             out["center"] = None if self.center is None else self.center.to_json()
+        if self.ratio is not UNSET:
+            out["ratio"] = None if self.ratio is None else self.ratio.to_json()
         out["rotation"] = self.rotation
         return out
 
@@ -60581,6 +60650,7 @@ class FixedPaperMapView(PaperMapView):
         return cls(
             scale=data["scale"],
             center=UNSET if "center" not in data else None if data["center"] is None else PaperGroundPoint.from_json(data["center"]),
+            ratio=UNSET if "ratio" not in data else None if data["ratio"] is None else PaperScaleRatio.from_json(data["ratio"]),
             rotation=data["rotation"] if "rotation" in data else 0,
         )
 
@@ -61065,6 +61135,57 @@ class SetItemPropsPaperOp(PaperOp):
         return cls(
             id=data["id"],
             patch=data["patch"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetViewportPaperOp(PaperOp):
+    """
+    Attributes:
+        bounds: Canonical metres; an unrotated model-space rectangle to fit exactly. Unit: length.
+        rotation: Unit: mdeg.
+        scale: Unit: scale.
+    """
+    TAG_VALUE: ClassVar[str] = "setViewport"
+    id: str
+    bounds: list[float] | None | Unset = UNSET
+    center: PaperGroundPoint | None | Unset = UNSET
+    locked: bool | None | Unset = UNSET
+    ratio: PaperScaleRatio | None | Unset = UNSET
+    rotation: int | None | Unset = UNSET
+    scale: int | None | Unset = UNSET
+    source: PaperViewportSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "setViewport"}
+        out["id"] = self.id
+        if self.bounds is not UNSET:
+            out["bounds"] = None if self.bounds is None else [float(e0) for e0 in self.bounds]
+        if self.center is not UNSET:
+            out["center"] = None if self.center is None else self.center.to_json()
+        if self.locked is not UNSET:
+            out["locked"] = self.locked
+        if self.ratio is not UNSET:
+            out["ratio"] = None if self.ratio is None else self.ratio.to_json()
+        if self.rotation is not UNSET:
+            out["rotation"] = self.rotation
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        if self.source is not UNSET:
+            out["source"] = None if self.source is None else self.source.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetViewportPaperOp:
+        return cls(
+            id=data["id"],
+            bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [float(e0) for e0 in data["bounds"]],
+            center=UNSET if "center" not in data else None if data["center"] is None else PaperGroundPoint.from_json(data["center"]),
+            locked=data.get("locked", UNSET),
+            ratio=UNSET if "ratio" not in data else None if data["ratio"] is None else PaperScaleRatio.from_json(data["ratio"]),
+            rotation=data.get("rotation", UNSET),
+            scale=data.get("scale", UNSET),
+            source=UNSET if "source" not in data else None if data["source"] is None else PaperViewportSource.from_json(data["source"]),
         )
 
 
@@ -61911,6 +62032,37 @@ class ContinuedPaperTableSource(PaperTableSource):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ContinuedPaperTableSource:
         return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingPaperViewportSource(PaperViewportSource):
+    TAG_VALUE: ClassVar[str] = "drawing"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "drawing"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingPaperViewportSource:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewSnapshotPaperViewportSource(PaperViewportSource):
+    """A capture, not a live link. The stable id/name and original view are retained."""
+    TAG_VALUE: ClassVar[str] = "viewSnapshot"
+    view: NamedView
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "viewSnapshot"}
+        out["view"] = self.view.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewSnapshotPaperViewportSource:
+        return cls(
+            view=NamedView.from_json(data["view"]),
+        )
 
 
 @dataclass(kw_only=True, slots=True)
@@ -65493,7 +65645,7 @@ _PAPER_MAP_LAYERS: dict[str, type[PaperMapLayers]] = {"all": AllPaperMapLayers, 
 _PAPER_MAP_VIEW: dict[str, type[PaperMapView]] = {"fixed": FixedPaperMapView, "atlas": AtlasPaperMapView}
 
 
-_PAPER_OP: dict[str, type[PaperOp]] = {"addSheet": AddSheetPaperOp, "removeSheet": RemoveSheetPaperOp, "renameSheet": RenameSheetPaperOp, "moveSheet": MoveSheetPaperOp, "duplicateSheet": DuplicateSheetPaperOp, "replaceSheet": ReplaceSheetPaperOp, "setPage": SetPagePaperOp, "addMaster": AddMasterPaperOp, "removeMaster": RemoveMasterPaperOp, "replaceMaster": ReplaceMasterPaperOp, "setSheetMaster": SetSheetMasterPaperOp, "detachMaster": DetachMasterPaperOp, "addItems": AddItemsPaperOp, "insertItems": InsertItemsPaperOp, "removeItems": RemoveItemsPaperOp, "moveItems": MoveItemsPaperOp, "resizeItem": ResizeItemPaperOp, "rotateItems": RotateItemsPaperOp, "setFrames": SetFramesPaperOp, "setItemProps": SetItemPropsPaperOp, "renameItem": RenameItemPaperOp, "reorder": ReorderPaperOp, "setOrder": SetOrderPaperOp, "group": GroupPaperOp, "ungroup": UngroupPaperOp, "setItems": SetItemsPaperOp, "lock": LockPaperOp, "hide": HidePaperOp, "align": AlignPaperOp, "distribute": DistributePaperOp, "matchSize": MatchSizePaperOp, "addGuide": AddGuidePaperOp, "moveGuide": MoveGuidePaperOp, "removeGuide": RemoveGuidePaperOp, "setSnapGrid": SetSnapGridPaperOp, "setAtlas": SetAtlasPaperOp, "setExport": SetExportPaperOp, "applyTemplate": ApplyTemplatePaperOp, "saveVariables": SaveVariablesPaperOp, "addAssets": AddAssetsPaperOp, "removeAssets": RemoveAssetsPaperOp, "addVariant": AddVariantPaperOp, "removeVariant": RemoveVariantPaperOp, "setVariant": SetVariantPaperOp}
+_PAPER_OP: dict[str, type[PaperOp]] = {"addSheet": AddSheetPaperOp, "removeSheet": RemoveSheetPaperOp, "renameSheet": RenameSheetPaperOp, "moveSheet": MoveSheetPaperOp, "duplicateSheet": DuplicateSheetPaperOp, "replaceSheet": ReplaceSheetPaperOp, "setPage": SetPagePaperOp, "addMaster": AddMasterPaperOp, "removeMaster": RemoveMasterPaperOp, "replaceMaster": ReplaceMasterPaperOp, "setSheetMaster": SetSheetMasterPaperOp, "detachMaster": DetachMasterPaperOp, "addItems": AddItemsPaperOp, "insertItems": InsertItemsPaperOp, "removeItems": RemoveItemsPaperOp, "moveItems": MoveItemsPaperOp, "resizeItem": ResizeItemPaperOp, "rotateItems": RotateItemsPaperOp, "setFrames": SetFramesPaperOp, "setItemProps": SetItemPropsPaperOp, "setViewport": SetViewportPaperOp, "renameItem": RenameItemPaperOp, "reorder": ReorderPaperOp, "setOrder": SetOrderPaperOp, "group": GroupPaperOp, "ungroup": UngroupPaperOp, "setItems": SetItemsPaperOp, "lock": LockPaperOp, "hide": HidePaperOp, "align": AlignPaperOp, "distribute": DistributePaperOp, "matchSize": MatchSizePaperOp, "addGuide": AddGuidePaperOp, "moveGuide": MoveGuidePaperOp, "removeGuide": RemoveGuidePaperOp, "setSnapGrid": SetSnapGridPaperOp, "setAtlas": SetAtlasPaperOp, "setExport": SetExportPaperOp, "applyTemplate": ApplyTemplatePaperOp, "saveVariables": SaveVariablesPaperOp, "addAssets": AddAssetsPaperOp, "removeAssets": RemoveAssetsPaperOp, "addVariant": AddVariantPaperOp, "removeVariant": RemoveVariantPaperOp, "setVariant": SetVariantPaperOp}
 
 
 _PAPER_OVERFLOW: dict[str, type[PaperOverflow]] = {"clip": ClipPaperOverflow, "continueIn": ContinueInPaperOverflow}
@@ -65509,6 +65661,9 @@ _PAPER_SHAPE_KIND: dict[str, type[PaperShapeKind]] = {"rect": RectPaperShapeKind
 
 
 _PAPER_TABLE_SOURCE: dict[str, type[PaperTableSource]] = {"fixed": FixedPaperTableSource, "layer": LayerPaperTableSource, "continued": ContinuedPaperTableSource}
+
+
+_PAPER_VIEWPORT_SOURCE: dict[str, type[PaperViewportSource]] = {"drawing": DrawingPaperViewportSource, "viewSnapshot": ViewSnapshotPaperViewportSource}
 
 
 _PARAMETER_EDIT: dict[str, type[ParameterEdit]] = {"add": AddParameterEdit, "set": SetParameterEdit, "rename": RenameParameterEdit, "remove": RemoveParameterEdit}
@@ -66062,6 +66217,7 @@ __all__ = [
     "DrawingCompared",
     "DrawingFont",
     "DrawingFontName",
+    "DrawingPaperViewportSource",
     "DrawingStandard",
     "DrawingUnit",
     "DrawingUnitName",
@@ -66909,6 +67065,7 @@ __all__ = [
     "PaperScaleBarLength",
     "PaperScaleBarStyle",
     "PaperScaleBarStyleName",
+    "PaperScaleRatio",
     "PaperScaleUnit",
     "PaperScaleUnitName",
     "PaperShapeKind",
@@ -66942,6 +67099,9 @@ __all__ = [
     "PaperVariableValue",
     "PaperVariantCondition",
     "PaperVariantFrame",
+    "PaperViewportClip",
+    "PaperViewportClipName",
+    "PaperViewportSource",
     "PaperZoneMarks",
     "ParagraphLayout",
     "ParallelConstraintRule",
@@ -67372,6 +67532,7 @@ __all__ = [
     "SetSpacesOperation",
     "SetVariantPaperOp",
     "SetViewMarksOperation",
+    "SetViewportPaperOp",
     "SetWallsOperation",
     "SettingsChanged",
     "SettingsSet",
@@ -67713,6 +67874,7 @@ __all__ = [
     "ViewMarksPlan",
     "ViewMarksReferenced",
     "ViewMarksReferences",
+    "ViewSnapshotPaperViewportSource",
     "ViewTarget",
     "ViewmarkEntity",
     "ViewsEdit",

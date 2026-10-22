@@ -133,10 +133,21 @@ pub struct FixedView {
     /// Denominator: 1000 is 1/1000.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: u32,
+    /// Exact paper:model ratio; overrides the legacy 1:scale denominator.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ratio: Option<crate::viewport::ScaleRatio>,
     /// The map's content turned clockwise on the paper.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "mdeg")))]
     pub rotation: Mdeg,
+}
+
+impl FixedView {
+    pub fn denominator(&self) -> f64 {
+        self.ratio
+            .map_or(f64::from(self.scale), |r| r.denominator())
+    }
 }
 
 /// A map that follows the atlas: each page's object, at the scale the policy chooses.
@@ -306,6 +317,31 @@ fn overview_frame() -> Stroke {
 #[cfg_attr(feature = "schema", schemars(rename = "PaperMapItem"))]
 pub struct MapItem {
     pub view: MapView,
+    #[serde(
+        default,
+        deserialize_with = "crate::viewport::default_on_null",
+        skip_serializing_if = "crate::viewport::Source::is_drawing"
+    )]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::viewport::Source>"))]
+    #[cfg_attr(feature = "ts", ts(as = "Option<crate::viewport::Source>", optional))]
+    pub source: crate::viewport::Source,
+    #[serde(
+        default,
+        deserialize_with = "crate::viewport::default_on_null",
+        skip_serializing_if = "std::ops::Not::not"
+    )]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<bool>"))]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub view_locked: bool,
+    /// Content is always clipped to its rectangular content frame. Polygon clips are CAD-SHEET-12.
+    #[serde(
+        default,
+        deserialize_with = "crate::viewport::default_on_null",
+        skip_serializing_if = "crate::viewport::Clip::is_frame"
+    )]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::viewport::Clip>"))]
+    #[cfg_attr(feature = "ts", ts(as = "Option<crate::viewport::Clip>", optional))]
+    pub clip: crate::viewport::Clip,
     #[serde(default)]
     pub layers: MapLayers,
     /// Another coordinate system for the map (EPSG code text); none: the project's.
@@ -1763,9 +1799,13 @@ pub fn frame_point(frame: &crate::units::RectUm, p: [i32; 2]) -> [f64; 2] {
 pub fn default_kind(type_name: &str) -> Option<ItemKind> {
     Some(match type_name {
         "map" => ItemKind::Map(MapItem {
+            source: Default::default(),
+            view_locked: false,
+            clip: Default::default(),
             view: MapView::Fixed(FixedView {
                 center: None,
                 scale: 1000,
+                ratio: None,
                 rotation: 0,
             }),
             layers: MapLayers::All(Empty {}),

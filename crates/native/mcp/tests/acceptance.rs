@@ -510,3 +510,57 @@ fn sheet_create_fit_and_detailed_read_work_as_one_atomic_agent_changeset() {
     let undone=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));
     assert_eq!(undone["output"]["book"],before["output"]["book"]);
 }
+
+#[test]
+fn an_agent_configures_a_fractional_viewport_and_the_view_lock_is_enforced() {
+    let mut server = Server::new();
+    let opened = call(
+        &mut server,
+        "drawing.open",
+        json!({"path":concat!(env!("CARGO_MANIFEST_DIR"),"/../../../fixtures/kcad/v2/sheets.kcad")}),
+    );
+    let drawing = opened["drawing"].as_str().unwrap();
+    let before = call(
+        &mut server,
+        "cad.sheets.set",
+        json!({"drawing":drawing,"details":true}),
+    );
+    let data: Value =
+        serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/viewports.json")).unwrap();
+    let sheet = &data["cases"][0]["sheet"];
+    let result = call(
+        &mut server,
+        "cad.changeset.apply",
+        json!({"drawing":drawing,"label":"Görünüm penceresi","steps":[{"command":"cad.sheets.edit","input":{"ops":[{"op":"addSheet","sheet":sheet},{"op":"setViewport","id":"viewport","ratio":{"paper":2,"model":1},"locked":true}]}}]}),
+    );
+    assert_eq!(result["status"], "completed", "{result}");
+    let read = call(
+        &mut server,
+        "cad.sheets.set",
+        json!({"drawing":drawing,"details":true}),
+    );
+    let page = read["output"]["book"]["sheets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["id"] == "page")
+        .unwrap();
+    assert_eq!(page["items"][0]["kind"]["viewLocked"], true);
+    assert_eq!(page["items"][0]["kind"]["view"]["ratio"]["paper"], 2.);
+    let rejected = tool_result(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":[{"op":"setItemProps","id":"viewport","patch":{"kind":{"view":{"center":{"x":9,"y":9}}}}}]}),
+    );
+    assert_eq!(
+        rejected["structuredContent"]["error"]["code"], "item_locked",
+        "{rejected}"
+    );
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    let undone = call(
+        &mut server,
+        "cad.sheets.set",
+        json!({"drawing":drawing,"details":true}),
+    );
+    assert_eq!(undone["output"]["book"], before["output"]["book"]);
+}

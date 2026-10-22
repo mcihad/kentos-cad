@@ -26,7 +26,7 @@ impl Frame {
             view: MapFrame {
                 content: m.clip,
                 center: m.view.center,
-                scale: m.view.scale.max(1),
+                scale: m.view.scale.max(1e-6),
                 view_rot: m.view.rotation,
                 item_rot: m.rotation,
             },
@@ -71,7 +71,7 @@ impl Frame {
 
     /// Metres on the ground per micrometre on the paper.
     fn metres_per_um(&self) -> f64 {
-        f64::from(self.view.scale.max(1)) / 1_000_000.0
+        self.view.scale.max(1e-6) / 1_000_000.0
     }
 }
 
@@ -305,7 +305,7 @@ mod tests {
                     x: 500_000.0,
                     y: 4_420_000.0,
                 }),
-                scale: 1000,
+                scale: 1000.0,
                 rotation: view_rot,
             },
             layers: MapLayers::default(),

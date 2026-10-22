@@ -20,7 +20,7 @@ pub(crate) struct MapFrame {
     /// The content's rectangle in the item's own (unturned) coordinates.
     pub content: RectUm,
     pub center: Option<GroundPoint>,
-    pub scale: u32,
+    pub scale: f64,
     /// The content's turn in the frame.
     pub view_rot: Mdeg,
     /// The frame's turn on the paper.
@@ -30,7 +30,7 @@ pub(crate) struct MapFrame {
 impl MapFrame {
     fn k(&self) -> f64 {
         // Micrometres on the paper per metre on the ground.
-        1_000_000.0 / f64::from(self.scale.max(1))
+        1_000_000.0 / self.scale.max(1e-6)
     }
 
     /// A ground point (east, north) in the item's own coordinates.
@@ -111,7 +111,7 @@ pub fn fixed_corners(item: &Item) -> Option<[[f64; 2]; 4]> {
     MapFrame {
         content: content_rect(item, m),
         center: f.center,
-        scale: f.scale,
+        scale: f.denominator(),
         view_rot: f.rotation,
         item_rot: item.rotation,
     }
@@ -127,21 +127,21 @@ pub fn content_rect(item: &Item, m: &MapItem) -> RectUm {
 /// A map's frame as drawn: its view, or an atlas page's.
 pub(crate) fn frame_of(item: &Item, m: &MapItem, inputs: &RenderInputs) -> Option<MapFrame> {
     let (center, scale, view_rot) = match &m.view {
-        MapView::Fixed(f) => (f.center, f.scale, f.rotation),
+        MapView::Fixed(f) => (f.center, f.denominator(), f.rotation),
         MapView::Atlas(a) => {
             let page = inputs
                 .atlas
                 .as_ref()
                 .and_then(|p| p.maps.iter().find(|v| v.item == item.id));
             match page {
-                Some(v) => (Some(v.center), v.scale.max(1), v.rotation),
+                Some(v) => (Some(v.center), f64::from(v.scale.max(1)), v.rotation),
                 None => {
                     let s = match &a.policy {
                         AtlasScale::Fixed(f) => f.scale,
                         AtlasScale::Predefined(p) => p.scales.first().copied().unwrap_or(1000),
                         AtlasScale::Fit(_) => 1000,
                     };
-                    (None, s, a.rotation)
+                    (None, f64::from(s), a.rotation)
                 }
             }
         }
@@ -149,15 +149,15 @@ pub(crate) fn frame_of(item: &Item, m: &MapItem, inputs: &RenderInputs) -> Optio
     Some(MapFrame {
         content: content_rect(item, m),
         center,
-        scale: scale.max(1),
+        scale: scale.max(1e-6),
         view_rot,
         item_rot: item.rotation,
     })
 }
 
 /// A grid interval for a scale: 1, 2, 2.5 or 5 times a power of ten nearest to 10 cm on the paper.
-pub fn auto_interval(scale: u32) -> f64 {
-    let target = f64::from(scale.max(1)) * 0.1;
+pub fn auto_interval(scale: f64) -> f64 {
+    let target = scale.max(1e-6) * 0.1;
     let k = libm::floor(libm::log10(target)) as i32;
     let mut best = (f64::MAX, target);
     for e in (k - 1)..=(k + 1) {
@@ -804,12 +804,12 @@ mod tests {
 
     #[test]
     fn grid_intervals_are_ten_centimetres_on_paper() {
-        assert_eq!(auto_interval(500), 50.0);
-        assert_eq!(auto_interval(1000), 100.0);
-        assert_eq!(auto_interval(2000), 200.0);
-        assert_eq!(auto_interval(2500), 250.0);
-        assert_eq!(auto_interval(5000), 500.0);
-        assert_eq!(auto_interval(25_000), 2500.0);
+        assert_eq!(auto_interval(500.0), 50.0);
+        assert_eq!(auto_interval(1000.0), 100.0);
+        assert_eq!(auto_interval(2000.0), 200.0);
+        assert_eq!(auto_interval(2500.0), 250.0);
+        assert_eq!(auto_interval(5000.0), 500.0);
+        assert_eq!(auto_interval(25_000.0), 2500.0);
     }
 
     #[test]
@@ -827,7 +827,7 @@ mod tests {
                 x: 485_000.0,
                 y: 4_512_000.0,
             }),
-            scale: 1000,
+            scale: 1000.0,
             view_rot: 30_000,
             item_rot: 0,
         };

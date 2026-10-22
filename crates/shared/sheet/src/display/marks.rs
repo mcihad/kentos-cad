@@ -39,7 +39,7 @@ struct Bar {
     right_pad: f64,
 }
 
-fn layout_bar(s: &ScaleBarItem, scale: u32, width: f64) -> Option<Bar> {
+fn layout_bar(s: &ScaleBarItem, scale: f64, width: f64) -> Option<Bar> {
     let n = f64::from(s.segments) + f64::from(s.left_segments);
     let km = |total: f64| match s.unit {
         ScaleUnit::Km => true,
@@ -47,7 +47,7 @@ fn layout_bar(s: &ScaleBarItem, scale: u32, width: f64) -> Option<Bar> {
         ScaleUnit::Auto => total >= 1000.0,
     };
     let make = |length: f64| -> Bar {
-        let seg = length * 1_000_000.0 / f64::from(scale.max(1));
+        let seg = length * 1_000_000.0 / scale.max(1e-6);
         let total = length * f64::from(s.segments);
         let in_km = km(total);
         let div = if in_km { 1000.0 } else { 1.0 };
@@ -1146,13 +1146,13 @@ mod tests {
         };
         s.segments = 4;
         // 1/1000, 80 mm: 4 × 20 m (80 mm) leaves no room for the end labels; 4 × 10 m (40 mm) fits.
-        let b = layout_bar(&s, 1000, 80_000.0).unwrap();
+        let b = layout_bar(&s, 1000.0, 80_000.0).unwrap();
         assert_eq!(b.length, 10.0);
         // 1/500, 80 mm: 4 × 5 m is 40 mm; 4 × 10 m is 80 mm and does not fit with its labels.
-        let b = layout_bar(&s, 500, 80_000.0).unwrap();
+        let b = layout_bar(&s, 500.0, 80_000.0).unwrap();
         assert_eq!(b.length, 5.0);
         // 1/50 000, 100 mm: 4 × 2 000 m is 160 mm; 4 × 1 000 m is 80 mm and fits, labels in km.
-        let b = layout_bar(&s, 50_000, 100_000.0).unwrap();
+        let b = layout_bar(&s, 50_000.0, 100_000.0).unwrap();
         assert_eq!(b.length, 1000.0);
         assert_eq!(b.labels.last().unwrap().1, "4 km");
     }

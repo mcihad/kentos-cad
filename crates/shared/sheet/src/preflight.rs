@@ -343,15 +343,20 @@ pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Res
             }
             if let MapView::Fixed(f) = &m.view
                 && m.overview_of.is_none()
-                && !paper::is_standard_scale(f.scale)
+                && !paper::standard_scales()
+                    .iter()
+                    .any(|s| f64::from(*s) == f.denominator())
             {
-                let fixes = nearest_standard(f.scale)
+                let fixes = nearest_standard(f.denominator().round().clamp(1.,u32::MAX as f64) as u32)
                     .map(|s| {
                         vec![op_fix(
                             &format!("Ölçeği 1/{s} yap"),
                             Op::SetItemProps(SetItemProps {
                                 id: it.id.clone(),
-                                patch: serde_json::json!({ "kind": { "type": "map", "view": { "type": "fixed", "scale": s } } }),
+                                patch: {
+                                    let mut patch=serde_json::json!({ "kind": { "type": "map", "view": { "type": "fixed", "scale": s } } });
+                                    if f.ratio.is_some(){patch["kind"]["view"]["ratio"]=serde_json::Value::Null;}patch
+                                },
                             }),
                         )]
                     })
@@ -360,7 +365,7 @@ pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Res
                     Severity::Warning,
                     "non_standard_scale",
                     Some(it),
-                    format!("{} 1/{} ölçeğinde: standart bir ölçek değil.", named(it), f.scale),
+                    format!("{} 1/{} ölçeğinde: standart bir ölçek değil.", named(it), f.denominator()),
                     "Kadastro ve imar paftaları standart ölçek ister (1/500, 1/1000, 1/2000, 1/5000 …).",
                     fixes,
                 );

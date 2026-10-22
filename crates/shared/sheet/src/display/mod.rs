@@ -150,7 +150,8 @@ pub struct MapViewPrim {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub center: Option<GroundPoint>,
-    pub scale: u32,
+    #[serde(serialize_with = "crate::viewport::serialize_denominator")]
+    pub scale: f64,
     /// The content's turn in the frame (the frame's own turn is the primitive's).
     pub rotation: Mdeg,
 }
@@ -485,7 +486,7 @@ impl Ctx<'_> {
             s.builtins
                 .retain(|(n, _)| n != "OLCEK" && n != "OLCEK_PAYDA");
             s.builtin("olcek", VarValue::Text(format!("1/{}", m.scale)));
-            s.builtin("olcek_payda", VarValue::Number(f64::from(m.scale)));
+            s.builtin("olcek_payda", VarValue::Number(m.scale));
         }
         s
     }
@@ -839,7 +840,7 @@ fn sheet_scope(
     match primary {
         Some(s) => {
             scope.builtin("olcek", VarValue::Text(format!("1/{s}")));
-            scope.builtin("olcek_payda", VarValue::Number(f64::from(s)));
+            scope.builtin("olcek_payda", VarValue::Number(s));
         }
         None => {
             scope.builtin("olcek", VarValue::Null);

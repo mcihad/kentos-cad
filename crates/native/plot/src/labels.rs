@@ -142,7 +142,7 @@ pub fn labels_in_view(
     let Some(bounds) = extent else {
         return Vec::new();
     };
-    let scale = f64::from(view.scale.max(1));
+    let scale = view.scale.max(1e-6);
     let pixels = 1000. / (PX_MM * scale);
     let shown = crate::layers::map_layers(
         doc.layers().nodes(),

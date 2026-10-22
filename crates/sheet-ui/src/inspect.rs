@@ -19,6 +19,7 @@ pub(crate) enum Conv {
     Optional,
     /// A whole number.
     Int,
+    Real,
     /// Micrometres shown as millimetres.
     Mm,
     /// Thousandths of a degree shown as degrees.
@@ -118,6 +119,19 @@ pub(crate) fn props_of(kind: &str) -> Vec<Prop> {
     match kind {
         "map" => vec![
             prop(&["kind", "view", "scale"], "Ölçek (1:…)", Conv::Int),
+            prop(
+                &["kind", "view", "ratio", "paper"],
+                "Oran: kâğıt",
+                Conv::Real,
+            ),
+            prop(
+                &["kind", "view", "ratio", "model"],
+                "Oran: model",
+                Conv::Real,
+            ),
+            prop(&["kind", "view", "center", "x"], "Merkez Y (m)", Conv::Real),
+            prop(&["kind", "view", "center", "y"], "Merkez X (m)", Conv::Real),
+            prop(&["kind", "viewLocked"], "Görünümü kilitle", Conv::Bool),
             prop(&["kind", "view", "rotation"], "Dönüş", Conv::Deg),
             prop(&["kind", "labelBand"], "Yazı bandı", Conv::Mm),
         ],
@@ -256,6 +270,13 @@ pub(crate) fn fixed_map(i: &Item) -> Option<&kentos_sheet::kinds::FixedView> {
 
 /// The item's value of a property, as the inspector shows it.
 pub(crate) fn read(item_json: &Json, p: &Prop, maps: &[(String, String)]) -> Value {
+    if p.path == ["kind", "viewLocked"] {
+        return Value::Bool(
+            at(item_json, p.path)
+                .and_then(Json::as_bool)
+                .unwrap_or(false),
+        );
+    }
     let Some(v) = at(item_json, p.path) else {
         return Value::Null;
     };
@@ -263,6 +284,7 @@ pub(crate) fn read(item_json: &Json, p: &Prop, maps: &[(String, String)]) -> Val
         Conv::Text | Conv::Optional => v
             .as_str()
             .map_or(Value::Null, |s| Value::Text(s.to_owned())),
+        Conv::Real => v.as_f64().map_or(Value::Null, Value::Real),
         Conv::Int => v.as_i64().map_or(Value::Null, Value::Integer),
         Conv::Mm => v.as_f64().map_or(Value::Null, |x| Value::Real(x / 1000.0)),
         Conv::Deg | Conv::Deg2 => v.as_f64().map_or(Value::Null, |x| Value::Real(x / 1000.0)),
@@ -297,6 +319,7 @@ pub(crate) fn write(p: &Prop, value: &Value, maps: &[(String, String)]) -> Optio
         (Conv::Text, Value::Null) => json!(""),
         (Conv::Optional, Value::Text(s)) if !s.trim().is_empty() => json!(s),
         (Conv::Optional, Value::Text(_) | Value::Null) => Json::Null,
+        (Conv::Real, v) => json!(v.as_f64()?),
         (Conv::Int, v) => json!(v.as_f64()?.round() as i64),
         (Conv::Mm | Conv::Deg | Conv::Deg2, v) => json!((v.as_f64()? * 1000.0).round() as i64),
         (Conv::Bool, Value::Bool(b)) => json!(b),
@@ -312,18 +335,22 @@ pub(crate) fn write(p: &Prop, value: &Value, maps: &[(String, String)]) -> Optio
         _ => return None,
     };
     // {"kind": {"style": {"size": 2500}}}: a merge that changes only that leaf.
-    Some(
-        p.path
-            .iter()
-            .rev()
-            .fold(leaf, |inner, key| json!({ *key: inner })),
-    )
+    let mut patch = p
+        .path
+        .iter()
+        .rev()
+        .fold(leaf, |inner, key| json!({ *key: inner }));
+    if p.path == ["kind", "view", "scale"] {
+        patch["kind"]["view"]["ratio"] = Json::Null;
+    }
+    Some(patch)
 }
 
 /// The inspector field of a property.
 pub(crate) fn field_of(p: &Prop, maps: &[(String, String)]) -> Field {
     let mut f = match p.conv {
         Conv::Text | Conv::Optional => Field::text(p.label),
+        Conv::Real => Field::real(p.label, 6).point(),
         Conv::Int => Field::integer(p.label),
         // The display rule (ADR 0149): a point, never a comma.
         Conv::Mm => Field::real(p.label, 1).unit("mm").point(),
@@ -385,6 +412,24 @@ pub(crate) fn refresh_fields(d: &mut Designer) {
     });
     let mut out = Vec::new();
     for p in props_of(kind.unwrap_or_default()) {
+        if p.path==["kind","viewLocked"]&&chosen.len()==1{continue;}
+        if p.path.starts_with(&["kind", "view", "ratio"])
+            && !chosen
+                .iter()
+                .all(|i| fixed_map(i).is_some_and(|v| v.ratio.is_some()))
+        {
+            continue;
+        }
+        if p.path.starts_with(&["kind", "view", "center"])
+            && !chosen
+                .iter()
+                .all(|i| fixed_map(i).is_some_and(|v| v.center.is_some()))
+        {
+            continue;
+        }
+
+        if p.path==["kind","view","scale"] && chosen.iter().all(|i|matches!(&i.kind,kentos_sheet::ItemKind::Map(m)if matches!(&m.view,kentos_sheet::MapView::Fixed(v)if v.ratio.is_some()))){continue;}
+
         let typed = matches!(
             p.path,
             ["kind", "declination"] | ["kind", "declinationYear"]
@@ -402,7 +447,18 @@ pub(crate) fn refresh_fields(d: &mut Designer) {
         }
         let varies = values.windows(2).any(|w| w[0] != w[1]);
         out.push(KindField {
-            field: field_of(&p, &maps),
+            field: {
+                let field = field_of(&p, &maps);
+                if p.path.starts_with(&["kind", "view"])
+                    && chosen
+                        .iter()
+                        .any(|i| matches!(&i.kind,kentos_sheet::ItemKind::Map(m)if m.view_locked))
+                {
+                    field.read_only()
+                } else {
+                    field
+                }
+            },
             value: if varies {
                 Value::Null
             } else {
@@ -682,7 +738,13 @@ mod tests {
                 let optional = matches!(p.conv, Conv::Map | Conv::Optional)
                     || p.path.last() == Some(&"fill")
                     || p.path.last() == Some(&"zebra")
-                    || p.path.last() == Some(&"declinationYear");
+                    || p.path.last() == Some(&"declinationYear")
+                    || p.path.starts_with(&["kind", "view", "ratio"])
+                    || p.path.starts_with(&["kind", "view", "center"])
+                    || p.path == ["kind", "viewLocked"];
+                if p.path == ["kind", "viewLocked"] {
+                    assert_eq!(read(&j, &p, &[]), Value::Bool(false));
+                }
                 assert!(optional || at(&j, p.path).is_some(), "{kind}: {:?}", p.path);
             }
         }

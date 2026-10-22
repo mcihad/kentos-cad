@@ -938,11 +938,11 @@ impl Designer {
         if chosen.is_empty() || !chosen.iter().all(|i| fixed_map(i).is_some()) {
             return None;
         }
-        let plot = self.ctx.capabilities.plot_scale.filter(|s| *s >= 1);
+        let plot = self.ctx.exact_plot_scale.or_else(||self.ctx.capabilities.plot_scale.map(f64::from)).filter(|s|s.is_finite()&&(1e-6..=1e8).contains(s));
         let at_plot = plot.is_some_and(|p| {
             chosen
                 .iter()
-                .all(|i| fixed_map(i).is_some_and(|v| v.scale == p))
+                .all(|i| fixed_map(i).is_some_and(|v| v.denominator() == p))
         });
         let has_view = self.ctx.center.is_some();
         let fit_view = self.ctx.center.is_some() && self.ctx.view_size.is_some();
@@ -956,49 +956,138 @@ impl Designer {
                 .spacing(6)
                 .align_y(Center),
             )
-            .on_press_maybe(on.filter(|_| editable))
+            .on_press_maybe(on.filter(|_| {
+                editable
+                    && chosen
+                        .iter()
+                        .all(|i| matches!(&i.kind,kentos_sheet::ItemKind::Map(m)if !m.view_locked))
+            }))
             .padding([3, 8])
             .style(style::button::secondary)
         };
         let scale = plot.map_or_else(String::new, |p| format!("Projenin çizim ölçeği 1/{p}. "));
+        let camera_editable = editable
+            && chosen
+                .iter()
+                .all(|i| matches!(&i.kind,kentos_sheet::ItemKind::Map(m)if !m.view_locked));
+        let source: Element<'_, Message> = if let [one] = chosen {
+            use kentos_sheet::viewport::{ScaleRatio, SetViewport, Source};
+            use kentos_ui::widget::select::{Choice, Select};
+            let kentos_sheet::ItemKind::Map(map) = &one.kind else {
+                return None;
+            };
+            let view = crate::inspect::fixed_map(one)?;
+            let id = one.id.clone();
+            let views = self.ctx.named_views.clone();
+            let mut labels = vec!["Bu çizim".to_owned()];
+            labels.extend(views.iter().map(|v| format!("{} (kopya)", v.name)));
+            let selected = match &map.source {
+                Source::Drawing => 0,
+                Source::ViewSnapshot { view } => views
+                    .iter()
+                    .position(|v| {
+                        kentos_sheet::viewport::view_key(v) == kentos_sheet::viewport::view_key(view)
+                            && v.name == view.name
+                    })
+                    .map_or_else(
+                        || {
+                            labels.push(format!("{} (kaydedilmiş kopya)", view.name));
+                            labels.len() - 1
+                        },
+                        |i| i + 1,
+                    ),
+            };
+            let current = labels[selected].clone();
+            let kept = views.clone();
+            let source: Element<'_, Message> = if camera_editable {
+                Select::new(
+                    labels.into_iter().enumerate().map(|(i, label)| {
+                        if i > views.len() {
+                            Choice::new(label).disabled()
+                        } else {
+                            Choice::new(label)
+                        }
+                    }),
+                    Some(selected),
+                    move |index| {
+                        Message::MapConfigure(SetViewport {
+                            id: id.clone(),
+                            source: Some(
+                                index
+                                    .checked_sub(1)
+                                    .and_then(|i| kept.get(i))
+                                    .map_or(Source::Drawing, |v| Source::ViewSnapshot {
+                                        view: v.clone(),
+                                    }),
+                            ),
+                            ..Default::default()
+                        })
+                    },
+                )
+                .searchable(false)
+                .into()
+            } else {
+                label::caption(current).into()
+            };
+            let exact = view.ratio.is_some();
+            let ratio = SetViewport {
+                id: one.id.clone(),
+                ratio: (!exact).then_some(ScaleRatio {
+                    paper: 1.,
+                    model: view.denominator(),
+                }),
+                scale: exact.then_some(view.denominator().round().clamp(1., 1e8) as u32),
+                ..Default::default()
+            };
+            let lock_id=one.id.clone();
+            let lock=if editable&&!one.locked {Switch::new(map.view_locked,move|on|Message::MapConfigure(SetViewport{id:lock_id.clone(),locked:Some(on),..Default::default()}))}else{Switch::disabled(map.view_locked)}.label("Görünüm kilidi");
+            let shown_ratio=view.ratio.map_or_else(||format!("1:{}",view.scale),|r|format!("{}:{}",r.paper,r.model));
+            column![lock,labelled("Kaynak",source,"Görünüm değişse de bu kopya korunur.".into()),
+                    action(if exact{"1:N kullan"}else{"Oran belirt"},crate::icons::PLOT_SCALE,camera_editable.then_some(Message::MapConfigure(ratio))),
+                    label::caption(format!("Ölçek {shown_ratio} · Dikdörtgen kırpma"))].spacing(6).into()
+        } else {
+            space::vertical().height(0).into()
+        };
+
         Some(
-            column![
-                row![
-                    action(
-                        "Çizim ölçeğini al",
-                        crate::icons::PLOT_SCALE,
-                        (plot.is_some() && !at_plot).then_some(Message::MapScaleFromDrawing),
-                    ),
-                    action(
-                        "Çizime sığdır", crate::icons::ZOOM_EXTENTS,
-                        self.ctx.drawing_bounds.is_some().then_some(Message::MapFitDrawing),
-                    ),
-                    action(
-                        "Seçime sığdır", crate::icons::TARGET,
-                        self.ctx.selection_bounds.is_some().then_some(Message::MapFitSelection),
-                    ),
-                    action(
-                        "Görünüme sığdır",
-                        crate::icons::ZOOM_EXTENTS,
-                        fit_view.then_some(Message::MapFitView),
-                    ),
-                    action(
-                        "Görünümden al",
-                        crate::icons::TARGET,
-                        has_view.then_some(Message::MapCentreFromView),
-                    ),
+                column![
+                    source,
+                    row![
+                        action(
+                            "Çizim ölçeğini al",
+                            crate::icons::PLOT_SCALE,
+                            (plot.is_some() && !at_plot).then_some(Message::MapScaleFromDrawing),
+                        ),
+                        action(
+                            "Çizime sığdır", crate::icons::ZOOM_EXTENTS,
+                            self.ctx.drawing_bounds.is_some().then_some(Message::MapFitDrawing),
+                        ),
+                        action(
+                            "Seçime sığdır", crate::icons::TARGET,
+                            self.ctx.selection_bounds.is_some().then_some(Message::MapFitSelection),
+                        ),
+                        action(
+                            "Görünüme sığdır",
+                            crate::icons::ZOOM_EXTENTS,
+                            fit_view.then_some(Message::MapFitView),
+                        ),
+                        action(
+                            "Görünümden al",
+                            crate::icons::TARGET,
+                            has_view.then_some(Message::MapCentreFromView),
+                        ),
+                    ]
+                    .spacing(6)
+                    .wrap(),
+                    label::caption(format!(
+                        "{scale}Sığdırma %5 kenar payı bırakır."
+                    ))
+                    .style(style::text::muted),
                 ]
                 .spacing(6)
-                .wrap(),
-                label::caption(format!(
-                    "{scale}Çizime/Seçime sığdır: nesneleri %5 kenar payıyla yerleştirir. Görünüme sığdır, çizim alanında görüneni standart ölçekte gösterir."
-                ))
-                .style(style::text::muted),
-            ]
-            .spacing(6)
-            .padding([4, 16])
-            .into(),
-        )
+                .padding([4, 16])
+                .into(),
+            )
     }
 
     fn picture_row(&self, chosen: &[&Item], editable: bool) -> Option<Element<'_, Message>> {

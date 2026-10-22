@@ -1652,3 +1652,50 @@ fn fit_drawing_and_selection_match_the_shared_command_cases_and_undo() {
         "{checked} independent cases reached the inspector"
     );
 }
+
+#[test]
+fn common_viewport_cases_replay_through_the_designer_and_undo() {
+    use kentos_sheet::{MapView, SheetBook};
+    let data: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/sheet/v1/viewports.json")).unwrap();
+    for case in data["cases"].as_array().unwrap() {
+        let mut book = SheetBook::default();
+        book.sheets
+            .push(serde_json::from_value(case["sheet"].clone()).unwrap());
+        let mut d = Designer::new(context());
+        d.load(book.clone());
+        d.update(Message::Tab(1));
+        let mut operation = case["operation"].clone();
+        operation.as_object_mut().unwrap().remove("op");
+        d.update(Message::MapConfigure(
+            serde_json::from_value(operation).unwrap(),
+        ));
+        if case["expected"]["error"].is_string() {
+            assert!(d.error().is_some(), "{}", case["name"]);
+            assert_eq!(d.book(), &book);
+            continue;
+        }
+        assert!(d.error().is_none(), "{}: {:?}", case["name"], d.error());
+        let ItemKind::Map(map) = &d.book().sheets[0].items[0].kind else {
+            panic!()
+        };
+        let MapView::Fixed(view) = &map.view else {
+            panic!()
+        };
+        assert!(
+            (view.denominator() - case["expected"]["denominator"].as_f64().unwrap()).abs() < 1e-9
+        );
+        d.update(Message::Undo);
+        assert_eq!(d.book(), &book);
+    }
+}
+
+#[test]
+fn drawing_scale_button_keeps_the_exact_fractional_project_denominator() {
+    let mut d=designer();let mut ctx=context();ctx.exact_plot_scale=Some(37.5);ctx.capabilities.plot_scale=Some(38);d.set_context(ctx);
+    let id=d.book().sheets[0].items.iter().find(|i|matches!(i.kind,ItemKind::Map(_))).unwrap().id.clone();
+    d.update(Message::Select(vec![id.clone()]));d.update(Message::MapScaleFromDrawing);
+    assert!(d.error().is_none(),"{:?}",d.error());
+    let ItemKind::Map(map)=&d.book().item(&id).unwrap().kind else{panic!()};
+    let kentos_sheet::MapView::Fixed(view)=&map.view else{panic!()};assert_eq!(view.denominator(),37.5);
+}

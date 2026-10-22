@@ -68,7 +68,7 @@ pub struct SheetMaps {
 struct StyledAt {
     /// The drawing (its session and state), the library's version, the scale and the map's own layers (its layer
     /// state and overrides, docs/adr/0314 §1; 0 for none).
-    key: (u64, u64, u64, u32, u64),
+    key: (u64, u64, u64, u64, u64),
     origin: Vec2,
     /// Each shown layer's id and name, and its build.
     layers: Vec<(String, String, kentos_native_style::batches::StyledLayer)>,
@@ -81,7 +81,7 @@ const STYLED_KEPT: usize = 4;
 /// texts, dimensions and leaders as that scale says, and its geometry store; none when that is the drawing.
 struct Scaled {
     /// The drawing (its session and state) and the scale.
-    key: (u64, u64, u32),
+    key: (u64, u64, u64),
     view: Option<(Document, Spatial)>,
 }
 
@@ -129,11 +129,11 @@ impl SheetMaps {
 impl SheetMaps {
     /// The drawing as the maps at `scale` draw it (docs/adr/0323 §2), from the copies kept; none when
     /// that is the drawing itself (no annotative object draws otherwise there).
-    fn scaled(&self, drawing: &Document, scale: u32) -> Option<Rc<Scaled>> {
-        let key = (drawing.session, drawing.model.generation(), scale);
+    fn scaled(&self, drawing: &Document, scale: f64) -> Option<Rc<Scaled>> {
+        let key = (drawing.session, drawing.model.generation(), scale.to_bits());
         let kept = self.scaled.borrow().iter().find(|s| s.key == key).cloned();
         let at = kept.unwrap_or_else(|| {
-            let at = f64::from(scale.max(1));
+            let at = scale.max(1e-6);
             // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
             let walls = Spatial::walls_differ_at(&drawing.model, at);
             let view = drawing
@@ -172,7 +172,7 @@ impl SheetMaps {
         doc: &Document,
         store: &kentos_geometry_core::store::Store,
         library: &kentos_native_style::library::StyleLibrary,
-        scale: u32,
+        scale: f64,
         own: (&MapLayers, &[kentos_sheet::kinds::LayerOverride]),
     ) -> Rc<StyledAt> {
         let own_key = match own {
@@ -193,7 +193,7 @@ impl SheetMaps {
             doc.session,
             doc.model.generation(),
             library.version(),
-            scale,
+            scale.to_bits(),
             own_key,
         );
         if let Some(at) = self.styled.borrow().iter().find(|a| a.key == key) {
@@ -205,7 +205,7 @@ impl SheetMaps {
                 doc.model.settings(),
             )),
             palette: crate::sheet_pdf::paper_style(),
-            symbol_scale: f64::from(scale.max(1)),
+            symbol_scale: scale.max(1e-6),
             screen: false,
             hairlines: false,
             origin,
@@ -544,8 +544,8 @@ type Source<'s> = (Option<&'s Document>, &'s Spatial);
 impl SheetPainter<'_> {
     /// The drawing and store a map at `scale` draws from (docs/adr/0323 §2): the copy at that scale
     /// when an annotative object draws otherwise there; `keep` holds the copy while it is used.
-    fn source<'s>(&'s self, scale: u32, keep: &'s mut Option<Rc<Scaled>>) -> Source<'s> {
-        *keep = self.drawing.and_then(|d| self.maps.scaled(d, scale.max(1)));
+    fn source<'s>(&'s self, scale: f64, keep: &'s mut Option<Rc<Scaled>>) -> Source<'s> {
+        *keep = self.drawing.and_then(|d| self.maps.scaled(d, scale.max(1e-6)));
         match keep.as_ref().and_then(|s| s.view.as_ref()) {
             Some((d, sp)) => (Some(d), sp),
             None => (self.drawing, self.spatial),
@@ -566,7 +566,7 @@ impl SheetPainter<'_> {
         if r.view.center.is_none() {
             return false;
         }
-        let scale = r.view.scale.max(1);
+        let scale = r.view.scale.max(1e-6);
         let at = self.maps.styled_at(
             drawing,
             spatial.store(),
@@ -574,7 +574,7 @@ impl SheetPainter<'_> {
             scale,
             (r.layers, r.overrides),
         );
-        let s = f64::from(scale);
+        let s = scale;
         let pad = 20.0 * s / 1000.0;
         let reach = [
             extent[0] - pad,
@@ -672,7 +672,7 @@ impl SheetPainter<'_> {
         let (drawing, spatial) = self.source(r.view.scale, &mut keep);
         let drawing = drawing?;
         let extent = r.extent?;
-        let scale = r.view.scale.max(1);
+        let scale = r.view.scale.max(1e-6);
         let at = self.maps.styled_at(
             drawing,
             spatial.store(),
@@ -680,7 +680,7 @@ impl SheetPainter<'_> {
             scale,
             (r.layers, r.overrides),
         );
-        let s = f64::from(scale);
+        let s = scale;
         let pad = 20.0 * s / 1000.0;
         let reach = [
             extent[0] - pad,
@@ -725,7 +725,7 @@ impl SheetPainter<'_> {
     )> {
         let c = r.view.center?;
         let turn = kentos_sheet_ui::paint::rad(r.view.rotation) as f32;
-        let scale = f64::from(r.view.scale.max(1));
+        let scale = r.view.scale.max(1e-6);
         // The frame's pixels per paper millimetre, and per CSS pixel of the paper.
         let px_per_mm = r.pixels_per_metre * scale / 1000.0;
         let k = (px_per_mm * crate::sheet_pdf::PX_MM).max(1e-6);
@@ -1056,6 +1056,7 @@ impl App {
             workspace: doc.map(|_| self.work_mode()),
             // The project's type is the catalog's; the opened drawing does not carry it yet.
             project_type: None,
+            exact_plot_scale:settings.map(|s|s.plot_scale).filter(|s|s.is_finite()&&(1e-6..=1e8).contains(s)),
             capabilities: Capabilities {
                 georeferenced: crs.is_some(),
                 attribute_layers: self.sheet_attributes.get(),
@@ -1086,6 +1087,7 @@ impl App {
                     .unwrap_or(CrsInfo { name, tm: None })
             }),
             center: doc.map(|_| GroundPoint { x: c.x, y: c.y }),
+            named_views:settings.map_or_else(Vec::new,|s|s.named_views.clone()),
             drawing_bounds: self.sheet_extent.get(),
             selection_bounds: doc.and_then(|d| {
                 let ids:Vec<_>=self.selection.ids().iter().filter_map(|s|d.model.uid(*s)).map(|u|u.to_string()).collect();
@@ -2165,7 +2167,7 @@ mod tests {
                 }),
                 // Large enough for the drawing's labels at the paper's own size (the
                 // parcel's name, the dimension's value: five pixels at least).
-                scale: 250,
+                scale: 250.0,
                 rotation,
             };
             let layers = MapLayers::default();
@@ -2258,7 +2260,7 @@ mod tests {
                 x: (b.min_x + b.max_x) / 2.0,
                 y: (b.min_y + b.max_y) / 2.0,
             }),
-            scale: 250,
+            scale: 250.0,
             rotation: 0,
         };
         let layers = MapLayers::default();
@@ -3070,7 +3072,7 @@ mod tests {
         };
         let span = (b.max_x - b.min_x).max(b.max_y - b.min_y).max(1.0);
         let size = Size::new(400.0, 300.0);
-        let k = 300.0 / (span * 1.2) / 1_000_000.0 * f64::from(map.view.scale);
+        let k = 300.0 / (span * 1.2) / 1_000_000.0 * map.view.scale;
         let extent = Some([
             b.min_x - span,
             b.min_y - span,

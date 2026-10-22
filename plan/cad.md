@@ -601,7 +601,7 @@ Pafta çekirdeği, düzenleyici, PDF/SVG ve değişken/şablon altyapısı var. 
 
 ### 17.2 CAD viewport ve çok ölçekli üretim
 
-- [ ] **CAD-SHEET-09:** CAD viewport; drawing/view kaynağı, bbox/center, gerçek scale ratio, rotation, clip, lock ve layer override taşısın.
+- [x] **CAD-SHEET-09:** CAD viewport; drawing/view kaynağı, bbox/center, gerçek scale ratio, rotation, clip, lock ve layer override taşısın. — **22 Ekim, [ADR 0594](../docs/adr/0594-explicit-cad-viewports.md):** ortak `setViewport`; mevcut çizim/adlı görünümün açık kopyası, gerçek ondalık oran, merkez/kapsam/dönüş, dikdörtgen içerik kırpması ve ayrı kamera kilidi. Ham özellik yaması kilidi aşamaz; katman ezmeleri ve çerçeve hareketi bağımsızdır. Gerçek ölçek PDF/raster/annotative önbelleklerinde kesilmez; projeden 37,5 ölçek alınırken 38 olmaz. 32 bağımsız senaryo core/native/arayüz/Python'da, 218 Python testi, gerçek DXF/DWG oran-kilit geri okuma ve MCP atomik işlem/undo geçti. Açık/koyu/büyük yazılı GPU ekranları ile Poppler PDF açılarak incelendi; dar pencerede kilit anahtarı yukarı alındı. 11/12/14/15'in ileri kapsamı bu maddede tamamlandı sayılmaz.
 - [ ] **CAD-SHEET-10:** Model kaynak 1:1 kalsın, kağıt mm ile yönetilsin; unit conversion ile viewport scale tek açık hesap yolu kullansın.
 - [ ] **CAD-SHEET-11:** 1:20/1:50/1:100 gibi standart ölçekler ve özel oranlar tam saklansın; scale değeri yalnız UI yuvarlamasıyla bozulmasın.
 - [ ] **CAD-SHEET-12:** Rectangle/polygon viewport clip, frame plot/no-plot ve lock/unlock seçenekleri desteklensin.

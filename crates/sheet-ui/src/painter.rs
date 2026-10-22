@@ -43,7 +43,7 @@ impl<'a> MapRequest<'a> {
     /// The request of a map primitive drawn `size` pixels large at `k` pixels per micrometre.
     pub fn of(m: &'a MapPrim, size: Size, k: f64, export: bool) -> Self {
         // A metre on the ground is 1 000 000 / scale micrometres on the paper.
-        let ppm = k * 1_000_000.0 / f64::from(m.view.scale.max(1));
+        let ppm = k * 1_000_000.0 / m.view.scale.max(1e-6);
         MapRequest {
             item: &m.item,
             size,
@@ -334,7 +334,7 @@ mod tests {
                     x: 1_000.0,
                     y: 2_000.0,
                 }),
-                scale: 1000,
+                scale: 1000.0,
                 rotation,
             };
             let layers = MapLayers::default();
@@ -397,7 +397,7 @@ mod tests {
                 x: 500_000.0,
                 y: 4_400_000.0,
             }),
-            scale: 1000,
+            scale: 1000.0,
             rotation: 0,
         };
         let layers = MapLayers::default();

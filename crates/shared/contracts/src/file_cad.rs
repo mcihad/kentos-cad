@@ -154,7 +154,11 @@ pub struct CadLayout {
 #[cfg_attr(feature = "ts", ts(export))]
 #[serde(rename_all = "camelCase")]
 pub struct CadViewport {
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    #[cfg_attr(feature="ts",ts(as="Option<bool>",optional))]
+    pub locked:bool,
     /// Paper-space centre in millimetres, x right, y up.
+    #[cfg_attr(feature="schema",schemars(extend("x-unit"="paper-mm")))]
     pub paper_center_mm: crate::Vec2,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "mm")))]
     pub width_mm: f64,

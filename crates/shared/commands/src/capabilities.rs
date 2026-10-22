@@ -90,6 +90,7 @@ const OBJECTS: &[&str] = &[
 
 /// Forwarded sheet validation codes: the convenience create command uses the same core.
 const SHEET_CORE: &[&str] = &[
+    "not_fixed_map", "ambiguous_source", "invalid_extent",
     "bad_curve", "curve_too_complex",
     "asset_in_use",
     "asset_too_large",

@@ -155,7 +155,7 @@ pub(crate) struct MapDrawer<'a> {
     /// The drawing as the maps at a scale draw it (docs/adr/0323 §2): a copy per scale where an annotative
     /// object draws otherwise there.
     annotative: bool,
-    scaled: std::collections::HashMap<u32, Option<(Document, Spatial)>>,
+    scaled: std::collections::HashMap<u64, Option<(Document, Spatial)>>,
     notes: Vec<String>,
     errors: Vec<String>,
     drawing: Option<String>,
@@ -190,27 +190,28 @@ impl<'a> MapDrawer<'a> {
     ) -> Option<PdfMap> {
         let doc = self.doc;
         let extent = m.extent?;
-        let at = m.view.scale.max(1);
+        let at = m.view.scale.max(1e-6);
+        let key = at.to_bits();
         // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
-        let walls = Spatial::walls_differ_at(doc, f64::from(at));
-        if (self.annotative || walls) && !self.scaled.contains_key(&at) {
+        let walls = Spatial::walls_differ_at(doc, at);
+        if (self.annotative || walls) && !self.scaled.contains_key(&key) {
             let copy = self
                 .annotative
-                .then(|| doc.at_scale(f64::from(at)))
+                .then(|| doc.at_scale(at))
                 .flatten()
                 .or_else(|| walls.then(|| doc.reading_copy()));
             let window = self.window;
             let copy = copy.map(|copy| {
                 let mut spatial = Spatial::new();
-                spatial.set_wall_scale(Some(f64::from(at)));
+                spatial.set_wall_scale(Some(at));
                 spatial.reload(&copy);
                 spatial.set_time_window(window);
                 (copy, spatial)
             });
-            self.scaled.insert(at, copy);
+            self.scaled.insert(key, copy);
         }
         let own;
-        let src = match self.scaled.get(&at) {
+        let src = match self.scaled.get(&key) {
             Some(Some((copy, spatial))) => {
                 own = MapSource {
                     doc: copy,
@@ -227,7 +228,7 @@ impl<'a> MapDrawer<'a> {
                 origin: self.origin,
             },
         };
-        let label_spatial = match self.scaled.get(&at) {
+        let label_spatial = match self.scaled.get(&key) {
             Some(Some((_, spatial))) => spatial,
             _ => self.spatial,
         };

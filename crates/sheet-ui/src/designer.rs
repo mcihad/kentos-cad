@@ -107,6 +107,8 @@ pub struct Context {
     pub workspace: Option<Workspace>,
     pub project_type: Option<ProjectType>,
     pub capabilities: Capabilities,
+    /// Exact project plotting denominator; the profile capability retains legacy integer defaults.
+    pub exact_plot_scale:Option<f64>,
     pub project: ProjectInfo,
     pub crs: Option<display::CrsInfo>,
     /// Where a new map looks (the drawing area's centre).
@@ -120,6 +122,7 @@ pub struct Context {
     /// The drawing's layers (id, name), for a coordinate list's source
     /// (docs/adr/0206 §2).
     pub layers: Vec<(String, String)>,
+    pub named_views:Vec<kentos_sheet::viewport::NamedModelView>,
     /// The project's layer states by name and its line types with patterns, for a map's own layers
     /// (docs/adr/0314 §1).
     pub layer_states: Vec<String>,

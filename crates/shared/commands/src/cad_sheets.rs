@@ -80,7 +80,7 @@ pub struct SheetMapInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
-    pub scale: Option<u32>,
+    pub scale: Option<f64>,
 }
 
 /// A sheet of the book as the answer lists it.

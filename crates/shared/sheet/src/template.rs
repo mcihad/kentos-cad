@@ -595,7 +595,7 @@ pub fn instantiate(t: &Template, ids: &InstanceIds, options: &InstanceOptions) -
                 f.center = Some(c);
             }
             if let Some(s) = options.scale {
-                f.scale = s;
+                f.scale = s; f.ratio=None;
             }
         }
     }

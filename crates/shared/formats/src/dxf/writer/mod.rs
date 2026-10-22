@@ -492,6 +492,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
         // The overall paper editor is viewport 1. DWG does not persist DXF
         // viewport IDs; a real first record keeps model frames numbered >=2.
         let editor = kentos_contracts::CadViewport {
+            locked:false,
             paper_center_mm: Vec2 { x: paper.data.width_mm / 2., y: paper.data.height_mm / 2. },
             width_mm: paper.data.width_mm, height_mm: paper.data.height_mm,
             view_center: Vec2 { x: 0., y: 0. }, view_height: paper.data.height_mm / 1000., twist: 0.,

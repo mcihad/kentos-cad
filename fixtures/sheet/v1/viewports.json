@@ -1,0 +1,3906 @@
+{
+  "schema": "kentos.sheet.viewports/1",
+  "cases": [
+    {
+      "name": "Oran 1:20",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 20
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 20.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -1.2999999999999998,
+            2.2
+          ],
+          [
+            6.3,
+            2.2
+          ],
+          [
+            6.3,
+            -2.2
+          ],
+          [
+            -1.2999999999999998,
+            -2.2
+          ]
+        ],
+        "bounds": [
+          -1.2999999999999998,
+          -2.2,
+          6.3,
+          2.2
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Oran 1:37.5",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 37.5
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 37.5,
+        "rotation": 0,
+        "corners": [
+          [
+            -4.625,
+            4.125
+          ],
+          [
+            9.625,
+            4.125
+          ],
+          [
+            9.625,
+            -4.125
+          ],
+          [
+            -4.625,
+            -4.125
+          ]
+        ],
+        "bounds": [
+          -4.625,
+          -4.125,
+          9.625,
+          4.125
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Oran 1:100",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 100
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 100.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -16.5,
+            11.0
+          ],
+          [
+            21.5,
+            11.0
+          ],
+          [
+            21.5,
+            -11.0
+          ],
+          [
+            -16.5,
+            -11.0
+          ]
+        ],
+        "bounds": [
+          -16.5,
+          -11.0,
+          21.5,
+          11.0
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Oran 2:1",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 2,
+          "model": 1
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 0.5,
+        "rotation": 0,
+        "corners": [
+          [
+            2.405,
+            0.055
+          ],
+          [
+            2.595,
+            0.055
+          ],
+          [
+            2.595,
+            -0.055
+          ],
+          [
+            2.405,
+            -0.055
+          ]
+        ],
+        "bounds": [
+          2.405,
+          -0.055,
+          2.595,
+          0.055
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Oran 3:2",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 3,
+          "model": 2
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 0.6666666666666666,
+        "rotation": 0,
+        "corners": [
+          [
+            2.3733333333333335,
+            0.07333333333333333
+          ],
+          [
+            2.6266666666666665,
+            0.07333333333333333
+          ],
+          [
+            2.6266666666666665,
+            -0.07333333333333333
+          ],
+          [
+            2.3733333333333335,
+            -0.07333333333333333
+          ]
+        ],
+        "bounds": [
+          2.3733333333333335,
+          -0.07333333333333333,
+          2.6266666666666665,
+          0.07333333333333333
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Oran 1:100000",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 100000
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 100000.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -18997.5,
+            11000.0
+          ],
+          [
+            19002.5,
+            11000.0
+          ],
+          [
+            19002.5,
+            -11000.0
+          ],
+          [
+            -18997.5,
+            -11000.0
+          ]
+        ],
+        "bounds": [
+          -18997.5,
+          -11000.0,
+          19002.5,
+          11000.0
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Oran 1:1",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 1
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 1.0,
+        "rotation": 0,
+        "corners": [
+          [
+            2.31,
+            0.11
+          ],
+          [
+            2.69,
+            0.11
+          ],
+          [
+            2.69,
+            -0.11
+          ],
+          [
+            2.31,
+            -0.11
+          ]
+        ],
+        "bounds": [
+          2.31,
+          -0.11,
+          2.69,
+          0.11
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Oran 100:1",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 100,
+          "model": 1
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 0.01,
+        "rotation": 0,
+        "corners": [
+          [
+            2.4981,
+            0.0011
+          ],
+          [
+            2.5019,
+            0.0011
+          ],
+          [
+            2.5019,
+            -0.0011
+          ],
+          [
+            2.4981,
+            -0.0011
+          ]
+        ],
+        "bounds": [
+          2.4981,
+          -0.0011,
+          2.5019,
+          0.0011
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Dönüş 30000",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "rotation": 30000,
+        "center": {
+          "x": 20.5,
+          "y": -30.25
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 37.5
+        }
+      },
+      "expected": {
+        "center": [
+          20.5,
+          -30.25
+        ],
+        "denominator": 37.5,
+        "rotation": 30000,
+        "corners": [
+          [
+            12.267068998035873,
+            -30.24014520938919
+          ],
+          [
+            24.607931001964126,
+            -23.11514520938919
+          ],
+          [
+            28.732931001964126,
+            -30.25985479061081
+          ],
+          [
+            16.392068998035874,
+            -37.38485479061081
+          ]
+        ],
+        "bounds": [
+          12.267068998035873,
+          -37.38485479061081,
+          28.732931001964126,
+          -23.11514520938919
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Dönüş 90000",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "rotation": 90000,
+        "center": {
+          "x": 20.5,
+          "y": -30.25
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 37.5
+        }
+      },
+      "expected": {
+        "center": [
+          20.5,
+          -30.25
+        ],
+        "denominator": 37.5,
+        "rotation": 90000,
+        "corners": [
+          [
+            16.375,
+            -37.375
+          ],
+          [
+            16.375,
+            -23.125
+          ],
+          [
+            24.625,
+            -23.125
+          ],
+          [
+            24.625,
+            -37.375
+          ]
+        ],
+        "bounds": [
+          16.375,
+          -37.375,
+          24.625,
+          -23.125
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Dönüş 270000",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "rotation": 270000,
+        "center": {
+          "x": 20.5,
+          "y": -30.25
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 37.5
+        }
+      },
+      "expected": {
+        "center": [
+          20.5,
+          -30.25
+        ],
+        "denominator": 37.5,
+        "rotation": 270000,
+        "corners": [
+          [
+            24.625,
+            -23.125
+          ],
+          [
+            24.625,
+            -37.375
+          ],
+          [
+            16.375,
+            -37.375
+          ],
+          [
+            16.375,
+            -23.125
+          ]
+        ],
+        "bounds": [
+          16.375,
+          -37.375,
+          24.625,
+          -23.125
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Dönüş -45000",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "rotation": -45000,
+        "center": {
+          "x": 20.5,
+          "y": -30.25
+        },
+        "ratio": {
+          "paper": 1,
+          "model": 37.5
+        }
+      },
+      "expected": {
+        "center": [
+          20.5,
+          -30.25
+        ],
+        "denominator": 37.5,
+        "rotation": 315000,
+        "corners": [
+          [
+            18.37867965644036,
+            -22.29504871165134
+          ],
+          [
+            28.45495128834866,
+            -32.371320343559645
+          ],
+          [
+            22.62132034355964,
+            -38.20495128834866
+          ],
+          [
+            12.545048711651342,
+            -28.128679656440355
+          ]
+        ],
+        "bounds": [
+          12.545048711651342,
+          -38.20495128834866,
+          28.45495128834866,
+          -22.29504871165134
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Kapsam [0, 0, 5, 3] 0",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "bounds": [
+          0,
+          0,
+          5,
+          3
+        ],
+        "rotation": 0
+      },
+      "expected": {
+        "center": [
+          2.5,
+          1.5
+        ],
+        "denominator": 13.636363636363637,
+        "rotation": 0,
+        "corners": [
+          [
+            -0.09090909090909083,
+            3.0
+          ],
+          [
+            5.090909090909091,
+            3.0
+          ],
+          [
+            5.090909090909091,
+            0.0
+          ],
+          [
+            -0.09090909090909083,
+            0.0
+          ]
+        ],
+        "bounds": [
+          -0.09090909090909083,
+          0.0,
+          5.090909090909091,
+          3.0
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Kapsam [487150, 4417820, 487155, 4417823] 0",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "bounds": [
+          487150,
+          4417820,
+          487155,
+          4417823
+        ],
+        "rotation": 0
+      },
+      "expected": {
+        "center": [
+          487152.5,
+          4417821.5
+        ],
+        "denominator": 13.636363636363637,
+        "rotation": 0,
+        "corners": [
+          [
+            487149.9090909091,
+            4417823.0
+          ],
+          [
+            487155.0909090909,
+            4417823.0
+          ],
+          [
+            487155.0909090909,
+            4417820.0
+          ],
+          [
+            487149.9090909091,
+            4417820.0
+          ]
+        ],
+        "bounds": [
+          487149.9090909091,
+          4417820.0,
+          487155.0909090909,
+          4417823.0
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Kapsam [0, 0, 5, 3] 30000",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "bounds": [
+          0,
+          0,
+          5,
+          3
+        ],
+        "rotation": 30000
+      },
+      "expected": {
+        "center": [
+          2.5,
+          1.5
+        ],
+        "denominator": 23.17307368796962,
+        "rotation": 30000,
+        "corners": [
+          [
+            -2.5875284473729137,
+            1.5060897543734353
+          ],
+          [
+            5.038490341696255,
+            5.908973755087662
+          ],
+          [
+            7.587528447372914,
+            1.4939102456265647
+          ],
+          [
+            -0.038490341696255204,
+            -2.908973755087662
+          ]
+        ],
+        "bounds": [
+          -2.5875284473729137,
+          -2.908973755087662,
+          7.587528447372914,
+          5.908973755087662
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Kapsam [-7, -4, 6, 8] 90000",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "bounds": [
+          -7,
+          -4,
+          6,
+          8
+        ],
+        "rotation": 90000
+      },
+      "expected": {
+        "center": [
+          -0.5,
+          2.0
+        ],
+        "denominator": 59.09090909090909,
+        "rotation": 90000,
+        "corners": [
+          [
+            -7.000000000000001,
+            -9.227272727272728
+          ],
+          [
+            -6.999999999999999,
+            13.227272727272728
+          ],
+          [
+            6.000000000000001,
+            13.227272727272728
+          ],
+          [
+            5.999999999999999,
+            -9.227272727272728
+          ]
+        ],
+        "bounds": [
+          -7.000000000000001,
+          -9.227272727272728,
+          6.000000000000001,
+          13.227272727272728
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Adlı görünüm 0",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewSnapshot",
+          "view": {
+            "id": "view-plan",
+            "name": "Kat planı",
+            "center": {
+              "x": 487150,
+              "y": 4417820
+            },
+            "width": 5,
+            "height": 3,
+            "twist": 0
+          }
+        }
+      },
+      "expected": {
+        "center": [
+          487150,
+          4417820
+        ],
+        "denominator": 13.636363636363637,
+        "rotation": 0,
+        "corners": [
+          [
+            487147.4090909091,
+            4417821.5
+          ],
+          [
+            487152.5909090909,
+            4417821.5
+          ],
+          [
+            487152.5909090909,
+            4417818.5
+          ],
+          [
+            487147.4090909091,
+            4417818.5
+          ]
+        ],
+        "bounds": [
+          487147.4090909091,
+          4417818.5,
+          487152.5909090909,
+          4417821.5
+        ],
+        "locked": false,
+        "source": {
+          "type": "viewSnapshot",
+          "view": {
+            "id": "view-plan",
+            "name": "Kat planı",
+            "center": {
+              "x": 487150,
+              "y": 4417820
+            },
+            "width": 5,
+            "height": 3,
+            "twist": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "Adlı görünüm 0.5235987755982988",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewSnapshot",
+          "view": {
+            "id": "view-plan",
+            "name": "Kat planı",
+            "center": {
+              "x": 487150,
+              "y": 4417820
+            },
+            "width": 10,
+            "height": 2,
+            "twist": 0.5235987755982988
+          }
+        }
+      },
+      "expected": {
+        "center": [
+          487150,
+          4417820
+        ],
+        "denominator": 26.31578947368421,
+        "rotation": 30000,
+        "corners": [
+          [
+            487144.22250456,
+            4417820.006915643
+          ],
+          [
+            487152.88275859784,
+            4417825.006915643
+          ],
+          [
+            487155.77749544,
+            4417819.993084357
+          ],
+          [
+            487147.11724140216,
+            4417814.993084357
+          ]
+        ],
+        "bounds": [
+          487144.22250456,
+          4417814.993084357,
+          487155.77749544,
+          4417825.006915643
+        ],
+        "locked": false,
+        "source": {
+          "type": "viewSnapshot",
+          "view": {
+            "id": "view-plan",
+            "name": "Kat planı",
+            "center": {
+              "x": 487150,
+              "y": 4417820
+            },
+            "width": 10,
+            "height": 2,
+            "twist": 0.5235987755982988
+          }
+        }
+      }
+    },
+    {
+      "name": "Adlı görünüm 1.5707963267948966",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewSnapshot",
+          "view": {
+            "id": "view-plan",
+            "name": "Kat planı",
+            "center": {
+              "x": 487150,
+              "y": 4417820
+            },
+            "width": 0.1,
+            "height": 0.15,
+            "twist": 1.5707963267948966
+          }
+        }
+      },
+      "expected": {
+        "center": [
+          487150,
+          4417820
+        ],
+        "denominator": 0.6818181818181818,
+        "rotation": 90000,
+        "corners": [
+          [
+            487149.925,
+            4417819.870454545
+          ],
+          [
+            487149.925,
+            4417820.129545455
+          ],
+          [
+            487150.075,
+            4417820.129545455
+          ],
+          [
+            487150.075,
+            4417819.870454545
+          ]
+        ],
+        "bounds": [
+          487149.925,
+          4417819.870454545,
+          487150.075,
+          4417820.129545455
+        ],
+        "locked": false,
+        "source": {
+          "type": "viewSnapshot",
+          "view": {
+            "id": "view-plan",
+            "name": "Kat planı",
+            "center": {
+              "x": 487150,
+              "y": 4417820
+            },
+            "width": 0.1,
+            "height": 0.15,
+            "twist": 1.5707963267948966
+          }
+        }
+      }
+    },
+    {
+      "name": "Kamerayı kilitle",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "locked": true
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 100.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -16.5,
+            11.0
+          ],
+          [
+            21.5,
+            11.0
+          ],
+          [
+            21.5,
+            -11.0
+          ],
+          [
+            -16.5,
+            -11.0
+          ]
+        ],
+        "bounds": [
+          -16.5,
+          -11.0,
+          21.5,
+          11.0
+        ],
+        "locked": true,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Kilitli kamerada oran reddi",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 50
+        }
+      },
+      "expected": {
+        "error": "item_locked"
+      }
+    },
+    {
+      "name": "Kilidi açarak kamerayı değiştir",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "locked": false,
+        "ratio": {
+          "paper": 2,
+          "model": 1
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 0.5,
+        "rotation": 0,
+        "corners": [
+          [
+            2.405,
+            0.055
+          ],
+          [
+            2.595,
+            0.055
+          ],
+          [
+            2.595,
+            -0.055
+          ],
+          [
+            2.405,
+            -0.055
+          ]
+        ],
+        "bounds": [
+          2.405,
+          -0.055,
+          2.595,
+          0.055
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "1:N ayarı önceki oranı açıkça kaldırır",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 2,
+                  "model": 1
+                }
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "scale": 50
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 50.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -7.0,
+            5.5
+          ],
+          [
+            12.0,
+            5.5
+          ],
+          [
+            12.0,
+            -5.5
+          ],
+          [
+            -7.0,
+            -5.5
+          ]
+        ],
+        "bounds": [
+          -7.0,
+          -5.5,
+          12.0,
+          5.5
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Kaynak yeniden çizim olur",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              },
+              "source": {
+                "type": "viewSnapshot",
+                "view": {
+                  "id": "view-plan",
+                  "name": "Kat planı",
+                  "center": {
+                    "x": 487150,
+                    "y": 4417820
+                  },
+                  "width": 0.1,
+                  "height": 0.15,
+                  "twist": 1.5707963267948966
+                }
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "drawing"
+        }
+      },
+      "expected": {
+        "center": [
+          2.5,
+          0.0
+        ],
+        "denominator": 100.0,
+        "rotation": 0,
+        "corners": [
+          [
+            -16.5,
+            11.0
+          ],
+          [
+            21.5,
+            11.0
+          ],
+          [
+            21.5,
+            -11.0
+          ],
+          [
+            -16.5,
+            -11.0
+          ]
+        ],
+        "bounds": [
+          -16.5,
+          -11.0,
+          21.5,
+          11.0
+        ],
+        "locked": false,
+        "source": {
+          "type": "drawing"
+        }
+      }
+    },
+    {
+      "name": "Geçersiz oran {'paper': 0, 'model': 1}",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 0,
+          "model": 1
+        }
+      },
+      "expected": {
+        "error": "out_of_range"
+      }
+    },
+    {
+      "name": "Geçersiz oran {'paper': -1, 'model': 2}",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": -1,
+          "model": 2
+        }
+      },
+      "expected": {
+        "error": "out_of_range"
+      }
+    },
+    {
+      "name": "Geçersiz oran {'paper': 1, 'model': 1000000000.0}",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "ratio": {
+          "paper": 1,
+          "model": 1000000000.0
+        }
+      },
+      "expected": {
+        "error": "out_of_range"
+      }
+    },
+    {
+      "name": "Merkez ve kapsam çelişir",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "bounds": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "center": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "expected": {
+        "error": "ambiguous_source"
+      }
+    },
+    {
+      "name": "Oran ve 1:N çelişir",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "scale": 50,
+        "ratio": {
+          "paper": 1,
+          "model": 100
+        }
+      },
+      "expected": {
+        "error": "ambiguous_source"
+      }
+    },
+    {
+      "name": "Ters kapsam",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "bounds": [
+          1,
+          1,
+          0,
+          0
+        ]
+      },
+      "expected": {
+        "error": "invalid_extent"
+      }
+    },
+    {
+      "name": "Nokta kapsamı",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "bounds": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "expected": {
+        "error": "invalid_extent"
+      }
+    },
+    {
+      "name": "Görünüm ve merkez çelişir",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 100,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "Görünüm",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewSnapshot",
+          "view": {
+            "id": "view-plan",
+            "name": "Kat planı",
+            "center": {
+              "x": 487150,
+              "y": 4417820
+            },
+            "width": 0.1,
+            "height": 0.15,
+            "twist": 1.5707963267948966
+          }
+        },
+        "center": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "expected": {
+        "error": "ambiguous_source"
+      }
+    }
+  ]
+}

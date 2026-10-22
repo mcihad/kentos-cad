@@ -1482,7 +1482,7 @@ mod tests {
             rotation: 0,
             view: MapViewPrim {
                 center: None,
-                scale: 1000,
+                scale: 1000.0,
                 rotation: 0,
             },
             layers: MapLayers::default(),

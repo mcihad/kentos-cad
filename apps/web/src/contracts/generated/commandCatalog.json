@@ -553992,6 +553992,51 @@
             ],
             "type": "object"
           },
+          "NamedView": {
+            "additionalProperties": false,
+            "description": "A named view of the project: its middle, the world size it shows (width\nalong the screen's x, height along its y) and its twist: the angle of the\nscreen's x axis from the world's x (east), counter-clockwise, in radians,\nin [0, 2π). A view with twist 0 shows the north up.",
+            "properties": {
+              "center": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The world point in the middle of the area.",
+                "x-unit": "length"
+              },
+              "height": {
+                "description": "The world height the area shows, along the screen's y.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "id": {
+                "description": "Its stable id, which a view mark points at (docs/adr/0345 §2); empty: the one its name gives (`view_key`).",
+                "type": "string"
+              },
+              "name": {
+                "description": "Trimmed, 1–64 characters, no control characters; unique.",
+                "type": "string"
+              },
+              "twist": {
+                "description": "The screen's x axis from east, counter-clockwise; 0 shows the north up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "width": {
+                "description": "The world width the area shows, along the screen's x.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "name",
+              "center",
+              "width",
+              "height",
+              "twist"
+            ],
+            "type": "object"
+          },
           "PaperAssetKind": {
             "description": "A picture's file type.",
             "enum": [
@@ -555224,6 +555269,17 @@
                 "additionalProperties": false,
                 "description": "A map frame: in CAD the “Görünüm penceresi” (profiles name it).",
                 "properties": {
+                  "clip": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperViewportClip"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Content is always clipped to its rectangular content frame. Polygon clips are CAD-SHEET-12."
+                  },
                   "clipToAtlasFeature": {
                     "default": false,
                     "description": "The host clips the content to the atlas object.",
@@ -555282,12 +555338,28 @@
                       "null"
                     ]
                   },
+                  "source": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperViewportSource"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "type": {
                     "const": "map",
                     "type": "string"
                   },
                   "view": {
                     "$ref": "#/$defs/PaperMapView"
+                  },
+                  "viewLocked": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -556575,6 +556647,17 @@
                       }
                     ]
                   },
+                  "ratio": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperScaleRatio"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Exact paper:model ratio; overrides the legacy 1:scale denominator."
+                  },
                   "rotation": {
                     "default": 0,
                     "description": "The map's content turned clockwise on the paper.",
@@ -557038,6 +557121,27 @@
                 "type": "string"
               }
             ]
+          },
+          "PaperScaleRatio": {
+            "additionalProperties": false,
+            "properties": {
+              "model": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              },
+              "paper": {
+                "description": "Paper and model lengths in the same physical unit: 2:1 enlarges twice.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "paper",
+              "model"
+            ],
+            "type": "object"
           },
           "PaperScaleUnit": {
             "oneOf": [
@@ -558067,6 +558171,47 @@
             ],
             "type": "object"
           },
+          "PaperViewportClip": {
+            "enum": [
+              "frame"
+            ],
+            "type": "string"
+          },
+          "PaperViewportSource": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "drawing",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "A capture, not a live link. The stable id/name and original view are retained.",
+                "properties": {
+                  "type": {
+                    "const": "viewSnapshot",
+                    "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/NamedView"
+                  }
+                },
+                "required": [
+                  "type",
+                  "view"
+                ],
+                "type": "object"
+              }
+            ]
+          },
           "PaperZoneMarks": {
             "additionalProperties": false,
             "description": "Zone marks in the band between the two lines (ISO 5457): columns 1, 2, 3 … from the left, rows A, B, C … from the top, I and O left out.",
@@ -558172,10 +558317,9 @@
               },
               "scale": {
                 "description": "Its scale (1:N); none for a map that follows something else (an atlas).",
-                "format": "uint32",
-                "minimum": 0,
+                "format": "double",
                 "type": [
-                  "integer",
+                  "number",
                   "null"
                 ],
                 "x-unit": "scale"
@@ -558414,6 +558558,51 @@
             ],
             "type": "object"
           },
+          "NamedView": {
+            "additionalProperties": false,
+            "description": "A named view of the project: its middle, the world size it shows (width\nalong the screen's x, height along its y) and its twist: the angle of the\nscreen's x axis from the world's x (east), counter-clockwise, in radians,\nin [0, 2π). A view with twist 0 shows the north up.",
+            "properties": {
+              "center": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The world point in the middle of the area.",
+                "x-unit": "length"
+              },
+              "height": {
+                "description": "The world height the area shows, along the screen's y.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "id": {
+                "description": "Its stable id, which a view mark points at (docs/adr/0345 §2); empty: the one its name gives (`view_key`).",
+                "type": "string"
+              },
+              "name": {
+                "description": "Trimmed, 1–64 characters, no control characters; unique.",
+                "type": "string"
+              },
+              "twist": {
+                "description": "The screen's x axis from east, counter-clockwise; 0 shows the north up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "width": {
+                "description": "The world width the area shows, along the screen's x.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "name",
+              "center",
+              "width",
+              "height",
+              "twist"
+            ],
+            "type": "object"
+          },
           "PaperAssetKind": {
             "description": "A picture's file type.",
             "enum": [
@@ -559646,6 +559835,17 @@
                 "additionalProperties": false,
                 "description": "A map frame: in CAD the “Görünüm penceresi” (profiles name it).",
                 "properties": {
+                  "clip": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperViewportClip"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Content is always clipped to its rectangular content frame. Polygon clips are CAD-SHEET-12."
+                  },
                   "clipToAtlasFeature": {
                     "default": false,
                     "description": "The host clips the content to the atlas object.",
@@ -559704,12 +559904,28 @@
                       "null"
                     ]
                   },
+                  "source": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperViewportSource"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "type": {
                     "const": "map",
                     "type": "string"
                   },
                   "view": {
                     "$ref": "#/$defs/PaperMapView"
+                  },
+                  "viewLocked": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -560997,6 +561213,17 @@
                       }
                     ]
                   },
+                  "ratio": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperScaleRatio"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Exact paper:model ratio; overrides the legacy 1:scale denominator."
+                  },
                   "rotation": {
                     "default": 0,
                     "description": "The map's content turned clockwise on the paper.",
@@ -561460,6 +561687,27 @@
                 "type": "string"
               }
             ]
+          },
+          "PaperScaleRatio": {
+            "additionalProperties": false,
+            "properties": {
+              "model": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              },
+              "paper": {
+                "description": "Paper and model lengths in the same physical unit: 2:1 enlarges twice.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "paper",
+              "model"
+            ],
+            "type": "object"
           },
           "PaperScaleUnit": {
             "oneOf": [
@@ -562489,6 +562737,47 @@
             ],
             "type": "object"
           },
+          "PaperViewportClip": {
+            "enum": [
+              "frame"
+            ],
+            "type": "string"
+          },
+          "PaperViewportSource": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "drawing",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "A capture, not a live link. The stable id/name and original view are retained.",
+                "properties": {
+                  "type": {
+                    "const": "viewSnapshot",
+                    "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/NamedView"
+                  }
+                },
+                "required": [
+                  "type",
+                  "view"
+                ],
+                "type": "object"
+              }
+            ]
+          },
           "PaperZoneMarks": {
             "additionalProperties": false,
             "description": "Zone marks in the band between the two lines (ISO 5457): columns 1, 2, 3 … from the left, rows A, B, C … from the top, I and O left out.",
@@ -562594,10 +562883,9 @@
               },
               "scale": {
                 "description": "Its scale (1:N); none for a map that follows something else (an atlas).",
-                "format": "uint32",
-                "minimum": 0,
+                "format": "double",
                 "type": [
-                  "integer",
+                  "number",
                   "null"
                 ],
                 "x-unit": "scale"
@@ -1031820,6 +1032108,51 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "NamedView": {
+            "additionalProperties": false,
+            "description": "A named view of the project: its middle, the world size it shows (width\nalong the screen's x, height along its y) and its twist: the angle of the\nscreen's x axis from the world's x (east), counter-clockwise, in radians,\nin [0, 2π). A view with twist 0 shows the north up.",
+            "properties": {
+              "center": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The world point in the middle of the area.",
+                "x-unit": "length"
+              },
+              "height": {
+                "description": "The world height the area shows, along the screen's y.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "id": {
+                "description": "Its stable id, which a view mark points at (docs/adr/0345 §2); empty: the one its name gives (`view_key`).",
+                "type": "string"
+              },
+              "name": {
+                "description": "Trimmed, 1–64 characters, no control characters; unique.",
+                "type": "string"
+              },
+              "twist": {
+                "description": "The screen's x axis from east, counter-clockwise; 0 shows the north up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "width": {
+                "description": "The world width the area shows, along the screen's x.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "name",
+              "center",
+              "width",
+              "height",
+              "twist"
+            ],
+            "type": "object"
+          },
           "PaperAssetKind": {
             "description": "A picture's file type.",
             "enum": [
@@ -1033105,6 +1033438,17 @@
                 "additionalProperties": false,
                 "description": "A map frame: in CAD the “Görünüm penceresi” (profiles name it).",
                 "properties": {
+                  "clip": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperViewportClip"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Content is always clipped to its rectangular content frame. Polygon clips are CAD-SHEET-12."
+                  },
                   "clipToAtlasFeature": {
                     "default": false,
                     "description": "The host clips the content to the atlas object.",
@@ -1033163,12 +1033507,28 @@
                       "null"
                     ]
                   },
+                  "source": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperViewportSource"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "type": {
                     "const": "map",
                     "type": "string"
                   },
                   "view": {
                     "$ref": "#/$defs/PaperMapView"
+                  },
+                  "viewLocked": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -1034456,6 +1034816,17 @@
                       }
                     ]
                   },
+                  "ratio": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperScaleRatio"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Exact paper:model ratio; overrides the legacy 1:scale denominator."
+                  },
                   "rotation": {
                     "default": 0,
                     "description": "The map's content turned clockwise on the paper.",
@@ -1034919,6 +1035290,27 @@
                 "type": "string"
               }
             ]
+          },
+          "PaperScaleRatio": {
+            "additionalProperties": false,
+            "properties": {
+              "model": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              },
+              "paper": {
+                "description": "Paper and model lengths in the same physical unit: 2:1 enlarges twice.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "paper",
+              "model"
+            ],
+            "type": "object"
           },
           "PaperScaleUnit": {
             "oneOf": [
@@ -1035920,6 +1036312,47 @@
             ],
             "type": "object"
           },
+          "PaperViewportClip": {
+            "enum": [
+              "frame"
+            ],
+            "type": "string"
+          },
+          "PaperViewportSource": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "drawing",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "A capture, not a live link. The stable id/name and original view are retained.",
+                "properties": {
+                  "type": {
+                    "const": "viewSnapshot",
+                    "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/NamedView"
+                  }
+                },
+                "required": [
+                  "type",
+                  "view"
+                ],
+                "type": "object"
+              }
+            ]
+          },
           "PaperZoneMarks": {
             "additionalProperties": false,
             "description": "Zone marks in the band between the two lines (ISO 5457): columns 1, 2, 3 … from the left, rows A, B, C … from the top, I and O left out.",
@@ -1036022,6 +1036455,24 @@
                 "type": "object"
               }
             ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
           },
           "Workspace": {
             "description": "A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each\nwith its own scene, axes and ribbon; every command still runs in both.\n`plan3d` and `disaster` are announced (\"Yakında\") and cannot be chosen yet;\na file naming them shows as CBS. There is no hybrid type any more.",
@@ -1036138,10 +1036589,9 @@
               },
               "scale": {
                 "description": "The map's scale denominator (1:N); none for a map that follows something else (an atlas).",
-                "format": "uint32",
-                "minimum": 0,
+                "format": "double",
                 "type": [
-                  "integer",
+                  "number",
                   "null"
                 ],
                 "x-unit": "scale"
@@ -1036276,10 +1036726,9 @@
               },
               "scale": {
                 "description": "The map's scale denominator (1:N); none for a map that follows something else (an atlas).",
-                "format": "uint32",
-                "minimum": 0,
+                "format": "double",
                 "type": [
-                  "integer",
+                  "number",
                   "null"
                 ],
                 "x-unit": "scale"
@@ -1036356,6 +1036805,9 @@
       },
       "capabilities": {
         "refusals": [
+          "not_fixed_map",
+          "ambiguous_source",
+          "invalid_extent",
           "bad_curve",
           "curve_too_complex",
           "asset_in_use",
@@ -1036573,10 +1037025,9 @@
               },
               "scale": {
                 "description": "The map's scale denominator (1:N); none for a map that follows something else (an atlas).",
-                "format": "uint32",
-                "minimum": 0,
+                "format": "double",
                 "type": [
-                  "integer",
+                  "number",
                   "null"
                 ],
                 "x-unit": "scale"
@@ -1036711,10 +1037162,9 @@
               },
               "scale": {
                 "description": "The map's scale denominator (1:N); none for a map that follows something else (an atlas).",
-                "format": "uint32",
-                "minimum": 0,
+                "format": "double",
                 "type": [
-                  "integer",
+                  "number",
                   "null"
                 ],
                 "x-unit": "scale"
@@ -1036839,6 +1037289,51 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "NamedView": {
+            "additionalProperties": false,
+            "description": "A named view of the project: its middle, the world size it shows (width\nalong the screen's x, height along its y) and its twist: the angle of the\nscreen's x axis from the world's x (east), counter-clockwise, in radians,\nin [0, 2π). A view with twist 0 shows the north up.",
+            "properties": {
+              "center": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The world point in the middle of the area.",
+                "x-unit": "length"
+              },
+              "height": {
+                "description": "The world height the area shows, along the screen's y.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "id": {
+                "description": "Its stable id, which a view mark points at (docs/adr/0345 §2); empty: the one its name gives (`view_key`).",
+                "type": "string"
+              },
+              "name": {
+                "description": "Trimmed, 1–64 characters, no control characters; unique.",
+                "type": "string"
+              },
+              "twist": {
+                "description": "The screen's x axis from east, counter-clockwise; 0 shows the north up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "width": {
+                "description": "The world width the area shows, along the screen's x.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "name",
+              "center",
+              "width",
+              "height",
+              "twist"
+            ],
+            "type": "object"
+          },
           "PaperAlignEdge": {
             "oneOf": [
               {
@@ -1038262,6 +1038757,17 @@
                 "additionalProperties": false,
                 "description": "A map frame: in CAD the “Görünüm penceresi” (profiles name it).",
                 "properties": {
+                  "clip": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperViewportClip"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Content is always clipped to its rectangular content frame. Polygon clips are CAD-SHEET-12."
+                  },
                   "clipToAtlasFeature": {
                     "default": false,
                     "description": "The host clips the content to the atlas object.",
@@ -1038320,12 +1038826,28 @@
                       "null"
                     ]
                   },
+                  "source": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperViewportSource"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "type": {
                     "const": "map",
                     "type": "string"
                   },
                   "view": {
                     "$ref": "#/$defs/PaperMapView"
+                  },
+                  "viewLocked": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -1039613,6 +1040135,17 @@
                       }
                     ]
                   },
+                  "ratio": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperScaleRatio"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Exact paper:model ratio; overrides the legacy 1:scale denominator."
+                  },
                   "rotation": {
                     "default": 0,
                     "description": "The map's content turned clockwise on the paper.",
@@ -1040316,6 +1040849,90 @@
                   "op",
                   "id",
                   "patch"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "bounds": {
+                    "description": "Canonical metres; an unrotated model-space rectangle to fit exactly.",
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 4,
+                    "minItems": 4,
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "x-unit": "length"
+                  },
+                  "center": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperGroundPoint"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "locked": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "op": {
+                    "const": "setViewport",
+                    "type": "string"
+                  },
+                  "ratio": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperScaleRatio"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "rotation": {
+                    "format": "int32",
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "mdeg"
+                  },
+                  "scale": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "scale"
+                  },
+                  "source": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperViewportSource"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "op",
+                  "id"
                 ],
                 "type": "object"
               },
@@ -1041274,6 +1041891,27 @@
                 "type": "string"
               }
             ]
+          },
+          "PaperScaleRatio": {
+            "additionalProperties": false,
+            "properties": {
+              "model": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              },
+              "paper": {
+                "description": "Paper and model lengths in the same physical unit: 2:1 enlarges twice.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "paper",
+              "model"
+            ],
+            "type": "object"
           },
           "PaperScaleUnit": {
             "oneOf": [
@@ -1042283,6 +1042921,47 @@
             ],
             "type": "object"
           },
+          "PaperViewportClip": {
+            "enum": [
+              "frame"
+            ],
+            "type": "string"
+          },
+          "PaperViewportSource": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "drawing",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "A capture, not a live link. The stable id/name and original view are retained.",
+                "properties": {
+                  "type": {
+                    "const": "viewSnapshot",
+                    "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/NamedView"
+                  }
+                },
+                "required": [
+                  "type",
+                  "view"
+                ],
+                "type": "object"
+              }
+            ]
+          },
           "PaperZoneMarks": {
             "additionalProperties": false,
             "description": "Zone marks in the band between the two lines (ISO 5457): columns 1, 2, 3 … from the left, rows A, B, C … from the top, I and O left out.",
@@ -1042362,6 +1043041,24 @@
             "required": [
               "sha256",
               "bytes"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
             ],
             "type": "object"
           },
@@ -1042476,10 +1043173,9 @@
               },
               "scale": {
                 "description": "The map's scale denominator (1:N); none for a map that follows something else (an atlas).",
-                "format": "uint32",
-                "minimum": 0,
+                "format": "double",
                 "type": [
-                  "integer",
+                  "number",
                   "null"
                 ],
                 "x-unit": "scale"
@@ -1042614,10 +1043310,9 @@
               },
               "scale": {
                 "description": "The map's scale denominator (1:N); none for a map that follows something else (an atlas).",
-                "format": "uint32",
-                "minimum": 0,
+                "format": "double",
                 "type": [
-                  "integer",
+                  "number",
                   "null"
                 ],
                 "x-unit": "scale"
@@ -1042694,6 +1043389,9 @@
       },
       "capabilities": {
         "refusals": [
+          "not_fixed_map",
+          "ambiguous_source",
+          "invalid_extent",
           "bad_curve",
           "curve_too_complex",
           "asset_in_use",

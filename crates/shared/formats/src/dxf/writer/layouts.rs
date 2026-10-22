@@ -65,5 +65,6 @@ pub(super) fn viewport(
     out.real(37, 0.);
     out.real(45, view.view_height * per_metre);
     out.real(51, view.twist.to_degrees());
-    out.int(90, 131072);
+    // DXF 90: 0x8000 is enabled; 0x20000 would turn the viewport off.
+    out.int(90, 32768 | if view.locked {16384}else{0});
 }
