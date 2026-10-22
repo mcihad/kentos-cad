@@ -7,7 +7,7 @@
 //!
 //! Tables with a single integer primary key are listed; a feature table is one in `geometry_columns`.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -529,6 +529,41 @@ async fn rows_by_keys(
         .collect()
 }
 
+/// Of `keys`, those whose rows the account sees but may not change: seen by a plain select, not by one `FOR UPDATE`
+/// (which takes the UPDATE privilege and the row security's UPDATE policies). A key no select sees is not here: the
+/// update finds no row and says so. Without the privilege at all, every key.
+async fn denied_keys(conn: &mut PgConnection, s: &Shape, keys: &[i64]) -> Result<Vec<i64>, ProviderError> {
+    let seen_sql = format!("SELECT {}::bigint FROM {} WHERE {} = ANY($1)", quote(&s.layer.fid), s.from, quote(&s.layer.fid));
+    let seen: Vec<i64> = sqlx::query_scalar(sqlx::AssertSqlSafe(seen_sql.as_str()))
+        .bind(keys)
+        .fetch_all(&mut *conn)
+        .await
+        .map_err(refused)?;
+    let mine_sql = format!("{seen_sql} FOR UPDATE");
+    let mine: HashSet<i64> = match sqlx::query_scalar(sqlx::AssertSqlSafe(mine_sql.as_str()))
+        .bind(keys)
+        .fetch_all(&mut *conn)
+        .await
+    {
+        Ok(found) => found.into_iter().collect(),
+        Err(e) if is_denied(&e) => HashSet::new(),
+        Err(e) => return Err(refused(e)),
+    };
+    let mut out: Vec<i64> = seen.into_iter().filter(|k| !mine.contains(k)).collect();
+    out.sort_unstable();
+    Ok(out)
+}
+
+/// Whether the database said the account lacks a privilege (SQLSTATE 42501).
+fn is_denied(e: &sqlx::Error) -> bool {
+    e.as_database_error().and_then(|d| d.code()).as_deref() == Some("42501")
+}
+
+/// A write's error: the row `key` the account may not change, or a refusal.
+fn denied_or_refused(e: sqlx::Error, key: i64) -> ProviderError {
+    if is_denied(&e) { ProviderError::RowsDenied(vec![key]) } else { refused(e) }
+}
+
 /// A row's values for `columns`, read from `first` on.
 fn values_of(r: &PgRow, columns: &[gpkg::Column], first: usize) -> Result<Vec<Value>, ProviderError> {
     let mut values = Vec::with_capacity(columns.len());
@@ -776,8 +811,20 @@ async fn edit_in(
         }
     }
     let (_, before) = rows(&mut *tx, &s, area).await?;
-    if !checked && before != revision {
+    if (!checked || !revision.is_empty()) && before != revision {
         return Err(ProviderError::Changed);
+    }
+    // The rows the edits change that the account sees but may not change (docs/adr/0585 §2): refused before a row is
+    // written, so a strict write is all or nothing over privileges and row security too.
+    let mut keys: Vec<i64> = edits.update.iter().map(|(fid, _)| *fid).collect();
+    keys.extend(edits.delete.iter().copied());
+    keys.sort_unstable();
+    keys.dedup();
+    if !keys.is_empty() {
+        let denied = denied_keys(&mut *tx, &s, &keys).await?;
+        if !denied.is_empty() {
+            return Err(ProviderError::RowsDenied(denied));
+        }
     }
     for c in &edits.add_columns {
         tx.execute(sqlx::AssertSqlSafe(format!("ALTER TABLE {sql_name} ADD COLUMN {} {}", quote(&c.name), pg_type(c))))
@@ -848,7 +895,7 @@ async fn edit_in(
         for (fid, row) in &edits.update {
             let (wkb, vals) = bind_row(row)?;
             let q = with_values!(sqlx::query(sqlx::AssertSqlSafe(sql.as_str())), wkb, vals).bind(*fid);
-            let done = q.execute(&mut *tx).await.map_err(refused)?;
+            let done = q.execute(&mut *tx).await.map_err(|e| denied_or_refused(e, *fid))?;
             if done.rows_affected() != 1 {
                 return Err(refused(format!("{full} tablosunda {fid} anahtarlı satır yok")));
             }
@@ -875,7 +922,11 @@ async fn edit_in(
     if !edits.delete.is_empty() {
         let sql = format!("DELETE FROM {sql_name} WHERE {} = $1", quote(&s.layer.fid));
         for fid in &edits.delete {
-            sqlx::query(sqlx::AssertSqlSafe(sql.as_str())).bind(*fid).execute(&mut *tx).await.map_err(refused)?;
+            sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
+                .bind(*fid)
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| denied_or_refused(e, *fid))?;
         }
     }
     if !edits.insert.is_empty() || !edits.delete.is_empty() {

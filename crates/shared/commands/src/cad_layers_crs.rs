@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+#[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
 use crate::layer_crs::LayerSourceCrs;
 

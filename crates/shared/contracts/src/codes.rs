@@ -1163,6 +1163,9 @@ codes! {
     TOPOLOGY_ON_READ = "topology_on_read", Failed, false, "Komşuların izlemesi yalnız yazarken olur.";
     /// A loose write's neighbours outside the area that kept their shape (docs/adr/0531).
     NEIGHBOURS_LEFT = "neighbours_left", Warning, false, "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi.";
+    /// Rows a write would change that the account sees but may not change: no privilege or a row security policy
+    /// (docs/adr/0585 §2).
+    ROWS_DENIED = "rows_denied", Failed, false, "Hesap tablonun bazı satırlarını görür ama değiştiremez (yetki ya da satır güvenliği); hiçbir şey yazılmadı.";
     /// A uid given to a point cloud command that is not a point cloud (docs/adr/0536).
     NOT_A_POINTCLOUD = "not_a_pointcloud", Failed, false, "Verilen nesne bir nokta bulutu değil.";
     /// Counting the classes would read more points than one call does (docs/adr/0536).

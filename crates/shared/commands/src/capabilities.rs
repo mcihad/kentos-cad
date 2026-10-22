@@ -3490,8 +3490,12 @@ const ENTRIES: &[Entry] = &[
                 "invalid_extent",
                 "derived_dataset",
             ],
-            // docs/adr/0531: the neighbours outside a part's area.
-            &["topology_on_read", "outside_neighbour_invalid"],
+            // docs/adr/0531, 0585: the neighbours outside a part's area, and rows the account may not change.
+            &[
+                "topology_on_read",
+                "outside_neighbour_invalid",
+                "rows_denied",
+            ],
             // docs/adr/0532 §1: layers written together, and the mapped relations' rows.
             &["invalid_input", "transaction_split", "relation_dangling"],
         ],

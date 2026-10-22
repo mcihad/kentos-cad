@@ -105,6 +105,13 @@ fn conflict_on(code: &str, message: impl Into<String>, path: &str, uids: &[Uuid]
     Stop::conflict(e)
 }
 
+/// A refusal about some objects: their lasting ids with it (docs/adr/0585 §2).
+fn refuse_on(code: &str, message: impl Into<String>, path: &str, uids: &[Uuid]) -> Stop {
+    let mut e = error(code, message.into(), Some(path.into()));
+    e.uids = uids.iter().map(Uuid::to_string).collect();
+    Stop::failed(e)
+}
+
 fn completed<T>(r: Result<(T, Vec<CommandWarning>), Stop>) -> CommandResult<T> {
     match r {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
@@ -446,6 +453,14 @@ pub(crate) fn provider_stop(e: provider::ProviderError, address: &str, at: At<'_
             codes::SOURCE_CHANGED,
             format!(
                 "{address} tablosunun {} satırını katman onlarla son eşleştiğinden beri başka biri değiştirdi; hiçbir şey yazılmadı.",
+                keys.len()
+            ),
+            at.table,
+        ),
+        provider::ProviderError::RowsDenied(keys) => refuse(
+            codes::ROWS_DENIED,
+            format!(
+                "{address} tablosunun {} satırını bu hesap görür ama değiştiremez (yetki ya da satır güvenliği); hiçbir şey yazılmadı.",
                 keys.len()
             ),
             at.table,
@@ -829,24 +844,8 @@ fn rows_changed(
             continue;
         };
         let same = found.get(key).is_some_and(|row| {
-            let Ok(t) =
-                gp::table_of_rows(layer, std::slice::from_ref(*row), &HashMap::new(), &|_| {
-                    *uid
-                })
-            else {
-                return false;
-            };
-            t.objects.into_iter().next().is_some_and(|(_, mut e)| {
-                if let Some(m) = mover
-                    && kentos_formats::reproject::move_entity(
-                        &mut e, &m.source, &m.project, &m.choices,
-                    )
-                    .is_err()
-                {
-                    return false;
-                }
-                base.get(uid).is_some_and(|b| base::hash_of(&e) == b.table)
-            })
+            row_hash(layer, row, *uid, mover)
+                .is_some_and(|h| base.get(uid).is_some_and(|b| h == b.table))
         });
         if !same {
             out.push(*key);
@@ -854,6 +853,40 @@ fn rows_changed(
     }
     out.sort_unstable();
     out.dedup();
+    out
+}
+
+/// A row as the import reads it, in the project's system, by the base's hash (docs/adr/0582 §2): none when it does
+/// not read or reach the project's system.
+fn row_hash(layer: &gpkg::Layer, row: &gpkg::Row, uid: Uuid, mover: Option<&Mover>) -> Option<u64> {
+    let t = gp::table_of_rows(layer, std::slice::from_ref(row), &HashMap::new(), &|_| uid).ok()?;
+    let (_, mut e) = t.objects.into_iter().next()?;
+    if let Some(m) = mover {
+        kentos_formats::reproject::move_entity(&mut e, &m.source, &m.project, &m.choices).ok()?;
+    }
+    Some(base::hash_of(&e))
+}
+
+/// The rows outside the area that follow a write, as they were read (docs/adr/0585 §1): each one's key, lasting id
+/// and hash. Checked again under the table's lock: a row changed or gone since refuses the write.
+fn neighbours_changed(
+    expect: &HashMap<i64, (Uuid, u64)>,
+    layer: &gpkg::Layer,
+    rows: &[gpkg::Row],
+    mover: Option<&Mover>,
+) -> Vec<i64> {
+    let found: HashMap<i64, &gpkg::Row> = rows.iter().map(|r| (r.fid, r)).collect();
+    let mut out: Vec<i64> = expect
+        .iter()
+        .filter(|(fid, (uid, h))| {
+            found
+                .get(fid)
+                .and_then(|row| row_hash(layer, row, *uid, mover))
+                != Some(*h)
+        })
+        .map(|(fid, _)| *fid)
+        .collect();
+    out.sort_unstable();
     out
 }
 
@@ -2368,17 +2401,27 @@ pub fn read_step(table: &str) -> String {
     format!("Kaynaktan oku: {table}")
 }
 
-/// The rows outside a part's area that follow a write (docs/adr/0531): their edits, and how many kept their shape.
+/// The rows outside a part's area that follow a write (docs/adr/0531, 0585): their edits, how many kept their shape,
+/// and, read from a database, what each was when read (its key, lasting id and hash), checked again under the lock.
 #[derive(Default)]
 struct Followed {
     rows: Vec<(i64, gpkg::NewRow)>,
     left: u32,
+    expect: HashMap<i64, (Uuid, u64)>,
+}
+
+/// Whether a shape has a problem Geçerliliği denetle names (docs/adr/0201 §6) other than a repeated vertex: what
+/// GEOS's validity says of a ring (a repeated vertex is valid there).
+fn invalid(s: &kentos_geometry_core::entity::Shape) -> bool {
+    use kentos_geometry_core::ops::geoprocess::validity::{Kind, problems};
+    problems(s).iter().any(|p| p.kind != Kind::Repeated)
 }
 
 /// The table's rows outside the part's area (none in the drawing) sharing the corners and edges the layer's written
-/// objects changed: read again by the changes' box from the same file state, put right by the topology core
-/// (`topology_edit::changes`, `apply`: the same rule as the drawing's Topoloji), back in the table's system as rows.
-/// A strict write refuses when one would be left invalid; a loose one keeps that one as it is.
+/// objects changed: read again by the changes' box from the source (a file from the same state, a database's table by
+/// its index), put right by the topology core (`topology_edit::changes`, `apply`: the same rule as the drawing's
+/// Topoloji), back in the table's system as rows. A row left with too few vertices, or newly invalid (docs/adr/0585
+/// §3), refuses a strict write; a loose one keeps that row as it is.
 #[allow(clippy::too_many_arguments)]
 fn follow_outside(
     doc: &Document,
@@ -2393,10 +2436,10 @@ fn follow_outside(
     use kentos_geometry_core::entity::Shape;
     use kentos_geometry_core::ops::topology_edit::{self, Neighbour, SAME};
     // A whole table is all in the drawing: nothing lies outside it.
-    let (Origin::File(path), Some(_)) = (source, area) else {
+    if area.is_none() {
         return Ok(Followed::default());
-    };
-    if stored.outside.is_empty() {
+    }
+    if matches!(source, Origin::File(_)) && stored.outside.is_empty() {
         return Ok(Followed::default());
     }
     let shares = |s: &Shape| {
@@ -2445,17 +2488,34 @@ fn follow_outside(
             "layer",
         )
     })?;
-    let near = load_or_refuse(path, &link.table, "layer", Some(near_box))?;
-    if near.sha256 != stored.sha256 {
-        return Err(conflict(
-            codes::SOURCE_CHANGED,
-            format!(
-                "{} okunurken değişti; üzerine yazılmadı. Yeniden deneyin.",
-                link.path
-            ),
-            "layer",
-        ));
-    }
+    // A file is read again from the same state; a database's rows by the box, each checked again under the lock.
+    let near = match source {
+        Origin::File(path) => {
+            let near = load_or_refuse(path, &link.table, "layer", Some(near_box))?;
+            if near.sha256 != stored.sha256 {
+                return Err(conflict(
+                    codes::SOURCE_CHANGED,
+                    format!(
+                        "{} okunurken değişti; üzerine yazılmadı. Yeniden deneyin.",
+                        link.path
+                    ),
+                    "layer",
+                ));
+            }
+            near
+        }
+        Origin::Database(address) => {
+            load_database(address, &link.table, at_one("layer"), Some(near_box))?
+        }
+    };
+    let database = matches!(source, Origin::Database(_));
+    let outside = |u: &Uuid| {
+        if database {
+            !stored.rows.contains_key(u)
+        } else {
+            stored.outside.contains_key(u)
+        }
+    };
     let in_drawing: HashSet<Uuid> = doc
         .by_layer_with_uids(&link.layer)
         .map(|(u, _)| u)
@@ -2464,9 +2524,7 @@ fn follow_outside(
         .in_project(mover)
         .into_iter()
         .filter(|(u, e)| {
-            stored.outside.contains_key(u)
-                && !in_drawing.contains(u)
-                && shares(&crate::geometry::shape(e))
+            outside(u) && !in_drawing.contains(u) && shares(&crate::geometry::shape(e))
         })
         .collect();
     let list: Vec<Neighbour> = candidates
@@ -2477,25 +2535,35 @@ fn follow_outside(
         })
         .collect();
     let answer = topology_edit::apply(&list, &changes, false);
-    if answer.invalid > 0 && profile == SyncTopology::Strict {
+    // Each followed row's shape, and whether it would be newly invalid (a row invalid before keeps following).
+    let mut followed = Vec::new();
+    let mut broken = 0usize;
+    for (i, shape) in answer.edited {
+        let Some((uid, e)) = candidates.get(i) else {
+            continue;
+        };
+        let shape = crate::topology_follow::straight(shape);
+        if invalid(&shape) && !invalid(&list[i].shape) {
+            broken += 1;
+            continue;
+        }
+        followed.push((*uid, e, shape));
+    }
+    let left = answer.invalid + broken;
+    if left > 0 && profile == SyncTopology::Strict {
         return Err(refuse(
             codes::OUTSIDE_NEIGHBOUR_INVALID,
             format!(
-                "Alanın dışındaki {} komşu kayıt ortak köşeyi izleyince geçersiz kalırdı; hiçbir şey yazılmadı. Alanı genişletip komşuları da çalışma kopyasına alın ya da gevşek kipte (loose) yazın.",
-                answer.invalid
+                "Alanın dışındaki {left} komşu kayıt ortak köşeyi izleyince geçersiz kalırdı; hiçbir şey yazılmadı. Alanı genişletip komşuları da çalışma kopyasına alın ya da gevşek kipte (loose) yazın."
             ),
             "topology",
         ));
     }
     let geometry = stored.layer.geometry.as_ref().map(|g| g.type_name.as_str());
     let mut rows = Vec::new();
-    for (i, shape) in answer.edited {
-        let Some((uid, e)) = candidates.get(i) else {
-            continue;
-        };
-        let Some(mut next) =
-            crate::geometry::with_shape(e, crate::topology_follow::straight(shape))
-        else {
+    let mut expect = HashMap::new();
+    for (uid, e, shape) in followed {
+        let Some(mut next) = crate::geometry::with_shape(e, shape) else {
             continue;
         };
         if let Some(m) = mover
@@ -2504,14 +2572,21 @@ fn follow_outside(
         {
             continue;
         }
+        let Some(&(fid, ..)) = near.rows.get(&uid) else {
+            continue;
+        };
         if let Ok(Some(row)) = gp::row_for(&next, columns, geometry) {
-            rows.push((stored.outside[uid], row));
+            if database {
+                expect.insert(fid, (uid, base::hash_of(e)));
+            }
+            rows.push((fid, row));
         }
     }
     rows.sort_by_key(|(fid, _)| *fid);
     Ok(Followed {
         rows,
-        left: answer.invalid as u32,
+        left: left as u32,
+        expect,
     })
 }
 

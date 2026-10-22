@@ -398,6 +398,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "satır düzeyinde yazma yalnız veritabanında; aynı tabloyu ikinci düzenleyici (QGIS) değiştirir, kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
     ),
     (
+        "cad.sources.sync",
+        "rows_denied",
+        "yetki ve satır güvenliği yalnız veritabanında: GeoPackage'ın satır hakkı yoktur; kentos-postgis'in postgis_cases.py ile koşan testi satır güvenliği politikalı bir hesapla sınar (ADR 0585)",
+    ),
+    (
         "cad.sources.describe",
         "source_unreachable",
         "veritabanına ulaşılıp ulaşılmadığı ev sahibinin sağlayıcısına bağlı (Python kaydeder, uygulamanın testleri kaydetmez); sağlayıcısız ret sources.rs'te, ulaşılamayan veritabanı kentos-postgis'in testlerinde (ADR 0505)",

@@ -268,9 +268,11 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/03/12/15/37. Parsel bölünürken yeni kimlikler, eski–yeni bağlantısı, alanların bölme politikası, ilişkiler ve form hesabı aynı işlemde sonuçlansın. Kilitli/yetkisiz komşu veya constraint hatası yarım veri bırakmasın. Tek undo yerel adımı eksiksiz geri alsın; sunucuda onaylanmış değişikliği geri alma yeni sürüm denetimli işlem olarak ele alınsın.
 
-- [ ] **CBS-12 — Dış sağlayıcıda görünüm dışı komşularla topolojik commit'i tamamla — P1**
+- [x] **CBS-12 — Dış sağlayıcıda görünüm dışı komşularla topolojik commit'i tamamla — P1**
 
   *Kısmen (19 Ekim 2026; [ADR 0531](../docs/adr/0531-neighbours-outside-the-area.md)): dosya kaynağında (GeoPackage) alan sınırlı parçanın yazması; ortak köşeleri değişen, haritaya yüklenmemiş komşular bbox sorgusuyla aynı dosya sürümünden okunur, mevcut `topology_edit` motoruyla izler, kaynağın sisteminde aynı SQLite işleminde yazılır; `strict` profilde geçersiz kalacak komşu hiçbir şeyin yazılmamasıdır, `loose`'da söylenerek bırakılır; dosya değiştiyse çakışma. Kalan: dış PostGIS kaynağı (sağlayıcının alan sınırı, CBS-02/04), yetki ve başka kullanıcının sürüm engeli, komşunun tam geçerlilik denetimi.*
+
+  *Yapıldı (22 Ekim 2026; [ADR 0585](../docs/adr/0585-neighbours-outside-the-area-in-a-database.md)): PostGIS parçasının komşuları değişen köşelerin kutusuyla sağlayıcıdan okunur, mevcut `topology_edit` ile izler, ADR 0584'ün tek işleminde yazılır; okunan komşu kilitten sonra satır satır yeniden denetlenir (arada değişen `source_changed`, yol `topology`); görünüp değiştirilemeyen satır (yetki ya da satır güvenliği) yazmadan önce `rows_denied`; komşunun geçerliliği Geçerliliği denetle'nin sorunlarıyla (yeni ortaya çıkan kendini kesme, sıfır alan, taşan delik), önceden geçersiz komşu engel değil; GeoPackage'ta da. 24 ortak durum GEOS'la, PostGIS'te iki komşulu, eşzamanlı `psql` oturumlu ve satır güvenlikli test. Kalan (kapsam dışı): SELECT politikasının gizlediği komşu söylenmiyor; yaylı komşu kenar düzleşir.*
 
   **Mevcut:** Ortak köşe/kenar düzenleme **zaten yapılmış**; MEVCUT-01 tamamlanmış kapsamdır. Native `topology_follow::around` ve `interaction::neighbours` görünen geometri deposundan komşuları bulur; köşe/kenar değişimleri aynı adımda yazılır. Kilitli komşu atlanıp bildirilir; bu mevcut davranış bir eksiklik diye yeniden açılmıyor. Açık iş, henüz olmayan dış GIS sağlayıcısında aynı işlemin kaynak sorgusu/transaction ile yürütülmesidir. [K07]
 

@@ -1017635,11 +1017635,11 @@
             ]
           },
           "SyncTopology": {
-            "description": "How a write takes the table's rows outside a part's area (docs/adr/0531): those sharing a corner or an edge the\nwritten objects changed follow them, in the same transaction.",
+            "description": "How a write takes the table's rows outside a part's area (docs/adr/0531, 0585): those sharing a corner or an edge\nthe written objects changed follow them, in the same transaction. A row is read by the changes' box from the file\nor the database; a database's row is checked again under the table's lock (`source_changed` when someone changed it\nsince, `rows_denied` when the account may see but not change it: both profiles write nothing then).",
             "oneOf": [
               {
                 "const": "strict",
-                "description": "All or nothing: a row that would be left invalid refuses the whole write (`outside_neighbour_invalid`).",
+                "description": "All or nothing: a row that would be left invalid (too few vertices, or newly invalid: a ring crossing itself, of\nno area, a hole out of its ring) refuses the whole write (`outside_neighbour_invalid`).",
                 "type": "string"
               },
               {
@@ -1017651,7 +1017651,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,\n`source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:\n`source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and\nthe layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry\nfor stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep\ntheir pins), `label_pins_moved` (pins that followed their key, or without a key their geometry or nearest feature\nof the same kind within 0,05 m, to another row; docs/adr/0578 §2), `label_pins_parked` (pins of objects whose row\nis outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given\nback to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the\npins of those rows are not followed).\n\n`with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in\ntogether or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,\n`source_changed`, `relation_dangling` …) and nothing is written. The layers must lie in one GeoPackage file\n(`transaction_split`: another file, or a database, which writes one table a transaction), must not repeat, and\n`with` is for writing (`invalid_input` with `read`). A relation KentOS maps (`cad.sources.relate`) is written with\nits layers: its mapping rows follow the child's field (`relation_dangling`: a reference to an object the table\ndoes not hold, not even after this write; `relation_unmapped`, a warning: a multi-valued reference that stays text).",
+        "description": "Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,\n`source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`, `rows_denied` (a\ndatabase's rows the account may not change: privilege or row security, docs/adr/0585 §2); conflicts:\n`source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and\nthe layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry\nfor stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep\ntheir pins), `label_pins_moved` (pins that followed their key, or without a key their geometry or nearest feature\nof the same kind within 0,05 m, to another row; docs/adr/0578 §2), `label_pins_parked` (pins of objects whose row\nis outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given\nback to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the\npins of those rows are not followed).\n\n`with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in\ntogether or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,\n`source_changed`, `relation_dangling` …) and nothing is written. The layers must lie in one GeoPackage file\n(`transaction_split`: another file, or a database, which writes one table a transaction), must not repeat, and\n`with` is for writing (`invalid_input` with `read`). A relation KentOS maps (`cad.sources.relate`) is written with\nits layers: its mapping rows follow the child's field (`relation_dangling`: a reference to an object the table\ndoes not hold, not even after this write; `relation_unmapped`, a warning: a multi-valued reference that stays text).",
         "properties": {
           "direction": {
             "$ref": "#/$defs/SyncDirection"
@@ -1017673,7 +1017673,7 @@
                 "type": "null"
               }
             ],
-            "description": "Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners\nand edges follow in the same transaction. Reading refuses it (`topology_on_read`)."
+            "description": "Writing a part's working copy (docs/adr/0531, 0585): the table's rows outside the area that share the changed\ncorners and edges follow in the same transaction, a GeoPackage's or a PostGIS table's. Reading refuses it\n(`topology_on_read`)."
           },
           "with": {
             "description": "Writing: more bound layers (by id) written in the same transaction: of the same GeoPackage file or the same\nPostGIS database (docs/adr/0532 §1, 0584 §1); layers of two sources are `transaction_split`.",
@@ -1018290,6 +1018290,7 @@
           "derived_dataset",
           "topology_on_read",
           "outside_neighbour_invalid",
+          "rows_denied",
           "invalid_input",
           "transaction_split",
           "relation_dangling"
@@ -1071628,6 +1071629,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi."
+    },
+    {
+      "code": "rows_denied",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Hesap tablonun bazı satırlarını görür ama değiştiremez (yetki ya da satır güvenliği); hiçbir şey yazılmadı."
     },
     {
       "code": "not_a_pointcloud",

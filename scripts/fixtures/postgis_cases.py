@@ -116,6 +116,15 @@ def check(c, seen, before):
     together = cur.fetchone()
     if together != ("birlikte", "baskasi", 101.0):
         problems.append(f"birlikte yazılan tablolar {together} ≠ ('birlikte', 'baskasi', 101.0)")
+    # The neighbours (docs/adr/0585): B and C followed A's corners in the parcels; row security kept B of the copy.
+    cur.execute("SELECT ad, ST_AsText(geom) FROM komsu.parsel ORDER BY fid")
+    parcels = dict(cur.fetchall())
+    if "487011 4420004" not in parcels.get("B", "") or "487010 4420007" not in parcels.get("C2", ""):
+        problems.append(f"komşular izlemedi: {parcels}")
+    cur.execute("SELECT ad, ST_AsText(geom) FROM komsu.kisitli ORDER BY fid")
+    narrow = dict(cur.fetchall())
+    if "487011 4420004" not in narrow.get("A", "") or "487010 4420004" not in narrow.get("B", ""):
+        problems.append(f"satır güvenliğinin tablosu: {narrow}")
     cur.execute("SELECT data_type FROM information_schema.columns WHERE table_schema = 'kadastro' "
                 "AND table_name = 'parsel' AND column_name = 'durum'")
     if [r[0] for r in cur.fetchall()] != ["text"]:
@@ -155,6 +164,24 @@ def main():
                                      layers=[table],
                                      layerCreationOptions=["SCHEMA=boyut", "FID=fid", "GEOMETRY_NAME=geom"],
                                      preserveFID=True))
+        # The neighbours outside a part's area (docs/adr/0585), and a copy whose row security lets the account
+        # kisitli change every row but B.
+        cur = c.cursor()
+        cur.execute("CREATE SCHEMA komsu")
+        gdal.VectorTranslate(pg, str(ROOT / "fixtures/geopackage/v1/komsu-gecerlilik.gpkg"),
+                             options=gdal.VectorTranslateOptions(
+                                 layers=["parsel"],
+                                 layerCreationOptions=["SCHEMA=komsu", "FID=fid", "GEOMETRY_NAME=geom"],
+                                 preserveFID=True))
+        cur.execute("CREATE TABLE komsu.kisitli AS SELECT * FROM komsu.parsel")
+        cur.execute("ALTER TABLE komsu.kisitli ADD PRIMARY KEY (fid)")
+        cur.execute("CREATE INDEX ON komsu.kisitli USING gist (geom)")
+        cur.execute(f"CREATE ROLE kisitli LOGIN PASSWORD '{PASSWORD}'")
+        cur.execute("GRANT USAGE ON SCHEMA komsu TO kisitli")
+        cur.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON komsu.kisitli TO kisitli")
+        cur.execute("ALTER TABLE komsu.kisitli ENABLE ROW LEVEL SECURITY")
+        cur.execute("CREATE POLICY gor ON komsu.kisitli FOR SELECT USING (true)")
+        cur.execute("CREATE POLICY degistir ON komsu.kisitli FOR UPDATE USING (ad <> 'B')")
         before = catalogue(c)
         out = Path(tempfile.mkstemp(suffix=".json")[1])
         env = dict(os.environ, KENTOS_PG_URL=f"postgresql://postgres@127.0.0.1:{port}/postgres",

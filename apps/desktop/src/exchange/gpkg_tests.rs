@@ -628,6 +628,150 @@ fn neighbour_screens() {
     }
 }
 
+/// komsu-gecerlilik.gpkg (docs/adr/0585) bound by A's area over a copy, the rows outside the area drawn beside it on the
+/// sample's Parsel layer to see them, and A's corner (10, 4) pulled out east where B would cross itself.
+fn validity_scene(name: &str) -> (App, String) {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let file = scratch(name).join("komsu-gecerlilik.gpkg");
+    std::fs::copy(gpkg("komsu-gecerlilik.gpkg"), &file).expect("copied");
+    let mut app = app_with_drawing();
+    let doc = app.document.as_mut().expect("a drawing");
+    let path = file.display().to_string();
+    let run_on = |doc: &mut kentos_domain::Document, command: &str, input: serde_json::Value| {
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            command,
+            CallOp::Execute,
+            input,
+        )
+        .expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+        answer["output"].clone()
+    };
+    // The sample drawing's Parsel layer, on screen already.
+    let table = "parsel".to_owned();
+    assert!(
+        doc.model.layers().get(&table).is_some(),
+        "the sample's Parsel layer"
+    );
+    // The table's rows outside the area, drawn plainly beside the part (the file's own ids are the part's).
+    for ring in [
+        &[(10.0, 0.0), (20.0, 0.0), (20.0, 4.0), (10.0, 4.0)][..],
+        &[(10.0, 6.0), (14.0, 8.0), (10.0, 10.0)][..],
+        &[(10.0, 10.0), (20.0, 20.0), (20.0, 10.0), (10.0, 20.0)][..],
+    ] {
+        let pts: Vec<serde_json::Value> = ring
+            .iter()
+            .map(|(x, y)| serde_json::json!({ "x": 487000.0 + x, "y": 4420000.0 + y }))
+            .collect();
+        run_on(
+            &mut doc.model,
+            "cad.polygon.create",
+            serde_json::json!({ "layerId": table, "pts": pts }),
+        );
+    }
+    run_on(
+        &mut doc.model,
+        "cad.sources.edit",
+        serde_json::json!({ "edit": { "kind": "link", "path": path, "table": "parsel",
+                                      "extent": [486990.0, 4419990.0, 487005.0, 4420030.0] } }),
+    );
+    let a = doc
+        .model
+        .by_layer_with_uids("import-parsel")
+        .next()
+        .map(|(u, _)| u.to_string())
+        .expect("A");
+    run_on(
+        &mut doc.model,
+        "cad.entities.stretch",
+        serde_json::json!({ "window": { "min": { "x": 487009.5, "y": 4420003.5 },
+                                        "max": { "x": 487010.5, "y": 4420004.5 } },
+                            "dx": 15.0, "dy": -2.0, "uids": [a] }),
+    );
+    (app, table)
+}
+
+#[test]
+fn a_neighbour_left_invalid_stops_a_strict_write_and_says_so() {
+    let (mut app, _) = validity_scene("gpkg-gecerlilik-test");
+    let _ = app
+        .settings
+        .choose(&[("drafting.topology", serde_json::Value::Bool(true))]);
+    app.apply_settings();
+    let _ = app.update(Message::Bound(crate::bound::Event::Write(Some(
+        "import-parsel".into(),
+    ))));
+    let said = crate::files_testing::last_said(&app);
+    assert!(
+        said.contains("1 komşu kayıt") && said.contains("geçersiz kalırdı"),
+        "{said}"
+    );
+    // Loose: A is written, B kept as it is and said.
+    let _ = app.update(Message::Bound(crate::bound::Event::WriteLoose(Some(
+        "import-parsel".into(),
+    ))));
+    let said = crate::files_testing::last_said(&app);
+    assert!(said.contains("olduğu gibi kaldı"), "{said}");
+}
+
+/// The strict write refused over the neighbour B would leave crossing itself, with the whole table beside it,
+/// `.run/shots/gpkg-*-11-gecerlilik-*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop exchange::gpkg_tests::validity_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn validity_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+        for mode in ["dark", "light"] {
+            let (mut app, table) = validity_scene(&format!("gpkg-gecerlilik-{mode}-{width}"));
+            let _ = app.settings.choose(&[
+                ("appearance.theme", serde_json::Value::from(mode)),
+                ("drafting.topology", serde_json::Value::Bool(true)),
+            ]);
+            app.apply_settings();
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            snapshot.settle(&mut app, App::view, &mut |app: &mut App, message| {
+                let _ = app.update(message);
+            });
+            // The part's A and the rows drawn beside it (the sample's own parcel left out), selected: the
+            // scene's direct edits show through the selection.
+            let picked: Vec<kentos_domain::Slot> = {
+                let doc = app.document.as_ref().expect("a drawing");
+                doc.model
+                    .by_layer_with_uids(&table)
+                    .chain(doc.model.by_layer_with_uids("import-parsel"))
+                    .filter(|(_, e)| e.base().label.is_none())
+                    .filter_map(|(u, _)| doc.model.slot_of(u))
+                    .collect()
+            };
+            let slots: Vec<f64> = picked.iter().map(|s| f64::from(s.0)).collect();
+            app.zoom_to_objects(&slots);
+            app.selection.set(picked);
+            let _ = app.update(Message::Bound(crate::bound::Event::Write(Some(
+                "import-parsel".into(),
+            ))));
+            snapshot.settle(&mut app, App::view, &mut |app: &mut App, message| {
+                let _ = app.update(message);
+            });
+            let path = out.join(format!("gpkg-{mode}-11-gecerlilik-{width}x{height}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes the picture");
+            println!("{}", path.display());
+        }
+    }
+}
+
 /// uzlas.gpkg (docs/adr/0538) bound over a copy, the layer edited as the shared cases edit it, then the copy changed
 /// as QGIS changed it (uzlas-qgis.gpkg): both sides changed since they last matched.
 fn reconcile_scene(name: &str) -> (App, PathBuf) {

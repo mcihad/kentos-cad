@@ -15,7 +15,8 @@ use kentos_geopackage::{self as gpkg, Edits};
 use super::together::{Loaded, load_link};
 use super::{
     Diff, Followed, Mover, Stored, at_one, base, codes, conflict, conflict_on, follow_outside,
-    layer_digest, mine_only, provider_stop, refuse, rows_changed, set_link,
+    layer_digest, mine_only, neighbours_changed, provider_stop, refuse, refuse_on, rows_changed,
+    set_link,
 };
 use crate::checks::Stop;
 use crate::provider;
@@ -230,8 +231,8 @@ pub(super) fn write(
                     .collect()
             })
             .collect();
-        // What each table's check found, for the refusal.
-        let mut changed: Vec<Vec<Uuid>> = vec![Vec::new(); jobs.len()];
+        // What each table's check found, for the refusal: the layer's own rows, and the neighbours outside its area.
+        let mut changed: Vec<(Vec<Uuid>, Vec<Uuid>)> = vec![(Vec::new(), Vec::new()); jobs.len()];
         let edited = {
             let mut checks: Vec<Box<provider::RowCheck<'_>>> = Vec::with_capacity(jobs.len());
             for ((k, (i, edits)), slot) in jobs.iter().enumerate().zip(changed.iter_mut()) {
@@ -239,11 +240,18 @@ pub(super) fn write(
                 let fid_uid = &fid_uids[k];
                 let base = it.base.as_ref();
                 let mover = it.mover.as_ref();
+                let expect = &it.followed.expect;
                 checks.push(Box::new(move |layer: &gpkg::Layer, rows: &[gpkg::Row]| {
                     let mut keys: Vec<i64> = edits.update.iter().map(|(f, _)| *f).collect();
                     keys.extend(edits.delete.iter().copied());
-                    let bad = rows_changed(base, layer, rows, &keys, fid_uid, mover);
-                    *slot = bad.iter().filter_map(|f| fid_uid.get(f).copied()).collect();
+                    let mut bad = rows_changed(base, layer, rows, &keys, fid_uid, mover);
+                    slot.0 = bad.iter().filter_map(|f| fid_uid.get(f).copied()).collect();
+                    let near = neighbours_changed(expect, layer, rows, mover);
+                    slot.1 = near
+                        .iter()
+                        .filter_map(|f| expect.get(f).map(|(u, _)| *u))
+                        .collect();
+                    bad.extend(near);
                     if bad.is_empty() { Ok(()) } else { Err(bad) }
                 }));
             }
@@ -252,11 +260,17 @@ pub(super) fn write(
                 .zip(checks.iter_mut())
                 .map(|((i, edits), check)| {
                     let it = &items[*i];
+                    // Row by row with a base; without one the area as a whole too, and the neighbours row by row.
+                    let rows = it.base.is_some() || !it.followed.expect.is_empty();
                     provider::TableEdit {
                         table: &it.link.table,
                         area: it.area,
-                        revision: &it.link.revision,
-                        check: it.base.is_some().then_some(&mut **check),
+                        revision: if it.base.is_some() {
+                            ""
+                        } else {
+                            &it.link.revision
+                        },
+                        check: rows.then_some(&mut **check),
                         edits,
                     }
                 })
@@ -266,17 +280,62 @@ pub(super) fn write(
         let edited = edited.map_err(|(k, e)| {
             let it = &items[jobs[k].0];
             let place = at(jobs[k].0);
+            let (own, near) = &changed[k];
             match e {
-                provider::ProviderError::RowsChanged(_) => conflict_on(
-                    codes::SOURCE_CHANGED,
-                    format!(
-                        "“{}” tablosunun {} satırını, katman onlarla son eşleştiğinden beri başka biri değiştirdi; hiçbir tablo yazılmadı. Tablodan okuyun (direction read) ya da o nesnelerdeki değişikliği bırakın.",
-                        it.link.table,
-                        changed[k].len()
-                    ),
-                    place,
-                    &changed[k],
-                ),
+                provider::ProviderError::RowsChanged(_) if own.is_empty() && !near.is_empty() => {
+                    conflict_on(
+                        codes::SOURCE_CHANGED,
+                        format!(
+                            "“{}” tablosunda alanın dışındaki {} komşu satırı, okunduktan sonra başka biri değiştirdi; hiçbir tablo yazılmadı. Yeniden yazın: komşular yeni hâlleriyle okunur.",
+                            it.link.table,
+                            near.len()
+                        ),
+                        "topology",
+                        near,
+                    )
+                }
+                provider::ProviderError::RowsChanged(_) => {
+                    let all: Vec<Uuid> = own.iter().chain(near).copied().collect();
+                    conflict_on(
+                        codes::SOURCE_CHANGED,
+                        format!(
+                            "“{}” tablosunun {} satırını, katman onlarla son eşleştiğinden beri başka biri değiştirdi; hiçbir tablo yazılmadı. Tablodan okuyun (direction read) ya da o nesnelerdeki değişikliği bırakın.",
+                            it.link.table,
+                            all.len()
+                        ),
+                        place,
+                        &all,
+                    )
+                }
+                provider::ProviderError::RowsDenied(keys) => {
+                    let fid_uid = &fid_uids[k];
+                    let uids: Vec<Uuid> = keys
+                        .iter()
+                        .filter_map(|f| {
+                            fid_uid
+                                .get(f)
+                                .or_else(|| it.followed.expect.get(f).map(|(u, _)| u))
+                                .copied()
+                        })
+                        .collect();
+                    let neighbours = keys.iter().all(|f| it.followed.expect.contains_key(f));
+                    refuse_on(
+                        codes::ROWS_DENIED,
+                        format!(
+                            "“{}” tablosunun {}{} satırını bu hesap görür ama değiştiremez (yetki ya da satır güvenliği); hiçbir tablo yazılmadı. Veritabanının yöneticisinden yetki isteyin{}.",
+                            it.link.table,
+                            if neighbours { "alanın dışındaki " } else { "" },
+                            keys.len(),
+                            if neighbours {
+                                " ya da komşuları izlemeden yazın (topology vermeden)"
+                            } else {
+                                ""
+                            }
+                        ),
+                        if neighbours { "topology" } else { place },
+                        &uids,
+                    )
+                }
                 e => provider_stop(e, &address, at_one(place)),
             }
         })?;

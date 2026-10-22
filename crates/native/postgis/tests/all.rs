@@ -652,6 +652,174 @@ fn layers_of_one_database_go_in_together() {
     assert_eq!(z["error"]["code"], "geometry_mismatch", "{z}");
 }
 
+/// The row of `table` whose `ad` is `ad`: its lasting id and its WKT, as a question to the database reads them.
+fn row_in(url: &str, table: &str, ad: &str) -> (String, String) {
+    let mut d = doc();
+    let asked = ok(&run(
+        &mut d,
+        "cad.sources.query",
+        CallOp::Execute,
+        json!({ "path": url, "table": table, "filter": format!("ad = '{ad}'"), "fields": ["ad"], "geometry": true }),
+    ))
+    .clone();
+    let row = &asked["rows"][0];
+    (
+        row["uid"].as_str().expect("uid").to_owned(),
+        row["wkt"].as_str().expect("wkt").to_owned(),
+    )
+}
+
+/// The part's layer of `table` (only A in its area) with A's corner at (dx, dy) from the origin moved by `by`.
+fn part_moved(url: &str, table: &str, corner: (f64, f64), by: (f64, f64)) -> (Document, String) {
+    let mut d = doc();
+    let linked = ok(&run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": table,
+                          "extent": [486990.0, 4419990.0, 487005.0, 4420030.0] } }),
+    ))
+    .clone();
+    assert_eq!(linked["objects"], json!(1), "{linked}");
+    let layer = linked["link"]["layer"].as_str().expect("layer").to_owned();
+    let a = d
+        .by_layer_with_uids(&layer)
+        .map(|(u, _)| u.to_string())
+        .next()
+        .expect("A");
+    let (x, y) = (487000.0 + corner.0, 4420000.0 + corner.1);
+    ok(&run(
+        &mut d,
+        "cad.entities.stretch",
+        CallOp::Execute,
+        json!({ "window": { "min": { "x": x - 0.5, "y": y - 0.5 }, "max": { "x": x + 0.5, "y": y + 0.5 } },
+                "dx": by.0, "dy": by.1, "uids": [a] }),
+    ));
+    (d, layer)
+}
+
+// docs/adr/0585: a part of a PostGIS table written with its neighbours outside the area (komsu-gecerlilik.gpkg in the
+// schema komsu): B follows A's moved corner in the same transaction; a neighbour someone changes between the read and
+// the lock refuses the write; a neighbour the account sees but may not change (row security) refuses it too.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn neighbours_outside_the_area_follow_in_the_database() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    // B follows A's corner (10, 4) moved one metre east.
+    let (mut d, layer) = part_moved(&url, "komsu.parsel", (10.0, 4.0), (1.0, 0.0));
+    let input = json!({ "layer": layer, "direction": "write", "topology": "strict" });
+    let plan = ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Plan,
+        input.clone(),
+    ))
+    .clone();
+    assert_eq!(plan["followed"], json!(1), "{plan}");
+    let (_, b_before) = row_in(&url, "komsu.parsel", "B");
+    assert!(
+        b_before.contains("487010 4420004"),
+        "a plan writes nothing: {b_before}"
+    );
+    let written = ok(&run(&mut d, "cad.sources.sync", CallOp::Execute, input)).clone();
+    assert_eq!(
+        (written["modified"].clone(), written["followed"].clone()),
+        (json!(1), json!(1)),
+        "{written}"
+    );
+    let (_, b) = row_in(&url, "komsu.parsel", "B");
+    assert!(
+        b.contains("487011 4420004") && !b.contains("487010 4420004"),
+        "{b}"
+    );
+    // A corner B would cross itself over: strict writes nothing.
+    let (mut d, layer) = part_moved(&url, "komsu.parsel", (11.0, 4.0), (14.0, -2.0));
+    let refused = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write", "topology": "strict" }),
+    );
+    assert_eq!(
+        refused["error"]["code"], "outside_neighbour_invalid",
+        "{refused}"
+    );
+    assert_eq!(row_in(&url, "komsu.parsel", "B").1, b);
+    // C changed by someone else after the write read it, before the lock: the write waits for the lock, finds C
+    // changed and writes nothing; written again, it follows C as it is now.
+    let (c_uid, _) = row_in(&url, "komsu.parsel", "C");
+    let (mut d, layer) = part_moved(&url, "komsu.parsel", (10.0, 6.0), (0.0, 1.0));
+    let other = std::thread::spawn({
+        let url = url.clone();
+        move || {
+            std::process::Command::new("psql")
+                .args([
+                    url.as_str(),
+                    "-q",
+                    "-v",
+                    "ON_ERROR_STOP=1",
+                    "-c",
+                    "BEGIN; UPDATE komsu.parsel SET ad = 'C2' WHERE ad = 'C'; SELECT pg_sleep(3); COMMIT;",
+                ])
+                .output()
+                .expect("psql runs")
+        }
+    });
+    std::thread::sleep(std::time::Duration::from_millis(1200));
+    let input = json!({ "layer": layer, "direction": "write", "topology": "strict" });
+    let raced = run(&mut d, "cad.sources.sync", CallOp::Execute, input.clone());
+    let psql = other.join().expect("the other editor");
+    assert!(
+        psql.status.success(),
+        "{}",
+        String::from_utf8_lossy(&psql.stderr)
+    );
+    assert_eq!(raced["status"], "conflict", "{raced}");
+    assert_eq!(raced["error"]["code"], "source_changed", "{raced}");
+    assert_eq!(raced["error"]["path"], "topology", "{raced}");
+    assert_eq!(raced["error"]["uids"], json!([c_uid]), "{raced}");
+    let again = ok(&run(&mut d, "cad.sources.sync", CallOp::Execute, input)).clone();
+    assert_eq!(again["followed"], json!(1), "{again}");
+    let (_, c) = row_in(&url, "komsu.parsel", "C2");
+    assert!(c.contains("487010 4420007"), "{c}");
+    // Row security: the account may change every row but B. With the neighbours, nothing is written; without them,
+    // A alone is.
+    let narrow = url.replacen("postgres@", "kisitli@", 1);
+    let (b_uid, b_kept) = row_in(&narrow, "komsu.kisitli", "B");
+    let (mut d, layer) = part_moved(&narrow, "komsu.kisitli", (10.0, 4.0), (1.0, 0.0));
+    let denied = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write", "topology": "strict" }),
+    );
+    assert_eq!(denied["error"]["code"], "rows_denied", "{denied}");
+    assert_eq!(denied["error"]["path"], "topology", "{denied}");
+    assert_eq!(denied["error"]["uids"], json!([b_uid]), "{denied}");
+    assert_eq!(row_in(&narrow, "komsu.kisitli", "B").1, b_kept);
+    assert!(
+        row_in(&narrow, "komsu.kisitli", "A")
+            .1
+            .contains("487010 4420004")
+    );
+    let alone = ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write" }),
+    ))
+    .clone();
+    assert_eq!(alone["modified"], json!(1), "{alone}");
+    assert!(
+        row_in(&narrow, "komsu.kisitli", "A")
+            .1
+            .contains("487011 4420004")
+    );
+}
+
 #[test]
 #[ignore = "a measurement on the throwaway PostGIS of scripts/fixtures/postgis_cases.py --timing"]
 fn postgis_timing() {

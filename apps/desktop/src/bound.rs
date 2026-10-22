@@ -395,9 +395,12 @@ impl App {
                 }
             }
             // The file changed since: the two sides are put together, not written over (docs/adr/0538).
-            // The window says why; without a base the reconcile's refusal is said.
+            // The window says why; without a base the reconcile's refusal is said. A neighbour outside the area
+            // changed between the read and the lock (docs/adr/0585) is not the layer's: writing again reads it anew.
             CommandResult::Conflict { error }
-                if error.code == "source_changed" && direction == SyncDirection::Write =>
+                if error.code == "source_changed"
+                    && direction == SyncDirection::Write
+                    && error.path.as_deref() != Some("topology") =>
             {
                 self.open_reconcile(&link.layer, true);
             }

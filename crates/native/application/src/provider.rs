@@ -54,6 +54,9 @@ pub enum ProviderError {
     /// Rows the edit touches changed since the layer last matched them (their keys): nothing was written
     /// (docs/adr/0582 §2).
     RowsChanged(Vec<i64>),
+    /// Rows the edit would update or delete that the account may see but not change (no privilege, or a row
+    /// security policy): their keys, nothing was written (docs/adr/0585 §2).
+    RowsDenied(Vec<i64>),
     /// A view or a query without an integer key column (docs/adr/0582 §3).
     NoKey(String),
     /// A view or a query whose key repeats: the key (docs/adr/0582 §3).
@@ -120,7 +123,9 @@ pub trait TableProvider: Send + Sync {
         area: Option<[f64; 4]>,
     ) -> Result<ProviderRead, ProviderError>;
     /// The edits in one transaction under a lock on the table. With `check`, the rows the edits update or delete are
-    /// read again and checked (docs/adr/0582 §2); without, the area must still be at `revision`.
+    /// read again and checked (docs/adr/0582 §2), and the area must also still be at `revision` unless it is empty;
+    /// without, the area must still be at `revision`. A row the account cannot change refuses the edit
+    /// ([`ProviderError::RowsDenied`]).
     fn edit(
         &self,
         address: &str,

@@ -446,22 +446,26 @@ pub enum SyncDirection {
     Read,
 }
 
-/// How a write takes the table's rows outside a part's area (docs/adr/0531): those sharing a corner or an edge the
-/// written objects changed follow them, in the same transaction.
+/// How a write takes the table's rows outside a part's area (docs/adr/0531, 0585): those sharing a corner or an edge
+/// the written objects changed follow them, in the same transaction. A row is read by the changes' box from the file
+/// or the database; a database's row is checked again under the table's lock (`source_changed` when someone changed it
+/// since, `rows_denied` when the account may see but not change it: both profiles write nothing then).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum SyncTopology {
-    /// All or nothing: a row that would be left invalid refuses the whole write (`outside_neighbour_invalid`).
+    /// All or nothing: a row that would be left invalid (too few vertices, or newly invalid: a ring crossing itself, of
+    /// no area, a hole out of its ring) refuses the whole write (`outside_neighbour_invalid`).
     Strict,
     /// The rows that can follow do; one that would be left invalid keeps its shape and is said (`neighbours_left`).
     Loose,
 }
 
 /// Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,
-/// `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:
+/// `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`, `rows_denied` (a
+/// database's rows the account may not change: privilege or row security, docs/adr/0585 §2); conflicts:
 /// `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
 /// the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
 /// for stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep
@@ -496,8 +500,9 @@ pub struct SourcesSync {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub with: Vec<String>,
-    /// Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners
-    /// and edges follow in the same transaction. Reading refuses it (`topology_on_read`).
+    /// Writing a part's working copy (docs/adr/0531, 0585): the table's rows outside the area that share the changed
+    /// corners and edges follow in the same transaction, a GeoPackage's or a PostGIS table's. Reading refuses it
+    /// (`topology_on_read`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub topology: Option<SyncTopology>,

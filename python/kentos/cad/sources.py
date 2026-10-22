@@ -936,8 +936,9 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
             layer: The bound layer, by id.
             direction:
             discard: Reading: take the table's rows though the layer differs (one undo step brings the layer back).
-            topology: Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners
-                and edges follow in the same transaction. Reading refuses it (`topology_on_read`).
+            topology: Writing a part's working copy (docs/adr/0531, 0585): the table's rows outside the area that share the changed
+                corners and edges follow in the same transaction, a GeoPackage's or a PostGIS table's. Reading refuses it
+                (`topology_on_read`).
             with_: Writing: more bound layers (by id) written in the same transaction: of the same GeoPackage file or the same
                 PostGIS database (docs/adr/0532 §1, 0584 §1); layers of two sources are `transaction_split`.
             request_id: Names this write: sent again with the same call it is answered as

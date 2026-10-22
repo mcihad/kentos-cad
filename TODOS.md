@@ -348,6 +348,7 @@ Liste:
   açılış, `.points` alışverişi; `.kcad` şema 88'in TS kodeği ve sütunların rasterinin 5. seçeneği; TS türleri üretildi.
 - [ ] `CBS-04` PostGIS'te alan, view ve sorgu katmanı, satır düzeyinde çakışma (ADR 0582, 22 Ekim): web'de gerekenler: web'in PostGIS'e bağlanması yok (sunucunun vekiliyle ayrı karar); masaüstündeki PostGIS'e bağlan'ın view, sorgu ve alan seçenekleri.
 - [ ] `CBS-07` Katmanın kaynak sistemi ve harita sistemi (ADR 0583, 22 Ekim): web'de gerekenler: `.kcad` şema 98'in `sourceCrs` ve `mapSrid`'inin okunup yazılması (TS türleri üretildi); web'in çizim hatlarında (WebGL2, WebGPU) stil toplayıcısının izdüşümü (`View.map`, WASM `styledBatches`'e harita sistemi), kameranın harita sistemi (`map_ratio`, ters dönüşümlü imleç), durum çubuğunda harita hücresi, koordinat sistemi menüsünde Harita sistemi ▸, katmanın sağ tık menüsünde Koordinat sistemi ▸ (Sistem ata, Yeniden izdüşür) ve `cad.layers.crs`, `cad.layers.reproject` işleyicileri; içe aktarmaların `sourceCrs`'i.
+- [ ] `CBS-12` Veritabanında alanın dışındaki komşular, yetki ve tam geçerlilik (ADR 0585, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; GeoPackage parçasının yazması web'e gelince komşunun geçerliliği Geçerliliği denetle'nin sorunlarıyla (yinelenen köşe hariç, önceden geçersiz komşu engel değil).
 - [ ] `CBS-11` Aynı kaynağa birlikte yazma ve yazmada Z ile M (ADR 0584, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; GeoPackage'a yazan web yolunda (yoksa) Z ve M denetimi `dims_problem`'in kuralıyla, Kaynağa birlikte yaz'ın aynı kaynağın değişen katmanlarını toplaması.
 - [ ] `CBS-02` kaynağı sorgula (ADR 0581, 22 Ekim): web'de gerekenler: `cad.sources.query`'nin işleyicisi (web'in GeoPackage'ı yok; WASM'da itme kuralı ve yerel sınama), İstatistik panelinde Kapsam; TS türleri üretildi.
 - [ ] `CBS-34` adres verisini denetle (ADR 0579, 21 Ekim): web'de gerekenler: `cad.addresses.check`'in işleyicisi (WASM'da
@@ -2362,9 +2363,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
 - [ ] `CBS-12` alanın dışındaki komşularla yazma (dilim): alan sınırlı GeoPackage parçası yazılırken ortak köşeleri değişen,
   çizimde olmayan komşular aynı dosya sürümünden okunur, ADR 0160'ın kuralıyla izler ve aynı SQLite işleminde yazılır;
   `cad.sources.sync`'in `topology`'si (`strict`: geçersiz kalacak komşu varsa hiçbir şey yazılmaz, `loose`: o komşu kalır,
-  söylenir), cevapta `followed` ve `left`; masaüstünde Topoloji açıkken Kaynağa yaz ve Kaynağa yaz, komşular gevşek. Kalan:
-  PostGIS parçası (sağlayıcının alan sınırı, CBS-02), komşunun tam geçerlilik denetimi, yetki ve sürüm engeli (CBS-38), yazmadan
-  önce komşuların önizlemesi. — **19 Ekim, [ADR 0531](docs/adr/0531-neighbours-outside-the-area.md).**
+  söylenir), cevapta `followed` ve `left`; masaüstünde Topoloji açıkken Kaynağa yaz ve Kaynağa yaz, komşular gevşek. — **19 Ekim,
+  [ADR 0531](docs/adr/0531-neighbours-outside-the-area.md).** PostGIS parçasının komşuları sağlayıcının kutu sorgusuyla, ADR
+  0584'ün tek işleminde; kilitten sonra komşu satır satır denetlenir (`source_changed`, yol `topology`), görünüp değiştirilemeyen
+  satır `rows_denied`; komşunun tam geçerliliği (Geçerliliği denetle'nin sorunları, GEOS'la 24 ortak durum). Kalan: yazmadan önce
+  komşuların önizlemesi, SELECT politikasının gizlediği komşunun söylenmesi. — **22 Ekim,
+  [ADR 0585](docs/adr/0585-neighbours-outside-the-area-in-a-database.md).**
 - [ ] `CBS-09` birleşik görünüm (dilim): projenin `joinViews`'u (`.kcad` şema 89), satırlar her okuyuşta çizimden, çoğalan satırın
   kimliği iki kaydın kalıcı kimliği, rapor ve kardinalite, kaydı bir kez sayan toplamlar, sahibi olan kayda yazma, kopuk görünüm;
   `cad.joins.edit`, `.query`, Öznitelik tablosu, pencere, Python, MCP. Kalan: dış kaynaklar arasında sağlayıcı sorgusu, PG görünümü
