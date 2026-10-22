@@ -206,6 +206,7 @@ pub(crate) enum Op {
     /// The drawing unit, the home view and the anchor a unit change wrote
     /// (docs/adr/0256 §1), before and after: in the step with the objects
     /// it scaled, so undo gives both back.
+    ImportMetadata { before: Box<crate::import_metadata::ImportMetadata>, after: Box<crate::import_metadata::ImportMetadata> },
     Units {
         before: UnitState,
         after: UnitState,
@@ -386,6 +387,7 @@ impl Op {
                 before: after.clone(),
                 after: before.clone(),
             },
+            Op::ImportMetadata { before, after } => Op::ImportMetadata { before: after.clone(), after: before.clone() },
             Op::Units { before, after } => Op::Units {
                 before: *after,
                 after: *before,
@@ -929,6 +931,7 @@ impl Document {
                 | Op::ArrayAdd { .. }
                 | Op::ArrayRemove { .. }
                 | Op::ArrayUpdate { .. }
+                | Op::ImportMetadata { .. }
                 | Op::Units { .. }
                 | Op::Domains { .. }
                 | Op::Constraints { .. } => false,
@@ -1125,6 +1128,7 @@ impl Document {
                 self.apply_array_op(op);
                 return;
             }
+            Op::ImportMetadata { after, .. } => { after.install(self); return; }
             Op::Units { after, .. } => {
                 self.settings.drawing_unit = after.drawing_unit;
                 self.home_view = after.home_view;

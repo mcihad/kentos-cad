@@ -202,6 +202,10 @@ pub struct CommandExample {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct CommandCapabilities {
+    /// CAD exchange's explicit format/version/feature profile, shared by UI, Python and AI.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub exchange: Option<crate::CadFormatCapabilities>,
     /// The object kinds its operations apply to; none when it takes no objects
     /// by kind (it names layers, styles, settings) or takes every kind.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

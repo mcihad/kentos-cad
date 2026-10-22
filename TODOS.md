@@ -51,6 +51,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- CAD-IO 2B pafta/viewport, xref ve zengin kayıp raporu: shared sözleşmeler hazır; masaüstü/headless kabulü ADR 0581, web penceresi/işleyicisi web yeniden başladığında eklenecek.
+- DWG içe/dışa aktarma: `file.import.dwg` / `file.export.dwg` masaüstü ve başsız yolda; web işleyicisi, dosya penceresi ve WASM bağlayıcısı web yeniden başladığında eklenecek (ADR 0580).
+
 Web'in son hâli `1aad00d0`'dır (12 Ekim 2026). Bu liste web'e dönüşün planıdır. Şunlar buraya bir satır yazar:
 
 - yalnız masaüstünde biten her madde;

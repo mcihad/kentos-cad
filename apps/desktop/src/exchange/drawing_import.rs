@@ -43,7 +43,7 @@ use kentos_formats::import;
 use kentos_formats::watch::{STOPPED, Steps};
 use kentos_interaction::{Format, Level};
 use kentos_native_application::ExecutionContext;
-use kentos_native_application::file_import::{self, ReadDxf};
+use kentos_native_application::file_import::{self, CadFormat, ReadDxf};
 use kentos_ui::label;
 use kentos_ui::widget::progress::{self, Task as Job, TaskList};
 use kentos_ui::widget::select::{Choice, Select};
@@ -175,13 +175,18 @@ pub(crate) fn unit_said(d: &UnitDecision, drawing: DrawingUnit) -> String {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Source {
     Dxf,
+    Dwg,
     Ncz,
 }
 
 impl Source {
+    fn cad(self) -> Option<CadFormat> {
+        match self { Self::Dxf => Some(CadFormat::Dxf), Self::Dwg => Some(CadFormat::Dwg), Self::Ncz => None }
+    }
     fn title(self) -> &'static str {
         match self {
             Source::Dxf => "DXF içe aktar",
+            Source::Dwg => "DWG içe aktar",
             Source::Ncz => "NCZ içe aktar",
         }
     }
@@ -189,6 +194,7 @@ impl Source {
     fn column(self) -> &'static str {
         match self {
             Source::Dxf => "DXF katmanı",
+            Source::Dwg => "DWG katmanı",
             Source::Ncz => "NCZ katmanı",
         }
     }
@@ -197,6 +203,7 @@ impl Source {
     fn prefix(self) -> &'static str {
         match self {
             Source::Dxf => "DXF",
+            Source::Dwg => "DWG",
             Source::Ncz => "NCZ",
         }
     }
@@ -204,6 +211,7 @@ impl Source {
     fn kind(self) -> Kind {
         match self {
             Source::Dxf => Kind::Dxf,
+            Source::Dwg => Kind::Dwg,
             Source::Ncz => Kind::Ncz,
         }
     }
@@ -224,6 +232,7 @@ pub struct State {
     excluded: BTreeSet<String>,
     /// Blokları patlat (a DXF's): its inserts opened into their objects.
     explode: bool,
+    allow_polyline_loss: bool,
     /// The unit chosen for a DXF's values (docs/adr/0257 §4); none: the rule's.
     file_unit: Option<FileUnit>,
     /// What a DXF's closed polylines become (docs/adr/0258 §1); none: the project type's.
@@ -258,6 +267,7 @@ pub enum Event {
     ToggleAll,
     /// Blokları patlat on or off: the file is read again.
     Explode,
+    AllowPolylineLoss,
     /// Dosyanın birimi chosen (none: the rule's): the file is read again.
     FileUnit(Option<FileUnit>),
     /// Kapalı çoklu çizgiler chosen (none: the project type's): the file is read again.
@@ -325,7 +335,7 @@ pub struct Importing {
     skipped: Vec<ReportItem>,
     /// A DXF's command, what it said and the revision before it: the
     /// journal's row once every object is in (docs/adr/0257 §4).
-    command: Option<(ImportDxf, Vec<CommandWarning>, u64)>,
+    command: Option<(ImportDxf, Vec<CommandWarning>, u64, CadFormat)>,
     /// When the last slice ended: the frame's own time is what passed since.
     last: Option<Instant>,
 }
@@ -396,7 +406,7 @@ impl App {
         let srid = self.project_srid();
         // “Başka dosya…” keeps the chosen coordinate system of a file that says nothing, and Blokları patlat.
         let (crs, explode, closed) = match &self.exchange {
-            Some(Window::DrawingImport(s)) if s.source == Source::Dxf && source == Source::Dxf => {
+            Some(Window::DrawingImport(s)) if s.source == source && source.cad().is_some() => {
                 (s.crs.clone(), s.explode, s.closed)
             }
             _ => (CrsQuestion::new(srid), false, None),
@@ -414,6 +424,7 @@ impl App {
             unusable: None,
             excluded: BTreeSet::new(),
             explode,
+            allow_polyline_loss: false,
             file_unit: None,
             closed,
             crs,
@@ -427,7 +438,7 @@ impl App {
     fn read_drawing(&mut self) -> Task<Message> {
         let font = self.drawing_font_id();
         // The command's options (docs/adr/0257 §3): the project's unit, the chosen one, its scale and typeface.
-        let options = match (&self.document, &self.exchange) {
+        let mut options = match (&self.document, &self.exchange) {
             (Some(d), Some(Window::DrawingImport(s))) => {
                 file_import::read_options(&d.model, s.file_unit, s.explode, s.closed)
             }
@@ -436,6 +447,10 @@ impl App {
         let Some(Window::DrawingImport(s)) = &mut self.exchange else {
             return Task::none();
         };
+        // Preview exposes losses; committing still requires explicit acceptance.
+        options.allow_polyline_loss = true;
+        // A new unit/closed/explode choice can produce a different loss report.
+        s.allow_polyline_loss = false;
         s.stop_reading();
         let read = READS.fetch_add(1, Ordering::Relaxed) + 1;
         let stop = Arc::new(AtomicBool::new(false));
@@ -466,6 +481,7 @@ impl App {
                 });
                 let result = match source {
                     Source::Dxf => kentos_formats::dxf::read_watched(&bytes, &options, &mut watch),
+                    Source::Dwg => kentos_dwg::read_watched(&bytes, &options, &mut watch).map_err(|e| e.to_string()),
                     Source::Ncz => kentos_ncz::read(
                         &bytes,
                         &NczReadOptions {
@@ -482,7 +498,12 @@ impl App {
                 });
                 let _ = out.unbounded_send(Event::Read {
                     read,
-                    result: result.map(Arc::new),
+                    result: result.map(|mut result| {
+                        if source.cad().is_some() {
+                            result.report.notes.extend(kentos_native_application::cad_layouts::diagnostics(&result.layouts));
+                        }
+                        Arc::new(result)
+                    }),
                     unusable,
                 });
             });
@@ -576,6 +597,7 @@ impl App {
                 }
                 s.unusable = unusable;
             }
+            Event::AllowPolylineLoss => s.allow_polyline_loss = !s.allow_polyline_loss,
             Event::Toggle(name) => {
                 if !s.excluded.remove(&name) {
                     s.excluded.insert(name);
@@ -608,7 +630,8 @@ impl App {
             && self.importing.is_none()
             && s.result.is_some()
             && s.unusable.is_none()
-            && !self.drawing_included(s).is_empty()
+            && (s.allow_polyline_loss || s.result.as_ref().is_none_or(|r| kentos_formats::dxf::polyline_policy::refusal(r.report.notes.iter().chain(&r.report.skipped)).is_none()))
+            && (!self.drawing_included(s).is_empty() || s.result.as_ref().is_some_and(|r| r.entities.is_empty() && !r.layouts.is_empty()))
             && s.crs.matches(&self.project_system())
     }
 
@@ -622,7 +645,7 @@ impl App {
         let Some(result) = s.result.clone() else {
             return Task::none();
         };
-        if s.source == Source::Dxf {
+        if s.source.cad().is_some() {
             return self.run_dxf_import(result);
         }
         let (name, source) = (s.file.name.clone(), s.source);
@@ -671,12 +694,14 @@ impl App {
         let Some(Window::DrawingImport(s)) = &self.exchange else {
             return Task::none();
         };
+        let Some(format) = s.source.cad() else { return Task::none(); };
         let included: BTreeSet<&str> = self
             .drawing_included(s)
             .into_iter()
             .map(|l| l.name.as_str())
             .collect();
         let input = ImportDxf {
+            allow_polyline_loss: s.allow_polyline_loss,
             path: s
                 .file
                 .path
@@ -701,7 +726,7 @@ impl App {
             return Task::none();
         };
         if result.entities.len() > AT_ONCE {
-            let plan = match file_import::import_plan(&doc.model, &input, &result.layers, &name) {
+            let plan = match file_import::import_plan_format(&doc.model, &input, &result.layers, &name, format) {
                 Ok(plan) => plan,
                 Err(error) => {
                     if let Some(Window::DrawingImport(s)) = &mut self.exchange {
@@ -712,12 +737,12 @@ impl App {
             };
             let said = file_import::warnings_of_read(&result);
             let base = doc.model.revision();
-            return self.write_import(&name, result, plan, Some((input, said, base)));
+            return self.write_import(&name, result, plan, Some((input, said, base, format)));
         }
         let first = doc.model.next_slot();
         let read = ReadDxf::of(&name, &bytes, (*result).clone());
         let answer =
-            file_import::execute_read(&mut ExecutionContext::new(&mut doc.model), input, read);
+            file_import::execute_read_format(&mut ExecutionContext::new(&mut doc.model), input, read, format);
         let output = match answer {
             CommandResult::Completed { output, .. } => output,
             CommandResult::Failed { error } | CommandResult::Conflict { error } => {
@@ -767,13 +792,14 @@ impl App {
         name: &str,
         result: Arc<ImportResult>,
         plan: ImportPlan,
-        command: Option<(ImportDxf, Vec<CommandWarning>, u64)>,
+        command: Option<(ImportDxf, Vec<CommandWarning>, u64, CadFormat)>,
     ) -> Task<Message> {
         let name = name.to_owned();
         let chosen = plan.layers.len();
         let skipped = result.report.skipped.clone();
         // The file's text and dimension styles (docs/adr/0183 §7).
         let styles = Styles {
+            layouts: result.layouts.clone(),
             text: result.text_styles.clone(),
             dimension: result.dimension_styles.clone(),
             line_types: result.line_types.clone(),
@@ -870,14 +896,15 @@ impl App {
             Ok(true) => {
                 if let Some(job) = self.importing.take() {
                     // A DXF's write is the command's: its row in the journal (docs/adr/0257 §4).
-                    if let Some((input, said, base)) = &job.command {
-                        file_import::record_progressive(
+                    if let Some((input, said, base, format)) = &job.command {
+                        file_import::record_progressive_format(
                             &mut doc.model,
                             input,
                             &job.name,
                             &job.work.slots,
                             said,
                             *base,
+                            *format,
                         );
                     }
                     // The view went there when the writing began (and the user may have moved it since).
@@ -1057,14 +1084,14 @@ impl App {
         let project = self.project_system();
         let r = s.result.as_deref();
         let meta = match (r, &s.failed) {
-            (Some(r), _) => words::facts(&r.report.source),
+            (Some(r), _) => words::facts(&r.report.source.iter().filter(|f| !matches!(f.label.as_str(), "Kodek" | "Aktarma biçimi")).cloned().collect::<Vec<_>>()),
             (None, Some(_)) => "okunamadı".to_owned(),
             (None, None) => "okunuyor…".to_owned(),
         };
         let mut body = Column::new()
             .spacing(12)
             .push(words::file_line(&s.file.name, meta));
-        if s.source == Source::Dxf {
+        if s.source.cad().is_some() {
             body = body.push(
                 row![
                     container(self.unit_field(s)).width(Length::FillPortion(3)),
@@ -1077,7 +1104,11 @@ impl App {
                     .width(Length::FillPortion(2)),
                 ]
                 .spacing(24),
-            );
+            ).push(words::field(
+                "Çoklu çizgi aktarımı",
+                words::check(s.allow_polyline_loss, "Raporlanan çoklu çizgi kaybını kabul et", Some(event(Event::AllowPolylineLoss))),
+                Some("Varsayılan olarak genişliği, yayı veya kotu değişen çoklu çizgiler içe alınmaz. Kabul ederseniz raporda açıklanan yaklaşık sonuç alınır.".into()),
+            ));
         }
         body = body
             .push(self.drawing_layers(s))
@@ -1138,6 +1169,7 @@ impl App {
             lines.push("Bloklar patlatılır: yerleştirmeler nesnelerine açılır.".to_owned());
         }
         let input = ImportDxf {
+            allow_polyline_loss: s.allow_polyline_loss,
             path: String::new(),
             file_unit: s.file_unit,
             explode_blocks: s.explode,
@@ -1428,5 +1460,18 @@ impl App {
         }
         names.reverse();
         names.join(" / ")
+    }
+}
+
+impl State {
+    pub(crate) fn trace_title(&self) -> String { self.source.title().into() }
+    pub(crate) fn trace_control(&self, control: crate::traces::Control<'_>) -> Result<Option<Message>, String> {
+        use crate::traces::Control;
+        match control {
+            Control::Press("Vazgeç") => Ok(Some(event(Event::Cancel))),
+            Control::Press("İçe aktar") => Ok(Some(event(Event::Run))),
+            Control::Check("Raporlanan çoklu çizgi kaybını kabul et", checked) => Ok((self.allow_polyline_loss != checked).then(|| event(Event::AllowPolylineLoss))),
+            _ => Err(format!("{}: {control} denetimi yok", self.trace_title())),
+        }
     }
 }

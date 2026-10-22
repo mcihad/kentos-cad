@@ -2995,6 +2995,22 @@
    "tests": 0
   },
   {
+   "id": "file.export.dwg",
+   "kind": "command",
+   "title": "DWG dışa aktar…",
+   "level": "semantic",
+   "via": [
+    "file.export.dwg"
+   ],
+   "operation": null,
+   "python": "Connection: file.export.dwg",
+   "mcp": "file.export.dwg",
+   "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0580).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.export.dxf",
    "kind": "command",
    "title": "DXF…",
@@ -3203,6 +3219,22 @@
    "mcp": "file.import.csv",
    "note": "Pencere sütunları ve komutun planını gösterir, İçe aktar komutla tek adımda alır (ADR 0522).",
    "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "file.import.dwg",
+   "kind": "command",
+   "title": "DWG içe aktar…",
+   "level": "semantic",
+   "via": [
+    "file.import.dwg"
+   ],
+   "operation": null,
+   "python": "Connection: file.import.dwg",
+   "mcp": "file.import.dwg",
+   "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0580).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },

@@ -105,6 +105,7 @@ pub struct Picked {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
     Dxf,
+    Dwg,
     /// A Netcad NCZ drawing (docs/adr/0138).
     Ncz,
     Coords,
@@ -212,13 +213,15 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 39] = [
+pub const COMMANDS: [&str; 41] = [
     "file.export.atlas",
     "file.import.dxf",
+    "file.import.dwg",
     "file.import.ncz",
     "file.import.ncn",
     "crs.points",
     "file.export.dxf",
+    "file.export.dwg",
     "file.export.ncn",
     "file.import.geojson",
     "file.import.shp",
@@ -277,6 +280,7 @@ impl App {
         }
         match id {
             "file.import.dxf" => self.pick(Kind::Dxf),
+            "file.import.dwg" => self.pick(Kind::Dwg),
             "file.import.ncz" => self.pick(Kind::Ncz),
             "file.import.ncn" | "crs.points" => self.pick(Kind::Coords),
             "file.import.geojson" => self.pick(Kind::GeoJson),
@@ -318,6 +322,11 @@ impl App {
             "file.export.gpx" => {
                 let state = wgs84_export::State::new(self, wgs84_export::Format::Gpx);
                 self.open_window(Window::Wgs84Export(state));
+                Task::none()
+            }
+            "file.export.dwg" => {
+                let state = dxf_export::State::dwg(self);
+                self.open_window(Window::DxfExport(state));
                 Task::none()
             }
             "file.export.dxf" => {
@@ -366,16 +375,17 @@ impl App {
             let path = path.clone();
             if kind == Kind::Shapefile {
                 return Task::perform(
-                    async move { Some(read_file(&path).map(|f| vec![f])) },
+                    async move { Some(read_file(&path, kind).map(|f| vec![f])) },
                     move |files| message(Event::PickedMany(kind, files)),
                 );
             }
-            return Task::perform(async move { Some(read_file(&path)) }, move |file| {
+            return Task::perform(async move { Some(read_file(&path, kind)) }, move |file| {
                 message(Event::Picked(kind, file))
             });
         }
         let (title, filter, extensions): (&str, &str, &[&str]) = match kind {
-            Kind::Dxf => ("DXF içe aktar", "AutoCAD DXF (DWG değil)", &["dxf"]),
+            Kind::Dxf => ("DXF içe aktar", "AutoCAD DXF", &["dxf"]),
+            Kind::Dwg => ("DWG içe aktar", "AutoCAD DWG", &["dwg"]),
             Kind::Ncz => ("NCZ içe aktar", "Netcad çizimi (NCZ)", &["ncz"]),
             Kind::Coords | Kind::TableCoords => (
                 "Koordinat listesi içe aktar",
@@ -427,6 +437,9 @@ impl App {
                     .add_filter(filter, extensions)
                     .pick_file()
                     .await?;
+                if matches!(kind, Kind::Dxf | Kind::Dwg) {
+                    return Some(read_file(&file.path().to_path_buf(), kind));
+                }
                 let name = file.file_name();
                 let path = Some(file.path().to_path_buf());
                 let bytes = file.read().await;
@@ -449,6 +462,9 @@ impl App {
             }
             Event::Picked(Kind::Dxf, Some(Ok(file))) => {
                 self.drawing_import_picked(drawing_import::Source::Dxf, file)
+            }
+            Event::Picked(Kind::Dwg, Some(Ok(file))) => {
+                self.drawing_import_picked(drawing_import::Source::Dwg, file)
             }
             Event::Picked(Kind::Ncz, Some(Ok(file))) => {
                 self.drawing_import_picked(drawing_import::Source::Ncz, file)
@@ -669,13 +685,15 @@ impl App {
     }
 }
 
-fn read_file(path: &PathBuf) -> Result<Picked, String> {
-    let bytes = std::fs::read(path).map_err(|e| {
+fn read_file(path: &PathBuf, kind: Kind) -> Result<Picked, String> {
+    let bytes = if matches!(kind, Kind::Dxf | Kind::Dwg) {
+        kentos_native_application::file_import::read_cad_bytes(path).map_err(|e| e.message)?
+    } else { std::fs::read(path).map_err(|e| {
         format!(
             "“{}” okunamadı: {e}. Dosyanın izinlerini denetleyin.",
             path.display()
         )
-    })?;
+    })? };
     let name = path.file_name().map_or_else(
         || path.display().to_string(),
         |n| n.to_string_lossy().into_owned(),
@@ -697,4 +715,13 @@ fn write_file(path: &std::path::Path, bytes: &[u8]) -> Result<String, String> {
         || path.display().to_string(),
         |n| n.to_string_lossy().into_owned(),
     ))
+}
+
+impl App {
+    pub(crate) fn exchange_trace_title(&self) -> String {
+        match &self.exchange { Some(Window::DrawingImport(s)) => s.trace_title(), Some(Window::DxfExport(s)) => s.trace_title(), _ => "Dosya aktarımı".into() }
+    }
+    pub(crate) fn exchange_trace_control(&self, control: crate::traces::Control<'_>) -> Result<Option<Message>, String> {
+        match &self.exchange { Some(Window::DrawingImport(s)) => s.trace_control(control), Some(Window::DxfExport(s)) => s.trace_control(control), _ => Err("Bu dosya penceresi izden yanıtlanamıyor".into()) }
+    }
 }

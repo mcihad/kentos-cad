@@ -2179,7 +2179,8 @@
       "LWPOLYLINE": 1,
       "DIMENSION": 2,
       "HATCH": 1,
-      "LINE": 13
+      "LINE": 13,
+      "VIEWPORT": 4
      },
      "polylines": [
       {

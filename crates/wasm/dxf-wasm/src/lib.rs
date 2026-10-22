@@ -174,7 +174,7 @@ pub fn write_dxf(input: &str) -> Result<Written, JsError> {
             "Yazılacak nesneler okunamadı ({e}); uygulama ile DXF modülü uyuşmuyor olabilir (pnpm wasm)."
         ))
     })?;
-    let (bytes, report) = kentos_formats::dxf::write(&input.0);
+    let (bytes, report) = kentos_formats::dxf::write_checked(&input.0).map_err(|e| JsError::new(&e.to_string()))?;
     let report = serde_json::to_string(&report)
         .map_err(|e| JsError::new(&format!("Rapor yazılamadı: {e}")))?;
     Ok(Written { bytes, report })

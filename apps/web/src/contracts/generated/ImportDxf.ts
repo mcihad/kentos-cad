@@ -13,6 +13,11 @@ import type { FileUnit } from "./FileUnit";
  */
 export type ImportDxf = { 
 /**
+ * Permit explicitly reported polyline approximation or loss. False rejects
+ * a conversion that cannot preserve bulges, widths or vertex elevations.
+ */
+allowPolylineLoss?: boolean, 
+/**
  * The file to read, an absolute path.
  */
 path: string, 

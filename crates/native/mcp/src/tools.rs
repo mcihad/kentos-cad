@@ -746,6 +746,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.changeset.apply"
             // A file there is written over with `overwrite` (docs/adr/0253 §10).
             | "file.export.dxf"
+            | "file.export.dwg"
             | "file.export.pdf"
             | "file.export.block"
             | "file.export.gpkg"

@@ -10,6 +10,11 @@ import type { DxfAnnotations } from "./DxfAnnotations";
  */
 export type ExportDxf = { 
 /**
+ * Permit explicitly reported polyline approximation or loss. False rejects
+ * a conversion that cannot preserve bulges, widths or vertex elevations.
+ */
+allowPolylineLoss?: boolean, 
+/**
  * The file to write, an absolute path.
  */
 path: string, 

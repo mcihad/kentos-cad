@@ -6,6 +6,11 @@ import type { FileUnit } from "./FileUnit";
 
 export type DxfReadOptions = { 
 /**
+ * Permit explicitly reported polyline approximation or loss. False rejects
+ * a conversion that cannot preserve bulges, widths or vertex elevations.
+ */
+allowPolylineLoss?: boolean, 
+/**
  * Stop after this many objects (0: one million); the rest is counted and reported.
  */
 maxEntities: number, 

@@ -520,6 +520,8 @@ fn input(entities: Vec<Entity>) -> DxfWriteInput {
         })
         .collect();
     DxfWriteInput {
+        allow_polyline_loss: false,
+        layouts: Vec::new(),
         wall_detail: None,
         uids: Default::default(),
         annotations: Default::default(),
@@ -1033,6 +1035,8 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
         }),
     ];
     let (text, report) = write(&DxfWriteInput {
+        allow_polyline_loss: false,
+        layouts: Vec::new(),
         wall_detail: None,
         uids: Default::default(),
         annotations: Default::default(),
@@ -1096,6 +1100,8 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
 #[test]
 fn nothing_to_write_is_still_a_file_autocad_opens() {
     let (text, report) = write(&DxfWriteInput {
+        allow_polyline_loss: false,
+        layouts: Vec::new(),
         wall_detail: None,
         uids: Default::default(),
         annotations: Default::default(),
@@ -1682,6 +1688,8 @@ fn lights() -> DxfWriteInput {
     first.base_mut().color = Some("#E5484D".into());
     first.base_mut().attrs.insert("No".into(), "7".into());
     DxfWriteInput {
+        allow_polyline_loss: false,
+        layouts: Vec::new(),
         blocks: vec![
             definition(
                 1,
@@ -1949,6 +1957,8 @@ fn blocks_read_back_as_the_same_blocks() {
 fn block_names_dxf_refuses_change_and_a_block_holding_itself_is_written_once() {
     let dot = || pole_like();
     let input = DxfWriteInput {
+        allow_polyline_loss: false,
+        layouts: Vec::new(),
         blocks: vec![
             definition(1, "Kapi", v(0.0, 0.0), vec![dot()]),
             definition(2, "KAPI", v(0.0, 0.0), vec![dot()]),

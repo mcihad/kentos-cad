@@ -7,6 +7,7 @@
 //! ezdxf writes and AutoCAD opens (checked with ezdxf's auditor, ADR 0009).
 
 use super::Out;
+use super::layouts::Paper;
 
 pub const LAYER_TABLE: u64 = 0x1;
 pub const LTYPE_TABLE: u64 = 0x2;
@@ -380,8 +381,8 @@ pub fn dimstyle_record(
 /// BLOCK_RECORD: model space and paper space, each pointing to its
 /// layout, then the drawing's blocks and the dimensions' anonymous ones
 /// (handle, name), as they were written.
-pub fn block_record_table(out: &mut Out, records: &[(u64, String, i64)]) {
-    table(out, "BLOCK_RECORD", BLOCK_RECORD_TABLE, 2 + records.len());
+pub fn block_record_table(out: &mut Out, records: &[(u64, String, i64)], papers: &[Paper<'_>]) {
+    table(out, "BLOCK_RECORD", BLOCK_RECORD_TABLE, 2 + records.len() + papers.len().saturating_sub(1));
     for (handle, name, layout) in [
         (MODEL_SPACE, "*Model_Space", "1A"),
         (PAPER_SPACE, "*Paper_Space", "1E"),
@@ -397,6 +398,10 @@ pub fn block_record_table(out: &mut Out, records: &[(u64, String, i64)]) {
             out,
             &[(2, name), (340, layout), (70, "0"), (280, "1"), (281, "0")],
         );
+    }
+    for paper in papers.iter().skip(1) {
+        record(out, "BLOCK_RECORD", paper.record, BLOCK_RECORD_TABLE, "AcDbBlockTableRecord");
+        out.str(2, &paper.block); out.handle(340, paper.layout); out.int(70, 0); out.int(280, 1); out.int(281, 0);
     }
     for (handle, name, units) in records {
         record(
@@ -417,7 +422,7 @@ pub fn block_record_table(out: &mut Out, records: &[(u64, String, i64)]) {
 
 /// BLOCKS: the model and paper space blocks (the drawing itself is in
 /// ENTITIES), then the drawing's blocks and the dimensions' own (`written`).
-pub fn blocks(out: &mut Out, written: &str) {
+pub fn blocks(out: &mut Out, written: &str, papers: &[Paper<'_>]) {
     out.section("BLOCKS");
     for (begin, end, owner, name) in [
         (0x18, 0x19, "17", "*Model_Space"),
@@ -453,6 +458,14 @@ pub fn blocks(out: &mut Out, written: &str) {
             ],
         );
     }
+    for paper in papers.iter().skip(1) {
+        out.str(0, "BLOCK"); out.handle(5, paper.begin); out.handle(330, paper.record);
+        out.str(100, "AcDbEntity"); out.str(8, "0"); out.str(100, "AcDbBlockBegin");
+        out.str(2, &paper.block); out.int(70, 0); out.xyz(10, kentos_contracts::Vec2 { x: 0., y: 0. });
+        out.str(3, &paper.block); out.str(1, "");
+        out.str(0, "ENDBLK"); out.handle(5, paper.end); out.handle(330, paper.record);
+        out.str(100, "AcDbEntity"); out.str(8, "0"); out.str(100, "AcDbBlockEnd");
+    }
     out.s.push_str(written);
     out.str(0, "ENDSEC");
 }
@@ -481,7 +494,10 @@ fn layout(
     plot_flags: &str,
     tab: &str,
     block_record: &str,
+    paper: Option<&kentos_contracts::CadLayout>,
 ) {
+    let width = paper.map(|p| crate::num::dxf_real(p.width_mm)).unwrap_or_else(|| "420.0".into());
+    let height = paper.map(|p| crate::num::dxf_real(p.height_mm)).unwrap_or_else(|| "297.0".into());
     fixed(
         out,
         &[
@@ -496,8 +512,8 @@ fn layout(
             (41, "20.0"),
             (42, "7.5"),
             (43, "20.0"),
-            (44, "420.0"),
-            (45, "297.0"),
+            (44, &width),
+            (45, &height),
             (46, "0.0"),
             (47, "0.0"),
             (48, "0.0"),
@@ -524,8 +540,8 @@ fn layout(
             (71, tab),
             (10, "0.0"),
             (20, "0.0"),
-            (11, "420.0"),
-            (21, "297.0"),
+            (11, &width),
+            (21, &height),
             (12, "0.0"),
             (22, "0.0"),
             (32, "0.0"),
@@ -622,7 +638,7 @@ fn material(out: &mut Out, handle: &str, name: &str) {
 }
 
 /// OBJECTS: the root dictionary and what it names.
-pub fn objects(out: &mut Out) {
+pub fn objects(out: &mut Out, papers: &[Paper<'_>]) {
     out.section("OBJECTS");
     fixed(
         out,
@@ -652,7 +668,12 @@ pub fn objects(out: &mut Out) {
     }
     dictionary(out, "B", &[]);
     dictionary(out, "C", &[]);
-    dictionary(out, "D", &[("Model", "1A"), ("Layout1", "1E")]);
+    if papers.is_empty() { dictionary(out, "D", &[("Model", "1A"), ("Layout1", "1E")]); }
+    else {
+        let entries: Vec<_> = std::iter::once(("Model".to_owned(), "1A".to_owned()))
+            .chain(papers.iter().map(|p| (super::blocks::one_line(&p.data.name), format!("{:X}", p.layout)))).collect();
+        dictionary(out, "D", &entries.iter().map(|(n, h)| (n.as_str(), h.as_str())).collect::<Vec<_>>());
+    }
     dictionary(
         out,
         "E",
@@ -681,8 +702,11 @@ pub fn objects(out: &mut Out) {
     dictionary(out, "14", &[]);
     dictionary(out, "15", &[]);
     dictionary(out, "16", &[]);
-    layout(out, "1A", "Model", "1024", "0", "17");
-    layout(out, "1E", "Layout1", "0", "1", "1B");
+    layout(out, "1A", "Model", "1024", "0", "17", None);
+    if papers.is_empty() { layout(out, "1E", "Layout1", "0", "1", "1B", None); }
+    for (i, p) in papers.iter().enumerate() {
+        layout(out, &format!("{:X}", p.layout), &super::blocks::one_line(&p.data.name), "0", &(i + 1).to_string(), &format!("{:X}", p.record), Some(p.data));
+    }
     material(out, "1F", "ByBlock");
     material(out, "20", "ByLayer");
     material(out, "21", "Global");

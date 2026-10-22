@@ -76,6 +76,11 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         .iter()
         .flat_map(|(_, list)| list.iter().map(|e| (*e).clone()))
         .collect();
+    // The document's draw order crosses layer boundaries. Grouping is only
+    // for the layer chooser, never a reason to repaint one whole layer on top.
+    let order: std::collections::HashMap<_, _> = doc.entities().enumerate()
+        .map(|(i, e)| (e.base().id, i)).collect();
+    entities.sort_by_key(|e| order.get(&e.base().id).copied().unwrap_or(usize::MAX));
     // A dynamic block's inserts as the plain blocks they draw (docs/adr/0319 §5): DXF has no place for KentOS's
     // parameters and actions.
     let (variants, mut notes) =
@@ -87,6 +92,8 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         .count();
     if scaled > 0 {
         notes.push(kentos_commands::ReportItem {
+                severity: None,
+                details: Vec::new(),
             what: "Ölçekli açıklama".into(),
             count: u32::try_from(scaled).unwrap_or(u32::MAX),
             reason: "Kendi ölçeğindeki hâliyle yazıldı; diğer ölçekleri ve oradaki yerleri DXF'e yazılmadı.".into(),
@@ -98,6 +105,8 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
     let constraints = doc.constraints();
     if !constraints.constraints.is_empty() {
         notes.push(kentos_commands::ReportItem {
+                severity: None,
+                details: Vec::new(),
             what: "Kısıt".into(),
             count: u32::try_from(constraints.constraints.len()).unwrap_or(u32::MAX),
             reason: format!(
@@ -107,6 +116,8 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
             lines: Vec::new(),
         });
     }
+    let (layouts, layout_notes) = kentos_native_application::cad_layouts::export(doc);
+    notes.extend(layout_notes);
     let settings = doc.settings();
     let format = Format::of(settings);
     // What a dimension without its own text shows (project units): its
@@ -139,6 +150,8 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         })
         .collect();
     DxfWriteInput {
+        allow_polyline_loss: false,
+        layouts,
         // The project's own detail for its walls (docs/adr/0339 §4); absent: by the scale.
         wall_detail: settings.arch.as_ref().and_then(|a| a.detail),
         uids,

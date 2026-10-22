@@ -25,6 +25,7 @@ pub const FILE_EXPORT_BLOCK_VERSION: u32 = 1;
 /// runs them beside the document's (`DESKTOP_COMMANDS`).
 pub const FILE_COMMANDS: &[(&str, u32)] = &[
     (FILE_EXPORT_DXF, FILE_EXPORT_DXF_VERSION),
+    (crate::FILE_EXPORT_DWG, crate::FILE_EXPORT_DWG_VERSION),
     (FILE_EXPORT_PDF, FILE_EXPORT_PDF_VERSION),
     (FILE_EXPORT_BLOCK, FILE_EXPORT_BLOCK_VERSION),
     (crate::FILE_EXPORT_GPKG, crate::FILE_EXPORT_GPKG_VERSION),
@@ -107,6 +108,11 @@ pub struct BlockFileExported {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportDxf {
+    /// Permit explicitly reported polyline approximation or loss. False rejects
+    /// a conversion that cannot preserve bulges, widths or vertex elevations.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub allow_polyline_loss: bool,
     /// The file to write, an absolute path.
     pub path: String,
     /// The layers whose objects to write (ids); every object when absent.

@@ -31,6 +31,9 @@ const RUNTIMES = ['tokio', 'sqlx*', 'axum*', 'hyper*', 'tower*', 'reqwest'];
 const BROWSER = ['wasm-bindgen*', 'js-sys', 'web-sys'];
 const DESKTOP = ['iced*', 'wgpu*', 'winit', 'naga'];
 const GROUPS = [
+  // The pinned DWG codec is native-only: upstream's wasm clock binds JavaScript.
+  // It may use only shared contracts/formats; no UI, runtime or browser reaches its native build (ADR 0580).
+  { name: 'cad-codec', path: 'crates/native/dwg/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'shared', path: 'crates/shared/', targets: [HOST, WASM], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'wasm', path: 'crates/wasm/', targets: [WASM], uses: ['shared'], forbid: [...RUNTIMES, ...DESKTOP, 'pyo3*'] },
   // The native drawing document (docs/adr/0020): innermost native layer, pure like the shared
@@ -50,44 +53,44 @@ const GROUPS = [
   // PostGIS as a bound layer's source (docs/adr/0505, plan/gis.md CBS-04): the product commands' TableProvider over
   // sqlx with TLS (the owner's choice, 17 Oct 2026), on a runtime of its own. The hosts register it (desktop, Python,
   // MCP); the product commands stay pure. Listed before `native`.
-  { name: 'postgis', path: 'crates/native/postgis/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project', 'stylelib', 'geopackage'], forbid: ['axum*', 'hyper*', 'tower*', 'reqwest', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'postgis', path: 'crates/native/postgis/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'project', 'stylelib', 'geopackage'], forbid: ['axum*', 'hyper*', 'tower*', 'reqwest', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'stylelib', path: 'crates/native/style-library/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
-  { name: 'application', path: 'crates/native/application/', targets: [HOST], uses: ['shared', 'domain', 'project', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'application', path: 'crates/native/application/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'project', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The native tool session (docs/adr/0021): tools, prompts and typed input over the document;
   // a finished object goes through the product commands. Pure like the document: no Iced,
   // window system or GPU (the desktop feeds it input and draws its preview), no runtime, no
   // browser. Listed before `native`, whose path contains it.
   // The tool session opens a standard layer a tool writes to (parsel, kot) as a new project has it
   // (project's `standard_layer`, docs/adr/0067); project is a pure model over shared and domain.
-  { name: 'interaction', path: 'crates/native/interaction/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'interaction', path: 'crates/native/interaction/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'project', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The native processing tools (İşlemler, docs/PROCESSING.md): declared tools and models over
   // the document, run by the desktop; the web keeps its TypeScript tools. Listed before `native`.
-  { name: 'processing', path: 'crates/native/processing/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'processing', path: 'crates/native/processing/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'project', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The desktop's style engine page (docs/adr/0090): the style library, a layer's program for the
   // style core and the core's batches with their colours and images. Pure like the tool session:
   // no Iced, window system or GPU (the renderer draws what it gives). Listed before `native`.
   // Through application (docs/adr/0302): project is a pure model over shared and domain.
-  { name: 'style', path: 'crates/native/style/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'style', path: 'crates/native/style/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'project', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // A drawing on paper (docs/adr/0252): the sheet book's maps as vectors through the style
   // engine, the sheets' tables and legends, the PDF's faces; what the desktop's sheet PDF and the
   // headless host's share. Pure like the style engine it draws with. Listed before `native`.
-  { name: 'plot', path: 'crates/native/plot/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'project', 'style', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'plot', path: 'crates/native/plot/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'interaction', 'project', 'style', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // A drawing's project model (the coordinate system registry, a new project's content): pure
   // like the document, which it builds on. Listed before `native`.
   { name: 'project', path: 'crates/native/project/', targets: [HOST], uses: ['shared', 'domain'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The headless command host (docs/adr/0130): a drawing without a window, its product commands
   // by name, the catalog, queries and files; what the Python SDK and the MCP server stand on.
   // Pure like the commands it runs. Listed before `native`.
-  { name: 'headless', path: 'crates/native/headless/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'project', 'style', 'plot', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'headless', path: 'crates/native/headless/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'interaction', 'processing', 'project', 'style', 'plot', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The Python SDK's extension module (docs/adr/0131): the headless host under CPython. The one
   // native crate that uses pyo3. Listed before `native`.
   // `processing` for kentos.network (docs/adr/0209 §11): a network built from the drawing as the İşlemler tools build it.
   // `postgis` registers the PostGIS provider (docs/adr/0505): its tokio and sqlx come in only through it.
-  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'project', 'style', 'plot', 'headless', 'processing', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', 'hyper*', 'tower*', 'reqwest', ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'interaction', 'project', 'style', 'plot', 'headless', 'processing', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', 'hyper*', 'tower*', 'reqwest', ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
   // The MCP server (docs/adr/0133, 0134): the headless host's tools over stdio, JSON-RPC by hand;
   // the server's commands through the desktop's cloud client (`native`). No UI, database or
   // server framework. Listed before `native`.
-  { name: 'mcp', path: 'crates/native/mcp/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'project', 'style', 'plot', 'headless', 'native', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'mcp', path: 'crates/native/mcp/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'interaction', 'processing', 'project', 'style', 'plot', 'headless', 'native', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'native', path: 'crates/native/', targets: [HOST], uses: ['shared', 'domain', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*'] },
   // The forms' guard (docs/adr/0411 §4) reads a project's `@` values as the desktop's document does: the pure
   // project model (`project`, over shared and domain) is the server's to use too.
@@ -96,7 +99,7 @@ const GROUPS = [
   { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   // The process that runs one İşlemler tool for a server job (docs/adr/0559 §3): the headless host and the tools over
   // one project file; no database, no server framework. Listed before `native`'s catch-all like the headless host.
-  { name: 'jobrun', path: 'apps/jobrun/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'style', 'plot', 'stylelib', 'geopackage'], forbid: ['sqlx*', 'axum*', 'tokio*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'jobrun', path: 'apps/jobrun/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'style', 'plot', 'stylelib', 'geopackage'], forbid: ['sqlx*', 'axum*', 'tokio*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The UI component library (docs/adr/0016): widgets, theme, icons; no domain, no runtime of its own.
   { name: 'ui', path: 'crates/ui/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },
   // Sheet layouts on the desktop (docs/sheet/design.md §11): the UI components over the shared
@@ -106,12 +109,12 @@ const GROUPS = [
   // No Iced or window system (the desktop app plugs it into Iced), no runtime, no browser.
   // It draws the style crate's batches (docs/adr/0090).
   // Through application (docs/adr/0302): project is a pure model over shared and domain.
-  { name: 'render', path: 'crates/render/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project', 'style', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*'] },
+  { name: 'render', path: 'crates/render/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'project', 'style', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*'] },
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
   // The desktop's Python console (docs/adr/0132) answers its script's requests through the
   // headless host's `rpc`; the Python itself runs in a process of its own, never in the app.
-  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style', 'sheet-ui', 'plot', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
-  { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'native', 'ui', 'render', 'style', 'stylelib'], forbid: ['axum*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style', 'sheet-ui', 'plot', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'interaction', 'native', 'ui', 'render', 'style', 'stylelib'], forbid: ['axum*', ...BROWSER] },
 ];
 
 const meta = JSON.parse(cargo(['metadata', '--format-version', '1', '--locked', '--no-deps']));

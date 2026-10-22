@@ -313,7 +313,7 @@ fn a_dxfs_blocks_go_out_to_dxf_as_blocks() {
     // The blocks the inserts place, in the order the objects place them, each after the ones it
     // holds (NO is inside KAPI); DAIRE's stretched insert is kept now (docs/adr/0315 §3).
     let names: Vec<&str> = back.blocks.iter().map(|b| b.name.as_str()).collect();
-    assert_eq!(names, ["DAIRE", "KENDI", "NO", "KAPI"]);
+    assert_eq!(names, ["NO", "KAPI", "DAIRE", "KENDI"]);
     let placed = back
         .entities
         .iter()
@@ -847,6 +847,9 @@ fn closed_polylines_go_in_as_the_window_says() {
             panic!("the DXF window");
         };
         let noted = format!("{state:?}").contains("Genişlikli kapalı çoklu çizgi");
+        if noted {
+            send(&mut app, Event::DrawingImport(drawing_import::Event::AllowPolylineLoss));
+        }
         send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
         assert_eq!(app.dialog, None, "the window closes after the import");
         (app, noted)
@@ -1368,4 +1371,31 @@ fn ncz_screens() {
             shot(&mut snapshot, &out, &mut app, "ncz-4-semboller");
         }
     }
+}
+
+#[test]
+fn polyline_loss_preview_requires_explicit_acceptance_and_each_new_file_resets_it() {
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(fixture("cad-io/ocs-0-width.dxf"));
+    let before = count(&app);
+    run(&mut app, "file.import.dxf");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    assert_eq!(count(&app), before, "preview is not permission to flatten a source");
+    assert!(matches!(app.exchange, Some(Window::DrawingImport(_))));
+    send(&mut app, Event::DrawingImport(drawing_import::Event::AllowPolylineLoss));
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Explode));
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    assert_eq!(count(&app), before, "changed read options need a fresh acceptance");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::AllowPolylineLoss));
+    // Picking another file, even the same path, needs a fresh acceptance.
+    app.picker = Picker::File(fixture("cad-io/ocs-1-width.dxf"));
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Another));
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    assert_eq!(count(&app), before);
+    send(&mut app, Event::DrawingImport(drawing_import::Event::AllowPolylineLoss));
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    assert_eq!(count(&app), before + 1);
+    assert!(app.exchange.is_none());
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(count(&app), before);
 }

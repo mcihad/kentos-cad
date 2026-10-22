@@ -252,7 +252,7 @@ def counts(rel: str, explode: bool) -> tuple[int, int]:
 
 def completed(rel: str, doc: dict, project: str, *, file_unit: str | None = None, explode: bool = False,
               layers: dict | None = None, group_name: str | None = None, op: str = "execute",
-              closed: str | None = None) -> tuple[dict, dict]:
+              closed: str | None = None, allow_polyline_loss: bool = False) -> tuple[dict, dict]:
     """The step importing `rel` into `doc` and what it gives: its result, and what the drawing then holds."""
     name = rel.rsplit("/", 1)[1]
     text = text_of(rel).encode()
@@ -297,6 +297,9 @@ def completed(rel: str, doc: dict, project: str, *, file_unit: str | None = None
         output["renamed"] = renamed
     step = {"op": op, "input": {"path": f"$fixture:{rel}"}, "result": {"status": "completed", "output": output,
                                                                         "warnings": warnings}}
+    if allow_polyline_loss:
+        step["input"]["allowPolylineLoss"] = True
+        warnings.append({"code":"import_losses", "message":"Kabul edilen çoklu çizgi dönüşüm kayıpları report.notes içinde ayrıntılıdır.", "path":"allowPolylineLoss"})
     if file_unit:
         step["input"]["fileUnit"] = file_unit
     if explode:
@@ -401,11 +404,11 @@ def cases() -> list:
          [completed(closed_dxf, m, "m")[0]])
     crs = setup(None)
     case("Kapalı çoklu çizgiler koordinat sistemli (CBS) projeye: alan olur, genişliği alınmaz; açık çizgi genişliğiyle",
-         [completed(closed_dxf, crs, "crs")[0]], crs)
+         [completed(closed_dxf, crs, "crs", allow_polyline_loss=True)[0]], crs)
     case("closedPolylines line: CBS projesinde de kapalı çizgi, genişliğiyle",
          [completed(closed_dxf, crs, "crs", closed="line")[0]], crs)
     case("closedPolylines area: CAD projesinde de alan",
-         [completed(closed_dxf, m, "m", closed="area")[0]])
+         [completed(closed_dxf, m, "m", closed="area", allow_polyline_loss=True)[0]])
     # Refusals, in the ADR's order.
     case("Göreli yol: invalid_file_path", [failed({"path": "mm.dxf"}, "invalid_file_path",
          "“mm.dxf” mutlak bir dosya yolu değil; okunacak dosyanın tam yolunu verin (/klasör/ad.dxf).", "path")])

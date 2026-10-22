@@ -1,0 +1,15 @@
+[package]
+name = "kentos-dwg"
+description = "In-memory DWG codec adapter using OpenCADStudio's OpenCADCodec"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+acadrust = { workspace = true }
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-formats = { path = "../../shared/formats" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

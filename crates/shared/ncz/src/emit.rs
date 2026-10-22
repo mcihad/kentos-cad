@@ -1172,6 +1172,8 @@ pub fn read(
         e.base_mut().id = 0;
     }
     let mut result = ImportResult {
+        layouts: Vec::new(),
+        source_handles: Vec::new(),
         line_type_scale: None,
         line_types: Vec::new(),
         entities,
@@ -1313,6 +1315,8 @@ mod tests {
         assert_eq!((zs(8), zs(9), zs(10)), (None, None, None));
         // The heights are counted where every import says it: as a fact of the file.
         let mut result = ImportResult {
+        layouts: Vec::new(),
+        source_handles: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             entities: out.clone(),

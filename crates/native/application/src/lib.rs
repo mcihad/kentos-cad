@@ -175,7 +175,10 @@ pub mod polygon_regular {
     };
 }
 pub mod curves_construct;
+pub mod cad_layouts;
+mod cad_source;
 pub mod file_import;
+pub mod file_import_dwg;
 pub mod geometry_store;
 pub mod import_apply;
 pub mod layer_filter;
@@ -1103,6 +1106,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::FILE_IMPORT_DXF,
         kentos_commands::FILE_IMPORT_DXF_VERSION,
     ),
+    (kentos_commands::FILE_IMPORT_DWG, kentos_commands::FILE_IMPORT_DWG_VERSION),
     // Toplu yazma of the attribute table ([`fields_write`], docs/adr/0507).
     (
         kentos_commands::CAD_FIELDS_WRITE,

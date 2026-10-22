@@ -15,12 +15,18 @@
 
 pub mod aci;
 mod dimension;
+mod diagnostics;
 mod emit;
 mod entity;
 mod hatch;
 mod justify;
 mod leaders;
 mod lexer;
+mod layouts;
+mod ordering;
+pub mod preflight;
+pub mod polyline_policy;
+pub use polyline_policy::write_checked;
 mod strings;
 mod styles;
 mod writer;
@@ -619,7 +625,9 @@ impl<'a> Reader<'a> {
                     description,
                     base,
                     entities,
-                    xref: flags & 4 != 0,
+                    xref: flags & 4 != 0 && g(1).is_some_and(|p| !p.text().trim().is_empty()),
+                    xref_path: g(1).map(|p| self.dec.string(p.value)).unwrap_or_default(),
+                    overlay: flags & 8 != 0,
                 },
             );
         }
@@ -637,6 +645,7 @@ fn encoding(bytes: &[u8], version: &str, codepage: &str, out: &mut Out) -> Encod
         return Encoding::Utf8;
     }
     match codepage {
+        "UTF-8" | "UTF8" => Encoding::Utf8,
         "ANSI_1254" | "" => Encoding::Windows1254,
         "ANSI_1252" => Encoding::Windows1252,
         other => {
@@ -678,23 +687,31 @@ fn constraint_groups(bytes: &[u8]) -> usize {
     count
 }
 
-pub fn read_watched(
-    bytes: &[u8],
-    opts: &DxfReadOptions,
-    watch: &mut dyn Watch,
-) -> Result<ImportResult, String> {
-    match read_once(bytes, opts, watch, false)? {
-        Some(result) => Ok(result),
-        // The blocks nest deeper than a drawing's may: read again, every insert opened.
-        None => {
-            let opened = DxfReadOptions {
-                explode_blocks: true,
-                ..opts.clone()
-            };
-            read_once(bytes, &opened, watch, true)?
-                .ok_or_else(|| "Bloklar açılarak da okunamadı.".to_string())
-        }
-    }
+pub fn read_watched(bytes: &[u8], opts: &DxfReadOptions, watch: &mut dyn Watch) -> Result<ImportResult, String> {
+    read_checked_watched(bytes, opts, watch).map_err(|e| e.message)
+}
+
+pub fn read_checked(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult, preflight::ReadError> {
+    read_checked_watched(bytes, opts, &mut Quiet)
+}
+
+/// One validation pass; parser errors and cancellation keep their structured code.
+pub fn read_checked_watched(bytes: &[u8], opts: &DxfReadOptions, watch: &mut dyn Watch) -> Result<ImportResult, preflight::ReadError> {
+    preflight::check(bytes, watch)?;
+    let read = (|| {
+        let mut result = match read_once(bytes, opts, watch, false)? {
+            Some(result) => result,
+            None => {
+                let opened = DxfReadOptions { explode_blocks: true, ..opts.clone() };
+                read_once(bytes, &opened, watch, true)?.ok_or_else(|| "Bloklar açılarak da okunamadı.".to_owned())?
+            }
+        };
+        diagnostics::enrich(&mut result.report, bytes, watch)?;
+        Ok(result)
+    })();
+    let result = read.map_err(|message: String| preflight::ReadError { code: if message == STOPPED { "cancelled" } else { "import_unreadable" }, message })?;
+    if !opts.allow_polyline_loss && let Some(error) = polyline_policy::refusal(result.report.notes.iter().chain(&result.report.skipped)) { return Err(error); }
+    Ok(result)
 }
 
 /// One reading; none when the blocks nest too deep to keep (the caller reads
@@ -785,7 +802,9 @@ fn read_once(
     if !saw_section {
         return Err("Dosyada DXF bölümü yok; bir ASCII DXF dosyası seçin.".into());
     }
-    let lib = std::mem::take(&mut rd.lib);
+    let order = ordering::mapping(bytes)?;
+    let mut lib = std::mem::take(&mut rd.lib);
+    for block in lib.blocks.values_mut() { ordering::reorder(&mut block.entities, &order); }
     let mut em = Emitter::new(&lib, out, opts.explode_blocks);
     em.project_font = opts
         .drawing_font
@@ -823,8 +842,10 @@ fn read_once(
             None => return Ok(None),
         }
     }
+    let model = Ctx::model();
+    let mut buffered = Vec::new();
+    let mut paper_entities = Vec::new();
     if pending_entities {
-        let model = Ctx::model();
         let mut seen = 0u32;
         while let Some(p) = rd.lex.next()? {
             if p.code != 0 {
@@ -839,10 +860,19 @@ fn read_once(
             }
             let kind = p.text().to_uppercase();
             match rd.entity(&kind, p.line)? {
+                Ok(e) if e.common.paper => paper_entities.push(e),
+                Ok(e) if !order.is_empty() => {
+                    if buffered.len() >= limit { return Err("Çizim sırası için nesne sınırı aşıldı; dosyayı bölün.".into()); }
+                    buffered.push(e);
+                }
                 Ok(e) => em.emit(&e, &model),
                 Err((reason, line)) => em.out.report.skip(&kind, &reason, line),
             }
         }
+    }
+    if !order.is_empty() {
+        ordering::reorder(&mut buffered, &order);
+        for e in &buffered { em.emit(e, &model); }
     }
     em.notes_done();
     em.merge_holes();
@@ -1063,7 +1093,12 @@ fn read_once(
             t
         })
         .collect();
+    let mut source_handles = vec![None; out.entities.len()];
+    for (handle, index) in &out.handles { if let Some(slot) = source_handles.get_mut(*index) { *slot = Some(format!("{handle:X}")); } }
+    let layouts = layouts::read(bytes, &lib, paper_entities, rd.dec, opts, scale, &mut out.report, watch)?;
     let mut result = ImportResult {
+        source_handles,
+        layouts,
         line_type_scale: rd
             .ltscale
             .filter(|s| s.is_finite() && *s > 0.0 && *s != 1.0),

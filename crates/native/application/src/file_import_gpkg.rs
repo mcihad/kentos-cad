@@ -226,6 +226,8 @@ fn moved(
                 continue;
             }
             let mut one = ImportResult {
+                layouts: Vec::new(),
+        source_handles: Vec::new(),
                 entities: vec![e],
                 layers: Vec::new(),
                 report: Default::default(),

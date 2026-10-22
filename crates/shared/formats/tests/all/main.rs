@@ -4,6 +4,7 @@
 
 mod coords;
 mod dxf;
+mod cad_io;
 mod dxf_units;
 mod exif;
 mod field_csv;

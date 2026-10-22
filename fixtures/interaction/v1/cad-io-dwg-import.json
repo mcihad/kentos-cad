@@ -1,0 +1,68 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "cad-io-dwg-import",
+  "title": "DWG önizleme, içe alma ve tek geri alma",
+  "source": "docs/adr/0581",
+  "covers": [
+    "CAD-IO-05",
+    "CAD-IO-07"
+  ],
+  "document": "exchange.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.125
+  },
+  "clickTolerance": 0.2,
+  "steps": [
+    {
+      "click": [
+        -20,
+        0
+      ],
+      "expect": {
+        "selected": [
+          3
+        ]
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "selected": []
+      }
+    },
+    {
+      "run": "file.import.dwg",
+      "expect": {
+        "dialog": "DWG içe aktar"
+      }
+    },
+    {
+      "shot": "onizleme"
+    },
+    {
+      "dialog": "DWG içe aktar",
+      "press": "İçe aktar",
+      "expect": {
+        "entities": 9
+      }
+    },
+    {
+      "shot": "alindi"
+    },
+    {
+      "key": "Ctrl+Z",
+      "expect": {
+        "entities": 4
+      }
+    },
+    {
+      "shot": "geri-alindi"
+    }
+  ],
+  "openFile": "../../formats/v1/dwg/mm.dwg"
+}

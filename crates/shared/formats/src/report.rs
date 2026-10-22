@@ -18,6 +18,9 @@ struct Items {
 impl Items {
     /// Another report's line: its count and its lines.
     fn absorb(&mut self, item: ReportItem) {
+        let key = (item.what.clone(), item.reason.clone());
+        let details = item.details;
+        let severity = item.severity;
         let mut lines = item.lines.into_iter();
         self.add(
             &item.what,
@@ -25,8 +28,11 @@ impl Items {
             lines.next().unwrap_or(0),
             item.count,
         );
-        for line in lines {
-            self.add(&item.what, &item.reason, line, 0);
+        for line in lines { self.add(&item.what, &item.reason, line, 0); }
+        if let Some(&i) = self.index.get(&key) {
+            let target = &mut self.list[i];
+            target.severity = target.severity.or(severity);
+            for detail in details { if target.details.len() < LINES_KEPT && !target.details.contains(&detail) { target.details.push(detail); } }
         }
     }
 
@@ -34,6 +40,8 @@ impl Items {
         let key = (what.to_string(), reason.to_string());
         let i = *self.index.entry(key).or_insert_with(|| {
             self.list.push(ReportItem {
+                severity: None,
+                details: Vec::new(),
                 what: what.to_string(),
                 count: 0,
                 reason: reason.to_string(),
@@ -96,6 +104,28 @@ impl Report {
         self.notes.add(what, reason, line, 1);
     }
 
+    /// Stable machine property for an irreversible polyline conversion.
+    pub fn polyline_loss(&mut self, code: &str, what: &str, reason: &str, line: u32) {
+        self.polyline_loss_from(code, what, reason, line, what, None);
+    }
+
+    pub fn polyline_loss_from(&mut self, code: &str, what: &str, reason: &str, line: u32, entity_type: &str, source_id: Option<String>) {
+        self.notes.add(what, reason, line, 1);
+        if let Some(&i) = self.notes.index.get(&(what.into(), reason.into())) {
+            let item = &mut self.notes.list[i];
+            item.severity = Some(kentos_contracts::ReportSeverity::Warning);
+            if item.details.len() < LINES_KEPT {
+                item.details.push(kentos_contracts::ReportDetail {
+                    entity_type: entity_type.into(), property: format!("polyline.loss.{code}"),
+                    source_id, source_line: (line > 0).then_some(line),
+                });
+            }
+        }
+    }
+
+    /// Keep stable property/identity metadata when a host contributes a diagnostic.
+    pub fn note_item(&mut self, item: ReportItem) { self.notes.absorb(item); }
+
     /// `n` of the same thing at once.
     pub fn note_n(&mut self, what: &str, reason: &str, line: u32, n: u32) {
         if n > 0 {
@@ -123,6 +153,12 @@ impl Report {
             self.notes.absorb(item);
         }
         self.source.extend(other.source);
+    }
+
+    /// Paper-space diagnostics join the file report without changing model counts.
+    pub fn absorb_losses(&mut self, report: ImportReport) {
+        for item in report.notes { self.notes.absorb(item); }
+        for item in report.skipped { self.skipped.absorb(item); }
     }
 
     pub fn total(&self) -> u32 {

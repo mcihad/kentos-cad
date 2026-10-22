@@ -617,6 +617,11 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
                 }
             }
             // The unit and the value lists are settings (docs/adr/0256 §1, 0430).
+            Op::ImportMetadata { .. } => {
+                for part in [ProjectPart::Settings, ProjectPart::Sheets] {
+                    if !report.parts.contains(&part) { report.parts.push(part); }
+                }
+            }
             Op::Units { .. } | Op::Domains { .. } => {
                 if !report.parts.contains(&ProjectPart::Settings) {
                     report.parts.push(ProjectPart::Settings);

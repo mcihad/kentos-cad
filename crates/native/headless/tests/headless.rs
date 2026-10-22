@@ -9,6 +9,9 @@ use kentos_commands::{DrawingFont, Workspace};
 use kentos_headless::{NewDrawing, Op, Session, catalog};
 use serde_json::{Value, json};
 
+#[path = "headless/dwg.rs"]
+mod dwg;
+
 #[path = "headless/atlas_cases.rs"]
 mod atlas_cases;
 

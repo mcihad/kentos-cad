@@ -3912,7 +3912,8 @@
         {
           "op": "execute",
           "input": {
-            "path": "$fixture:formats/v1/dxf-import/closed.dxf"
+            "path": "$fixture:formats/v1/dxf-import/closed.dxf",
+            "allowPolylineLoss": true
           },
           "result": {
             "status": "completed",
@@ -3945,6 +3946,11 @@
                 "code": "unit_ignored",
                 "path": "fileUnit",
                 "message": "Dosya birimini milimetre olarak bildiriyor; koordinat sistemi olan proje dosyayı metre okur, değerler ölçeklenmedi. Ölçeklemek için dosyanın birimini seçin (fileUnit)."
+              },
+              {
+                "code": "import_losses",
+                "message": "Kabul edilen çoklu çizgi dönüşüm kayıpları report.notes içinde ayrıntılıdır.",
+                "path": "allowPolylineLoss"
               }
             ]
           },
@@ -4404,6 +4410,7 @@
           "op": "execute",
           "input": {
             "path": "$fixture:formats/v1/dxf-import/closed.dxf",
+            "allowPolylineLoss": true,
             "closedPolylines": "area"
           },
           "result": {
@@ -4432,7 +4439,13 @@
               "report": "$any",
               "revision": "$current"
             },
-            "warnings": []
+            "warnings": [
+              {
+                "code": "import_losses",
+                "message": "Kabul edilen çoklu çizgi dönüşüm kayıpları report.notes içinde ayrıntılıdır.",
+                "path": "allowPolylineLoss"
+              }
+            ]
           },
           "expect": {
             "ids": [

@@ -9,6 +9,9 @@ members = [
     "crates/shared/contracts",
     "crates/shared/commands",
     "crates/shared/formats",
+    # DWG codec adapter (ADR 0580): OpenCADStudio's pinned, MPL-2.0 codec;
+    # its types never cross this crate's public boundary.
+    "crates/native/dwg",
     # Point clouds (docs/adr/0207): LAS, LAZ, COPC and text clouds, their index, looks and
     # operations; a crate of its own so the formats worker does not carry LAZ.
     "crates/shared/pointcloud",
@@ -97,6 +100,7 @@ default-members = [
     "crates/shared/contracts",
     "crates/shared/commands",
     "crates/shared/formats",
+    "crates/native/dwg",
     "crates/shared/pointcloud",
     "crates/shared/ncz",
     "crates/shared/kcad",
@@ -145,6 +149,9 @@ publish = false
 
 # Exact versions: adding or bumping a dependency is a decision (CLAUDE.md §3).
 [workspace.dependencies]
+# OpenCADStudio's codec (owner's final choice, 22 October 2026).
+# Pin the exact revision used by that application; update only with the CAD-IO corpus.
+acadrust = { git = "https://github.com/HakanSeven12/opencadcodec.git", rev = "ff75fddc322bda4cf817c5f68535c5c2b316b9c4", default-features = false }
 serde = { version = "=1.0.229", features = ["derive"] }
 # float_roundtrip: parsed floats are exact (the default parser may be one ulp off), so
 # coordinates cross the WASM boundary and files bit for bit (docs/adr/0008).

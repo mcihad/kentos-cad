@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 216] = [
+pub(crate) const TITLES: [(&str, &str); 218] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -125,8 +125,8 @@ pub(crate) const TITLES: [(&str, &str); 216] = [
     ("cad.subnetworks.find", "Alt ağları bul"),
     ("cad.subnetworks.update", "Alt ağları güncelle"),
     ("cad.linearref.define", "Olay bağı"),
-    ("cad.addresses.define", "Adres verisi"),
     ("cad.addresses.check", "Adres verisini denetle"),
+    ("cad.addresses.define", "Adres verisi"),
     ("cad.layers.time", "Katmanın zamanı"),
     ("cad.scenarios.edit", "Senaryo"),
     ("cad.layers.filter", "Katman süzgeci"),
@@ -192,6 +192,7 @@ pub(crate) const TITLES: [(&str, &str); 216] = [
     ("file.import.pdf", "PDF içe aktar"),
     ("file.import.gpkg", "GeoPackage içe aktar"),
     ("file.import.dxf", "DXF içe aktar"),
+    ("file.import.dwg", "DWG içe aktar"),
     ("cad.sheets.edit", "Pafta kitabı"),
     ("cad.changeset.apply", "Değişiklik kümesi"),
     ("cad.rectangle.create", "Dikdörtgen oluştur"),
@@ -226,6 +227,7 @@ pub(crate) const TITLES: [(&str, &str); 216] = [
     ("file.export.maplibre", "Görünüşü MapLibre stili olarak dışa aktar"),
     ("file.import.maplibre", "MapLibre stilinden görünüş al"),
     ("file.export.dxf", "DXF dışa aktar"),
+    ("file.export.dwg", "DWG dışa aktar"),
     ("file.export.block", "Bloğu dosyaya yaz"),
     ("file.export.pdf", "PDF olarak yazdır"),
 ];

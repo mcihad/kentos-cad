@@ -204,6 +204,8 @@ pub use file_import_gis::*;
 pub use sources::*;
 pub use cad_stac::*;
 pub use file_import::*;
+mod file_cad;
+pub use file_cad::*;
 pub use formats::*;
 pub use hatch::*;
 pub use identity::*;

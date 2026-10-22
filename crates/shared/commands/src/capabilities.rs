@@ -3107,7 +3107,24 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &["invalid_file_path"],
             REVISION,
-            &["file_not_found", "import_unreadable"],
+            &["file_not_found", "import_unreadable", "polyline_geometry_loss", "unsupported_cad_format", "unsupported_cad_version", "unsupported_cad_encoding", "cad_file_too_large"],
+            LAYER,
+            &["nothing_to_import"],
+        ],
+        warnings: &[
+            "unit_assumed",
+            "unit_ignored",
+            "block_units_differ",
+            "import_losses",
+        ],
+        targets: none,
+    },
+    Entry {
+        id: "file.import.dwg",
+        refusals: &[
+            &["invalid_file_path"],
+            REVISION,
+            &["file_not_found", "import_unreadable", "polyline_geometry_loss", "unsupported_cad_version", "cad_file_too_large"],
             LAYER,
             &["nothing_to_import"],
         ],
@@ -3590,13 +3607,21 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "file.export.dwg",
+        refusals: &[&["invalid_file_path", "file_exists", "layer_not_found", "invalid_uid",
+            "entity_not_found", "nothing_to_export", "file_unwritable", "import_unreadable", "polyline_geometry_loss",
+            "unsupported_cad_version", "cad_file_too_large"]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
         id: "file.export.dxf",
         refusals: &[&[
             "invalid_file_path",
             "file_exists",
             "layer_not_found",
             "nothing_to_export",
-            "file_unwritable",
+            "file_unwritable", "polyline_geometry_loss",
         ]],
         warnings: &[],
         targets: none,
@@ -3677,6 +3702,7 @@ pub fn capabilities_of(id: &str) -> Option<CommandCapabilities> {
         }
     }
     Some(CommandCapabilities {
+        exchange: exchange_profile(id),
         targets: (entry.targets)(),
         refusals,
         warnings: entry.warnings.iter().map(|w| (*w).to_owned()).collect(),
@@ -3718,4 +3744,36 @@ mod tests {
             assert!(crate::codes::info(code).is_some(), "{code}");
         }
     }
+}
+
+/// A codec may decode more than the KentOS model can edit; never advertise both as one boolean.
+fn exchange_profile(id: &str) -> Option<crate::CadFormatCapabilities> {
+    if !matches!(id, "file.import.dxf" | "file.export.dxf" | "file.import.dwg" | "file.export.dwg") { return None; }
+    let dwg = id.ends_with("dwg");
+    let versions: Vec<String> = if dwg {
+        crate::DwgVersion::ALL.iter().map(|v| v.signature().to_owned()).collect()
+    } else {
+        ["AC1006", "AC1009", "AC1012", "AC1014", "AC1015", "AC1018", "AC1021", "AC1024", "AC1027", "AC1032"].iter().map(|v| (*v).to_owned()).collect()
+    };
+    Some(crate::CadFormatCapabilities {
+        format: if dwg { "DWG" } else { "DXF" }.into(),
+        provider: if dwg { "OpenCADCodec, pinned Git revision; KentOS model-space bridge" } else { "KentOS ASCII DXF" }.into(),
+        local: true, remote_upload: false, mid_decode_cancellation: !dwg,
+        read_versions: versions,
+        write_versions: if dwg { crate::DwgVersion::ALL.iter().map(|v| v.signature().to_owned()).collect() } else { vec!["AC1021".into()] },
+        encodings: if dwg { vec!["binary DWG".into()] } else { vec!["ASCII UTF-8 (AC1021+)".into(), "ASCII ANSI_1252 / ANSI_1254 (legacy)".into()] },
+        features: [
+            ("modelSpace2d", "native", "native", "Temel entity, katman, stil, blok ve NURBS; bildirilen dönüşüm/kayıp raporuna bakın."),
+            ("polylineIntegrity", "strict2d", "strict2d", "Düzlemsel genişlik/yay/kapanış/kot ve X/Y blok ölçeği korunur; 2B modelin temsil edemediği dönüşüm polyline_geometry_loss ile reddedilir. allowPolylineLoss açıkça seçilirse raporlu yaklaşık dönüşüm yapılır; eğik OCS tam yerel 3B desteği değildir."),
+            ("annotation", "appearance", "appearance", "Desteklenen ölçü/yazı/kılavuz; çoklu annotative scale veya foreign ilişki ağının tamamı değil."),
+            ("xref", "reference", "reference", "Kaynak yol, attach/overlay ve yerleştirme korunur; dış dosya kendiliğinden yüklenmez."),
+            ("layoutViewport", "native2d", "native2d", "Gerçek pafta kitabı, 2B ortografik VIEWPORT ve temel kâğıt öğeleri; 3B/perspektif, kırpma, atlas ve ileri pafta öğeleri kayıp raporunda."),
+            ("dynamicBlock", "appearance", "appearance", "Foreign evaluation graph düzenlenebilir sayılmaz; plain block görünüşü."),
+            ("constraint", "reportedLoss", "reportedLoss", "Çözümlenmiş geometri; foreign kısıt graph'ı aktarılmaz."),
+            ("aecProxy", "reportedLoss", "rejected", "Çözülebilen görünüş veya açık kayıp; bilinmeyen sınıf çalıştırılmaz."),
+            ("opaqueMetadata", "reportedLoss", "reportedLoss", "Kaynak kimlikleri raporda; eşlenemeyen pointer/dictionary graph'ı kayıpsız yazılmaz."),
+        ].iter().map(|(feature, read, write, note)| crate::CadFeatureSupport {
+            feature: (*feature).into(), read: (*read).into(), write: (*write).into(), note: (*note).into()
+        }).collect(),
+    })
 }

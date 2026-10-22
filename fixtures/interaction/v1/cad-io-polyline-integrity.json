@@ -1,0 +1,64 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "cad-io-polyline-integrity",
+  "title": "Çoklu çizgi kaybı önizlemesi ve açık kabul",
+  "source": "docs/adr/0582",
+  "covers": [
+    "CAD-IO-15"
+  ],
+  "document": "exchange.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.125
+  },
+  "clickTolerance": 0.2,
+  "steps": [
+    {
+      "run": "file.import.dxf",
+      "expect": {
+        "dialog": "DXF içe aktar"
+      }
+    },
+    {
+      "shot": "kayip-raporu"
+    },
+    {
+      "dialog": "DXF içe aktar",
+      "press": "İçe aktar",
+      "expect": {
+        "entities": 4,
+        "dialog": "DXF içe aktar"
+      }
+    },
+    {
+      "dialog": "DXF içe aktar",
+      "check": {
+        "Raporlanan çoklu çizgi kaybını kabul et": true
+      }
+    },
+    {
+      "shot": "acik-kabul"
+    },
+    {
+      "dialog": "DXF içe aktar",
+      "press": "İçe aktar",
+      "expect": {
+        "entities": 5
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "expect": {
+        "entities": 4
+      }
+    },
+    {
+      "shot": "geri-alindi"
+    }
+  ],
+  "openFile": "../../formats/v1/cad-io/ocs-0-width.dxf"
+}

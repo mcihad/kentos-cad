@@ -1375,6 +1375,54 @@ fn an_agent_imports_a_dxf_in_its_unit() {
 }
 
 #[test]
+fn an_agent_imports_a_dwg_through_the_pinned_codec() {
+    let mut server = Server::new();
+    let listed = ask(&mut server, 1, "tools/list", json!({}));
+    let tools = listed["result"]["tools"].as_array().expect("tools");
+    let import = tools
+        .iter()
+        .find(|t| t["name"] == "file.import.dwg")
+        .expect("file.import.dwg");
+    assert_eq!(import["annotations"]["destructiveHint"], false);
+    assert!(
+        import["inputSchema"]["properties"]
+            .get("fileUnit")
+            .is_some(),
+        "{import}"
+    );
+    let files = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/formats/v1/dwg");
+    let made = call(
+        &mut server,
+        "drawing.new",
+        json!({ "name": "Oda", "workspace": "cad", "drawingUnit": "m" }),
+    );
+    let drawing = made["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let path = files.join("mm.dwg").display().to_string();
+    let planned = call(
+        &mut server,
+        "file.import.dwg",
+        json!({ "drawing": drawing, "op": "plan", "path": path }),
+    );
+    assert_eq!(planned["isError"], false, "{planned}");
+    let unit = &planned["structuredContent"]["output"]["unit"];
+    assert_eq!(
+        (&unit["declared"], &unit["source"], &unit["factor"]),
+        (&json!(4), &json!("declared"), &json!(0.001))
+    );
+    let done = call(
+        &mut server,
+        "file.import.dwg",
+        json!({ "drawing": drawing, "path": path }),
+    );
+    assert_eq!(done["isError"], false, "{done}");
+    assert_eq!(done["structuredContent"]["output"]["objects"], 5);
+}
+
+#[test]
 fn an_agent_keeps_and_renames_a_named_view() {
     // docs/adr/0285 §1: the project's named views through the catalog's command.
     let mut server = Server::new();
@@ -1620,4 +1668,18 @@ fn an_agent_prepares_a_stac_item_and_a_bad_search_is_a_refusal() {
         Some(2),
         "{page}"
     );
+}
+
+#[test]
+fn an_agent_must_explicitly_accept_a_reported_polyline_loss() {
+    let mut server = Server::new();
+    let made = call(&mut server, "drawing.new", json!({"name":"Bütünlük", "workspace":"cad", "drawingUnit":"m"}));
+    let drawing = made["structuredContent"]["drawing"].as_str().unwrap().to_owned();
+    let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/formats/v1/cad-io/ocs-0-width.dxf");
+    let refused = call(&mut server,"file.import.dxf",json!({"drawing":drawing,"path":source,"op":"plan"}));
+    assert_eq!(refused["isError"],true,"{refused}");
+    assert_eq!(refused["structuredContent"]["error"]["code"],"polyline_geometry_loss","{refused}");
+    let accepted = call(&mut server,"file.import.dxf",json!({"drawing":drawing,"path":source,"op":"plan","allowPolylineLoss":true}));
+    assert_eq!(accepted["isError"],false,"{accepted}");
+    assert!(accepted["structuredContent"]["warnings"].as_array().unwrap().iter().any(|w| w["code"] == "import_losses"));
 }

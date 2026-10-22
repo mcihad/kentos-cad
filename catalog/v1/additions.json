@@ -2680,6 +2680,28 @@
       "shortcuts": [],
       "category": "Dosya",
       "status": "implemented"
+    },
+    {
+      "id": "file.import.dwg",
+      "title": "DWG içe aktar…",
+      "short": "DWG içe aktar",
+      "icon": "import",
+      "description": "DWG dosyasını içe aktar; sürümü sabit OpenCADCodec ile bu bilgisayarda, aktarım raporuyla.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Dosya",
+      "status": "implemented"
+    },
+    {
+      "id": "file.export.dwg",
+      "title": "DWG dışa aktar…",
+      "short": "DWG dışa aktar",
+      "icon": "export",
+      "description": "DWG dosyasını dışa aktar; sürümü sabit OpenCADCodec ile bu bilgisayarda, aktarım raporuyla.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Dosya",
+      "status": "implemented"
     }
   ],
   "icons": {

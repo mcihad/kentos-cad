@@ -46,6 +46,7 @@ impl App {
     /// yet goes by its name in the code.
     pub fn dialog_title(&self) -> Option<String> {
         self.dialog.map(|d| match d {
+            Dialog::Exchange => self.exchange_trace_title(),
             Dialog::BlockDefine => crate::blocks::DEFINE_TITLE.to_owned(),
             Dialog::BlockAttributes => crate::block_attributes::ATTRIBUTES_TITLE.to_owned(),
             Dialog::AttributeValues => crate::attribute_values::VALUES_TITLE.to_owned(),
@@ -113,6 +114,7 @@ impl App {
     /// nothing (a button that is off, a box already so).
     pub fn dialog_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         match self.dialog {
+            Some(Dialog::Exchange) => self.exchange_trace_control(control),
             Some(Dialog::BlockDefine) => self.block_define_control(control),
             Some(Dialog::BlockAttributes) => self.block_attributes_control(control),
             Some(Dialog::AttributeValues) => self.attribute_values_control(control),

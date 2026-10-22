@@ -100,7 +100,8 @@ struct Format {
     badge: &'static str,
 }
 
-const IMPORTS: [Format; 7] = [
+const IMPORTS: [Format; 8] = [
+    Format { id: "file.import.dwg", label: "DWG", detail: "R14–2018 binary biçimleri; temel 2D kapsamı ve kayıp raporu", badge: "DWG" },
     Format {
         id: "file.import.dxf",
         label: "DXF",
@@ -146,7 +147,8 @@ const IMPORTS: [Format; 7] = [
     },
 ];
 
-const EXPORTS: [Format; 6] = [
+const EXPORTS: [Format; 7] = [
+    Format { id: "file.export.dwg", label: "DWG", detail: "Seçilen DWG biçim sürümünde; doğrulanan dosya tek adımda yazılır", badge: "DWG" },
     Format {
         id: "file.export.dxf",
         label: "DXF",
@@ -199,12 +201,13 @@ const RECENT: usize = 5;
 const PROJECTS: u32 = 5;
 
 /// Commands that need a drawing on screen.
-const NEEDS_DRAWING: [&str; 7] = [
+const NEEDS_DRAWING: [&str; 8] = [
     "file.save",
     "file.saveAs",
     "file.settings",
     "file.print",
     "file.export.dxf",
+    "file.export.dwg",
     "file.export.ncn",
     "file.export.geojson",
 ];

@@ -1113,7 +1113,13 @@ codes! {
     /// A file to read that is not there (`file.import.dxf`, docs/adr/0257 §3).
     FILE_NOT_FOUND = "file_not_found", Failed, false, "Okunacak dosya yok.";
     /// A file to import that cannot be read as its format.
+    /// An irreversible polyline conversion needs explicit acceptance.
+    POLYLINE_GEOMETRY_LOSS = "polyline_geometry_loss", Failed, false, "Çoklu çizginin genişliği, yayı veya kotu kayıpsız aktarılamıyor; seçenekleri düzeltin veya önce plan üzerinde allowPolylineLoss=true ile ayrıntılı kayıp raporunu inceleyin.";
     IMPORT_UNREADABLE = "import_unreadable", Failed, false, "Dosya okunamadı ya da biçimi bozuk; hiçbir şey alınmadı.";
+    UNSUPPORTED_CAD_FORMAT = "unsupported_cad_format", Failed, false, "Dosya seçilen CAD biçiminde değil; doğru içe aktarma komutunu kullanın.";
+    UNSUPPORTED_CAD_ENCODING = "unsupported_cad_encoding", Failed, false, "CAD dosyasının ikili/metin kodlaması desteklenmiyor; desteklenen ASCII DXF biçiminde kaydedin.";
+    UNSUPPORTED_CAD_VERSION = "unsupported_cad_version", Failed, false, "CAD dosyasının binary biçim sürümü desteklenmiyor; kaynak yazılımda desteklenen biçimde kaydedin.";
+    CAD_FILE_TOO_LARGE = "cad_file_too_large", Failed, false, "CAD dosyası ya da aktarma verisi 256 MiB sınırını aşıyor; dosyayı bölün.";
     /// An import with no object to take: the file holds none, or every layer was left out.
     NOTHING_TO_IMPORT = "nothing_to_import", Failed, false, "Dosyada ya da seçilen katmanlarında alınacak nesne yok.";
     /// The file declares no unit (or a code no one defines): its numbers were taken in the project's unit (docs/adr/0257 §1).

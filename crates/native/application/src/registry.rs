@@ -5,7 +5,7 @@
 //! through here, so they all run the same handler the tools run.
 
 use crate::{
-    block_params, blocks_freeze, blocks_proxy, blocks_query, blocks_replace, file_import_block,
+    file_import_dwg, block_params, blocks_freeze, blocks_proxy, blocks_query, blocks_replace, file_import_block,
 };
 use kentos_commands::{
     AddressesDefine, AnnotationsScales, ArcCreate, ArraysEdit, BlocksDefine, BlocksEdit, CallOp, ChangesetApply,
@@ -307,6 +307,7 @@ macro_rules! by_command {
             kentos_commands::CAD_SETTINGS_SET => $then!(settings_set, SettingsSet),
             kentos_commands::CAD_UNITS_CHANGE => $then!(units_change, UnitsChange),
             kentos_commands::FILE_IMPORT_DXF => $then!(file_import, ImportDxf),
+            kentos_commands::FILE_IMPORT_DWG => $then!(file_import_dwg, ImportDxf),
             kentos_commands::FILE_IMPORT_GPKG => $then!(file_import_gpkg, ImportGpkg),
             kentos_commands::FILE_IMPORT_SLD => $then!(sld, ImportSld),
             kentos_commands::FILE_IMPORT_QML => $then!(qml, ImportQml),

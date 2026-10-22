@@ -7551,7 +7551,7 @@ pub fn catalog() -> CommandCatalog {
                       Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). \
                       Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. \
                       Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DXF: ad.dxf”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. \
-                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder."
                 .into(),
             aliases: vec!["dxfin".into()],
             effect: CommandEffect::Document,
@@ -7581,6 +7581,50 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Birim bildirmeyen dosya, santimetre olduğu bilinerek, ağacın üstüne".into(),
                     input: json!({ "path": "/plan/eski.dxf", "fileUnit": "cm", "group": "", "skipLayers": ["DEFPOINTS"] }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_DWG.into(),
+            version: crate::FILE_IMPORT_DWG_VERSION,
+            title: "DWG içe aktar".into(),
+            summary: "path'teki DWG dosyasını açık çizime alır, masaüstünün DWG içe aktar penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile (ADR 0580), ağ veya uzak dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; \
+                      yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. \
+                      Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. \
+                      Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). \
+                      Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. \
+                      Kaynak DWG sürümü ve bellek içi DXF aktarma biçimi report.source içinde ayrı söylenir. R14–2018 biçim imzaları desteklenir; korunmayan içerik report.skipped/notes içindedir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DWG: ad.dwg”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder."
+                .into(),
+            aliases: vec!["dwgin".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportDxf>(),
+            output: schema::<crate::DxfImported>(),
+            plan: Some(schema::<crate::DxfImported>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Milimetrelik plan metrelik projeye".into(),
+                    input: json!({ "path": "/plan/kat-plani.dwg" }),
+                    output: Some(json!({
+                        "file": "kat-plani.dwg", "bytes": 48213, "sha256": "9f2c4c0e1b7a3d5e8f6a2b4c6d8e0f1a3b5c7d9e1f2a4b6c8d0e2f4a6b8c0d2e",
+                        "unit": { "declared": 4, "used": 4, "name": "milimetre", "source": "declared", "factor": 0.001, "assumed": false },
+                        "closedPolylines": "line",
+                        "objects": 312, "targets": { "DUVAR": "import-duvar", "0": "cizim" },
+                        "layers": [{ "id": "import-duvar", "name": "DUVAR" }], "group": "import-kat-plani-dxf",
+                        "blocks": 2, "textStyles": 1, "dimensionStyles": 0, "report": {}, "revision": "12"
+                    })),
+                },
+                CommandExample {
+                    title: "Birim bildirmeyen dosya, santimetre olduğu bilinerek, ağacın üstüne".into(),
+                    input: json!({ "path": "/plan/eski.dwg", "fileUnit": "cm", "group": "", "skipLayers": ["DEFPOINTS"] }),
                     output: None,
                 },
             ],
@@ -8643,7 +8687,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             title: "DXF dışa aktar".into(),
             summary: "Çizimi AutoCAD 2007 DXF dosyası olarak yazar: bütün nesneler ya da layers'ın katmanlarındakiler, katmanlarıyla; DXF'in tutamadıkları KentOS verisiyle. \
                       Dosya yarım kalmaz: geçici adla yazılır, diske indirilir, geri okunup denetlenir, sonra tek adımda yerine konur; eski dosya ancak yenisi tamsa gider. overwrite verilmezse var olan dosya reddedilir (file_exists). \
-                      plan dosyayı yazmadan yazılacak olanı söyler (nesneler, katmanlar, baytlar, yazıcının raporu). Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması dosyayı geri almaz."
+                      plan dosyayı yazmadan yazılacak olanı söyler (nesneler, katmanlar, baytlar, yazıcının raporu). Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması dosyayı geri almaz. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder."
                 .into(),
             aliases: vec!["dxf".into(), "dxfout".into()],
             effect: CommandEffect::Query,
@@ -8660,6 +8704,32 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             examples: vec![CommandExample {
                 title: "Bütün çizim".into(),
                 input: json!({ "path": "/tmp/kat-plani.dxf", "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_DWG.into(),
+            version: crate::FILE_EXPORT_DWG_VERSION,
+            title: "DWG dışa aktar".into(),
+            summary: "Çizimi seçilen binary DWG biçiminde yazar (version: AC1014, AC1015, AC1018, AC1021, AC1024, AC1027 veya varsayılan AC1032). AutoCAD ürün yılı binary biçim yılı değildir. Sürümü sabit OpenCADCodec ile bellekte dönüştürür; dosya dışarı gönderilmez: bütün nesneler, uids ile seçilenler ya da layers'ın katmanlarındakiler, katmanlarıyla; DWG'in tutamadıkları KentOS verisiyle. \
+                      Dosya yarım kalmaz: geçici adla yazılır, diske indirilir, geri okunup denetlenir, sonra tek adımda yerine konur; eski dosya ancak yenisi tamsa gider. overwrite verilmezse var olan dosya reddedilir (file_exists). \
+                      plan dosyayı yazmadan yazılacak olanı söyler (nesneler, katmanlar, baytlar, yazıcının raporu). Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması dosyayı geri almaz. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder."
+                .into(),
+            aliases: vec!["dwg".into(), "dwgout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportDwg>(),
+            output: schema::<crate::DwgExported>(),
+            plan: Some(schema::<crate::DwgExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün çizim".into(),
+                input: json!({ "path": "/tmp/kat-plani.dwg", "overwrite": true, "version": "AC1032" }),
                 output: None,
             }],
         },
@@ -9491,7 +9561,7 @@ mod tests {
                     crate::CAD_UNITS_CHANGE => {
                         serde_json::from_value::<crate::UnitsChange>(e.input.clone()).map(|_| ())
                     }
-                    crate::FILE_IMPORT_DXF => {
+                    crate::FILE_IMPORT_DXF | crate::FILE_IMPORT_DWG => {
                         serde_json::from_value::<crate::ImportDxf>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_IMPORT_PDF => {
@@ -9541,6 +9611,9 @@ mod tests {
                     }
                     crate::FILE_EXPORT_DXF => {
                         serde_json::from_value::<crate::ExportDxf>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_DWG => {
+                        serde_json::from_value::<crate::ExportDwg>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_GPKG => {
                         serde_json::from_value::<crate::ExportGpkg>(e.input.clone()).map(|_| ())
@@ -10046,7 +10119,7 @@ mod tests {
                             serde_json::from_value::<crate::UnitsChanged>(output.clone())
                                 .map(|_| ())
                         }
-                        crate::FILE_IMPORT_DXF => {
+                        crate::FILE_IMPORT_DXF | crate::FILE_IMPORT_DWG => {
                             serde_json::from_value::<crate::DxfImported>(output.clone()).map(|_| ())
                         }
                         crate::CAD_WALLS_CREATE => {

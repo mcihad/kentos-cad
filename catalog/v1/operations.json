@@ -2080,6 +2080,20 @@
         "cad.rasters.gpkgwrite"
       ],
       "note": "Pencere karo piramidinin planını gösterir, GeoPackage'ı komut yazar (ADR 0556 §5)."
+    },
+    "file.import.dwg": {
+      "level": "semantic",
+      "via": [
+        "file.import.dwg"
+      ],
+      "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0580)."
+    },
+    "file.export.dwg": {
+      "level": "semantic",
+      "via": [
+        "file.export.dwg"
+      ],
+      "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0580)."
     }
   },
   "tools": {

@@ -286,6 +286,7 @@ pub(super) type Wholes = BTreeMap<u32, (Option<String>, Vec<Entity>)>;
 
 pub(super) struct Writer<'a> {
     pub out: &'a mut Out,
+    pub uids: &'a BTreeMap<u32, kentos_contracts::EntityId>,
     /// The dimensions' own blocks (BLOCKS section), and their block records.
     pub blocks: &'a mut Out,
     pub records: &'a mut Vec<(u64, String, i64)>,
@@ -307,6 +308,7 @@ pub(super) struct Writer<'a> {
     pub points: bool,
     /// The block record the objects belong to: model space, or a definition's.
     pub owner: u64,
+    pub paper: Option<&'a str>,
     /// A definition's objects are written (docs/adr/0144 §5): one without a
     /// layer of its own on 0, BYBLOCK where it has no colour or weight of
     /// its own; not counted (the drawing's objects are).
@@ -481,6 +483,7 @@ impl Writer<'_> {
             }
         };
         self.out.str(8, layer);
+        if let Some(name) = self.paper.filter(|_| !self.defining) { self.out.int(67, 1); self.out.str(410, &super::blocks::one_line(name)); }
         let follows =
             |p: kentos_contracts::LookPart| self.defining && base.look.by_layer.contains(&p);
         // Its own line type (docs/adr/0260 §2), its LTYPE record written with the table; a definition's object
@@ -1054,6 +1057,12 @@ impl Writer<'_> {
         self.out.str(8, layer);
     }
 
+    fn path_source(&self, base: &EntityBase) -> String {
+        if let Some(paper) = self.paper { return format!("paper:{paper}/object:{}", base.id); }
+        if self.defining { return format!("block-record:{:X}/object:{}", self.owner, base.id); }
+        self.uids.get(&base.id).map(|id| id.to_text()).unwrap_or_else(|| format!("object:{}",base.id))
+    }
+
     /// A polyline or polygon (or a hole of one, `outline` false) with elevations. DXF holds
     /// them at the vertex only in a 3D POLYLINE, which has no arcs: a path with arcs keeps its
     /// arcs and holds one elevation for all its vertices (a LWPOLYLINE's 38) when they share
@@ -1068,6 +1077,13 @@ impl Writer<'_> {
         widths: Option<&[[f64; 2]]>,
         mut meta: Meta,
     ) -> u64 {
+        // Planar paths with widths use LWPOLYLINE even without arcs: a 3D
+        // POLYLINE cannot carry their widths. The single elevation is standard DXF.
+        let level = zs.first().copied().flatten().filter(|z| zs.iter().all(|w| *w == Some(*z)));
+        if let Some(z) = level.filter(|_| widths.is_some()) {
+            meta.z = z == 0.0;
+            return self.lwpolyline(base, pts, bulges, closed, Some(z), widths, meta);
+        }
         if !bulges.is_some_and(has_arcs) {
             elevation_meta(&mut meta, zs);
             if outline {
@@ -1079,10 +1095,10 @@ impl Writer<'_> {
             }
             // A 3D polyline has no widths (docs/adr/0258 §2).
             if widths.is_some() {
-                self.report.note(
-                    "Genişlikli çoklu çizgi",
+                self.report.polyline_loss_from(
+                    "nonplanar_width", "Genişlikli çoklu çizgi",
                     "köşe kotları için 3B çoklu çizgi olarak yazıldı; DXF'in 3B çoklu çizgisi genişlik taşımadığı için genişliği yazılmadı",
-                    0,
+                    0, "POLYLINE", Some(self.path_source(base)),
                 );
             }
             self.without_elevation(&meta);
@@ -1106,11 +1122,11 @@ impl Writer<'_> {
                 self.lwpolyline(base, pts, bulges, closed, Some(z), widths, meta)
             }
             None => {
-                if outline {
-                    self.report.note(
-                        "Kot (Z)",
+                {
+                    self.report.polyline_loss_from(
+                        "nonplanar_bulge", "Kot (Z)",
                         "yaylı çoklu çizginin köşe kotları farklı; DXF'in 3B çoklu çizgisi yay taşımadığı için kotlar yazılmadı, yaylar korundu",
-                        0,
+                        0, "LWPOLYLINE", Some(self.path_source(base)),
                     );
                 }
                 self.lwpolyline(base, pts, bulges, closed, None, widths, meta)
@@ -1834,6 +1850,7 @@ impl Writer<'_> {
         let (extent, points) = {
             let mut w = Writer {
                 out: &mut objects,
+                uids: self.uids,
                 blocks: &mut *self.blocks,
                 records: &mut *self.records,
                 dimensions: &mut *self.dimensions,
@@ -1847,6 +1864,7 @@ impl Writer<'_> {
                 extent: None,
                 points: false,
                 owner: record,
+                paper: None,
                 defining: true,
                 names: self.names,
                 defined: self.defined,

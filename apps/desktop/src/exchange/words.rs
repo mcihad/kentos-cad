@@ -149,7 +149,12 @@ pub fn report_lines<'a, Message: 'a>(
     let mut lines: Vec<Element<'a, Message>> = items
         .iter()
         .take(max)
-        .map(|i| text_line(kind, report_text(i)))
+        .map(|i| text_line(match i.severity {
+            Some(kentos_commands::ReportSeverity::Error) => Kind::Error,
+            Some(kentos_commands::ReportSeverity::Warning) => Kind::Warn,
+            Some(kentos_commands::ReportSeverity::Info) => Kind::Info,
+            None => kind,
+        }, report_text(i)))
         .collect();
     if items.len() > max {
         lines.push(text_line(
@@ -265,6 +270,7 @@ mod tests {
     #[test]
     fn report_items_read_as_the_webs_sentences() {
         let item = ReportItem {
+            severity: None, details: Vec::new(),
             what: "IMAGE".into(),
             count: 3,
             reason: "raster görüntüler alınmaz".into(),
@@ -282,6 +288,7 @@ mod tests {
         assert_eq!(report_text(&plain), "IMAGE: 1, raster görüntüler alınmaz.");
         // One about the whole file (its unit, docs/adr/0165 §2) has no count.
         let about = ReportItem {
+            severity: None, details: Vec::new(),
             what: "Birim".into(),
             count: 0,
             reason: "dosya inç biriminde; değerler çizimin birimine, milimetreye çevrildi".into(),

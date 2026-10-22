@@ -103,8 +103,7 @@ fn read(path: &str, page: Option<u32>, at: &str) -> Result<Source, Stop> {
             at,
         ));
     }
-    let bytes = std::fs::read(p)
-        .map_err(|_| fail(codes::FILE_NOT_FOUND, format!("{path} okunamadı: dosya yok ya da açılamıyor."), at))?;
+    let bytes = crate::file_import::read_cad_bytes(p).map_err(|e| fail(&e.code, e.message, at))?;
     // A PDF: its page as the source drawing (docs/adr/0351 §2).
     if kentos_formats::pdf::is_pdf(&bytes) {
         let number = page.unwrap_or(1);
@@ -134,7 +133,10 @@ fn read(path: &str, page: Option<u32>, at: &str) -> Result<Source, Stop> {
             "operation.page",
         ));
     }
-    let drawing = crate::file_import_block::read_drawing(&bytes).map_err(|why| {
+    let drawing = match kentos_kcad::sniff(&bytes) {
+        kentos_kcad::Sniff::Kcad | kentos_kcad::Sniff::Json => crate::file_import_block::read_drawing(&bytes),
+        _ => crate::cad_source::drawing(&bytes, p),
+    }.map_err(|why| {
         fail(
             codes::IMPORT_UNREADABLE,
             format!("{} bir KentOS çizimi olarak okunamadı: {why}", file_name(path)),

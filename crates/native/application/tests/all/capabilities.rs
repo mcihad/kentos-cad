@@ -87,6 +87,15 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("file.import.dwg", "polyline_geometry_loss", "DWG codec bridge ve plan/execute değişmezliği headless::dwg::polyline_integrity testinde gerçek binary ile sınanır; ortak bağımsız ASCII korpusu file.import.polyline-policy.json içindedir."),
+    ("file.import.dxf", "cad_file_too_large", "256 MiB sınırı; bu boyutta veri ortak korpusa alınmaz, preflight sınırlar (CAD-IO-09/19)"),
+    ("file.import.dxf", "unsupported_cad_format", "yanlış DWG seçimi preflight'ın biçim testinde sınanır"),
+    ("file.import.dxf", "unsupported_cad_version", "bütün ilan edilmiş ASCII sürümleri ve gelecekteki bilinmeyen sürüm preflight testinde sınanır"),
+    ("file.import.dxf", "unsupported_cad_encoding", "binary, UTF-16 ve desteklenmeyen kod sayfası preflight testinde sınanır"),
+    ("file.import.dwg", "cad_file_too_large", "256 MiB sınırı adaptörde; bu boyutta dosya ortak korpusa alınmaz (ADR 0580)"),
+    ("file.import.dwg", "block_units_differ", "blok birimleri ortak DXF yolu; DXF ortak durumları ve adaptör korpusu sınar (ADR 0580)"),
+    ("file.import.dwg", "unit_assumed", "birimsiz R14 adaptör testi ve ortak DXF varsayılan birim testleri sınar (ADR 0580)"),
+    ("file.import.dwg", "import_losses", "atlanan kayıtlar codec raporundan gelir; ileri kaynaklar üretim korpusuyla ayrıca kabul edilecek (ADR 0580)"),
     (
         "cad.sheets.set",
         "book_unreadable",

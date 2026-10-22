@@ -41,6 +41,8 @@ pub struct Common {
     pub weight: Weight,
     pub extrusion: P3,
     pub paper: bool,
+    pub layout: String,
+    pub owner: Option<u64>,
     pub invisible: bool,
     /// Its line type's name (6), pattern scale (48) and transparency (440; docs/adr/0260).
     pub line_type: Option<String>,
@@ -374,7 +376,9 @@ fn common(list: &[Pair<'_>], dec: Decoder) -> Result<Common, Unreadable> {
             g.num_or(220, 0.0)?,
             g.num_or(230, 1.0)?,
         ],
-        paper: g.int(67) == 1,
+        paper: g.int(67) == 1 || (!g.string(410).is_empty() && !g.string(410).eq_ignore_ascii_case("Model")),
+        layout: g.string(410),
+        owner: u64::from_str_radix(g.string(330).trim(), 16).ok(),
         invisible: g.int(60) == 1,
         line_type: g.has(6).then(|| g.string(6)),
         ltscale: list
@@ -429,6 +433,7 @@ pub fn parse(
             let mut bulges: Vec<f64> = Vec::new();
             let mut widths: Vec<[f64; 2]> = Vec::new();
             let constant = g.num_or(43, 0.0)?;
+            let variable = list.iter().any(|p| matches!(p.code, 40 | 41));
             for p in list {
                 let v = || {
                     parse_real(p.text()).ok_or_else(|| {
@@ -465,7 +470,7 @@ pub fn parse(
                 }
             }
             // The vertices' own widths when any is given, else the constant width for every edge.
-            let widths = if widths.iter().any(|[a, b]| *a != 0.0 || *b != 0.0) {
+            let widths = if variable {
                 Some(widths)
             } else if constant != 0.0 {
                 Some(vec![[constant, constant]; pts.len()])

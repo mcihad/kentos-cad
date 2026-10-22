@@ -312,6 +312,8 @@ fn merge(mut results: Vec<ImportResult>) -> ImportResult {
             && d.srid != first
         {
             one.report.notes.push(ReportItem {
+                severity: None,
+                details: Vec::new(),
                 what: "Katmanların sistemi".into(),
                 count: 1,
                 reason: format!(

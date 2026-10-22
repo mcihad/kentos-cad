@@ -29,7 +29,6 @@ use crate::geom::{
     Similarity, Tf, arc_points, arc_steps, bulge_path_points, bulge_path_zs, dist, ellipse_from,
     finite, has_arcs, ocs_tf, ocs_z, ring_area, ring_contains, to_core, v,
 };
-use crate::gis::CLOSING_Z;
 use crate::math::{TAU, atan2, cos, deg, hypot, norm_angle, rad, sin, sin_cos_deg};
 use crate::nurbs;
 use crate::report::Report;
@@ -63,6 +62,8 @@ pub struct Block {
     pub base: P3,
     pub entities: Vec<Parsed>,
     pub xref: bool,
+    pub xref_path: String,
+    pub overlay: bool,
 }
 
 /// What the tables and blocks sections defined (read-only while entities are converted).
@@ -110,6 +111,8 @@ pub struct Library {
 #[derive(Clone)]
 pub struct Ctx {
     pub tf: Tf,
+    /// Exact source semantics, before floating point composition: anisotropy or tilted OCS.
+    pub deformed: bool,
     pub z_scale: f64,
     pub z_offset: f64,
     pub layer: Option<String>,
@@ -134,6 +137,7 @@ impl Ctx {
     pub fn model() -> Ctx {
         Ctx {
             tf: Tf::IDENTITY,
+            deformed: false,
             z_scale: 1.0,
             z_offset: 0.0,
             layer: None,
@@ -755,7 +759,7 @@ impl<'l> Emitter<'l> {
         let names: Vec<&String> = lib
             .order
             .iter()
-            .filter(|n| !n.starts_with('*') && lib.blocks.get(*n).is_some_and(|b| !b.xref))
+            .filter(|n| !n.starts_with('*'))
             .collect();
         for (i, n) in names.iter().enumerate() {
             self.kept.insert((*n).clone(), block_id(i + 1));
@@ -772,8 +776,8 @@ impl<'l> Emitter<'l> {
             let outer = own.then(|| std::mem::take(&mut self.out.report));
             self.defining = true;
             let ctx = Ctx::definition(n);
-            for x in &block.entities {
-                self.emit(x, &ctx);
+            if !block.xref {
+                for x in &block.entities { self.emit(x, &ctx); }
             }
             self.notes_done();
             // The rings KentOS wrote as polylines of their own go back into their polygons, as in the drawing.
@@ -789,7 +793,14 @@ impl<'l> Emitter<'l> {
             self.pending = pending;
             defs.push(BlockDefinition {
                 dynamic: None,
-                xref: None,
+                xref: block.xref.then(|| kentos_contracts::XrefSource {
+                    path: block.xref_path.clone(),
+                    relative: (!block.xref_path.starts_with('/') && !block.xref_path.contains(':')).then(|| block.xref_path.clone()),
+                    kind: if block.overlay { kentos_contracts::XrefKind::Overlay } else { kentos_contracts::XrefKind::Attach },
+                    // Unloaded source: no file has been read. Zero is an unknown digest sentinel.
+                    digest: "0".repeat(64), unloaded: true, group: None, parent: None,
+                    objects: Vec::new(), page: None, underlay: None,
+                }),
                 card: None,
                 id: self.kept[n],
                 name: block.name.clone(),
@@ -875,6 +886,10 @@ impl<'l> Emitter<'l> {
 
     fn skip(&mut self, what: &str, reason: &str, line: u32) {
         self.out.report.skip(what, reason, line);
+    }
+
+    fn polyline_loss(&mut self, code: &str, what: &str, reason: &str, line: u32) {
+        self.out.report.polyline_loss(code, what, reason, line);
     }
 
     fn note(&mut self, what: &str, reason: &str, line: u32) {
@@ -1333,7 +1348,7 @@ impl<'l> Emitter<'l> {
                     *elevation != 0.0,
                 );
                 let pts: Vec<Vec2> = pts.iter().map(|p| v(p[0], p[1])).collect();
-                self.path(m, pts, bulges.clone(), *closed, zs, widths.clone(), b(), e);
+                self.path(m, !ctx.deformed && ext[0] == 0.0 && ext[1] == 0.0, pts, bulges.clone(), *closed, zs, widths.clone(), b(), e);
             }
             Kind::Polyline {
                 flags,
@@ -1866,6 +1881,7 @@ impl<'l> Emitter<'l> {
     fn path(
         &mut self,
         m: Tf,
+        preserves_shape: bool,
         pts: Vec<Vec2>,
         mut bulges: Vec<f64>,
         closed: bool,
@@ -1876,28 +1892,25 @@ impl<'l> Emitter<'l> {
     ) {
         let mut pts = pts;
         let mut zs = zs.filter(|z| z.len() == pts.len());
-        let mut widths = widths.filter(|w| w.len() == pts.len());
+        let mut widths = widths.filter(|w| w.len() == pts.len() && w.iter().any(|[a,b]| *a != 0.0 || *b != 0.0));
         bulges.resize(pts.len(), 0.0);
         // A closed path that repeats its first vertex: the repeat is not a corner.
-        if closed && pts.len() > 1 && pts.first() == pts.last() {
+        if closed && pts.len() > 1 && pts.first() == pts.last()
+            && zs.as_ref().is_none_or(|z| z.first() == z.last()) {
             pts.pop();
             bulges.pop();
             if let Some(w) = widths.as_mut() {
                 w.pop();
             }
             if let Some(z) = zs.as_mut() {
-                // Its own height goes with it; the first vertex keeps its own, and that is said when they differ.
-                let last = z.pop().flatten();
-                if last.is_some() && last != z.first().copied().flatten() {
-                    self.note(CLOSING_Z.0, CLOSING_Z.1, e.line);
-                }
+                z.pop();
             }
         }
         if pts.len() < 2 {
             return self.skip(&e.name, "iki köşesi yok", e.line);
         }
         let wide = widths.is_some();
-        let (pts, bulges, zs, widths) = match (has_arcs(&bulges), m.similarity()) {
+        let (pts, bulges, zs, widths) = match (has_arcs(&bulges), m.similarity().filter(|_| preserves_shape)) {
             (_, Some(s)) => {
                 let pts: Vec<Vec2> = pts.iter().map(|p| m.apply(*p)).collect();
                 let bulges: Vec<f64> = if s.mirror {
@@ -1919,8 +1932,8 @@ impl<'l> Emitter<'l> {
                 let ring = bulge_path_points(&pts, &bulges, closed);
                 // The points sampled along an arc edge take the elevation the edge has there.
                 let zs = zs.map(|z| bulge_path_zs(&pts, &bulges, &z, closed));
-                self.note(
-                    &e.name,
+                self.polyline_loss(
+                    "nonuniform_bulge", &e.name,
                     "yaylı kenarları eşit olmayan ölçekle eklendiği için noktalara bölündü",
                     e.line,
                 );
@@ -1934,8 +1947,8 @@ impl<'l> Emitter<'l> {
             }
         };
         if wide && widths.is_none() {
-            self.note(
-                "Genişlikli çoklu çizgi",
+            self.polyline_loss(
+                "nonuniform_width", "Genişlikli çoklu çizgi",
                 "eşit olmayan ölçekle eklendiği için genişliği alınmadı; çizgi ekseniyle geldi",
                 e.line,
             );
@@ -1950,8 +1963,8 @@ impl<'l> Emitter<'l> {
         let line = self.closed_lines || e.meta.as_ref().is_some_and(|m| m.line);
         if closed && !line && (pts.len() >= 3 || bulges.is_some()) {
             if widths.is_some() {
-                self.note(
-                    "Genişlikli kapalı çoklu çizgi",
+                self.polyline_loss(
+                    "area_width", "Genişlikli kapalı çoklu çizgi",
                     "kapalı alan olarak alındığı için genişliği alınmadı; genişliğiyle almak için kapalı çoklu çizgileri çizgi olarak alın",
                     e.line,
                 );
@@ -1986,8 +1999,8 @@ impl<'l> Emitter<'l> {
                     )
                     .is_some() =>
                 {
-                    self.note(
-                        "Genişlikli çoklu çizgi",
+                    self.polyline_loss(
+                        "invalid_width", "Genişlikli çoklu çizgi",
                         "genişlikleri geçersiz (eksi ya da sonsuz) olduğu için alınmadı",
                         e.line,
                     );
@@ -2034,7 +2047,7 @@ impl<'l> Emitter<'l> {
             // 3D polyline: world coordinates, straight segments, a height at each vertex; no widths.
             let pts: Vec<Vec2> = verts.iter().map(|x| xy(x.p)).collect();
             let zs = Self::heights(ctx, e, verts.iter().map(|x| x.p[2]), false);
-            return self.path(ctx.tf, pts, Vec::new(), closed, zs, None, b, e);
+            return self.path(ctx.tf, !ctx.deformed, pts, Vec::new(), closed, zs, None, b, e);
         }
         let Some(m) = ocs(ctx, ext, elevation) else {
             return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
@@ -2053,7 +2066,7 @@ impl<'l> Emitter<'l> {
             .iter()
             .any(|x| x.widths != [0.0, 0.0])
             .then(|| verts.iter().map(|x| x.widths).collect());
-        self.path(m, pts, bulges, closed, zs, widths, b, e);
+        self.path(m, !ctx.deformed && ext[0] == 0.0 && ext[1] == 0.0, pts, bulges, closed, zs, widths, b, e);
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -2157,7 +2170,7 @@ impl<'l> Emitter<'l> {
                     }
                 }
             };
-            return self.path(Tf::IDENTITY, pts, Vec::new(), closed, None, None, b, e);
+            return self.path(Tf::IDENTITY, true, pts, Vec::new(), closed, None, None, b, e);
         }
         if fit.len() >= 2 {
             if own.is_none() {
@@ -2581,11 +2594,8 @@ impl<'l> Emitter<'l> {
             );
         };
         if block.xref {
-            return self.skip(
-                "Dış başvuru (XREF)",
-                "dış başvurulu çizimler alınmaz; AutoCAD'de bağlayıp (BIND) yeniden kaydedin",
-                e.line,
-            );
+            return self.skip("Dış başvuru (XREF)",
+                "Blokları patlat seçeneğiyle yüklenmemiş dış başvuru açılamaz; başvuruyu korumak için bu seçeneği kapatın.", e.line);
         }
         if ctx.chain.contains(&key) || ctx.chain.len() >= MAX_DEPTH {
             return self.skip(
@@ -2598,6 +2608,10 @@ impl<'l> Emitter<'l> {
             return self.skip("Blok (INSERT)", "doğrultusu (210) geçersiz", e.line);
         };
         let [sx, sy, sz] = scale;
+        let nz = super::extrusion_z(e.common.extrusion);
+        if nz.abs() != 1.0 {
+            self.polyline_loss("block_ocs", "Blok (INSERT)", "eğik blok düzleminin tam 3B dönüşümü 2B modelde korunamaz", e.line);
+        }
         if sx == 0.0 || sy == 0.0 {
             return self.skip("Blok (INSERT)", "ölçeği sıfır", e.line);
         }
@@ -2613,7 +2627,6 @@ impl<'l> Emitter<'l> {
             Color::True(rgb) => aci::true_color(rgb),
         };
         let byblock_weight = self.insert_weight(e, ctx, layer);
-        let nz = super::extrusion_z(e.common.extrusion);
         let mut chain = ctx.chain.clone();
         chain.push(key);
         // An array insert (MINSERT); a huge one stops at the object limit or at the walk's.
@@ -2640,6 +2653,7 @@ impl<'l> Emitter<'l> {
                 .then(&ctx.tf);
             let child = Ctx {
                 tf: local,
+                deformed: ctx.deformed || sx.abs() != sy.abs() || e.common.extrusion[0] != 0.0 || e.common.extrusion[1] != 0.0,
                 z_scale: ctx.z_scale * sz * nz,
                 z_offset: ctx.z_offset + ctx.z_scale * nz * (p[2] - sz * block.base[2]),
                 layer: Some(layer.to_string()),
@@ -2979,8 +2993,8 @@ impl<'l> Emitter<'l> {
             block: id,
             p: v(placed.p[0], placed.p[1]),
             scale: sx.abs(),
-            // Unequal factors stay one insert (docs/adr/0315 §3); equal ones within a billionth are one.
-            y_scale: (sx != 0.0 && (sx.abs() - sy.abs()).abs() > sx.abs() * 1e-9)
+            // Every distinct factor stays distinct, including sub-billionth differences.
+            y_scale: (sx.abs() != sy.abs())
                 .then_some(sy.abs()),
             rotation: exact.unwrap_or_else(|| turn_of(degrees)),
             mirror,
@@ -3014,6 +3028,7 @@ impl<'l> Emitter<'l> {
         let mut chain = ctx.chain.clone();
         chain.push(key);
         let child = Ctx {
+            deformed: ctx.deformed || e.common.extrusion[0] != 0.0 || e.common.extrusion[1] != 0.0,
             tf: o.then(&ctx.tf),
             layer: Some(layer.to_string()),
             byblock,

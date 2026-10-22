@@ -10,6 +10,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Length, Task};
@@ -20,11 +22,12 @@ use kentos_ui::label;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableRow, Table};
 use kentos_ui::widget::tree_view::{Check, check_box};
-use kentos_ui::widget::{Dialog, overlay, swatch};
+use kentos_ui::widget::{Choice, Select, Dialog, overlay, swatch};
+use kentos_commands::{DwgVersion, DwgExported, ExportDwg};
 
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Window, message, off_thread};
-use crate::app::{App, Message};
+use crate::app::{App, Message, Picker};
 use crate::view::hex_color;
 
 /// What an export writes.
@@ -62,10 +65,13 @@ const THEMED: [&str; 3] = ["fg", "fg-dim", "paper"];
 
 #[derive(Debug, Clone)]
 pub struct State {
+    id: u64,
+    dwg: Option<DwgVersion>,
     scope: Scope,
     /// Layers the user left out.
     excluded: BTreeSet<String>,
     writing: bool,
+    allow_polyline_loss: bool,
     status: Option<(bool, String)>,
     /// What the writer said and how many layers it wrote: logged once the file is written.
     written: Option<(ExportReport, usize)>,
@@ -92,10 +98,15 @@ pub enum Event {
     Toggle(String),
     ToggleAll,
     Run,
-    Bytes(Vec<u8>, ExportReport, usize),
+    Bytes(u64, Vec<u8>, ExportReport, usize),
     Dimensions(Form),
     Leaders(Form),
     Metadata,
+    AllowPolylineLoss,
+    Failed(u64, String),
+    Version(DwgVersion),
+    DwgPath(u64, Option<PathBuf>),
+    DwgDone(u64, Box<Result<DwgExported, String>>),
 }
 
 fn event(e: Event) -> Message {
@@ -103,8 +114,15 @@ fn event(e: Event) -> Message {
 }
 
 impl State {
+    pub fn dwg(app: &App) -> Self {
+        Self { dwg: Some(DwgVersion::AC1032), ..Self::new(app) }
+    }
+
     pub fn new(app: &App) -> Self {
+        static NEXT: AtomicU64 = AtomicU64::new(1);
         Self {
+            id: NEXT.fetch_add(1, Ordering::Relaxed),
+            dwg: None,
             scope: if app.selection.is_empty() {
                 Scope::Visible
             } else {
@@ -112,6 +130,7 @@ impl State {
             },
             excluded: BTreeSet::new(),
             writing: false,
+            allow_polyline_loss: false,
             status: None,
             written: None,
             annotations: DxfAnnotations::default(),
@@ -166,9 +185,27 @@ impl App {
 
     pub(super) fn dxf_export_event(&mut self, e: Event) -> Task<Message> {
         match e {
+            Event::DwgPath(id, path) => return self.dwg_export_path(id, path),
+            Event::DwgDone(id, done) => {
+                let Some(Window::DxfExport(s)) = &mut self.exchange else { return Task::none(); };
+                if s.id != id || s.dwg.is_none() { return Task::none(); }
+                return match *done {
+                    Ok(output) => {
+                        let report = serde_json::from_value(output.report).unwrap_or_default();
+                        s.written = Some((report, output.layers as usize));
+                        self.dxf_export_written(Some(Ok(output.path)))
+                    }
+                    Err(message) => self.dxf_export_written(Some(Err(message))),
+                };
+            }
+            Event::Failed(id, message) => {
+                if !matches!(&self.exchange, Some(Window::DxfExport(s)) if s.id == id) { return Task::none(); }
+                return self.dxf_export_written(Some(Err(message)));
+            }
             Event::Run => return self.dxf_export_run(),
-            Event::Bytes(bytes, report, layers) => {
+            Event::Bytes(id, bytes, report, layers) => {
                 if let Some(Window::DxfExport(s)) = &mut self.exchange {
+                    if s.id != id { return Task::none(); }
                     s.written = Some((report, layers));
                     let name = self.export_name(".dxf");
                     return self.save_export(bytes, name, ("AutoCAD DXF", "dxf"));
@@ -188,7 +225,9 @@ impl App {
         let Some(Window::DxfExport(s)) = &mut self.exchange else {
             return Task::none();
         };
+        if s.writing { return Task::none(); }
         match e {
+            Event::Version(version) => { if s.dwg.is_some() { s.dwg = Some(version); } }
             Event::Scope(scope) => s.scope = scope,
             Event::Toggle(id) => {
                 if !s.excluded.remove(&id) {
@@ -207,7 +246,8 @@ impl App {
             Event::Dimensions(f) => s.annotations.dimensions = f.0,
             Event::Leaders(f) => s.annotations.leaders = f.0,
             Event::Metadata => s.annotations.metadata = !s.annotations.metadata,
-            Event::Run | Event::Bytes(..) => {}
+            Event::AllowPolylineLoss => s.allow_polyline_loss = !s.allow_polyline_loss,
+            Event::Run | Event::Bytes(..) | Event::DwgPath(..) | Event::DwgDone(..) | Event::Failed(..) => {}
         }
         Task::none()
     }
@@ -219,22 +259,70 @@ impl App {
         if s.writing {
             return Task::none();
         }
+        if s.dwg.is_some() {
+            let id = s.id;
+            let suggested = self.export_name(".dwg");
+            if let Some(Window::DxfExport(s)) = &mut self.exchange {
+                s.writing = true;
+                s.status = Some((false, "Dosya konumu seçiliyor…".into()));
+            }
+            if let Picker::File(path) = &self.picker {
+                return Task::done(event(Event::DwgPath(id, Some(path.clone()))));
+            }
+            return Task::perform(async move {
+                let file = rfd::AsyncFileDialog::new().set_title("DWG dışa aktar")
+                    .set_file_name(suggested).add_filter("AutoCAD DWG", &["dwg"])
+                    .save_file().await?;
+                let mut path = file.path().to_path_buf();
+                if path.extension().is_none() { path.set_extension("dwg"); }
+                Some(path)
+            }, move |path| event(Event::DwgPath(id, path)));
+        }
         let chosen = self.chosen(s);
-        if chosen.is_empty() {
+        if chosen.is_empty() && (s.scope == Scope::Selection || doc.model.sheets().is_none()) {
             return Task::none();
         }
         // The headless host's builder: a script and the window write the same file (docs/adr/0252).
         let mut input = kentos_headless::export::dxf_input(&doc.model, &chosen);
         input.annotations = s.annotations;
+        input.allow_polyline_loss = s.allow_polyline_loss;
         let count = input.layers.len();
+        let id = s.id;
         if let Some(Window::DxfExport(s)) = &mut self.exchange {
             s.writing = true;
             s.status = Some((false, "Yazılıyor…".to_owned()));
         }
         off_thread(
-            move || kentos_formats::dxf::write(&input),
-            move |(bytes, report)| Exchange::DxfExport(Event::Bytes(bytes, report, count)),
+            move || kentos_formats::dxf::write_checked(&input),
+            move |result| Exchange::DxfExport(match result {
+                Ok((bytes, report)) => Event::Bytes(id, bytes, report, count),
+                Err(error) => Event::Failed(id, error.message),
+            }),
         )
+    }
+
+    /// Selection and annotations are explicit command inputs; the atomic writer is shared with Python/AI.
+    fn dwg_export_path(&mut self, id: u64, path: Option<PathBuf>) -> Task<Message> {
+        let (Some(Window::DxfExport(s)), Some(doc)) = (&self.exchange, &self.document) else {
+            return Task::none();
+        };
+        if s.id != id { return Task::none(); }
+        let Some(version) = s.dwg else { return Task::none(); };
+        let Some(path) = path else { return self.dxf_export_written(None); };
+        let selected: BTreeSet<_> = self.chosen(s).into_iter()
+            .flat_map(|(_, list)| list.into_iter().map(|e| e.base().id)).collect();
+        let uids = doc.model.entities_with_uids()
+            .filter(|(_, e)| selected.contains(&e.base().id))
+            .map(|(uid, _)| uid.to_string()).collect();
+        let input = ExportDwg { allow_polyline_loss: s.allow_polyline_loss, path: path.display().to_string(), uids: Some(uids),
+            layers: None, overwrite: true, annotations: Some(s.annotations), version };
+        let model = doc.model.clone();
+        if let Some(Window::DxfExport(s)) = &mut self.exchange {
+            s.status = Some((false, "DWG yazılıyor ve yeniden okunarak denetleniyor…".into()));
+        }
+        off_thread(move || kentos_headless::file_commands::export_dwg(&model, &input)
+            .map_err(|e| e.message),
+            move |result| Exchange::DxfExport(Event::DwgDone(id, Box::new(result))))
     }
 
     pub(super) fn dxf_export_written(
@@ -249,12 +337,13 @@ impl App {
             None => s.status = None,
             Some(Err(e)) => s.status = Some((true, format!("Yazılamadı: {e}"))),
             Some(Ok(name)) => {
+                let format = s.dwg.map_or_else(|| "AutoCAD 2007 DXF".to_owned(), |v| format!("DWG {}", v.label()));
                 let (report, layers) = s.written.take().unwrap_or_default();
                 let written: u32 = report.counts.values().sum();
                 self.say(
                     Level::Success,
                     format!(
-                        "“{name}” yazıldı: {written} nesne, {layers} katman (AutoCAD 2007 DXF)."
+                        "“{name}” yazıldı: {written} nesne, {layers} katman ({format})."
                     ),
                 );
                 for item in &report.notes {
@@ -291,17 +380,26 @@ impl App {
             |c| c.1 > 0,
         );
         let chosen = self.chosen(s);
-        let any = chosen.iter().any(|(_, list)| !list.is_empty());
+        let any = chosen.iter().any(|(_, list)| !list.is_empty()) || (s.scope != Scope::Selection && self.document.as_ref().is_some_and(|d| d.model.sheets().is_some()));
         let mut body = Column::new()
             .spacing(12)
             .push(words::field(
                 "Yazılacak nesneler",
                 scope,
-                Some("AutoCAD 2007 DXF (UTF-8, birim metre); koordinatlar yuvarlanmadan, tam yazılır.".to_owned()),
+                Some(if s.dwg.is_some() { "Seçili DWG sürümüne dönüştürülür; sürüm ve aktarım kayıpları raporlanır." } else { "AutoCAD 2007 DXF (UTF-8, birim metre); koordinatlar yuvarlanmadan, tam yazılır." }.to_owned()),
             ))
             .push(self.dxf_export_layers(s))
             .push(dxf_export_forms(s))
+            .push(words::field("Çoklu çizgi aktarımı", words::check(s.allow_polyline_loss, "Raporlanan çoklu çizgi kaybını kabul et", (!s.writing).then(|| event(Event::AllowPolylineLoss))), Some("Varsayılan olarak genişliği, yayı veya kotu kaybolacak dosya yazılmaz. Kabul ederseniz kayıp dışa aktarım raporunda belirtilir.".into())))
             .push(self.dxf_export_summary(&chosen, &s.annotations));
+        if let Some(version) = s.dwg {
+            body = body.push(words::field("DWG biçimi",
+                Select::new(DwgVersion::ALL.iter().map(|v| Choice::new(v.label())),
+                    DwgVersion::ALL.iter().position(|v| *v == version),
+                    move |i| event(Event::Version(DwgVersion::ALL.get(i).copied().unwrap_or(version))))
+                    .searchable(false),
+                Some("R14 birim bilgisini ve nesne çizgi kalınlığını taşımaz; alıcıda birimi seçin. Yeni sürümler de raporlanan 2B kapsamla sınırlıdır.".into())));
+        }
         if let Some((error, words)) = &s.status {
             body = body.push(words::text_line(
                 if *error { Line::Error } else { Line::Info },
@@ -309,7 +407,7 @@ impl App {
             ));
         }
         overlay::blocking(
-            Dialog::new("DXF dışa aktar")
+            Dialog::new(if s.dwg.is_some() { "DWG dışa aktar" } else { "DXF dışa aktar" })
                 // As tall as its content; a long body (a drawing with many layers) scrolls, the buttons stay in view.
                 .scroll(body)
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
@@ -350,9 +448,9 @@ impl App {
                 None => "Katmanı olmayan nesneler".to_owned(),
             };
             let state = match layer {
-                None => "DXF katmanı 0 olarak".to_owned(),
+                None => "CAD katmanı 0 olarak".to_owned(),
                 Some(_) => [
-                    (!layers.is_visible(id)).then_some("gizli: DXF'te kapalı"),
+                    (!layers.is_visible(id)).then_some("gizli: kapalı yazılır"),
                     layers.is_locked(id).then_some("kilitli"),
                 ]
                 .into_iter()
@@ -387,7 +485,7 @@ impl App {
                 TableColumn::new("").width(22),
                 TableColumn::new("Katman").width(Length::FillPortion(3)),
                 TableColumn::new("Nesne").width(60).align_right(),
-                TableColumn::new("DXF'te").width(Length::FillPortion(2)),
+                TableColumn::new(if s.dwg.is_some() { "DWG'de" } else { "DXF'te" }).width(Length::FillPortion(2)),
             ])
             .extend(rows),
             all.len(),
@@ -623,6 +721,25 @@ fn dxf_export_forms(s: &State) -> Element<'_, Message> {
     )
 }
 
+impl State {
+    pub(crate) fn trace_title(&self) -> String { if self.dwg.is_some() { "DWG dışa aktar" } else { "DXF dışa aktar" }.into() }
+    pub(crate) fn trace_control(&self, control: crate::traces::Control<'_>) -> Result<Option<Message>, String> {
+        use crate::traces::Control;
+        let action = match control {
+            Control::Press("Vazgeç") => return Ok(Some(message(Exchange::Close))),
+            Control::Press("Dışa aktar…") if !self.writing => Event::Run,
+            Control::Check("Raporlanan çoklu çizgi kaybını kabul et", checked) if !self.writing => {
+                if self.allow_polyline_loss == checked { return Ok(None); }
+                Event::AllowPolylineLoss
+            }
+            Control::Fill("DWG biçimi", value) if self.dwg.is_some() => Event::Version(DwgVersion::ALL.iter().copied().find(|v| v.label() == value || v.signature() == value).ok_or_else(|| format!("Bilinmeyen DWG biçimi: {value}"))?),
+            _ => return Err(format!("{}: {control} denetimi yok", self.trace_title())),
+        };
+        Ok(Some(event(action)))
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use kentos_commands::Entity;
@@ -643,4 +760,19 @@ mod tests {
         );
         assert!(super::islanded(&area(&part)));
     }
+    #[test]
+    fn late_dxf_bytes_or_errors_do_not_enter_a_new_export_window() {
+        let mut app = crate::files_testing::app_with_drawing();
+        let old = super::State::new(&app).id;
+        let mut replacement = super::State::new(&app);
+        replacement.writing = true;
+        app.exchange = Some(super::Window::DxfExport(replacement));
+        let _ = app.dxf_export_event(super::Event::Bytes(old, vec![1,2,3], Default::default(), 1));
+        let _ = app.dxf_export_event(super::Event::Failed(old, "late failure".into()));
+        let Some(super::Window::DxfExport(current)) = &app.exchange else { panic!("new window stays") };
+        assert!(current.writing);
+        assert!(current.written.is_none());
+        assert!(current.status.is_none());
+    }
+
 }

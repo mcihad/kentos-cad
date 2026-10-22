@@ -1,0 +1,1178 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "file.import.dxf",
+  "commandVersion": 1,
+  "title": "Çoklu çizgi bütünlüğü",
+  "note": "Independent Autodesk DXF group streams; integrity refusals, not a KentOS round-trip oracle.\nRun --check to verify both sources and command expectations without regenerating them.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İçe alma",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 100,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "grup",
+        "name": "Grup",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "ic",
+            "name": "İç",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+      {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "ocs-0-width / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-0-width.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-0-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-0-width.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-0-bulge / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-0-bulge.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-0-bulge / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-0-bulge.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-1-width / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-1-width.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-1-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-1-width.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-1-bulge / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-1-bulge.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-1-bulge / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-1-bulge.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-2-width / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-2-width.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-2-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-2-width.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-2-bulge / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-2-bulge.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-2-bulge / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-2-bulge.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-3-width / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-3-width.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-3-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-3-width.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-3-bulge / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-3-bulge.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-3-bulge / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-3-bulge.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-4-width / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-4-width.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-4-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-4-width.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-4-bulge / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-4-bulge.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ocs-4-bulge / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/ocs-4-bulge.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-0-width / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-0-width.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-0-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-0-width.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-0-bulge / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-0-bulge.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-0-bulge / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-0-bulge.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-1-width / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-1-width.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-1-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-1-width.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-1-bulge / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-1-bulge.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-1-bulge / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-1-bulge.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-2-width / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-2-width.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-2-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-2-width.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-2-bulge / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-2-bulge.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-2-bulge / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-2-bulge.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-3-width / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-3-width.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-3-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-3-width.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-3-bulge / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-3-bulge.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-3-bulge / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-3-bulge.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-4-width / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-4-width.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-4-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-4-width.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-4-bulge / plan: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-4-bulge.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "nonuniform-4-bulge / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/cad-io/nonuniform-4-bulge.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "polyline_geometry_loss",
+              "message": "$any",
+              "path": "allowPolylineLoss"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    }
+  ]
+}

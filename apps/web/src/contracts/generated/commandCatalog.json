@@ -1019419,7 +1019419,7 @@
       "id": "file.import.dxf",
       "version": 1,
       "title": "DXF içe aktar",
-      "summary": "path'teki DXF dosyasını açık çizime alır, masaüstünün DXF içe aktar penceresi gibi: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DXF: ad.dxf”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "path'teki DXF dosyasını açık çizime alır, masaüstünün DXF içe aktar penceresi gibi: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DXF: ad.dxf”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder.",
       "aliases": [
         "dxfin"
       ],
@@ -1019487,6 +1019487,10 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `file.import.dxf` v1. Refusals (`CommandError.code`), in order:\n`invalid_file_path` (empty, relative, a directory), `invalid_revision`,\n`revision_conflict`, `file_not_found`, `import_unreadable` (not a DXF, or\nbroken), `layer_not_found` and `not_a_layer` (a target of `layers`, at\n`layers.<name>`), `layer_locked` (a target the objects cannot go onto),\n`nothing_to_import` (no object left to take). Warnings: `unit_assumed`,\n`unit_ignored`, `block_units_differ`, `import_losses`.",
         "properties": {
+          "allowPolylineLoss": {
+            "description": "Permit explicitly reported polyline approximation or loss. False rejects\na conversion that cannot preserve bulges, widths or vertex elevations.",
+            "type": "boolean"
+          },
           "closedPolylines": {
             "anyOf": [
               {
@@ -1020051,12 +1020055,99 @@
         "type": "object"
       },
       "capabilities": {
+        "exchange": {
+          "format": "DXF",
+          "provider": "KentOS ASCII DXF",
+          "local": true,
+          "remoteUpload": false,
+          "readVersions": [
+            "AC1006",
+            "AC1009",
+            "AC1012",
+            "AC1014",
+            "AC1015",
+            "AC1018",
+            "AC1021",
+            "AC1024",
+            "AC1027",
+            "AC1032"
+          ],
+          "writeVersions": [
+            "AC1021"
+          ],
+          "encodings": [
+            "ASCII UTF-8 (AC1021+)",
+            "ASCII ANSI_1252 / ANSI_1254 (legacy)"
+          ],
+          "midDecodeCancellation": true,
+          "features": [
+            {
+              "feature": "modelSpace2d",
+              "read": "native",
+              "write": "native",
+              "note": "Temel entity, katman, stil, blok ve NURBS; bildirilen dönüşüm/kayıp raporuna bakın."
+            },
+            {
+              "feature": "polylineIntegrity",
+              "read": "strict2d",
+              "write": "strict2d",
+              "note": "Düzlemsel genişlik/yay/kapanış/kot ve X/Y blok ölçeği korunur; 2B modelin temsil edemediği dönüşüm polyline_geometry_loss ile reddedilir. allowPolylineLoss açıkça seçilirse raporlu yaklaşık dönüşüm yapılır; eğik OCS tam yerel 3B desteği değildir."
+            },
+            {
+              "feature": "annotation",
+              "read": "appearance",
+              "write": "appearance",
+              "note": "Desteklenen ölçü/yazı/kılavuz; çoklu annotative scale veya foreign ilişki ağının tamamı değil."
+            },
+            {
+              "feature": "xref",
+              "read": "reference",
+              "write": "reference",
+              "note": "Kaynak yol, attach/overlay ve yerleştirme korunur; dış dosya kendiliğinden yüklenmez."
+            },
+            {
+              "feature": "layoutViewport",
+              "read": "native2d",
+              "write": "native2d",
+              "note": "Gerçek pafta kitabı, 2B ortografik VIEWPORT ve temel kâğıt öğeleri; 3B/perspektif, kırpma, atlas ve ileri pafta öğeleri kayıp raporunda."
+            },
+            {
+              "feature": "dynamicBlock",
+              "read": "appearance",
+              "write": "appearance",
+              "note": "Foreign evaluation graph düzenlenebilir sayılmaz; plain block görünüşü."
+            },
+            {
+              "feature": "constraint",
+              "read": "reportedLoss",
+              "write": "reportedLoss",
+              "note": "Çözümlenmiş geometri; foreign kısıt graph'ı aktarılmaz."
+            },
+            {
+              "feature": "aecProxy",
+              "read": "reportedLoss",
+              "write": "rejected",
+              "note": "Çözülebilen görünüş veya açık kayıp; bilinmeyen sınıf çalıştırılmaz."
+            },
+            {
+              "feature": "opaqueMetadata",
+              "read": "reportedLoss",
+              "write": "reportedLoss",
+              "note": "Kaynak kimlikleri raporda; eşlenemeyen pointer/dictionary graph'ı kayıpsız yazılmaz."
+            }
+          ]
+        },
         "refusals": [
           "invalid_file_path",
           "invalid_revision",
           "revision_conflict",
           "file_not_found",
           "import_unreadable",
+          "polyline_geometry_loss",
+          "unsupported_cad_format",
+          "unsupported_cad_version",
+          "unsupported_cad_encoding",
+          "cad_file_too_large",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
@@ -1020113,6 +1020204,802 @@
             "fileUnit": "cm",
             "group": "",
             "path": "/plan/eski.dxf",
+            "skipLayers": [
+              "DEFPOINTS"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.import.dwg",
+      "version": 1,
+      "title": "DWG içe aktar",
+      "summary": "path'teki DWG dosyasını açık çizime alır, masaüstünün DWG içe aktar penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile (ADR 0580), ağ veya uzak dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. Kaynak DWG sürümü ve bellek içi DXF aktarma biçimi report.source içinde ayrı söylenir. R14–2018 biçim imzaları desteklenir; korunmayan içerik report.skipped/notes içindedir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DWG: ad.dwg”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder.",
+      "aliases": [
+        "dwgin"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "ClosedPolylines": {
+            "description": "What a file's closed polyline becomes (docs/adr/0258 §1).",
+            "oneOf": [
+              {
+                "const": "area",
+                "description": "An area: what a GIS project wants of a parcel's boundary.",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "A closed line: a CAD drawing's polyline stays a line.",
+                "type": "string"
+              }
+            ]
+          },
+          "FileUnit": {
+            "description": "A unit a file's lengths may be read in, whatever the file says\n(docs/adr/0257 §1): DXF's `$INSUNITS` most used.",
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "dm",
+                  "m",
+                  "km",
+                  "yd",
+                  "mi"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The international inch (25.4 mm).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot (0.3048 m).",
+                "type": "string"
+              },
+              {
+                "const": "usFt",
+                "description": "The US survey foot (1200/3937 m).",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.dxf` v1. Refusals (`CommandError.code`), in order:\n`invalid_file_path` (empty, relative, a directory), `invalid_revision`,\n`revision_conflict`, `file_not_found`, `import_unreadable` (not a DXF, or\nbroken), `layer_not_found` and `not_a_layer` (a target of `layers`, at\n`layers.<name>`), `layer_locked` (a target the objects cannot go onto),\n`nothing_to_import` (no object left to take). Warnings: `unit_assumed`,\n`unit_ignored`, `block_units_differ`, `import_losses`.",
+        "properties": {
+          "allowPolylineLoss": {
+            "description": "Permit explicitly reported polyline approximation or loss. False rejects\na conversion that cannot preserve bulges, widths or vertex elevations.",
+            "type": "boolean"
+          },
+          "closedPolylines": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ClosedPolylines"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the file's closed LWPOLYLINEs and POLYLINEs become, those KentOS\nmarked closed lines aside (docs/adr/0258 §1). Absent: closed lines in\na CAD project, areas in any other."
+          },
+          "expectedRevision": {
+            "description": "The drawing's revision the input was prepared against.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "explodeBlocks": {
+            "description": "Blokları patlat: every insert opened into its objects, no block\ndefinitions taken (docs/adr/0144 §5).",
+            "type": "boolean"
+          },
+          "fileUnit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/FileUnit"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The unit the file's values are in, whatever it declares (docs/adr/0257\n§1). Absent: a local project takes the unit the file declares, a\nproject with a coordinate system metres; a file that declares none is\nin the project's unit, its numbers kept."
+          },
+          "group": {
+            "description": "The group at the top of the tree the new layers go into, found by its\nname or made. Absent: one named after the file; empty: the top of the tree.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "A file's layer (its name in the file) → the drawing's layer (its id)\nits objects go onto. A layer not named here goes onto the drawing's\nlayer of the same name (case and Turkish marks aside), else onto a new\nlayer with the file's look.",
+            "type": "object"
+          },
+          "path": {
+            "description": "The file to read, an absolute path.",
+            "type": "string"
+          },
+          "skipLayers": {
+            "description": "The file's layers (by their names in the file) whose objects are left out.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ImportDxf",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "BlockUnit": {
+            "description": "A block whose record names another unit than the file's (DXF\nBLOCK_RECORD's group 70): its inserts' scale holds the ratio\n(docs/adr/0257 §2).",
+            "properties": {
+              "code": {
+                "description": "Its `$INSUNITS` code.",
+                "format": "int64",
+                "type": "integer",
+                "x-unit": "insunits"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "code"
+            ],
+            "type": "object"
+          },
+          "ClosedPolylines": {
+            "description": "What a file's closed polyline becomes (docs/adr/0258 §1).",
+            "oneOf": [
+              {
+                "const": "area",
+                "description": "An area: what a GIS project wants of a parcel's boundary.",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "A closed line: a CAD drawing's polyline stays a line.",
+                "type": "string"
+              }
+            ]
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
+          "RenamedBlock": {
+            "description": "A block whose name the drawing had: as the file names it, as it went in.",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "UnitDecision": {
+            "description": "How a file's lengths were read (docs/adr/0257 §1): what the file\ndeclares, the unit the values were taken in and why, and the blocks\nwhose unit is another.",
+            "properties": {
+              "assumed": {
+                "description": "Neither declared nor chosen: the project's unit (metres with a\ncoordinate system) taken, the numbers kept.",
+                "type": "boolean"
+              },
+              "blocks": {
+                "description": "The blocks whose unit is another than the file's, in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/BlockUnit"
+                },
+                "type": "array"
+              },
+              "declared": {
+                "description": "The `$INSUNITS` code the file declares; none for 0 or no header.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "insunits"
+              },
+              "factor": {
+                "description": "Metres in one of `used`: the values were multiplied by it.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              },
+              "name": {
+                "description": "Its name: “milimetre”, “inç”.",
+                "type": "string"
+              },
+              "source": {
+                "$ref": "#/$defs/UnitSource"
+              },
+              "used": {
+                "description": "The `$INSUNITS` code of the unit the values were read in.",
+                "format": "int64",
+                "type": "integer",
+                "x-unit": "insunits"
+              }
+            },
+            "required": [
+              "used",
+              "name",
+              "source",
+              "factor",
+              "assumed"
+            ],
+            "type": "object"
+          },
+          "UnitSource": {
+            "description": "Why a file's lengths were read in the unit they were (docs/adr/0257 §1).",
+            "oneOf": [
+              {
+                "const": "chosen",
+                "description": "The user or the caller chose it (`fileUnit`).",
+                "type": "string"
+              },
+              {
+                "const": "declared",
+                "description": "The file declares it, and a local project takes it.",
+                "type": "string"
+              },
+              {
+                "const": "metres",
+                "description": "A project with a coordinate system reads metres.",
+                "type": "string"
+              },
+              {
+                "const": "project",
+                "description": "The file declares none, or a code no one defines: a local project's\nown unit, the numbers kept.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.dxf` took in, or with `plan` would take.",
+        "properties": {
+          "blocks": {
+            "description": "The block definitions taken, and the names changed on the way: as\nthe file says, as the drawing has it (“Kapı” → “Kapı (2)”).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "closedPolylines": {
+            "$ref": "#/$defs/ClosedPolylines",
+            "description": "What the file's closed polylines became (docs/adr/0258 §1)."
+          },
+          "dimensionStyles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256 (64 hex digits): what\nwas read, so a replay can tell the same file.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "The objects taken.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "renamed": {
+            "items": {
+              "$ref": "#/$defs/RenamedBlock"
+            },
+            "type": "array"
+          },
+          "report": {
+            "description": "The reader's report: the file's facts, what was skipped and why."
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "targets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The file's layer (its name in the file) → the drawing's layer its\nobjects went onto; the layers left out are not here.",
+            "type": "object"
+          },
+          "textStyles": {
+            "description": "The text and dimension styles added to the project (docs/adr/0183 §7).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unit": {
+            "$ref": "#/$defs/UnitDecision",
+            "description": "The unit the file's lengths were read in and why (docs/adr/0257 §1)."
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "unit",
+          "closedPolylines",
+          "objects",
+          "targets",
+          "layers",
+          "blocks",
+          "textStyles",
+          "dimensionStyles",
+          "report",
+          "revision"
+        ],
+        "title": "DxfImported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "BlockUnit": {
+            "description": "A block whose record names another unit than the file's (DXF\nBLOCK_RECORD's group 70): its inserts' scale holds the ratio\n(docs/adr/0257 §2).",
+            "properties": {
+              "code": {
+                "description": "Its `$INSUNITS` code.",
+                "format": "int64",
+                "type": "integer",
+                "x-unit": "insunits"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "code"
+            ],
+            "type": "object"
+          },
+          "ClosedPolylines": {
+            "description": "What a file's closed polyline becomes (docs/adr/0258 §1).",
+            "oneOf": [
+              {
+                "const": "area",
+                "description": "An area: what a GIS project wants of a parcel's boundary.",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "A closed line: a CAD drawing's polyline stays a line.",
+                "type": "string"
+              }
+            ]
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
+          "RenamedBlock": {
+            "description": "A block whose name the drawing had: as the file names it, as it went in.",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "UnitDecision": {
+            "description": "How a file's lengths were read (docs/adr/0257 §1): what the file\ndeclares, the unit the values were taken in and why, and the blocks\nwhose unit is another.",
+            "properties": {
+              "assumed": {
+                "description": "Neither declared nor chosen: the project's unit (metres with a\ncoordinate system) taken, the numbers kept.",
+                "type": "boolean"
+              },
+              "blocks": {
+                "description": "The blocks whose unit is another than the file's, in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/BlockUnit"
+                },
+                "type": "array"
+              },
+              "declared": {
+                "description": "The `$INSUNITS` code the file declares; none for 0 or no header.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "insunits"
+              },
+              "factor": {
+                "description": "Metres in one of `used`: the values were multiplied by it.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              },
+              "name": {
+                "description": "Its name: “milimetre”, “inç”.",
+                "type": "string"
+              },
+              "source": {
+                "$ref": "#/$defs/UnitSource"
+              },
+              "used": {
+                "description": "The `$INSUNITS` code of the unit the values were read in.",
+                "format": "int64",
+                "type": "integer",
+                "x-unit": "insunits"
+              }
+            },
+            "required": [
+              "used",
+              "name",
+              "source",
+              "factor",
+              "assumed"
+            ],
+            "type": "object"
+          },
+          "UnitSource": {
+            "description": "Why a file's lengths were read in the unit they were (docs/adr/0257 §1).",
+            "oneOf": [
+              {
+                "const": "chosen",
+                "description": "The user or the caller chose it (`fileUnit`).",
+                "type": "string"
+              },
+              {
+                "const": "declared",
+                "description": "The file declares it, and a local project takes it.",
+                "type": "string"
+              },
+              {
+                "const": "metres",
+                "description": "A project with a coordinate system reads metres.",
+                "type": "string"
+              },
+              {
+                "const": "project",
+                "description": "The file declares none, or a code no one defines: a local project's\nown unit, the numbers kept.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.dxf` took in, or with `plan` would take.",
+        "properties": {
+          "blocks": {
+            "description": "The block definitions taken, and the names changed on the way: as\nthe file says, as the drawing has it (“Kapı” → “Kapı (2)”).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "closedPolylines": {
+            "$ref": "#/$defs/ClosedPolylines",
+            "description": "What the file's closed polylines became (docs/adr/0258 §1)."
+          },
+          "dimensionStyles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256 (64 hex digits): what\nwas read, so a replay can tell the same file.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "The objects taken.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "renamed": {
+            "items": {
+              "$ref": "#/$defs/RenamedBlock"
+            },
+            "type": "array"
+          },
+          "report": {
+            "description": "The reader's report: the file's facts, what was skipped and why."
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "targets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The file's layer (its name in the file) → the drawing's layer its\nobjects went onto; the layers left out are not here.",
+            "type": "object"
+          },
+          "textStyles": {
+            "description": "The text and dimension styles added to the project (docs/adr/0183 §7).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unit": {
+            "$ref": "#/$defs/UnitDecision",
+            "description": "The unit the file's lengths were read in and why (docs/adr/0257 §1)."
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "unit",
+          "closedPolylines",
+          "objects",
+          "targets",
+          "layers",
+          "blocks",
+          "textStyles",
+          "dimensionStyles",
+          "report",
+          "revision"
+        ],
+        "title": "DxfImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "exchange": {
+          "format": "DWG",
+          "provider": "OpenCADCodec, pinned Git revision; KentOS model-space bridge",
+          "local": true,
+          "remoteUpload": false,
+          "readVersions": [
+            "AC1014",
+            "AC1015",
+            "AC1018",
+            "AC1021",
+            "AC1024",
+            "AC1027",
+            "AC1032"
+          ],
+          "writeVersions": [
+            "AC1014",
+            "AC1015",
+            "AC1018",
+            "AC1021",
+            "AC1024",
+            "AC1027",
+            "AC1032"
+          ],
+          "encodings": [
+            "binary DWG"
+          ],
+          "midDecodeCancellation": false,
+          "features": [
+            {
+              "feature": "modelSpace2d",
+              "read": "native",
+              "write": "native",
+              "note": "Temel entity, katman, stil, blok ve NURBS; bildirilen dönüşüm/kayıp raporuna bakın."
+            },
+            {
+              "feature": "polylineIntegrity",
+              "read": "strict2d",
+              "write": "strict2d",
+              "note": "Düzlemsel genişlik/yay/kapanış/kot ve X/Y blok ölçeği korunur; 2B modelin temsil edemediği dönüşüm polyline_geometry_loss ile reddedilir. allowPolylineLoss açıkça seçilirse raporlu yaklaşık dönüşüm yapılır; eğik OCS tam yerel 3B desteği değildir."
+            },
+            {
+              "feature": "annotation",
+              "read": "appearance",
+              "write": "appearance",
+              "note": "Desteklenen ölçü/yazı/kılavuz; çoklu annotative scale veya foreign ilişki ağının tamamı değil."
+            },
+            {
+              "feature": "xref",
+              "read": "reference",
+              "write": "reference",
+              "note": "Kaynak yol, attach/overlay ve yerleştirme korunur; dış dosya kendiliğinden yüklenmez."
+            },
+            {
+              "feature": "layoutViewport",
+              "read": "native2d",
+              "write": "native2d",
+              "note": "Gerçek pafta kitabı, 2B ortografik VIEWPORT ve temel kâğıt öğeleri; 3B/perspektif, kırpma, atlas ve ileri pafta öğeleri kayıp raporunda."
+            },
+            {
+              "feature": "dynamicBlock",
+              "read": "appearance",
+              "write": "appearance",
+              "note": "Foreign evaluation graph düzenlenebilir sayılmaz; plain block görünüşü."
+            },
+            {
+              "feature": "constraint",
+              "read": "reportedLoss",
+              "write": "reportedLoss",
+              "note": "Çözümlenmiş geometri; foreign kısıt graph'ı aktarılmaz."
+            },
+            {
+              "feature": "aecProxy",
+              "read": "reportedLoss",
+              "write": "rejected",
+              "note": "Çözülebilen görünüş veya açık kayıp; bilinmeyen sınıf çalıştırılmaz."
+            },
+            {
+              "feature": "opaqueMetadata",
+              "read": "reportedLoss",
+              "write": "reportedLoss",
+              "note": "Kaynak kimlikleri raporda; eşlenemeyen pointer/dictionary graph'ı kayıpsız yazılmaz."
+            }
+          ]
+        },
+        "refusals": [
+          "invalid_file_path",
+          "invalid_revision",
+          "revision_conflict",
+          "file_not_found",
+          "import_unreadable",
+          "polyline_geometry_loss",
+          "unsupported_cad_version",
+          "cad_file_too_large",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "nothing_to_import"
+        ],
+        "warnings": [
+          "unit_assumed",
+          "unit_ignored",
+          "block_units_differ",
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Milimetrelik plan metrelik projeye",
+          "input": {
+            "path": "/plan/kat-plani.dwg"
+          },
+          "output": {
+            "blocks": 2,
+            "bytes": 48213,
+            "closedPolylines": "line",
+            "dimensionStyles": 0,
+            "file": "kat-plani.dwg",
+            "group": "import-kat-plani-dxf",
+            "layers": [
+              {
+                "id": "import-duvar",
+                "name": "DUVAR"
+              }
+            ],
+            "objects": 312,
+            "report": {},
+            "revision": "12",
+            "sha256": "9f2c4c0e1b7a3d5e8f6a2b4c6d8e0f1a3b5c7d9e1f2a4b6c8d0e2f4a6b8c0d2e",
+            "targets": {
+              "0": "cizim",
+              "DUVAR": "import-duvar"
+            },
+            "textStyles": 1,
+            "unit": {
+              "assumed": false,
+              "declared": 4,
+              "factor": 0.001,
+              "name": "milimetre",
+              "source": "declared",
+              "used": 4
+            }
+          }
+        },
+        {
+          "title": "Birim bildirmeyen dosya, santimetre olduğu bilinerek, ağacın üstüne",
+          "input": {
+            "fileUnit": "cm",
+            "group": "",
+            "path": "/plan/eski.dwg",
             "skipLayers": [
               "DEFPOINTS"
             ]
@@ -1058458,6 +1059345,37 @@
             ],
             "type": "object"
           },
+          "ReportDetail": {
+            "description": "A bounded source sample for an aggregated CAD loss report.",
+            "properties": {
+              "entityType": {
+                "type": "string"
+              },
+              "property": {
+                "type": "string"
+              },
+              "sourceId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sourceLine": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "entityType",
+              "property"
+            ],
+            "type": "object"
+          },
           "ReportItem": {
             "description": "One line of an import or export report: what, how many, and what happened to it.",
             "properties": {
@@ -1058466,6 +1059384,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "count"
+              },
+              "details": {
+                "description": "Source samples, bounded like `lines`; count may be greater than this sample list.",
+                "items": {
+                  "$ref": "#/$defs/ReportDetail"
+                },
+                "type": "array"
               },
               "lines": {
                 "description": "The first source lines where it occurs.",
@@ -1058481,6 +1059406,17 @@
                 "description": "What happened and, where it helps, what to do (Turkish, for the user).",
                 "type": "string"
               },
+              "severity": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ReportSeverity"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Absent for legacy reports. CAD reports distinguish information, changed content and rejected content."
+              },
               "what": {
                 "description": "The source's name for it (\"IMAGE\", \"Genişlikli çoklu çizgi\").",
                 "type": "string"
@@ -1058493,6 +1059429,15 @@
               "lines"
             ],
             "type": "object"
+          },
+          "ReportSeverity": {
+            "description": "CAD diagnostic severity; independent of whether a supported entity was kept.",
+            "enum": [
+              "info",
+              "warning",
+              "error"
+            ],
+            "type": "string"
           },
           "ShpColumnAsText": {
             "description": "A field written as text, and why (a date-time, a number past dBASE's digits, values its rule refuses).",
@@ -1058720,6 +1059665,37 @@
             ],
             "type": "object"
           },
+          "ReportDetail": {
+            "description": "A bounded source sample for an aggregated CAD loss report.",
+            "properties": {
+              "entityType": {
+                "type": "string"
+              },
+              "property": {
+                "type": "string"
+              },
+              "sourceId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sourceLine": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "entityType",
+              "property"
+            ],
+            "type": "object"
+          },
           "ReportItem": {
             "description": "One line of an import or export report: what, how many, and what happened to it.",
             "properties": {
@@ -1058728,6 +1059704,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "count"
+              },
+              "details": {
+                "description": "Source samples, bounded like `lines`; count may be greater than this sample list.",
+                "items": {
+                  "$ref": "#/$defs/ReportDetail"
+                },
+                "type": "array"
               },
               "lines": {
                 "description": "The first source lines where it occurs.",
@@ -1058743,6 +1059726,17 @@
                 "description": "What happened and, where it helps, what to do (Turkish, for the user).",
                 "type": "string"
               },
+              "severity": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ReportSeverity"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Absent for legacy reports. CAD reports distinguish information, changed content and rejected content."
+              },
               "what": {
                 "description": "The source's name for it (\"IMAGE\", \"Genişlikli çoklu çizgi\").",
                 "type": "string"
@@ -1058755,6 +1059749,15 @@
               "lines"
             ],
             "type": "object"
+          },
+          "ReportSeverity": {
+            "description": "CAD diagnostic severity; independent of whether a supported entity was kept.",
+            "enum": [
+              "info",
+              "warning",
+              "error"
+            ],
+            "type": "string"
           },
           "ShpColumnAsText": {
             "description": "A field written as text, and why (a date-time, a number past dBASE's digits, values its rule refuses).",
@@ -1065621,7 +1066624,7 @@
       "id": "file.export.dxf",
       "version": 1,
       "title": "DXF dışa aktar",
-      "summary": "Çizimi AutoCAD 2007 DXF dosyası olarak yazar: bütün nesneler ya da layers'ın katmanlarındakiler, katmanlarıyla; DXF'in tutamadıkları KentOS verisiyle. Dosya yarım kalmaz: geçici adla yazılır, diske indirilir, geri okunup denetlenir, sonra tek adımda yerine konur; eski dosya ancak yenisi tamsa gider. overwrite verilmezse var olan dosya reddedilir (file_exists). plan dosyayı yazmadan yazılacak olanı söyler (nesneler, katmanlar, baytlar, yazıcının raporu). Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması dosyayı geri almaz.",
+      "summary": "Çizimi AutoCAD 2007 DXF dosyası olarak yazar: bütün nesneler ya da layers'ın katmanlarındakiler, katmanlarıyla; DXF'in tutamadıkları KentOS verisiyle. Dosya yarım kalmaz: geçici adla yazılır, diske indirilir, geri okunup denetlenir, sonra tek adımda yerine konur; eski dosya ancak yenisi tamsa gider. overwrite verilmezse var olan dosya reddedilir (file_exists). plan dosyayı yazmadan yazılacak olanı söyler (nesneler, katmanlar, baytlar, yazıcının raporu). Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması dosyayı geri almaz. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder.",
       "aliases": [
         "dxf",
         "dxfout"
@@ -1065677,6 +1066680,10 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `file.export.dxf` v1. Refusals (`CommandError.code`), in order:\n`invalid_file_path` (empty, relative, a directory, no directory to go\ninto), `file_exists` (there is a file and `overwrite` is not set),\n`layer_not_found` (a layer named the drawing does not have, at\n`layers[i]`), `nothing_to_export` (no object to write), `file_unwritable`.",
         "properties": {
+          "allowPolylineLoss": {
+            "description": "Permit explicitly reported polyline approximation or loss. False rejects\na conversion that cannot preserve bulges, widths or vertex elevations.",
+            "type": "boolean"
+          },
           "annotations": {
             "anyOf": [
               {
@@ -1065817,12 +1066824,95 @@
         "type": "object"
       },
       "capabilities": {
+        "exchange": {
+          "format": "DXF",
+          "provider": "KentOS ASCII DXF",
+          "local": true,
+          "remoteUpload": false,
+          "readVersions": [
+            "AC1006",
+            "AC1009",
+            "AC1012",
+            "AC1014",
+            "AC1015",
+            "AC1018",
+            "AC1021",
+            "AC1024",
+            "AC1027",
+            "AC1032"
+          ],
+          "writeVersions": [
+            "AC1021"
+          ],
+          "encodings": [
+            "ASCII UTF-8 (AC1021+)",
+            "ASCII ANSI_1252 / ANSI_1254 (legacy)"
+          ],
+          "midDecodeCancellation": true,
+          "features": [
+            {
+              "feature": "modelSpace2d",
+              "read": "native",
+              "write": "native",
+              "note": "Temel entity, katman, stil, blok ve NURBS; bildirilen dönüşüm/kayıp raporuna bakın."
+            },
+            {
+              "feature": "polylineIntegrity",
+              "read": "strict2d",
+              "write": "strict2d",
+              "note": "Düzlemsel genişlik/yay/kapanış/kot ve X/Y blok ölçeği korunur; 2B modelin temsil edemediği dönüşüm polyline_geometry_loss ile reddedilir. allowPolylineLoss açıkça seçilirse raporlu yaklaşık dönüşüm yapılır; eğik OCS tam yerel 3B desteği değildir."
+            },
+            {
+              "feature": "annotation",
+              "read": "appearance",
+              "write": "appearance",
+              "note": "Desteklenen ölçü/yazı/kılavuz; çoklu annotative scale veya foreign ilişki ağının tamamı değil."
+            },
+            {
+              "feature": "xref",
+              "read": "reference",
+              "write": "reference",
+              "note": "Kaynak yol, attach/overlay ve yerleştirme korunur; dış dosya kendiliğinden yüklenmez."
+            },
+            {
+              "feature": "layoutViewport",
+              "read": "native2d",
+              "write": "native2d",
+              "note": "Gerçek pafta kitabı, 2B ortografik VIEWPORT ve temel kâğıt öğeleri; 3B/perspektif, kırpma, atlas ve ileri pafta öğeleri kayıp raporunda."
+            },
+            {
+              "feature": "dynamicBlock",
+              "read": "appearance",
+              "write": "appearance",
+              "note": "Foreign evaluation graph düzenlenebilir sayılmaz; plain block görünüşü."
+            },
+            {
+              "feature": "constraint",
+              "read": "reportedLoss",
+              "write": "reportedLoss",
+              "note": "Çözümlenmiş geometri; foreign kısıt graph'ı aktarılmaz."
+            },
+            {
+              "feature": "aecProxy",
+              "read": "reportedLoss",
+              "write": "rejected",
+              "note": "Çözülebilen görünüş veya açık kayıp; bilinmeyen sınıf çalıştırılmaz."
+            },
+            {
+              "feature": "opaqueMetadata",
+              "read": "reportedLoss",
+              "write": "reportedLoss",
+              "note": "Kaynak kimlikleri raporda; eşlenemeyen pointer/dictionary graph'ı kayıpsız yazılmaz."
+            }
+          ]
+        },
         "refusals": [
           "invalid_file_path",
           "file_exists",
           "layer_not_found",
           "nothing_to_export",
-          "file_unwritable"
+          "file_unwritable",
+          "polyline_geometry_loss"
         ]
       },
       "examples": [
@@ -1065831,6 +1066921,346 @@
           "input": {
             "overwrite": true,
             "path": "/tmp/kat-plani.dxf"
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.export.dwg",
+      "version": 1,
+      "title": "DWG dışa aktar",
+      "summary": "Çizimi seçilen binary DWG biçiminde yazar (version: AC1014, AC1015, AC1018, AC1021, AC1024, AC1027 veya varsayılan AC1032). AutoCAD ürün yılı binary biçim yılı değildir. Sürümü sabit OpenCADCodec ile bellekte dönüştürür; dosya dışarı gönderilmez: bütün nesneler, uids ile seçilenler ya da layers'ın katmanlarındakiler, katmanlarıyla; DWG'in tutamadıkları KentOS verisiyle. Dosya yarım kalmaz: geçici adla yazılır, diske indirilir, geri okunup denetlenir, sonra tek adımda yerine konur; eski dosya ancak yenisi tamsa gider. overwrite verilmezse var olan dosya reddedilir (file_exists). plan dosyayı yazmadan yazılacak olanı söyler (nesneler, katmanlar, baytlar, yazıcının raporu). Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması dosyayı geri almaz. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder.",
+      "aliases": [
+        "dwg",
+        "dwgout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "DwgVersion": {
+            "description": "The binary format signature, not the release year of the application saving it.",
+            "enum": [
+              "AC1014",
+              "AC1015",
+              "AC1018",
+              "AC1021",
+              "AC1024",
+              "AC1027",
+              "AC1032"
+            ],
+            "type": "string"
+          },
+          "DxfAnnotations": {
+            "description": "How tables, dimensions and leaders are written in DXF (docs/adr/0327 §6). A table is always its look as a block\n(DXF's ACAD_TABLE is not written); KentOS's data, when written, gives each back to KentOS whole.",
+            "properties": {
+              "dimensions": {
+                "$ref": "#/$defs/DxfForm",
+                "default": "native"
+              },
+              "leaders": {
+                "$ref": "#/$defs/DxfForm",
+                "default": "native"
+              },
+              "metadata": {
+                "default": true,
+                "description": "KentOS's data on them (the table's cells and styles, the dimension's and the leader's own fields).",
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "DxfForm": {
+            "description": "What a dimension or a leader becomes in DXF (docs/adr/0327 §6).",
+            "oneOf": [
+              {
+                "const": "native",
+                "description": "Its own DXF entity (DIMENSION; LEADER and MTEXT): another program edits it as one.",
+                "type": "string"
+              },
+              {
+                "const": "block",
+                "description": "Its look as an anonymous block's lines, arrowheads and texts, placed by an INSERT: every program shows it as\nKentOS draws it, none edits it as a dimension or a leader.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Export a drawing in a deliberately selected DWG binary format.",
+        "properties": {
+          "allowPolylineLoss": {
+            "description": "Permit explicitly reported polyline approximation or loss. False rejects\na conversion that cannot preserve bulges, widths or vertex elevations.",
+            "type": "boolean"
+          },
+          "annotations": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DxfAnnotations"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "layers": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "overwrite": {
+            "default": false,
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          },
+          "uids": {
+            "description": "Only the named persistent objects; intersected with layers when both are given.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "version": {
+            "$ref": "#/$defs/DwgVersion",
+            "default": "AC1032",
+            "description": "A DWG file signature. AC1032 is shared by multiple AutoCAD product years."
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportDwg",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.dxf` wrote, or with `plan` would write.",
+        "properties": {
+          "bytes": {
+            "description": "The file's bytes: written, or the size the plan would write.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "layers": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "objects": {
+            "description": "The objects written and the layers they are on.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "replaced": {
+            "description": "Whether a file was there (and is written over).",
+            "type": "boolean"
+          },
+          "report": {
+            "description": "The writer's report: what each kind became, what changed on the way."
+          },
+          "sha256": {
+            "description": "SHA-256 of the bytes, 64 hex digits.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "objects",
+          "layers",
+          "replaced",
+          "report"
+        ],
+        "title": "DxfExported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.dxf` wrote, or with `plan` would write.",
+        "properties": {
+          "bytes": {
+            "description": "The file's bytes: written, or the size the plan would write.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "layers": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "objects": {
+            "description": "The objects written and the layers they are on.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "replaced": {
+            "description": "Whether a file was there (and is written over).",
+            "type": "boolean"
+          },
+          "report": {
+            "description": "The writer's report: what each kind became, what changed on the way."
+          },
+          "sha256": {
+            "description": "SHA-256 of the bytes, 64 hex digits.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "objects",
+          "layers",
+          "replaced",
+          "report"
+        ],
+        "title": "DxfExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "exchange": {
+          "format": "DWG",
+          "provider": "OpenCADCodec, pinned Git revision; KentOS model-space bridge",
+          "local": true,
+          "remoteUpload": false,
+          "readVersions": [
+            "AC1014",
+            "AC1015",
+            "AC1018",
+            "AC1021",
+            "AC1024",
+            "AC1027",
+            "AC1032"
+          ],
+          "writeVersions": [
+            "AC1014",
+            "AC1015",
+            "AC1018",
+            "AC1021",
+            "AC1024",
+            "AC1027",
+            "AC1032"
+          ],
+          "encodings": [
+            "binary DWG"
+          ],
+          "midDecodeCancellation": false,
+          "features": [
+            {
+              "feature": "modelSpace2d",
+              "read": "native",
+              "write": "native",
+              "note": "Temel entity, katman, stil, blok ve NURBS; bildirilen dönüşüm/kayıp raporuna bakın."
+            },
+            {
+              "feature": "polylineIntegrity",
+              "read": "strict2d",
+              "write": "strict2d",
+              "note": "Düzlemsel genişlik/yay/kapanış/kot ve X/Y blok ölçeği korunur; 2B modelin temsil edemediği dönüşüm polyline_geometry_loss ile reddedilir. allowPolylineLoss açıkça seçilirse raporlu yaklaşık dönüşüm yapılır; eğik OCS tam yerel 3B desteği değildir."
+            },
+            {
+              "feature": "annotation",
+              "read": "appearance",
+              "write": "appearance",
+              "note": "Desteklenen ölçü/yazı/kılavuz; çoklu annotative scale veya foreign ilişki ağının tamamı değil."
+            },
+            {
+              "feature": "xref",
+              "read": "reference",
+              "write": "reference",
+              "note": "Kaynak yol, attach/overlay ve yerleştirme korunur; dış dosya kendiliğinden yüklenmez."
+            },
+            {
+              "feature": "layoutViewport",
+              "read": "native2d",
+              "write": "native2d",
+              "note": "Gerçek pafta kitabı, 2B ortografik VIEWPORT ve temel kâğıt öğeleri; 3B/perspektif, kırpma, atlas ve ileri pafta öğeleri kayıp raporunda."
+            },
+            {
+              "feature": "dynamicBlock",
+              "read": "appearance",
+              "write": "appearance",
+              "note": "Foreign evaluation graph düzenlenebilir sayılmaz; plain block görünüşü."
+            },
+            {
+              "feature": "constraint",
+              "read": "reportedLoss",
+              "write": "reportedLoss",
+              "note": "Çözümlenmiş geometri; foreign kısıt graph'ı aktarılmaz."
+            },
+            {
+              "feature": "aecProxy",
+              "read": "reportedLoss",
+              "write": "rejected",
+              "note": "Çözülebilen görünüş veya açık kayıp; bilinmeyen sınıf çalıştırılmaz."
+            },
+            {
+              "feature": "opaqueMetadata",
+              "read": "reportedLoss",
+              "write": "reportedLoss",
+              "note": "Kaynak kimlikleri raporda; eşlenemeyen pointer/dictionary graph'ı kayıpsız yazılmaz."
+            }
+          ]
+        },
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "layer_not_found",
+          "invalid_uid",
+          "entity_not_found",
+          "nothing_to_export",
+          "file_unwritable",
+          "import_unreadable",
+          "polyline_geometry_loss",
+          "unsupported_cad_version",
+          "cad_file_too_large"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bütün çizim",
+          "input": {
+            "overwrite": true,
+            "path": "/tmp/kat-plani.dwg",
+            "version": "AC1032"
           }
         }
       ]
@@ -1069093,10 +1070523,40 @@
       "meaning": "Okunacak dosya yok."
     },
     {
+      "code": "polyline_geometry_loss",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çoklu çizginin genişliği, yayı veya kotu kayıpsız aktarılamıyor; seçenekleri düzeltin veya önce plan üzerinde allowPolylineLoss=true ile ayrıntılı kayıp raporunu inceleyin."
+    },
+    {
       "code": "import_unreadable",
       "kind": "failed",
       "retryable": false,
       "meaning": "Dosya okunamadı ya da biçimi bozuk; hiçbir şey alınmadı."
+    },
+    {
+      "code": "unsupported_cad_format",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosya seçilen CAD biçiminde değil; doğru içe aktarma komutunu kullanın."
+    },
+    {
+      "code": "unsupported_cad_encoding",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "CAD dosyasının ikili/metin kodlaması desteklenmiyor; desteklenen ASCII DXF biçiminde kaydedin."
+    },
+    {
+      "code": "unsupported_cad_version",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "CAD dosyasının binary biçim sürümü desteklenmiyor; kaynak yazılımda desteklenen biçimde kaydedin."
+    },
+    {
+      "code": "cad_file_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "CAD dosyası ya da aktarma verisi 256 MiB sınırını aşıyor; dosyayı bölün."
     },
     {
       "code": "nothing_to_import",

@@ -76,6 +76,7 @@ pub struct Applied {
 /// ids the reader's (`dxf-text-1` …), the objects naming them so.
 #[derive(Clone, Debug, Default)]
 pub struct Styles {
+    pub layouts: Vec<kentos_commands::CadLayout>,
     pub text: Vec<TextStyleDef>,
     pub dimension: Vec<DimensionStyleDef>,
     /// The file's line types with patterns and its line type scale (docs/adr/0313 §6).
@@ -567,6 +568,7 @@ fn apply_inner(
     styles: Styles,
     plan: &ImportPlan,
 ) -> Result<Applied, String> {
+    let sheets = crate::cad_layouts::merge(doc, &styles.layouts)?;
     let mut prepared = prepare(doc, plan)?;
     let mut styles = ImportedStyles::new(doc.settings(), styles);
     let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets, &styles);
@@ -581,6 +583,7 @@ fn apply_inner(
         return Err(error);
     }
     let mut made = Made::default();
+    let mut added_styles = (0, 0);
     let slots = doc.transact(&plan.label, |doc| {
         made = make_layers(doc, plan, &mut prepared)?;
         imported.add(doc)?;
@@ -598,9 +601,14 @@ fn apply_inner(
         let placed: Vec<(usize, Slot)> =
             places.iter().copied().zip(slots.iter().copied()).collect();
         tie_placeholders(doc, &placed);
+        doc.with_import_metadata(&plan.label, |doc| {
+            added_styles = styles.add(doc);
+            if let Some(sheets) = sheets { doc.set_sheets(Some(sheets))?; }
+            Ok::<_, String>(())
+        })?;
         Ok::<_, String>(slots)
     })?;
-    let styles = styles.add(doc);
+    let styles = added_styles;
     Ok(Applied {
         slots,
         created: made.names(),
@@ -699,6 +707,7 @@ const BATCH: usize = 2048;
 /// [`Progressive::stop`] reverts whole.
 #[derive(Debug)]
 pub struct Progressive {
+    sheets: Option<kentos_commands::ProjectSheets>,
     group: Option<Group>,
     targets: HashMap<String, String>,
     /// The reader's block id → the drawing's, and the drawing's ids an insert may place.
@@ -735,6 +744,7 @@ impl Progressive {
         styles: Styles,
         plan: &ImportPlan,
     ) -> Result<Self, String> {
+        let sheets = crate::cad_layouts::merge(doc, &styles.layouts)?;
         let mut prepared = prepare(doc, plan)?;
         let styles = ImportedStyles::new(doc.settings(), styles);
         let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets, &styles);
@@ -754,6 +764,7 @@ impl Progressive {
         };
         let targets_by_source = targets_of(&prepared);
         Ok(Self {
+            sheets,
             group: Some(group),
             targets: prepared.targets,
             known: imported.ids.values().copied().collect(),
@@ -833,10 +844,13 @@ impl Progressive {
                     .zip(self.slots.iter().copied())
                     .collect();
                 tie_placeholders(doc, &placed);
-                if let Some(group) = self.group.take() {
-                    doc.end_group(group);
-                }
-                self.added_styles = self.styles.add(doc);
+                let meta = doc.with_import_metadata(&self.label, |doc| {
+                    self.added_styles = self.styles.add(doc);
+                    if let Some(sheets) = self.sheets.take() { doc.set_sheets(Some(sheets))?; }
+                    Ok::<_, String>(())
+                });
+                if let Err(error) = meta { self.cancel(doc); return Err(error); }
+                if let Some(group) = self.group.take() { doc.end_group(group); }
                 return Ok(true);
             }
             if Instant::now() >= until {
@@ -1552,6 +1566,7 @@ mod tests {
         let mut def = block(1, "Pafta", None);
         def.entities.push(text_in("", "dxf-text-2"));
         let styles = Styles {
+            layouts: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             text: vec![
@@ -1608,6 +1623,8 @@ mod tests {
         assert_eq!(inside, Some(new));
         assert_eq!(doc.undo().as_deref(), Some("DXF: stiller.dxf"));
         assert_eq!(doc.len(), 0);
+        assert_eq!(doc.settings().text_styles.len(), 1);
+        assert!(doc.redo().is_some());
         assert_eq!(doc.settings().text_styles.len(), 2);
     }
 }

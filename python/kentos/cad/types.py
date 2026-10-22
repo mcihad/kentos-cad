@@ -1244,6 +1244,21 @@ DrawingUnitName = Literal["mm", "cm", "m", "in", "ft"]
 """The names of :class:`DrawingUnit`, for a plain string."""
 
 
+class DwgVersion(_StrEnum):
+    """The binary format signature, not the release year of the application saving it."""
+    AC1014 = "AC1014"
+    AC1015 = "AC1015"
+    AC1018 = "AC1018"
+    AC1021 = "AC1021"
+    AC1024 = "AC1024"
+    AC1027 = "AC1027"
+    AC1032 = "AC1032"
+
+
+DwgVersionName = Literal["AC1014", "AC1015", "AC1018", "AC1021", "AC1024", "AC1027", "AC1032"]
+"""The names of :class:`DwgVersion`, for a plain string."""
+
+
 class DxfForm(_StrEnum):
     """What a dimension or a leader becomes in DXF (docs/adr/0327 §6).
 
@@ -3497,6 +3512,17 @@ class RelationState(_StrEnum):
 
 RelationStateName = Literal["unbound", "split", "single", "text", "mapped", "foreign", "broken"]
 """The names of :class:`RelationState`, for a plain string."""
+
+
+class ReportSeverity(_StrEnum):
+    """CAD diagnostic severity; independent of whether a supported entity was kept."""
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+
+
+ReportSeverityName = Literal["info", "warning", "error"]
+"""The names of :class:`ReportSeverity`, for a plain string."""
 
 
 class ResourceKind(_StrEnum):
@@ -17699,6 +17725,51 @@ class ExportCsv(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportDwg(_Model):
+    """Export a drawing in a deliberately selected DWG binary format.
+    Attributes:
+        allow_polyline_loss: Permit explicitly reported polyline approximation or loss. False rejects
+            a conversion that cannot preserve bulges, widths or vertex elevations.
+        uids: Only the named persistent objects; intersected with layers when both are given.
+        version: A DWG file signature. AC1032 is shared by multiple AutoCAD product years.
+    """
+    path: str
+    allow_polyline_loss: bool | Unset = UNSET
+    annotations: DxfAnnotations | None | Unset = UNSET
+    layers: list[str] | None | Unset = UNSET
+    overwrite: bool = False
+    uids: list[str] | None | Unset = UNSET
+    version: DwgVersion | DwgVersionName = DwgVersion.AC1032
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.allow_polyline_loss is not UNSET:
+            out["allowPolylineLoss"] = self.allow_polyline_loss
+        if self.annotations is not UNSET:
+            out["annotations"] = None if self.annotations is None else self.annotations.to_json()
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        out["overwrite"] = self.overwrite
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        out["version"] = _enum_out(self.version)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportDwg:
+        return cls(
+            path=data["path"],
+            allow_polyline_loss=data.get("allowPolylineLoss", UNSET),
+            annotations=UNSET if "annotations" not in data else None if data["annotations"] is None else DxfAnnotations.from_json(data["annotations"]),
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+            version=_enum_in(DwgVersion, data["version"]) if "version" in data else DwgVersion.AC1032,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportDxf(_Model):
     """Input of `file.export.dxf` v1. Refusals (`CommandError.code`), in order:
     `invalid_file_path` (empty, relative, a directory, no directory to go
@@ -17707,11 +17778,14 @@ class ExportDxf(_Model):
     `layers[i]`), `nothing_to_export` (no object to write), `file_unwritable`.
     Attributes:
         path: The file to write, an absolute path.
+        allow_polyline_loss: Permit explicitly reported polyline approximation or loss. False rejects
+            a conversion that cannot preserve bulges, widths or vertex elevations.
         annotations: How tables, dimensions and leaders are written (docs/adr/0327 §6); absent: native entities with KentOS's data.
         layers: The layers whose objects to write (ids); every object when absent.
         overwrite: Write over a file that is there.
     """
     path: str
+    allow_polyline_loss: bool | Unset = UNSET
     annotations: DxfAnnotations | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
     overwrite: bool = False
@@ -17719,6 +17793,8 @@ class ExportDxf(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
+        if self.allow_polyline_loss is not UNSET:
+            out["allowPolylineLoss"] = self.allow_polyline_loss
         if self.annotations is not UNSET:
             out["annotations"] = None if self.annotations is None else self.annotations.to_json()
         if self.layers is not UNSET:
@@ -17730,6 +17806,7 @@ class ExportDxf(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ExportDxf:
         return cls(
             path=data["path"],
+            allow_polyline_loss=data.get("allowPolylineLoss", UNSET),
             annotations=UNSET if "annotations" not in data else None if data["annotations"] is None else DxfAnnotations.from_json(data["annotations"]),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
             overwrite=data["overwrite"] if "overwrite" in data else False,
@@ -23092,6 +23169,8 @@ class ImportDxf(_Model):
     `unit_ignored`, `block_units_differ`, `import_losses`.
     Attributes:
         path: The file to read, an absolute path.
+        allow_polyline_loss: Permit explicitly reported polyline approximation or loss. False rejects
+            a conversion that cannot preserve bulges, widths or vertex elevations.
         closed_polylines: What the file's closed LWPOLYLINEs and POLYLINEs become, those KentOS
             marked closed lines aside (docs/adr/0258 §1). Absent: closed lines in
             a CAD project, areas in any other.
@@ -23111,6 +23190,7 @@ class ImportDxf(_Model):
         skip_layers: The file's layers (by their names in the file) whose objects are left out.
     """
     path: str
+    allow_polyline_loss: bool | Unset = UNSET
     closed_polylines: ClosedPolylines | ClosedPolylinesName | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     explode_blocks: bool | Unset = UNSET
@@ -23122,6 +23202,8 @@ class ImportDxf(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
+        if self.allow_polyline_loss is not UNSET:
+            out["allowPolylineLoss"] = self.allow_polyline_loss
         if self.closed_polylines is not UNSET:
             out["closedPolylines"] = None if self.closed_polylines is None else _enum_out(self.closed_polylines)
         if self.expected_revision is not UNSET:
@@ -23142,6 +23224,7 @@ class ImportDxf(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ImportDxf:
         return cls(
             path=data["path"],
+            allow_polyline_loss=data.get("allowPolylineLoss", UNSET),
             closed_polylines=UNSET if "closedPolylines" not in data else None if data["closedPolylines"] is None else _enum_in(ClosedPolylines, data["closedPolylines"]),
             expected_revision=data.get("expectedRevision", UNSET),
             explode_blocks=data.get("explodeBlocks", UNSET),
@@ -39113,6 +39196,37 @@ class RenamedBlock(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ReportDetail(_Model):
+    """A bounded source sample for an aggregated CAD loss report.
+    Attributes:
+        source_line: Unit: 1.
+    """
+    entity_type: str
+    property: str
+    source_id: str | None | Unset = UNSET
+    source_line: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["entityType"] = self.entity_type
+        out["property"] = self.property
+        if self.source_id is not UNSET:
+            out["sourceId"] = self.source_id
+        if self.source_line is not UNSET:
+            out["sourceLine"] = self.source_line
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReportDetail:
+        return cls(
+            entity_type=data["entityType"],
+            property=data["property"],
+            source_id=data.get("sourceId", UNSET),
+            source_line=data.get("sourceLine", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ReportItem(_Model):
     """One line of an import or export report: what, how many, and what happened to it.
     Attributes:
@@ -39120,11 +39234,15 @@ class ReportItem(_Model):
         count: Unit: count.
         reason: What happened and, where it helps, what to do (Turkish, for the user).
         lines: The first source lines where it occurs. Unit: index.
+        details: Source samples, bounded like `lines`; count may be greater than this sample list.
+        severity: Absent for legacy reports. CAD reports distinguish information, changed content and rejected content.
     """
     what: str
     count: int
     reason: str
     lines: list[int]
+    details: list[ReportDetail] | Unset = UNSET
+    severity: ReportSeverity | ReportSeverityName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -39132,6 +39250,10 @@ class ReportItem(_Model):
         out["count"] = self.count
         out["reason"] = self.reason
         out["lines"] = list(self.lines)
+        if self.details is not UNSET:
+            out["details"] = [e0.to_json() for e0 in self.details]
+        if self.severity is not UNSET:
+            out["severity"] = None if self.severity is None else _enum_out(self.severity)
         return out
 
     @classmethod
@@ -39141,6 +39263,8 @@ class ReportItem(_Model):
             count=data["count"],
             reason=data["reason"],
             lines=list(data["lines"]),
+            details=[ReportDetail.from_json(e0) for e0 in data["details"]] if "details" in data else UNSET,
+            severity=UNSET if "severity" not in data else None if data["severity"] is None else _enum_in(ReportSeverity, data["severity"]),
         )
 
 
@@ -60208,6 +60332,8 @@ __all__ = [
     "DrawingStandard",
     "DrawingUnit",
     "DrawingUnitName",
+    "DwgVersion",
+    "DwgVersionName",
     "DxfAnnotations",
     "DxfExported",
     "DxfForm",
@@ -60309,6 +60435,7 @@ __all__ = [
     "ExportAtlas",
     "ExportBlock",
     "ExportCsv",
+    "ExportDwg",
     "ExportDxf",
     "ExportFgb",
     "ExportGis",
@@ -61225,7 +61352,10 @@ __all__ = [
     "ReplaceStyleWallsOperation",
     "ReplaceTextEdit",
     "ReplaceTypeOpeningsOperation",
+    "ReportDetail",
     "ReportItem",
+    "ReportSeverity",
+    "ReportSeverityName",
     "ReselectHatchEdit",
     "ResetArrayEdit",
     "ResetJoinsWallsOperation",

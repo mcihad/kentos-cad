@@ -30,6 +30,11 @@ pub const FILE_IMPORT_DXF_VERSION: u32 = 1;
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportDxf {
+    /// Permit explicitly reported polyline approximation or loss. False rejects
+    /// a conversion that cannot preserve bulges, widths or vertex elevations.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub allow_polyline_loss: bool,
     /// The file to read, an absolute path.
     pub path: String,
     /// The unit the file's values are in, whatever it declares (docs/adr/0257

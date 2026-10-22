@@ -291,6 +291,8 @@ fn stray_note(boxes: &[Bounds], on: &[&str], far: &[usize]) -> Option<ReportItem
     }
     let (x, y) = centre(first);
     Some(ReportItem {
+                severity: None,
+                details: Vec::new(),
         what: "Uzaktaki nesne".into(),
         count: u32::try_from(far.len()).unwrap_or(u32::MAX),
         // `+ 0.0` writes a negative zero as 0.

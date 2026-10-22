@@ -88,8 +88,14 @@ fn dxf(
     doc: &Document,
     input: &ExportDxf,
 ) -> Result<(PathBuf, bool, Vec<u8>, DxfExported), Refused> {
+    dxf_selected(doc, input, None)
+}
+
+fn dxf_selected(
+    doc: &Document, input: &ExportDxf, uids: Option<&[String]>,
+) -> Result<(PathBuf, bool, Vec<u8>, DxfExported), Refused> {
     let (path, exists) = target(&input.path, input.overwrite)?;
-    let objects: Vec<&kentos_commands::Entity> = match &input.layers {
+    let mut objects: Vec<&kentos_commands::Entity> = match &input.layers {
         None => doc.entities().collect(),
         Some(ids) => {
             let mut chosen = Vec::new();
@@ -120,8 +126,23 @@ fn dxf(
             chosen
         }
     };
+    if let Some(uids) = uids {
+        let mut chosen = std::collections::HashSet::new();
+        for (i, text) in uids.iter().enumerate() {
+            let uid = kentos_domain::Uuid::parse_str(text).map_err(|_| refuse(
+                codes::INVALID_UID, "Nesne kimliği geçerli bir UUID değil.", &format!("uids[{i}]")))?;
+            let slot = doc.slot_of(uid).ok_or_else(|| refuse(
+                codes::ENTITY_NOT_FOUND, "Nesne çizimde yok.", &format!("uids[{i}]")))?;
+            chosen.insert(slot.0);
+        }
+        objects.retain(|e| chosen.contains(&e.base().id));
+    }
+    let mut seen = std::collections::HashSet::new();
+    objects.retain(|e| seen.insert(e.base().id));
     let grouped = crate::export::by_layer(doc, objects);
-    if grouped.is_empty() {
+    let mut dxf_input = crate::export::dxf_input(doc, &grouped);
+    let paper_only = input.layers.is_none() && uids.is_none() && dxf_input.layouts.iter().any(|p| !p.entities.is_empty() || !p.viewports.is_empty());
+    if grouped.is_empty() && !paper_only {
         return Err(refuse(
             codes::NOTHING_TO_EXPORT,
             "Seçilen katmanlarda nesne yok: DXF'e yazılacak bir şey yok.",
@@ -132,10 +153,11 @@ fn dxf(
             },
         ));
     }
-    let mut dxf_input = crate::export::dxf_input(doc, &grouped);
+    dxf_input.allow_polyline_loss = input.allow_polyline_loss;
     dxf_input.annotations = input.annotations.unwrap_or_default();
     let layers = u32::try_from(dxf_input.layers.len()).unwrap_or(u32::MAX);
-    let (bytes, report) = kentos_formats::dxf::write(&dxf_input);
+    let (bytes, report) = kentos_formats::dxf::write_checked(&dxf_input)
+        .map_err(|e| refuse(e.code, e.message, "allowPolylineLoss"))?;
     let output = DxfExported {
         path: path.display().to_string(),
         bytes: bytes.len() as u64,
@@ -146,6 +168,40 @@ fn dxf(
         report: serde_json::to_value(&report).unwrap_or(Value::Null),
     };
     Ok((path, exists, bytes, output))
+}
+
+
+/// The same CAD export in a selected DWG binary format, verified before the atomic write.
+fn dwg(
+    doc: &Document, input: &kentos_commands::ExportDwg,
+) -> Result<(PathBuf, bool, Vec<u8>, kentos_commands::DwgExported), Refused> {
+    let dxf_input = ExportDxf { allow_polyline_loss: input.allow_polyline_loss, path: input.path.clone(), layers: input.layers.clone(),
+        overwrite: input.overwrite, annotations: input.annotations };
+    let (path, exists, dxf, mut output) = dxf_selected(doc, &dxf_input, input.uids.as_deref())?;
+    let bytes = kentos_dwg::encode(&dxf, input.version)
+        .map_err(|e| refuse(e.code, e.message, "path"))?;
+    output.bytes = bytes.len() as u64;
+    output.sha256 = sha256_hex(&bytes);
+    if input.version == kentos_commands::DwgVersion::AC1014
+        && let Some(notes) = output.report["notes"].as_array_mut() {
+            notes.push(serde_json::json!({"what": "R14 biçimi", "count": 1,
+                "reason": "INSUNITS birimi ve nesne çizgi kalınlığı bu sürümde taşınmaz. Koordinatlar metredir; alıcıda metre birimini seçin. Yeni DWG sürümü bu kaybı önler.", "lines": []}));
+    }
+    output.report["codec"] = serde_json::json!({
+        "provider": kentos_dwg::PROVIDER, "revision": kentos_dwg::REVISION,
+        "sourceFormat": "DXF", "sourceVersion": "AC1021",
+        "targetFormat": "DWG", "targetVersion": input.version.signature(),
+        "reopened": true, "independentValidation": false
+    });
+    Ok((path, exists, bytes, output))
+}
+
+/// The desktop and command use the same builder and atomic file writer.
+pub fn export_dwg(doc: &Document, input: &kentos_commands::ExportDwg)
+    -> Result<kentos_commands::DwgExported, Refused> {
+    let (path, _, bytes, output) = dwg(doc, input)?;
+    write_guarded(&path, &bytes, input.overwrite)?;
+    Ok(output)
 }
 
 /// The PDF's bytes and what they hold, or the refusal.
@@ -809,6 +865,11 @@ pub(crate) fn write(path: &Path, bytes: &[u8]) -> Result<(), Refused> {
         .map_err(|e| refuse(codes::FILE_UNWRITABLE, e.message, "path"))
 }
 
+fn write_guarded(path: &Path, bytes: &[u8], overwrite: bool) -> Result<(), Refused> {
+    files::write_bytes_with_overwrite(bytes, path, overwrite).map(|_| ())
+        .map_err(|e| refuse(e.code, e.message, "path"))
+}
+
 /// What a file command answers with, written or planned: its output as JSON.
 struct Done {
     output: Value,
@@ -891,6 +952,10 @@ fn refused_result(error: CommandError) -> CommandResult<Value> {
 
 /// Runs `op` of the file command `command`; its answer, and the file it
 /// wrote (execute).
+fn typed_version_loss(command: &str, output: &Value) -> bool {
+    command == kentos_commands::FILE_EXPORT_DWG && output["report"]["codec"]["targetVersion"] == "AC1014"
+}
+
 fn run_typed(
     doc: &Document,
     command: &str,
@@ -915,7 +980,7 @@ fn run_typed(
                         effect: None,
                     },
                     CallOp::Execute => {
-                        if let Err(refused) = write(&path, &bytes) {
+                        if let Err(refused) = write_guarded(&path, &bytes, typed.overwrite) {
                             return Ok((CommandResult::Failed { error: *refused }, None));
                         }
                         Done {
@@ -929,10 +994,17 @@ fn run_typed(
                     }
                 },
             };
+            let warnings = if command == kentos_commands::FILE_EXPORT_DWG
+                && (done.output["report"]["skipped"].as_array().is_some_and(|a| !a.is_empty())
+                    || typed_version_loss(command, &done.output)) {
+                vec![CommandWarning { code: codes::EXPORT_LOSSES.into(),
+                    message: "DWG aktarımında kayıp var; yazılanlar ve sürüm kayıpları için report alanına bakın.".into(),
+                    path: Some("report".into()) }]
+            } else { Vec::new() };
             Ok((
                 CommandResult::Completed {
                     output: done.output,
-                    warnings: Vec::new(),
+                    warnings,
                 },
                 done.effect,
             ))
@@ -1400,6 +1472,7 @@ fn run_typed(
     }
     match command {
         FILE_EXPORT_DXF => go!(ExportDxf, dxf),
+        kentos_commands::FILE_EXPORT_DWG => go!(kentos_commands::ExportDwg, dwg),
         FILE_EXPORT_PDF => go!(ExportPdf, pdf),
         FILE_EXPORT_BLOCK => go!(ExportBlock, block_file),
         other => Err(format!("“{other}” bir dosya komutu değil.")),
@@ -1408,6 +1481,7 @@ fn run_typed(
 
 fn version_of(command: &str) -> u32 {
     match command {
+        kentos_commands::FILE_EXPORT_DWG => kentos_commands::FILE_EXPORT_DWG_VERSION,
         FILE_EXPORT_PDF => FILE_EXPORT_PDF_VERSION,
         FILE_EXPORT_BLOCK => FILE_EXPORT_BLOCK_VERSION,
         FILE_EXPORT_GPKG => FILE_EXPORT_GPKG_VERSION,
@@ -1432,6 +1506,9 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
         format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
     };
     match command {
+        kentos_commands::FILE_EXPORT_DWG => serde_json::from_value::<kentos_commands::ExportDwg>(input.clone())
+            .map_err(text)
+            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         FILE_EXPORT_DXF => serde_json::from_value::<ExportDxf>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),

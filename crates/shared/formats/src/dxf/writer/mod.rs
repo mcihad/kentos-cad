@@ -22,6 +22,7 @@ mod entities;
 mod hatch_ties;
 mod input;
 mod layers;
+mod layouts;
 mod styles;
 
 /// The line weight (mm) a DXF holds for `mm` once written: the nearest of
@@ -300,7 +301,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     let mut report = Report::default();
     // The caller's notes first (docs/adr/0319 §5).
     for n in &input.notes {
-        report.note_n(&n.what, &n.reason, n.lines.first().copied().unwrap_or(0), n.count);
+        report.note_item(n.clone());
     }
     // A wall goes as the lines and hatches it draws at its detail (docs/adr/0339 §4): DXF has no wall of KentOS's.
     let plain;
@@ -326,6 +327,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     let mut handles = Handles {
         next: template::FIRST_FREE,
     };
+    let papers = layouts::allocate(&input.layouts, &mut handles);
     // The associative hatches and their sources take their handles first (docs/adr/0333 §3).
     let ties = hatch_ties::ties_of(input, &mut handles);
     let layers = Layers::new(&input.layers, &mut report);
@@ -368,6 +370,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
         let extent = {
             let mut w = Writer {
                 out: &mut objects,
+                uids: &input.uids,
                 blocks: &mut blocks,
                 records: &mut records,
                 dimensions: &mut dimensions,
@@ -381,6 +384,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
                 extent: None,
                 points: false,
                 owner: record,
+                paper: None,
                 defining: true,
                 names: &names,
                 defined: &defined,
@@ -429,6 +433,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     let extent = {
         let mut w = Writer {
             out: &mut body,
+            uids: &input.uids,
             blocks: &mut blocks,
             records: &mut records,
             dimensions: &mut dimensions,
@@ -442,6 +447,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             extent: None,
             points: false,
             owner: MODEL_SPACE,
+            paper: None,
             defining: false,
             names: &names,
             defined: &defined,
@@ -466,6 +472,36 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
         points |= w.points;
         w.extent
     };
+    let mut paper_body = Out::default();
+    for paper in &papers {
+        let mut objects = paper.data.entities.clone();
+        for e in &mut objects { units::entity(e, units::Scale { mul: 1000., div: 1. }); }
+        {
+            let mut w = Writer {
+                out: &mut paper_body, uids: &input.uids, blocks: &mut blocks, records: &mut records,
+                dimensions: &mut dimensions, anonymous: &mut anonymous, values: &no_values,
+                decimals: input.length_decimals, grads: input.grads, handles: &mut handles,
+                layers: &layers, report: &mut report, extent: None, points: false,
+                owner: paper.record, paper: Some(&paper.data.name), defining: false,
+                names: &names, defined: &defined, placing: &placing, styles: &style_names,
+                per_metre: 1000., ltypes: &mut ltypes, arrows: &mut arrows,
+                pen: entities::Pen::default(), forms: input.annotations, ties: &ties, wholes: &no_wholes,
+            };
+            for e in &objects { w.entity(e); }
+        }
+        // The overall paper editor is viewport 1. DWG does not persist DXF
+        // viewport IDs; a real first record keeps model frames numbered >=2.
+        let editor = kentos_contracts::CadViewport {
+            paper_center_mm: Vec2 { x: paper.data.width_mm / 2., y: paper.data.height_mm / 2. },
+            width_mm: paper.data.width_mm, height_mm: paper.data.height_mm,
+            view_center: Vec2 { x: 0., y: 0. }, view_height: paper.data.height_mm / 1000., twist: 0.,
+        };
+        layouts::viewport(&mut paper_body, &mut handles, paper, &editor, 1, unit.per_metre());
+        for (id, view) in paper.data.viewports.iter().enumerate() {
+            layouts::viewport(&mut paper_body, &mut handles, paper, view, id + 2, unit.per_metre());
+        }
+    }
+
     let mut tables = Out::default();
     tables.section("TABLES");
     let (centre, height) = view(extent.as_ref());
@@ -507,7 +543,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
         unit.per_metre(),
         &ltypes,
     );
-    template::block_record_table(&mut tables, &records);
+    template::block_record_table(&mut tables, &records, &papers);
     tables.str(0, "ENDSEC");
 
     // The header is written last: it holds the next free handle.
@@ -526,11 +562,12 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     );
     template::classes(&mut out);
     out.s.push_str(&tables.s);
-    template::blocks(&mut out, &blocks.s);
+    template::blocks(&mut out, &blocks.s, &papers);
     out.section("ENTITIES");
     out.s.push_str(&body.s);
+    out.s.push_str(&paper_body.s);
     out.str(0, "ENDSEC");
-    template::objects(&mut out);
+    template::objects(&mut out, &papers);
     out.str(0, "EOF");
     (out.s.into_bytes(), report.export())
 }

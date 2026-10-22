@@ -176,6 +176,8 @@ pub fn reproject(
     reasons.sort_by_key(|(u, _)| u.as_str());
     for (u, n) in &reasons {
         result.report.skipped.push(ReportItem {
+                severity: None,
+                details: Vec::new(),
             what: "Çevrilemeyen nesne".into(),
             count: *n,
             reason: format!("bir köşesi {}; alınmadı", why(*u)),
@@ -184,6 +186,8 @@ pub fn reproject(
     }
     if kinds_left > 0 {
         result.report.skipped.push(ReportItem {
+                severity: None,
+                details: Vec::new(),
             what: "Eğrili ya da başka türden nesne".into(),
             count: kinds_left,
             reason: "projenin sistemine yalnız noktalar ve düz kenarlı yollar çevrilir; alınmadı"

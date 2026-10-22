@@ -215,7 +215,9 @@ fn every_kind_with_layers_colours_and_the_turkish_code_page() {
     assert_eq!(e.len(), 16);
 
     assert!(skipped(&r, "IMAGE").is_some_and(|s| s.contains("raster")));
-    assert!(skipped(&r, "Kâğıt uzayı nesnesi").is_some());
+    assert!(skipped(&r, "Kâğıt uzayı nesnesi").is_none());
+    assert_eq!(r.layouts.len(), 1);
+    assert_eq!(r.layouts[0].entities.len(), 1);
     // Widths are read, no longer said lost (docs/adr/0258 §2).
     assert!(
         !r.report
@@ -1285,7 +1287,7 @@ fn vertices_take_the_heights_a_file_gives_them() {
 }
 
 #[test]
-fn a_closed_polyline_that_repeats_its_first_vertex_keeps_the_firsts_height() {
+fn a_closed_polyline_preserves_a_vertical_closing_segment() {
     let vertex = |x: &str, y: &str, z: &str| {
         groups(&[
             (0, "VERTEX"),
@@ -1315,22 +1317,23 @@ fn a_closed_polyline_that_repeats_its_first_vertex_keeps_the_firsts_height() {
         entities.extend(vertex(v.0, v.1, v.2));
     }
     entities.extend(groups(&[(0, "SEQEND"), (8, "0")]));
+    let bytes = dxf_of(&[("ENTITIES", entities)]);
     let r = dxf::read(
-        &dxf_of(&[("ENTITIES", entities)]),
-        &DxfReadOptions::default(),
+        &bytes,
+        &DxfReadOptions { closed_polylines: kentos_contracts::ClosedPolylines::Line, ..Default::default() },
     )
     .expect("read");
     assert_eq!(r.entities.len(), 1, "{:?}", r.report);
     assert_eq!(
         heights(&r.entities[0]),
-        Some(vec![Some(10.0), Some(11.0), Some(12.0), Some(13.0)])
+        Some(vec![Some(10.0), Some(11.0), Some(12.0), Some(13.0), Some(99.0)])
     );
     let said = r
         .report
         .notes
         .iter()
         .find(|n| n.what == "Halka kapanışının Z'si");
-    assert_eq!(said.map(|n| n.count), Some(1), "{:?}", r.report.notes);
+    assert!(said.is_none(), "vertical segment must survive: {:?}", r.report.notes);
 }
 
 #[test]

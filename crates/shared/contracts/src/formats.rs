@@ -217,7 +217,8 @@ use crate::layer::LineType;
 ///    stays 53.
 /// 94 (docs/adr/0518 §1): a raster's `georef` (its georeference record): `.kcad` document schema 88; in the typed
 ///    columns a raster's option 5, the record as one JSON text. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 94;
+/// 95: CAD paper-space layouts and structured source diagnostics (CAD-IO-11/12).
+pub const FORMATS_VERSION: u32 = 96;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -273,12 +274,46 @@ pub struct ImportLayer {
     pub fields: Vec<crate::fields::LayerField>,
 }
 
+/// CAD diagnostic severity; independent of whether a supported entity was kept.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ReportSeverity { Info, Warning, Error }
+
+/// A bounded source sample for an aggregated CAD loss report.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ReportDetail {
+    pub entity_type: String,
+    pub property: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub source_line: Option<u32>,
+}
+
 /// One line of an import or export report: what, how many, and what happened to it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ReportItem {
+    /// Absent for legacy reports. CAD reports distinguish information, changed content and rejected content.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub severity: Option<ReportSeverity>,
+    /// Source samples, bounded like `lines`; count may be greater than this sample list.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReportDetail>>", optional))]
+    pub details: Vec<ReportDetail>,
     /// The source's name for it ("IMAGE", "Genişlikli çoklu çizgi").
     pub what: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -361,6 +396,14 @@ pub struct DeclaredCrs {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportResult {
+    /// Source handles aligned with model entities; meaningful only inside this CAD source.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Option<String>>>", optional))]
+    pub source_handles: Vec<Option<String>>,
+    /// Real paper-space layouts, separate from model-space entities.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::CadLayout>>", optional))]
+    pub layouts: Vec<crate::CadLayout>,
     pub entities: Vec<Entity>,
     pub layers: Vec<ImportLayer>,
     pub report: ImportReport,
@@ -864,6 +907,11 @@ pub struct CoordWriteInput {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DxfReadOptions {
+    /// Permit explicitly reported polyline approximation or loss. False rejects
+    /// a conversion that cannot preserve bulges, widths or vertex elevations.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub allow_polyline_loss: bool,
     /// Stop after this many objects (0: one million); the rest is counted and reported.
     pub max_entities: u32,
     /// Blokları patlat: every insert opened into its objects, no definitions
@@ -1179,6 +1227,15 @@ pub struct DxfWriteLayer {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DxfWriteInput {
+    /// Permit explicitly reported polyline approximation or loss. False rejects
+    /// a conversion that cannot preserve bulges, widths or vertex elevations.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub allow_polyline_loss: bool,
+    /// Real paper-space layouts, separate from model-space entities.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::CadLayout>>", optional))]
+    pub layouts: Vec<crate::CadLayout>,
     pub entities: Vec<Entity>,
     pub layers: Vec<DxfWriteLayer>,
     /// Plot scale denominator (1000 for 1:1000): line type patterns and point marks are sized for paper at it.

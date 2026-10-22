@@ -802,6 +802,8 @@ impl Taking {
                 Some(k) => k.count += i.count,
                 // A page's lines are not the take's: none kept.
                 None => self.skipped.push(ReportItem {
+                severity: None,
+                details: Vec::new(),
                     lines: Vec::new(),
                     ..i.clone()
                 }),
@@ -929,6 +931,8 @@ mod tests {
     #[test]
     fn the_words_say_what_matched_what_was_left_out_and_what_stopped_it() {
         let other = ReportItem {
+                severity: None,
+                details: Vec::new(),
             what: "Geometri türü “Circle”".into(),
             count: 3,
             reason: "desteklenmiyor; alınmadı".into(),

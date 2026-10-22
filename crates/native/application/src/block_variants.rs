@@ -193,6 +193,8 @@ pub fn plain_for_export(
                 )
             };
             Some(kentos_commands::ReportItem {
+                severity: None,
+                details: Vec::new(),
                 what: "Dinamik blok".into(),
                 count: all,
                 reason: format!(

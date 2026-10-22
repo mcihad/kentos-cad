@@ -74,6 +74,9 @@ struct Fields {
     label: Option<String>,
     symbol: Option<String>,
     line_weight: Option<f64>,
+    look: kentos_contracts::look::ObjectLook,
+    widths: Option<Vec<[f64; 2]>>,
+    ms: Option<Vec<Option<f64>>>,
     p: Option<Vec2>,
     z: Option<f64>,
     a: Option<Vec2>,
@@ -146,6 +149,7 @@ struct Fields {
     boundary: Option<Vec<kentos_contracts::HatchLoop>>,
     block: Option<BlockId>,
     scale: Option<f64>,
+    y_scale: Option<f64>,
     mirror: Option<bool>,
     /// A table's own fields (docs/adr/0184).
     rows: Option<Vec<f64>>,
@@ -176,7 +180,7 @@ impl Fields {
     fn entity<E: de::Error>(self) -> Result<Entity, E> {
         let kind = need(self.kind, "kind")?;
         let base = EntityBase {
-            look: Default::default(),
+            look: self.look,
             id: need(self.id, "id")?,
             layer_id: need(self.layer_id, "layerId")?,
             color: self.color,
@@ -253,15 +257,15 @@ impl Fields {
                     parts|
          -> Result<PathEntity, E> {
             Ok(PathEntity {
-                ms: None,
+                ms: self.ms.clone(),
                 base,
                 pts: need(pts, "pts")?,
                 bulges,
                 holes: rings(holes)?,
                 zs,
                 parts,
-                closed: false,
-                widths: None,
+                closed: self.closed.unwrap_or(false),
+                widths: self.widths.clone(),
             })
         };
         let construction = |base: EntityBase,
@@ -437,7 +441,7 @@ impl Fields {
                 block: need(self.block, "block")?,
                 p: need(self.p, "p")?,
                 scale: need(self.scale, "scale")?,
-                y_scale: None,
+                y_scale: self.y_scale,
                 rotation: need(self.rotation, "rotation")?,
                 mirror: self.mirror.unwrap_or(false),
             }),
@@ -538,6 +542,15 @@ impl<'de> Deserialize<'de> for Wire {
                         "label" => f.label = map.next_value()?,
                         "symbol" => f.symbol = map.next_value()?,
                         "lineWeight" => f.line_weight = map.next_value()?,
+                        "lineType" => f.look.line_type = map.next_value()?,
+                        "linePattern" => f.look.line_pattern = map.next_value()?,
+                        "lineTypeScale" => f.look.line_type_scale = map.next_value()?,
+                        "transparency" => f.look.transparency = map.next_value()?,
+                        "order" => f.look.order = map.next_value()?,
+                        "byLayer" => f.look.by_layer = map.next_value()?,
+                        "wipeout" => f.look.wipeout = map.next_value()?,
+                        "widths" => f.widths = map.next_value()?,
+                        "ms" => f.ms = map.next_value()?,
                         "p" => f.p = Some(map.next_value()?),
                         "z" => f.z = map.next_value()?,
                         "a" => f.a = Some(map.next_value()?),
@@ -603,6 +616,7 @@ impl<'de> Deserialize<'de> for Wire {
                         "boundary" => f.boundary = map.next_value()?,
                         "block" => f.block = Some(map.next_value()?),
                         "scale" => f.scale = Some(map.next_value()?),
+                        "yScale" => f.y_scale = map.next_value()?,
                         "mirror" => f.mirror = map.next_value()?,
                         "rows" => f.rows = Some(map.next_value()?),
                         "columns" => f.columns = Some(map.next_value()?),
@@ -646,6 +660,14 @@ impl<'de> Deserialize<'de> for Objects {
 /// A block definition, its objects read by `Wire` (docs/adr/0144 §5).
 #[derive(serde::Deserialize)]
 struct Definition {
+    #[serde(default)]
+    xref: Option<kentos_contracts::XrefSource>,
+    #[serde(default)]
+    dynamic: Option<kentos_contracts::DynamicBlock>,
+    #[serde(default)]
+    card: Option<kentos_contracts::BlockCard>,
+    #[serde(default)]
+    units: Option<kentos_contracts::BlockUnits>,
     id: BlockId,
     name: String,
     base: Vec2,
@@ -667,14 +689,14 @@ impl<'de> Deserialize<'de> for Definitions {
         Ok(Definitions(
             list.into_iter()
                 .map(|d| BlockDefinition {
-                    dynamic: None,
-                    xref: None,
-                    card: None,
+                    dynamic: d.dynamic,
+                    xref: d.xref,
+                    card: d.card,
                     id: d.id,
                     name: d.name,
                     base: d.base,
                     entities: d.entities.0,
-                    units: None,
+                    units: d.units,
                     attributes: d.attributes,
                     description: d.description,
                 })
@@ -686,6 +708,16 @@ impl<'de> Deserialize<'de> for Definitions {
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Input {
+    #[serde(default)]
+    allow_polyline_loss: bool,
+    #[serde(default)]
+    notes: Vec<kentos_contracts::ReportItem>,
+    #[serde(default)]
+    uids: BTreeMap<u32, kentos_contracts::EntityId>,
+    #[serde(default)]
+    wall_detail: Option<kentos_contracts::WallDetail>,
+    #[serde(default)]
+    layouts: Vec<kentos_contracts::CadLayout>,
     entities: Objects,
     layers: Vec<DxfWriteLayer>,
     scale: f64,
@@ -719,10 +751,12 @@ impl<'de> Deserialize<'de> for WriteInput {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<WriteInput, D::Error> {
         let i = Input::deserialize(d)?;
         Ok(WriteInput(DxfWriteInput {
-        uids: Default::default(),
-            wall_detail: None,
+            allow_polyline_loss: i.allow_polyline_loss,
+            layouts: i.layouts,
+            uids: i.uids,
+            wall_detail: i.wall_detail,
             annotations: i.annotations,
-            notes: Vec::new(),
+            notes: i.notes,
             entities: i.entities.0,
             layers: i.layers,
             scale: i.scale,

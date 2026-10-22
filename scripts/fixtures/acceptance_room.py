@@ -349,7 +349,7 @@ def build() -> dict:
         return [p[0] * k, p[1] * k]
     dxf = {
         "insunits": 4,
-        "counts": {"LWPOLYLINE": 1, "DIMENSION": 2, "HATCH": 1, "LINE": 13},
+        "counts": {"LWPOLYLINE": 1, "DIMENSION": 2, "HATCH": 1, "LINE": 13, "VIEWPORT": 2 * len(SHEETS)},
         "polylines": [{"closed": True, "points": [mm(q) for q in ROOM]}],
         "lines": [[mm(a), mm(b)] for a, b in [*axes, *[tuple(x) for x in out], *trimmed, k11]],
         "dimensions": [W * k, W * k],
