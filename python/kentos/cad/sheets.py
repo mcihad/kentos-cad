@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    PaperOp,
+    SheetPicture,
     SheetsEdit,
     SheetsEdited,
     SheetsSet,
@@ -29,13 +31,16 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
     addItems (harita, antet, ölçek çubuğu, kuzey oku, yazı …), setItemProps,
     removeItems, applyTemplate, saveVariables ve ötekiler. Kâğıt üstündeki uzunluklar
     mikrometre (A3 yatay 420000 × 297000), açılar derecenin binde biridir; haritanın
-    görünümü projenin koordinatlarında merkez ve ölçek paydasıyla verilir. Kitap
-    kâğıdındır: değiştirmek çizimi kirli yapar, çizimin geri alma adımı değildir;
-    sonuçtaki inverse değişikliği geri alan işlemlerdir (bu komuta yeniden verilir).
-    Sonuç kitabın paftalarını boyları ve haritalarının ölçekleriyle sayar. Çekirdeğin
-    okumadığı ya da reddettiği işlem hiçbir şey yazdırmaz; ret çekirdeğin kodu ve ops[i]
-    yoluyla döner. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-    yazılmaz, sonuç conflict olur.
+    görünümü projenin koordinatlarında merkez ve ölçek paydasıyla verilir. Tek başına
+    çağrı kâğıdın geçmişindedir; açık Python/belge grubu ve changeset kitabı ve
+    resimleri modelle tek undo/redo adımına alır. Sonuçtaki inverse işlemleri geri alır.
+    pictures, addAssets bilgisindeki SHA-256 ve byte boyuyla eşleşen base64 resim
+    baytlarıdır; applyTemplate içindeki resim baytları otomatik gömülür. inversePictures
+    gelirse ters işlemlerle birlikte pictures olarak ve replacePictures=true ile
+    verilir. Sonuç kitabın paftalarını boyları ve haritalarının ölçekleriyle sayar.
+    Çekirdeğin okumadığı ya da reddettiği işlem hiçbir şey yazdırmaz; ret çekirdeğin
+    kodu ve ops[i] yoluyla döner. expectedRevision verilmişse ve çizim o sürümde değilse
+    hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.sheets.edit"
@@ -51,8 +56,10 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
         doc: Document,
         /,
         *,
-        ops: Sequence[Any],
+        ops: Sequence[PaperOp | Mapping[str, Any]],
         expected_revision: str | None | Unset = UNSET,
+        pictures: Sequence[SheetPicture] | Unset = UNSET,
+        replace_pictures: bool | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> SheetsEdited:
@@ -63,12 +70,16 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
         (harita, antet, ölçek çubuğu, kuzey oku, yazı …), setItemProps, removeItems,
         applyTemplate, saveVariables ve ötekiler. Kâğıt üstündeki uzunluklar mikrometre (A3
         yatay 420000 × 297000), açılar derecenin binde biridir; haritanın görünümü projenin
-        koordinatlarında merkez ve ölçek paydasıyla verilir. Kitap kâğıdındır: değiştirmek
-        çizimi kirli yapar, çizimin geri alma adımı değildir; sonuçtaki inverse değişikliği
-        geri alan işlemlerdir (bu komuta yeniden verilir). Sonuç kitabın paftalarını boyları
-        ve haritalarının ölçekleriyle sayar. Çekirdeğin okumadığı ya da reddettiği işlem
-        hiçbir şey yazdırmaz; ret çekirdeğin kodu ve ops[i] yoluyla döner. expectedRevision
-        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        koordinatlarında merkez ve ölçek paydasıyla verilir. Tek başına çağrı kâğıdın
+        geçmişindedir; açık Python/belge grubu ve changeset kitabı ve resimleri modelle tek
+        undo/redo adımına alır. Sonuçtaki inverse işlemleri geri alır. pictures, addAssets
+        bilgisindeki SHA-256 ve byte boyuyla eşleşen base64 resim baytlarıdır; applyTemplate
+        içindeki resim baytları otomatik gömülür. inversePictures gelirse ters işlemlerle
+        birlikte pictures olarak ve replacePictures=true ile verilir. Sonuç kitabın
+        paftalarını boyları ve haritalarının ölçekleriyle sayar. Çekirdeğin okumadığı ya da
+        reddettiği işlem hiçbir şey yazdırmaz; ret çekirdeğin kodu ve ops[i] yoluyla döner.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -77,6 +88,9 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
             expected_revision: The document revision the input was prepared against, as decimal
                 text. When given and the document is no longer at it, nothing is
                 written and the answer is `conflict`.
+            pictures: Embedded picture bytes, keyed by SHA-256. Metadata is supplied by addAssets or applyTemplate.
+                Each picture must match the book's metadata (digest and byte length). Existing bytes are retained.
+            replace_pictures: Replace the entire picture byte set instead of merging it; use with the answer's inversePictures for undo.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -92,6 +106,8 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
         return self.execute_input(doc, SheetsEdit(
             ops=list(ops),
             expected_revision=expected_revision,
+            pictures=_opt(pictures, lambda x: list(x)),
+            replace_pictures=replace_pictures,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -99,8 +115,10 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
         doc: Document,
         /,
         *,
-        ops: Sequence[Any],
+        ops: Sequence[PaperOp | Mapping[str, Any]],
         expected_revision: str | None | Unset = UNSET,
+        pictures: Sequence[SheetPicture] | Unset = UNSET,
+        replace_pictures: bool | Unset = UNSET,
     ) -> SheetsEdited:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -108,6 +126,8 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
         return self.plan_input(doc, SheetsEdit(
             ops=list(ops),
             expected_revision=expected_revision,
+            pictures=_opt(pictures, lambda x: list(x)),
+            replace_pictures=replace_pictures,
         ))
 
     def validate(
@@ -115,8 +135,10 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
         doc: Document,
         /,
         *,
-        ops: Sequence[Any],
+        ops: Sequence[PaperOp | Mapping[str, Any]],
         expected_revision: str | None | Unset = UNSET,
+        pictures: Sequence[SheetPicture] | Unset = UNSET,
+        replace_pictures: bool | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -124,6 +146,8 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
         return self.validate_input(doc, SheetsEdit(
             ops=list(ops),
             expected_revision=expected_revision,
+            pictures=_opt(pictures, lambda x: list(x)),
+            replace_pictures=replace_pictures,
         ))
 
     def answer(
@@ -131,8 +155,10 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
         doc: Document,
         /,
         *,
-        ops: Sequence[Any],
+        ops: Sequence[PaperOp | Mapping[str, Any]],
         expected_revision: str | None | Unset = UNSET,
+        pictures: Sequence[SheetPicture] | Unset = UNSET,
+        replace_pictures: bool | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -145,6 +171,8 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
         return self.answer_input(doc, SheetsEdit(
             ops=list(ops),
             expected_revision=expected_revision,
+            pictures=_opt(pictures, lambda x: list(x)),
+            replace_pictures=replace_pictures,
         ), op=op, request_id=request_id, expected=expected)
 
 

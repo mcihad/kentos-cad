@@ -13,6 +13,6 @@ sheets: Array<string>, replaced: boolean,
  */
 findings: unknown, 
 /**
- * What a host without a window cannot draw, said in words.
+ * Rasterization choices and resolution limits, said in words.
  */
 notes: Array<string>, };

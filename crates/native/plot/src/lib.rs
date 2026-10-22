@@ -21,7 +21,10 @@
 pub mod atlas;
 pub mod book;
 pub mod fonts;
+mod images;
 pub mod inputs;
+pub mod labels;
 pub mod layers;
 pub mod maps;
+mod raster;
 pub mod vectors;

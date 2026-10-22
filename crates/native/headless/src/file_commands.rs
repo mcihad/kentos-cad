@@ -244,7 +244,7 @@ fn pdf(
     let user = std::env::var("USER")
         .or_else(|_| std::env::var("USERNAME"))
         .unwrap_or_default();
-    let made = kentos_plot::book::book_pdf(doc, &wanted, &user, &kentos_plot::book::today())
+    let made = kentos_plot::book::book_pdf_at(doc, &wanted, &user, &kentos_plot::book::today(), input.drawing.as_deref())
         .map_err(|e| refuse(codes::PDF_UNWRITABLE, e.message, "path"))?;
     let output = PdfExported {
         path: path.display().to_string(),

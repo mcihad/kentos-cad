@@ -7739,7 +7739,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "Projenin pafta kitabını pafta çekirdeğinin kendi işlemleriyle değiştirir (kentos.sheet/1; pafta tasarımcısının yaptıkları): ops sırayla ve tek değişiklik olarak uygulanır. \
                       Her işlem op ile adlanan bir nesnedir: addSheet (sayfası, öğeleriyle bir pafta), removeSheet, renameSheet, setPage, addItems (harita, antet, ölçek çubuğu, kuzey oku, yazı …), setItemProps, removeItems, applyTemplate, saveVariables ve ötekiler. \
                       Kâğıt üstündeki uzunluklar mikrometre (A3 yatay 420000 × 297000), açılar derecenin binde biridir; haritanın görünümü projenin koordinatlarında merkez ve ölçek paydasıyla verilir. \
-                      Kitap kâğıdındır: değiştirmek çizimi kirli yapar, çizimin geri alma adımı değildir; sonuçtaki inverse değişikliği geri alan işlemlerdir (bu komuta yeniden verilir). Sonuç kitabın paftalarını boyları ve haritalarının ölçekleriyle sayar. \
+                      Tek başına çağrı kâğıdın geçmişindedir; açık Python/belge grubu ve changeset kitabı ve resimleri modelle tek undo/redo adımına alır. Sonuçtaki inverse işlemleri geri alır. pictures, addAssets bilgisindeki SHA-256 ve byte boyuyla eşleşen base64 resim baytlarıdır; applyTemplate içindeki resim baytları otomatik gömülür. inversePictures gelirse ters işlemlerle birlikte pictures olarak ve replacePictures=true ile verilir. Sonuç kitabın paftalarını boyları ve haritalarının ölçekleriyle sayar. \
                       Çekirdeğin okumadığı ya da reddettiği işlem hiçbir şey yazdırmaz; ret çekirdeğin kodu ve ops[i] yoluyla döner. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
@@ -8867,7 +8867,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             version: crate::FILE_EXPORT_PDF_VERSION,
             title: "PDF olarak yazdır".into(),
             summary: "Projenin pafta kitabını PDF olarak yazar: sheets'teki paftalar (yoksa hepsi, kitabın sırasıyla), her biri bir sayfa; projenin sistemi transverse Mercator ise GeoPDF. \
-                      Pencere olmadan çizilemeyen (haritaların yazıları) notes'ta, pafta çekirdeğinin bulguları findings'te söylenir. Dosya DXF'teki gibi yarım kalmadan yazılır; overwrite verilmezse var olan dosya reddedilir. \
+                      Vektör haritaların yazıları aranabilir kalır; zengin stiller seçili dpi ile resme çevrilir, notes nedeni ve çözünürlük sınırını söyler. Pafta çekirdeğinin bulguları findings içindedir. Dosya DXF'teki gibi yarım kalmadan yazılır; overwrite verilmezse var olan dosya reddedilir. \
                       plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması dosyayı geri almaz."
                 .into(),
             aliases: vec!["pdf".into(), "yazdir".into()],

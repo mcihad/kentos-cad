@@ -3312,6 +3312,7 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &[
                 "no_operations",
+                "bad_asset",
                 "bad_color",
                 "bad_value",
                 "out_of_range",

@@ -107,19 +107,14 @@ pub struct MapSource<'a> {
     pub origin: Vec2,
 }
 
-/// The map's content as vectors (the web's app/sheet/mapContent.ts `vectorMap` and pdfExport.ts
-/// `coreLayers`): the shown layers bottom first (only those a layer list names), each through
-/// the style engine at the map's scale on the paper's palette, what reaches the map's box with
-/// a margin of 20 paper mm; then every layer's text masks and texts over all of them. A layer
-/// that draws something with no vector form is named with what (the map then goes as a picture).
-pub fn vector_content(
+/// Styled layers shared by vector PDF and the headless/desktop CPU painter.
+pub(crate) fn built_layers(
     src: &MapSource<'_>,
     layers: &MapLayers,
     overrides: &[kentos_sheet::kinds::LayerOverride],
     scale: u32,
     extent: [f64; 4],
-    labels: &[MapLabel],
-) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
+) -> Vec<(String, String, kentos_native_style::StyledLayer)> {
     let doc = src.doc;
     let scale = f64::from(scale.max(1));
     let pad = 20.0 * scale / 1000.0;
@@ -156,19 +151,9 @@ pub fn vector_content(
         MapLayers::List(l) => Some(&l.layers),
         _ => None,
     };
-    let font = sheet_font(
-        doc.settings()
-            .drawing_font
-            .unwrap_or(kentos_contracts::DrawingFont::Barlow),
-    );
-    let o = VectorScale {
-        scale,
-        origin: [origin.x, origin.y],
-    };
     let mut layer_styles = HashMap::new();
     crate::layers::styles(doc.layers().nodes(), &mut layer_styles);
-    let mut shapes: Vec<MapLayerContent> = Vec::new();
-    let mut unsupported = Vec::new();
+    let mut built = Vec::new();
     // The map's layer state and overrides (docs/adr/0314 §1): its own layers, the drawing's untouched.
     for node in crate::layers::map_layers(
         doc.layers().nodes(),
@@ -202,13 +187,53 @@ pub fn vector_content(
                 styles: &layer_styles,
             },
         );
+        built.push((node.id.clone(), node.name.clone(), styled));
+    }
+    built
+}
+
+/// The map's content as vectors (the web's app/sheet/mapContent.ts `vectorMap` and pdfExport.ts
+/// `coreLayers`): the shown layers bottom first (only those a layer list names), each through
+/// the style engine at the map's scale on the paper's palette, what reaches the map's box with
+/// a margin of 20 paper mm; then every layer's text masks and texts over all of them. A layer
+/// that draws something with no vector form is named with what (the map then goes as a picture).
+pub fn vector_content(
+    src: &MapSource<'_>,
+    layers: &MapLayers,
+    overrides: &[kentos_sheet::kinds::LayerOverride],
+    scale: u32,
+    extent: [f64; 4],
+    labels: &[MapLabel],
+) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
+    let doc = src.doc;
+    let scale = f64::from(scale.max(1));
+    let pad = 20. * scale / 1000.;
+    let reach = [
+        extent[0] - pad,
+        extent[1] - pad,
+        extent[2] + pad,
+        extent[3] + pad,
+    ];
+    let origin = src.origin;
+    let font = sheet_font(
+        doc.settings()
+            .drawing_font
+            .unwrap_or(kentos_contracts::DrawingFont::Barlow),
+    );
+    let o = VectorScale {
+        scale,
+        origin: [origin.x, origin.y],
+    };
+    let mut shapes = Vec::new();
+    let mut unsupported = Vec::new();
+    for (id, name, styled) in built_layers(src, layers, overrides, scale as u32, extent) {
         let (paths, missing) = layer_paths(&styled, &o, Some(reach));
         if !missing.is_empty() {
-            unsupported.push((node.name.clone(), missing));
+            unsupported.push((name.clone(), missing));
         }
         shapes.push(MapLayerContent {
-            id: node.id.clone(),
-            name: node.name.clone(),
+            id,
+            name,
             paths,
             texts: Vec::new(),
         });

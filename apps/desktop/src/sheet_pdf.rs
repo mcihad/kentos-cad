@@ -18,6 +18,7 @@ use crate::app::{App, Message};
 pub(crate) use kentos_plot::maps::{PX_MM, paper_style};
 
 /// A colour of the screen as the PDF writes it: `#rrggbb`, with its opacity `#rrggbbaa`.
+#[cfg(test)]
 pub(crate) fn hex_of(c: iced::Color) -> String {
     let [r, g, b, a] = c.into_rgba8();
     if a == 255 {

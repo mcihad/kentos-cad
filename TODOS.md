@@ -51,6 +51,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- CAD-SHEET-06 (ADR 0591): ortak ops şeması ve asset/inversePictures sözleşmesi hazır. Web yeniden açılınca pafta komut işleyicisi baytların birleştirme/tam değiştirme ve ters bayt politikasını izlemeli; harita yazısı ve zengin stil çıktı eşdeğerliği kendi çıktı yolunda sınanmalı. Native CPU/SVG rasterizer web'e taşınmış sayılmaz.
+
 - CAD-IO 2B pafta/viewport, xref ve zengin kayıp raporu: shared sözleşmeler hazır; masaüstü/headless kabulü ADR 0587, web penceresi/işleyicisi web yeniden başladığında eklenecek.
 - CAD-SHEET kâğıt çizgisinin geometriden ayrı seçme çerçevesi ve DXF/DWG bloklarının kendi birimleriyle normalizasyonu ortak/native yolda düzeltildi (ADR 0589). Web'in kendi içe aktarma belge/pafta işleyicisi ve ortak fixture beklentileri web yeniden açıldığında uyarlanacak; web kabulü yapılmış sayılmaz.
 - CAD-SHEET-05 birleşik model/pafta betik grubu ve changeset undo/redo'su native yolda (ADR 0590). Web yeniden açıldığında kendi belge geçmişi kitap/resim snapshot'larını, grup iptalini ve savepoint'i izlemeli; sonraki bağımsız pafta düzenlemesini ezmeden bütün undo/redo'yu reddetmeli. `fixtures/sheet/v1/model-transactions.json` aynı beklentileri taşır.

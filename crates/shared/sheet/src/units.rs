@@ -24,12 +24,18 @@ pub const UM_PER_PT: f64 = 352.777_777_777_777_8;
 /// A rectangle on the paper: its top-left corner and size, before rotation.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperRectUm"))]
 pub struct RectUm {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub left: Um,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub top: Um,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub width: Um,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub height: Um,
 }
 
@@ -137,22 +143,32 @@ impl RectUm {
 /// A paper size.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSizeUm"))]
 pub struct SizeUm {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub width: Um,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub height: Um,
 }
 
 /// Empty space on each side of the page; the printable area is inside it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperMargins"))]
 pub struct Margins {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub top: Um,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub right: Um,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub bottom: Um,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub left: Um,
 }
 

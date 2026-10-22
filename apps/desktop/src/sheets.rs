@@ -489,20 +489,14 @@ impl MapPainter for SheetPainter<'_> {
         let doc = &drawing.model;
         r.view.center?;
         let extent = r.extent?;
-        let texts = self
-            .label_layout(doc, spatial, r)
-            .map(|(camera, spots, fence)| {
-                crate::labels::texts_in_map(
-                    doc,
-                    spots,
-                    camera,
-                    crate::labels::paper_colors(),
-                    self.font,
-                    self.format,
-                    fence,
-                )
-            })
-            .unwrap_or_default();
+        let texts = kentos_plot::labels::labels_in_view(
+            doc,
+            spatial,
+            r.view,
+            r.layers,
+            r.overrides,
+            r.extent,
+        );
         let src = kentos_plot::maps::MapSource {
             doc: &drawing.model,
             store: spatial.store(),

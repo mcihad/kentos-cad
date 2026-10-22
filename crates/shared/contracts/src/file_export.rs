@@ -164,6 +164,10 @@ pub struct DxfExported {
 pub struct ExportPdf {
     /// The file to write, an absolute path.
     pub path: String,
+    /// The source drawing's absolute path for resolving linked image files. Hosts supply the open file when omitted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing: Option<String>,
     /// The sheets to print, by id, a page each; every sheet in the book's order when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -190,7 +194,7 @@ pub struct PdfExported {
     /// The sheet core's findings (preflight).
     #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub findings: serde_json::Value,
-    /// What a host without a window cannot draw, said in words.
+    /// Rasterization choices and resolution limits, said in words.
     pub notes: Vec<String>,
 }
 

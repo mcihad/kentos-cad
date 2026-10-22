@@ -142,9 +142,9 @@ impl Session {
 
     /// The project's sheet book as a PDF at `path` (docs/adr/0252 §3):
     /// `file.export.pdf` (docs/adr/0253 §10) of the sheets named (none: every
-    /// sheet, in the book's order), over a file that is there. What a headless
-    /// host cannot draw (the maps' texts) is said in `notes`, the core's
-    /// findings in `findings`. An export is not a save.
+    /// sheet, in the book's order), over a file that is there. Rasterization
+    /// choices are said in `notes`, the core's findings in `findings`.
+    /// An export is not a save.
     pub fn export_pdf(&mut self, path: &Path, sheets: &[String]) -> Result<Value, HeadlessError> {
         let mut input = json!({ "path": path.display().to_string(), "overwrite": true });
         if !sheets.is_empty() {
@@ -154,7 +154,8 @@ impl Session {
     }
 
     /// A file command's execute: its output, or its refusal as the host's error.
-    fn file_command(&mut self, command: &str, input: Value) -> Result<Value, HeadlessError> {
+    fn file_command(&mut self, command: &str, mut input: Value) -> Result<Value, HeadlessError> {
+        dispatch::with_own_file(command, &mut input, self.path.as_deref());
         let answer = crate::file_commands::call(
             &mut self.doc,
             CallEnvelope {

@@ -53,6 +53,10 @@ pub const UNITS: &[(&str, &str)] = &[
         "paper-mm",
         "Kâğıtta milimetre: kalınlık, kâğıttaki yazı yüksekliği, pafta boyları.",
     ),
+    ("paper-um", "Kâğıtta mikrometre; 1000 µm = 1 mm."),
+    ("mdeg", "Derecenin binde biri; kâğıtta saat yönünde pozitif."),
+    ("dpi", "Bir inçteki piksel sayısı."),
+    ("frame-millionths", "Öğe çerçevesinin milyonda biri; çerçeve boyuyla ölçeklenir."),
     ("px", "Ekranda mantıksal piksel."),
     (
         "deg",

@@ -15,8 +15,9 @@ serde_json = { workspace = true }
 libm = { workspace = true }
 ts-rs = { workspace = true, optional = true }
 schemars = { workspace = true, optional = true }
+kentos-sheet = { path = "../sheet", default-features = false, optional = true }
 
 [features]
 default = ["ts", "schema"]
 ts = ["dep:ts-rs", "kentos-contracts/ts"]
-schema = ["dep:schemars", "kentos-contracts/schema"]
+schema = ["dep:schemars", "kentos-contracts/schema", "dep:kentos-sheet", "kentos-sheet/schema"]

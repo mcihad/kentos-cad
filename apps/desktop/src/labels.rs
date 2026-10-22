@@ -523,11 +523,13 @@ pub fn paint_in_map(
 }
 
 // A label of a sheet's map as the PDF writes it is the plotter's (docs/adr/0252): laid out here.
+#[cfg(test)]
 pub use kentos_plot::maps::MapLabel;
 
 /// The drawing's text in a sheet's map as [`paint_in_map`] lays it out (the same pieces, the
 /// same room between them, the same fence), as a list rather than a picture.
 #[allow(clippy::too_many_arguments)]
+#[cfg(test)]
 pub fn texts_in_map(
     doc: &Document,
     spots: Vec<LabelSpot>,
@@ -664,12 +666,14 @@ fn grown(view: Camera, g: Grow) -> Camera {
 }
 
 /// The pieces as the PDF takes them: each anchored on the ground as the drawing area anchors it.
+#[cfg(test)]
 struct Collect<'a> {
     doc: &'a Document,
     camera: Camera,
     labels: Vec<MapLabel>,
 }
 
+#[cfg(test)]
 impl Collect<'_> {
     /// Points of the screen on the ground, and a wordless label of the object's layer in `color` to
     /// carry them (a placed label's background, shadow or callout); none for no object.
@@ -714,6 +718,7 @@ impl Collect<'_> {
     }
 }
 
+#[cfg(test)]
 impl Ink for Collect<'_> {
     fn size(&self) -> Size {
         Size::ZERO

@@ -743,7 +743,11 @@ impl AtlasPlanned {
             });
         }
         let mut notes = self.notes.clone();
-        notes.extend(drawer.finish());
+        notes.extend(
+            drawer
+                .finish()
+                .map_err(|e| AtlasError::new(&e.code, e.message, "maps"))?,
+        );
         if self.clip_feature {
             notes.push(
                 "Haritanın “atlas nesnesine kırp” seçeneği henüz PDF'e uygulanmıyor: harita çerçevesinin içi tamamen çizildi."
@@ -765,7 +769,7 @@ impl AtlasPlanned {
                 raster: None,
             })
             .collect();
-        let inputs = PdfInputs {
+        let mut inputs = PdfInputs {
             render: base,
             fonts: crate::fonts::pdf_fonts(),
             assets,
@@ -782,6 +786,8 @@ impl AtlasPlanned {
             geo: inputs.crs.is_some(),
             layers: true,
         };
+        crate::images::svg_assets(&book, &mut inputs, &options, sheet.export.dpi)
+            .map_err(|e| AtlasError::new("plot_asset_unreadable", e, "assets"))?;
         let bytes = kentos_sheet::pdf::to_pdf(&book, &inputs, &options)
             .map_err(|e| AtlasError::new("pdf_unwritable", e.message, "path"))?;
         let findings = kentos_sheet::pdf::findings(&book, &inputs, &options)

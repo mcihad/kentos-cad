@@ -6,16 +6,9 @@
 //! paths at its scale ([`crate::maps`]), the drawing's faces, GeoPDF where the
 //! project's system is a transverse Mercator one.
 //!
-//! What a window draws and a headless host cannot is said, never faked:
-//!
-//! - the drawing's texts on a map (dimension values, text objects, labels)
-//!   are laid out by the desktop's text system: a headless map has its paths
-//!   and not its texts (`notes`);
-//! - a map with something no vector writes (a pattern or picture fill, a
-//!   picture marker) goes to the desktop's PDF as a picture; here it is the
-//!   core's empty map box, the layers named (`notes`);
-//! - an SVG picture of a sheet needs a rasterizer: the core's own finding
-//!   (`svg_not_in_pdf`) says it is drawn as an empty box.
+//! Map text is laid out by the shared spatial/paragraph engine with bundled faces.
+//! Rich map styles use the native CPU twin of the GPU shaders; SVG assets use
+//! the bundled-font SVG rasterizer. Missing image sources fail the whole export.
 
 use kentos_contracts::{LayerNodeType, ProjectSettings};
 use kentos_domain::Document;
@@ -38,9 +31,9 @@ pub struct BookPdf {
     pub bytes: Vec<u8>,
     /// The sheets written, a page each, by id.
     pub sheets: Vec<String>,
-    /// The core's findings (an SVG picture drawn as a box …).
+    /// The shared core's preflight findings.
     pub findings: Vec<Finding>,
-    /// What this host leaves out (the maps' texts, a map with no vector form).
+    /// Rasterization choices, target resolution and explicit resource limits.
     pub notes: Vec<String>,
 }
 
@@ -164,7 +157,8 @@ pub(crate) struct MapDrawer<'a> {
     annotative: bool,
     scaled: std::collections::HashMap<u32, Option<(Document, Spatial)>>,
     notes: Vec<String>,
-    texts_left: bool,
+    errors: Vec<String>,
+    drawing: Option<String>,
 }
 
 impl<'a> MapDrawer<'a> {
@@ -183,7 +177,8 @@ impl<'a> MapDrawer<'a> {
             annotative: doc.has_annotative(),
             scaled: std::collections::HashMap::new(),
             notes: Vec::new(),
-            texts_left: false,
+            errors: Vec::new(),
+            drawing: None,
         }
     }
 
@@ -195,12 +190,6 @@ impl<'a> MapDrawer<'a> {
     ) -> Option<PdfMap> {
         let doc = self.doc;
         let extent = m.extent?;
-        self.texts_left |= doc.entities().any(|e| {
-            matches!(
-                e,
-                kentos_contracts::Entity::Text(_) | kentos_contracts::Entity::Dimension(_)
-            ) || e.base().label.is_some()
-        });
         let at = m.view.scale.max(1);
         // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
         let walls = Spatial::walls_differ_at(doc, f64::from(at));
@@ -238,44 +227,56 @@ impl<'a> MapDrawer<'a> {
                 origin: self.origin,
             },
         };
-        match vector_content(
+        let label_spatial = match self.scaled.get(&at) {
+            Some(Some((_, spatial))) => spatial,
+            _ => self.spatial,
+        };
+        let labels = crate::labels::map_labels(src.doc, label_spatial, m);
+        let content = match vector_content(
             src,
             &m.layers,
             &m.layer_overrides,
             m.view.scale,
             extent,
-            &[],
+            &labels,
         ) {
-            Ok(content) => Some(PdfMap {
-                item: m.item.clone(),
-                content,
-                corners: None,
-            }),
+            Ok(content) => content,
             Err(unsupported) => {
-                let named: Vec<String> = unsupported
+                let dpi = book
+                    .sheets
                     .iter()
-                    .map(|(layer, what)| format!("{layer} ({})", what.join(", ")))
-                    .collect();
-                self.notes.push(format!(
-                    "“{}” haritası vektörle yazılamadı: {}. Başsız çıktıda boş harita kutusu basıldı; masaüstünün PDF'i onu resim olarak yazar.",
-                    book.item(&m.item).map_or(m.item.as_str(), |i| i.name.as_str()),
-                    named.join("; ")
-                ));
-                None
+                    .map(|s| s.export.dpi)
+                    .max()
+                    .unwrap_or(300);
+                match crate::raster::map(src, m, &labels, dpi, self.drawing.as_deref()) {
+                    Ok(png) => {
+                        self.notes.push(format!("“{}” haritası {} dpi hedefiyle resim olarak yazıldı (en çok 8192 px/32 MP): {}.",book.item(&m.item).map_or(m.item.as_str(),|i|i.name.as_str()),dpi,
+                            unsupported.iter().map(|(name,why)|format!("{name} ({})",why.join(", "))).collect::<Vec<_>>().join("; ")));
+                        kentos_sheet::pdf::MapContent::Raster(png)
+                    }
+                    Err(e) => {
+                        self.errors.push(e);
+                        return None;
+                    }
+                }
             }
-        }
+        };
+        Some(PdfMap {
+            item: m.item.clone(),
+            content,
+            corners: None,
+        })
     }
 
     /// What the headless host leaves out, said once.
-    pub(crate) fn finish(mut self) -> Vec<String> {
-        if self.texts_left {
-            self.notes.push(
-                "Haritaların yazıları (ölçü değerleri, yazılar, etiketler) başsız çıktıda henüz basılmaz: \
-                 çizgiler, alanlar ve taramalar basılır. Yazılarıyla PDF için masaüstünün Dışa aktar › PDF'ini kullanın."
-                    .to_owned(),
-            );
+    pub(crate) fn finish(self) -> Result<Vec<String>, PlotError> {
+        if !self.errors.is_empty() {
+            return Err(PlotError::new(
+                "plot_asset_unreadable",
+                self.errors.join(" "),
+            ));
         }
-        self.notes
+        Ok(self.notes)
     }
 }
 
@@ -285,6 +286,17 @@ pub fn book_pdf(
     sheets: &[String],
     user: &str,
     date: &str,
+) -> Result<BookPdf, PlotError> {
+    book_pdf_at(doc, sheets, user, date, None)
+}
+
+/// As book_pdf, with the drawing's file for linked image resolution.
+pub fn book_pdf_at(
+    doc: &Document,
+    sheets: &[String],
+    user: &str,
+    date: &str,
+    drawing: Option<&str>,
 ) -> Result<BookPdf, PlotError> {
     let Some(kept) = doc.sheets() else {
         return Err(PlotError::new(
@@ -315,6 +327,7 @@ pub fn book_pdf(
         render.legends.extend(data.legends);
     }
     let mut drawer = MapDrawer::new(doc, &spatial, &library, None);
+    drawer.drawing = drawing.map(str::to_owned);
     let mut maps: Vec<PdfMap> = Vec::new();
     for id in &chosen {
         let list = display::display_list(&book, id, &render)
@@ -331,7 +344,7 @@ pub fn book_pdf(
             }
         }
     }
-    let notes = drawer.finish();
+    let notes = drawer.finish()?;
     let assets = pictures
         .into_iter()
         .map(|(sha256, data)| PdfAsset {
@@ -341,7 +354,7 @@ pub fn book_pdf(
         })
         .collect();
     let srid = doc.settings().srid;
-    let inputs = PdfInputs {
+    let mut inputs = PdfInputs {
         render,
         fonts: crate::fonts::pdf_fonts(),
         assets,
@@ -355,6 +368,17 @@ pub fn book_pdf(
         geo: inputs.crs.is_some(),
         layers: true,
     };
+    crate::images::svg_assets(
+        &book,
+        &mut inputs,
+        &options,
+        book.sheets
+            .iter()
+            .map(|s| s.export.dpi)
+            .max()
+            .unwrap_or(300),
+    )
+    .map_err(|e| PlotError::new("plot_asset_unreadable", e))?;
     let bytes = kentos_sheet::pdf::to_pdf(&book, &inputs, &options)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
     let findings = kentos_sheet::pdf::findings(&book, &inputs, &options)

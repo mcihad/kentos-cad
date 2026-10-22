@@ -8,4 +8,5 @@ mod files;
 mod atlas;
 mod book;
 mod map_layers;
+mod output;
 mod units;
