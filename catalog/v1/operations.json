@@ -2113,6 +2113,27 @@
         "file.export.dwg"
       ],
       "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0586)."
+    },
+    "sheet.fitDrawing": {
+      "level": "semantic",
+      "via": [
+        "cad.sheets.fit"
+      ],
+      "note": "Pafta tasarımcısı, Python ve AI aynı oluşturma/sığdırma çekirdeğini kullanır (ADR 0592)."
+    },
+    "sheet.fitSelection": {
+      "level": "semantic",
+      "via": [
+        "cad.sheets.fit"
+      ],
+      "note": "Pafta tasarımcısı, Python ve AI aynı oluşturma/sığdırma çekirdeğini kullanır (ADR 0592)."
+    },
+    "sheet.fromTemplate": {
+      "level": "semantic",
+      "via": [
+        "cad.sheets.create"
+      ],
+      "note": "Pafta tasarımcısı, Python ve AI aynı oluşturma/sığdırma çekirdeğini kullanır (ADR 0592)."
     }
   },
   "tools": {

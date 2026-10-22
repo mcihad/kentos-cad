@@ -7730,6 +7730,28 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        CommandDescriptor {
+            id: crate::CAD_SHEETS_CREATE.into(), version: 1,
+            title: "Şablondan pafta oluştur".into(), summary: "Sistem şablonundan (source.type=system, id) ya da tam özel şablondan (custom, template) yeni pafta oluşturur. Sistem şablonları ve tam kitap cad.sheets.set(details=true) ile okunur. options: sayfa, ad, metre cinsinden center, ölçek paydası scale ve değişken values cevapları. Yeni id paftanın kimliğidir; öğe ve ana sayfa kimlikleri bu id’den türetilir. Resimler otomatik gömülür; index varsa paftayı o sıraya koyar. Tasarımcıyla aynı oluşturma işlemleri; hata halinde hiçbir şey yazılmaz. Model geometri değişmez. Bağımsız çağrı kâğıt geçmişinde, açık betik grubunda modelle birlikte tek undo/redo adımıdır; inverse ve inversePictures geri alır. expectedRevision korunur.".into(),
+            aliases: vec![], effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![],
+            undo: CommandUndo::None, cost: CommandCost::Instant,
+            input: schema::<crate::SheetsCreate>(), output: schema::<crate::SheetsEdited>(),
+            plan: Some(schema::<crate::SheetsEdited>()), capabilities: None,
+            examples: vec![CommandExample {title: "Şablondan pafta oluştur".into(), input: json!({"id":"kat-plani","source":{"type":"system","id":"sys:cad-mimari"},"options":{"name":"A-101 Zemin kat","scale":50,"center":{"x":2.5,"y":0.0}}}), output: None}],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SHEETS_FIT.into(), version: 1,
+            title: "Görünüm penceresini nesnelere sığdır".into(), summary: "Sabit haritayı item kimliğiyle nesneye sığdırır. uids verilirse kalıcı kimlikli model nesneleri, bounds verilirse metre cinsinden [minX,minY,maxX,maxY], ikisi de yoksa bütün model kullanılır. uids ve bounds birlikte verilmez; boş seçim reddedilir. Döndürme korunur, iç boşluk ve yazı bandından kalan alan kullanılır; marginPct her yanda kutu boyunun yüzdesidir (varsayılan %5). standardScales=false en küçük sığan tam paydayı, true standart paydayı seçer. Tek nokta mevcut ölçeği korur. Kaynak nesneler ve modelin 1:1 boyu değişmez; yalnız görünüm merkez ve ölçeği değişir. Kilitli öğe ve atlas haritası reddedilir. Pafta tasarımcısı ile aynı çekirdek; inverse geri alır, açık betik grubunda modelle tek adımdır.".into(),
+            aliases: vec![], effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![],
+            undo: CommandUndo::None, cost: CommandCost::Instant,
+            input: schema::<crate::SheetsFit>(), output: schema::<crate::SheetsEdited>(),
+            plan: Some(schema::<crate::SheetsEdited>()), capabilities: None,
+            examples: vec![CommandExample {title: "Görünüm penceresini nesnelere sığdır".into(), input: json!({"item":"kat-plani-item-0","bounds":[0.0,0.0,5.0,3.0],"marginPct":5}), output: None}],
+        },
         // The sheet book by the sheet core's own operations (docs/adr/0252 §2), held together by
         // fixtures/commands/v1/cad.sheets.edit.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -9683,6 +9705,12 @@ mod tests {
                         serde_json::from_value::<crate::RecordsDuplicate>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::CAD_SHEETS_CREATE => {
+                        serde_json::from_value::<crate::SheetsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SHEETS_FIT => {
+                        serde_json::from_value::<crate::SheetsFit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SHEETS_EDIT => {
                         serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -10252,7 +10280,7 @@ mod tests {
                             serde_json::from_value::<crate::RecordsDuplicated>(output.clone())
                                 .map(|_| ())
                         }
-                        crate::CAD_SHEETS_EDIT => {
+                        crate::CAD_SHEETS_EDIT | crate::CAD_SHEETS_CREATE | crate::CAD_SHEETS_FIT => {
                             serde_json::from_value::<crate::SheetsEdited>(output.clone())
                                 .map(|_| ())
                         }

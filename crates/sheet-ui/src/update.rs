@@ -402,23 +402,14 @@ impl Designer {
             }
             Message::MapFitView => {
                 if let (Some(c), Some([w, h])) = (self.ctx.center, self.ctx.view_size) {
-                    self.patch_maps(|i| {
-                        let rotation = match &i.kind {
-                            kentos_sheet::kinds::ItemKind::Map(m) => match &m.view {
-                                kentos_sheet::kinds::MapView::Fixed(v) => v.rotation,
-                                kentos_sheet::kinds::MapView::Atlas(_) => 0,
-                            },
-                            _ => 0,
-                        };
-                        let center = json!({ "x": c.x, "y": c.y });
-                        match kentos_sheet::atlas::fit_view_scale(w, h, rotation, &i.frame) {
-                            Some(s) => {
-                                json!({ "kind": { "view": { "center": center, "scale": s } } })
-                            }
-                            None => json!({ "kind": { "view": { "center": center } } }),
-                        }
-                    });
+                    self.fit_maps([c.x-w/2.,c.y-h/2.,c.x+w/2.,c.y+h/2.],0,true);
                 }
+            }
+            Message::MapFitDrawing => {
+                if let Some(bounds)=self.ctx.drawing_bounds {self.fit_maps(bounds,5,false);}
+            }
+            Message::MapFitSelection => {
+                if let Some(bounds)=self.ctx.selection_bounds {self.fit_maps(bounds,5,false);}
             }
             Message::CoordLive => {
                 self.patch_coordinate_lists(json!({ "source": { "type": "selection" } }))
@@ -732,6 +723,16 @@ impl Designer {
     }
 
     /// Each chosen, unlocked map with a fixed view patched (docs/adr/0206 §1), in one step.
+    fn fit_maps(&mut self, bounds:[f64;4], margin:u8, standard:bool) {
+        let ops=self.chosen().into_iter().filter(|i|!i.locked && crate::inspect::fixed_map(i).is_some())
+            .map(|i|kentos_sheet::fit::map(i,bounds,margin,standard)).collect::<kentos_sheet::Result<Vec<_>>>();
+        match ops {
+            Ok(ops) if !ops.is_empty()=>{self.commit(ops);},
+            Ok(_)=>{},
+            Err(e)=>self.error=Some(e.message),
+        }
+    }
+
     fn patch_maps(&mut self, patch: impl Fn(&kentos_sheet::model::Item) -> serde_json::Value) {
         let ops: Vec<Op> = self
             .chosen()

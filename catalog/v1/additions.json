@@ -2741,6 +2741,26 @@
       "shortcuts": [],
       "category": "Dosya",
       "status": "implemented"
+    },
+    {
+      "id": "sheet.fitDrawing",
+      "title": "Çizime sığdır",
+      "icon": "zoomExtents",
+      "description": "Seçili sabit görünüm penceresini model nesnelerinin kapsamına %5 kenar payıyla sığdırır.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Pafta",
+      "status": "implemented"
+    },
+    {
+      "id": "sheet.fitSelection",
+      "title": "Seçime sığdır",
+      "icon": "zoomExtents",
+      "description": "Seçili sabit görünüm penceresini çizimde seçilmiş model nesnelerine %5 kenar payıyla sığdırır.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Pafta",
+      "status": "implemented"
     }
   ],
   "icons": {

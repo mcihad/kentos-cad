@@ -644,7 +644,7 @@ fn affected_by(doc: &Document, uids: &[String]) -> (Vec<String>, Vec<String>) {
         return (Vec::new(), Vec::new());
     }
     let mut sheets: Vec<String> = Vec::new();
-    let input = kentos_commands::SheetsSet { uids: Some(uids.to_vec()) };
+    let input = kentos_commands::SheetsSet { uids: Some(uids.to_vec()), ..Default::default() };
     if let Ok(set) = crate::sheets_set::set_of(doc, &input) {
         for a in set.affected.unwrap_or_default() {
             if !a.reasons.contains(&kentos_commands::AffectReason::Shows) {

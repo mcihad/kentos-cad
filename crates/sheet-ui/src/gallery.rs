@@ -22,7 +22,6 @@ use kentos_contracts::{ProjectType, Workspace};
 use kentos_sheet::cloud::{DeviceCloudState, TemplateRole};
 use kentos_sheet::display::{self, DisplayList, Prim, RenderMode};
 use kentos_sheet::model::{Orientation, Paper, SheetBook};
-use kentos_sheet::ops::{AddAssets, AddMaster, AddSheet, Op};
 use kentos_sheet::preflight::Finding;
 use kentos_sheet::profile::{RankedTemplate, TemplateFit, rank_templates};
 use kentos_sheet::template::{
@@ -1164,35 +1163,17 @@ impl Designer {
             scale: self.ctx.capabilities.plot_scale,
             values,
         };
-        let inst = match instantiate(t, &ids, &options) {
-            Ok(i) => i,
-            Err(e) => {
-                self.error = Some(e.message);
-                return false;
-            }
+        let made = match kentos_sheet::create::from_template(t, &ids, &options, None) {
+            Ok(made) => made,
+            Err(e) => { self.error = Some(e.message); return false; }
         };
-        for a in &inst.asset_bytes {
+        for a in &made.pictures {
             if let Some(bytes) = kentos_sheet::template::base64_decode(&a.data) {
                 self.add_asset_bytes(&a.meta.sha256, bytes);
             }
         }
-        let id = inst.sheet.id.clone();
-        let mut ops = Vec::new();
-        if !inst.assets.is_empty() {
-            ops.push(Op::AddAssets(AddAssets {
-                assets: inst.assets,
-            }));
-        }
-        if let Some(m) = inst.master {
-            ops.push(Op::AddMaster(AddMaster {
-                master: m,
-                index: None,
-            }));
-        }
-        ops.push(Op::AddSheet(AddSheet {
-            sheet: inst.sheet,
-            index: None,
-        }));
+        let id = made.sheet;
+        let ops = made.ops;
         if self.commit_as(ops, Some(label)) {
             self.open = Some(id);
             self.selection.clear();

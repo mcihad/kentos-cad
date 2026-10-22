@@ -119,7 +119,7 @@ pub fn fixed_corners(item: &Item) -> Option<[[f64; 2]; 4]> {
 }
 
 /// The content's rectangle: the frame less its padding and its label band.
-pub(crate) fn content_rect(item: &Item, m: &MapItem) -> RectUm {
+pub fn content_rect(item: &Item, m: &MapItem) -> RectUm {
     let r = item.content_rect().inset(m.label_band);
     RectUm::new(r.left, r.top, r.width.max(1), r.height.max(1))
 }

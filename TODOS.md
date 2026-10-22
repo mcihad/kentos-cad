@@ -51,6 +51,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- CAD-SHEET-07 (ADR 0592): `cad.sheets.create`, `cad.sheets.fit` ve ayrıntılı `cad.sheets.set` native/Python/MCP yolunda; galeri ortak oluşturma, Çizime/Seçime sığdır ortak sığdırma çekirdeğini kullanır. Web yeniden açıldığında kendi ürün işleyicileri ve tasarımcı bu hesaplara bağlanmalı, ortak 23/29 senaryo ve UI karşılıkları yürütülmeli.
+
 - CAD-SHEET-06 (ADR 0591): ortak ops şeması ve asset/inversePictures sözleşmesi hazır. Web yeniden açılınca pafta komut işleyicisi baytların birleştirme/tam değiştirme ve ters bayt politikasını izlemeli; harita yazısı ve zengin stil çıktı eşdeğerliği kendi çıktı yolunda sınanmalı. Native CPU/SVG rasterizer web'e taşınmış sayılmaz.
 
 - CAD-IO 2B pafta/viewport, xref ve zengin kayıp raporu: shared sözleşmeler hazır; masaüstü/headless kabulü ADR 0587, web penceresi/işleyicisi web yeniden başladığında eklenecek.

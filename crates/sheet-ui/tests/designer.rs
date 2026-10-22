@@ -1577,3 +1577,78 @@ fn a_sheet_and_an_item_are_renamed_in_place() {
     d.update(esc);
     assert_eq!(d.selection(), [first]);
 }
+
+/// The inspector's two new fit buttons use the independent command cases' same physical result.
+#[test]
+fn fit_drawing_and_selection_match_the_shared_command_cases_and_undo() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/commands/v1/cad.sheets.fit.json"
+    ))
+    .unwrap();
+    let mut checked = 0;
+    for case in fixture["cases"].as_array().unwrap() {
+        let step = &case["steps"][1];
+        let input = &step["input"];
+        if step["op"] != "execute"
+            || step["result"]["status"] != "completed"
+            || input["marginPct"] != 5
+            || input["standardScales"] != false
+        {
+            continue;
+        }
+        let source: Item = serde_json::from_value(
+            case["steps"][0]["input"]["ops"][0]["sheet"]["items"][0].clone(),
+        )
+        .unwrap();
+        let sheet: kentos_sheet::Sheet =
+            serde_json::from_value(case["steps"][0]["input"]["ops"][0]["sheet"].clone()).unwrap();
+        let bounds = input
+            .get("bounds")
+            .map(|v| serde_json::from_value(v.clone()).unwrap())
+            .unwrap_or([0., 0., 5., 0.]);
+        for message in [Message::MapFitDrawing, Message::MapFitSelection] {
+            let mut d = Designer::new(Context {
+                drawing_bounds: Some(bounds),
+                selection_bounds: Some(bounds),
+                ..context()
+            });
+            let book = kentos_sheet::SheetBook {
+                sheets: vec![sheet.clone()],
+                ..Default::default()
+            };
+            d.load(book.clone());
+            d.update(Message::Tab(1));
+            d.update(Message::Select(vec![source.id.clone()]));
+            d.update(message);
+            assert!(d.error().is_none(), "{}: {:?}", case["name"], d.error());
+            let ItemKind::Map(m) = &d.book().sheets[0].items[0].kind else {
+                panic!()
+            };
+            let kentos_sheet::MapView::Fixed(v) = &m.view else {
+                panic!()
+            };
+            assert_eq!(
+                v.scale,
+                step["result"]["output"]["sheets"][0]["maps"][0]["scale"]
+                    .as_u64()
+                    .unwrap() as u32,
+                "{}",
+                case["name"]
+            );
+            assert_eq!(
+                v.center,
+                Some(GroundPoint {
+                    x: bounds[0] + (bounds[2] - bounds[0]) / 2.,
+                    y: bounds[1] + (bounds[3] - bounds[1]) / 2.
+                })
+            );
+            d.update(Message::Undo);
+            assert_eq!(d.book(), &book, "{}", case["name"]);
+        }
+        checked += 1;
+    }
+    assert!(
+        checked >= 12,
+        "{checked} independent cases reached the inspector"
+    );
+}

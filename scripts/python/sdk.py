@@ -146,6 +146,12 @@ class Nullable:
 
 
 @dataclass
+class JsonRecordT:
+    """A domain-validated JSON record with a descriptive schema; preserve its exact wire fields."""
+    inner: object
+
+
+@dataclass
 class Field:
     wire: str
     py: str
@@ -358,6 +364,8 @@ def parse_type(s, where: str):
         return AnyT()
     if not isinstance(s, dict):
         raise Fail(f"{where}: unsupported schema {s!r}")
+    if s.get("x-raw-record"):
+        return JsonRecordT(parse_type({k:v for k,v in s.items() if k != "x-raw-record"}, where))
     if "$ref" in s:
         return Ref(ref_name(s["$ref"]))
     if "anyOf" in s:
@@ -409,6 +417,8 @@ class Emit:
             return t.py
         if isinstance(t, AnyT):
             return "Any"
+        if isinstance(t, JsonRecordT):
+            return f"{self.hint(t.inner, loose)} | Mapping[str, Any]"
         if isinstance(t, Ref):
             k = self.m.kind(t.name)
             # Paper ops were JSON objects before their complete schema shipped (ADR 0591).
@@ -437,6 +447,8 @@ class Emit:
             return f"float({v})" if t.py == "float" else v
         if isinstance(t, AnyT):
             return v
+        if isinstance(t, JsonRecordT):
+            return f"(dict({v}) if isinstance({v}, Mapping) else {v}.to_json())"
         if isinstance(t, Ref):
             k = self.m.kind(t.name)
             if k == "enum":
@@ -464,7 +476,7 @@ class Emit:
         e = f"e{depth}"
         if isinstance(t, Prim):
             return f"float({v})" if t.py == "float" else v
-        if isinstance(t, AnyT):
+        if isinstance(t, (AnyT, JsonRecordT)):
             return v
         if isinstance(t, Ref):
             k = self.m.kind(t.name)

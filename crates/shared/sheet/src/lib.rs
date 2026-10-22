@@ -11,6 +11,8 @@
 pub mod atlas;
 pub mod bind;
 pub mod cloud;
+pub mod create;
+pub mod fit;
 pub mod display;
 pub mod error;
 pub mod expr;

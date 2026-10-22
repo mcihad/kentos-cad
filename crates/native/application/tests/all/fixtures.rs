@@ -18,7 +18,7 @@ use kentos_commands::{
     FieldsUsage, HatchPatternsEdit, LabelsPin, LayersCompose, LayersContingents, LayersEdit,
     LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersRenderer, LayersRules, LayersService,
     LayersSet, LayersStates, LayersSubtypes, LayersTable, LayersTime, LayersTranslate, LibraryEdit,
-    LineTypesEdit, NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit,
+    LineTypesEdit, NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, SheetsCreate, SheetsFit,
     StandardsApply, StandardsCheck, StylesEdit, StylesImpact, UcsSet, UcsTo, ViewsEdit, ViewsOp,
 };
 use kentos_commands::{
@@ -76,7 +76,7 @@ use kentos_native_application::{
     layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
     layers_translate, leaders_edit, line, linearref_define, network_define, nurbs, offset,
     openings_create, openings_edit, point, points_construct, polygon, polygon_regular, polyline,
-    rectangle_create, scenarios_edit, set, settings_set, sheets_edit, snap_find, spaces_create,
+    rectangle_create, scenarios_edit, set, settings_set, sheets_edit, sheets_create, sheets_fit, snap_find, spaces_create,
     spaces_edit, spaces_quantities, styles_edit, tables_edit, texts_check, texts_edit, transform,
     ucs_set, units_change, views_edit, walls_create, walls_edit, walls_from_lines, walls_joins,
 };
@@ -2181,6 +2181,9 @@ impl Input for StylesEdit {
     }
 }
 
+impl Input for SheetsCreate { fn number(&mut self,_path:&str)->Option<&mut f64>{None} }
+impl Input for SheetsFit { fn number(&mut self,_path:&str)->Option<&mut f64>{None} }
+
 impl Input for SheetsEdit {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -3561,6 +3564,8 @@ fn run_op(
         kentos_commands::CAD_PROCESSING_BATCH => {
             run!(processing_batch, kentos_commands::ProcessingBatch)
         }
+        kentos_commands::CAD_SHEETS_CREATE => run!(sheets_create, SheetsCreate),
+        kentos_commands::CAD_SHEETS_FIT => run!(sheets_fit, SheetsFit),
         kentos_commands::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
         kentos_commands::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
         other => return Err(format!("{at}: {other} için koşucu yok")),

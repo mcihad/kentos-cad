@@ -276,6 +276,8 @@ pub enum Message {
     /// (the drawing area's centre).
     MapScaleFromDrawing,
     MapFitView,
+    MapFitDrawing,
+    MapFitSelection,
     MapCentreFromView,
     /// The chosen map's own layers (docs/adr/0314 §1): a layer state of the project by its name (none: the
     /// drawing's), a layer overridden, one override's change, one taken away.

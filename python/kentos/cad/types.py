@@ -6917,6 +6917,25 @@ class SelectRegion(_Union):
         return _variant(_SELECT_REGION, "SelectRegion", "kind", data).from_json(data)
 
 
+class SheetTemplateSource(_Union):
+    """One of:
+
+    - :class:`SystemSheetTemplateSource` (``type: system``)
+    - :class:`CustomSheetTemplateSource` (``type: custom``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "type"
+
+    @property
+    def type(self) -> str:
+        """The name of the variant (``type`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetTemplateSource:
+        return _variant(_SHEET_TEMPLATE_SOURCE, "SheetTemplateSource", "type", data).from_json(data)
+
+
 class SourcesEditOp(_Union):
     """An edit of the project's bound layers.
 
@@ -34049,6 +34068,41 @@ class PaperSheet(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PaperSheetBook(_Model):
+    """Every sheet of a project.
+    Attributes:
+        schema: `kentos.sheet/1`.
+        assets: Pictures by the SHA-256 of their bytes; the bytes are the host's asset store's.
+        masters: Master pages (ana sayfalar).
+        variables: The project's own variables (`@proje_no`, `@idare` …).
+    """
+    schema: str
+    assets: list[PaperAssetMeta] = field(default_factory=list)
+    masters: list[PaperMaster] = field(default_factory=list)
+    sheets: list[PaperSheet] = field(default_factory=list)
+    variables: list[PaperVariable] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["schema"] = self.schema
+        out["assets"] = [e0.to_json() for e0 in self.assets]
+        out["masters"] = [e0.to_json() for e0 in self.masters]
+        out["sheets"] = [e0.to_json() for e0 in self.sheets]
+        out["variables"] = [e0.to_json() for e0 in self.variables]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperSheetBook:
+        return cls(
+            schema=data["schema"],
+            assets=[PaperAssetMeta.from_json(e0) for e0 in data["assets"]] if "assets" in data else list(),
+            masters=[PaperMaster.from_json(e0) for e0 in data["masters"]] if "masters" in data else list(),
+            sheets=[PaperSheet.from_json(e0) for e0 in data["sheets"]] if "sheets" in data else list(),
+            variables=[PaperVariable.from_json(e0) for e0 in data["variables"]] if "variables" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PaperSizeUm(_Model):
     """A paper size.
     Attributes:
@@ -43347,6 +43401,42 @@ class SheetSeries(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetsCreate(_Model):
+    """
+    Attributes:
+        id: New sheet id. Item and master ids are derived from it deterministically.
+        index: Unit: index.
+        options: Page choice, name, centre in metres, scale denominator and variable answers.
+    """
+    id: str
+    source: SheetTemplateSource
+    expected_revision: str | None | Unset = UNSET
+    index: int | None | Unset = UNSET
+    options: PaperInstanceOptions | Mapping[str, Any] = field(default_factory=dict)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["source"] = self.source.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.index is not UNSET:
+            out["index"] = self.index
+        out["options"] = (dict(self.options) if isinstance(self.options, Mapping) else self.options.to_json())
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetsCreate:
+        return cls(
+            id=data["id"],
+            source=SheetTemplateSource.from_json(data["source"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            index=data.get("index", UNSET),
+            options=data["options"] if "options" in data else dict(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetsEdit(_Model):
     """Input of `cad.sheets.edit` v1: the sheet core's operations applied to the
     project's book in order, as one change. Lengths on the paper are
@@ -43439,17 +43529,65 @@ class SheetsEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetsFit(_Model):
+    """
+    Attributes:
+        bounds: Explicit ground box [min east,min north,max east,max north], canonical metres. Mutually exclusive with uids. Unit: m.
+        margin_pct: Extra ground on each side as a percent of its size (0–100). Unit: percent.
+        uids: Object ids; absent together with bounds: all model objects. An empty list is refused.
+    """
+    item: str
+    bounds: list[float] | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    margin_pct: int = 5
+    standard_scales: bool = False
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["item"] = self.item
+        if self.bounds is not UNSET:
+            out["bounds"] = None if self.bounds is None else [float(e0) for e0 in self.bounds]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["marginPct"] = self.margin_pct
+        out["standardScales"] = self.standard_scales
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetsFit:
+        return cls(
+            item=data["item"],
+            bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [float(e0) for e0 in data["bounds"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+            margin_pct=data["marginPct"] if "marginPct" in data else 5,
+            standard_scales=data["standardScales"] if "standardScales" in data else False,
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetsSet(_Model):
     """Input of `cad.sheets.set` v1 (“Pafta seti”): the set; with `uids`, the sheets those objects' change affects.
 
     Refusals, in this order: `entity_not_found` (at `uids[i]`), `book_unreadable`.
     Attributes:
+        details: Include the canonical book and complete system templates for automation.
+        pictures: Include embedded picture bytes (base64), explicitly opt in to the larger response.
         uids: The changed objects' persistent ids; absent: no affected list.
     """
+    details: bool | Unset = UNSET
+    pictures: bool | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.details is not UNSET:
+            out["details"] = self.details
+        if self.pictures is not UNSET:
+            out["pictures"] = self.pictures
         if self.uids is not UNSET:
             out["uids"] = None if self.uids is None else list(self.uids)
         return out
@@ -43457,6 +43595,8 @@ class SheetsSet(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SheetsSet:
         return cls(
+            details=data.get("details", UNSET),
+            pictures=data.get("pictures", UNSET),
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
         )
 
@@ -43473,6 +43613,9 @@ class SheetsSetResult(_Model):
     sheets: list[SetSheet]
     revision: str
     affected: list[AffectedFrame] | None | Unset = UNSET
+    book: PaperSheetBook | None | Unset = UNSET
+    pictures: list[SheetPicture] | None | Unset = UNSET
+    templates: list[PaperTemplate] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -43481,6 +43624,12 @@ class SheetsSetResult(_Model):
         out["revision"] = self.revision
         if self.affected is not UNSET:
             out["affected"] = None if self.affected is None else [e0.to_json() for e0 in self.affected]
+        if self.book is not UNSET:
+            out["book"] = None if self.book is None else self.book.to_json()
+        if self.pictures is not UNSET:
+            out["pictures"] = None if self.pictures is None else [e0.to_json() for e0 in self.pictures]
+        if self.templates is not UNSET:
+            out["templates"] = None if self.templates is None else [e0.to_json() for e0 in self.templates]
         return out
 
     @classmethod
@@ -43490,6 +43639,9 @@ class SheetsSetResult(_Model):
             sheets=[SetSheet.from_json(e0) for e0 in data["sheets"]],
             revision=data["revision"],
             affected=UNSET if "affected" not in data else None if data["affected"] is None else [AffectedFrame.from_json(e0) for e0 in data["affected"]],
+            book=UNSET if "book" not in data else None if data["book"] is None else PaperSheetBook.from_json(data["book"]),
+            pictures=UNSET if "pictures" not in data else None if data["pictures"] is None else [SheetPicture.from_json(e0) for e0 in data["pictures"]],
+            templates=UNSET if "templates" not in data else None if data["templates"] is None else [PaperTemplate.from_json(e0) for e0 in data["templates"]],
         )
 
 
@@ -62307,6 +62459,40 @@ class SimilarSelectRegion(SelectRegion):
 
 
 @dataclass(kw_only=True, slots=True)
+class SystemSheetTemplateSource(SheetTemplateSource):
+    TAG_VALUE: ClassVar[str] = "system"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "system"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SystemSheetTemplateSource:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CustomSheetTemplateSource(SheetTemplateSource):
+    TAG_VALUE: ClassVar[str] = "custom"
+    template: PaperTemplate | Mapping[str, Any]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "custom"}
+        out["template"] = (dict(self.template) if isinstance(self.template, Mapping) else self.template.to_json())
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CustomSheetTemplateSource:
+        return cls(
+            template=data["template"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LinkSourcesEditOp(SourcesEditOp):
     """Binds a table: onto a new layer with its rows (one undo step, as `file.import.gpkg` takes it), or onto the
     `layer` given, which must hold the table's objects as they are. A table in another coordinate system is bound
@@ -65026,6 +65212,9 @@ _SCHEDULE_OPERATION: dict[str, type[ScheduleOperation]] = {"cell": CellScheduleO
 _SELECT_REGION: dict[str, type[SelectRegion]] = {"window": WindowSelectRegion, "crossing": CrossingSelectRegion, "fence": FenceSelectRegion, "polygon": PolygonSelectRegion, "circle": CircleSelectRegion, "containing": ContainingSelectRegion, "point": PointSelectRegion, "all": AllSelectRegion, "objects": ObjectsSelectRegion, "invert": InvertSelectRegion, "similar": SimilarSelectRegion}
 
 
+_SHEET_TEMPLATE_SOURCE: dict[str, type[SheetTemplateSource]] = {"system": SystemSheetTemplateSource, "custom": CustomSheetTemplateSource}
+
+
 _SOURCES_EDIT_OP: dict[str, type[SourcesEditOp]] = {"link": LinkSourcesEditOp, "key": KeySourcesEditOp, "extent": ExtentSourcesEditOp, "unlink": UnlinkSourcesEditOp, "relink": RelinkSourcesEditOp}
 
 
@@ -65460,6 +65649,7 @@ __all__ = [
     "CurvesEdit",
     "CustomDatum",
     "CustomPaperLegendEntries",
+    "CustomSheetTemplateSource",
     "DataProfile",
     "DatasetDim",
     "DatumTransform",
@@ -66391,6 +66581,7 @@ __all__ = [
     "PaperScaleUnitName",
     "PaperShapeKind",
     "PaperSheet",
+    "PaperSheetBook",
     "PaperSizeDimension",
     "PaperSizeDimensionName",
     "PaperSizeUm",
@@ -66857,8 +67048,11 @@ __all__ = [
     "SheetMapInfo",
     "SheetPicture",
     "SheetSeries",
+    "SheetTemplateSource",
+    "SheetsCreate",
     "SheetsEdit",
     "SheetsEdited",
+    "SheetsFit",
     "SheetsSet",
     "SheetsSetResult",
     "ShowHeaderPaperEmptyTable",
@@ -67023,6 +67217,7 @@ __all__ = [
     "SyncedLayer",
     "SyncedPins",
     "SyncedRelation",
+    "SystemSheetTemplateSource",
     "TabFormItem",
     "TableAlign",
     "TableAlignName",

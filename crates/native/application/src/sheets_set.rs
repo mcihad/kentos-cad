@@ -177,6 +177,9 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
         out
     });
     Ok(SheetsSetResult {
+        book: input.details.then(|| serde_json::to_value(book.as_ref().cloned().unwrap_or_default()).unwrap_or_default()),
+        templates: input.details.then(|| kentos_sheet::template::system_templates().iter().map(|t|serde_json::to_value(t).unwrap_or_default()).collect()),
+        pictures: input.pictures.then(|| cx_pictures(doc)),
         series,
         sheets,
         affected,
@@ -212,4 +215,8 @@ pub fn plan_in(doc: &Document, input: &SheetsSet) -> CommandResult<SheetsSetResu
 /// Read-only: the same answer as the plan.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: SheetsSet) -> CommandResult<SheetsSetResult> {
     plan(cx, &input)
+}
+
+fn cx_pictures(doc: &Document) -> Vec<kentos_commands::SheetPicture> {
+    doc.sheets().map(|s| s.pictures.clone()).unwrap_or_default()
 }

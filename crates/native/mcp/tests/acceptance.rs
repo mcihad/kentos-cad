@@ -486,3 +486,27 @@ fn the_parcels_are_made_checked_written_and_opened_elsewhere_as_the_scenario_say
     );
     let _ = std::fs::remove_dir_all(dir);
 }
+
+#[test]
+fn sheet_create_fit_and_detailed_read_work_as_one_atomic_agent_changeset() {
+    let mut server=Server::new();
+    let opened=call(&mut server,"drawing.open",json!({"path":concat!(env!("CARGO_MANIFEST_DIR"),"/../../../fixtures/kcad/v2/sheets.kcad")}));
+    let drawing=opened["drawing"].as_str().unwrap();
+    let before=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true,"pictures":true}));
+    let fixture:Value=serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.sheets.create.json")).unwrap();
+    let mut create=fixture["cases"][0]["steps"][0]["input"].clone();create["id"]=json!("agent");
+    let answer=call(&mut server,"cad.changeset.apply",json!({"drawing":drawing,"label":"Pafta oluştur ve sığdır","steps":[
+        {"command":"cad.sheets.create","input":create},
+        {"command":"cad.sheets.fit","input":{"item":"agent-item-0","bounds":[0,0,5,3]}}
+    ]}));
+    assert_eq!(answer["status"],"completed","{answer}");
+    let read=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true,"pictures":true}));
+    assert!(read["output"]["templates"].as_array().unwrap().len()>=10);
+    let added=read["output"]["book"]["sheets"].as_array().unwrap().iter().find(|s|s["id"]=="agent").unwrap();
+    assert_eq!(added["items"][0]["kind"]["view"]["scale"],15);
+    assert_eq!(added["items"][0]["kind"]["view"]["center"],json!({"x":2.5,"y":1.5}));
+    assert_eq!(read["output"]["pictures"],before["output"]["pictures"]);
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    let undone=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));
+    assert_eq!(undone["output"]["book"],before["output"]["book"]);
+}

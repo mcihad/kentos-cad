@@ -1176,6 +1176,7 @@ pub struct App {
     pub(crate) sheet_session: Option<u64>,
     pub(crate) sheet_generation: Option<(u64, u64)>,
     pub(crate) sheet_attributes: std::cell::Cell<bool>,
+    pub(crate) sheet_extent: std::cell::Cell<Option<[f64;4]>>,
     /// The sheet templates' cloud library (sheet_library.rs, docs/sheet/design.md §13).
     pub(crate) sheet_library: crate::sheet_library::SheetLibrary,
     /// What the sheet mode's tables, coordinate lists and legends were last given for (sheet_inputs.rs).
@@ -1314,6 +1315,7 @@ impl App {
             sheet_session: None,
             sheet_generation: None,
             sheet_attributes: std::cell::Cell::new(false),
+            sheet_extent: std::cell::Cell::new(None),
             sheet_library: crate::sheet_library::SheetLibrary::default(),
             sheet_data_key: None,
             toasts: kentos_ui::widget::Toasts::new(),
@@ -2496,6 +2498,15 @@ impl App {
                 return Task::none();
             }
             return self.update(Message::Sheet(kentos_sheet_ui::Message::Model));
+        }
+        if matches!(id, "sheet.fitDrawing" | "sheet.fitSelection") {
+            if !self.sheets.is_active() || self.sheets.selection().is_empty() {
+                self.warn("Paftada bir sabit görünüm penceresi seçin.");
+                return Task::none();
+            }
+            return self.update(Message::Sheet(if id == "sheet.fitDrawing" {
+                kentos_sheet_ui::Message::MapFitDrawing
+            } else { kentos_sheet_ui::Message::MapFitSelection }));
         }
         if id.starts_with("cloud.") {
             return self.cloud_command(id);

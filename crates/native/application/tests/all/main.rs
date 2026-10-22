@@ -9,6 +9,7 @@ mod profile_files;
 mod break_join_ties;
 mod capabilities;
 mod cad_sheet;
+mod sheet_tools;
 mod catalog;
 mod change_effects;
 mod cleanup_cmd;

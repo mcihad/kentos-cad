@@ -7191,17 +7191,49 @@
    "tests": 0
   },
   {
+   "id": "sheet.fitDrawing",
+   "kind": "command",
+   "title": "Çizime sığdır",
+   "level": "semantic",
+   "via": [
+    "cad.sheets.fit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sheets.fit",
+   "mcp": "cad.sheets.fit",
+   "note": "Pafta tasarımcısı, Python ve AI aynı oluşturma/sığdırma çekirdeğini kullanır (ADR 0592).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "sheet.fitSelection",
+   "kind": "command",
+   "title": "Seçime sığdır",
+   "level": "semantic",
+   "via": [
+    "cad.sheets.fit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sheets.fit",
+   "mcp": "cad.sheets.fit",
+   "note": "Pafta tasarımcısı, Python ve AI aynı oluşturma/sığdırma çekirdeğini kullanır (ADR 0592).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "sheet.fromTemplate",
    "kind": "command",
    "title": "Şablondan pafta…",
    "level": "semantic",
    "via": [
-    "cad.sheets.edit"
+    "cad.sheets.create"
    ],
    "operation": null,
-   "python": "kentos.cad.sheets.edit",
-   "mcp": "cad.sheets.edit",
-   "note": "Pafta çekirdeğinin işlemi cad.sheets.edit'le (ADR 0252 §2).",
+   "python": "kentos.cad.sheets.create",
+   "mcp": "cad.sheets.create",
+   "note": "Pafta tasarımcısı, Python ve AI aynı oluşturma/sığdırma çekirdeğini kullanır (ADR 0592).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2

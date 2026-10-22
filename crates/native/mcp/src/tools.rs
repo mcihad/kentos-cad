@@ -746,6 +746,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.joins.edit"
             // It removes sheets and their items as the designer does (docs/adr/0252 §2).
             | "cad.sheets.edit"
+            | "cad.sheets.fit"
             // A change set runs any of these (docs/adr/0253 §8).
             | "cad.changeset.apply"
             // A file there is written over with `overwrite` (docs/adr/0253 §10).

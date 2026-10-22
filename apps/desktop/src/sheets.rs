@@ -1086,6 +1086,11 @@ impl App {
                     .unwrap_or(CrsInfo { name, tm: None })
             }),
             center: doc.map(|_| GroundPoint { x: c.x, y: c.y }),
+            drawing_bounds: self.sheet_extent.get(),
+            selection_bounds: doc.and_then(|d| {
+                let ids:Vec<_>=self.selection.ids().iter().filter_map(|s|d.model.uid(*s)).map(|u|u.to_string()).collect();
+                if ids.is_empty() {None} else {kentos_native_application::sheets_fit::object_extent(&d.model,Some(&ids)).ok().flatten()}
+            }),
             // The layers a coordinate list may read (docs/adr/0206 §2).
             layers: doc.map_or_else(Vec::new, |d| {
                 d.model
@@ -1162,6 +1167,7 @@ impl App {
                     .as_ref()
                     .is_some_and(|d| d.model.entities().any(|e| !e.base().attrs.is_empty())),
             );
+            self.sheet_extent.set(self.document.as_ref().and_then(|d|kentos_native_application::sheets_fit::object_extent(&d.model,None).ok().flatten()));
             self.sheet_maps.sync(self.document.as_ref());
         }
         let ctx = self.sheet_context();
@@ -1253,12 +1259,14 @@ impl App {
             kentos_sheet_ui::Message::Stage(_)
                 | kentos_sheet_ui::Message::NewSheet
                 | kentos_sheet_ui::Message::Gallery(_)
+                | kentos_sheet_ui::Message::MapFitDrawing
+                | kentos_sheet_ui::Message::MapFitSelection
                 | kentos_sheet_ui::Message::MapFitView
                 | kentos_sheet_ui::Message::MapCentreFromView
         ) {
             let ctx = self.sheet_context();
             let now = self.sheets.context();
-            if ctx.center != now.center || ctx.view_size != now.view_size {
+            if ctx.center != now.center || ctx.view_size != now.view_size || ctx.drawing_bounds != now.drawing_bounds || ctx.selection_bounds != now.selection_bounds {
                 self.sheets.set_context(ctx);
             }
         }

@@ -318,6 +318,9 @@ impl Designer {
                 Message::Section("kind"),
             ));
             if self.open_section("kind") {
+                if let Some(row) = self.map_row(&chosen, editable) {
+                    col = col.push(row);
+                }
                 // A north arrow's declination part stands after “Biçim”, the value typed by hand
                 // and its year after it with their hint, as the web's does.
                 let north = self.north_part(&chosen, editable);
@@ -375,9 +378,6 @@ impl Designer {
                     None => col = col.push(fields(0..len)),
                 }
                 if let Some(row) = self.picture_row(&chosen, editable) {
-                    col = col.push(row);
-                }
-                if let Some(row) = self.map_row(&chosen, editable) {
                     col = col.push(row);
                 }
                 if let Some(part) = self.map_layers_part(&chosen, editable) {
@@ -959,6 +959,14 @@ impl Designer {
                         (plot.is_some() && !at_plot).then_some(Message::MapScaleFromDrawing),
                     ),
                     action(
+                        "Çizime sığdır", crate::icons::ZOOM_EXTENTS,
+                        self.ctx.drawing_bounds.is_some().then_some(Message::MapFitDrawing),
+                    ),
+                    action(
+                        "Seçime sığdır", crate::icons::TARGET,
+                        self.ctx.selection_bounds.is_some().then_some(Message::MapFitSelection),
+                    ),
+                    action(
                         "Görünüme sığdır",
                         crate::icons::ZOOM_EXTENTS,
                         fit_view.then_some(Message::MapFitView),
@@ -972,7 +980,7 @@ impl Designer {
                 .spacing(6)
                 .wrap(),
                 label::caption(format!(
-                    "{scale}Görünüme sığdır: harita çizim alanında görüneni gösterir, ölçeği onu sığdıran en büyük standart ölçek olur."
+                    "{scale}Çizime/Seçime sığdır: nesneleri %5 kenar payıyla yerleştirir. Görünüme sığdır, çizim alanında görüneni standart ölçekte gösterir."
                 ))
                 .style(style::text::muted),
             ]

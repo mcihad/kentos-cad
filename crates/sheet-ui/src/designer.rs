@@ -114,6 +114,9 @@ pub struct Context {
     /// How much ground the drawing area shows, metres across and down
     /// (Görünüme sığdır, docs/adr/0206 §1).
     pub view_size: Option<[f64; 2]>,
+    /// Canonical model bounds, from the same object-box calculation as cad.sheets.fit.
+    pub drawing_bounds: Option<[f64; 4]>,
+    pub selection_bounds: Option<[f64; 4]>,
     /// The drawing's layers (id, name), for a coordinate list's source
     /// (docs/adr/0206 §2).
     pub layers: Vec<(String, String)>,
