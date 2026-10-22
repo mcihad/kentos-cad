@@ -207,6 +207,30 @@ pub fn merge_with_source(
             let mut kind = kinds::default_kind("map").ok_or("Pafta görünüm türü bulunamadı")?;
             if let ItemKind::Map(map) = &mut kind {
                 map.view_locked = view.locked;
+                map.frame_plot = view.frame_plot;
+                if !view.paper_clip_mm.is_empty() {
+                    map.clip = kentos_sheet::clip::Clip::Polygon {
+                        points: view
+                            .paper_clip_mm
+                            .iter()
+                            .map(|p| {
+                                [
+                                    ((p.x - view.paper_center_mm.x + view.width_mm / 2.)
+                                        / view.width_mm
+                                        * 1e6)
+                                        .round() as i32,
+                                    ((view.paper_center_mm.y + view.height_mm / 2. - p.y)
+                                        / view.height_mm
+                                        * 1e6)
+                                        .round() as i32,
+                                ]
+                            })
+                            .collect(),
+                    };
+                    map.clip
+                        .validate()
+                        .map_err(|e| format!("{}: {}", layout.name, e.message))?;
+                }
                 map.view = MapView::Fixed(kinds::FixedView {
                     center: Some(GroundPoint {
                         x: view.view_center.x,
@@ -227,12 +251,14 @@ pub fn merge_with_source(
                 (view.width_mm * 1000.).round().max(1.) as i32,
                 (view.height_mm * 1000.).round().max(1.) as i32,
             );
-            sheet.items.push(Item::new(
+            let mut item = Item::new(
                 &Uuid::now_v7().to_string(),
                 &format!("DXF görünümü {}", i + 1),
                 frame,
                 kind,
-            ));
+            );
+            item.border = Some(Stroke::solid("#000000", 250));
+            sheet.items.push(item);
         }
         book.sheets.push(sheet);
     }
@@ -387,28 +413,49 @@ pub fn export(doc: &Document) -> (Vec<CadLayout>, Vec<ReportItem>) {
                     {
                         omitted += 1;
                     }
-                    if item.rotation.rem_euclid(90000) != 0 {
-                        omitted += 1;
-                        continue;
-                    }
                     if let MapView::Fixed(view) = &map.view
                         && let Some(center) = &view.center
                     {
                         let rect = kentos_sheet::display::map_content_rect(item, map);
                         let c = world_point(item, rect.center(), layout.height_mm);
-                        let (width, height) = if item.rotation.rem_euclid(180000) == 90000 {
-                            (rect.height, rect.width)
+                        let angled = item.rotation.rem_euclid(90000) != 0;
+                        let (width, height) = if angled {
+                            let (sn, cs) = kentos_sheet::units::sin_cos(item.rotation);
+                            (
+                                f64::from(rect.width) * cs.abs()
+                                    + f64::from(rect.height) * sn.abs(),
+                                f64::from(rect.width) * sn.abs()
+                                    + f64::from(rect.height) * cs.abs(),
+                            )
+                        } else if item.rotation.rem_euclid(180000) == 90000 {
+                            (f64::from(rect.height), f64::from(rect.width))
                         } else {
-                            (rect.width, rect.height)
+                            (f64::from(rect.width), f64::from(rect.height))
                         };
                         layout.viewports.push(CadViewport {
+                            paper_clip_mm: if map.clip.is_frame() && !angled {
+                                Vec::new()
+                            } else {
+                                map.clip
+                                    .paper_points(&rect)
+                                    .iter()
+                                    .map(|p| {
+                                        let point = world_point(item, *p, layout.height_mm);
+                                        Vec2 {
+                                            x: point.x * 1000.,
+                                            y: point.y * 1000.,
+                                        }
+                                    })
+                                    .collect()
+                            },
+                            frame_plot: map.frame_plot && item.border.is_some(),
                             locked: map.view_locked,
                             paper_center_mm: Vec2 {
                                 x: c.x * 1000.,
                                 y: c.y * 1000.,
                             },
-                            width_mm: kentos_sheet::projection::paper_um_to_mm(f64::from(width)),
-                            height_mm: kentos_sheet::projection::paper_um_to_mm(f64::from(height)),
+                            width_mm: kentos_sheet::projection::paper_um_to_mm(width),
+                            height_mm: kentos_sheet::projection::paper_um_to_mm(height),
                             view_center: Vec2 {
                                 x: center.x,
                                 y: center.y,
@@ -416,7 +463,7 @@ pub fn export(doc: &Document) -> (Vec<CadLayout>, Vec<ReportItem>) {
                             view_height: kentos_sheet::projection::Scale::for_rendering(
                                 view.denominator(),
                             )
-                            .model_metres(f64::from(height)),
+                            .model_metres(height),
                             twist: f64::from(kentos_sheet::units::norm_mdeg(
                                 i64::from(view.rotation) + i64::from(item.rotation),
                             ))
@@ -571,7 +618,7 @@ pub fn export(doc: &Document) -> (Vec<CadLayout>, Vec<ReportItem>) {
         Vec::new()
     } else {
         vec![ReportItem { severity: Some(ReportSeverity::Warning), details: Vec::new(), what: "Pafta dışa aktarımı".into(), count: omitted,
-        reason: "Desteklenmeyen pafta öğesi/özelliği (ana pafta, atlas, grup, dolgu, kenarlık, opaklık, veri bağlama, iç boşluk, görünüm katman ezmesi veya eğik görünüm çerçevesi) aktarılmadı; desteklenen metin, çizgi, çokgen ve sabit görünüm aktarıldı.".into(), lines: Vec::new() }]
+        reason: "Desteklenmeyen pafta öğesi/özelliği (ana pafta, atlas, grup, dolgu, kenarlık, opaklık, veri bağlama, iç boşluk, görünüm katman ezmesi) aktarılmadı; desteklenen metin, çizgi, çokgen ve sabit görünüm aktarıldı.".into(), lines: Vec::new() }]
     };
     (result, notes)
 }

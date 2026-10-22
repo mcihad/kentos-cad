@@ -312,7 +312,11 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
     };
     let r = mf.content;
     if let Some(f) = &it.fill {
-        pen.rect(r, Some(f), None, 0);
+        if m.clip.is_frame() {
+            pen.rect(r, Some(f), None, 0);
+        } else {
+            pen.path(&m.clip.paper_points(&r), true, Some(f), None);
+        }
     }
     if mf.center.is_none() {
         notes.push(Note {
@@ -339,6 +343,7 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
     };
     pen.prims.push(Prim::Map(MapPrim {
         item: it.id.clone(),
+        clip_shape: m.clip.clone(),
         clip,
         rotation: pen.rot,
         view: MapViewPrim {
@@ -376,14 +381,20 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
     for f in outside {
         f(pen);
     }
-    if let Some(b) = &it.border {
-        pen.rect(r, None, Some(b), 0);
-    } else if m
-        .grids
-        .iter()
-        .any(|g| g.enabled && g.frame == GridFrame::Line)
-    {
-        pen.rect(r, None, Some(&Stroke::solid("#000000", 350)), 0);
+    if m.frame_plot || ctx.inputs.mode == super::RenderMode::Design {
+        let border = it.border.as_ref().cloned().or_else(|| {
+            m.grids
+                .iter()
+                .any(|g| g.enabled && g.frame == GridFrame::Line)
+                .then(|| Stroke::solid("#000000", 350))
+        });
+        if let Some(border) = border {
+            if m.clip.is_frame() {
+                pen.rect(r, None, Some(&border), 0);
+            } else {
+                pen.path(&m.clip.paper_points(&r), true, None, Some(&border));
+            }
+        }
     }
 }
 

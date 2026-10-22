@@ -547,6 +547,26 @@ fn an_agent_configures_a_fractional_viewport_and_the_view_lock_is_enforced() {
         .unwrap();
     assert_eq!(page["items"][0]["kind"]["viewLocked"], true);
     assert_eq!(page["items"][0]["kind"]["view"]["ratio"]["paper"], 2.);
+    let clipped = call(
+        &mut server,
+        "cad.changeset.apply",
+        json!({"drawing":drawing,"label":"Kırpma sınırı","steps":[{"command":"cad.sheets.edit","input":{"ops":[{"op":"setViewport","id":"viewport","clip":{"type":"polygon","points":[[0,0],[1000000,0],[0,1000000]]},"framePlot":false}]}}]}),
+    );
+    assert_eq!(clipped["status"], "completed");
+    let clipped_read = call(
+        &mut server,
+        "cad.sheets.set",
+        json!({"drawing":drawing,"details":true}),
+    );
+    let clipped_page = clipped_read["output"]["book"]["sheets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["id"] == "page")
+        .unwrap();
+    assert_eq!(clipped_page["items"][0]["kind"]["clip"]["type"], "polygon");
+    assert_eq!(clipped_page["items"][0]["kind"]["framePlot"], false);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
     let rejected = tool_result(
         &mut server,
         "cad.sheets.edit",

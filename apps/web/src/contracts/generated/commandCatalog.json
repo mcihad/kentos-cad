@@ -555278,7 +555278,7 @@
                         "type": "null"
                       }
                     ],
-                    "description": "Content is always clipped to its rectangular content frame. Polygon clips are CAD-SHEET-12."
+                    "description": "Boundary in content-frame coordinates, independent of camera scale."
                   },
                   "clipToAtlasFeature": {
                     "default": false,
@@ -555289,6 +555289,12 @@
                     "description": "Another coordinate system for the map (EPSG code text); none: the project's.",
                     "type": [
                       "string",
+                      "null"
+                    ]
+                  },
+                  "framePlot": {
+                    "type": [
+                      "boolean",
                       "null"
                     ]
                   },
@@ -558172,10 +558178,74 @@
             "type": "object"
           },
           "PaperViewportClip": {
-            "enum": [
-              "frame"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "frame",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "bounds": {
+                    "description": "Left, top, right, bottom in frame millionths.",
+                    "items": {
+                      "format": "int32",
+                      "type": "integer"
+                    },
+                    "maxItems": 4,
+                    "minItems": 4,
+                    "type": "array",
+                    "x-unit": "frame-millionths"
+                  },
+                  "type": {
+                    "const": "rectangle",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "bounds"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "points": {
+                    "description": "A simple ring, either winding; closure is implicit. Coordinates are frame millionths.",
+                    "items": {
+                      "items": {
+                        "format": "int32",
+                        "type": "integer"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "frame-millionths"
+                  },
+                  "type": {
+                    "const": "polygon",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "points"
+                ],
+                "type": "object"
+              }
+            ]
           },
           "PaperViewportSource": {
             "oneOf": [
@@ -559853,7 +559923,7 @@
                         "type": "null"
                       }
                     ],
-                    "description": "Content is always clipped to its rectangular content frame. Polygon clips are CAD-SHEET-12."
+                    "description": "Boundary in content-frame coordinates, independent of camera scale."
                   },
                   "clipToAtlasFeature": {
                     "default": false,
@@ -559864,6 +559934,12 @@
                     "description": "Another coordinate system for the map (EPSG code text); none: the project's.",
                     "type": [
                       "string",
+                      "null"
+                    ]
+                  },
+                  "framePlot": {
+                    "type": [
+                      "boolean",
                       "null"
                     ]
                   },
@@ -562747,10 +562823,74 @@
             "type": "object"
           },
           "PaperViewportClip": {
-            "enum": [
-              "frame"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "frame",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "bounds": {
+                    "description": "Left, top, right, bottom in frame millionths.",
+                    "items": {
+                      "format": "int32",
+                      "type": "integer"
+                    },
+                    "maxItems": 4,
+                    "minItems": 4,
+                    "type": "array",
+                    "x-unit": "frame-millionths"
+                  },
+                  "type": {
+                    "const": "rectangle",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "bounds"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "points": {
+                    "description": "A simple ring, either winding; closure is implicit. Coordinates are frame millionths.",
+                    "items": {
+                      "items": {
+                        "format": "int32",
+                        "type": "integer"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "frame-millionths"
+                  },
+                  "type": {
+                    "const": "polygon",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "points"
+                ],
+                "type": "object"
+              }
+            ]
           },
           "PaperViewportSource": {
             "oneOf": [
@@ -1033465,7 +1033605,7 @@
                         "type": "null"
                       }
                     ],
-                    "description": "Content is always clipped to its rectangular content frame. Polygon clips are CAD-SHEET-12."
+                    "description": "Boundary in content-frame coordinates, independent of camera scale."
                   },
                   "clipToAtlasFeature": {
                     "default": false,
@@ -1033476,6 +1033616,12 @@
                     "description": "Another coordinate system for the map (EPSG code text); none: the project's.",
                     "type": [
                       "string",
+                      "null"
+                    ]
+                  },
+                  "framePlot": {
+                    "type": [
+                      "boolean",
                       "null"
                     ]
                   },
@@ -1036331,10 +1036477,74 @@
             "type": "object"
           },
           "PaperViewportClip": {
-            "enum": [
-              "frame"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "frame",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "bounds": {
+                    "description": "Left, top, right, bottom in frame millionths.",
+                    "items": {
+                      "format": "int32",
+                      "type": "integer"
+                    },
+                    "maxItems": 4,
+                    "minItems": 4,
+                    "type": "array",
+                    "x-unit": "frame-millionths"
+                  },
+                  "type": {
+                    "const": "rectangle",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "bounds"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "points": {
+                    "description": "A simple ring, either winding; closure is implicit. Coordinates are frame millionths.",
+                    "items": {
+                      "items": {
+                        "format": "int32",
+                        "type": "integer"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "frame-millionths"
+                  },
+                  "type": {
+                    "const": "polygon",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "points"
+                ],
+                "type": "object"
+              }
+            ]
           },
           "PaperViewportSource": {
             "oneOf": [
@@ -1038784,7 +1038994,7 @@
                         "type": "null"
                       }
                     ],
-                    "description": "Content is always clipped to its rectangular content frame. Polygon clips are CAD-SHEET-12."
+                    "description": "Boundary in content-frame coordinates, independent of camera scale."
                   },
                   "clipToAtlasFeature": {
                     "default": false,
@@ -1038795,6 +1039005,12 @@
                     "description": "Another coordinate system for the map (EPSG code text); none: the project's.",
                     "type": [
                       "string",
+                      "null"
+                    ]
+                  },
+                  "framePlot": {
+                    "type": [
+                      "boolean",
                       "null"
                     ]
                   },
@@ -1040897,6 +1041113,22 @@
                       }
                     ]
                   },
+                  "clip": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperViewportClip"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "framePlot": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
                   "id": {
                     "type": "string"
                   },
@@ -1042940,10 +1043172,74 @@
             "type": "object"
           },
           "PaperViewportClip": {
-            "enum": [
-              "frame"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "frame",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "bounds": {
+                    "description": "Left, top, right, bottom in frame millionths.",
+                    "items": {
+                      "format": "int32",
+                      "type": "integer"
+                    },
+                    "maxItems": 4,
+                    "minItems": 4,
+                    "type": "array",
+                    "x-unit": "frame-millionths"
+                  },
+                  "type": {
+                    "const": "rectangle",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "bounds"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "points": {
+                    "description": "A simple ring, either winding; closure is implicit. Coordinates are frame millionths.",
+                    "items": {
+                      "items": {
+                        "format": "int32",
+                        "type": "integer"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": "array",
+                    "x-unit": "frame-millionths"
+                  },
+                  "type": {
+                    "const": "polygon",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "points"
+                ],
+                "type": "object"
+              }
+            ]
           },
           "PaperViewportSource": {
             "oneOf": [

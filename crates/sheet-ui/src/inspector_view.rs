@@ -1010,7 +1010,7 @@ impl Designer {
                     }),
                     Some(selected),
                     move |index| {
-                        Message::MapConfigure(SetViewport {
+                        Message::MapConfigure(Box::new(SetViewport {
                             id: id.clone(),
                             source: Some(
                                 index
@@ -1021,7 +1021,7 @@ impl Designer {
                                     }),
                             ),
                             ..Default::default()
-                        })
+                        }))
                     },
                 )
                 .searchable(false)
@@ -1062,11 +1062,11 @@ impl Designer {
                     }),
                     Some(picked),
                     move |index| {
-                        Message::MapConfigure(SetViewport {
+                        Message::MapConfigure(Box::new(SetViewport {
                             id: preset_id.clone(),
                             ratio: presets.get(index).copied(),
                             ..Default::default()
-                        })
+                        }))
                     },
                 )
                 .searchable(false)
@@ -1077,11 +1077,11 @@ impl Designer {
             let lock_id = one.id.clone();
             let lock = if editable && !one.locked {
                 Switch::new(map.view_locked, move |on| {
-                    Message::MapConfigure(SetViewport {
+                    Message::MapConfigure(Box::new(SetViewport {
                         id: lock_id.clone(),
                         locked: Some(on),
                         ..Default::default()
-                    })
+                    }))
                 })
             } else {
                 Switch::disabled(map.view_locked)
@@ -1091,8 +1091,33 @@ impl Designer {
                 || format!("1:{}", view.scale),
                 |r| format!("{}:{}", r.paper, r.model),
             );
+            let frame_id = one.id.clone();
+            let frame_plot = if editable && !one.locked {
+                Switch::new(map.frame_plot, move |on| {
+                    Message::MapConfigure(Box::new(SetViewport {
+                        id: frame_id.clone(),
+                        frame_plot: Some(on),
+                        ..Default::default()
+                    }))
+                })
+            } else {
+                Switch::disabled(map.frame_plot)
+            }
+            .label("Çerçeve baskıya çıksın");
+            let clip_name = match &map.clip {
+                kentos_sheet::clip::Clip::Frame => "Tam çerçeve",
+                kentos_sheet::clip::Clip::Rectangle { .. } => "Dikdörtgen sınır",
+                kentos_sheet::clip::Clip::Polygon { .. } => "Çokgen sınır",
+            };
+            let clipping = button(label::body(format!("Kırpma: {clip_name}…")))
+                .on_press_maybe((editable && !one.locked).then_some(Message::ViewportClip(
+                    crate::viewport_clip::ClipMessage::Open(one.id.clone()),
+                )))
+                .style(style::button::secondary);
             column![
                 lock,
+                frame_plot,
+                clipping,
                 labelled(
                     "Kaynak",
                     source,
@@ -1110,7 +1135,7 @@ impl Designer {
                         "Oran belirt"
                     },
                     crate::icons::PLOT_SCALE,
-                    camera_editable.then_some(Message::MapConfigure(ratio))
+                    camera_editable.then_some(Message::MapConfigure(Box::new(ratio)))
                 ),
                 label::caption(format!("Ölçek {shown_ratio}"))
             ]

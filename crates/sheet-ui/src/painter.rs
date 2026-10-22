@@ -20,6 +20,7 @@ use kentos_sheet::kinds::MapLayers;
 /// What a map frame shows and how large it is on the screen.
 #[derive(Clone, Debug, PartialEq)]
 pub struct MapRequest<'a> {
+    pub primitive: Option<&'a MapPrim>,
     /// The map item's id.
     pub item: &'a str,
     /// The content's size, pixels (the frame turned with it, if it is turned).
@@ -44,6 +45,7 @@ impl<'a> MapRequest<'a> {
         // A metre on the ground is 1 000 000 / scale micrometres on the paper.
         let ppm = kentos_sheet::projection::Scale::for_rendering(m.view.scale).pixels_per_metre(k);
         MapRequest {
+            primitive: Some(m),
             item: &m.item,
             size,
             view: &m.view,
@@ -340,6 +342,7 @@ mod tests {
             };
             let layers = MapLayers::default();
             let r = MapRequest {
+                primitive: None,
                 item: "m",
                 size: Size::new(160.0, 90.0),
                 view: &view,
@@ -403,6 +406,7 @@ mod tests {
         };
         let layers = MapLayers::default();
         let r = MapRequest {
+            primitive: None,
             item: "m",
             size: Size::new(200.0, 100.0),
             view: &view,

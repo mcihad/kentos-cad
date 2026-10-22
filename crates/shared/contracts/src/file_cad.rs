@@ -154,9 +154,20 @@ pub struct CadLayout {
 #[cfg_attr(feature = "ts", ts(export))]
 #[serde(rename_all = "camelCase")]
 pub struct CadViewport {
-    #[serde(default,skip_serializing_if="std::ops::Not::not")]
-    #[cfg_attr(feature="ts",ts(as="Option<bool>",optional))]
-    pub locked:bool,
+    /// Paper-space clipping boundary in mm, x right/y up. Empty is the rectangular viewport.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::Vec2>>", optional))]
+    #[cfg_attr(feature="schema",schemars(extend("x-unit"="paper-mm")))]
+    pub paper_clip_mm: Vec<crate::Vec2>,
+    #[serde(
+        default = "viewport_frame_yes",
+        skip_serializing_if = "viewport_frame_is_yes"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub frame_plot: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub locked: bool,
     /// Paper-space centre in millimetres, x right, y up.
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="paper-mm")))]
     pub paper_center_mm: crate::Vec2,
@@ -170,4 +181,11 @@ pub struct CadViewport {
     pub view_height: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub twist: f64,
+}
+
+fn viewport_frame_yes() -> bool {
+    true
+}
+fn viewport_frame_is_yes(v: &bool) -> bool {
+    *v
 }

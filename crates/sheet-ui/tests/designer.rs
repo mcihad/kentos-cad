@@ -1667,9 +1667,7 @@ fn common_viewport_cases_replay_through_the_designer_and_undo() {
         d.update(Message::Tab(1));
         let mut operation = case["operation"].clone();
         operation.as_object_mut().unwrap().remove("op");
-        d.update(Message::MapConfigure(
-            serde_json::from_value(operation).unwrap(),
-        ));
+        d.update(Message::MapConfigure(Box::new(serde_json::from_value(operation).unwrap(),)));
         if case["expected"]["error"].is_string() {
             assert!(d.error().is_some(), "{}", case["name"]);
             assert_eq!(d.book(), &book);
@@ -1774,11 +1772,11 @@ fn exact_scale_text_and_presets_keep_the_pair_and_unrelated_changes_do_not_round
     for ratio in kentos_sheet::viewport::standard_ratios() {
         let mut d = designer();
         let id = item(&d, "Harita").id.clone();
-        d.update(Message::MapConfigure(SetViewport {
+        d.update(Message::MapConfigure(Box::new(SetViewport {
             id: id.clone(),
             ratio: Some(*ratio),
             ..Default::default()
-        }));
+        })));
         let ItemKind::Map(map) = &d.book().item(&id).unwrap().kind else {
             panic!()
         };
@@ -1786,5 +1784,46 @@ fn exact_scale_text_and_presets_keep_the_pair_and_unrelated_changes_do_not_round
             panic!()
         };
         assert_eq!(v.ratio, Some(*ratio));
+    }
+}
+
+#[test]
+fn clipping_cases_replay_in_the_designer_without_changing_camera_or_bypassing_item_locks() {
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/viewport-clips.json"
+    ))
+    .unwrap();
+    for case in data["cases"].as_array().unwrap() {
+        let mut book = kentos_sheet::SheetBook::default();
+        book.sheets
+            .push(serde_json::from_value(case["sheet"].clone()).unwrap());
+        let mut d = Designer::new(context());
+        d.load(book.clone());
+        d.update(Message::Tab(1));
+        let mut raw = case["operation"].clone();
+        raw.as_object_mut().unwrap().remove("op");
+        d.update(Message::MapConfigure(Box::new(serde_json::from_value(raw).unwrap())));
+        if case["expected"]["error"].is_string() {
+            assert!(d.error().is_some());
+            assert_eq!(d.book(), &book);
+            continue;
+        }
+        assert!(d.error().is_none(), "{}: {:?}", case["name"], d.error());
+        let ItemKind::Map(map) = &d.book().sheets[0].items[0].kind else {
+            panic!()
+        };
+        assert_eq!(
+            serde_json::to_value(&map.clip).unwrap(),
+            case["expected"]["clip"]
+        );
+        assert_eq!(
+            map.frame_plot,
+            case["expected"]["framePlot"].as_bool().unwrap()
+        );
+        let changed = d.book() != &book;
+        d.update(Message::Undo);
+        if changed {
+            assert_eq!(d.book(), &book);
+        }
     }
 }

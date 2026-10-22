@@ -152,6 +152,12 @@ impl<'a> MapLayer<'a> {
         serde_json::to_string(&self.prim.layers)
             .unwrap_or_default()
             .hash(&mut h);
+        serde_json::to_string(&self.prim.clip_shape)
+            .unwrap_or_default()
+            .hash(&mut h);
+        serde_json::to_string(&self.prim.layer_overrides)
+            .unwrap_or_default()
+            .hash(&mut h);
         self.prim.crs.hash(&mut h);
         self.prim.rotation.hash(&mut h);
         (
@@ -172,7 +178,7 @@ impl<'a> MapLayer<'a> {
         frame.translate(Vector::new(-self.size.width / 2.0, -self.size.height / 2.0));
         let content = Rectangle::new(Point::ORIGIN, self.size);
         if self.prim.view.center.is_none() || !self.painter.paint(&request, frame) {
-            paint::placeholder(frame, content, 1.0);
+            paint::placeholder_shaped(frame, content, 1., &self.prim.clip_shape);
         }
     }
 }

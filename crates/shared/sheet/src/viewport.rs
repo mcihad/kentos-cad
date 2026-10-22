@@ -8,31 +8,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "schema", schemars(rename = "PaperScaleRatio"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ScaleRatio {
-    /// Paper and model lengths in the same physical unit: 2:1 enlarges twice.
-    #[cfg_attr(feature="schema",schemars(extend("x-unit"="1")))]
-    pub paper: f64,
-    #[cfg_attr(feature="schema",schemars(extend("x-unit"="1")))]
-    pub model: f64,
-}
-impl ScaleRatio {
-    pub fn denominator(self) -> f64 {
-        self.model / self.paper
-    }
-    pub fn valid(self) -> bool {
-        self.paper.is_finite()
-            && self.model.is_finite()
-            && self.paper > 0.
-            && self.model > 0.
-            && crate::projection::Scale::new(self.denominator()).is_some()
-    }
-}
+pub use kentos_contracts::PaperScaleRatio as ScaleRatio;
 /// CAD presets are independent of the GIS atlas fitting table. Custom ratios remain valid.
 pub fn standard_ratios() -> &'static [ScaleRatio] {
     const RATIOS: &[ScaleRatio] = &[
@@ -130,21 +106,7 @@ impl Source {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "schema", schemars(rename = "PaperViewportClip"))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
-#[serde(rename_all = "camelCase")]
-pub enum Clip {
-    #[default]
-    Frame,
-}
-impl Clip {
-    pub fn is_frame(&self) -> bool {
-        matches!(self, Self::Frame)
-    }
-}
+pub use crate::clip::Clip;
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -179,6 +141,12 @@ pub struct SetViewport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub locked: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub clip: Option<Clip>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub frame_plot: Option<bool>,
 }
 
 pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
@@ -318,12 +286,25 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
     if let Some(locked) = input.locked {
         changed.view_locked = locked;
     }
+    if let Some(clip) = &input.clip {
+        clip.validate()?;
+        changed.clip = clip.clone();
+    }
+    if let Some(plot) = input.frame_plot {
+        changed.frame_plot = plot;
+    }
     let ratio = view.ratio;
     changed.view = MapView::Fixed(view);
     let mut patch = serde_json::json!({"kind":changed});
     patch["kind"]["source"] = serde_json::to_value(&changed.source)
         .map_err(|e| SheetError::json("Görünüm kaynağı", &e))?;
     patch["kind"]["viewLocked"] = serde_json::json!(changed.view_locked);
+    if input.clip.is_some() {
+        patch["kind"]["clip"] = serde_json::json!(changed.clip);
+    }
+    if input.frame_plot.is_some() {
+        patch["kind"]["framePlot"] = serde_json::json!(changed.frame_plot);
+    }
     patch["kind"]["view"]["ratio"] = serde_json::json!(ratio);
     Ok(Op::SetItemProps(SetItemProps {
         id: item.id.clone(),

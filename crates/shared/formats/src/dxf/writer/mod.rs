@@ -330,7 +330,27 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     let papers = layouts::allocate(&input.layouts, &mut handles);
     // The associative hatches and their sources take their handles first (docs/adr/0333 §3).
     let ties = hatch_ties::ties_of(input, &mut handles);
-    let layers = Layers::new(&input.layers, &mut report);
+    let mut layers = Layers::new(&input.layers, &mut report);
+    let viewport_no_plot = if input
+        .layouts
+        .iter()
+        .flat_map(|p| &p.viewports)
+        .any(|v| !v.frame_plot)
+    {
+        layers.viewport_frame_layer(false)
+    } else {
+        "0".to_owned()
+    };
+    let viewport_plot = if input
+        .layouts
+        .iter()
+        .flat_map(|p| &p.viewports)
+        .any(|v| v.frame_plot)
+    {
+        layers.viewport_frame_layer(true)
+    } else {
+        "0".to_owned()
+    };
     let mut body = Out::default();
     // The blocks (the drawing's and the dimensions' own) and their block records.
     let mut blocks = Out::default();
@@ -492,14 +512,38 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
         // The overall paper editor is viewport 1. DWG does not persist DXF
         // viewport IDs; a real first record keeps model frames numbered >=2.
         let editor = kentos_contracts::CadViewport {
-            locked:false,
-            paper_center_mm: Vec2 { x: paper.data.width_mm / 2., y: paper.data.height_mm / 2. },
-            width_mm: paper.data.width_mm, height_mm: paper.data.height_mm,
-            view_center: Vec2 { x: 0., y: 0. }, view_height: paper.data.height_mm / 1000., twist: 0.,
+            locked: false,
+            paper_clip_mm: Vec::new(),
+            frame_plot: true,
+            paper_center_mm: Vec2 {
+                x: paper.data.width_mm / 2.,
+                y: paper.data.height_mm / 2.,
+            },
+            width_mm: paper.data.width_mm,
+            height_mm: paper.data.height_mm,
+            view_center: Vec2 { x: 0., y: 0. },
+            view_height: paper.data.height_mm / 1000.,
+            twist: 0.,
         };
-        layouts::viewport(&mut paper_body, &mut handles, paper, &editor, 1, unit.per_metre());
+        layouts::viewport(
+            &mut paper_body,
+            &mut handles,
+            paper,
+            &editor,
+            1,
+            unit.per_metre(),
+            (&viewport_plot, &viewport_no_plot),
+        );
         for (id, view) in paper.data.viewports.iter().enumerate() {
-            layouts::viewport(&mut paper_body, &mut handles, paper, view, id + 2, unit.per_metre());
+            layouts::viewport(
+                &mut paper_body,
+                &mut handles,
+                paper,
+                view,
+                id + 2,
+                unit.per_metre(),
+                (&viewport_plot, &viewport_no_plot),
+            );
         }
     }
 

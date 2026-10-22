@@ -27,4 +27,5 @@ pub mod labels;
 pub mod layers;
 pub mod maps;
 mod raster;
+pub use raster::{MapImage, render_image as render_map_image};
 pub mod vectors;

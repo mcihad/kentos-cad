@@ -18,6 +18,7 @@ pub(super) struct Frame {
     view: MapFrame,
     clip: crate::units::RectUm,
     turn: crate::units::Mdeg,
+    shape: crate::clip::Clip,
 }
 
 impl Frame {
@@ -32,6 +33,7 @@ impl Frame {
             },
             clip: m.clip,
             turn: m.rotation,
+            shape: m.clip_shape.clone(),
         }
     }
 
@@ -78,7 +80,17 @@ impl Frame {
 /// The frame's clip (until the matching `restore`).
 fn clip_to(page: &mut Page<'_>, frame: &Frame) {
     page.save();
-    page.poly(&frame.corners(), true);
+    if frame.shape.is_frame() {
+        page.poly(&frame.corners(), true);
+    } else {
+        let points = frame
+            .shape
+            .paper_points(&frame.clip)
+            .iter()
+            .map(|p| rotate(*p, frame.clip.center(), frame.turn))
+            .collect::<Vec<_>>();
+        page.poly(&points, true);
+    }
     page.c.clip_nonzero();
     page.c.end_path();
 }
@@ -259,6 +271,15 @@ pub(super) const PLACEHOLDER: (&str, &str, u16) = ("harita", "barlow", 400);
 
 /// A map without content: a light grey box with “harita”, as the SVG writer draws it.
 pub(super) fn placeholder(page: &mut Page<'_>, m: &MapPrim) {
+    if m.clip_shape.is_frame() {
+        placeholder_body(page, m);
+    } else {
+        clip_to(page, &Frame::of(m));
+        placeholder_body(page, m);
+        page.restore();
+    }
+}
+fn placeholder_body(page: &mut Page<'_>, m: &MapPrim) {
     let r = &m.clip;
     page.rect(r, m.rotation, 0);
     page.paint(Some("#ececec"), None, false);
@@ -296,6 +317,7 @@ mod tests {
 
     fn prim(rotation: i32, view_rot: i32) -> MapPrim {
         MapPrim {
+            clip_shape: Default::default(),
             layer_overrides: Vec::new(),
             item: "m".into(),
             clip: RectUm::new(20_000, 10_000, 200_000, 100_000),

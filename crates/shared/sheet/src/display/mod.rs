@@ -161,6 +161,9 @@ pub struct MapViewPrim {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapPrim {
+    #[serde(default, skip_serializing_if = "crate::clip::Clip::is_frame")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<crate::clip::Clip>", optional))]
+    pub clip_shape: crate::clip::Clip,
     pub item: ItemId,
     /// The content's rectangle, before the frame's turn about its own centre.
     pub clip: RectUm,

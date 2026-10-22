@@ -807,7 +807,7 @@ fn sheet09_viewport_screens() {
         assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
         sheet(
             &mut app,
-            Sheet::MapConfigure(kentos_sheet::viewport::SetViewport {
+            Sheet::MapConfigure(Box::new(kentos_sheet::viewport::SetViewport {
                 id: map.clone(),
                 source: Some(kentos_sheet::viewport::Source::ViewSnapshot {
                     view: named.clone(),
@@ -818,7 +818,7 @@ fn sheet09_viewport_screens() {
                 }),
                 locked: Some(true),
                 ..Default::default()
-            }),
+            })),
         );
         assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
         let item = app
@@ -1066,7 +1066,7 @@ fn sheet11_exact_scale_screens() {
         assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
         sheet(
             &mut app,
-            Sheet::MapConfigure(kentos_sheet::viewport::SetViewport {
+            Sheet::MapConfigure(Box::new(kentos_sheet::viewport::SetViewport {
                 id: map.clone(),
                 source: Some(kentos_sheet::viewport::Source::ViewSnapshot {
                     view: named.clone(),
@@ -1077,7 +1077,7 @@ fn sheet11_exact_scale_screens() {
                 }),
                 locked: Some(false),
                 ..Default::default()
-            }),
+            })),
         );
         assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
         let item = app
@@ -1150,5 +1150,178 @@ fn sheet11_exact_scale_screens() {
             .unwrap();
             std::fs::write(out.join("sheet11-exact-scale.pdf"), pdf.bytes).unwrap();
         }
+    }
+}
+
+#[test]
+#[ignore = "GPU pictures, run alone"]
+fn sheet12_clipping_screens() {
+    use kentos_sheet::{ItemKind, MapView};
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/commands/v1/cad.sheets.fit.json"
+    ))
+    .unwrap();
+    let mut snapshot: kentos_commands::DocumentSnapshotV1 =
+        serde_json::from_value(fixture["setup"].clone()).unwrap();
+    snapshot.entities.clear();
+    snapshot.layers[0].style.renderer = Some(
+        serde_json::json!({"type":"single","symbols":{"fill":{"type":"fill","layers":[{"id":"blue","type":"simpleFill","color":"#1747aa"}]}}}),
+    );
+    for raw in [
+        serde_json::json!({"kind":"polygon","id":1,"layerId":"cizim","attrs":{},"pts":[{"x":0,"y":0},{"x":5,"y":0},{"x":5,"y":3},{"x":0,"y":3}]}),
+        serde_json::json!({"kind":"text","id":2,"layerId":"cizim","attrs":{},"p":{"x":3.1,"y":2.35},"text":"ETİKET","height":0.18,"rotation":0}),
+    ] {
+        snapshot.entities.push(serde_json::from_value(raw).unwrap());
+    }
+    let mut model = kentos_domain::Document::from_snapshot(snapshot).unwrap();
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/viewport-clips.json"
+    ))
+    .unwrap();
+    let mut page: kentos_sheet::Sheet =
+        serde_json::from_value(data["cases"][0]["sheet"].clone()).unwrap();
+    let prototype = page.items[0].clone();
+    page.items.clear();
+    page.name = "Kırpma sınırları · 1:50".into();
+    for (id, name, left, source) in [
+        ("full", "Tam çerçeve", 30000, "Explicit frame"),
+        ("tri", "Üçgen · çerçeve baskısız", 155000, "Triangle"),
+        ("L", "İçbükey çokgen", 280000, "Concave L"),
+    ] {
+        let case = data["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["name"] == source)
+            .unwrap();
+        let mut item = prototype.clone();
+        item.id = id.into();
+        item.name = name.into();
+        item.frame = kentos_sheet::units::RectUm::new(left, 80000, 110000, 80000);
+        let ItemKind::Map(map) = &mut item.kind else {
+            panic!()
+        };
+        map.clip = serde_json::from_value(case["expected"]["clip"].clone()).unwrap();
+        map.frame_plot = id != "tri";
+        let MapView::Fixed(v) = &mut map.view else {
+            panic!()
+        };
+        v.scale = 50;
+        v.ratio = None;
+        v.center = Some(kentos_sheet::GroundPoint { x: 2.5, y: 1.5 });
+        page.items.push(item);
+        let mut kind = kentos_sheet::kinds::default_kind("text").unwrap();
+        let ItemKind::Text(t) = &mut kind else {
+            panic!()
+        };
+        t.content = name.into();
+        t.style.size = 3000;
+        page.items.push(kentos_sheet::Item::new(
+            &format!("label-{id}"),
+            &format!("{name} etiketi"),
+            kentos_sheet::units::RectUm::new(left, 170000, 110000, 15000),
+            kind,
+        ));
+    }
+    let mut book = kentos_sheet::SheetBook::default();
+    book.sheets.push(page);
+    model
+        .set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
+        .unwrap();
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).unwrap();
+    let pdf = kentos_plot::book::book_pdf(&model, &[], "Test", "2026-10-22").unwrap();
+    std::fs::write(out.join("sheet12-clips.pdf"), pdf.bytes).unwrap();
+    for (theme, text, width, height) in [
+        ("light", 13, 1440., 900.),
+        ("dark", 13, 1440., 900.),
+        ("dark", 18, 1100., 650.),
+    ] {
+        let (mut app, _store) = app_with_store("sheet12-clips");
+        app.settings.choose(&[
+            ("appearance.theme", serde_json::json!(theme)),
+            ("appearance.textSize", serde_json::json!(text)),
+        ]);
+        app.apply_settings();
+        let doc = Document::from_v2(model.to_snapshot_v2(), None).unwrap();
+        let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        drive(&mut app, task);
+        sheet(&mut app, Sheet::Tab(1));
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(width, height)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        sheet(&mut app, Sheet::ZoomPage);
+        snap.settle(&mut app, App::view, &mut update);
+        let image = snap.render(app.view(), &app.theme());
+        let path = out.join(format!("sheet12-clips-{theme}-{text}.png"));
+        image.save(&path).unwrap();
+        println!("{}", path.display());
+        let (px, py, k) = if text == 13 {
+            (300., 222., 795. / 420.)
+        } else {
+            (328., 250., 407. / 420.)
+        };
+        for (left, x, y, blue) in [
+            (30., 0.25, 0.25, true),
+            (155., 0.25, 0.25, true),
+            (155., 0.75, 0.75, false),
+            (280., 0.25, 0.25, true),
+            (280., 0.75, 0.25, false),
+            (280., 0.75, 0.75, true),
+        ] {
+            let x = (px + (left + x * 110.) * k) as usize;
+            let y = (py + (80. + y * 80.) * k) as usize;
+            let at = (y * width as usize + x) * 4;
+            let p = &image.rgba[at..at + 4];
+            assert_eq!(
+                i16::from(p[2]) > i16::from(p[0]) + 40 && i16::from(p[2]) > i16::from(p[1]) + 20,
+                blue,
+                "{theme}-{text}: probe {left}/{x}/{y}: {p:?}"
+            );
+        }
+        // The concave void must contain neither source fill nor source text.
+        for y in ((py + 96. * k) as usize)..((py + 116. * k) as usize) {
+            for x in ((px + 346. * k) as usize)..((px + 379. * k) as usize) {
+                let at = (y * width as usize + x) * 4;
+                assert!(
+                    image.rgba[at..at + 3].iter().all(|c| *c >= 245),
+                    "{theme}-{text}: leaked model content in polygon void"
+                );
+            }
+        }
+        sheet(
+            &mut app,
+            Sheet::ViewportClip(kentos_sheet_ui::viewport_clip::ClipMessage::Open(
+                "tri".into(),
+            )),
+        );
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet12-boundary-dialog-{theme}-{text}.png")))
+            .unwrap();
+        if text == 18 {
+            snap.input(
+                &mut app,
+                App::view,
+                &mut update,
+                kentos_ui::snapshot::Input::Click(iced::Point::new(881., 568.)),
+            );
+            assert!(
+                app.sheets
+                    .window(kentos_sheet_ui::lend(&kentos_sheet_ui::NoMaps))
+                    .is_none(),
+                "real mouse click closes an unchanged valid boundary"
+            );
+        } else {
+            sheet(
+                &mut app,
+                Sheet::ViewportClip(kentos_sheet_ui::viewport_clip::ClipMessage::Apply),
+            );
+        }
+        assert!(app.sheets.error().is_none());
     }
 }

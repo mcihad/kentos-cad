@@ -383,6 +383,28 @@ for (const f of files('kpafta/invalid')) {
   }
 }
 
+// CAD-SHEET-12 uses existing operations/display/PDF interfaces only.
+{
+  const root=json('ops/book.json');
+  for(const c of json('viewport-clips.json').cases){
+    const before=bookText({...root,sheets:[c.sheet],masters:[],assets:[],variables:[]},c.name);
+    const raw=engine.applyOp(before,JSON.stringify(c.operation));
+    if(c.expected.error){assert.equal(refused(raw,c.name).code,c.expected.error,c.name);}
+    else{
+      const result=ok(raw,c.name);const item=result.book.sheets[0].items[0];
+      assert.deepStrictEqual(item.kind.clip??{type:'frame'},c.expected.clip,c.name);
+      assert.equal(item.kind.framePlot??true,c.expected.framePlot,c.name);
+      assert.deepStrictEqual(item.kind.view,c.sheet.items[0].kind.view,c.name);
+      const list=ok(engine.displayList(JSON.stringify(result.book),'page',JSON.stringify({mode:'export'})),c.name);
+      const map=list.prims.find(p=>p.type==='map');assert.deepStrictEqual(map.clipShape??{type:'frame'},c.expected.clip,c.name);
+      const svg=ok(engine.toSvg(JSON.stringify(list),'{}'),c.name);
+      if(c.expected.clip.type!=='frame'){assert.ok(svg.includes('<polygon points='),c.name);}
+      assert.equal(digest(ok(engine.applyOps(JSON.stringify(result.book),JSON.stringify(result.inverse)),c.name).book,c.name),digest(before,c.name));
+    }
+    count('viewport-clips');
+  }
+}
+
 const info = ok(engine.engineInfo(), 'engineInfo');
 console.log(
   `Pafta çekirdeği WASM ${info.version} (${info.bookSchema}): ` +

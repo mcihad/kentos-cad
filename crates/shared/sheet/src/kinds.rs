@@ -333,7 +333,7 @@ pub struct MapItem {
     #[cfg_attr(feature = "schema", schemars(with = "Option<bool>"))]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub view_locked: bool,
-    /// Content is always clipped to its rectangular content frame. Polygon clips are CAD-SHEET-12.
+    /// Boundary in content-frame coordinates, independent of camera scale.
     #[serde(
         default,
         deserialize_with = "crate::viewport::default_on_null",
@@ -342,6 +342,14 @@ pub struct MapItem {
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::viewport::Clip>"))]
     #[cfg_attr(feature = "ts", ts(as = "Option<crate::viewport::Clip>", optional))]
     pub clip: crate::viewport::Clip,
+    #[serde(
+        default = "crate::clip::yes",
+        deserialize_with = "crate::clip::yes_on_null",
+        skip_serializing_if = "crate::clip::is_yes"
+    )]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<bool>"))]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub frame_plot: bool,
     #[serde(default)]
     pub layers: MapLayers,
     /// Another coordinate system for the map (EPSG code text); none: the project's.
@@ -1802,6 +1810,7 @@ pub fn default_kind(type_name: &str) -> Option<ItemKind> {
             source: Default::default(),
             view_locked: false,
             clip: Default::default(),
+            frame_plot: true,
             view: MapView::Fixed(FixedView {
                 center: None,
                 scale: 1000,

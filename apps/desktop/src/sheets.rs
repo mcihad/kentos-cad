@@ -455,6 +455,47 @@ pub(crate) struct SheetPainter<'a> {
 
 impl MapPainter for SheetPainter<'_> {
     fn paint(&self, r: &MapRequest<'_>, frame: &mut Frame) -> bool {
+        if let Some(primitive) = r.primitive
+            && !primitive.clip_shape.is_frame()
+        {
+            let mut keep = None;
+            let (drawing, spatial) = self.source(r.view.scale, &mut keep);
+            let Some(doc) = drawing.map(|d| &d.model).or(self.doc) else {
+                return false;
+            };
+            let Some(center) = r.view.center else {
+                return false;
+            };
+            let src = kentos_plot::maps::MapSource {
+                doc,
+                store: spatial.store(),
+                library: self.library,
+                origin: Vec2::new(center.x, center.y),
+            };
+            let labels = kentos_plot::labels::map_labels(doc, spatial, primitive);
+            let cap = if r.export { 8192. } else { 4096. };
+            let factor = (cap / f64::from(r.size.width.max(r.size.height)).max(1.)).min(1.);
+            let size = [
+                (f64::from(r.size.width) * factor).ceil().max(1.) as u32,
+                (f64::from(r.size.height) * factor).ceil().max(1.) as u32,
+            ];
+            let path = self
+                .drawing
+                .and_then(|d| d.path.as_ref())
+                .and_then(|p| p.to_str());
+            let Ok(image) = kentos_plot::render_map_image(&src, primitive, &labels, size, path)
+            else {
+                return false;
+            };
+            kentos_sheet_ui::paint::draw_pixels(
+                frame,
+                r.bounds(),
+                image.width,
+                image.height,
+                image.rgba,
+            );
+            return true;
+        }
         // The styled vectors its PDF writes; where a layer has none, the plain scene.
         if !self.paint_styled(r, frame) && !self.maps.paint_scene(r, frame) {
             return false;
@@ -2186,6 +2227,7 @@ mod tests {
             };
             let layers = MapLayers::default();
             let r = MapRequest {
+                primitive: None,
                 overrides: &[],
                 item: "m",
                 // As large as a map's picture is drawn (no shrinking: the text at its own size).
@@ -2279,6 +2321,7 @@ mod tests {
         };
         let layers = MapLayers::default();
         let request = |k: f64| MapRequest {
+            primitive: None,
             overrides: &[],
             item: "m",
             // The same frame, 160 × 120 mm of paper, at k pixels per micrometre (the screen's zoom, the file's).

@@ -395,7 +395,10 @@ impl Designer {
             Message::Print => self.open_pdf(true),
             Message::Atlas => return vec![Effect::HostAction("sheet.atlas".to_owned())],
             Message::Pdf(m) => return self.pdf_update(m),
-            Message::MapConfigure(input)=>{self.commit(vec![Op::SetViewport(input)]);},
+            Message::ViewportClip(m) => self.viewport_clip_update(m),
+            Message::MapConfigure(input) => {
+                self.commit(vec![Op::SetViewport(*input)]);
+            }
             Message::MapScaleFromDrawing => {
                 if let Some(scale)=self.ctx.exact_plot_scale.or_else(||self.ctx.capabilities.plot_scale.map(f64::from)).filter(|s|s.is_finite()&&(1e-6..=1e8).contains(s)) {
                     let ops=self.chosen().into_iter().filter(|i|!i.locked&&crate::inspect::fixed_map(i).is_some()).map(|i|Op::SetViewport(kentos_sheet::viewport::SetViewport{id:i.id.clone(),scale:(scale>=1.&&scale.fract()==0.).then_some(scale as u32),ratio:(scale<1.||scale.fract()!=0.).then_some(kentos_sheet::viewport::ScaleRatio{paper:1.,model:scale}),..Default::default()})).collect();

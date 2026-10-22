@@ -3,20 +3,21 @@ import type { AffectedFrame } from "./AffectedFrame";
 import type { SetSheet } from "./SetSheet";
 import type { SheetPicture } from "./SheetPicture";
 import type { SheetSeries } from "./SheetSeries";
+import type { PaperScaleRatio } from "./sheet/PaperScaleRatio";
 
 /**
  * Output of `cad.sheets.set` v1 (its plan's too).
  */
-export type SheetsSetResult = { 
+export type SheetsSetResult = {
 /**
  * The series, sorted by their letters and digit; `Diğer` last.
  */
-series: Array<SheetSeries>, 
+series: Array<SheetSeries>,
 /**
  * The sheets, in the book's order.
  */
-sheets: Array<SetSheet>, 
+sheets: Array<SetSheet>,
 /**
  * With `uids`: the frames affected, in the book's order; their sheets are the ones to print again.
  */
-affected?: Array<AffectedFrame>, revision: string, book?: unknown, templates?: Array<unknown>, pictures?: Array<SheetPicture>, standardRatios?: Array<{paper: number; model: number}>, };
+affected?: Array<AffectedFrame>, revision: string, book?: unknown, templates?: Array<unknown>, pictures?: Array<SheetPicture>, standardRatios?: Array<PaperScaleRatio>, };

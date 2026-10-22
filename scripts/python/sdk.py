@@ -425,6 +425,8 @@ class Emit:
             # Keep exact raw inputs (including unknown fields for the core to reject).
             if t.name == "PaperOp":
                 return "PaperOp | Mapping[str, Any]"
+            if t.name == "PaperViewportClip" and k == "union":
+                return "PaperViewportClip | PaperViewportClipName"
             if k == "enum":
                 return f"{t.name} | {t.name}Name"
             if k == "vec2" and loose:
@@ -459,6 +461,8 @@ class Emit:
                 return v
             if t.name == "PaperOp":
                 return f"(dict({v}) if isinstance({v}, Mapping) else {v}.to_json())"
+            if t.name == "PaperViewportClip":
+                return f"({v} if isinstance({v}, str) else {v}.to_json())"
             return f"{v}.to_json()"
         if isinstance(t, ListT):
             inner = self.enc(t.item, e, depth + 1)
@@ -666,6 +670,8 @@ def emit_union_base(u: Union, common: list[tuple[str, str]]) -> str:
     doc = (doc + "\n\n" if doc else "") + "One of:\n\n" + variants
     lines = [f"class {u.name}(_Union):", docstring(doc, "    ").rstrip("\n")]
     lines.append("    __slots__ = ()")
+    if u.name == "PaperViewportClip":
+        lines.append('    FRAME: ClassVar[str] = "frame"  # Legacy v1 spelling; native readers still accept it.')
     lines.append(f'    TAG: ClassVar[str] = "{u.tag}"')
     if common:
         lines.append("")
@@ -681,11 +687,16 @@ def emit_union_base(u: Union, common: list[tuple[str, str]]) -> str:
     lines.append("")
     lines.append("    @classmethod")
     lines.append(f"    def from_json(cls, data: Mapping[str, Any]) -> {u.name}:")
+    if u.name == "PaperViewportClip":
+        lines.append('        if data == "frame":')
+        lines.append('            return FramePaperViewportClip()')
     lines.append(f'        return _variant(_{snake(u.name).upper()}, "{u.name}", "{u.tag}", data).from_json(data)')
     return "\n".join(lines) + "\n"
 
 
 def emit_types(model: Model, units: list[dict] | None = None) -> str:
+    if "PaperViewportClip" in model.unions:
+        model.aliases["PaperViewportClipName"] = ("Legacy frame spelling, accepted alongside tagged clip boundaries.", 'Literal["frame"]')
     em = Emit(model)
     parts = [HEADER, TYPES_PRELUDE]
     if units:

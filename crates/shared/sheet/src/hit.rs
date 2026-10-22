@@ -165,6 +165,20 @@ fn dist_to_segment(p: [f64; 2], a: [f64; 2], b: [f64; 2]) -> f64 {
 pub fn point_on(item: &Item, p: [f64; 2], tol: f64) -> bool {
     let c = item.frame.center();
     let q = rotate(p, c, -item.rotation);
+    if let ItemKind::Map(map) = &item.kind
+        && !map.clip.is_frame()
+    {
+        let frame = crate::display::map_content_rect(item, map);
+        if map.clip.contains(
+            (q[0] - f64::from(frame.left)) / f64::from(frame.width),
+            (q[1] - f64::from(frame.top)) / f64::from(frame.height),
+        ) {
+            return true;
+        }
+        let boundary = map.clip.paper_points(&frame);
+        return (0..boundary.len())
+            .any(|i| dist_to_segment(q, boundary[i], boundary[(i + 1) % boundary.len()]) <= tol);
+    }
     if let ItemKind::Shape(shape) = &item.kind
         && let crate::kinds::ShapeKind::Cad(cad) = &shape.shape
     {

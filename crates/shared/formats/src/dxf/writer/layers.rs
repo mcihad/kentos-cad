@@ -358,6 +358,48 @@ impl Layers {
     }
 
     /// LAYER: "0" first (the drawing's own "0" when it has one), then the layers in the drawing's order.
+    /// A distinct nonplotting layer for viewport borders; never reuse a user's plotting layer.
+    pub fn viewport_frame_layer(&mut self, plot: bool) -> String {
+        if plot
+            && self.zero.is_none_or(|i| {
+                let l = &self.list[i];
+                l.plot && l.visible && !l.frozen
+            })
+        {
+            return "0".into();
+        }
+        let base = if plot {
+            "KENTOS_VIEWPORT_PLOT"
+        } else {
+            "KENTOS_VIEWPORT_NOPLOT"
+        };
+        let mut n = 0;
+        let name = loop {
+            let name = if n == 0 {
+                base.to_owned()
+            } else {
+                format!("{base}_{n}")
+            };
+            if !self.list.iter().any(|l| key(&l.name) == key(&name)) {
+                break name;
+            }
+            n += 1;
+        };
+        self.list.push(Layer {
+            name: name.clone(),
+            color: DxfColor { aci: 7, rgb: None },
+            app_color: None,
+            visible: true,
+            locked: false,
+            line_type: LineType::Continuous,
+            pattern: None,
+            weight: 25,
+            plot,
+            frozen: false,
+        });
+        name
+    }
+
     pub fn layer_table(&self, out: &mut Out, handles: &mut super::Handles) {
         let count = self.list.len() + usize::from(self.zero.is_none());
         template::table(out, "LAYER", LAYER_TABLE, count);
@@ -478,5 +520,24 @@ mod tests {
         assert_eq!(line_weight(0.33), (35, true));
         assert_eq!(line_weight(5.0), (211, true));
         assert_eq!(line_weight(f64::NAN), (-3, true));
+    }
+
+    #[test]
+    fn viewport_frame_layers_preserve_plotting_when_zero_is_frozen_nonplot_and_names_collide() {
+        let mut zero = layer("zero", "0", &[]);
+        zero.plot = Some(false);
+        zero.frozen = Some(true);
+        zero.visible = false;
+        let reserved = layer("reserved", "KENTOS_VIEWPORT_PLOT", &[]);
+        let mut layers = Layers::new(&[zero, reserved], &mut Report::default());
+        let yes = layers.viewport_frame_layer(true);
+        let no = layers.viewport_frame_layer(false);
+        assert_ne!(yes, "0");
+        assert_ne!(yes, "KENTOS_VIEWPORT_PLOT");
+        assert_ne!(yes, no);
+        let plotted = layers.list.iter().find(|l| l.name == yes).unwrap();
+        assert!(plotted.plot && plotted.visible && !plotted.frozen);
+        let unplotted = layers.list.iter().find(|l| l.name == no).unwrap();
+        assert!(!unplotted.plot && unplotted.visible && !unplotted.frozen);
     }
 }

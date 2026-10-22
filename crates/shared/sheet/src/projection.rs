@@ -26,10 +26,10 @@ pub struct Scale {
     denominator: f64,
 }
 impl Scale {
-    pub const MIN: f64 = 1e-6;
-    pub const MAX: f64 = 1e8;
+    pub const MIN: f64 = kentos_contracts::PaperScaleRatio::MIN_DENOMINATOR;
+    pub const MAX: f64 = kentos_contracts::PaperScaleRatio::MAX_DENOMINATOR;
     pub fn new(denominator: f64) -> Option<Self> {
-        (denominator.is_finite() && (Self::MIN..=Self::MAX).contains(&denominator))
+        kentos_contracts::PaperScaleRatio::valid_denominator(denominator)
             .then_some(Self { denominator })
     }
     /// Render inputs come from a validated book. Retains the renderer's finite lower fallback;

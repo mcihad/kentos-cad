@@ -14,3 +14,5 @@ mod wmm;
 mod viewports;
 
 mod projection;
+
+mod clips;

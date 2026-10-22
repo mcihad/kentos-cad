@@ -246,3 +246,6 @@ pub use variables::*;
 
 /// Version of this set of contracts, reported by the API's health endpoint.
 pub const CONTRACTS_VERSION: u32 = 1;
+
+mod paper_scale;
+pub use paper_scale::PaperScaleRatio;

@@ -346,6 +346,7 @@ pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Res
                 && !paper::standard_scales()
                     .iter()
                     .any(|s| f64::from(*s) == f.denominator())
+                && !crate::viewport::standard_ratios().iter().any(|r|r.denominator()==f.denominator())
             {
                 let fixes = nearest_standard(f.denominator().round().clamp(1.,u32::MAX as f64) as u32)
                     .map(|s| {

@@ -132,3 +132,14 @@ fn a_property_patch_cannot_bypass_the_view_lock_but_can_move_the_paper_frame() {
         locked
     );
 }
+
+#[test]
+fn cad_presets_do_not_trigger_the_gis_only_nonstandard_scale_warning(){
+    let data:Value=serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/viewports.json")).unwrap();
+    for ratio in standard_ratios(){
+        let mut book=SheetBook::default();book.sheets.push(serde_json::from_value(data["cases"][0]["sheet"].clone()).unwrap());
+        let done=ops::apply_all(&book,&[Op::SetViewport(SetViewport{id:"viewport".into(),ratio:Some(*ratio),..Default::default()})]).unwrap();
+        let findings=preflight::preflight(&done.book,"page",&RenderInputs::default()).unwrap();
+        assert!(!findings.iter().any(|f|f.code=="non_standard_scale"),"{ratio:?}");
+    }
+}

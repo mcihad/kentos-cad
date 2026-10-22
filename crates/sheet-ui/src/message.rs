@@ -275,7 +275,8 @@ pub enum Message {
     /// Görünüme sığdır (the scale and centre that show the drawing area's view), Görünümden al
     /// (the drawing area's centre).
     MapScaleFromDrawing,
-    MapConfigure(kentos_sheet::viewport::SetViewport),
+    MapConfigure(Box<kentos_sheet::viewport::SetViewport>),
+    ViewportClip(crate::viewport_clip::ClipMessage),
     MapFitView,
     MapFitDrawing,
     MapFitSelection,

@@ -16,8 +16,6 @@ pub(crate) fn map(
     dpi: u16,
     drawing: Option<&str>,
 ) -> Result<RasterMap, String> {
-    let center = m.view.center.ok_or("Haritanın merkezi yok.")?;
-    let extent = m.extent.ok_or("Haritanın kapsamı yok.")?;
     let raw = [
         f64::from(m.clip.width) * f64::from(dpi) / 25400.,
         f64::from(m.clip.height) * f64::from(dpi) / 25400.,
@@ -32,6 +30,32 @@ pub(crate) fn map(
     );
     if u64::from(w) * u64::from(h) > 32_100_000 {
         return Err("Harita resmi 32 milyon pikseli aşıyor; paftanın dpi değerini düşürün.".into());
+    }
+    let image = render_image(src, m, labels, [w, h], drawing)?;
+    Ok(RasterMap {
+        png: png(&image.rgba, image.width, image.height)?,
+    })
+}
+
+/// A straight RGBA map image, using the output style engine and bundled fonts.
+pub struct MapImage {
+    pub width: u32,
+    pub height: u32,
+    pub rgba: Vec<u8>,
+}
+/// Shared by a polygon viewport's desktop preview and its headless raster output.
+pub fn render_image(
+    src: &MapSource<'_>,
+    m: &MapPrim,
+    labels: &[MapLabel],
+    size: [u32; 2],
+    drawing: Option<&str>,
+) -> Result<MapImage, String> {
+    let center = m.view.center.ok_or("Haritanın merkezi yok.")?;
+    let extent = m.extent.ok_or("Haritanın kapsamı yok.")?;
+    let [w, h] = size;
+    if w == 0 || h == 0 || w > 8192 || h > 8192 || u64::from(w) * u64::from(h) > 32_100_000 {
+        return Err("Harita resmi en çok 8192 px/32 MP olabilir.".into());
     }
     let scale = m.view.scale.max(1e-6);
     let physical = kentos_sheet::projection::Scale::for_rendering(scale);
@@ -82,8 +106,14 @@ pub(crate) fn map(
             [p.red(), p.green(), p.blue(), p.alpha()]
         })
         .collect();
-    Ok(RasterMap {
-        png: png(&straight, w, h)?,
+    let mut rgba = straight;
+    if !m.clip_shape.mask_rgba(&mut rgba, w, h) {
+        return Err("Harita kırpma belleği geçersiz.".into());
+    }
+    Ok(MapImage {
+        width: w,
+        height: h,
+        rgba,
     })
 }
 

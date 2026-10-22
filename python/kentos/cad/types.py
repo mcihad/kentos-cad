@@ -3313,14 +3313,6 @@ PaperVarKindName = Literal["text", "number", "bool", "date"]
 """The names of :class:`PaperVarKind`, for a plain string."""
 
 
-class PaperViewportClip(_StrEnum):
-    FRAME = "frame"
-
-
-PaperViewportClipName = Literal["frame"]
-"""The names of :class:`PaperViewportClip`, for a plain string."""
-
-
 class ParameterKind(_StrEnum):
     """What a parameter's value is: a length in the drawing's unit, an angle in the project's angle unit, or a number."""
     LENGTH = "length"
@@ -5105,6 +5097,10 @@ XyzWithoutZName = Literal["zero", "skip"]
 PaperVarValue = Union[bool, float, str, None]
 
 
+#: Legacy frame spelling, accepted alongside tagged clip boundaries.
+PaperViewportClipName = Union[Literal["frame"]]
+
+
 #: A parameter's value: a number (a length, an angle in radians), a point of the definition's coordinates, a flip
 #: or a name (a visibility state, a lookup row).
 ParamValue = Union[bool, float, str, dict[str, float]]
@@ -6760,6 +6756,29 @@ class PaperTableSource(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> PaperTableSource:
         return _variant(_PAPER_TABLE_SOURCE, "PaperTableSource", "type", data).from_json(data)
+
+
+class PaperViewportClip(_Union):
+    """One of:
+
+    - :class:`FramePaperViewportClip` (``type: frame``)
+    - :class:`RectanglePaperViewportClip` (``type: rectangle``)
+    - :class:`PolygonPaperViewportClip` (``type: polygon``)
+    """
+    __slots__ = ()
+    FRAME: ClassVar[str] = "frame"  # Legacy v1 spelling; native readers still accept it.
+    TAG: ClassVar[str] = "type"
+
+    @property
+    def type(self) -> str:
+        """The name of the variant (``type`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperViewportClip:
+        if data == "frame":
+            return FramePaperViewportClip()
+        return _variant(_PAPER_VIEWPORT_CLIP, "PaperViewportClip", "type", data).from_json(data)
 
 
 class PaperViewportSource(_Union):
@@ -59968,7 +59987,7 @@ class ExpressionPaperGridLabelFormat(PaperGridLabelFormat):
 class MapPaperItemKind(PaperItemKind):
     """A map frame: in CAD the “Görünüm penceresi” (profiles name it).
     Attributes:
-        clip: Content is always clipped to its rectangular content frame. Polygon clips are CAD-SHEET-12.
+        clip: Boundary in content-frame coordinates, independent of camera scale.
         clip_to_atlas_feature: The host clips the content to the atlas object.
         crs: Another coordinate system for the map (EPSG code text); none: the project's.
         grids: Coordinate grids (karelaj).
@@ -59982,6 +60001,7 @@ class MapPaperItemKind(PaperItemKind):
     clip: PaperViewportClip | PaperViewportClipName | None | Unset = UNSET
     clip_to_atlas_feature: bool = False
     crs: str | None | Unset = UNSET
+    frame_plot: bool | None | Unset = UNSET
     grids: list[PaperMapGrid] = field(default_factory=list)
     label_band: int = 0
     layer_overrides: list[PaperLayerOverride] | Unset = UNSET
@@ -59995,10 +60015,12 @@ class MapPaperItemKind(PaperItemKind):
         out: dict[str, Any] = {"type": "map"}
         out["view"] = self.view.to_json()
         if self.clip is not UNSET:
-            out["clip"] = None if self.clip is None else _enum_out(self.clip)
+            out["clip"] = None if self.clip is None else (self.clip if isinstance(self.clip, str) else self.clip.to_json())
         out["clipToAtlasFeature"] = self.clip_to_atlas_feature
         if self.crs is not UNSET:
             out["crs"] = self.crs
+        if self.frame_plot is not UNSET:
+            out["framePlot"] = self.frame_plot
         out["grids"] = [e0.to_json() for e0 in self.grids]
         out["labelBand"] = self.label_band
         if self.layer_overrides is not UNSET:
@@ -60017,9 +60039,10 @@ class MapPaperItemKind(PaperItemKind):
     def from_json(cls, data: Mapping[str, Any]) -> MapPaperItemKind:
         return cls(
             view=PaperMapView.from_json(data["view"]),
-            clip=UNSET if "clip" not in data else None if data["clip"] is None else _enum_in(PaperViewportClip, data["clip"]),
+            clip=UNSET if "clip" not in data else None if data["clip"] is None else PaperViewportClip.from_json(data["clip"]),
             clip_to_atlas_feature=data["clipToAtlasFeature"] if "clipToAtlasFeature" in data else False,
             crs=data.get("crs", UNSET),
+            frame_plot=data.get("framePlot", UNSET),
             grids=[PaperMapGrid.from_json(e0) for e0 in data["grids"]] if "grids" in data else list(),
             label_band=data["labelBand"] if "labelBand" in data else 0,
             layer_overrides=[PaperLayerOverride.from_json(e0) for e0 in data["layerOverrides"]] if "layerOverrides" in data else UNSET,
@@ -61154,6 +61177,8 @@ class SetViewportPaperOp(PaperOp):
     id: str
     bounds: list[float] | None | Unset = UNSET
     center: PaperGroundPoint | None | Unset = UNSET
+    clip: PaperViewportClip | PaperViewportClipName | None | Unset = UNSET
+    frame_plot: bool | None | Unset = UNSET
     locked: bool | None | Unset = UNSET
     ratio: PaperScaleRatio | None | Unset = UNSET
     rotation: int | None | Unset = UNSET
@@ -61167,6 +61192,10 @@ class SetViewportPaperOp(PaperOp):
             out["bounds"] = None if self.bounds is None else [float(e0) for e0 in self.bounds]
         if self.center is not UNSET:
             out["center"] = None if self.center is None else self.center.to_json()
+        if self.clip is not UNSET:
+            out["clip"] = None if self.clip is None else (self.clip if isinstance(self.clip, str) else self.clip.to_json())
+        if self.frame_plot is not UNSET:
+            out["framePlot"] = self.frame_plot
         if self.locked is not UNSET:
             out["locked"] = self.locked
         if self.ratio is not UNSET:
@@ -61185,6 +61214,8 @@ class SetViewportPaperOp(PaperOp):
             id=data["id"],
             bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [float(e0) for e0 in data["bounds"]],
             center=UNSET if "center" not in data else None if data["center"] is None else PaperGroundPoint.from_json(data["center"]),
+            clip=UNSET if "clip" not in data else None if data["clip"] is None else PaperViewportClip.from_json(data["clip"]),
+            frame_plot=data.get("framePlot", UNSET),
             locked=data.get("locked", UNSET),
             ratio=UNSET if "ratio" not in data else None if data["ratio"] is None else PaperScaleRatio.from_json(data["ratio"]),
             rotation=data.get("rotation", UNSET),
@@ -62036,6 +62067,61 @@ class ContinuedPaperTableSource(PaperTableSource):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ContinuedPaperTableSource:
         return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class FramePaperViewportClip(PaperViewportClip):
+    TAG_VALUE: ClassVar[str] = "frame"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "frame"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FramePaperViewportClip:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class RectanglePaperViewportClip(PaperViewportClip):
+    """
+    Attributes:
+        bounds: Left, top, right, bottom in frame millionths. Unit: frame-millionths.
+    """
+    TAG_VALUE: ClassVar[str] = "rectangle"
+    bounds: list[int]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "rectangle"}
+        out["bounds"] = list(self.bounds)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RectanglePaperViewportClip:
+        return cls(
+            bounds=list(data["bounds"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PolygonPaperViewportClip(PaperViewportClip):
+    """
+    Attributes:
+        points: A simple ring, either winding; closure is implicit. Coordinates are frame millionths. Unit: frame-millionths.
+    """
+    TAG_VALUE: ClassVar[str] = "polygon"
+    points: list[list[int]]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "polygon"}
+        out["points"] = [list(e0) for e0 in self.points]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PolygonPaperViewportClip:
+        return cls(
+            points=[list(e0) for e0 in data["points"]],
+        )
 
 
 @dataclass(kw_only=True, slots=True)
@@ -65667,6 +65753,9 @@ _PAPER_SHAPE_KIND: dict[str, type[PaperShapeKind]] = {"rect": RectPaperShapeKind
 _PAPER_TABLE_SOURCE: dict[str, type[PaperTableSource]] = {"fixed": FixedPaperTableSource, "layer": LayerPaperTableSource, "continued": ContinuedPaperTableSource}
 
 
+_PAPER_VIEWPORT_CLIP: dict[str, type[PaperViewportClip]] = {"frame": FramePaperViewportClip, "rectangle": RectanglePaperViewportClip, "polygon": PolygonPaperViewportClip}
+
+
 _PAPER_VIEWPORT_SOURCE: dict[str, type[PaperViewportSource]] = {"drawing": DrawingPaperViewportSource, "viewSnapshot": ViewSnapshotPaperViewportSource}
 
 
@@ -66462,6 +66551,7 @@ __all__ = [
     "FormsValidated",
     "FoundSnap",
     "FrameInsertsClipOperation",
+    "FramePaperViewportClip",
     "FrameTableEdit",
     "FrameUcsTo",
     "FromFieldDomainsOp",
@@ -67208,6 +67298,7 @@ __all__ = [
     "PolygonEntity",
     "PolygonEntityGeometry",
     "PolygonPaperShapeKind",
+    "PolygonPaperViewportClip",
     "PolygonPlan",
     "PolygonSelectMode",
     "PolygonSelectModeName",
@@ -67377,6 +67468,7 @@ __all__ = [
     "RectangleCorners",
     "RectangleCreate",
     "RectangleFrame",
+    "RectanglePaperViewportClip",
     "RefreshTablesOperation",
     "RegisteredArea",
     "RegistryDatum",

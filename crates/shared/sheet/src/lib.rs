@@ -11,6 +11,7 @@
 pub mod atlas;
 pub mod bind;
 pub mod cad;
+pub mod clip;
 pub mod viewport;
 pub mod projection;
 pub mod cloud;

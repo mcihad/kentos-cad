@@ -409,6 +409,21 @@ pub fn to_svg(list: &DisplayList, options: &SvgOptions) -> String {
             },
             Prim::Map(m) => {
                 let r = &m.clip;
+                if !m.clip_shape.is_frame() {
+                    clip += 1;
+                    let points = m
+                        .clip_shape
+                        .paper_points(r)
+                        .iter()
+                        .map(|p| format!("{},{}", p[0], p[1]))
+                        .collect::<Vec<_>>()
+                        .join(" ");
+                    let _ = writeln!(
+                        out,
+                        r#"<clipPath id="m{clip}"><polygon points="{points}"{}/></clipPath><g clip-path="url(#m{clip})">"#,
+                        rotation(m.rotation, r)
+                    );
+                }
                 match options.maps.iter().find(|x| x.item == m.item) {
                     Some(img) => {
                         let _ = writeln!(
@@ -439,6 +454,9 @@ pub fn to_svg(list: &DisplayList, options: &SvgOptions) -> String {
                         );
                     }
                     None => {}
+                }
+                if !m.clip_shape.is_frame() {
+                    out.push_str("</g>\n");
                 }
             }
             Prim::PushClip(c) => {
