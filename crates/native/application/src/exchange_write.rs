@@ -48,6 +48,8 @@ pub fn put_nodes(
                     card: n.card.clone(),
                     compose: n.compose.clone(),
                     filter: None,
+                    // Where its objects came from stays with them (docs/adr/0583 §1).
+                    source_crs: n.source_crs.clone(),
                 };
                 model.add_layer(new, parent, false).map_err(|r| r.0)?;
                 counts.layers += 1;

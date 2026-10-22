@@ -3,7 +3,7 @@
   "version": 1,
   "id": "cad-io-dwg-export",
   "title": "DWG sürümü ve dışa aktarma penceresi",
-  "source": "docs/adr/0581",
+  "source": "docs/adr/0587",
   "covers": [
     "CAD-IO-05",
     "CAD-IO-07"

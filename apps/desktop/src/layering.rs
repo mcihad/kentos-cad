@@ -575,13 +575,21 @@ impl App {
                 if node.visible { "Gizle" } else { "Göster" },
                 Message::LayerVisible(id.clone()),
             )
-            .icon(if node.visible { Icon::EyeOff } else { Icon::Eye })
+            .icon(if node.visible {
+                Icon::EyeOff
+            } else {
+                Icon::Eye
+            })
             .shortcut("Boşluk")
             .item(
                 if node.locked { "Kilidi aç" } else { "Kilitle" },
                 Message::LayerLocked(id.clone()),
             )
-            .icon(if node.locked { Icon::Unlock } else { Icon::Lock })
+            .icon(if node.locked {
+                Icon::Unlock
+            } else {
+                Icon::Lock
+            })
             .item("Yalnızca bunu göster", event(Event::Isolate(id.clone())))
             .icon(icon("layerIsolate"))
             .separator();
@@ -591,17 +599,29 @@ impl App {
             .icon(icon("layersShowAll"))
             .separator()
             .item(
-                if node.frozen == Some(true) { "Çöz" } else { "Dondur" },
+                if node.frozen == Some(true) {
+                    "Çöz"
+                } else {
+                    "Dondur"
+                },
                 // The active layer is never frozen.
                 (node.frozen == Some(true) || !self.holds_active(node))
                     .then(|| Message::LayerFrozen(id.clone())),
             )
-            .icon(icon(if node.frozen == Some(true) { "sun" } else { "freeze" }))
+            .icon(icon(if node.frozen == Some(true) {
+                "sun"
+            } else {
+                "freeze"
+            }))
             .item("Bütün katmanları çöz", Message::Run("layer.thawAll"))
             .icon(icon("layersThawAll"))
             .separator()
             .item(
-                if node.plot == Some(false) { "Yazdır" } else { "Yazdırma" },
+                if node.plot == Some(false) {
+                    "Yazdır"
+                } else {
+                    "Yazdırma"
+                },
                 Message::LayerPlot(id.clone()),
             )
             .icon(Icon::Print);
@@ -647,7 +667,11 @@ impl App {
             .item("Nesnelerini seç", event(Event::SelectObjects(id.clone())))
             .icon(icon("select"))
             .item(
-                if is_layer { "Katmana yakınlaştır" } else { "Gruba yakınlaştır" },
+                if is_layer {
+                    "Katmana yakınlaştır"
+                } else {
+                    "Gruba yakınlaştır"
+                },
                 (self.objects_below(node) > 0).then(|| event(Event::ZoomTo(id.clone()))),
             )
             .icon(icon("zoomSelection"));
@@ -669,7 +693,10 @@ impl App {
                 .submenu("Görünüş", self.layer_look_menu(node))
                 .icon(icon("layerStyle"))
                 .submenu("Veri", self.layer_data_menu(node))
-                .icon(icon("layerFields"));
+                .icon(icon("layerFields"))
+                // Where its objects came from, and moving them (docs/adr/0583 §1–§2).
+                .submenu("Koordinat sistemi", self.layer_crs_menu(node))
+                .icon(icon("crs"));
         }
         // Kaynak ▸ on a bound layer (bound.rs, docs/adr/0503).
         if let Some(link) = self.bound_link(&id) {
@@ -677,7 +704,10 @@ impl App {
             let part = link.extent.is_some();
             let bound = |e: crate::bound::Event| Message::Bound(e);
             let mut source = Menu::new()
-                .item("Kaynağa yaz", bound(crate::bound::Event::Write(Some(id.clone()))))
+                .item(
+                    "Kaynağa yaz",
+                    bound(crate::bound::Event::Write(Some(id.clone()))),
+                )
                 .icon(icon("sourceWrite"))
                 .item(
                     "Kaynağa birlikte yaz",
@@ -693,7 +723,10 @@ impl App {
                     .icon(icon("sourceWrite"));
             }
             let source = source
-                .item("Kaynaktan oku", bound(crate::bound::Event::Read(Some(id.clone()))))
+                .item(
+                    "Kaynaktan oku",
+                    bound(crate::bound::Event::Read(Some(id.clone()))),
+                )
                 .icon(icon("sourceRead"))
                 .item(
                     "Kaynakla uzlaştır…",
@@ -707,11 +740,12 @@ impl App {
                     bound(crate::bound::Event::Relink(Some(id.clone()))),
                 )
                 .separator()
-                .item("Bağı çöz", bound(crate::bound::Event::Unlink(Some(id.clone()))))
+                .item(
+                    "Bağı çöz",
+                    bound(crate::bound::Event::Unlink(Some(id.clone()))),
+                )
                 .icon(icon("sourceUnlink"));
-            menu = menu
-                .submenu("Kaynak", source)
-                .icon(icon("sourceLinked"));
+            menu = menu.submenu("Kaynak", source).icon(icon("sourceLinked"));
         }
         // Kenet ▸ (layer_snap.rs, docs/adr/0163 §4).
         if let Some(doc) = &self.document {
@@ -726,7 +760,10 @@ impl App {
                 .submenu(
                     "Senaryo",
                     Menu::new()
-                        .item("Senaryoyu göster", time(crate::temporal::Event::Show(id.clone())))
+                        .item(
+                            "Senaryoyu göster",
+                            time(crate::temporal::Event::Show(id.clone())),
+                        )
                         .icon(icon("scenarioShow"))
                         .item("Mevcut durum", time(crate::temporal::Event::Base))
                         .icon(icon("scenarioBase"))
@@ -751,7 +788,11 @@ impl App {
             .icon(icon("edit"))
             .shortcut("F2")
             .item(
-                if is_layer { "Yanına yeni katman" } else { "İçine yeni katman" },
+                if is_layer {
+                    "Yanına yeni katman"
+                } else {
+                    "İçine yeni katman"
+                },
                 event(Event::AddBeside(id.clone())),
             )
             .icon(icon("layerAdd"));
@@ -760,7 +801,10 @@ impl App {
             menu = menu
                 .item("Kopyasını oluştur", event(Event::Duplicate(id.clone())))
                 .icon(icon("layerDuplicate"))
-                .item("Başka katmanlarla birleştir…", event(Event::MergeInto(id.clone())))
+                .item(
+                    "Başka katmanlarla birleştir…",
+                    event(Event::MergeInto(id.clone())),
+                )
                 .icon(icon("layerMerge"));
         }
         menu.separator()
@@ -823,7 +867,11 @@ impl App {
             .icon(icon("lineWeight"))
             .separator()
             .item(
-                if style.renderer.is_some() { "Katman stili… (özel)" } else { "Katman stili…" },
+                if style.renderer.is_some() {
+                    "Katman stili… (özel)"
+                } else {
+                    "Katman stili…"
+                },
                 Message::LayerStyle(crate::style::layer_style::Event::Open(Some(id.clone()))),
             )
             .icon(icon("layerStyle"))
@@ -839,12 +887,18 @@ impl App {
             .icon(icon("layerLabels"))
             .separator()
             // SLD (docs/adr/0516): the look out to QGIS, GeoServer, MapServer, and theirs in.
-            .item("Görünüşü SLD olarak kaydet…", event(Event::SldExport(id.clone())))
+            .item(
+                "Görünüşü SLD olarak kaydet…",
+                event(Event::SldExport(id.clone())),
+            )
             .icon(icon("sldExport"))
             .item("SLD'den görünüş al…", event(Event::SldImport(id.clone())))
             .icon(icon("sldImport"))
             // QML (docs/adr/0555): QGIS's own style file, out and in.
-            .item("Görünüşü QML olarak kaydet…", event(Event::QmlExport(id.clone())))
+            .item(
+                "Görünüşü QML olarak kaydet…",
+                event(Event::QmlExport(id.clone())),
+            )
             .icon(icon("qmlExport"))
             .item("QML'den görünüş al…", event(Event::QmlImport(id.clone())))
             .icon(icon("qmlImport"))
@@ -903,7 +957,11 @@ impl App {
             .separator()
             // Katman süzgeci (docs/adr/0211 §4): the window, the selection's objects, taken away.
             .item(
-                if node.filter.is_some() { "Süzgeç… (süzgeçli)" } else { "Süzgeç…" },
+                if node.filter.is_some() {
+                    "Süzgeç… (süzgeçli)"
+                } else {
+                    "Süzgeç…"
+                },
                 event(Event::Filter(id.clone())),
             )
             .icon(icon("layerFilter"))
@@ -923,7 +981,11 @@ impl App {
             .separator()
             // Zaman ayarları (docs/adr/0210 §10): its objects' start, end and key fields.
             .item(
-                if node.time.is_some() { "Zaman ayarları… (zamansal)" } else { "Zaman ayarları…" },
+                if node.time.is_some() {
+                    "Zaman ayarları… (zamansal)"
+                } else {
+                    "Zaman ayarları…"
+                },
                 Message::Time(crate::temporal::Event::OpenLayer(id.clone())),
             )
             .icon(icon("timeLayer"))
@@ -1541,8 +1603,19 @@ fn screens() {
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
             for name in [
-                "tek", "cok", "menu", "renk", "ad", "sil", "komutlar", "durumlar", "sld", "qml",
-                "maplibre", "maplibre-yaz", "menu-gorunus",
+                "tek",
+                "cok",
+                "menu",
+                "renk",
+                "ad",
+                "sil",
+                "komutlar",
+                "durumlar",
+                "sld",
+                "qml",
+                "maplibre",
+                "maplibre-yaz",
+                "menu-gorunus",
             ]
             .into_iter()
             .filter(|n| {

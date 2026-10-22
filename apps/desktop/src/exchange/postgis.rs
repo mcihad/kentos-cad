@@ -1,6 +1,7 @@
-//! PostGIS'e bağlan (docs/adr/0505, plan/gis.md CBS-04): a database's address (no password in it: PGPASSWORD or
-//! ~/.pgpass), its tables listed off the interface's thread (`cad.sources.describe`), the chosen ones bound to new
-//! layers with `cad.sources.edit`, a table in another system only with Projenin sistemine çevir ticked.
+//! PostGIS'e bağlan (docs/adr/0505, 0582, plan/gis.md CBS-04): a database's address (no password in it: PGPASSWORD
+//! or ~/.pgpass), its tables and views listed off the interface's thread (`cad.sources.describe`), the chosen ones and
+//! a query layer bound to new layers with `cad.sources.edit`, by the view's area when asked, a table in another system
+//! only with Projenin sistemine çevir ticked.
 
 use iced::widget::{Column, text_input};
 use iced::{Element, Task};
@@ -23,6 +24,10 @@ pub struct State {
     pub tables: Vec<SourceTable>,
     pub chosen: Vec<bool>,
     pub reproject: bool,
+    /// A query layer's SQL (docs/adr/0582 §3); empty: none.
+    pub query: String,
+    /// Only the rows in the view's area (docs/adr/0582 §1).
+    pub area: bool,
     pub listing: bool,
     pub status: Option<(bool, String)>,
 }
@@ -34,6 +39,8 @@ pub enum Event {
     Listed(Result<Vec<SourceTable>, String>),
     Toggle(usize),
     Reproject,
+    Query(String),
+    Area,
     Run,
 }
 
@@ -64,6 +71,16 @@ pub(crate) fn list_tables(address: String) -> Result<Vec<SourceTable>, String> {
         } => Ok(tables),
         CommandResult::Failed { error } | CommandResult::Conflict { error } => Err(error.message),
         _ => Err("tablolar okunamadı".into()),
+    }
+}
+
+/// How a bound source is said: a table's or a view's name, a query as “Sorgu katmanı”.
+fn shown_name(table: &str) -> String {
+    let first = table.split_whitespace().next().unwrap_or_default();
+    if first.eq_ignore_ascii_case("select") || first.eq_ignore_ascii_case("with") {
+        "Sorgu katmanı".to_owned()
+    } else {
+        table.to_owned()
     }
 }
 
@@ -104,7 +121,7 @@ impl App {
                         s.status = tables.is_empty().then(|| {
                             (
                                 true,
-                                "Veritabanında tam sayı anahtarlı tablo yok.".to_owned(),
+                                "Veritabanında tam sayı anahtarlı tablo ya da anahtarlı view yok; bir sorgu katmanı yazabilirsiniz.".to_owned(),
                             )
                         });
                         s.tables = tables;
@@ -122,6 +139,11 @@ impl App {
                 }
             }
             Event::Reproject => s.reproject = !s.reproject,
+            Event::Query(q) => {
+                s.query = q;
+                s.status = None;
+            }
+            Event::Area => s.area = !s.area,
             Event::Run => self.postgis_bind(),
         }
         Task::none()
@@ -133,22 +155,30 @@ impl App {
         };
         let address = s.address.trim().to_owned();
         let reproject = s.reproject;
-        let tables: Vec<String> = s
+        // The view's area, for what has geometry (a query: whatever it holds; docs/adr/0582 §1).
+        let area = s.area.then(|| {
+            let b = self.viewport.camera.visible_bounds();
+            [b.min_x, b.min_y, b.max_x, b.max_y]
+        });
+        let mut tables: Vec<(String, bool)> = s
             .tables
             .iter()
             .zip(&s.chosen)
             .filter(|(_, c)| **c)
-            .map(|(t, _)| t.name.clone())
+            .map(|(t, _)| (t.name.clone(), t.geometry.is_some()))
             .collect();
+        if !s.query.trim().is_empty() {
+            tables.push((s.query.trim().to_owned(), true));
+        }
         let Some(doc) = &mut self.document else {
             return;
         };
         let first = doc.model.next_slot();
         let (mut bound, mut objects, mut warnings) = (Vec::new(), 0u32, Vec::new());
-        for table in &tables {
+        for (table, geometry) in &tables {
             let input = SourcesEdit {
                 edit: SourcesEditOp::Link {
-                    extent: None,
+                    extent: area.filter(|_| *geometry),
                     path: address.clone(),
                     table: table.clone(),
                     layer: None,
@@ -165,7 +195,7 @@ impl App {
                     warnings: w,
                 } => {
                     objects += output.objects;
-                    bound.push(table.clone());
+                    bound.push(shown_name(table));
                     warnings.extend(w);
                 }
                 CommandResult::Failed { error }
@@ -178,8 +208,9 @@ impl App {
                                 error.message
                             } else {
                                 format!(
-                                    "{} bağlandı; “{table}” bağlanamadı: {}",
+                                    "{} bağlandı; “{}” bağlanamadı: {}",
                                     bound.join(", "),
+                                    shown_name(table),
                                     error.message
                                 )
                             },
@@ -201,7 +232,7 @@ impl App {
         self.announce(
             if warnings.is_empty() { Level::Success } else { Level::Warn },
             format!(
-                "{} PostGIS tablosu bağlı katman oldu, {objects} nesne. Değişiklikleri Kaynağa yaz ile veritabanına yazın.",
+                "{} PostGIS kaynağı bağlı katman oldu, {objects} nesne. Tabloların değişikliklerini Kaynağa yaz ile veritabanına yazın; view ve sorgu salt okunurdur.",
                 bound.len()
             ),
         );
@@ -240,7 +271,7 @@ impl App {
                     if t.capabilities.update {
                         ""
                     } else {
-                        ", salt okunur"
+                        ", salt okunur (view ya da yetkisiz)"
                     }
                 );
                 list = list.push(words::check(
@@ -250,6 +281,29 @@ impl App {
                 ));
             }
             body = body.push(words::field("Tablolar", list, None));
+        }
+        if !s.tables.is_empty() || !s.query.is_empty() {
+            let query = kentos_ui::widget::focus_ring(
+                text_input("SELECT fid, ad, geom FROM şema.tablo WHERE …", &s.query)
+                    .on_input(|t| event(Event::Query(t)))
+                    .padding([5, 8])
+                    .size(kentos_ui::theme::typography::body())
+                    .style(style::field::input),
+            );
+            body = body.push(words::field(
+                "Sorgu katmanı",
+                query,
+                Some("Tek bir SELECT; salt okunur bağlanır. Tam sayı bir anahtar sütunu (fid, id, gid ya da ogc_fid) gerekir; geometri ilk geometry sütunudur.".to_owned()),
+            ));
+            body = body.push(words::field(
+                "Alan",
+                words::check(
+                    s.area,
+                    "Yalnız görünen alanın satırları".to_owned(),
+                    Some(event(Event::Area)),
+                ),
+                Some("Milyon satırlı tabloda ilk harita bütün tabloyu indirmeden gelir: yalnız kutusu görünen alana değen satırlar alınır, yazma alanın dışına dokunmaz. Geometrisiz tablo bütün bağlanır.".to_owned()),
+            ));
         }
         let other = s
             .tables
@@ -278,7 +332,8 @@ impl App {
                 text.clone(),
             ));
         }
-        let chosen = s.chosen.iter().filter(|c| **c).count();
+        let chosen =
+            s.chosen.iter().filter(|c| **c).count() + usize::from(!s.query.trim().is_empty());
         let ready = chosen > 0 && (!other || s.reproject);
         overlay::blocking(
             Dialog::new("PostGIS'e bağlan")

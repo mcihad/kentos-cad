@@ -1,4 +1,4 @@
-//! DWG import delegates to the same unit/routing/undo/journal policy as DXF (ADR 0580).
+//! DWG import delegates to the same unit/routing/undo/journal policy as DXF (ADR 0586).
 use crate::{
     ExecutionContext,
     file_import::{self, CadFormat},

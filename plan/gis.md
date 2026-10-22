@@ -108,10 +108,10 @@ dönüşüm yoktur. Küçük dilimlerle devam etmek madde kapatmaz.
 
 **Sıradaki iş, bu sırayla:**
 
-1. **CBS-02, ortak sağlayıcı sözleşmesi:** genel `Source`/`Dataset` arayüzü; kaynağa itilen kutu, sütun ve süzgeç sorgusu; kararlı sayfa ve akış;
+1. **CBS-02, ortak sağlayıcı sözleşmesi** (bitti, 22 Ekim, ADR 0581)**:** genel `Source`/`Dataset` arayüzü; kaynağa itilen kutu, sütun ve süzgeç sorgusu; kararlı sayfa ve akış;
    sorgu planının açıklaması. Önce GeoPackage'la (`kentos-geopackage`), sonra PostGIS'le (`kentos-postgis`). Önce ADR'yi yazın, çünkü bu karar
    çizimi, keneti, seçimi, tabloyu ve analizleri etkiler.
-2. **CBS-04, PostGIS'e itilen sorgu:** sayfa sayfa ilk harita, view ve SQL katmanı, milyon satır ölçümü, QGIS'le eşzamanlı düzenleme.
+2. **CBS-04, PostGIS'e itilen sorgu** (bitti, 22 Ekim, ADR 0582)**:** sayfa sayfa ilk harita, view ve SQL katmanı, milyon satır ölçümü, QGIS'le eşzamanlı düzenleme.
 3. **CBS-07, her katmanın kendi sistemi:** çizimde anında dönüşüm, ters dönüşümlü tıklama ve kenet, WKT2 ve kullanım alanı.
 
 Bunlar bitince kalanları kapanabilir hâle gelenler: CBS-11, 12, 14, 15, 20, 23, 24, 29, 33, 36 ve 42. CBS-42'nin bütçeleri (görünür küme,
@@ -148,7 +148,10 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/03/36. Bir belediye çalışanı dosyanın katmanlarını veriyi içe aktarmadan görebilsin, doğru katmanı ekleyebilsin ve kapatıp açınca bağlantıyı korusun. Taşınan kaynak için yeniden konumlandırma sunulsun; erişilemeyen kaynak boş katman diye kaydedilmesin. İlk dilimde yerel kaynaklar yeterli; STAC ve kurumsal katalog CBS-10/31'de genişler.
 
-- [ ] **CBS-02 — Dış dataset'ler için ortak provider sözleşmesini uygula — P0**
+- [x] **CBS-02 — Dış dataset'ler için ortak provider sözleşmesini uygula — P0**
+
+  *Bitti (22 Ekim 2026; [ADR 0581](../docs/adr/0581-source-query.md)): ortak sorgu `cad.sources.query`: GeoPackage tablosu, PostGIS tablosu ve çizimin katmanı aynı sözleşmeyle (`GeoPackage::scan`, sağlayıcının `describe` ve `scan`'i, çizim uyarlayıcısı). Kutu, yer, sütunlar ve süzgecin kaynağın denetleyebildiği kısmı kaynağa gider; kural kapsayıcıdır, her kayıt projenin sisteminde ifadeyle yeniden sınanır. Anahtar sırasıyla kararlı sayfa ve imleç, kalıcı kimlikler, sayı ve `kentos.statistics/1` istatistikleri, sorgu planı (kutu dizin, geometri ya da yerel; okunan sütunlar; giden SQL ve tam olup olmadığı; yerelde yapılanlar). Parçası bağlı katmanda yüklenen kapsam `partial_scope` der; kaynak kapsamı bütün tabloyu tarar, İstatistik'in Kapsam'ı Kaynağın tümü'nü iş parçacığında Durdur'la sorar. 48 ortak durum GDAL'ın dosyasından KentOS kodu olmadan; itmenin özellik testi 400 rastgele koşulda; PostGIS aynı soruları aynı satırlarla cevaplar. Çizim, kenet ve seçimin bağlı katmanı görünüme göre kaynaktan sayfa sayfa okuması CBS-04'tedir.*
+
 
   *Kısmen (18 Ekim 2026; [ADR 0510](../docs/adr/0510-bound-layer-of-a-part.md)): GeoPackage tablosunun bir alanı çalışma kopyası olur (`cad.sources.edit`'in `extent`'i, `.kcad`'de bağla): yalnız kutusu alana değen satırlar okunur (mekânsal dizinle; dizinsiz tabloda geometrinin kutusuyla, eskiden sessizce bütün tablo dönüyordu), eşitleme alanın dışını silmez, dışarı taşınan nesne kendi satırına yazılır. 1 milyon parselde 400 × 300 m'lik alan 372 ms ve 24 MB. Kalan: alanı değiştirmek, görünüme göre kendiliğinden okuma, PostGIS'te alan, sürüm damgasının dosyanın tamamından ucuzlaması.*
 
@@ -170,7 +173,10 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/06/36; ilk sürümde vektör+tablo, sonra raster tile/ilişkili tablo profilleri. QGIS **4.2'de üretilen gerçek GeoPackage** açılıp düzenlenmeli; QGIS'te yeniden açıldığında kimlik, Türkçe alan/değer, null, delik, multipart ve desteklenen Z/M kaybolmamalı. Yazma ortasında iptal/çökme dosyayı yarım şemayla bırakmamalı; ağ paylaşımı çok yazarlı sunucu gibi sunulmamalı.
 
-- [ ] **CBS-04 — Kurumun mevcut PostGIS tablo/view'larına doğrudan bağlan — P1**
+- [x] **CBS-04 — Kurumun mevcut PostGIS tablo/view'larına doğrudan bağlan — P1**
+
+  *Bitti (22 Ekim 2026; [ADR 0582](../docs/adr/0582-postgis-area-views-and-row-conflicts.md)): PostGIS'te alan sınırı (bağlama ve `extent` işlemi; okuma `&&` ile dizinden, alanın sürümü alanın satırlarından): 1 milyon parselde ilk harita 51 ms. View ve SQL sorgu katmanı salt okunur bağlanır (anahtar `fid`, `id`, `gid` ya da `ogc_fid`; sorgu tek deyim, `READ ONLY` işlemde; `no_row_key`, `row_key_not_unique`). Yazma satır düzeyinde: kilit altında yalnız katmanın değiştirdiği satırlar tabana karşı denetlenir, başkasının değiştirdiği aynı satır `source_changed` ile reddedilir ve `uids` onu söyler, başka satırlardaki değişiklikler yazmayı engellemez (`source_others`). QGIS 4.2.3'ün PostgreSQL sağlayıcısıyla eşzamanlı düzenleme senaryosu geçici PostGIS'te geçti. Masaüstünde PostGIS'e bağlan view'ları, sorgu katmanını ve yalnız görünen alanı sunar. Kalan: tetikleyici ya da outbox ile bildirim (bugün yoklama), yazılabilir view, birden çok geometri sütunu.*
+
 
   *Kısmen (17 Ekim 2026; [ADR 0505](../docs/adr/0505-postgis-bound-layers.md)): PostGIS tablosu bağlı katman olarak açılır (`cad.sources.*`'ın adresle çalışması), TLS'li sqlx sağlayıcısı `kentos-postgis` ev sahiplerince kaydedilir; sürüm satırların SHA-256'sı (`xmin` değil), yazma kilit altında sürüm denetimiyle tek işlemde, kalıcı kimlikler `kentos_uids`'te; parola projeye yazılmaz; masaüstünde PostGIS'e bağlan. Geçici PostGIS'te ogr2ogr ve psycopg2'yle denetlendi. Kalan: sorguyu kaynağa itmek ve sayfa sayfa ilk harita, view ve SQL katmanı, tetikleyici/outbox izleme, milyon satır ölçümü, QGIS'le eşzamanlı düzenleme senaryosu.*
 
@@ -209,6 +215,8 @@ birer birer çalıştırın.
 - [ ] **CBS-07 — Katman CRS'sini koruyan genel on-the-fly provider dönüşümü ekle — P0**
 
   *Kısmen (17 Ekim 2026; [ADR 0504](../docs/adr/0504-source-crs-and-box-transform.md)): bağlı katmanda kaynak sistemi korunur (`reproject`: katman projenin, tablo kendi sisteminde; yazma tablonun sistemine geri çevirerek, gidip gelen koordinat aynı sayılır), sıklaştırılmış ve antimeridyeni bilen kutu dönüşümü `crs::transform_bounds` (PROJ'un `transform_bounds`'uyla). Kalan: her katmanın kendi sistemiyle çizimde anında dönüşüm, ters dönüşümlü tıklama ve kenet, WKT2 ve kullanım alanı, genel PROJ bağdaştırıcısı.*
+
+  *Kısmen (22 Ekim 2026; [ADR 0583](../docs/adr/0583-layer-source-crs-and-map-system.md)): katmanın kaynak sistemi kaydı (`sourceCrs`: EPSG kodu, ad, WKT2, eksen sırası, birim, kullanım alanı; `.kcad` şema 98), içe aktarmalar ve bağlı katmanlar yazar; `cad.layers.crs` (Sistem ata) ve `cad.layers.reproject` (Yeniden izdüşür) ayrı komutlar; projenin harita sistemi (`mapSrid`): çizim stil toplayıcısında sıklaştırılarak harita sistemine çevrilir, kamera ters dönüşümle imleci, tıklamayı, keneti ve seçimi projenin noktalarıyla verir; durum çubuğunda harita koordinatı. Kalan: harita sisteminde rasterler, nokta bulutları ve resimler; genel PROJ bağdaştırıcısı; harita sisteminde pafta.*
 
   **Mevcut:** Türkiye odaklı dönüşüm/ikinci CRS ve servis dönüşümleri var. Genel feature içe alma/servis verisi çoğunlukla proje sistemine kopyalanıyor [K05/K12]. Bir harita CRS'si ile her veri kaynağının CRS'si ayrı olmalı.
 
@@ -252,15 +260,19 @@ birer birer çalıştırın.
 
   *Kısmen (17 Ekim 2026; [ADR 0503](../docs/adr/0503-bound-layers.md)): bütün çizim araçları bağlı katmanda çalışır; yerel geri alma, kaynağa yazma (`cad.sources.sync` write, tek SQLite işlemi) ve kaynaktan yeniden okuma ayrı durumlar; başkasının değiştirdiği dosya ezilmez (`source_changed`), katmandaki yazılmamış iş sorulmadan atılmaz (`pending_changes`). Kalan: aynı kaynaktaki katmanların birlikte commit'i, nesne nesne üç yollu birleştirme (CBS-37), PostGIS işlemi.*
 
+  *Kısmen (22 Ekim 2026; [ADR 0584](../docs/adr/0584-commit-together-and-z-m-on-write.md)): aynı PostGIS veritabanındaki bağlı katmanlar `with`'le tek işlemde yazılır (tablolar adlarının sırasıyla kilitlenir, her biri tabanına karşı denetlenir, biri reddederse hiçbiri yazılmaz; `TableProvider::edit_many`); iki kaynağa birden tek işlem kurulmaz (`transaction_split`). Yazmadan önce Z ve M sütunun bayraklarına göre denetlenir: yasaklayana kotlu, isteyene kotsuz, hiçbirine kısmen kotlu nesne yazılmaz (`geometry_mismatch`). Masaüstünde Kaynağa birlikte yaz aynı kaynağın değişen katmanlarını da toplar. Kalan: PostGIS'te çoktan çoğa eşleme tablosu, bölmede soy bağı, sunucuda onaylanmış değişikliğin geri alınması.*
+
   **Mevcut:** CAD araçları, transaction/undo ve PR'nin yeni nesnede form açması güçlü bir temel. Harici kaynağa yazma, yerel undo ile veritabanında kalıcı commit'in farkını görünür kılmalı [K07/P25-A].
 
   **Yapılacak kalan iş:** Mevcut nokta/çizgi/alan, multipart/delik, reshape/split/merge, trace ve köşe düzenleme araçlarını yeni provider oturumuna bağla; aynı araçları yeniden geliştirme. Provider'ın hedef dataset, yazılabilirlik ve feature template bağlamını mevcut form/domain/alt türden kur. Taslak, yerel undo, kaynağa commit ve kaynaktan yeniden yükleme birbirinden ayrı durumlar olsun. Aynı transaction kaynağındaki katmanların değişikliklerini birlikte commit et; bağımsız veritabanları için atomiklik vaat etme. Z/M/eğri aktarımında destek dışı durumları yazmadan önce reddet.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/03/12/15/37. Parsel bölünürken yeni kimlikler, eski–yeni bağlantısı, alanların bölme politikası, ilişkiler ve form hesabı aynı işlemde sonuçlansın. Kilitli/yetkisiz komşu veya constraint hatası yarım veri bırakmasın. Tek undo yerel adımı eksiksiz geri alsın; sunucuda onaylanmış değişikliği geri alma yeni sürüm denetimli işlem olarak ele alınsın.
 
-- [ ] **CBS-12 — Dış sağlayıcıda görünüm dışı komşularla topolojik commit'i tamamla — P1**
+- [x] **CBS-12 — Dış sağlayıcıda görünüm dışı komşularla topolojik commit'i tamamla — P1**
 
   *Kısmen (19 Ekim 2026; [ADR 0531](../docs/adr/0531-neighbours-outside-the-area.md)): dosya kaynağında (GeoPackage) alan sınırlı parçanın yazması; ortak köşeleri değişen, haritaya yüklenmemiş komşular bbox sorgusuyla aynı dosya sürümünden okunur, mevcut `topology_edit` motoruyla izler, kaynağın sisteminde aynı SQLite işleminde yazılır; `strict` profilde geçersiz kalacak komşu hiçbir şeyin yazılmamasıdır, `loose`'da söylenerek bırakılır; dosya değiştiyse çakışma. Kalan: dış PostGIS kaynağı (sağlayıcının alan sınırı, CBS-02/04), yetki ve başka kullanıcının sürüm engeli, komşunun tam geçerlilik denetimi.*
+
+  *Yapıldı (22 Ekim 2026; [ADR 0585](../docs/adr/0585-neighbours-outside-the-area-in-a-database.md)): PostGIS parçasının komşuları değişen köşelerin kutusuyla sağlayıcıdan okunur, mevcut `topology_edit` ile izler, ADR 0584'ün tek işleminde yazılır; okunan komşu kilitten sonra satır satır yeniden denetlenir (arada değişen `source_changed`, yol `topology`); görünüp değiştirilemeyen satır (yetki ya da satır güvenliği) yazmadan önce `rows_denied`; komşunun geçerliliği Geçerliliği denetle'nin sorunlarıyla (yeni ortaya çıkan kendini kesme, sıfır alan, taşan delik), önceden geçersiz komşu engel değil; GeoPackage'ta da. 24 ortak durum GEOS'la, PostGIS'te iki komşulu, eşzamanlı `psql` oturumlu ve satır güvenlikli test. Kalan (kapsam dışı): SELECT politikasının gizlediği komşu söylenmiyor; yaylı komşu kenar düzleşir.*
 
   **Mevcut:** Ortak köşe/kenar düzenleme **zaten yapılmış**; MEVCUT-01 tamamlanmış kapsamdır. Native `topology_follow::around` ve `interaction::neighbours` görünen geometri deposundan komşuları bulur; köşe/kenar değişimleri aynı adımda yazılır. Kilitli komşu atlanıp bildirilir; bu mevcut davranış bir eksiklik diye yeniden açılmıyor. Açık iş, henüz olmayan dış GIS sağlayıcısında aynı işlemin kaynak sorgusu/transaction ile yürütülmesidir. [K07]
 

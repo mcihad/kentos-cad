@@ -9,6 +9,7 @@ use crate::layout::FrameUniform;
 use crate::precision::split;
 use crate::settings::RenderSettings;
 use crate::{Bounds, Vec2};
+use kentos_geometry_core::crs::map::MapProjection;
 
 /// Farthest zoom out: logical pixels per metre (about a whole country on screen).
 pub const MIN_SCALE: f64 = 1e-4;
@@ -19,11 +20,11 @@ pub const FIT_PADDING: f64 = 48.0;
 /// One CSS pixel at 96 dpi in metres: the screen scale 1:N the status bar shows.
 const METRES_PER_PX: f64 = 0.000_264_58;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct Camera {
-    /// The world point in the middle of the area.
+    /// The point in the middle of the area: the world's, or the map system's when there is one.
     pub center: Vec2,
-    /// Logical pixels per world unit.
+    /// Logical pixels per world unit (on a map of another system, at the point the map was taken up).
     pub scale: f64,
     /// The area's size in logical pixels.
     pub width: f64,
@@ -32,6 +33,29 @@ pub struct Camera {
     /// from the world's x (east), counter-clockwise, radians in [0, 2π); 0
     /// shows the north up. The world turns by minus it about the middle.
     pub twist: f64,
+    /// The map's system (docs/adr/0583 §3): the world (the project's system) is drawn moved into it. The centre and
+    /// the scale are the map's; `world_to_screen` and `screen_to_world` go through it, so what works with world
+    /// points (the pointer, snapping, picking, the overlays) keeps working with them.
+    pub map: Option<&'static MapProjection>,
+    /// World units a map unit is, where the map was taken up (1 without one): the screen's pixels per map unit are
+    /// `scale` × it, so a pixel stays about as many world units as it was (a degree's 111 km too).
+    pub map_ratio: f64,
+}
+
+impl PartialEq for Camera {
+    fn eq(&self, o: &Self) -> bool {
+        self.center == o.center
+            && self.scale == o.scale
+            && self.width == o.width
+            && self.height == o.height
+            && self.twist == o.twist
+            && self.map_ratio == o.map_ratio
+            && match (self.map, o.map) {
+                (None, None) => true,
+                (Some(a), Some(b)) => std::ptr::eq(a, b),
+                _ => false,
+            }
+    }
 }
 
 impl Default for Camera {
@@ -42,6 +66,8 @@ impl Default for Camera {
             width: 1.0,
             height: 1.0,
             twist: 0.0,
+            map: None,
+            map_ratio: 1.0,
         }
     }
 }
@@ -99,22 +125,49 @@ impl Camera {
         (u * c - v * s, u * s + v * c)
     }
 
+    /// Logical pixels per unit of the map's system (per world unit without one).
+    pub fn map_px(&self) -> f64 {
+        self.scale * self.map_ratio
+    }
+
+    /// A world point on the map: itself without a map system; no number where the map does not reach it.
+    pub fn to_map(&self, p: Vec2) -> Vec2 {
+        match self.map {
+            None => p,
+            Some(m) => m.forward(p).unwrap_or(Vec2::new(f64::NAN, f64::NAN)),
+        }
+    }
+
+    /// A map point in the world: itself without a map system; no number where the world does not reach it.
+    pub fn from_map(&self, p: Vec2) -> Vec2 {
+        match self.map {
+            None => p,
+            Some(m) => m.inverse(p).unwrap_or(Vec2::new(f64::NAN, f64::NAN)),
+        }
+    }
+
+    /// Screen position of a point of the map's system (the centre's).
+    pub fn map_to_screen(&self, p: Vec2) -> [f64; 2] {
+        let (u, v) = self.turned_in(p.x - self.center.x, p.y - self.center.y);
+        let px = self.map_px();
+        [u * px + self.width / 2.0, self.height / 2.0 - v * px]
+    }
+
+    /// The map's point under a screen position.
+    pub fn screen_to_map(&self, x: f64, y: f64) -> Vec2 {
+        let px = self.map_px();
+        let (dx, dy) = self.turned_out((x - self.width / 2.0) / px, -(y - self.height / 2.0) / px);
+        Vec2::new(self.center.x + dx, self.center.y + dy)
+    }
+
     /// Screen position (logical px from the top-left, y down) of a world point.
     pub fn world_to_screen(&self, p: Vec2) -> [f64; 2] {
-        let (u, v) = self.turned_in(p.x - self.center.x, p.y - self.center.y);
-        [
-            u * self.scale + self.width / 2.0,
-            self.height / 2.0 - v * self.scale,
-        ]
+        self.map_to_screen(self.to_map(p))
     }
 
     /// World point under a screen position.
     pub fn screen_to_world(&self, x: f64, y: f64) -> Vec2 {
-        let (dx, dy) = self.turned_out(
-            (x - self.width / 2.0) / self.scale,
-            -(y - self.height / 2.0) / self.scale,
-        );
-        Vec2::new(self.center.x + dx, self.center.y + dy)
+        self.from_map(self.screen_to_map(x, y))
     }
 
     /// A world direction (an angle from east, counter-clockwise) as the screen shows it: the
@@ -126,7 +179,8 @@ impl Camera {
     /// Moves the view with the pointer: the world under it follows it by (dx, dy) pixels.
     pub fn pan_by(&mut self, dx: f64, dy: f64) {
         if dx.is_finite() && dy.is_finite() {
-            let (wx, wy) = self.turned_out(dx / self.scale, -dy / self.scale);
+            let px = self.map_px();
+            let (wx, wy) = self.turned_out(dx / px, -dy / px);
             self.center = Vec2::new(self.center.x - wx, self.center.y - wy);
         }
     }
@@ -136,12 +190,10 @@ impl Camera {
         if !(factor.is_finite() && factor > 0.0 && x.is_finite() && y.is_finite()) {
             return;
         }
-        let anchor = self.screen_to_world(x, y);
+        let anchor = self.screen_to_map(x, y);
         self.scale = (self.scale * factor).clamp(MIN_SCALE, MAX_SCALE);
-        let (dx, dy) = self.turned_out(
-            (x - self.width / 2.0) / self.scale,
-            -(y - self.height / 2.0) / self.scale,
-        );
+        let px = self.map_px();
+        let (dx, dy) = self.turned_out((x - self.width / 2.0) / px, -(y - self.height / 2.0) / px);
         self.center = Vec2::new(anchor.x - dx, anchor.y - dy);
     }
 
@@ -165,6 +217,8 @@ impl Camera {
         if !finite || b.min_x > b.max_x || b.min_y > b.max_y {
             return;
         }
+        // A world box is fitted as the map shows it.
+        let b = &self.box_to_map(b);
         let (bw, bh) = (b.max_x - b.min_x, b.max_y - b.min_y);
         let (c, s) = self.twist_cos_sin();
         let (c, s) = (c.abs(), s.abs());
@@ -174,12 +228,59 @@ impl Camera {
             (bw * c + bh * s, bw * s + bh * c)
         };
         let center = Vec2::new((b.min_x + b.max_x) / 2.0, (b.min_y + b.max_y) / 2.0);
-        self.fit_size(center, w, h, padding);
+        self.fit_map(center, w, h, padding);
     }
 
-    /// Puts `center` in the middle of the area with `w` × `h` world units along the screen's
-    /// axes as large as fits within `padding` pixels of margin (a named view, docs/adr/0285 §1).
+    /// A world box as the map's: its edges sampled, their points moved (itself without a map system).
+    pub fn box_to_map(&self, b: &Bounds) -> Bounds {
+        let Some(m) = self.map else { return *b };
+        let mut out = Bounds {
+            min_x: f64::INFINITY,
+            min_y: f64::INFINITY,
+            max_x: f64::NEG_INFINITY,
+            max_y: f64::NEG_INFINITY,
+        };
+        for i in 0..=8 {
+            let t = f64::from(i) / 8.0;
+            let x = b.min_x + (b.max_x - b.min_x) * t;
+            let y = b.min_y + (b.max_y - b.min_y) * t;
+            for p in [
+                Vec2::new(x, b.min_y),
+                Vec2::new(x, b.max_y),
+                Vec2::new(b.min_x, y),
+                Vec2::new(b.max_x, y),
+            ] {
+                if let Some(q) = m.forward(p) {
+                    out.min_x = out.min_x.min(q.x);
+                    out.min_y = out.min_y.min(q.y);
+                    out.max_x = out.max_x.max(q.x);
+                    out.max_y = out.max_y.max(q.y);
+                }
+            }
+        }
+        out
+    }
+
+    /// Puts the world point `center` in the middle of the area with `w` × `h` world units along the screen's
+    /// axes as large as fits within `padding` pixels of margin (a named view, docs/adr/0285 §1); on a map of
+    /// another system the box round `center` is fitted as the map shows it.
     pub fn fit_size(&mut self, center: Vec2, w: f64, h: f64, padding: f64) {
+        if self.map.is_some() {
+            let b = self.box_to_map(&Bounds {
+                min_x: center.x - w / 2.0,
+                min_y: center.y - h / 2.0,
+                max_x: center.x + w / 2.0,
+                max_y: center.y + h / 2.0,
+            });
+            let c = Vec2::new((b.min_x + b.max_x) / 2.0, (b.min_y + b.max_y) / 2.0);
+            self.fit_map(c, b.max_x - b.min_x, b.max_y - b.min_y, padding);
+            return;
+        }
+        self.fit_map(center, w, h, padding);
+    }
+
+    /// [`Camera::fit_size`] with the centre and size already the map's.
+    fn fit_map(&mut self, center: Vec2, w: f64, h: f64, padding: f64) {
         if !(center.x.is_finite() && center.y.is_finite() && w.is_finite() && h.is_finite()) {
             return;
         }
@@ -188,7 +289,8 @@ impl Camera {
         // An area smaller than its margins keeps at least half of itself for the drawing.
         let sx = (self.width - padding * 2.0).max(self.width / 2.0) / w;
         let sy = (self.height - padding * 2.0).max(self.height / 2.0) / h;
-        let scale = sx.min(sy);
+        // The map's pixels per unit, as the world's.
+        let scale = sx.min(sy) / self.map_ratio;
         self.scale = if scale.is_finite() && scale > 0.0 {
             scale.clamp(MIN_SCALE, MAX_SCALE)
         } else {
@@ -199,9 +301,40 @@ impl Camera {
 
     /// Centres the view on a world point.
     pub fn center_on(&mut self, p: Vec2) {
+        let p = self.to_map(p);
         if p.x.is_finite() && p.y.is_finite() {
             self.center = p;
         }
+    }
+
+    /// The world point in the middle of the area.
+    pub fn world_center(&self) -> Vec2 {
+        self.from_map(self.center)
+    }
+
+    /// The same view drawn in another map system (none: the world's): the world point in the middle stays there,
+    /// a short world line there as long on the screen as it was.
+    pub fn with_map(&self, map: Option<&'static MapProjection>) -> Camera {
+        let middle = self.world_center();
+        let mut c = Camera {
+            map,
+            map_ratio: 1.0,
+            ..*self
+        };
+        if map.is_some() && middle.x.is_finite() && middle.y.is_finite() {
+            c.center_on(middle);
+            // A screen pixel's world length near the middle, on the map.
+            let step = 1.0 / self.scale.max(f64::MIN_POSITIVE);
+            let east = Vec2::new(middle.x + step, middle.y);
+            let (a, b) = (c.to_map(middle), c.to_map(east));
+            let after = (b.x - a.x).hypot(b.y - a.y);
+            if after > 0.0 && after.is_finite() {
+                c.map_ratio = step / after;
+            }
+        } else if middle.x.is_finite() && middle.y.is_finite() {
+            c.center_on(middle);
+        }
+        c
     }
 
     /// The world size the area shows along the screen's x and y.
@@ -209,8 +342,34 @@ impl Camera {
         (self.width / self.scale, self.height / self.scale)
     }
 
-    /// The world box the area shows: with a twist, the box round the turned area.
+    /// The world box the area shows: with a twist, the box round the turned area; on a map of another system,
+    /// the box round the area's edges moved back into the world.
     pub fn visible_bounds(&self) -> Bounds {
+        if let Some(m) = self.map {
+            let mut out = Bounds {
+                min_x: f64::INFINITY,
+                min_y: f64::INFINITY,
+                max_x: f64::NEG_INFINITY,
+                max_y: f64::NEG_INFINITY,
+            };
+            for i in 0..=8 {
+                let t = f64::from(i) / 8.0;
+                for (x, y) in [
+                    (self.width * t, 0.0),
+                    (self.width * t, self.height),
+                    (0.0, self.height * t),
+                    (self.width, self.height * t),
+                ] {
+                    if let Some(p) = m.inverse(self.screen_to_map(x, y)) {
+                        out.min_x = out.min_x.min(p.x);
+                        out.min_y = out.min_y.min(p.y);
+                        out.max_x = out.max_x.max(p.x);
+                        out.max_y = out.max_y.max(p.y);
+                    }
+                }
+            }
+            return out;
+        }
         if self.twist == 0.0 {
             let a = self.screen_to_world(0.0, self.height);
             let b = self.screen_to_world(self.width, 0.0);
@@ -262,6 +421,8 @@ impl Camera {
             width: (self.width * c + self.height * s).ceil(),
             height: (self.width * s + self.height * c).ceil(),
             twist: 0.0,
+            map: self.map,
+            map_ratio: self.map_ratio,
         }
     }
 
@@ -290,7 +451,7 @@ impl Camera {
             center_hi: [cx_hi, cy_hi],
             center_lo: [cx_lo, cy_lo],
             viewport: [size_px[0].max(1.0), size_px[1].max(1.0)],
-            px_per_unit: (self.scale * scale_factor) as f32,
+            px_per_unit: (self.map_px() * scale_factor) as f32,
             dpi: scale_factor as f32,
             background: settings.background.to_f32(),
             line_width: settings.line_width,
@@ -316,11 +477,90 @@ mod tests {
 
     fn turned(twist: f64) -> Camera {
         Camera {
+            map: None,
+            map_ratio: 1.0,
             center: Vec2::new(487_000.0, 4_420_000.0),
             scale: 8.0,
             width: 800.0,
             height: 600.0,
             twist,
+        }
+    }
+
+    /// A TUREF / TM36 drawing seen in Web Mercator or in WGS 84 degrees (docs/adr/0583 §3).
+    fn on_map(geographic: bool) -> Camera {
+        use kentos_geometry_core::crs::map::{MapProjection, interned};
+        use kentos_geometry_core::crs::{Datum, System};
+        let tm = System::Tm {
+            datum: Datum::Turef,
+            latitude_of_origin: None,
+            central_meridian: 36.0,
+            scale_factor: 1.0,
+            false_easting: 500_000.0,
+            false_northing: 0.0,
+        };
+        let map = if geographic {
+            System::Geographic {
+                datum: Datum::Wgs84,
+            }
+        } else {
+            System::Mercator {}
+        };
+        turned(0.0).with_map(Some(interned(MapProjection::new(tm, map, Vec::new()))))
+    }
+
+    #[test]
+    fn on_a_map_a_point_reads_back_and_the_middle_and_the_scale_stay() {
+        for geographic in [false, true] {
+            let before = turned(0.0);
+            let c = on_map(geographic);
+            // The world point in the middle stays there.
+            let [x, y] = c.world_to_screen(Vec2::new(487_000.0, 4_420_000.0));
+            assert!(
+                (x - 400.0).abs() < 1e-6 && (y - 300.0).abs() < 1e-6,
+                "{x} {y}"
+            );
+            // A short world line near the middle is as long on the screen as it was.
+            let [a, _] = c.world_to_screen(Vec2::new(487_000.0, 4_420_000.0));
+            let [b, _] = c.world_to_screen(Vec2::new(487_010.0, 4_420_000.0));
+            let [a0, _] = before.world_to_screen(Vec2::new(487_000.0, 4_420_000.0));
+            let [b0, _] = before.world_to_screen(Vec2::new(487_010.0, 4_420_000.0));
+            assert!(((b - a) - (b0 - a0)).abs() < 0.2, "{} {}", b - a, b0 - a0);
+            // A pointer anywhere on the area reads back to its pixel.
+            for (px, py) in [(10.0, 20.0), (400.0, 300.0), (799.0, 599.0)] {
+                let w = c.screen_to_world(px, py);
+                let [bx, by] = c.world_to_screen(w);
+                assert!(
+                    (bx - px).abs() < 1e-5 && (by - py).abs() < 1e-5,
+                    "{bx} {by}"
+                );
+            }
+            // The visible box, in the world, holds what the corners show.
+            let v = c.visible_bounds();
+            for (px, py) in [
+                (0.0, 0.0),
+                (800.0, 0.0),
+                (0.0, 600.0),
+                (800.0, 600.0),
+                (400.0, 0.0),
+            ] {
+                let w = c.screen_to_world(px, py);
+                assert!(
+                    w.x >= v.min_x - 1e-6 && w.x <= v.max_x + 1e-6,
+                    "{w:?} {v:?}"
+                );
+                assert!(
+                    w.y >= v.min_y - 1e-6 && w.y <= v.max_y + 1e-6,
+                    "{w:?} {v:?}"
+                );
+            }
+            // Back to the world's own: the same view.
+            let back = c.with_map(None);
+            assert!(
+                (back.center.x - 487_000.0).abs() < 1e-6
+                    && (back.center.y - 4_420_000.0).abs() < 1e-6
+            );
+            assert!((back.scale - 8.0).abs() < 0.01, "{}", back.scale);
         }
     }
 

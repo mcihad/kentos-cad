@@ -4,7 +4,8 @@ import type { SyncTopology } from "./SyncTopology";
 
 /**
  * Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,
- * `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:
+ * `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`, `rows_denied` (a
+ * database's rows the account may not change: privilege or row security, docs/adr/0585 §2); conflicts:
  * `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
  * the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
  * for stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep
@@ -32,11 +33,13 @@ layer: string, direction: SyncDirection,
  */
 discard?: boolean, 
 /**
- * Writing: more bound layers (by id) written in the same transaction.
+ * Writing: more bound layers (by id) written in the same transaction: of the same GeoPackage file or the same
+ * PostGIS database (docs/adr/0532 §1, 0584 §1); layers of two sources are `transaction_split`.
  */
 with?: Array<string>, 
 /**
- * Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners
- * and edges follow in the same transaction. Reading refuses it (`topology_on_read`).
+ * Writing a part's working copy (docs/adr/0531, 0585): the table's rows outside the area that share the changed
+ * corners and edges follow in the same transaction, a GeoPackage's or a PostGIS table's. Reading refuses it
+ * (`topology_on_read`).
  */
 topology?: SyncTopology, };

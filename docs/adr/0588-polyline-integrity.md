@@ -1,6 +1,6 @@
-# 0582 — Çoklu çizgi aktarımında bütünlük ve açık kayıp kabulü
+# 0588 — Çoklu çizgi aktarımında bütünlük ve açık kayıp kabulü
 
-22 Ekim 2026. [ADR 0581](0581-cad-io-layout-xref-and-loss-contract.md) devamı; CAD-IO-15 için **kısmi uygulama**. Madde bütünüyle kapatılmış değildir. Geometriyi aktaramamayı açıkça söylemek, o geometriyi yerel ve düzenlenebilir biçimde desteklemekle aynı kabul edilmez.
+22 Ekim 2026. [ADR 0587](0587-cad-io-layout-xref-and-loss-contract.md) devamı; CAD-IO-15 için **kısmi uygulama**. Madde bütünüyle kapatılmış değildir. Geometriyi aktaramamayı açıkça söylemek, o geometriyi yerel ve düzenlenebilir biçimde desteklemekle aynı kabul edilmez.
 
 ## Düzeltilen gerçek kayıplar
 

@@ -7,7 +7,7 @@ Son kullanıcıya ayrı OpenCADStudio kurulumu gerekmez.
 Byte dizileri ↔ KentOS sözleşmeleri sınırı, birim/kayıp raporu ve yeniden okuma
 denetimi burada; dosya yolları, atomik yazma ve belge/undo ev sahibindedir.
 Kapsam, sürüm yükseltme ve açık üretim kabulü sınırları:
-[ADR 0580](../../../docs/adr/0580-dwg-opencadcodec-git.md).
+[ADR 0586](../../../docs/adr/0586-dwg-opencadcodec-git.md).
 
 `cargo test -p kentos-dwg` adaptör örneklerini sınar.
 `cargo run -p kentos-dwg --example corpus` codec ile binary örnekleri yeniden üretir;

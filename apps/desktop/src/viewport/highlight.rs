@@ -88,6 +88,8 @@ impl Viewport {
         let build = |ids: &mut dyn Iterator<Item = Slot>, style: Highlight| {
             let mut pieces = Vec::new();
             let objects = objects_of(doc, spatial, ids, &mut pieces);
+            let moved = on_map(&objects, self.camera.map);
+            let objects = moved.as_ref().map_or(objects, |m| m.iter().collect());
             Arc::new(scene::build_highlight(
                 objects,
                 &style,
@@ -117,6 +119,8 @@ impl Viewport {
                         &mut selection.ids().iter().copied(),
                         &mut pieces,
                     );
+                    let moved = on_map(&objects, self.camera.map);
+                    let objects = moved.as_ref().map_or(objects, |m| m.iter().collect());
                     let threads = std::thread::available_parallelism()
                         .map_or(1, |n| n.get())
                         .clamp(1, 8);
@@ -162,6 +166,26 @@ impl Viewport {
         };
         (selected, hovered)
     }
+}
+
+/// The objects moved into the map's system (docs/adr/0583 §3), their vertices; none without a map. An object whose
+/// curve does not move vertex by vertex, or that the map does not reach, is not highlighted there.
+fn on_map(
+    objects: &[&Entity],
+    map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
+) -> Option<Vec<Entity>> {
+    let m = map?;
+    Some(
+        objects
+            .iter()
+            .filter_map(|e| {
+                let mut e = (*e).clone();
+                kentos_formats::reproject::move_entity(&mut e, &m.project, &m.map, &m.choices)
+                    .ok()
+                    .map(|()| e)
+            })
+            .collect(),
+    )
 }
 
 /// The objects to highlight, a block's insert by its pieces (docs/adr/0144),

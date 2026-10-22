@@ -124,6 +124,12 @@ pub(crate) enum Op {
         before: Box<LayerInfo>,
         after: Box<LayerInfo>,
     },
+    /// A layer's source system record (docs/adr/0583 §1), before and after.
+    LayerSourceCrs {
+        layer: String,
+        before: Option<Box<kentos_contracts::LayerSourceCrs>>,
+        after: Option<Box<kentos_contracts::LayerSourceCrs>>,
+    },
     /// A layer's composition (docs/adr/0226 §3, §4), before and after.
     LayerCompose {
         layer: String,
@@ -303,6 +309,15 @@ impl Op {
                 before,
                 after,
             } => Op::LayerInfo {
+                layer: layer.clone(),
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::LayerSourceCrs {
+                layer,
+                before,
+                after,
+            } => Op::LayerSourceCrs {
                 layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
@@ -917,6 +932,7 @@ impl Document {
                 | Op::LayerFilter { .. }
                 | Op::LayerInfo { .. }
                 | Op::LayerCompose { .. }
+                | Op::LayerSourceCrs { .. }
                 | Op::LayerTableStyles { .. }
                 | Op::LayerSubtypes { .. }
                 | Op::LayerContingents { .. }
@@ -1073,6 +1089,10 @@ impl Document {
             }
             Op::LayerInfo { layer, after, .. } => {
                 self.layers.replace_info(layer, after);
+                return;
+            }
+            Op::LayerSourceCrs { layer, after, .. } => {
+                self.layers.replace_source_crs(layer, after.as_deref());
                 return;
             }
             Op::LayerCompose { layer, after, .. } => {

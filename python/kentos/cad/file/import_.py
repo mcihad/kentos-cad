@@ -366,7 +366,7 @@ csv = _FileImportCsv()
 class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
     """``file.import.dwg`` v1. DWG içe aktar: path'teki DWG dosyasını açık çizime alır,
     masaüstünün DWG içe aktar penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile
-    (ADR 0580), ağ veya uzak dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde
+    (ADR 0586), ağ veya uzak dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde
     aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın
     görünüşüyle yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer
     (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var
@@ -414,7 +414,7 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         expected: Expected | None = None,
     ) -> DxfImported:
         """DWG içe aktar: path'teki DWG dosyasını açık çizime alır, masaüstünün DWG içe aktar
-        penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile (ADR 0580), ağ veya uzak
+        penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile (ADR 0586), ağ veya uzak
         dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük
         küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana
         gider; yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş

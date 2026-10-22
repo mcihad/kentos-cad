@@ -452,6 +452,10 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub compose: Option<crate::layer_compose::LayerCompose>,
+    /// The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group.
+    #[serde(rename = "sourceCrs", default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional, rename = "sourceCrs"))]
+    pub source_crs: Option<crate::layer_crs::LayerSourceCrs>,
     /// Yazdır: absent, it is printed; `false`, it is drawn on screen but not
     /// on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;
     /// docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.

@@ -87,6 +87,11 @@ drawingUnit?: DrawingUnit,
  */
 secondSrid?: number, 
 /**
+ * The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:
+ * the project's own. Changing it changes no coordinate.
+ */
+mapSrid?: number, 
+/**
  * The project's own coordinate system when it is a definition
  * (docs/adr/0168 §1); `srid` is then 0.
  */

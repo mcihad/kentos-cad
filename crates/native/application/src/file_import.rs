@@ -230,6 +230,7 @@ fn plan_of(
         &input.skip_layers,
     )?; }
     Ok(ImportPlan {
+        source_srid: None,
         label: format.step_name(file),
         layers,
         group: group_of(routing.group, file),

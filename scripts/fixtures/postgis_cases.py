@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """A bound layer on PostGIS, end to end against a throwaway database (docs/adr/0505, plan/gis.md CBS-04).
 
-    /usr/bin/python3 scripts/fixtures/postgis_cases.py [--screens]
+    /usr/bin/python3 scripts/fixtures/postgis_cases.py [--screens] [--timing]
 
 1. Starts postgis/postgis:18-3.6 in docker on a free port (never the developer's database on 5432) and loads QGIS's
    GeoPackage (fixtures/geopackage/v1/qgis.gpkg) and the WGS 84 one into the schema `kadastro` with GDAL's ogr2ogr,
@@ -110,6 +110,21 @@ def check(c, seen, before):
         uid = [r[0] for r in cur.fetchall()]
         if uid != [seen["drawn"]]:
             problems.append(f"üçgenin kalıcı kimliği {uid} ≠ {seen['drawn']}")
+    # Written together, then refused together (docs/adr/0584 §1); the Z column kept its elevations (§2).
+    cur.execute("SELECT (SELECT ad FROM boyut.duz), (SELECT ad FROM boyut.cizgi), "
+                "(SELECT ST_ZMax(geom) FROM boyut.kotlu)")
+    together = cur.fetchone()
+    if together != ("birlikte", "baskasi", 101.0):
+        problems.append(f"birlikte yazılan tablolar {together} ≠ ('birlikte', 'baskasi', 101.0)")
+    # The neighbours (docs/adr/0585): B and C followed A's corners in the parcels; row security kept B of the copy.
+    cur.execute("SELECT ad, ST_AsText(geom) FROM komsu.parsel ORDER BY fid")
+    parcels = dict(cur.fetchall())
+    if "487011 4420004" not in parcels.get("B", "") or "487010 4420007" not in parcels.get("C2", ""):
+        problems.append(f"komşular izlemedi: {parcels}")
+    cur.execute("SELECT ad, ST_AsText(geom) FROM komsu.kisitli ORDER BY fid")
+    narrow = dict(cur.fetchall())
+    if "487011 4420004" not in narrow.get("A", "") or "487010 4420004" not in narrow.get("B", ""):
+        problems.append(f"satır güvenliğinin tablosu: {narrow}")
     cur.execute("SELECT data_type FROM information_schema.columns WHERE table_schema = 'kadastro' "
                 "AND table_name = 'parsel' AND column_name = 'durum'")
     if [r[0] for r in cur.fetchall()] != ["text"]:
@@ -127,6 +142,46 @@ def main():
         c = wait(port)
         c.cursor().execute("CREATE SCHEMA kadastro")
         load(port)
+        # The query cases' file (docs/adr/0581): its tables in the schema sorgu; the one text in nokta's number
+        # column cannot be a number in PostgreSQL and is made NULL (the shared questions leave it out).
+        c.cursor().execute("CREATE SCHEMA sorgu")
+        pg = f"PG:host=127.0.0.1 port={port} user=postgres password={PASSWORD} dbname=postgres"
+        for table in ("nokta", "bina", "kayit"):
+            gdal.VectorTranslate(pg, str(ROOT / "fixtures/sources/v1/sorgu.gpkg"),
+                                 options=gdal.VectorTranslateOptions(
+                                     layers=[table],
+                                     layerCreationOptions=["SCHEMA=sorgu", "FID=fid", "GEOMETRY_NAME=geom"],
+                                     preserveFID=True))
+        c.cursor().execute("UPDATE sorgu.nokta SET kot = NULL WHERE fid = 60")
+        # A view keyed by fid and one without a key (docs/adr/0582 §3).
+        c.cursor().execute("CREATE VIEW sorgu.nokta_v AS SELECT fid, ad, tur, geom FROM sorgu.nokta WHERE fid <= 50")
+        c.cursor().execute("CREATE VIEW sorgu.anahtarsiz AS SELECT ad, geom FROM sorgu.nokta")
+        # The tables written together and the Z and M columns (docs/adr/0584).
+        c.cursor().execute("CREATE SCHEMA boyut")
+        for table in ("duz", "cizgi", "kotlu"):
+            gdal.VectorTranslate(pg, str(ROOT / "fixtures/geopackage/v1/boyut.gpkg"),
+                                 options=gdal.VectorTranslateOptions(
+                                     layers=[table],
+                                     layerCreationOptions=["SCHEMA=boyut", "FID=fid", "GEOMETRY_NAME=geom"],
+                                     preserveFID=True))
+        # The neighbours outside a part's area (docs/adr/0585), and a copy whose row security lets the account
+        # kisitli change every row but B.
+        cur = c.cursor()
+        cur.execute("CREATE SCHEMA komsu")
+        gdal.VectorTranslate(pg, str(ROOT / "fixtures/geopackage/v1/komsu-gecerlilik.gpkg"),
+                             options=gdal.VectorTranslateOptions(
+                                 layers=["parsel"],
+                                 layerCreationOptions=["SCHEMA=komsu", "FID=fid", "GEOMETRY_NAME=geom"],
+                                 preserveFID=True))
+        cur.execute("CREATE TABLE komsu.kisitli AS SELECT * FROM komsu.parsel")
+        cur.execute("ALTER TABLE komsu.kisitli ADD PRIMARY KEY (fid)")
+        cur.execute("CREATE INDEX ON komsu.kisitli USING gist (geom)")
+        cur.execute(f"CREATE ROLE kisitli LOGIN PASSWORD '{PASSWORD}'")
+        cur.execute("GRANT USAGE ON SCHEMA komsu TO kisitli")
+        cur.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON komsu.kisitli TO kisitli")
+        cur.execute("ALTER TABLE komsu.kisitli ENABLE ROW LEVEL SECURITY")
+        cur.execute("CREATE POLICY gor ON komsu.kisitli FOR SELECT USING (true)")
+        cur.execute("CREATE POLICY degistir ON komsu.kisitli FOR UPDATE USING (ad <> 'B')")
         before = catalogue(c)
         out = Path(tempfile.mkstemp(suffix=".json")[1])
         env = dict(os.environ, KENTOS_PG_URL=f"postgresql://postgres@127.0.0.1:{port}/postgres",
@@ -141,6 +196,30 @@ def main():
                                "--", "--ignored"], cwd=ROOT, env=env)
         if desk.returncode != 0:
             print("masaüstünün PostGIS penceresi düştü", file=sys.stderr)
+            return 1
+        if "--timing" in sys.argv:
+            # A million parcels for docs/adr/0582 §5, made by the database itself.
+            cur = c.cursor()
+            cur.execute("CREATE SCHEMA zaman")
+            cur.execute("CREATE TABLE zaman.parsel (fid bigint PRIMARY KEY, ada integer, parsel integer, ad text, "
+                        "geom geometry(Polygon, 5256))")
+            cur.execute("INSERT INTO zaman.parsel SELECT g, g / 1000 + 1, g % 1000 + 1, 'Parsel ' || g, "
+                        "ST_MakeEnvelope(500000 + (g % 1000) * 20, 4400000 + (g / 1000) * 20, "
+                        "500020 + (g % 1000) * 20, 4400020 + (g / 1000) * 20, 5256) "
+                        "FROM generate_series(0, 999999) AS g")
+            cur.execute("CREATE INDEX ON zaman.parsel USING gist (geom)")
+            cur.execute("ANALYZE zaman.parsel")
+            timing = subprocess.run(["cargo", "test", "--release", "-q", "-p", "kentos-postgis", "--test", "all",
+                                     "postgis_timing", "--", "--ignored", "--nocapture"],
+                                    cwd=ROOT, env=dict(env, KENTOS_PG_TIMING="1"))
+            if timing.returncode != 0:
+                print("PostGIS ölçümü düştü", file=sys.stderr)
+                return 1
+        # KentOS and QGIS 4.2 on the same table (docs/adr/0582 §2), with the Python SDK's interpreter.
+        qgis = subprocess.run([str(ROOT / ".run/py/bin/python"), str(ROOT / "scripts/fixtures/postgis_qgis_cases.py")],
+                              cwd=ROOT, env=dict(env, KENTOS_PG_PORT=str(port)))
+        if qgis.returncode != 0:
+            print("QGIS ile eşzamanlı düzenleme düştü", file=sys.stderr)
             return 1
         if "--screens" in sys.argv:
             subprocess.run(["cargo", "test", "-q", "-p", "kentos-desktop", "exchange::postgis_tests::screens", "--",

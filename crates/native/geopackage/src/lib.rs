@@ -252,6 +252,20 @@ pub struct Query {
     pub limit: Option<usize>,
 }
 
+/// A table read a part at a time (`GeoPackage::scan`, docs/adr/0581 §2): rows whose box meets `bbox`, of which
+/// `filter`'s SQL condition holds (its `?` bound to its values, its columns named `t."name"`), after `after` in fid
+/// order; their values are `columns`' (indices into the layer's columns; none: all), their geometry read when
+/// `geometry`. At most `chunk` rows a part.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Scan<'a> {
+    pub bbox: Option<[f64; 4]>,
+    pub columns: Option<&'a [usize]>,
+    pub geometry: bool,
+    pub filter: Option<(&'a str, &'a [Value])>,
+    pub after: Option<i64>,
+    pub chunk: usize,
+}
+
 /// A table to write.
 #[derive(Clone, Debug, PartialEq)]
 pub struct TableDef {
@@ -642,6 +656,124 @@ impl GeoPackage {
                 .collect());
         }
         Ok(rows)
+    }
+
+    /// The rows `s` asks for, handed to `f` a part at a time in fid order (docs/adr/0581 §2): each part one query of
+    /// at most `s.chunk` rows after the last fid read, so memory stays with the part. A box is as in [`rows`]: the
+    /// spatial index's, or each geometry's own box when the table has none. `f` returns false to stop. The rows'
+    /// values are the columns `s.columns` names, in that order. Returns how many rows the file handed over (before the
+    /// box of a table without an index).
+    ///
+    /// [`rows`]: GeoPackage::rows
+    pub fn scan(
+        &self,
+        layer: &Layer,
+        s: &Scan<'_>,
+        f: &mut dyn FnMut(Vec<Row>) -> bool,
+    ) -> Result<u64> {
+        let t = quote(&layer.name);
+        let fid = quote(&layer.fid);
+        let all: Vec<usize> = (0..layer.columns.len()).collect();
+        let columns = s.columns.unwrap_or(&all);
+        if let Some(&i) = columns.iter().find(|&&i| i >= layer.columns.len()) {
+            return Err(Error(format!("{i}. sütun tabloda yok")));
+        }
+        let geom = layer.geometry.as_ref().map(|g| quote(&g.name));
+        let indexed_box = s.bbox.is_some() && layer.indexed && layer.geometry.is_some();
+        // Without an index the box needs each geometry, read or not.
+        let read_geometry = s.geometry || (s.bbox.is_some() && !indexed_box);
+        let mut cols = vec![format!("t.{fid}")];
+        cols.push(match (&geom, read_geometry) {
+            (Some(g), true) => format!("t.{g}"),
+            _ => "NULL".into(),
+        });
+        cols.extend(
+            columns
+                .iter()
+                .map(|&i| format!("t.{}", quote(&layer.columns[i].name))),
+        );
+        let mut sql = format!("SELECT {} FROM {t} AS t", cols.join(", "));
+        let mut wh = Vec::new();
+        let mut args: Vec<Value> = Vec::new();
+        if let (true, Some(b), Some(g)) = (indexed_box, s.bbox, &layer.geometry) {
+            sql.push_str(&format!(
+                " JOIN {} AS r ON r.id = t.{fid}",
+                quote(&format!("rtree_{}_{}", layer.name, g.name))
+            ));
+            wh.push("r.maxx >= ? AND r.minx <= ? AND r.maxy >= ? AND r.miny <= ?".to_owned());
+            args.extend([
+                Value::Real(b[0]),
+                Value::Real(b[2]),
+                Value::Real(b[1]),
+                Value::Real(b[3]),
+            ]);
+        }
+        if let Some((cond, values)) = s.filter
+            && !cond.is_empty()
+        {
+            wh.push(format!("({cond})"));
+            args.extend(values.iter().cloned());
+        }
+        wh.push(format!("t.{fid} > ?"));
+        sql.push_str(" WHERE ");
+        sql.push_str(&wh.join(" AND "));
+        sql.push_str(&format!(" ORDER BY t.{fid} LIMIT {}", s.chunk.max(1)));
+        let mut st = self.conn.prepare(&sql)?;
+        let n = columns.len();
+        let mut after = s.after.unwrap_or(i64::MIN);
+        let mut handed = 0u64;
+        loop {
+            let mut bound = args.clone();
+            bound.push(Value::Integer(after));
+            let rows = st
+                .query_map(rusqlite::params_from_iter(bound.iter()), |r| {
+                    let geometry = match r.get_ref(1)? {
+                        ValueRef::Null => None,
+                        ValueRef::Blob(b) => Some(read_blob(b).map(|g| g.geometry)),
+                        _ => Some(Err(BlobError(
+                            "geometri sütununda geometri olmayan değer".into(),
+                        ))),
+                    };
+                    let mut values = Vec::with_capacity(n);
+                    for i in 0..n {
+                        values.push(Value::of(r.get_ref(2 + i)?));
+                    }
+                    Ok(Row {
+                        fid: r.get(0)?,
+                        geometry,
+                        values,
+                    })
+                })?
+                .collect::<rusqlite::Result<Vec<Row>>>()?;
+            let Some(last) = rows.last().map(|r| r.fid) else {
+                return Ok(handed);
+            };
+            let full = rows.len() >= s.chunk.max(1);
+            after = last;
+            handed += rows.len() as u64;
+            let mut rows = rows;
+            if let Some(b) = s.bbox
+                && !indexed_box
+            {
+                rows.retain(|r| match &r.geometry {
+                    Some(Ok(g)) => g.bounds().is_some_and(|g| {
+                        g[2] >= b[0] && g[0] <= b[2] && g[3] >= b[1] && g[1] <= b[3]
+                    }),
+                    _ => false,
+                });
+            }
+            if !s.geometry {
+                for r in &mut rows {
+                    r.geometry = None;
+                }
+            }
+            if !rows.is_empty() && !f(rows) {
+                return Ok(handed);
+            }
+            if !full {
+                return Ok(handed);
+            }
+        }
     }
 
     /// KentOS's lasting ids of a table's rows, by fid (the `kentos_uids` extension; none when the file lacks it).

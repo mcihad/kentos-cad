@@ -1,4 +1,4 @@
-//! DWG through OpenCADStudio's pinned OpenCADCodec (ADR 0580).
+//! DWG through OpenCADStudio's pinned OpenCADCodec (ADR 0586).
 //!
 //! Only bytes and KentOS contracts cross this boundary. A loss-reporting,
 //! in-memory DXF bridge reuses the unit/block/style rules of the existing

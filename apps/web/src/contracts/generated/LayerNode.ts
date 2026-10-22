@@ -9,6 +9,7 @@ import type { LayerFilter } from "./LayerFilter";
 import type { LayerNodeType } from "./LayerNodeType";
 import type { LayerRule } from "./LayerRule";
 import type { LayerSnap } from "./LayerSnap";
+import type { LayerSourceCrs } from "./LayerSourceCrs";
 import type { LayerStyle } from "./LayerStyle";
 import type { LayerSubtypes } from "./LayerSubtypes";
 import type { LayerTime } from "./LayerTime";
@@ -77,6 +78,10 @@ card?: InfoCard,
  * absent, opaque and normal. Only a layer has it, never a group.
  */
 compose?: LayerCompose, 
+/**
+ * The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group.
+ */
+sourceCrs?: LayerSourceCrs, 
 /**
  * Yazdır: absent, it is printed; `false`, it is drawn on screen but not
  * on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;

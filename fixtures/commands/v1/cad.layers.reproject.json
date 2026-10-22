@@ -1,0 +1,1388 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.layers.reproject",
+ "commandVersion": 1,
+ "title": "Yeniden izdüşür: katmanın nesneleri bir sistemden projeninkine",
+ "note": "ADR 0583. Kayıt koordinat sistemleri kaydından; WKT2 EPSG'nin tanımından yazılır ve PROJ'da (pyproj) kodun kendisiyle aynı eksen sırası ve aynı noktalar olarak okunur. Çevrilen koordinatlar PROJ'un, ADR 0167'nin her datum çifti için adını verdiği EPSG yoluyla; 1 mm içinde. Bağımsız başvuru: scripts/fixtures/layer_crs_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Kaynak sistemleri",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 500000,
+   "y": 4400000
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "tum",
+    "name": "Tüm",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "eski",
+    "name": "Eski pafta",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gps",
+    "name": "GPS",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "bozuk",
+    "name": "Bozuk",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kotlu",
+    "name": "Kotlu",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "bos",
+    "name": "Boş",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "utm",
+    "name": "UTM",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "wgsutm",
+    "name": "WGSUTM",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "geo",
+    "name": "GEO",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "merc",
+    "name": "MERC",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "tm33",
+    "name": "TM33",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "tum",
+    "attrs": {},
+    "p": {
+     "x": 512000.0,
+     "y": 4420000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 2,
+    "layerId": "eski",
+    "attrs": {
+     "ad": "S1"
+    },
+    "p": {
+     "x": 512345.678,
+     "y": 4420123.456
+    },
+    "z": 875.25
+   },
+   {
+    "kind": "polyline",
+    "id": 3,
+    "layerId": "eski",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 512345.678,
+      "y": 4420123.456
+     },
+     {
+      "x": 512400.0,
+      "y": 4420150.0
+     },
+     {
+      "x": 512380.0,
+      "y": 4420200.0
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 4,
+    "layerId": "gps",
+    "attrs": {
+     "ad": "G1"
+    },
+    "p": {
+     "x": 32.8597,
+     "y": 39.9334
+    }
+   },
+   {
+    "kind": "point",
+    "id": 5,
+    "layerId": "gps",
+    "attrs": {
+     "ad": "G2"
+    },
+    "p": {
+     "x": 32.864,
+     "y": 39.937
+    }
+   },
+   {
+    "kind": "point",
+    "id": 6,
+    "layerId": "bozuk",
+    "attrs": {},
+    "p": {
+     "x": 512000.0,
+     "y": 4420000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 7,
+    "layerId": "kilitli",
+    "attrs": {},
+    "p": {
+     "x": 32.86,
+     "y": 39.93
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 8,
+    "layerId": "parsel",
+    "attrs": {
+     "ada": "101"
+    },
+    "pts": [
+     {
+      "x": 512000.0,
+      "y": 4421000.0
+     },
+     {
+      "x": 512100.0,
+      "y": 4421000.0
+     },
+     {
+      "x": 512100.0,
+      "y": 4421100.0
+     },
+     {
+      "x": 512000.0,
+      "y": 4421100.0
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 512030.0,
+        "y": 4421030.0
+       },
+       {
+        "x": 512060.0,
+        "y": 4421030.0
+       },
+       {
+        "x": 512060.0,
+        "y": 4421060.0
+       },
+       {
+        "x": 512030.0,
+        "y": 4421060.0
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 9,
+    "layerId": "kotlu",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 512345.678,
+      "y": 4420123.456
+     },
+     {
+      "x": 512400.0,
+      "y": 4420150.0
+     }
+    ],
+    "zs": [
+     870.5,
+     871.25
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 10,
+    "layerId": "utm",
+    "attrs": {},
+    "p": {
+     "x": 488000.0,
+     "y": 4420000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 11,
+    "layerId": "wgsutm",
+    "attrs": {},
+    "p": {
+     "x": 488000.0,
+     "y": 4420000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 12,
+    "layerId": "geo",
+    "attrs": {},
+    "p": {
+     "x": 32.86,
+     "y": 39.93
+    }
+   },
+   {
+    "kind": "point",
+    "id": 13,
+    "layerId": "merc",
+    "attrs": {},
+    "p": {
+     "x": 3657946.0,
+     "y": 4855000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 14,
+    "layerId": "tm33",
+    "attrs": {},
+    "p": {
+     "x": 757000.0,
+     "y": 4425000.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "ED50 / TM36'da sanılan eski pafta projenin sistemine: noktalar EPSG yoluyla, kot kalır, kayıt ED50",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "eski",
+      "from": 2322
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "eski",
+       "from": 2322,
+       "to": 5256,
+       "moved": 2,
+       "via": "$any",
+       "crs": {
+        "srid": 2322,
+        "name": "ED50 / TM36",
+        "wkt": "PROJCRS[\"ED50 / TM36\",BASEGEOGCRS[\"ED50\",DATUM[\"European Datum 1950\",ELLIPSOID[\"International 1924\",6378388,297,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"TM36\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",36,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"northing (X)\",north,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"easting (Y)\",east,ORDER[2],LENGTHUNIT[\"metre\",1]],ID[\"EPSG\",2322]]",
+        "axisOrder": "ne",
+        "unit": "metre",
+        "area": "34.5°–37.5° D (3° dilim)"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "eski",
+        "attrs": {
+         "ad": "S1"
+        },
+        "p": {
+         "x": 512324.1944368656,
+         "y": 4419940.758225092
+        },
+        "z": 875.25
+       },
+       "3": {
+        "kind": "polyline",
+        "id": 3,
+        "layerId": "eski",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 512324.1944368656,
+          "y": 4419940.758225092
+         },
+         {
+          "x": 512378.51612555474,
+          "y": 4419967.302168782
+         },
+         {
+          "x": 512358.5161544983,
+          "y": 4420017.301887387
+         }
+        ]
+       }
+      }
+     },
+     "within": 0.001
+    }
+   ]
+  },
+  {
+   "name": "geri alma eski koordinatları ve kaydın yokluğunu geri getirir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "eski",
+      "from": 2322
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "eski",
+       "from": 2322,
+       "to": 5256,
+       "moved": 2,
+       "via": "$any",
+       "crs": {
+        "srid": 2322,
+        "name": "ED50 / TM36",
+        "wkt": "PROJCRS[\"ED50 / TM36\",BASEGEOGCRS[\"ED50\",DATUM[\"European Datum 1950\",ELLIPSOID[\"International 1924\",6378388,297,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"TM36\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",36,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"northing (X)\",north,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"easting (Y)\",east,ORDER[2],LENGTHUNIT[\"metre\",1]],ID[\"EPSG\",2322]]",
+        "axisOrder": "ne",
+        "unit": "metre",
+        "area": "34.5°–37.5° D (3° dilim)"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "within": 0.001
+    },
+    {
+     "op": "undo",
+     "returns": "Yeniden izdüşür",
+     "expect": {
+      "entities": {
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "eski",
+        "attrs": {
+         "ad": "S1"
+        },
+        "p": {
+         "x": 512345.678,
+         "y": 4420123.456
+        },
+        "z": 875.25
+       },
+       "3": {
+        "kind": "polyline",
+        "id": 3,
+        "layerId": "eski",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 512345.678,
+          "y": 4420123.456
+         },
+         {
+          "x": 512400.0,
+          "y": 4420150.0
+         },
+         {
+          "x": 512380.0,
+          "y": 4420200.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "eski",
+      "from": 2322
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "eski",
+       "from": 2322,
+       "to": 5256,
+       "moved": 2,
+       "via": "$any",
+       "crs": {
+        "srid": 2322,
+        "name": "ED50 / TM36",
+        "wkt": "PROJCRS[\"ED50 / TM36\",BASEGEOGCRS[\"ED50\",DATUM[\"European Datum 1950\",ELLIPSOID[\"International 1924\",6378388,297,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"TM36\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",36,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"northing (X)\",north,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"easting (Y)\",east,ORDER[2],LENGTHUNIT[\"metre\",1]],ID[\"EPSG\",2322]]",
+        "axisOrder": "ne",
+        "unit": "metre",
+        "area": "34.5°–37.5° D (3° dilim)"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 0.001
+    }
+   ]
+  },
+  {
+   "name": "kaydı olan katman from'suz: önce Sistem ata, sonra Yeniden izdüşür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "gps",
+      "srid": 4326
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "gps",
+       "crs": {
+        "srid": 4326,
+        "name": "WGS 84",
+        "wkt": "GEOGCRS[\"WGS 84\",DATUM[\"World Geodetic System 1984\",ELLIPSOID[\"WGS 84\",6378137,298.257223563,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],CS[ellipsoidal,2],AXIS[\"geodetic latitude (Lat)\",north,ORDER[1],ANGLEUNIT[\"degree\",0.0174532925199433]],AXIS[\"geodetic longitude (Lon)\",east,ORDER[2],ANGLEUNIT[\"degree\",0.0174532925199433]],ID[\"EPSG\",4326]]",
+        "axisOrder": "latlon",
+        "unit": "degree",
+        "area": "Dünya, coğrafi (enlem/boylam)"
+       },
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.layers.crs"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "gps"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "gps",
+       "from": 4326,
+       "to": 5256,
+       "moved": 2,
+       "via": "$any",
+       "crs": {
+        "srid": 4326,
+        "name": "WGS 84",
+        "wkt": "GEOGCRS[\"WGS 84\",DATUM[\"World Geodetic System 1984\",ELLIPSOID[\"WGS 84\",6378137,298.257223563,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],CS[ellipsoidal,2],AXIS[\"geodetic latitude (Lat)\",north,ORDER[1],ANGLEUNIT[\"degree\",0.0174532925199433]],AXIS[\"geodetic longitude (Lon)\",east,ORDER[2],ANGLEUNIT[\"degree\",0.0174532925199433]],ID[\"EPSG\",4326]]",
+        "axisOrder": "latlon",
+        "unit": "degree",
+        "area": "Dünya, coğrafi (enlem/boylam)"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "4": {
+        "kind": "point",
+        "id": 4,
+        "layerId": "gps",
+        "attrs": {
+         "ad": "G1"
+        },
+        "p": {
+         "x": 231553.4217273632,
+         "y": 4426858.9286117945
+        }
+       },
+       "5": {
+        "kind": "point",
+        "id": 5,
+        "layerId": "gps",
+        "attrs": {
+         "ad": "G2"
+        },
+        "p": {
+         "x": 231935.13161595573,
+         "y": 4427245.816566187
+        }
+       }
+      }
+     },
+     "within": 0.001
+    }
+   ]
+  },
+  {
+   "name": "ED50 / UTM 36N numaraları projenin sistemine (EPSG:23036 → 5256)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "utm",
+      "from": 23036
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "utm",
+       "from": 23036,
+       "to": 5256,
+       "moved": 1,
+       "via": "$any",
+       "crs": {
+        "srid": 23036,
+        "name": "ED50 / UTM 36N",
+        "wkt": "PROJCRS[\"ED50 / UTM 36N\",BASEGEOGCRS[\"ED50\",DATUM[\"European Datum 1950\",ELLIPSOID[\"International 1924\",6378388,297,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"UTM 36N\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",33,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",0.9996,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"easting (X)\",east,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"northing (Y)\",north,ORDER[2],LENGTHUNIT[\"metre\",1]],ID[\"EPSG\",23036]]",
+        "axisOrder": "en",
+        "unit": "metre",
+        "area": "30°–36° D (6° dilim)"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "10": {
+        "kind": "point",
+        "id": 10,
+        "layerId": "utm",
+        "attrs": {},
+        "p": {
+         "x": 231494.175732141,
+         "y": 4426301.276714929
+        }
+       }
+      }
+     },
+     "within": 0.001
+    }
+   ]
+  },
+  {
+   "name": "WGS 84 / UTM 36N numaraları projenin sistemine (EPSG:32636 → 5256)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "wgsutm",
+      "from": 32636
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "wgsutm",
+       "from": 32636,
+       "to": 5256,
+       "moved": 1,
+       "via": "$any",
+       "crs": {
+        "srid": 32636,
+        "name": "WGS 84 / UTM 36N",
+        "wkt": "PROJCRS[\"WGS 84 / UTM 36N\",BASEGEOGCRS[\"WGS 84\",DATUM[\"World Geodetic System 1984\",ELLIPSOID[\"WGS 84\",6378137,298.257223563,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"UTM 36N\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",33,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",0.9996,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"easting (X)\",east,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"northing (Y)\",north,ORDER[2],LENGTHUNIT[\"metre\",1]],ID[\"EPSG\",32636]]",
+        "axisOrder": "en",
+        "unit": "metre",
+        "area": "30°–36° D (6° dilim)"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "11": {
+        "kind": "point",
+        "id": 11,
+        "layerId": "wgsutm",
+        "attrs": {},
+        "p": {
+         "x": 231528.39159593562,
+         "y": 4426484.3427067865
+        }
+       }
+      }
+     },
+     "within": 0.001
+    }
+   ]
+  },
+  {
+   "name": "TUREF numaraları projenin sistemine (EPSG:5252 → 5256)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "geo",
+      "from": 5252
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "geo",
+       "from": 5252,
+       "to": 5256,
+       "moved": 1,
+       "via": "$any",
+       "crs": {
+        "srid": 5252,
+        "name": "TUREF",
+        "wkt": "GEOGCRS[\"TUREF\",DATUM[\"Turkish National Reference Frame\",ELLIPSOID[\"GRS 1980\",6378137,298.257222101,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],CS[ellipsoidal,2],AXIS[\"geodetic latitude (Lat)\",north,ORDER[1],ANGLEUNIT[\"degree\",0.0174532925199433]],AXIS[\"geodetic longitude (Lon)\",east,ORDER[2],ANGLEUNIT[\"degree\",0.0174532925199433]],ID[\"EPSG\",5252]]",
+        "axisOrder": "latlon",
+        "unit": "degree",
+        "area": "Türkiye, coğrafi (enlem/boylam)"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "12": {
+        "kind": "point",
+        "id": 12,
+        "layerId": "geo",
+        "attrs": {},
+        "p": {
+         "x": 231565.7749219262,
+         "y": 4426480.411315407
+        }
+       }
+      }
+     },
+     "within": 0.001
+    }
+   ]
+  },
+  {
+   "name": "WGS 84 / Pseudo-Mercator numaraları projenin sistemine (EPSG:3857 → 5256)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "merc",
+      "from": 3857
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "merc",
+       "from": 3857,
+       "to": 5256,
+       "moved": 1,
+       "via": "$any",
+       "crs": {
+        "srid": 3857,
+        "name": "WGS 84 / Pseudo-Mercator",
+        "wkt": "PROJCRS[\"WGS 84 / Pseudo-Mercator\",BASEGEOGCRS[\"WGS 84\",DATUM[\"World Geodetic System 1984\",ELLIPSOID[\"WGS 84\",6378137,298.257223563,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"Pseudo-Mercator\",METHOD[\"Popular Visualisation Pseudo Mercator\",ID[\"EPSG\",1024]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"False easting\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"easting (X)\",east,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"northing (Y)\",north,ORDER[2],LENGTHUNIT[\"metre\",1]],ID[\"EPSG\",3857]]",
+        "axisOrder": "en",
+        "unit": "metre",
+        "area": "Web haritaları (altlık karolar)"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "13": {
+        "kind": "point",
+        "id": 13,
+        "layerId": "merc",
+        "attrs": {},
+        "p": {
+         "x": 231535.313385783,
+         "y": 4425887.589774601
+        }
+       }
+      }
+     },
+     "within": 0.001
+    }
+   ]
+  },
+  {
+   "name": "ED50 / TM33 numaraları projenin sistemine (EPSG:2321 → 5256)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "tm33",
+      "from": 2321
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "tm33",
+       "from": 2321,
+       "to": 5256,
+       "moved": 1,
+       "via": "$any",
+       "crs": {
+        "srid": 2321,
+        "name": "ED50 / TM33",
+        "wkt": "PROJCRS[\"ED50 / TM33\",BASEGEOGCRS[\"ED50\",DATUM[\"European Datum 1950\",ELLIPSOID[\"International 1924\",6378388,297,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"TM33\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",33,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"northing (X)\",north,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"easting (Y)\",east,ORDER[2],LENGTHUNIT[\"metre\",1]],ID[\"EPSG\",2321]]",
+        "axisOrder": "ne",
+        "unit": "metre",
+        "area": "31.5°–34.5° D (3° dilim)"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "14": {
+        "kind": "point",
+        "id": 14,
+        "layerId": "tm33",
+        "attrs": {},
+        "p": {
+         "x": 500463.99653609237,
+         "y": 4420489.35922147
+        }
+       }
+      }
+     },
+     "within": 0.001
+    }
+   ]
+  },
+  {
+   "name": "delikli alan: dış halka ve delik birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "from": 2322
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "from": 2322,
+       "to": 5256,
+       "moved": 1,
+       "via": "$any",
+       "crs": {
+        "srid": 2322,
+        "name": "ED50 / TM36",
+        "wkt": "PROJCRS[\"ED50 / TM36\",BASEGEOGCRS[\"ED50\",DATUM[\"European Datum 1950\",ELLIPSOID[\"International 1924\",6378388,297,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"TM36\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",36,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"northing (X)\",north,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"easting (Y)\",east,ORDER[2],LENGTHUNIT[\"metre\",1]],ID[\"EPSG\",2322]]",
+        "axisOrder": "ne",
+        "unit": "metre",
+        "area": "34.5°–37.5° D (3° dilim)"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "8": {
+        "kind": "polygon",
+        "id": 8,
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "101"
+        },
+        "pts": [
+         {
+          "x": 511978.5169184816,
+          "y": 4420817.297299715
+         },
+         {
+          "x": 512078.5164156549,
+          "y": 4420817.297443155
+         },
+         {
+          "x": 512078.5162722245,
+          "y": 4420917.296937925
+         },
+         {
+          "x": 511978.516775026,
+          "y": 4420917.296794481
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 512008.51672459923,
+            "y": 4420847.297191177
+           },
+           {
+            "x": 512038.5165737541,
+            "y": 4420847.29723421
+           },
+           {
+            "x": 512038.51653072174,
+            "y": 4420877.297082641
+           },
+           {
+            "x": 512008.5166815649,
+            "y": 4420877.297039607
+           }
+          ]
+         }
+        ]
+       }
+      }
+     },
+     "within": 0.001
+    }
+   ]
+  },
+  {
+   "name": "kotlu çizgi: köşelerin kotları kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "kotlu",
+      "from": 2322
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "kotlu",
+       "from": 2322,
+       "to": 5256,
+       "moved": 1,
+       "via": "$any",
+       "crs": {
+        "srid": 2322,
+        "name": "ED50 / TM36",
+        "wkt": "PROJCRS[\"ED50 / TM36\",BASEGEOGCRS[\"ED50\",DATUM[\"European Datum 1950\",ELLIPSOID[\"International 1924\",6378388,297,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"TM36\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",36,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"northing (X)\",north,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"easting (Y)\",east,ORDER[2],LENGTHUNIT[\"metre\",1]],ID[\"EPSG\",2322]]",
+        "axisOrder": "ne",
+        "unit": "metre",
+        "area": "34.5°–37.5° D (3° dilim)"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "9": {
+        "kind": "polyline",
+        "id": 9,
+        "layerId": "kotlu",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 512324.1944368656,
+          "y": 4419940.758225092
+         },
+         {
+          "x": 512378.51612555474,
+          "y": 4419967.302168782
+         }
+        ],
+        "zs": [
+         870.5,
+         871.25
+        ]
+       }
+      }
+     },
+     "within": 0.001
+    }
+   ]
+  },
+  {
+   "name": "boş katman: hiçbir nesne çevrilmez, kayıt yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "bos",
+      "from": 2322
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "bos",
+       "from": 2322,
+       "to": 5256,
+       "moved": 0,
+       "via": "",
+       "crs": {
+        "srid": 2322,
+        "name": "ED50 / TM36",
+        "wkt": "PROJCRS[\"ED50 / TM36\",BASEGEOGCRS[\"ED50\",DATUM[\"European Datum 1950\",ELLIPSOID[\"International 1924\",6378388,297,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"TM36\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",36,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"northing (X)\",north,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"easting (Y)\",east,ORDER[2],LENGTHUNIT[\"metre\",1]],ID[\"EPSG\",2322]]",
+        "axisOrder": "ne",
+        "unit": "metre",
+        "area": "34.5°–37.5° D (3° dilim)"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sürüm çakışması: hazırlandıktan sonra çizim değişmişse hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "captureRevision",
+     "as": "once"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "gps",
+      "srid": 4326
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "gps",
+       "crs": {
+        "srid": 4326,
+        "name": "WGS 84",
+        "wkt": "GEOGCRS[\"WGS 84\",DATUM[\"World Geodetic System 1984\",ELLIPSOID[\"WGS 84\",6378137,298.257223563,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],CS[ellipsoidal,2],AXIS[\"geodetic latitude (Lat)\",north,ORDER[1],ANGLEUNIT[\"degree\",0.0174532925199433]],AXIS[\"geodetic longitude (Lon)\",east,ORDER[2],ANGLEUNIT[\"degree\",0.0174532925199433]],ID[\"EPSG\",4326]]",
+        "axisOrder": "latlon",
+        "unit": "degree",
+        "area": "Dünya, coğrafi (enlem/boylam)"
+       },
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.layers.crs"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "eski",
+      "from": 2322,
+      "expectedRevision": "$once"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: sürüm metni değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "eski",
+      "from": 2322,
+      "expectedRevision": "x"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “x” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yok",
+      "from": 2322
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: kaydı olmayan katman from'suz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "eski"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“Eski pafta” katmanının kaynak sistemi kaydı yok; nesnelerin şimdiki sistemini from ile verin.",
+       "path": "from"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: nesneler zaten projenin sisteminde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "tum",
+      "from": 5256
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "Nesneler zaten projenin sisteminde (EPSG:5256); çevrilecek bir şey yok. Yalnız kayıt için cad.layers.crs.",
+       "path": "from"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: kayıtta olmayan kod",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "eski",
+      "from": 9999
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_srid",
+       "message": "EPSG:9999 koordinat sistemleri kaydında yok. Kayıttaki bir sistemin kodunu verin.",
+       "path": "from"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: kilitli katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "kilitli",
+      "from": 4326
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; kilidi Katmanlar panelinden açın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: grup",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "grup",
+      "from": 4326
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir katman grubu; kaynak sistemi yalnız katmanın olur. Grubun bir katmanını verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: boylam olamayacak sayılar WGS 84'ten çevrilemez, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "bozuk",
+      "from": 4326
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_unreached",
+       "message": "“Bozuk” katmanının 1 nesnesi EPSG:4326'den projenin sistemine çevrilemiyor (sistemin dışında); hiçbir şey yazılmadı. Doğru sistemi from ile verin.",
+       "path": "from",
+       "uids": [
+        "$uidOf:6"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

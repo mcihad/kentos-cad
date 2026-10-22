@@ -141,7 +141,12 @@ fn work_out(doc: &Document, area: &Camera, colors: &Colors) -> Marks {
     let upright = area.upright();
     let camera = &upright;
     let hub = super::hub();
-    let view = camera.visible_bounds();
+    // The tiles and their labels are in the map's system the area draws in (docs/adr/0583 §3).
+    let view = Camera {
+        map: None,
+        ..*camera
+    }
+    .visible_bounds();
     let box_world = [view.min_x, view.min_y, view.max_x, view.max_y];
     let mut held: Vec<Arc<Vec<Candidate>>> = Vec::new();
     let mut credits: Vec<Credit> = Vec::new();
@@ -150,7 +155,7 @@ fn work_out(doc: &Document, area: &Camera, colors: &Colors) -> Marks {
         let sv = hub.view(&key);
         let seen = sv
             .as_ref()
-            .and_then(|sv| in_view(sv, box_world, camera.scale));
+            .and_then(|sv| in_view(sv, box_world, camera.map_px()));
         if let Some(c) = hub.attribution(&key) {
             credits.push(c);
         }
@@ -182,7 +187,7 @@ fn work_out(doc: &Document, area: &Camera, colors: &Colors) -> Marks {
     let screen = Screen {
         x0: view.min_x,
         y0: view.max_y,
-        px_per_unit: camera.scale,
+        px_per_unit: camera.map_px(),
         width: camera.width,
         height: camera.height,
     };

@@ -1,4 +1,4 @@
-# 0580 — DWG için OpenCADStudio'nun OpenCADCodec Git bağımlılığı
+# 0586 — DWG için OpenCADStudio'nun OpenCADCodec Git bağımlılığı
 
 Tarih: 22 Ekim 2026. Durum: sahibin seçimiyle kabul; temel 2B entegrasyon, üretim DWG uyumluluğu kabulü henüz değil.
 
@@ -35,7 +35,7 @@ OpenCADStudio uygulaması GPL-3.0, seçilen ayrı codec MPL-2.0 lisanslıdır. K
 
 Adaptörün test korpusu bağımsız ASCII DXF geometri/birim verilerinden üretilen yedi DWG hedefini ve entity, block, text, style, dimension, hatch, OCS, elevation örneklerini içerir. Beklenen geometri bağımsızdır; **binary DWG örnekleri bu codec ile üretildiği için bağımsız DWG motoru kabulü değildir**. Gerçek müşteri DWG'leri, AutoCAD'de görsel/düzenlenebilirlik, Windows/Linux/ARM64 dağıtımları, performans/bellek ölçümü ve ileri içerik kabulü açık kalır. Test edilen platformları çalıştırılan kontrollerle raporla; upstream desteğini KentOS garantisi sayma.
 
-Dynamic block, constraint, AEC/proxy ve bilinmeyen dictionary/xdata için kayıpsız düzenleme iddia edilmez. Gerçek 2B paper-space/layout/viewport ile xref attach/overlay takip çalışmasında eklendi; kapsam ve güncel kabul kayıtları [ADR 0581](0581-cad-io-layout-xref-and-loss-contract.md) içindedir. Aşağıdaki sayılar ilk dikey dilimin tarihsel test kaydıdır. Web geliştirmesi durduğundan yeni web arayüzü/WASM binding eklenmez (ADR 0228); sözleşme ve katalog üretimi devam eder.
+Dynamic block, constraint, AEC/proxy ve bilinmeyen dictionary/xdata için kayıpsız düzenleme iddia edilmez. Gerçek 2B paper-space/layout/viewport ile xref attach/overlay takip çalışmasında eklendi; kapsam ve güncel kabul kayıtları [ADR 0587](0587-cad-io-layout-xref-and-loss-contract.md) içindedir. Aşağıdaki sayılar ilk dikey dilimin tarihsel test kaydıdır. Web geliştirmesi durduğundan yeni web arayüzü/WASM binding eklenmez (ADR 0228); sözleşme ve katalog üretimi devam eder.
 
 ## Bu değişiklikte çalıştırılan kontroller
 

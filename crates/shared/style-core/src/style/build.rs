@@ -435,18 +435,35 @@ pub struct LayerObjects<'a> {
 }
 
 /// What Görünüm kipleri leave out of a layer (docs/adr/0195 §1): the fills
-/// and hatches of closed objects (pictures stay), the edges of areas.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// and hatches of closed objects (pictures stay), the edges of areas; and the
+/// map's system the layer is drawn in (docs/adr/0583 §3), none: the project's.
+#[derive(Clone, Copy, Debug)]
 pub struct View {
     pub fills: bool,
     pub area_edges: bool,
+    pub map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
 }
+
+impl PartialEq for View {
+    fn eq(&self, o: &Self) -> bool {
+        self.fills == o.fills
+            && self.area_edges == o.area_edges
+            && match (self.map, o.map) {
+                (None, None) => true,
+                (Some(a), Some(b)) => std::ptr::eq(a, b),
+                _ => false,
+            }
+    }
+}
+
+impl Eq for View {}
 
 impl Default for View {
     fn default() -> Self {
         View {
             fills: true,
             area_edges: true,
+            map: None,
         }
     }
 }
@@ -600,6 +617,7 @@ pub fn build_layer_in(
         }),
     };
     let mut sink = BatchSink::new(origin);
+    sink.set_map(view.map);
     let mut buf = Vec::new();
     let mut piece_at = 0usize;
     let mut cx = Cx {

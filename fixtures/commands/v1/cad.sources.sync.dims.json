@@ -1,0 +1,2105 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.sources.sync",
+ "commandVersion": 1,
+ "title": "Bağlı tabloya yazmada Z ve M (ADR 0584 §2)",
+ "note": "Tablonun Z ve M bayrakları gpkg_geometry_columns'tan sqlite3'le; kural ADR 0584 §2'nin. scripts/fixtures/source_dims_cases.py yazar.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Bağlı katmanlar",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "2B sütuna kotlu nesne yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-1.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-1.gpkg",
+       "table": "duz"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "fadb3504-9a2f-503c-bc7f-1d3523636285",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420010.0
+          },
+          {
+           "x": 487000.0,
+           "y": 4420010.0
+          }
+         ],
+         "zs": [
+          100.0,
+          100.0,
+          100.0,
+          100.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-duz",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "fadb3504-9a2f-503c-bc7f-1d3523636285 kimlikli nesne tabloya yazılamaz: nesnenin kotları var, tablonun geometri sütunu Z almaz; kotları silin (Kot ver › Sıfırla) ya da Z'li bir tabloya yazın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "2B sütuna kısmen kotlu nesne de yazılmaz: kotları vardır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-2.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-2.gpkg",
+       "table": "duz"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "fadb3504-9a2f-503c-bc7f-1d3523636285",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420010.0
+          },
+          {
+           "x": 487000.0,
+           "y": 4420010.0
+          }
+         ],
+         "zs": [
+          100.0,
+          null,
+          100.0,
+          100.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-duz",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "fadb3504-9a2f-503c-bc7f-1d3523636285 kimlikli nesne tabloya yazılamaz: nesnenin kotları var, tablonun geometri sütunu Z almaz; kotları silin (Kot ver › Sıfırla) ya da Z'li bir tabloya yazın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "2B sütunda yalnız öznitelik değişince yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-3.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-3.gpkg",
+       "table": "duz"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "fadb3504-9a2f-503c-bc7f-1d3523636285"
+      ],
+      "attrs": {
+       "ad": "yeni"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-duz",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan da kotlu nesneyi 2B sütuna yazmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-4.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-4.gpkg",
+       "table": "duz"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "fadb3504-9a2f-503c-bc7f-1d3523636285",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420010.0
+          },
+          {
+           "x": 487000.0,
+           "y": 4420010.0
+          }
+         ],
+         "zs": [
+          100.0,
+          100.0,
+          100.0,
+          100.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-duz",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "fadb3504-9a2f-503c-bc7f-1d3523636285 kimlikli nesne tabloya yazılamaz: nesnenin kotları var, tablonun geometri sütunu Z almaz; kotları silin (Kot ver › Sıfırla) ya da Z'li bir tabloya yazın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Z'li sütuna kotları silinmiş nesne yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-5.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-5.gpkg",
+       "table": "kotlu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "2e24da28-2a51-58ff-b652-4e86822f1b31",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420010.0
+          },
+          {
+           "x": 487000.0,
+           "y": 4420010.0
+          }
+         ],
+         "zs": [
+          null,
+          null,
+          null,
+          null
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-kotlu",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "2e24da28-2a51-58ff-b652-4e86822f1b31 kimlikli nesne tabloya yazılamaz: nesnenin kotu yok, tablonun geometri sütunu her köşede Z ister; köşelere kot verin (Kot ver).",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Z'li sütuna kısmen kotlu nesne yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-6.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-6.gpkg",
+       "table": "kotlu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "2e24da28-2a51-58ff-b652-4e86822f1b31",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420010.0
+          },
+          {
+           "x": 487000.0,
+           "y": 4420010.0
+          }
+         ],
+         "zs": [
+          100.0,
+          null,
+          100.0,
+          100.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-kotlu",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "2e24da28-2a51-58ff-b652-4e86822f1b31 kimlikli nesne tabloya yazılamaz: bazı köşelerin kotu var, bazılarının yok; tabloya ya her köşe kotuyla ya hiçbiri kotsuz yazılır (Kot ver).",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Z'li sütuna bütün köşeleri kotlu nesne yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-7.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-7.gpkg",
+       "table": "kotlu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "2e24da28-2a51-58ff-b652-4e86822f1b31",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420010.0
+          },
+          {
+           "x": 487000.0,
+           "y": 4420010.0
+          }
+         ],
+         "zs": [
+          100.0,
+          100.0,
+          100.0,
+          100.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-kotlu",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Z'li sütunda yalnız öznitelik değişince kotlarıyla yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-8.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-8.gpkg",
+       "table": "kotlu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "2e24da28-2a51-58ff-b652-4e86822f1b31"
+      ],
+      "attrs": {
+       "ad": "yeni"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-kotlu",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Z'li sütun: önce reddedilen kısmi kot düzeltilince yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-9.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-9.gpkg",
+       "table": "kotlu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "2e24da28-2a51-58ff-b652-4e86822f1b31",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420010.0
+          },
+          {
+           "x": 487000.0,
+           "y": 4420010.0
+          }
+         ],
+         "zs": [
+          100.0,
+          null,
+          100.0,
+          100.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-kotlu",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "2e24da28-2a51-58ff-b652-4e86822f1b31 kimlikli nesne tabloya yazılamaz: bazı köşelerin kotu var, bazılarının yok; tabloya ya her köşe kotuyla ya hiçbiri kotsuz yazılır (Kot ver).",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "2e24da28-2a51-58ff-b652-4e86822f1b31",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420010.0
+          },
+          {
+           "x": 487000.0,
+           "y": 4420010.0
+          }
+         ],
+         "zs": [
+          100.0,
+          100.0,
+          100.0,
+          100.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-kotlu",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "isteğe bağlı sütuna kotlu nesne yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-10.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-10.gpkg",
+       "table": "serbest"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "0c43a757-b14f-568e-9a07-314911f4b04a",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420010.0
+          },
+          {
+           "x": 487000.0,
+           "y": 4420010.0
+          }
+         ],
+         "zs": [
+          100.0,
+          100.0,
+          100.0,
+          100.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-serbest",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "isteğe bağlı sütuna da kısmen kotlu nesne yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-11.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-11.gpkg",
+       "table": "serbest"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "0c43a757-b14f-568e-9a07-314911f4b04a",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420010.0
+          },
+          {
+           "x": 487000.0,
+           "y": 4420010.0
+          }
+         ],
+         "zs": [
+          100.0,
+          null,
+          100.0,
+          100.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-serbest",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "0c43a757-b14f-568e-9a07-314911f4b04a kimlikli nesne tabloya yazılamaz: bazı köşelerin kotu var, bazılarının yok; tabloya ya her köşe kotuyla ya hiçbiri kotsuz yazılır (Kot ver).",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "isteğe bağlı sütunda kotsuz nesne yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-12.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-12.gpkg",
+       "table": "serbest"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0c43a757-b14f-568e-9a07-314911f4b04a"
+      ],
+      "attrs": {
+       "ad": "yeni"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-serbest",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "isteğe bağlı çizgi sütununa ölçülü (M) çizgi yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-13.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-13.gpkg",
+       "table": "serbestcizgi"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "80c5f5de-ed21-5050-acbf-335cbe067a09",
+        "geometry": {
+         "kind": "polyline",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420110.0
+          }
+         ],
+         "ms": [
+          0.0,
+          5.0,
+          15.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-serbestcizgi",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "isteğe bağlı çizgi sütununa kısmen ölçülü çizgi yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-14.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-14.gpkg",
+       "table": "serbestcizgi"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "80c5f5de-ed21-5050-acbf-335cbe067a09",
+        "geometry": {
+         "kind": "polyline",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420110.0
+          }
+         ],
+         "ms": [
+          0.0,
+          null,
+          15.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-serbestcizgi",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "80c5f5de-ed21-5050-acbf-335cbe067a09 kimlikli nesne tabloya yazılamaz: bazı köşelerin ölçüsü (M) var, bazılarının yok; rotayı kalibre edin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "M'li sütuna ölçüleri silinmiş çizgi yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-15.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-15.gpkg",
+       "table": "olculu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "3fa0c7f7-96fb-5102-9b6c-a15c53b1085e",
+        "geometry": {
+         "kind": "polyline",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420110.0
+          }
+         ],
+         "ms": [
+          null,
+          null,
+          null
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-olculu",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "3fa0c7f7-96fb-5102-9b6c-a15c53b1085e kimlikli nesne tabloya yazılamaz: nesnenin ölçüsü (M) yok, tablonun geometri sütunu her köşede M ister; rotayı kalibre edin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "M'li sütuna kısmen ölçülü çizgi yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-16.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-16.gpkg",
+       "table": "olculu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "3fa0c7f7-96fb-5102-9b6c-a15c53b1085e",
+        "geometry": {
+         "kind": "polyline",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420110.0
+          }
+         ],
+         "ms": [
+          0.0,
+          null,
+          15.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-olculu",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "3fa0c7f7-96fb-5102-9b6c-a15c53b1085e kimlikli nesne tabloya yazılamaz: bazı köşelerin ölçüsü (M) var, bazılarının yok; rotayı kalibre edin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "M'li sütuna bütün köşeleri ölçülü çizgi yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-17.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-17.gpkg",
+       "table": "olculu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "3fa0c7f7-96fb-5102-9b6c-a15c53b1085e",
+        "geometry": {
+         "kind": "polyline",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420110.0
+          }
+         ],
+         "ms": [
+          0.0,
+          5.0,
+          15.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-olculu",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "M'li ama Z'siz sütuna kotlu çizgi yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-18.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-18.gpkg",
+       "table": "olculu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "3fa0c7f7-96fb-5102-9b6c-a15c53b1085e",
+        "geometry": {
+         "kind": "polyline",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420110.0
+          }
+         ],
+         "zs": [
+          1.0,
+          2.0,
+          3.0
+         ],
+         "ms": [
+          0.0,
+          5.0,
+          15.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-olculu",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "3fa0c7f7-96fb-5102-9b6c-a15c53b1085e kimlikli nesne tabloya yazılamaz: nesnenin kotları var, tablonun geometri sütunu Z almaz; kotları silin (Kot ver › Sıfırla) ya da Z'li bir tabloya yazın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "M'li sütunda yalnız öznitelik değişince ölçüleriyle yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-19.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-19.gpkg",
+       "table": "olculu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "3fa0c7f7-96fb-5102-9b6c-a15c53b1085e"
+      ],
+      "attrs": {
+       "ad": "yeni"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-olculu",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "2B çizgi sütununa ölçülü çizgi yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-20.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-20.gpkg",
+       "table": "cizgi"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "437f9932-1e59-5487-81e0-00f511821c1c",
+        "geometry": {
+         "kind": "polyline",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420110.0
+          }
+         ],
+         "ms": [
+          0.0,
+          5.0,
+          15.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-cizgi",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "437f9932-1e59-5487-81e0-00f511821c1c kimlikli nesne tabloya yazılamaz: nesnenin ölçüleri (M) var, tablonun geometri sütunu M almaz; M'li bir tabloya yazın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "2B çizgi sütununa kotlu çizgi yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-21.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-21.gpkg",
+       "table": "cizgi"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "elevation",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "437f9932-1e59-5487-81e0-00f511821c1c",
+        "geometry": {
+         "kind": "polyline",
+         "pts": [
+          {
+           "x": 487000.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420100.0
+          },
+          {
+           "x": 487010.0,
+           "y": 4420110.0
+          }
+         ],
+         "zs": [
+          1.0,
+          2.0,
+          3.0
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-cizgi",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "437f9932-1e59-5487-81e0-00f511821c1c kimlikli nesne tabloya yazılamaz: nesnenin kotları var, tablonun geometri sütunu Z almaz; kotları silin (Kot ver › Sıfırla) ya da Z'li bir tabloya yazın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "2B çizgi sütununda yalnız öznitelik değişince yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/boyut.gpkg",
+     "to": "$tmp:boyut-22.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:boyut-22.gpkg",
+       "table": "cizgi"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "437f9932-1e59-5487-81e0-00f511821c1c"
+      ],
+      "attrs": {
+       "ad": "yeni"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-cizgi",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  }
+ ]
+}

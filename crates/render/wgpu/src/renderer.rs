@@ -399,7 +399,8 @@ impl Renderer {
                 camera.center.y - frame.origin.y,
             ],
             origin: [frame.origin.x, frame.origin.y],
-            scale: camera.scale,
+            // The scene's numbers are the map's (docs/adr/0583 §3).
+            scale: camera.map_px(),
             screen_scale: camera.screen_scale(),
             twist: camera.twist,
         };
@@ -742,7 +743,7 @@ impl Renderer {
                         lens.camera.center.y - lens.origin.y,
                     ],
                     origin: [lens.origin.x, lens.origin.y],
-                    scale: lens.camera.scale,
+                    scale: lens.camera.map_px(),
                     dpr: lens.scale_factor,
                     size_px: lens.size_px,
                     scale_denominator: state.drawn.screen_scale,
@@ -1077,7 +1078,7 @@ fn whole_pixels(origin: [f32; 2], size: [f32; 2]) -> [f32; 4] {
 /// width, height): its centre moved by what the picture's middle is off the area's, so a point
 /// lands on the host's pixel it would have.
 fn camera_at(camera: &Camera, area: [f32; 4], placed: [f32; 4], scale_factor: f64) -> Camera {
-    let px_per_unit = camera.scale * scale_factor;
+    let px_per_unit = camera.map_px() * scale_factor;
     if px_per_unit.is_nan() || px_per_unit <= 0.0 {
         return *camera;
     }
@@ -1395,7 +1396,7 @@ mod tests {
     /// Where a world point lands in the host's frame, device pixels, drawn by `camera` into
     /// `area` (x, y, width, height) at `scale` device pixels a logical pixel.
     fn host_px(camera: &Camera, area: [f32; 4], p: Vec2, scale: f64) -> [f64; 2] {
-        let px_per_unit = camera.scale * scale;
+        let px_per_unit = camera.map_px() * scale;
         [
             f64::from(area[0]) + f64::from(area[2]) / 2.0 + (p.x - camera.center.x) * px_per_unit,
             f64::from(area[1]) + f64::from(area[3]) / 2.0 - (p.y - camera.center.y) * px_per_unit,
@@ -1409,6 +1410,8 @@ mod tests {
         let placed = whole_pixels([area[0], area[1]], [area[2], area[3]]);
         assert_eq!(placed, [61.0, 161.0, 619.0, 630.0]);
         let camera = Camera {
+            map: None,
+            map_ratio: 1.0,
             center: Vec2::new(1234.5, -87.25),
             scale: 3.7,
             width: 400.0,

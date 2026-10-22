@@ -742,6 +742,7 @@ mod tests {
     #[test]
     fn a_projects_type_names_its_axes() {
         let mut settings = ProjectSettings {
+            map_srid: None,
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,
@@ -839,6 +840,7 @@ mod tests {
     #[test]
     fn a_local_project_reads_in_its_unit() {
         let mut settings = ProjectSettings {
+            map_srid: None,
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,

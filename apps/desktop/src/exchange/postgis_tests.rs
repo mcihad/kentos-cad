@@ -164,6 +164,20 @@ fn screens() {
             picture(&mut app, &format!("postgis-{mode}-2-tablolar"));
             send(&mut app, Event::Postgis(P::Reproject));
             picture(&mut app, &format!("postgis-{mode}-3-cevir"));
+            // A query layer and the view's area (docs/adr/0582).
+            for (i, n) in names.iter().enumerate() {
+                if n == "sorgu.nokta_v" {
+                    send(&mut app, Event::Postgis(P::Toggle(i)));
+                }
+            }
+            send(
+                &mut app,
+                Event::Postgis(P::Query(
+                    "SELECT fid, ad, tur, geom FROM sorgu.nokta WHERE tur = 'direk'".into(),
+                )),
+            );
+            send(&mut app, Event::Postgis(P::Area));
+            picture(&mut app, &format!("postgis-{mode}-5-sorgu-alan"));
             if real.is_some() {
                 send(&mut app, Event::Postgis(P::Run));
                 picture(&mut app, &format!("postgis-{mode}-4-bagli"));

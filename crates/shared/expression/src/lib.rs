@@ -49,6 +49,7 @@ pub mod more;
 pub mod parser;
 pub mod patterns;
 pub mod program;
+pub mod pushdown;
 pub mod read;
 mod resolve;
 pub mod rows;

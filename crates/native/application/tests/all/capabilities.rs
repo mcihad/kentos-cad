@@ -92,10 +92,10 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     ("file.import.dxf", "unsupported_cad_format", "yanlış DWG seçimi preflight'ın biçim testinde sınanır"),
     ("file.import.dxf", "unsupported_cad_version", "bütün ilan edilmiş ASCII sürümleri ve gelecekteki bilinmeyen sürüm preflight testinde sınanır"),
     ("file.import.dxf", "unsupported_cad_encoding", "binary, UTF-16 ve desteklenmeyen kod sayfası preflight testinde sınanır"),
-    ("file.import.dwg", "cad_file_too_large", "256 MiB sınırı adaptörde; bu boyutta dosya ortak korpusa alınmaz (ADR 0580)"),
-    ("file.import.dwg", "block_units_differ", "blok birimleri ortak DXF yolu; DXF ortak durumları ve adaptör korpusu sınar (ADR 0580)"),
-    ("file.import.dwg", "unit_assumed", "birimsiz R14 adaptör testi ve ortak DXF varsayılan birim testleri sınar (ADR 0580)"),
-    ("file.import.dwg", "import_losses", "atlanan kayıtlar codec raporundan gelir; ileri kaynaklar üretim korpusuyla ayrıca kabul edilecek (ADR 0580)"),
+    ("file.import.dwg", "cad_file_too_large", "256 MiB sınırı adaptörde; bu boyutta dosya ortak korpusa alınmaz (ADR 0586)"),
+    ("file.import.dwg", "block_units_differ", "blok birimleri ortak DXF yolu; DXF ortak durumları ve adaptör korpusu sınar (ADR 0586)"),
+    ("file.import.dwg", "unit_assumed", "birimsiz R14 adaptör testi ve ortak DXF varsayılan birim testleri sınar (ADR 0586)"),
+    ("file.import.dwg", "import_losses", "atlanan kayıtlar codec raporundan gelir; ileri kaynaklar üretim korpusuyla ayrıca kabul edilecek (ADR 0586)"),
     (
         "cad.sheets.set",
         "book_unreadable",
@@ -380,6 +380,36 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "cad.sources.edit",
         "too_many_sources",
         "1000 bağlı katmanlık kurulum durum dosyasını büyütür; sınır sources.rs'te ve sözleşmenin sources_problem'inde",
+    ),
+    (
+        "cad.sources.edit",
+        "no_row_key",
+        "view ve sorgu katmanı yalnız veritabanında; ev sahibinin sağlayıcısı uygulamanın testlerinde kayıtlı değil, durum kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
+    ),
+    (
+        "cad.sources.edit",
+        "row_key_not_unique",
+        "view ve sorgu katmanı yalnız veritabanında; ev sahibinin sağlayıcısı uygulamanın testlerinde kayıtlı değil, durum kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
+    ),
+    (
+        "cad.sources.query",
+        "no_row_key",
+        "view ve sorgu katmanı yalnız veritabanında; ev sahibinin sağlayıcısı uygulamanın testlerinde kayıtlı değil, durum kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
+    ),
+    (
+        "cad.sources.query",
+        "row_key_not_unique",
+        "view ve sorgu katmanı yalnız veritabanında; ev sahibinin sağlayıcısı uygulamanın testlerinde kayıtlı değil, durum kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
+    ),
+    (
+        "cad.sources.sync",
+        "source_others",
+        "satır düzeyinde yazma yalnız veritabanında; aynı tabloyu ikinci düzenleyici (QGIS) değiştirir, kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
+    ),
+    (
+        "cad.sources.sync",
+        "rows_denied",
+        "yetki ve satır güvenliği yalnız veritabanında: GeoPackage'ın satır hakkı yoktur; kentos-postgis'in postgis_cases.py ile koşan testi satır güvenliği politikalı bir hesapla sınar (ADR 0585)",
     ),
     (
         "cad.sources.describe",

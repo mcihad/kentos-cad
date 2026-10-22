@@ -26,6 +26,7 @@ use crate::document::Document;
 
 fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
     LayerNode {
+        source_crs: None,
         table_styles: Vec::new(),
         subtypes: None,
         contingents: Vec::new(),
@@ -130,6 +131,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
         version: 1,
         name: "parcalar".into(),
         settings: ProjectSettings {
+            map_srid: None,
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,
@@ -576,7 +578,9 @@ fn a_hatch_s_fill_takes_its_transparency() {
     let names = |id: &str| id.to_owned();
     let node = doc.model.layers().get("yol").expect("yol").clone();
     let styles: std::collections::HashMap<String, LayerStyle> =
-        [("yol".to_owned(), node.style.clone())].into_iter().collect();
+        [("yol".to_owned(), node.style.clone())]
+            .into_iter()
+            .collect();
     let opts = BuildOptions {
         line_types: None,
         layer_styles: Some(&styles),
@@ -602,6 +606,9 @@ fn a_hatch_s_fill_takes_its_transparency() {
     let program: Value = serde_json::from_str(&call.program).expect("a program");
     for (i, kind) in ["solid", "gradient", "lines"].iter().enumerate() {
         let set = program["sets"][call.objects[4 * i + 2] as usize].to_string();
-        assert!(set.contains("\"opacity\":0.6"), "the {kind} hatch is 60 % seen: {set}");
+        assert!(
+            set.contains("\"opacity\":0.6"),
+            "the {kind} hatch is 60 % seen: {set}"
+        );
     }
 }

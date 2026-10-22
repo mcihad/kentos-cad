@@ -348,6 +348,7 @@ impl App {
             LayerTarget::Existing(id) => self.layer_name(id),
         };
         let import = ImportPlan {
+            source_srid: None,
             label: format!("GNSS: {name}"),
             layers: vec![(String::new(), target)],
             group: None,

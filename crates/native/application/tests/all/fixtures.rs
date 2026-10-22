@@ -12,13 +12,14 @@ use std::path::PathBuf;
 
 use kentos_commands::ChangesetApply;
 use kentos_commands::{
-    AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
-    CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
-    AnnotationsScales, EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
-    FieldsUsage, LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersContingents, LayersRules, LayersSubtypes, LayersTable, LayersRenderer, LayersService,
-    LayersSet, LayersStates, LayersTime, LayersTranslate, LibraryEdit, LineTypesEdit, HatchPatternsEdit,
-    NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, StandardsApply,
-    StandardsCheck, StylesEdit, StylesImpact, UcsSet, UcsTo, ViewsEdit, ViewsOp,
+    AddressesDefine, AnnotationsScales, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE,
+    CAD_BLOCKS_EDIT, CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate,
+    EntitiesFillet, EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim,
+    FieldsUsage, HatchPatternsEdit, LabelsPin, LayersCompose, LayersContingents, LayersEdit,
+    LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersRenderer, LayersRules, LayersService,
+    LayersSet, LayersStates, LayersSubtypes, LayersTable, LayersTime, LayersTranslate, LibraryEdit,
+    LineTypesEdit, NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit,
+    StandardsApply, StandardsCheck, StylesEdit, StylesImpact, UcsSet, UcsTo, ViewsEdit, ViewsOp,
 };
 use kentos_commands::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -28,59 +29,90 @@ use kentos_commands::{
     LineCreate, PointCreate, PolygonCreate, PolylineCreate, Transform,
 };
 use kentos_commands::{
+    AttachmentsInspect, DomainsEdit, DomainsExport, FieldsMigrate, FormsAudit, FormsCompare,
+    FormsEdit, FormsExport, FormsFill, FormsImport, FormsRecompute, FormsSubmit, FormsTest,
+    FormsTransition, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit, SchemaDescribe,
+};
+use kentos_commands::{
     DimensionMeasure, DimensionsCreate, Division, EntitiesBoundary, EntitiesBreak, EntitiesDivide,
-    EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, ImportDxf, ImportGpkg, ImportPdf, MeasuredPoint,
-    UnitsChange,
+    EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, ImportDxf, ImportGpkg, ImportPdf,
+    MeasuredPoint, UnitsChange,
 };
+use kentos_commands::{JoinsEdit, JoinsQuery};
 use kentos_domain::{Document, Slot, Uuid};
-use kentos_native_application::profiles::{apply as profiles_apply, check as profiles_check};
-use kentos_native_application::profile_files::{import as profiles_import, list as profiles_list, migrate as profiles_migrate};
-use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
-use kentos_native_application::fields_write;
-use kentos_native_application::{stac_host, stac_prepare, stac_search};
-use kentos_native_application::meshes::{describe as meshes_describe, query as meshes_query};
-use kentos_native_application::pointcloud_areas::{profile as pointclouds_profile, region as pointclouds_region};
-use kentos_native_application::pointclouds::{describe as pointclouds_describe, query as pointclouds_query};
-use kentos_native_application::time_query;
 use kentos_native_application::drawing_compare;
-use kentos_native_application::{
-    processing_batch, processing_run, processing_tools, subnetworks, subnetworks_update,
-};
-use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
-use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
+use kentos_native_application::fields_write;
 use kentos_native_application::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
-use kentos_native_application::{assets_check, images_edit, rasters_mosaic, rasters_georef, inserts_clip, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
-use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile, relate as sources_relate, sync as sources_sync};
+use kentos_native_application::layers_crs::{
+    assign as layers_crs_assign, reproject as layers_reproject,
+};
+use kentos_native_application::meshes::{describe as meshes_describe, query as meshes_query};
+use kentos_native_application::pointcloud_areas::{
+    profile as pointclouds_profile, region as pointclouds_region,
+};
+use kentos_native_application::pointclouds::{
+    describe as pointclouds_describe, query as pointclouds_query,
+};
+use kentos_native_application::profile_files::{
+    import as profiles_import, list as profiles_list, migrate as profiles_migrate,
+};
+use kentos_native_application::profiles::{apply as profiles_apply, check as profiles_check};
 use kentos_native_application::records_page;
+use kentos_native_application::sources::{
+    describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile,
+    relate as sources_relate, sync as sources_sync,
+};
+use kentos_native_application::sources_query;
+use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
+use kentos_native_application::time_query;
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, annotations_scales, arc, array, blocks_define, blocks_edit,
-    circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit,
-    edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick, entities_relate, crs_transform,
-    entities_select, entities_trim, entities_vertex, labels_pin, labels_report, layers_compose, layers_edit,
-    layers_filter, fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
-    layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, linearref_define, network_define, nurbs, offset, walls_create, walls_edit, walls_from_lines, walls_joins, openings_create, openings_edit, spaces_create, spaces_edit, spaces_quantities,
-    point, points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit,
-    set, settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
-    views_edit,
+    DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, annotations_scales, arc,
+    array, blocks_define, blocks_edit, circle, crs_transform, curves_construct, delete,
+    dimensions_edit, dimensions_query, dimensions_reassociate, edit, entities_chamfer,
+    entities_extend, entities_fillet, entities_order, entities_pick, entities_relate,
+    entities_select, entities_trim, entities_vertex, fields_edit, fields_usage, fonts_report,
+    hatches_edit, labels_pin, labels_report, layers_compose, layers_contingents, layers_edit,
+    layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_rules,
+    layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
+    layers_translate, leaders_edit, line, linearref_define, network_define, nurbs, offset,
+    openings_create, openings_edit, point, points_construct, polygon, polygon_regular, polyline,
+    rectangle_create, scenarios_edit, set, settings_set, sheets_edit, snap_find, spaces_create,
+    spaces_edit, spaces_quantities, styles_edit, tables_edit, texts_check, texts_edit, transform,
+    ucs_set, units_change, views_edit, walls_create, walls_edit, walls_from_lines, walls_joins,
 };
 use kentos_native_application::{
-    arrays_edit, changeset, constraints_edit, constraints_query, parameters_edit, create, curves_edit, dimensions_create, divide, drawing_audit,
-    entities_boundary, entities_break, entities_cleanup, entities_copy, entities_explode,
-    entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
-    entities_reverse, file_import, file_import_dwg, file_import_csv, file_import_fgb, file_import_geojson, file_import_gml, file_import_gpkg, file_import_kml, file_import_shp, file_import_pdf, gis_derivation, qml, sld, stretch, maplibre,
+    arch_edit, columns_create, grids_create, ramps_create, stairs_create,
+};
+use kentos_native_application::{
+    arrays_edit, changeset, constraints_edit, constraints_query, create, curves_edit,
+    dimensions_create, divide, drawing_audit, entities_boundary, entities_break, entities_cleanup,
+    entities_copy, entities_explode, entities_hatch, entities_join, entities_lengthen,
+    entities_match, entities_paste, entities_reverse, file_import, file_import_dwg, file_import_csv,
+    file_import_fgb, file_import_geojson, file_import_gml, file_import_gpkg, file_import_kml,
+    file_import_pdf, file_import_shp, gis_derivation, maplibre, parameters_edit, qml, sld, stretch,
+};
+use kentos_native_application::{
+    assets_check, images_edit, inserts_clip, rasters_georef, rasters_mosaic, sheets_set,
+    spaces_finish, templates_apply, viewmarks_create, viewmarks_edit, viewmarks_references,
+    xrefs_edit, xrefs_list,
+};
+use kentos_native_application::{
+    attachments_inspect, domains_edit, domains_export, fields_migrate, forms_audit, forms_compare,
+    forms_edit, forms_export, forms_fill, forms_import, forms_recompute, forms_submit, forms_test,
+    forms_transition, forms_validate, records, records_duplicate, relations_edit, schema_describe,
 };
 use kentos_native_application::{
     block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
     file_import_block, hatch_patterns_edit, library_edit, line_types_edit, styles_impact,
 };
-use kentos_commands::{
-    FormsAudit, FormsCompare, FormsEdit, FormsRecompute, FormsTest, FormsTransition, DomainsEdit, DomainsExport, FieldsMigrate, AttachmentsInspect, SchemaDescribe, FormsExport, FormsImport, FormsFill, FormsSubmit, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
+use kentos_native_application::{joins_edit, joins_query};
+use kentos_native_application::{
+    processing_batch, processing_run, processing_tools, subnetworks, subnetworks_update,
 };
 use kentos_native_application::{
-    forms_audit, forms_compare, forms_edit, forms_recompute, forms_test, forms_transition, domains_edit, domains_export, fields_migrate, attachments_inspect, schema_describe, forms_export, forms_import, forms_fill, forms_submit, forms_validate, records, records_duplicate, relations_edit,
+    schedules_create, schedules_edit, tags_check, tags_create, tags_edit,
 };
-use kentos_commands::{JoinsEdit, JoinsQuery};
-use kentos_native_application::{joins_edit, joins_query};
+use kentos_native_application::{stac_host, stac_prepare, stac_search};
 use serde_json::{Value, json};
 
 type Outcome<T> = Result<T, String>;
@@ -183,7 +215,9 @@ fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value
         // Whatever the command gives (compared by `same`).
         Value::String(text) if text == "$any" => value.clone(),
         // A fixture file's absolute path, anywhere in a text (docs/adr/0257 §3).
-        Value::String(text) if (text.contains("$fixture:") || text.contains("$tmp:")) => Value::String(with_fixtures(text)),
+        Value::String(text) if (text.contains("$fixture:") || text.contains("$tmp:")) => {
+            Value::String(with_fixtures(text))
+        }
         Value::String(text) if text.starts_with("$blockOf:") => {
             let name = &text["$blockOf:".len()..];
             let block = doc
@@ -379,10 +413,7 @@ fn with_uids(text: &str, state: &State, at: &str) -> Outcome<String> {
 }
 
 /// The number of a point list at `rest` (`pts[1].y`, after any ring prefix).
-fn point_number<'a>(
-    pts: &'a mut [kentos_commands::Vec2],
-    rest: &str,
-) -> Option<&'a mut f64> {
+fn point_number<'a>(pts: &'a mut [kentos_commands::Vec2], rest: &str) -> Option<&'a mut f64> {
     let (i, axis) = rest.strip_prefix("pts[")?.split_once("].")?;
     let p = pts.get_mut(i.parse::<usize>().ok()?)?;
     match axis {
@@ -684,7 +715,8 @@ impl Input for kentos_commands::WallsCreate {
             "width" => w.width.as_mut(),
             "offset" => w.offset.as_mut(),
             "height" => w.height.as_mut(),
-            _ => named_point(&mut w.pts, "pts", rest).or_else(|| list_number(w.bulges.as_deref_mut()?, "bulges", rest)),
+            _ => named_point(&mut w.pts, "pts", rest)
+                .or_else(|| list_number(w.bulges.as_deref_mut()?, "bulges", rest)),
         }
     }
 }
@@ -880,7 +912,12 @@ impl Input for kentos_commands::XrefsEdit {
             (O::Attach { at: Some(p), .. }, "operation.at.x") => Some(&mut p.x),
             (O::Attach { at: Some(p), .. }, "operation.at.y") => Some(&mut p.y),
             (O::Attach { scale: Some(s), .. }, "operation.scale") => Some(s),
-            (O::Attach { rotation: Some(r), .. }, "operation.rotation") => Some(r),
+            (
+                O::Attach {
+                    rotation: Some(r), ..
+                },
+                "operation.rotation",
+            ) => Some(r),
             _ => None,
         }
     }
@@ -1145,7 +1182,11 @@ impl Input for AnnotationsScales {
             "point.x" => self.point.as_mut().map(|p| &mut p.x),
             "point.y" => self.point.as_mut().map(|p| &mut p.y),
             _ => {
-                let i: usize = path.strip_prefix("scales[")?.strip_suffix(']')?.parse().ok()?;
+                let i: usize = path
+                    .strip_prefix("scales[")?
+                    .strip_suffix(']')?
+                    .parse()
+                    .ok()?;
                 self.scales.get_mut(i)
             }
         }
@@ -1230,8 +1271,7 @@ impl Input for EntitiesTrim {
     /// `picks[0].at.x`, `boundaries.max.y` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if let Some(rest) = path.strip_prefix("boundaries.") {
-            let Some(kentos_commands::TrimBoundaries::Area { min, max }) =
-                &mut self.boundaries
+            let Some(kentos_commands::TrimBoundaries::Area { min, max }) = &mut self.boundaries
             else {
                 return None;
             };
@@ -1875,10 +1915,15 @@ impl Input for EntitiesHatch {
             "lineWeight" => return self.look.line_weight.as_mut(),
             // docs/adr/0331 §2.
             "pattern.origin.at.x" | "pattern.origin.at.y" => {
-                let Some(kentos_commands::HatchOrigin::Point { at }) = &mut self.pattern.origin else {
+                let Some(kentos_commands::HatchOrigin::Point { at }) = &mut self.pattern.origin
+                else {
                     return None;
                 };
-                return Some(if path.ends_with('x') { &mut at.x } else { &mut at.y });
+                return Some(if path.ends_with('x') {
+                    &mut at.x
+                } else {
+                    &mut at.y
+                });
             }
             _ => {}
         }
@@ -1896,9 +1941,12 @@ impl Input for EntitiesHatch {
             "region.at.x" => Some(&mut at.x),
             "region.at.y" => Some(&mut at.y),
             "region.gap" => gap.as_mut(),
-            _ if path.starts_with("region.alsoAt[") => {
-                point_number(also_at, path.strip_prefix("region.alsoAt")?.replacen('[', "pts[", 1).as_str())
-            }
+            _ if path.starts_with("region.alsoAt[") => point_number(
+                also_at,
+                path.strip_prefix("region.alsoAt")?
+                    .replacen('[', "pts[", 1)
+                    .as_str(),
+            ),
             _ => area_number(boundaries, path.strip_prefix("region.boundaries.")?),
         }
     }
@@ -1946,7 +1994,12 @@ impl Input for kentos_commands::LeadersEdit {
         use kentos_commands::LeaderEdit;
         match (&mut self.edit, path) {
             (LeaderEdit::Align { angle, .. }, "edit.angle") => Some(angle),
-            (LeaderEdit::Align { spacing: Some(s), .. }, "edit.spacing") => Some(s),
+            (
+                LeaderEdit::Align {
+                    spacing: Some(s), ..
+                },
+                "edit.spacing",
+            ) => Some(s),
             _ => None,
         }
     }
@@ -2396,6 +2449,37 @@ impl Input for kentos_commands::RecordsPage {
     }
 }
 
+impl Input for kentos_commands::LayersCrs {
+    /// No number to move: a layer and a code.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::LayersReproject {
+    /// No number to move: a layer and a code.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::SourcesQuery {
+    /// The box's and the place's numbers.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let at = |rest: &str| rest.parse::<usize>().ok();
+        if let Some(i) = path.strip_prefix("bbox.").and_then(at) {
+            return self.bbox.as_mut()?.get_mut(i);
+        }
+        if let Some(i) = path.strip_prefix("near.at.").and_then(at) {
+            return self.near.as_mut()?.at.get_mut(i);
+        }
+        if path == "near.tolerance" {
+            return Some(&mut self.near.as_mut()?.tolerance);
+        }
+        None
+    }
+}
+
 impl Input for kentos_commands::SubnetworksFind {
     /// No number: a network's id.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -2546,11 +2630,7 @@ impl Input for EntitiesSetProperties {
 }
 
 /// A coordinate of a named point: `c.x`, `p.y`.
-fn coordinate<'a>(
-    p: &'a mut kentos_commands::Vec2,
-    name: &str,
-    path: &str,
-) -> Option<&'a mut f64> {
+fn coordinate<'a>(p: &'a mut kentos_commands::Vec2, name: &str, path: &str) -> Option<&'a mut f64> {
     match path.strip_prefix(name)?.strip_prefix('.')? {
         "x" => Some(&mut p.x),
         "y" => Some(&mut p.y),
@@ -3086,10 +3166,7 @@ fn run_op(
             run!(rectangle_create, kentos_commands::RectangleCreate)
         }
         kentos_commands::CAD_POLYGON_REGULAR => {
-            run!(
-                polygon_regular,
-                kentos_commands::RegularPolygonCreate
-            )
+            run!(polygon_regular, kentos_commands::RegularPolygonCreate)
         }
         kentos_commands::CAD_ENTITIES_VERTEX => {
             run!(entities_vertex, kentos_commands::EntitiesVertex)
@@ -3117,10 +3194,7 @@ fn run_op(
             run!(entities_reverse, kentos_commands::EntitiesReverse)
         }
         kentos_commands::CAD_ENTITIES_LENGTHEN => {
-            run!(
-                entities_lengthen,
-                kentos_commands::EntitiesLengthen
-            )
+            run!(entities_lengthen, kentos_commands::EntitiesLengthen)
         }
         kentos_commands::CAD_ENTITIES_DIVIDE => run!(divide, EntitiesDivide),
         kentos_commands::CAD_ARRAYS_EDIT => {
@@ -3371,6 +3445,10 @@ fn run_op(
         kentos_commands::CAD_LAYERS_TIME => run!(layers_time, LayersTime),
         kentos_commands::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),
         kentos_commands::CAD_LAYERS_FILTER => run!(layers_filter, LayersFilter),
+        kentos_commands::CAD_LAYERS_CRS => run!(layers_crs_assign, kentos_commands::LayersCrs),
+        kentos_commands::CAD_LAYERS_REPROJECT => {
+            run!(layers_reproject, kentos_commands::LayersReproject)
+        }
         kentos_commands::CAD_LAYERS_INFO => run!(layers_info, LayersInfo),
         kentos_commands::CAD_LAYERS_TABLE => run!(layers_table, LayersTable),
         kentos_commands::CAD_LAYERS_SUBTYPES => run!(layers_subtypes, LayersSubtypes),
@@ -3393,9 +3471,13 @@ fn run_op(
         kentos_commands::CAD_STANDARDS_APPLY => run!(standards_apply, StandardsApply),
         kentos_commands::CAD_PROFILES_APPLY => run!(profiles_apply, kentos_commands::ProfilesApply),
         kentos_commands::CAD_PROFILES_CHECK => run!(profiles_check, kentos_commands::ProfilesCheck),
-        kentos_commands::CAD_PROFILES_IMPORT => run!(profiles_import, kentos_commands::ProfilesImport),
+        kentos_commands::CAD_PROFILES_IMPORT => {
+            run!(profiles_import, kentos_commands::ProfilesImport)
+        }
         kentos_commands::CAD_PROFILES_LIST => run!(profiles_list, kentos_commands::ProfilesList),
-        kentos_commands::CAD_PROFILES_MIGRATE => run!(profiles_migrate, kentos_commands::ProfilesMigrate),
+        kentos_commands::CAD_PROFILES_MIGRATE => {
+            run!(profiles_migrate, kentos_commands::ProfilesMigrate)
+        }
         kentos_commands::CAD_LINE_TYPES_EDIT => run!(line_types_edit, LineTypesEdit),
         kentos_commands::CAD_HATCH_PATTERNS_EDIT => run!(hatch_patterns_edit, HatchPatternsEdit),
         kentos_commands::CAD_LIBRARY_EDIT => run!(library_edit, LibraryEdit),
@@ -3460,16 +3542,25 @@ fn run_op(
             run!(maplibre, kentos_commands::ImportMaplibre)
         }
         kentos_commands::FILE_IMPORT_PDF => run!(file_import_pdf, ImportPdf),
-        kentos_commands::CAD_SOURCES_DESCRIBE => run!(sources_describe, kentos_commands::SourcesDescribe),
+        kentos_commands::CAD_SOURCES_DESCRIBE => {
+            run!(sources_describe, kentos_commands::SourcesDescribe)
+        }
         kentos_commands::CAD_SOURCES_EDIT => run!(sources_edit, kentos_commands::SourcesEdit),
         kentos_commands::CAD_SOURCES_SYNC => run!(sources_sync, kentos_commands::SourcesSync),
-        kentos_commands::CAD_SOURCES_RECONCILE => run!(sources_reconcile, kentos_commands::SourcesReconcile),
+        kentos_commands::CAD_SOURCES_RECONCILE => {
+            run!(sources_reconcile, kentos_commands::SourcesReconcile)
+        }
         kentos_commands::CAD_SOURCES_RELATE => run!(sources_relate, kentos_commands::SourcesRelate),
         kentos_commands::CAD_RECORDS_PAGE => run!(records_page, kentos_commands::RecordsPage),
+        kentos_commands::CAD_SOURCES_QUERY => run!(sources_query, kentos_commands::SourcesQuery),
         kentos_commands::CAD_FIELDS_WRITE => run!(fields_write, kentos_commands::FieldsWrite),
-        kentos_commands::CAD_PROCESSING_TOOLS => run!(processing_tools, kentos_commands::ProcessingTools),
+        kentos_commands::CAD_PROCESSING_TOOLS => {
+            run!(processing_tools, kentos_commands::ProcessingTools)
+        }
         kentos_commands::CAD_PROCESSING_RUN => run!(processing_run, kentos_commands::ProcessingRun),
-        kentos_commands::CAD_PROCESSING_BATCH => run!(processing_batch, kentos_commands::ProcessingBatch),
+        kentos_commands::CAD_PROCESSING_BATCH => {
+            run!(processing_batch, kentos_commands::ProcessingBatch)
+        }
         kentos_commands::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
         kentos_commands::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
         other => return Err(format!("{at}: {other} için koşucu yok")),
@@ -3683,7 +3774,8 @@ fn run_step(
             if step["op"] == "execute" && doc.revision() != before {
                 let last = doc.journal().last();
                 if !last.is_some_and(|r| {
-                    r.kind == kentos_commands::CallKind::Command && r.command.as_deref() == Some(name)
+                    r.kind == kentos_commands::CallKind::Command
+                        && r.command.as_deref() == Some(name)
                 }) {
                     return Err(format!(
                         "{at}: {name} yazdı ama kayıtta komut olarak yok (son satır {:?} {:?})",
@@ -3733,7 +3825,8 @@ fn run_step(
             let to = with_fixtures(to);
             // A file in a folder the case names (the project's `profiller`, docs/adr/0558): the folder is made.
             if let Some(folder) = std::path::Path::new(&to).parent() {
-                std::fs::create_dir_all(folder).map_err(|e| format!("{at}: {}: {e}", folder.display()))?;
+                std::fs::create_dir_all(folder)
+                    .map_err(|e| format!("{at}: {}: {e}", folder.display()))?;
             }
             std::fs::copy(&from, &to).map_err(|e| format!("{at}: {from}: {e}"))?;
         }
@@ -3857,7 +3950,8 @@ fn check(
                 expect_same(&json!(kinds), want, "kısıtların türleri", at)?;
             }
             "parameters" => {
-                let got = serde_json::to_value(&doc.constraints().parameters).unwrap_or(Value::Null);
+                let got =
+                    serde_json::to_value(&doc.constraints().parameters).unwrap_or(Value::Null);
                 expect_same(&got, want, "parametreler", at)?;
             }
             "canRedo" => expect_same(&json!(doc.can_redo()), want, "canRedo", at)?,
@@ -4083,9 +4177,16 @@ fn check(
 /// `value` with every `$fixture:` path in its texts made absolute (a bound layer's file, docs/adr/0503).
 fn setup_paths(value: &Value) -> Value {
     match value {
-        Value::String(text) if (text.contains("$fixture:") || text.contains("$tmp:")) => Value::String(with_fixtures(text)),
+        Value::String(text) if (text.contains("$fixture:") || text.contains("$tmp:")) => {
+            Value::String(with_fixtures(text))
+        }
         Value::Array(items) => Value::Array(items.iter().map(setup_paths).collect()),
-        Value::Object(fields) => Value::Object(fields.iter().map(|(k, v)| (k.clone(), setup_paths(v))).collect()),
+        Value::Object(fields) => Value::Object(
+            fields
+                .iter()
+                .map(|(k, v)| (k.clone(), setup_paths(v)))
+                .collect(),
+        ),
         other => other.clone(),
     }
 }
@@ -4137,9 +4238,12 @@ fn run_case(command: &str, setup: &Value, case: &Value, at: &str) -> Outcome<()>
 /// cases. Answers the commands they were for, the cases run and what failed.
 /// `KENTOS_CASES_ONLY=cad.walls,cad.nurbs` runs only the files whose names hold one of the words.
 fn only_cases() -> Option<Vec<String>> {
-    std::env::var("KENTOS_CASES_ONLY")
-        .ok()
-        .map(|v| v.split(',').map(str::to_owned).filter(|w| !w.is_empty()).collect())
+    std::env::var("KENTOS_CASES_ONLY").ok().map(|v| {
+        v.split(',')
+            .map(str::to_owned)
+            .filter(|w| !w.is_empty())
+            .collect()
+    })
 }
 
 fn run_folder(dir: &std::path::Path, least: usize) -> (Vec<String>, usize, Vec<String>) {

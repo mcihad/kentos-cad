@@ -1140,15 +1140,34 @@ impl Labels<'_> {
                     let slash = advance(face, '/', bold, true);
                     parts.push((upper, x, paragraph::STACK_OVER * height, small, 0.0));
                     parts.push(("/".into(), x + num * em, 0.0, small, 0.0));
-                    parts.push((lower, x + (num + slash) * em, paragraph::STACK_UNDER * height, small, 0.0));
+                    parts.push((
+                        lower,
+                        x + (num + slash) * em,
+                        paragraph::STACK_UNDER * height,
+                        small,
+                        0.0,
+                    ));
                     width = (num + slash + den) * em;
                 } else {
                     let w = num.max(den);
-                    parts.push((upper, x + (w - num) / 2.0 * em, paragraph::STACK_OVER * height, small, 0.0));
-                    parts.push((lower, x + (w - den) / 2.0 * em, paragraph::STACK_UNDER * height, small, 0.0));
+                    parts.push((
+                        upper,
+                        x + (w - num) / 2.0 * em,
+                        paragraph::STACK_OVER * height,
+                        small,
+                        0.0,
+                    ));
+                    parts.push((
+                        lower,
+                        x + (w - den) / 2.0 * em,
+                        paragraph::STACK_UNDER * height,
+                        small,
+                        0.0,
+                    ));
                     if mark == '/' {
                         // The bar: an underline 0.12 of its size under a blank's baseline.
-                        let bar = paragraph::STACK_BAR * height + 0.12 * height * paragraph::SCRIPT_SIZE;
+                        let bar =
+                            paragraph::STACK_BAR * height + 0.12 * height * paragraph::SCRIPT_SIZE;
                         let long = (w * em * self.camera.get().scale / width_factor) as f32;
                         parts.push((" ".into(), x, bar, small, long));
                     }
@@ -2540,14 +2559,15 @@ mod tests {
     /// object's layer beside the texts; the PDF puts them under the texts (sheet_pdf.rs).
     #[test]
     fn a_map_takes_the_placed_labels_backgrounds_and_callouts() {
-        let snapshot =
-            kentos_commands::DocumentSnapshotV1::from_json(crate::label_scenes::DRAWING)
-                .expect("the scene reads");
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(crate::label_scenes::DRAWING)
+            .expect("the scene reads");
         let doc = crate::document::Document::new(snapshot, None).expect("opens");
         let mut spatial = Spatial::new();
         spatial.reload(&doc.model);
         // The scene at 1:1000 on the paper: CSS pixels per ground metre.
         let camera = Camera {
+            map: None,
+            map_ratio: 1.0,
             center: kentos_render_wgpu::Vec2::new(487_140.0, 4_420_085.0),
             scale: 1.0 / crate::sheet_pdf::PX_MM,
             width: 1400.0,

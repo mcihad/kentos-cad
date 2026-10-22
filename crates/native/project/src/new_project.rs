@@ -55,6 +55,7 @@ pub struct NewProject {
 /// The default units of a project (the web's `PROJECT_SETTINGS_DEFAULTS`).
 pub fn default_settings(srid: u32) -> ProjectSettings {
     ProjectSettings {
+        map_srid: None,
         leader_styles: Vec::new(),
         wall_styles: Vec::new(),
         arch: None,
@@ -266,6 +267,7 @@ fn label(placement: LabelPlacement, size: f64) -> LabelStyle {
 
 fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
     LayerNode {
+        source_crs: None,
         table_styles: Vec::new(),
         subtypes: None,
         contingents: Vec::new(),

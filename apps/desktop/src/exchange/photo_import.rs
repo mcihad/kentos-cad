@@ -436,6 +436,7 @@ impl App {
             LayerTarget::Existing(id) => self.layer_name(id),
         };
         let import = ImportPlan {
+            source_srid: None,
             label: TITLE.to_owned(),
             layers: vec![(String::new(), target)],
             group: None,

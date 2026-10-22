@@ -2999,6 +2999,22 @@ PinMatchName = Literal["key", "geometry", "nearest"]
 """The names of :class:`PinMatch`, for a plain string."""
 
 
+class PlanBox(_StrEnum):
+    """How the box was applied.
+
+    - ``index``: By the source's spatial index.
+    - ``geometry``: By each geometry's box, in the source (no index).
+    - ``local``: Here, over the drawing's objects.
+    """
+    INDEX = "index"
+    GEOMETRY = "geometry"
+    LOCAL = "local"
+
+
+PlanBoxName = Literal["index", "geometry", "local"]
+"""The names of :class:`PlanBox`, for a plain string."""
+
+
 class PointLabelMode(_StrEnum):
     """Where a point's label goes (docs/adr/0212 §3.3).
 
@@ -3311,6 +3327,36 @@ class PropertiesOperation(_StrEnum):
 
 PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "attributes", "label", "unlink", "template", "attachments", "lineType", "lineTypeScale", "transparency", "wipeout"]
 """The names of :class:`PropertiesOperation`, for a plain string."""
+
+
+class QueriedKind(_StrEnum):
+    """What a question was asked of.
+
+    - ``drawing``: The drawing's objects.
+    - ``geopackage``: A GeoPackage file.
+    - ``postgis``: A PostGIS database.
+    """
+    DRAWING = "drawing"
+    GEOPACKAGE = "geopackage"
+    POSTGIS = "postgis"
+
+
+QueriedKindName = Literal["drawing", "geopackage", "postgis"]
+"""The names of :class:`QueriedKind`, for a plain string."""
+
+
+class QueryScope(_StrEnum):
+    """What a layer's question is asked of.
+
+    - ``loaded``: The drawing's objects of the layer: a bound layer's working copy (of a part, a part only).
+    - ``source``: A bound layer's source, the whole table.
+    """
+    LOADED = "loaded"
+    SOURCE = "source"
+
+
+QueryScopeName = Literal["loaded", "source"]
+"""The names of :class:`QueryScope`, for a plain string."""
 
 
 class RasterRender(_StrEnum):
@@ -4065,10 +4111,12 @@ SyncDirectionName = Literal["write", "read"]
 
 
 class SyncTopology(_StrEnum):
-    """How a write takes the table's rows outside a part's area (docs/adr/0531): those sharing a corner or an edge the
-    written objects changed follow them, in the same transaction.
+    """How a write takes the table's rows outside a part's area (docs/adr/0531, 0585): those sharing a corner or an edge
+    the written objects changed follow them, in the same transaction. A row is read by the changes' box from the file
+    or the database; a database's row is checked again under the table's lock (`source_changed` when someone changed it
+    since, `rows_denied` when the account may see but not change it: both profiles write nothing then).
 
-    - ``strict``: All or nothing: a row that would be left invalid refuses the whole write (`outside_neighbour_invalid`).
+    - ``strict``: All or nothing: a row that would be left invalid (too few vertices, or newly invalid: a ring crossing itself, of
     - ``loose``: The rows that can follow do; one that would be left invalid keeps its shape and is said (`neighbours_left`).
     """
     STRICT = "strict"
@@ -25750,6 +25798,7 @@ class LayerNode(_Model):
             objects. Only a layer has it, never a group.
         snap: A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;
             absent, the general kinds. Only a layer has it, never a group.
+        source_crs: The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group.
         subtypes: Alt türler (docs/adr/0422): the field that sorts the records and what each kind narrows.
             Only a layer holding objects has them.
         table_styles: Koşullu biçim (docs/adr/0413 §1): how the attribute table paints its rows and cells by
@@ -25779,6 +25828,7 @@ class LayerNode(_Model):
     scenario: ScenarioInfo | None | Unset = UNSET
     service: ServiceLayer | None | Unset = UNSET
     snap: LayerSnap | None | Unset = UNSET
+    source_crs: LayerSourceCrs | None | Unset = UNSET
     subtypes: LayerSubtypes | None | Unset = UNSET
     table_styles: list[TableStyle] | Unset = UNSET
     time: LayerTime | None | Unset = UNSET
@@ -25821,6 +25871,8 @@ class LayerNode(_Model):
             out["service"] = None if self.service is None else self.service.to_json()
         if self.snap is not UNSET:
             out["snap"] = None if self.snap is None else self.snap.to_json()
+        if self.source_crs is not UNSET:
+            out["sourceCrs"] = None if self.source_crs is None else self.source_crs.to_json()
         if self.subtypes is not UNSET:
             out["subtypes"] = None if self.subtypes is None else self.subtypes.to_json()
         if self.table_styles is not UNSET:
@@ -25854,6 +25906,7 @@ class LayerNode(_Model):
             scenario=UNSET if "scenario" not in data else None if data["scenario"] is None else ScenarioInfo.from_json(data["scenario"]),
             service=UNSET if "service" not in data else None if data["service"] is None else ServiceLayer.from_json(data["service"]),
             snap=UNSET if "snap" not in data else None if data["snap"] is None else LayerSnap.from_json(data["snap"]),
+            source_crs=UNSET if "sourceCrs" not in data else None if data["sourceCrs"] is None else LayerSourceCrs.from_json(data["sourceCrs"]),
             subtypes=UNSET if "subtypes" not in data else None if data["subtypes"] is None else LayerSubtypes.from_json(data["subtypes"]),
             table_styles=[TableStyle.from_json(e0) for e0 in data["tableStyles"]] if "tableStyles" in data else UNSET,
             time=UNSET if "time" not in data else None if data["time"] is None else LayerTime.from_json(data["time"]),
@@ -25930,6 +25983,47 @@ class LayerSnap(_Model):
         return cls(
             kinds=UNSET if "kinds" not in data else None if data["kinds"] is None else list(data["kinds"]),
             off=data.get("off", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerSourceCrs(_Model):
+    """The system a layer's objects came from.
+    Attributes:
+        wkt: WKT2 (ISO 19162:2019).
+        axis_order: `en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).
+        unit: `metre` or `degree`.
+        area: Where the system is meant for, in the registry's words.
+        srid: Its EPSG code, when the registry knows it. Unit: epsg.
+    """
+    name: str
+    wkt: str
+    axis_order: str
+    unit: str
+    area: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["wkt"] = self.wkt
+        out["axisOrder"] = self.axis_order
+        out["unit"] = self.unit
+        if self.area is not UNSET:
+            out["area"] = self.area
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerSourceCrs:
+        return cls(
+            name=data["name"],
+            wkt=data["wkt"],
+            axis_order=data["axisOrder"],
+            unit=data["unit"],
+            area=data.get("area", UNSET),
+            srid=data.get("srid", UNSET),
         )
 
 
@@ -26454,6 +26548,68 @@ class LayersContingents(_Model):
             layer=data["layer"],
             expected_revision=data.get("expectedRevision", UNSET),
             groups=[FieldGroup.from_json(e0) for e0 in data["groups"]] if "groups" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersCrs(_Model):
+    """Input of `cad.layers.crs` v1.
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        srid: The system its objects came from (an EPSG code the registry knows); absent or null clears the record. Unit: epsg.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersCrs:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersCrsSet(_Model):
+    """Output of `cad.layers.crs` v1.
+    Attributes:
+        changed: Whether it differed (an undo step was written).
+        revision: The document's revision after the write, as decimal text.
+        crs: The record now; absent when cleared.
+    """
+    layer: str
+    changed: bool
+    revision: str
+    crs: LayerSourceCrs | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        if self.crs is not UNSET:
+            out["crs"] = None if self.crs is None else self.crs.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersCrsSet:
+        return cls(
+            layer=data["layer"],
+            changed=data["changed"],
+            revision=data["revision"],
+            crs=UNSET if "crs" not in data else None if data["crs"] is None else LayerSourceCrs.from_json(data["crs"]),
         )
 
 
@@ -27151,6 +27307,79 @@ class LayersRendererPlan(_Model):
         return cls(
             node=LayerNode.from_json(data["node"]),
             changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersReproject(_Model):
+    """Input of `cad.layers.reproject` v1.
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        from_: The system the objects are in now (an EPSG code the registry knows); absent: the layer's recorded one. Unit: epsg.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    from_: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersReproject:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            from_=data.get("from", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersReprojected(_Model):
+    """Output of `cad.layers.reproject` v1.
+    Attributes:
+        from_: The system the objects came from. Unit: epsg.
+        to: The project's system they are in now. Unit: epsg.
+        moved: The objects moved. Unit: count.
+        via: The way and its accuracy (“EPSG:1311, ±1 m”), as the transforms say it.
+        crs: The layer's record now.
+        revision: The document's revision after the write, as decimal text.
+    """
+    layer: str
+    from_: int
+    to: int
+    moved: int
+    via: str
+    crs: LayerSourceCrs
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["moved"] = self.moved
+        out["via"] = self.via
+        out["crs"] = self.crs.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersReprojected:
+        return cls(
+            layer=data["layer"],
+            from_=data["from"],
+            to=data["to"],
+            moved=data["moved"],
+            via=data["via"],
+            crs=LayerSourceCrs.from_json(data["crs"]),
             revision=data["revision"],
         )
 
@@ -36430,6 +36659,8 @@ class ProjectSettings(_Model):
             absent: 1. Unit: 1.
         line_types: The project's line types with patterns (docs/adr/0313 §1).
         linear_events: The project's links of event layers to their routes (docs/adr/0569), in the list's order.
+        map_srid: The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:
+            the project's own. Changing it changes no coordinate. Unit: epsg.
         named_ucs: The project's named UCSs, in the order they were kept.
         named_views: The project's named views, in the order they were kept (docs/adr/0285 §1).
         networks: The project's networks (docs/adr/0209 §2).
@@ -36483,6 +36714,7 @@ class ProjectSettings(_Model):
     line_type_scale: float | None | Unset = UNSET
     line_types: list[LineTypeDef] | Unset = UNSET
     linear_events: list[EventLink] | Unset = UNSET
+    map_srid: int | None | Unset = UNSET
     named_ucs: list[NamedUcs] | Unset = UNSET
     named_views: list[NamedView] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
@@ -36550,6 +36782,8 @@ class ProjectSettings(_Model):
             out["lineTypes"] = [e0.to_json() for e0 in self.line_types]
         if self.linear_events is not UNSET:
             out["linearEvents"] = [e0.to_json() for e0 in self.linear_events]
+        if self.map_srid is not UNSET:
+            out["mapSrid"] = self.map_srid
         if self.named_ucs is not UNSET:
             out["namedUcs"] = [e0.to_json() for e0 in self.named_ucs]
         if self.named_views is not UNSET:
@@ -36614,6 +36848,7 @@ class ProjectSettings(_Model):
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_types=[LineTypeDef.from_json(e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
             linear_events=[EventLink.from_json(e0) for e0 in data["linearEvents"]] if "linearEvents" in data else UNSET,
+            map_srid=data.get("mapSrid", UNSET),
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             named_views=[NamedView.from_json(e0) for e0 in data["namedViews"]] if "namedViews" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
@@ -36968,6 +37203,200 @@ class QuantityTotals(_Model):
             wall_net_area=float(data["wallNetArea"]),
             openings=data["openings"],
             opening_area=float(data["openingArea"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class QueriedRow(_Model):
+    """A record a question returned.
+    Attributes:
+        uid: Its lasting id: the same in every window and in a bound layer's working copy.
+        attrs: The fields asked for, as the drawing's attributes read them (an empty value left out).
+        key: Its key in the source (fid, primary key); none for a drawing's object. Unit: id.
+        wkt: Its geometry in the project's system, ISO WKT (with `geometry`).
+    """
+    uid: str
+    attrs: dict[str, str]
+    key: int | None | Unset = UNSET
+    wkt: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["attrs"] = dict(self.attrs)
+        if self.key is not UNSET:
+            out["key"] = self.key
+        if self.wkt is not UNSET:
+            out["wkt"] = self.wkt
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> QueriedRow:
+        return cls(
+            uid=data["uid"],
+            attrs=dict(data["attrs"]),
+            key=data.get("key", UNSET),
+            wkt=data.get("wkt", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class QueriedSource(_Model):
+    """The source a question read.
+    Attributes:
+        path: The file's path or the database's address.
+        srid: The source's system (EPSG), when it is known. Unit: epsg.
+    """
+    kind: QueriedKind | QueriedKindName
+    layer: str | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.table is not UNSET:
+            out["table"] = self.table
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> QueriedSource:
+        return cls(
+            kind=_enum_in(QueriedKind, data["kind"]),
+            layer=data.get("layer", UNSET),
+            path=data.get("path", UNSET),
+            srid=data.get("srid", UNSET),
+            table=data.get("table", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class QueriedStatistic(_Model):
+    """A field's statistics over every record a question keeps: exact decimals as text.
+    Attributes:
+        read: Values read as numbers. Unit: count.
+        skipped: Values given but not numbers. Unit: count.
+        problem: Why the sums are not given (too large to sum exactly).
+        std: The sample standard deviation.
+    """
+    field: str
+    read: int
+    skipped: int
+    max: str | None | Unset = UNSET
+    mean: str | None | Unset = UNSET
+    min: str | None | Unset = UNSET
+    problem: str | None | Unset = UNSET
+    std: str | None | Unset = UNSET
+    sum: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["read"] = self.read
+        out["skipped"] = self.skipped
+        if self.max is not UNSET:
+            out["max"] = self.max
+        if self.mean is not UNSET:
+            out["mean"] = self.mean
+        if self.min is not UNSET:
+            out["min"] = self.min
+        if self.problem is not UNSET:
+            out["problem"] = self.problem
+        if self.std is not UNSET:
+            out["std"] = self.std
+        if self.sum is not UNSET:
+            out["sum"] = self.sum
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> QueriedStatistic:
+        return cls(
+            field=data["field"],
+            read=data["read"],
+            skipped=data["skipped"],
+            max=data.get("max", UNSET),
+            mean=data.get("mean", UNSET),
+            min=data.get("min", UNSET),
+            problem=data.get("problem", UNSET),
+            std=data.get("std", UNSET),
+            sum=data.get("sum", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class QueryNear(_Model):
+    """Records near a place (what a click identifies).
+    Attributes:
+        at: The place, in the project's system: east, north. Unit: length.
+        tolerance: How far from it a record's geometry may be. Unit: length.
+    """
+    at: list[float]
+    tolerance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = [float(e0) for e0 in self.at]
+        out["tolerance"] = float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> QueryNear:
+        return cls(
+            at=[float(e0) for e0 in data["at"]],
+            tolerance=float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class QueryPlan(_Model):
+    """What the source did and what was done here (docs/adr/0581 §4).
+    Attributes:
+        columns: The columns the source read.
+        geometry: Whether the source read the geometry.
+        exact: Whether that condition is the whole filter and keeps exactly what it keeps.
+        local: What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,
+            `statistics`.
+        order: The order of the records: `key` (the source's) or `uid` (the drawing's).
+        pushed: The condition the source checked, its values written in.
+    """
+    columns: list[str]
+    geometry: bool
+    exact: bool
+    local: list[str]
+    order: str
+    box: PlanBox | PlanBoxName | None | Unset = UNSET
+    pushed: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["columns"] = list(self.columns)
+        out["geometry"] = self.geometry
+        out["exact"] = self.exact
+        out["local"] = list(self.local)
+        out["order"] = self.order
+        if self.box is not UNSET:
+            out["box"] = None if self.box is None else _enum_out(self.box)
+        if self.pushed is not UNSET:
+            out["pushed"] = self.pushed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> QueryPlan:
+        return cls(
+            columns=list(data["columns"]),
+            geometry=data["geometry"],
+            exact=data["exact"],
+            local=list(data["local"]),
+            order=data["order"],
+            box=UNSET if "box" not in data else None if data["box"] is None else _enum_in(PlanBox, data["box"]),
+            pushed=data.get("pushed", UNSET),
         )
 
 
@@ -40362,6 +40791,7 @@ class SettingsSet(_Model):
         length_decimals: Unit: count.
         length_style: How lengths are written (docs/adr/0262 §2): decimal, or architectural,
             engineering and fractional feet and inches in an inch or foot drawing.
+        map_srid: The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes. Unit: epsg.
         plot_scale: Unit: scale.
         second_srid: Unit: epsg.
         srid: Unit: epsg.
@@ -40377,6 +40807,7 @@ class SettingsSet(_Model):
     heights: HeightReference | None | Unset = UNSET
     length_decimals: int | None | Unset = UNSET
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
+    map_srid: int | None | Unset = UNSET
     name: str | None | Unset = UNSET
     plot_scale: float | None | Unset = UNSET
     project_type: Workspace | WorkspaceName | None | Unset = UNSET
@@ -40407,6 +40838,8 @@ class SettingsSet(_Model):
             out["lengthDecimals"] = self.length_decimals
         if self.length_style is not UNSET:
             out["lengthStyle"] = None if self.length_style is None else _enum_out(self.length_style)
+        if self.map_srid is not UNSET:
+            out["mapSrid"] = self.map_srid
         if self.name is not UNSET:
             out["name"] = self.name
         if self.plot_scale is not UNSET:
@@ -40433,6 +40866,7 @@ class SettingsSet(_Model):
             heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
             length_decimals=data.get("lengthDecimals", UNSET),
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
+            map_srid=data.get("mapSrid", UNSET),
             name=data.get("name", UNSET),
             plot_scale=UNSET if "plotScale" not in data else None if data["plotScale"] is None else float(data["plotScale"]),
             project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(Workspace, data["projectType"]),
@@ -41655,6 +42089,149 @@ class SourcesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SourcesQueried(_Model):
+    """Output of `cad.sources.query` v1, and its plan.
+    Attributes:
+        partial: The answer is of a bound layer's part, not of the whole data set.
+        read: How many records the source handed over. Unit: count.
+        next: The cursor of the page after this one; none on the last.
+        stamp: A cheap mark of a file's state (its size and modification time); none for a database or the drawing.
+        total: How many records the question keeps (with `count` or `statistics`). Unit: count.
+    """
+    source: QueriedSource
+    rows: list[QueriedRow]
+    plan: QueryPlan
+    partial: bool
+    read: int
+    revision: str
+    next: str | None | Unset = UNSET
+    stamp: str | None | Unset = UNSET
+    statistics: list[QueriedStatistic] | Unset = UNSET
+    total: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source.to_json()
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["plan"] = self.plan.to_json()
+        out["partial"] = self.partial
+        out["read"] = self.read
+        out["revision"] = self.revision
+        if self.next is not UNSET:
+            out["next"] = self.next
+        if self.stamp is not UNSET:
+            out["stamp"] = self.stamp
+        if self.statistics is not UNSET:
+            out["statistics"] = [e0.to_json() for e0 in self.statistics]
+        if self.total is not UNSET:
+            out["total"] = self.total
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesQueried:
+        return cls(
+            source=QueriedSource.from_json(data["source"]),
+            rows=[QueriedRow.from_json(e0) for e0 in data["rows"]],
+            plan=QueryPlan.from_json(data["plan"]),
+            partial=data["partial"],
+            read=data["read"],
+            revision=data["revision"],
+            next=data.get("next", UNSET),
+            stamp=data.get("stamp", UNSET),
+            statistics=[QueriedStatistic.from_json(e0) for e0 in data["statistics"]] if "statistics" in data else UNSET,
+            total=data.get("total", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesQuery(_Model):
+    """Input of `cad.sources.query` v1: `layer`, or `path` and `table`.
+
+    Refusals, checked in this order: `invalid_input` (neither or both of `layer` and `path`, `table` without `path`,
+    `path` without `table`, `scope` without `layer`), `invalid_count` (`limit` past 10 000), `invalid_extent` (a box that
+    is reversed or not finite), `invalid_tolerance`, `invalid_cursor` (not a cursor of this question), `invalid_expression`
+    (the filter does not compile, reads `$sıra` or `$ölçek`, or looks at another layer), `layer_not_found`, `invalid_input`
+    (`scope: source` on a layer that is not bound), `file_not_found`, `import_unreadable`, `table_not_found`,
+    `field_not_found` (in `fields` or `statistics`), `source_unreachable`. A job stopped answers `cancelled`.
+    Attributes:
+        bbox: Records whose box meets this one, in the project's system: west, south, east, north. Unit: length.
+        count: Count every record the question keeps.
+        cursor: The page after the one whose `next` this is.
+        fields: The fields returned, by name; none: all of them.
+        filter: A condition in İfadeyle seç's language: the records it holds for.
+        geometry: Return each record's geometry in the project's system (ISO WKT).
+        layer: A layer of the drawing (its id).
+        limit: How many records a page holds, 0–10 000; none: 100. 0 returns none (for a count or statistics). Unit: count.
+        near: Records near a place.
+        path: A GeoPackage file's path, or a database's address (`postgresql://…`, no password).
+        scope: With `layer`: its working copy (the default) or its source's whole table.
+        statistics: Fields whose statistics are of every record the question keeps (`kentos.statistics/1`).
+        table: With `path`: the table (`schema.table` in a database).
+    """
+    bbox: list[float] | None | Unset = UNSET
+    count: bool | None | Unset = UNSET
+    cursor: str | None | Unset = UNSET
+    fields: list[str] | None | Unset = UNSET
+    filter: str | None | Unset = UNSET
+    geometry: bool | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    near: QueryNear | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    scope: QueryScope | QueryScopeName | None | Unset = UNSET
+    statistics: list[str] | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.bbox is not UNSET:
+            out["bbox"] = None if self.bbox is None else [float(e0) for e0 in self.bbox]
+        if self.count is not UNSET:
+            out["count"] = self.count
+        if self.cursor is not UNSET:
+            out["cursor"] = self.cursor
+        if self.fields is not UNSET:
+            out["fields"] = None if self.fields is None else list(self.fields)
+        if self.filter is not UNSET:
+            out["filter"] = self.filter
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.near is not UNSET:
+            out["near"] = None if self.near is None else self.near.to_json()
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.scope is not UNSET:
+            out["scope"] = None if self.scope is None else _enum_out(self.scope)
+        if self.statistics is not UNSET:
+            out["statistics"] = None if self.statistics is None else list(self.statistics)
+        if self.table is not UNSET:
+            out["table"] = self.table
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesQuery:
+        return cls(
+            bbox=UNSET if "bbox" not in data else None if data["bbox"] is None else [float(e0) for e0 in data["bbox"]],
+            count=data.get("count", UNSET),
+            cursor=data.get("cursor", UNSET),
+            fields=UNSET if "fields" not in data else None if data["fields"] is None else list(data["fields"]),
+            filter=data.get("filter", UNSET),
+            geometry=data.get("geometry", UNSET),
+            layer=data.get("layer", UNSET),
+            limit=data.get("limit", UNSET),
+            near=UNSET if "near" not in data else None if data["near"] is None else QueryNear.from_json(data["near"]),
+            path=data.get("path", UNSET),
+            scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(QueryScope, data["scope"]),
+            statistics=UNSET if "statistics" not in data else None if data["statistics"] is None else list(data["statistics"]),
+            table=data.get("table", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SourcesReconcile(_Model):
     """Input of `cad.sources.reconcile` v1. Refusals: `source_not_found`, `layer_not_found`, `source_gone`,
     `derived_dataset`, `crs_mismatch`, `invalid_extent`, `source_readonly`, `layer_locked`, `no_source_base` (the link has no
@@ -41852,7 +42429,8 @@ class SourcesRelated(_Model):
 @dataclass(kw_only=True, slots=True)
 class SourcesSync(_Model):
     """Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,
-    `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:
+    `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`, `rows_denied` (a
+    database's rows the account may not change: privilege or row security, docs/adr/0585 §2); conflicts:
     `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
     the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
     for stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep
@@ -41872,9 +42450,11 @@ class SourcesSync(_Model):
     Attributes:
         layer: The bound layer, by id.
         discard: Reading: take the table's rows though the layer differs (one undo step brings the layer back).
-        topology: Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners
-            and edges follow in the same transaction. Reading refuses it (`topology_on_read`).
-        with_: Writing: more bound layers (by id) written in the same transaction.
+        topology: Writing a part's working copy (docs/adr/0531, 0585): the table's rows outside the area that share the changed
+            corners and edges follow in the same transaction, a GeoPackage's or a PostGIS table's. Reading refuses it
+            (`topology_on_read`).
+        with_: Writing: more bound layers (by id) written in the same transaction: of the same GeoPackage file or the same
+            PostGIS database (docs/adr/0532 §1, 0584 §1); layers of two sources are `transaction_split`.
     """
     layer: str
     direction: SyncDirection | SyncDirectionName
@@ -60776,6 +61356,7 @@ __all__ = [
     "LayerSetOperation",
     "LayerSetOperationName",
     "LayerSnap",
+    "LayerSourceCrs",
     "LayerState",
     "LayerStateNode",
     "LayerStatesDone",
@@ -60791,6 +61372,8 @@ __all__ = [
     "LayersComposePlan",
     "LayersComposed",
     "LayersContingents",
+    "LayersCrs",
+    "LayersCrsSet",
     "LayersEdit",
     "LayersEdited",
     "LayersFilter",
@@ -60807,6 +61390,8 @@ __all__ = [
     "LayersRendered",
     "LayersRenderer",
     "LayersRendererPlan",
+    "LayersReproject",
+    "LayersReprojected",
     "LayersRules",
     "LayersService",
     "LayersServicePlan",
@@ -61094,6 +61679,8 @@ __all__ = [
     "PlaceMeasuredPoint",
     "PlaceOn",
     "PlacementArrayEdit",
+    "PlanBox",
+    "PlanBoxName",
     "PointBinding",
     "PointBlockParameter",
     "PointCadElement",
@@ -61236,6 +61823,15 @@ __all__ = [
     "QmlExported",
     "QmlImported",
     "QuantityTotals",
+    "QueriedKind",
+    "QueriedKindName",
+    "QueriedRow",
+    "QueriedSource",
+    "QueriedStatistic",
+    "QueryNear",
+    "QueryPlan",
+    "QueryScope",
+    "QueryScopeName",
     "RadiusConstraintRule",
     "RadiusDimensionMeasure",
     "RampEntity",
@@ -61490,6 +62086,8 @@ __all__ = [
     "SourcesEdit",
     "SourcesEditOp",
     "SourcesEdited",
+    "SourcesQueried",
+    "SourcesQuery",
     "SourcesReconcile",
     "SourcesReconciled",
     "SourcesRelate",

@@ -1,4 +1,4 @@
-//! DWG exchange contracts (ADR 0580). These contain no external codec types.
+//! DWG exchange contracts (ADR 0586). These contain no external codec types.
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]

@@ -1169,6 +1169,9 @@ codes! {
     TOPOLOGY_ON_READ = "topology_on_read", Failed, false, "Komşuların izlemesi yalnız yazarken olur.";
     /// A loose write's neighbours outside the area that kept their shape (docs/adr/0531).
     NEIGHBOURS_LEFT = "neighbours_left", Warning, false, "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi.";
+    /// Rows a write would change that the account sees but may not change: no privilege or a row security policy
+    /// (docs/adr/0585 §2).
+    ROWS_DENIED = "rows_denied", Failed, false, "Hesap tablonun bazı satırlarını görür ama değiştiremez (yetki ya da satır güvenliği); hiçbir şey yazılmadı.";
     /// A uid given to a point cloud command that is not a point cloud (docs/adr/0536).
     NOT_A_POINTCLOUD = "not_a_pointcloud", Failed, false, "Verilen nesne bir nokta bulutu değil.";
     /// Counting the classes would read more points than one call does (docs/adr/0536).
@@ -1657,6 +1660,18 @@ codes! {
     INVALID_PDF_REGION = "invalid_pdf_region", Failed, false, "PDF'ten alınacak bölge sayfaya değen, eni ve boyu sıfırdan büyük bir dikdörtgen olmalı.";
     /// What a PDF page holds that an underlay does not take (pictures, shadings, texts it cannot read).
     PDF_LEFT_OUT = "pdf_left_out", Warning, false, "PDF sayfasındaki bazı içerik altlığa alınmadı (resimler, gölgelemeler, okunamayan yazılar).";
+    /// A question answered from a bound layer's part (docs/adr/0581 §5).
+    PARTIAL_SCOPE = "partial_scope", Warning, false, "Yanıt bağlı katmanın yüklenen parçasından; bütün veri kümesi için kapsamı kaynak yapın (scope: source).";
+    /// Records a source handed over that could not be read (docs/adr/0581 §4).
+    ROWS_UNREADABLE = "rows_unreadable", Warning, false, "Geometrisi okunamayan kayıtlar atlandı; iletisi kaçını söyler.";
+    /// Objects a reprojection cannot move into the project's system (docs/adr/0583 §2).
+    CRS_UNREACHED = "crs_unreached", Failed, false, "Bazı nesneler projenin sistemine çevrilemiyor (sistemin dışında); hiçbir şey yazılmadı. uids onları söyler.";
+    /// A view or a query without an integer key column (docs/adr/0582 §3).
+    NO_ROW_KEY = "no_row_key", Failed, false, "View ya da sorgu katmanında tam sayı bir anahtar sütunu (fid, id, gid, ogc_fid) yok.";
+    /// A view or a query whose key repeats (docs/adr/0582 §3).
+    ROW_KEY_NOT_UNIQUE = "row_key_not_unique", Failed, false, "View ya da sorgu katmanının anahtarı birden çok satırda aynı.";
+    /// A write that went through while someone else changed other rows of the area (docs/adr/0582 §2).
+    SOURCE_OTHERS = "source_others", Warning, false, "Alanın başka satırlarını başka biri değiştirdi; okuyarak katmana alın.";
     /// A point snapped or measured on a PDF underlay: a picture of a drawing, not its geometry.
     UNDERLAY_MEASURE = "underlay_measure", Warning, false, "Nokta bir PDF altlığından alındı; altlık bir çizimin resmidir, ölçüsü kanıtlanmış CAD geometrisi değildir.";
     /// A pasted block or style whose name this drawing has, renamed.

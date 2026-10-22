@@ -1,6 +1,6 @@
 # CAD dosya değişimi: karar, kapsam ve koruma kuralları
 
-22 Ekim 2026. CAD-IO-01/02/03/06/08/16/18/19 için kaynak ve kabul kaydı. Uygulanan sağlayıcı seçimi [ADR 0580](../adr/0580-dwg-opencadcodec-git.md). “Sağlayıcı destekliyor”, KentOS'ta denenmiş veya kayıpsız demek değildir. Bu belge sağlayıcı lisansının yerine geçmez.
+22 Ekim 2026. CAD-IO-01/02/03/06/08/16/18/19 için kaynak ve kabul kaydı. Uygulanan sağlayıcı seçimi [ADR 0586](../adr/0586-dwg-opencadcodec-git.md). “Sağlayıcı destekliyor”, KentOS'ta denenmiş veya kayıpsız demek değildir. Bu belge sağlayıcı lisansının yerine geçmez.
 
 ## Sağlayıcı karar matrisi
 
@@ -19,7 +19,7 @@ RealDWG'nin C++/.NET arayüzü ve güncel Windows gereksinimi [Autodesk'in ürü
 | İçerik | KentOS okuma | KentOS yazma | Semantik/kayıp koşulu |
 |---|---|---|---|
 | Model-space temel 2B | LINE, POINT, CIRCLE, ARC, ELLIPSE, POLYLINE/LWPOLYLINE, SPLINE | yerel CAD entity'leri | Z/OCS/projeksiyon, çizgi genişliği ve dönüşümler ayrı sayısal korpusla sınanır |
-| Çoklu çizgi bütünlüğü | düzlemsel genişlik/yay/kot, ±Z extrusion; X/Y ölçeği korunmuş INSERT | standart planar LWPOLYLINE veya 3B düz POLYLINE | 2B modelin taşıyamadığı dönüşüm varsayılan polyline_geometry_loss; yalnız açık allowPolylineLoss ile raporlu yaklaşık sonuç; genel eğik/afin yerel düzenleme henüz yok (ADR 0582) |
+| Çoklu çizgi bütünlüğü | düzlemsel genişlik/yay/kot, ±Z extrusion; X/Y ölçeği korunmuş INSERT | standart planar LWPOLYLINE veya 3B düz POLYLINE | 2B modelin taşıyamadığı dönüşüm varsayılan polyline_geometry_loss; yalnız açık allowPolylineLoss ile raporlu yaklaşık sonuç; genel eğik/afin yerel düzenleme henüz yok (ADR 0588) |
 | Katman | LAYER, açık/kapalı, donmuş, kilit, plot, renk/kalınlık | LAYER | ad çakışması ve grup düzleştirmesi raporlanır |
 | LTYPE/LIN | basit örüntü, karmaşık yazı/shape tanımı | LTYPE | dosyası bulunmayan SHX görünümü eşdeğer kabul edilmez |
 | STYLE | font adı, yükseklik, genişlik/hiza ve mevcut model alanları | STYLE | bulunmayan yüz için kullanılan alternatif raporlanır |

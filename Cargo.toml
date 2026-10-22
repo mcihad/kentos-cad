@@ -9,7 +9,7 @@ members = [
     "crates/shared/contracts",
     "crates/shared/commands",
     "crates/shared/formats",
-    # DWG codec adapter (ADR 0580): OpenCADStudio's pinned, MPL-2.0 codec;
+    # DWG codec adapter (ADR 0586): OpenCADStudio's pinned, MPL-2.0 codec;
     # its types never cross this crate's public boundary.
     "crates/native/dwg",
     # Point clouds (docs/adr/0207): LAS, LAZ, COPC and text clouds, their index, looks and

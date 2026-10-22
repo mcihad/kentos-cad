@@ -574,6 +574,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::LayerFilter { layer, .. }
             | Op::LayerInfo { layer, .. }
             | Op::LayerCompose { layer, .. }
+            | Op::LayerSourceCrs { layer, .. }
             | Op::LayerTableStyles { layer, .. }
             | Op::LayerSubtypes { layer, .. }
             | Op::LayerContingents { layer, .. }

@@ -679,6 +679,7 @@ impl App {
             })
             .collect();
         let plan = ImportPlan {
+            source_srid: None,
             label: format!("{}: {name}", source.prefix()),
             layers,
             group: Some(name.clone()),

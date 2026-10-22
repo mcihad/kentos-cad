@@ -5,73 +5,114 @@
 //! through here, so they all run the same handler the tools run.
 
 use crate::{
+    attachments_inspect, domains_edit, domains_export, fields_migrate, forms_export, forms_import,
+    schema_describe,
+};
+use crate::{
     file_import_dwg, block_params, blocks_freeze, blocks_proxy, blocks_query, blocks_replace, file_import_block,
 };
 use kentos_commands::{
-    AddressesDefine, AnnotationsScales, ArcCreate, ArraysEdit, BlocksDefine, BlocksEdit, CallOp, ChangesetApply,
-    CircleCreate, CurvesConstruct, CurvesEdit, DimensionsCreate, DimensionsEdit, DimensionsQuery, DimensionsReassociate, FieldsEdit, HatchesEdit, LeadersEdit, TablesEdit, FontsReport, TextsCheck, TextsEdit,
-    DrawingAudit, EntitiesArray, EntitiesBoundary, EntitiesBreak, EntitiesChamfer, EntitiesCleanup,
-    EntitiesCopy, EntitiesCreate, EntitiesDelete, EntitiesDivide, EntitiesEdit, EntitiesExplode,
-    EntitiesFillet, EntitiesHatch, EntitiesJoin, EntitiesLengthen, EntitiesMatch, EntitiesOffset,
-    EntitiesOrder, EntitiesPaste, EntitiesPick, EntitiesRelate, EntitiesReverse, CrsTransform, EntitiesSelect,
+    AddressesDefine, AnnotationsScales, ArcCreate, ArraysEdit, BlocksDefine, BlocksEdit, CallOp,
+    ChangesetApply, CircleCreate, CrsTransform, CurvesConstruct, CurvesEdit, DimensionsCreate,
+    DimensionsEdit, DimensionsQuery, DimensionsReassociate, DrawingAudit, EntitiesArray,
+    EntitiesBoundary, EntitiesBreak, EntitiesChamfer, EntitiesCleanup, EntitiesCopy,
+    EntitiesCreate, EntitiesDelete, EntitiesDivide, EntitiesEdit, EntitiesExplode, EntitiesFillet,
+    EntitiesHatch, EntitiesJoin, EntitiesLengthen, EntitiesMatch, EntitiesOffset, EntitiesOrder,
+    EntitiesPaste, EntitiesPick, EntitiesRelate, EntitiesReverse, EntitiesSelect,
     EntitiesSetProperties, EntitiesStretch, EntitiesTransform, EntitiesTrim, EntitiesVertex,
-    FieldsUsage, GisDerivation, ImportCsv, ImportDxf, ImportFgb, ImportGeojson, ImportGml, ImportGpkg, ImportKml, ImportShp, ImportQml, ImportSld, LabelsPin, LabelsReport, LayersCompose, LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersContingents, LayersRules, LayersSubtypes, LayersTable, ImportPdf, ImportMaplibre,
-    LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime,
-    LayersTranslate, LibraryEdit, LineCreate, LineTypesEdit, HatchPatternsEdit, NetworkDefine, NurbsCreate, WallsCreate, WallsEdit, WallsFromLines,
-    PointCreate, PointsConstruct, PolygonCreate, PolylineCreate, RectangleCreate,
-    RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
-    StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
+    FieldsEdit, FieldsUsage, FontsReport, GisDerivation, HatchPatternsEdit, HatchesEdit, ImportCsv,
+    ImportDxf, ImportFgb, ImportGeojson, ImportGml, ImportGpkg, ImportKml, ImportMaplibre,
+    ImportPdf, ImportQml, ImportShp, ImportSld, LabelsPin, LabelsReport, LayersCompose,
+    LayersContingents, LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels,
+    LayersRenderer, LayersRules, LayersService, LayersSet, LayersStates, LayersSubtypes,
+    LayersTable, LayersTime, LayersTranslate, LeadersEdit, LibraryEdit, LineCreate, LineTypesEdit,
+    NetworkDefine, NurbsCreate, PointCreate, PointsConstruct, PolygonCreate, PolylineCreate,
+    RectangleCreate, RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind,
+    StandardsApply, StandardsCheck, StylesEdit, StylesImpact, TablesEdit, TextsCheck, TextsEdit,
+    UcsSet, UnitsChange, ViewsEdit, WallsCreate, WallsEdit, WallsFromLines, codes,
 };
-use kentos_commands::{AssetsCheck, ImagesEdit, RastersMosaic, RastersGeoref, WallsJoins, OpeningsCreate, OpeningsEdit, SpacesCreate, SpacesEdit, SpacesQuantities, GridsCreate, ColumnsCreate, StairsCreate, RampsCreate, ArchEdit, TagsCreate, TagsCheck, TagsEdit, ViewMarksCreate, ViewMarksEdit, ViewMarksReferences, SpacesFinish, TemplatesApply, SheetsSet, XrefsEdit, XrefsList, SchedulesCreate, SchedulesEdit, AttachmentsInspect, ConstraintsEdit, ConstraintsQuery, ParametersEdit, FieldsWrite, ProcessingBatch, ProcessingRun, ProcessingTools, SourcesDescribe, SourcesEdit, SourcesReconcile, SourcesRelate, SourcesSync, RecordsPage, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock, InsertsClip};
-use crate::{
-    attachments_inspect, schema_describe, domains_edit, domains_export, fields_migrate, forms_export,
-    forms_import,
+use kentos_commands::{
+    ArchEdit, AssetsCheck, AttachmentsInspect, BlocksFreeze, BlocksInsert, BlocksParameters,
+    BlocksProxy, BlocksQuery, BlocksReplace, ColumnsCreate, ConstraintsEdit, ConstraintsQuery,
+    DomainsEdit, DomainsExport, FieldsMigrate, FieldsWrite, FormsExport, FormsImport, GridsCreate,
+    ImagesEdit, ImportBlock, InsertsClip, OpeningsCreate, OpeningsEdit, ParametersEdit,
+    ProcessingBatch, ProcessingRun, ProcessingTools, RampsCreate, RastersGeoref, RastersMosaic,
+    RecordsPage, SchedulesCreate, SchedulesEdit, SchemaDescribe, SheetsSet, SourcesDescribe,
+    SourcesEdit, SourcesQuery, SourcesReconcile, SourcesRelate, SourcesSync, SpacesCreate,
+    SpacesEdit, SpacesFinish, SpacesQuantities, StairsCreate, TagsCheck, TagsCreate, TagsEdit,
+    TemplatesApply, ViewMarksCreate, ViewMarksEdit, ViewMarksReferences, WallsJoins, XrefsEdit,
+    XrefsList,
 };
 use serde_json::Value;
 
+use crate::addresses_check;
 use crate::blocks_insert;
-use crate::{joins_edit, joins_query};
-use kentos_commands::{JoinsEdit, JoinsQuery};
+use crate::drawing_compare;
 use crate::fields_write;
-use crate::{processing_batch, processing_run, processing_tools};
-use crate::{stac_prepare, stac_search};
-use crate::meshes::{describe as meshes_describe, query as meshes_query};
 use crate::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
-use kentos_commands::{RastersGpkgRead, RastersGpkgWrite};
+use crate::layers_crs::{assign as layers_crs_assign, reproject as layers_reproject};
+use crate::meshes::{describe as meshes_describe, query as meshes_query};
 use crate::pointcloud_areas::{profile as pointclouds_profile, region as pointclouds_region};
 use crate::pointclouds::{describe as pointclouds_describe, query as pointclouds_query};
+use crate::profile_files::{
+    import as profiles_import, list as profiles_list, migrate as profiles_migrate,
+};
+use crate::profiles::{apply as profiles_apply, check as profiles_check};
+use crate::records_page;
+use crate::sources::{
+    describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile,
+    relate as sources_relate, sync as sources_sync,
+};
+use crate::sources_query;
+use crate::standards::{apply as standards_apply, check as standards_check};
+use crate::time_query;
+use crate::{
+    DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, arch_edit, array,
+    arrays_edit, assets_check, blocks_define, blocks_edit, changeset, circle, columns_create,
+    constraints_edit, constraints_query, create, crs_transform, curves_construct, curves_edit,
+    delete, dimensions_create, dimensions_edit, dimensions_query, dimensions_reassociate, divide,
+    drawing_audit, edit, entities_boundary, entities_break, entities_chamfer, entities_cleanup,
+    entities_copy, entities_explode, entities_extend, entities_fillet, entities_hatch,
+    entities_join, entities_lengthen, entities_match, entities_order, entities_paste,
+    entities_pick, entities_relate, entities_reverse, entities_select, entities_trim,
+    entities_vertex, fields_edit, fields_usage, file_import, file_import_csv, file_import_fgb,
+    file_import_geojson, file_import_gml, file_import_gpkg, file_import_kml, file_import_pdf,
+    file_import_shp, fonts_report, gis_derivation, grids_create, hatch_patterns_edit, hatches_edit,
+    images_edit, inserts_clip, labels_pin, labels_report, layers_compose, layers_contingents,
+    layers_edit, layers_filter, layers_find, layers_info, layers_labels, layers_renderer,
+    layers_rules, layers_service, layers_set, layers_states, layers_subtypes, layers_table,
+    layers_time, layers_translate, leaders_edit, library_edit, line, line_types_edit,
+    linearref_define, maplibre, network_define, nurbs, offset, openings_create, openings_edit,
+    parameters_edit, point, points_construct, polygon, polygon_regular, polyline, qml,
+    ramps_create, rasters_georef, rasters_mosaic, rectangle_create, scenarios_edit,
+    schedules_create, schedules_edit, set, settings_set, sheets_edit, sheets_set, sld, snap_find,
+    spaces_create, spaces_edit, spaces_finish, spaces_quantities, stairs_create, stretch,
+    styles_edit, styles_impact, tables_edit, tags_check, tags_create, tags_edit, templates_apply,
+    texts_check, texts_edit, transform, ucs_set, units_change, viewmarks_create, viewmarks_edit,
+    viewmarks_references, views_edit, walls_create, walls_edit, walls_from_lines, walls_joins,
+    xrefs_edit, xrefs_list,
+};
+use crate::{
+    forms_audit, forms_compare, forms_edit, forms_fill, forms_recompute, forms_submit, forms_test,
+    forms_transition, forms_validate, records, records_duplicate, relations_edit,
+};
+use crate::{joins_edit, joins_query};
+use crate::{processing_batch, processing_run, processing_tools};
+use crate::{stac_prepare, stac_search};
+use crate::{subnetworks, subnetworks_update};
+use kentos_commands::AddressesCheck;
+use kentos_commands::DrawingCompare;
+use kentos_commands::{
+    FormsAudit, FormsCompare, FormsEdit, FormsFill, FormsRecompute, FormsSubmit, FormsTest,
+    FormsTransition, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
+};
+use kentos_commands::{JoinsEdit, JoinsQuery};
 use kentos_commands::{
     MeshesDescribe, MeshesQuery, PointCloudsDescribe, PointCloudsProfile, PointCloudsQuery,
     PointCloudsRegion, TimeQuery,
 };
-use crate::time_query;
-use crate::drawing_compare;
-use kentos_commands::DrawingCompare;
-use crate::addresses_check;
-use kentos_commands::AddressesCheck;
+use kentos_commands::{RastersGpkgRead, RastersGpkgWrite};
 use kentos_commands::{StacPrepare, StacSearch};
-use crate::{subnetworks, subnetworks_update};
-use crate::sources::{describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile, relate as sources_relate, sync as sources_sync};
-use crate::records_page;
-use crate::profiles::{apply as profiles_apply, check as profiles_check};
-use crate::profile_files::{import as profiles_import, list as profiles_list, migrate as profiles_migrate};
-use crate::standards::{apply as standards_apply, check as standards_check};
-use crate::{
-    DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, arrays_edit, constraints_edit, constraints_query, parameters_edit, blocks_define,
-    blocks_edit, changeset, circle, create, curves_construct, curves_edit, delete,
-    dimensions_create, dimensions_edit, dimensions_query, dimensions_reassociate, divide, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit, drawing_audit, edit, entities_boundary,
-    entities_break, entities_chamfer, entities_cleanup, entities_copy, entities_explode,
-    entities_extend, entities_fillet, entities_hatch, entities_join, entities_lengthen,
-    entities_match, entities_order, entities_paste, entities_pick, entities_relate, entities_reverse, crs_transform, entities_select, entities_trim, entities_vertex, file_import, file_import_csv, file_import_fgb, file_import_geojson, file_import_gml, file_import_gpkg, file_import_kml, file_import_shp, gis_derivation, qml, sld, labels_pin, labels_report, layers_compose, fields_usage, layers_edit, layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_contingents, layers_rules, layers_subtypes, layers_table, layers_service, layers_set, layers_states, layers_time, layers_translate, library_edit, line, hatch_patterns_edit, line_types_edit, linearref_define, network_define, nurbs, offset, point, points_construct, polygon, assets_check, images_edit, rasters_mosaic, rasters_georef, walls_create, walls_edit, walls_from_lines, walls_joins, openings_create, openings_edit, spaces_create, spaces_edit, spaces_quantities, grids_create, columns_create, stairs_create, ramps_create, arch_edit, tags_create, tags_check, tags_edit, viewmarks_create, viewmarks_edit, viewmarks_references, spaces_finish, templates_apply, sheets_set, xrefs_edit, xrefs_list, schedules_create, schedules_edit, file_import_pdf, inserts_clip, maplibre,
-    polygon_regular, polyline, rectangle_create, scenarios_edit, set, settings_set, sheets_edit,
-    snap_find, stretch, styles_edit, styles_impact, transform, ucs_set, units_change, views_edit,
-};
-use crate::{
-    forms_audit, forms_compare, forms_edit, forms_recompute, forms_test, forms_transition, forms_fill, forms_submit, forms_validate, records, records_duplicate, relations_edit,
-};
-use kentos_commands::{
-    FormsAudit, FormsCompare, FormsEdit, FormsRecompute, FormsTest, FormsTransition, FormsFill, FormsSubmit, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
-};
 
 /// Why a command was not run: not a refusal of the command (that is its
 /// `CommandResult`), but a command this host does not run or input that is
@@ -132,9 +173,15 @@ macro_rules! by_command {
             kentos_commands::CAD_BLOCKS_EDIT => $then!(blocks_edit, BlocksEdit),
             kentos_commands::CAD_LAYERS_SERVICE => $then!(layers_service, LayersService),
             kentos_commands::CAD_NETWORK_DEFINE => $then!(network_define, NetworkDefine),
-            kentos_commands::CAD_LINEARREF_DEFINE => $then!(linearref_define, kentos_commands::LinearRefDefine),
-            kentos_commands::CAD_SUBNETWORKS_FIND => $then!(subnetworks, kentos_commands::SubnetworksFind),
-            kentos_commands::CAD_SUBNETWORKS_UPDATE => $then!(subnetworks_update, kentos_commands::SubnetworksUpdate),
+            kentos_commands::CAD_LINEARREF_DEFINE => {
+                $then!(linearref_define, kentos_commands::LinearRefDefine)
+            }
+            kentos_commands::CAD_SUBNETWORKS_FIND => {
+                $then!(subnetworks, kentos_commands::SubnetworksFind)
+            }
+            kentos_commands::CAD_SUBNETWORKS_UPDATE => {
+                $then!(subnetworks_update, kentos_commands::SubnetworksUpdate)
+            }
             kentos_commands::CAD_ENTITIES_OFFSET => $then!(offset, EntitiesOffset),
             kentos_commands::CAD_POINTS_CONSTRUCT => $then!(points_construct, PointsConstruct),
             kentos_commands::CAD_CURVES_CONSTRUCT => $then!(curves_construct, CurvesConstruct),
@@ -149,6 +196,7 @@ macro_rules! by_command {
             kentos_commands::CAD_SOURCES_RECONCILE => $then!(sources_reconcile, SourcesReconcile),
             kentos_commands::CAD_SOURCES_RELATE => $then!(sources_relate, SourcesRelate),
             kentos_commands::CAD_RECORDS_PAGE => $then!(records_page, RecordsPage),
+            kentos_commands::CAD_SOURCES_QUERY => $then!(sources_query, SourcesQuery),
             kentos_commands::CAD_FIELDS_WRITE => $then!(fields_write, FieldsWrite),
             kentos_commands::CAD_PROCESSING_TOOLS => $then!(processing_tools, ProcessingTools),
             kentos_commands::CAD_PROCESSING_RUN => $then!(processing_run, ProcessingRun),
@@ -174,7 +222,9 @@ macro_rules! by_command {
             kentos_commands::CAD_TAGS_EDIT => $then!(tags_edit, TagsEdit),
             kentos_commands::CAD_VIEWMARKS_CREATE => $then!(viewmarks_create, ViewMarksCreate),
             kentos_commands::CAD_VIEWMARKS_EDIT => $then!(viewmarks_edit, ViewMarksEdit),
-            kentos_commands::CAD_VIEWMARKS_REFERENCES => $then!(viewmarks_references, ViewMarksReferences),
+            kentos_commands::CAD_VIEWMARKS_REFERENCES => {
+                $then!(viewmarks_references, ViewMarksReferences)
+            }
             kentos_commands::CAD_SPACES_FINISH => $then!(spaces_finish, SpacesFinish),
             kentos_commands::CAD_TEMPLATES_APPLY => $then!(templates_apply, TemplatesApply),
             kentos_commands::CAD_SHEETS_SET => $then!(sheets_set, SheetsSet),
@@ -187,10 +237,16 @@ macro_rules! by_command {
             kentos_commands::CAD_RASTERS_GPKGWRITE => $then!(gpkg_tiles_write, RastersGpkgWrite),
             kentos_commands::CAD_STAC_SEARCH => $then!(stac_search, StacSearch),
             kentos_commands::CAD_STAC_PREPARE => $then!(stac_prepare, StacPrepare),
-            kentos_commands::CAD_POINTCLOUDS_DESCRIBE => $then!(pointclouds_describe, PointCloudsDescribe),
+            kentos_commands::CAD_POINTCLOUDS_DESCRIBE => {
+                $then!(pointclouds_describe, PointCloudsDescribe)
+            }
             kentos_commands::CAD_POINTCLOUDS_QUERY => $then!(pointclouds_query, PointCloudsQuery),
-            kentos_commands::CAD_POINTCLOUDS_REGION => $then!(pointclouds_region, PointCloudsRegion),
-            kentos_commands::CAD_POINTCLOUDS_PROFILE => $then!(pointclouds_profile, PointCloudsProfile),
+            kentos_commands::CAD_POINTCLOUDS_REGION => {
+                $then!(pointclouds_region, PointCloudsRegion)
+            }
+            kentos_commands::CAD_POINTCLOUDS_PROFILE => {
+                $then!(pointclouds_profile, PointCloudsProfile)
+            }
             kentos_commands::CAD_MESHES_DESCRIBE => $then!(meshes_describe, MeshesDescribe),
             kentos_commands::CAD_MESHES_QUERY => $then!(meshes_query, MeshesQuery),
             kentos_commands::CAD_TIME_QUERY => $then!(time_query, TimeQuery),
@@ -200,7 +256,9 @@ macro_rules! by_command {
             kentos_commands::CAD_SCHEDULES_EDIT => $then!(schedules_edit, SchedulesEdit),
             kentos_commands::CAD_SPACES_EDIT => $then!(spaces_edit, SpacesEdit),
             kentos_commands::CAD_SPACES_QUANTITIES => $then!(spaces_quantities, SpacesQuantities),
-            kentos_commands::CAD_ANNOTATIONS_SCALES => $then!(annotations_scales, AnnotationsScales),
+            kentos_commands::CAD_ANNOTATIONS_SCALES => {
+                $then!(annotations_scales, AnnotationsScales)
+            }
             kentos_commands::CAD_ENTITIES_ORDER => $then!(entities_order, EntitiesOrder),
             kentos_commands::CAD_UCS_SET => $then!(ucs_set, UcsSet),
             kentos_commands::CAD_VIEWS_EDIT => $then!(views_edit, ViewsEdit),
@@ -215,7 +273,9 @@ macro_rules! by_command {
             kentos_commands::CAD_DOMAINS_EDIT => $then!(domains_edit, DomainsEdit),
             kentos_commands::CAD_DOMAINS_EXPORT => $then!(domains_export, DomainsExport),
             kentos_commands::CAD_FIELDS_MIGRATE => $then!(fields_migrate, FieldsMigrate),
-            kentos_commands::CAD_ATTACHMENTS_INSPECT => $then!(attachments_inspect, AttachmentsInspect),
+            kentos_commands::CAD_ATTACHMENTS_INSPECT => {
+                $then!(attachments_inspect, AttachmentsInspect)
+            }
             kentos_commands::CAD_SCHEMA_DESCRIBE => $then!(schema_describe, SchemaDescribe),
             kentos_commands::CAD_FORMS_EXPORT => $then!(forms_export, FormsExport),
             kentos_commands::CAD_FORMS_IMPORT => $then!(forms_import, FormsImport),
@@ -267,6 +327,12 @@ macro_rules! by_command {
             kentos_commands::CAD_LAYERS_TIME => $then!(layers_time, LayersTime),
             kentos_commands::CAD_SCENARIOS_EDIT => $then!(scenarios_edit, ScenariosEdit),
             kentos_commands::CAD_LAYERS_FILTER => $then!(layers_filter, LayersFilter),
+            kentos_commands::CAD_LAYERS_CRS => {
+                $then!(layers_crs_assign, kentos_commands::LayersCrs)
+            }
+            kentos_commands::CAD_LAYERS_REPROJECT => {
+                $then!(layers_reproject, kentos_commands::LayersReproject)
+            }
             kentos_commands::CAD_LAYERS_COMPOSE => $then!(layers_compose, LayersCompose),
             kentos_commands::CAD_LAYERS_INFO => $then!(layers_info, LayersInfo),
             kentos_commands::CAD_LAYERS_TABLE => $then!(layers_table, LayersTable),
@@ -287,13 +353,25 @@ macro_rules! by_command {
             kentos_commands::CAD_LAYERS_TRANSLATE => $then!(layers_translate, LayersTranslate),
             kentos_commands::CAD_STANDARDS_CHECK => $then!(standards_check, StandardsCheck),
             kentos_commands::CAD_STANDARDS_APPLY => $then!(standards_apply, StandardsApply),
-            kentos_commands::CAD_PROFILES_APPLY => $then!(profiles_apply, kentos_commands::ProfilesApply),
-            kentos_commands::CAD_PROFILES_CHECK => $then!(profiles_check, kentos_commands::ProfilesCheck),
-            kentos_commands::CAD_PROFILES_IMPORT => $then!(profiles_import, kentos_commands::ProfilesImport),
-            kentos_commands::CAD_PROFILES_LIST => $then!(profiles_list, kentos_commands::ProfilesList),
-            kentos_commands::CAD_PROFILES_MIGRATE => $then!(profiles_migrate, kentos_commands::ProfilesMigrate),
+            kentos_commands::CAD_PROFILES_APPLY => {
+                $then!(profiles_apply, kentos_commands::ProfilesApply)
+            }
+            kentos_commands::CAD_PROFILES_CHECK => {
+                $then!(profiles_check, kentos_commands::ProfilesCheck)
+            }
+            kentos_commands::CAD_PROFILES_IMPORT => {
+                $then!(profiles_import, kentos_commands::ProfilesImport)
+            }
+            kentos_commands::CAD_PROFILES_LIST => {
+                $then!(profiles_list, kentos_commands::ProfilesList)
+            }
+            kentos_commands::CAD_PROFILES_MIGRATE => {
+                $then!(profiles_migrate, kentos_commands::ProfilesMigrate)
+            }
             kentos_commands::CAD_LINE_TYPES_EDIT => $then!(line_types_edit, LineTypesEdit),
-            kentos_commands::CAD_HATCH_PATTERNS_EDIT => $then!(hatch_patterns_edit, HatchPatternsEdit),
+            kentos_commands::CAD_HATCH_PATTERNS_EDIT => {
+                $then!(hatch_patterns_edit, HatchPatternsEdit)
+            }
             kentos_commands::CAD_LIBRARY_EDIT => $then!(library_edit, LibraryEdit),
             kentos_commands::CAD_STYLES_IMPACT => $then!(styles_impact, StylesImpact),
             kentos_commands::CAD_BLOCKS_INSERT => $then!(blocks_insert, BlocksInsert),

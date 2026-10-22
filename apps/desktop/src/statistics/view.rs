@@ -12,6 +12,7 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, Table};
 use kentos_ui::widget::{Tip, horizontal_divider, tip, vertical_divider};
 
+use super::source::texts as whole_texts;
 use super::{Event, StatsNow, summary_cells, texts};
 use crate::app::{App, Message};
 use crate::charts::data::layer_list;
@@ -58,7 +59,14 @@ impl App {
         let now = self.charts.stats.borrow();
         let bar = self.statistics_bar(&now);
         let table = self.summary_table(&now);
-        let detail = detail_pane(&now);
+        let detail = match self.whole_pane() {
+            Some(whole) => whole,
+            None => detail_pane(&now),
+        };
+        let detail = match self.scope_row() {
+            Some(scope) => column![scope, horizontal_divider(), detail].into(),
+            None => detail,
+        };
         drop(now);
         let body = row![
             container(table).width(Fill).height(Fill),
@@ -100,9 +108,9 @@ impl App {
         );
         let filters = row![
             container(label::muted(texts::LAYER)).padding([0, 2]),
-            container(layer).width(Length::Fixed(220.0)),
+            container(layer).width(Length::Fixed(180.0)),
             container(label::muted(texts::SHOW)).padding([0, 2]),
-            container(show).width(Length::Fixed(190.0)),
+            container(show).width(Length::Fixed(140.0)),
             label::muted(texts::objects(now.rows.len())),
         ]
         .spacing(8)
@@ -194,6 +202,115 @@ impl App {
             })
             .empty(empty)
             .into()
+    }
+}
+
+impl App {
+    /// Kapsam, over the detail pane of a bound layer: Çalışma kopyası or Kaynağın tümü.
+    fn scope_row<'a>(&self) -> Option<Element<'a, Message>> {
+        self.stats_bound()?;
+        let scope = Select::new(
+            [Choice::new(whole_texts::LOADED), Choice::new(whole_texts::WHOLE)],
+            Some(usize::from(self.charts.whole.on)),
+            |i| msg(Event::Scope(i == 1)),
+        );
+        Some(tip(
+            row![
+                label::muted(whole_texts::SCOPE),
+                container(scope).width(Fill),
+            ]
+            .spacing(8)
+            .align_y(Center)
+            .padding([6, 12]),
+            Tip::new(whole_texts::SCOPE).body(whole_texts::SCOPE_HINT),
+            iced::widget::tooltip::Position::Top,
+        ))
+    }
+
+    /// Kaynağın tümü's pane, while that scope is chosen for a bound layer and a field: the source's answer, or
+    /// that it is being read (with Durdur).
+    fn whole_pane<'a>(&self) -> Option<Element<'a, Message>> {
+        let w = &self.charts.whole;
+        if !w.on || self.stats_bound().is_none() {
+            return None;
+        }
+        let field = self.charts.field.clone()?;
+        let note = |t: String| -> Element<'a, Message> {
+            container(label::muted(t).size(typography::caption()))
+                .padding([10, 12])
+                .into()
+        };
+        if field.starts_with('$') {
+            return Some(note(whole_texts::GEOMETRY.to_owned()));
+        }
+        let head = row![
+            label::heading(field.clone()),
+            label::caption(whole_texts::WHOLE),
+        ]
+        .spacing(8)
+        .align_y(iced::Alignment::End);
+        if w.running.is_some() {
+            return Some(
+                column![
+                    head,
+                    row![
+                        label::muted(whole_texts::READING),
+                        space::horizontal(),
+                        bar_button(
+                            "close",
+                            whole_texts::STOP,
+                            whole_texts::STOP,
+                            Some(msg(Event::WholeStop)),
+                        ),
+                    ]
+                    .align_y(Center),
+                ]
+                .spacing(8)
+                .padding([8, 12])
+                .into(),
+            );
+        }
+        let answer = match &w.answer {
+            None => return Some(note(whole_texts::READING.to_owned())),
+            Some(Err(why)) => return Some(note(why.clone())),
+            Some(Ok(a)) => a,
+        };
+        let line = |k: &'static str, v: String| -> Element<'a, Message> {
+            row![label::muted(k).width(Fill), label::body(v)]
+                .spacing(12)
+                .into()
+        };
+        let mut lines = vec![line(
+            whole_texts::RECORDS,
+            answer.total.unwrap_or_default().to_string(),
+        )];
+        if let Some(st) = answer.statistics.first() {
+            lines.push(line(whole_texts::READ, st.read.to_string()));
+            lines.push(line(whole_texts::SKIPPED, st.skipped.to_string()));
+            for (k, v) in [
+                (whole_texts::SUM, &st.sum),
+                (whole_texts::MEAN, &st.mean),
+                (whole_texts::MIN, &st.min),
+                (whole_texts::MAX, &st.max),
+                (whole_texts::STD, &st.std),
+            ] {
+                if let Some(v) = v {
+                    lines.push(line(k, v.clone()));
+                }
+            }
+        }
+        Some(
+            column![
+                head,
+                column(lines).spacing(2),
+                horizontal_divider(),
+                label::muted(whole_texts::handed(answer.read)).size(typography::caption()),
+            ]
+            .spacing(6)
+            .padding([8, 12])
+            .width(Fill)
+            .into(),
+        )
     }
 }
 

@@ -347,7 +347,7 @@ impl App {
             let frame = picture.map(|p| {
                 p.fit.view_frame(
                     OVERVIEW,
-                    (camera.center.x, camera.center.y),
+                    (camera.world_center().x, camera.world_center().y),
                     1.0 / camera.scale,
                     (camera.width, camera.height),
                 )
@@ -385,7 +385,10 @@ impl App {
             let title = title_row("Büyüteç", zooms, msg(Event::CloseLens), head);
             let body: Element<'_, Message> = match (self.navigation.at, &self.document) {
                 (Some(at), Some(doc)) => {
+                    // On a map of another system the lens looks at the map too (docs/adr/0583 §3).
                     let mut camera = Camera {
+                        map: self.viewport.camera.map,
+                        map_ratio: self.viewport.camera.map_ratio,
                         center: at,
                         scale: self.viewport.camera.scale * f64::from(zoom),
                         width: LENS.0,
@@ -393,7 +396,7 @@ impl App {
                         // Büyüteç looks as the area does, turned with it (docs/adr/0285 §2).
                         twist: self.viewport.camera.twist,
                     };
-                    camera.center = at;
+                    camera.center_on(at);
                     self.lens_view(doc, camera)
                 }
                 // Before the pointer has been on the drawing: where it will look.

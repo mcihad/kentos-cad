@@ -9842,6 +9842,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -9958,6 +9969,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerState": {
@@ -13766,6 +13822,16 @@
                   "$ref": "#/$defs/EventLink"
                 },
                 "type": "array"
+              },
+              "mapSrid": {
+                "description": "The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:\nthe project's own. Changing it changes no coordinate.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
               },
               "namedUcs": {
                 "description": "The project's named UCSs, in the order they were kept.",
@@ -25053,6 +25119,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -25169,6 +25246,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerState": {
@@ -26995,6 +27117,16 @@
                   "$ref": "#/$defs/EventLink"
                 },
                 "type": "array"
+              },
+              "mapSrid": {
+                "description": "The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:\nthe project's own. Changing it changes no coordinate.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
               },
               "namedUcs": {
                 "description": "The project's named UCSs, in the order they were kept.",
@@ -38897,6 +39029,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -39013,6 +39156,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerState": {
@@ -42859,6 +43047,16 @@
                   "$ref": "#/$defs/EventLink"
                 },
                 "type": "array"
+              },
+              "mapSrid": {
+                "description": "The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:\nthe project's own. Changing it changes no coordinate.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
               },
               "namedUcs": {
                 "description": "The project's named UCSs, in the order they were kept.",
@@ -238257,6 +238455,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -238373,6 +238582,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -251903,6 +252157,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -252019,6 +252284,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -265675,6 +265985,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -265791,6 +266112,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -937693,6 +938059,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -937809,6 +938186,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -945522,6 +945944,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -945638,6 +946071,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -948320,6 +948798,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -948436,6 +948925,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -949244,6 +949778,528 @@
           "title": "Süzgeci kaldır",
           "input": {
             "layer": "parsel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.layers.crs",
+      "version": 1,
+      "title": "Sistem ata",
+      "summary": "Katmanın kaynak sistemi kaydını yazar ya da siler (srid verilmezse ya da null ise): nesnelerinin hangi koordinat sisteminden geldiği; adı, WKT2'si, EPSG eksen sırası, birimi ve kullanım alanı kayıttan. Nesneler her zaman projenin sistemindedir; atama hiçbir koordinatı değiştirmez (yanlış sistemde alınmış veriyi çevirmek için cad.layers.reproject). Katman ağacının değişikliğidir: tek geri alma adımı “Sistem ata”; kayıt aynıysa hiçbir şey yazılmaz. Kilitli katmanda da çalışır, veri değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "sistemata",
+        "assigncrs"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.layers.crs` v1.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The layer's id.",
+            "type": "string"
+          },
+          "srid": {
+            "description": "The system its objects came from (an EPSG code the registry knows); absent or null clears the record.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "title": "LayersCrs",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.crs` v1.",
+        "properties": {
+          "changed": {
+            "description": "Whether it differed (an undo step was written).",
+            "type": "boolean"
+          },
+          "crs": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerSourceCrs"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The record now; absent when cleared."
+          },
+          "layer": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "changed",
+          "revision"
+        ],
+        "title": "LayersCrsSet",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.crs` v1.",
+        "properties": {
+          "changed": {
+            "description": "Whether it differed (an undo step was written).",
+            "type": "boolean"
+          },
+          "crs": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerSourceCrs"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The record now; absent when cleared."
+          },
+          "layer": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "changed",
+          "revision"
+        ],
+        "title": "LayersCrsSet",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "layer_not_found",
+          "not_a_layer",
+          "unknown_srid",
+          "layer_refused",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Katmanın verisi WGS 84'ten geldi",
+          "input": {
+            "layer": "gps",
+            "srid": 4326
+          }
+        },
+        {
+          "title": "Kaydı sil",
+          "input": {
+            "layer": "gps"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.layers.reproject",
+      "version": 1,
+      "title": "Yeniden izdüşür",
+      "summary": "Katmanın nesnelerini verilen sistemden (from; verilmezse katmanın kaynak sistemi) projenin sistemine çevirir: projenin sisteminde sanılarak alınmış veriyi düzeltir. Kotlar ve ölçüler kalır; yay ve eğriler dönüşümün kuralıyla çevrilir. Çevrilemeyen nesne varsa hiçbir şey yazılmaz (crs_unreached, uids). Katmanın kaynak sistemi from olur. Tek geri alma adımı “Yeniden izdüşür”. Kilitli katman reddedilir; projenin sistemi yoksa ya da from projeninkiyse crs_mismatch. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "izdusur",
+        "reproject"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.layers.reproject` v1.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "description": "The system the objects are in now (an EPSG code the registry knows); absent: the layer's recorded one.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "layer": {
+            "description": "The layer's id.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "title": "LayersReproject",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.reproject` v1.",
+        "properties": {
+          "crs": {
+            "$ref": "#/$defs/LayerSourceCrs",
+            "description": "The layer's record now."
+          },
+          "from": {
+            "description": "The system the objects came from.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "moved": {
+            "description": "The objects moved.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "type": "string"
+          },
+          "to": {
+            "description": "The project's system they are in now.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "via": {
+            "description": "The way and its accuracy (“EPSG:1311, ±1 m”), as the transforms say it.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "from",
+          "to",
+          "moved",
+          "via",
+          "crs",
+          "revision"
+        ],
+        "title": "LayersReprojected",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.reproject` v1.",
+        "properties": {
+          "crs": {
+            "$ref": "#/$defs/LayerSourceCrs",
+            "description": "The layer's record now."
+          },
+          "from": {
+            "description": "The system the objects came from.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "moved": {
+            "description": "The objects moved.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "type": "string"
+          },
+          "to": {
+            "description": "The project's system they are in now.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "via": {
+            "description": "The way and its accuracy (“EPSG:1311, ±1 m”), as the transforms say it.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "from",
+          "to",
+          "moved",
+          "via",
+          "crs",
+          "revision"
+        ],
+        "title": "LayersReprojected",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_input",
+          "unknown_srid",
+          "crs_mismatch",
+          "crs_unreached",
+          "layer_refused",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "ED50 / TM36'da sanılan katmanı projenin sistemine çevir",
+          "input": {
+            "from": 2322,
+            "layer": "eski-pafta"
           }
         }
       ]
@@ -950845,6 +951901,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -950961,6 +952028,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -953340,6 +954452,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -953456,6 +954579,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -955894,6 +957062,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -956010,6 +957189,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -958464,6 +959688,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -958580,6 +959815,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -961000,6 +962280,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -961116,6 +962407,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -963534,6 +964870,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -963650,6 +964997,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -966844,6 +968236,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -966960,6 +968363,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -970216,6 +971664,17 @@
                 ],
                 "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
               },
+              "sourceCrs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSourceCrs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group."
+              },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
               },
@@ -970332,6 +971791,51 @@
                 "type": "boolean"
               }
             },
+            "type": "object"
+          },
+          "LayerSourceCrs": {
+            "additionalProperties": false,
+            "description": "The system a layer's objects came from.",
+            "properties": {
+              "area": {
+                "description": "Where the system is meant for, in the registry's words.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "axisOrder": {
+                "description": "`en`, `ne` or `latlon`: EPSG's order of its axes (the drawing's are always east, north).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "description": "Its EPSG code, when the registry knows it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "unit": {
+                "description": "`metre` or `degree`.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "WKT2 (ISO 19162:2019).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "wkt",
+              "axisOrder",
+              "unit"
+            ],
             "type": "object"
           },
           "LayerStyle": {
@@ -980796,6 +982300,16 @@
               }
             ],
             "description": "How lengths are written (docs/adr/0262 §2): decimal, or architectural,\nengineering and fractional feet and inches in an inch or foot drawing."
+          },
+          "mapSrid": {
+            "description": "The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
           },
           "name": {
             "type": [
@@ -1011807,7 +1013321,9 @@
           "invalid_extent",
           "invalid_key",
           "derived_dataset",
-          "pending_changes"
+          "pending_changes",
+          "no_row_key",
+          "row_key_not_unique"
         ],
         "warnings": [
           "crs_undeclared",
@@ -1016086,7 +1017602,7 @@
       "id": "cad.sources.sync",
       "version": 1,
       "title": "Kaynakla eşitle",
-      "summary": "Bağlı katmanı tablosuyla eşitler. write: katmanın değişikliklerini tabloya yazar, tek SQLite işleminde: yeni nesneler kalıcı kimlikleriyle eklenir (kentos_uids), değişenler fid'leriyle güncellenir, silinenler silinir, katmanın tabloda olmayan alanları sütun olarak eklenir; mekânsal dizin kendi tetikleyicileriyle izler, tanımadığı tablolara dokunulmaz. Dosya katman onunla son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi tablonun sütununa uymayan nesne geometry_mismatch; tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya yazılır. read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz (pending_changes, conflict). PostGIS tablosu da aynı kurallarla, tek veritabanı işleminde yazılır: tablo yazarlara kilitlenir, sürümü yeniden denetlenir, kalıcı kimlikler şemanın kentos_uids tablosunda; ulaşılamayan veritabanı source_unreachable. with (yalnız write) başka bağlı katmanları aynı işlemde yazar: üst kayıt ile alt kayıtları ya hep birlikte ya hiç (docs/adr/0532): her katman önce denetlenir, biri reddedilirse (source_readonly, geometry_mismatch, source_changed, relation_dangling) hiçbiri yazılmaz; katmanlar tek GeoPackage dosyasında olmalıdır (transaction_split: ayrı dosya ya da bir tablo bir işlemde yazan veritabanı); cevabın layers'ı her katmanın payı, relations'ı eşli ilişkilerin eşleme satırlarıdır. cad.sources.relate ile eşlenen çoktan çoğa ilişki katmanlarıyla birlikte yazılır: eşleme tablosunun satırları alt katmanın çok değerli alanını izler, alan metin sütunu olarak yazılmaz; eşlenmemiş çoktan çoğa başvuru “; ” ile birleşmiş metin olarak kalır ve relation_unmapped ile söylenir, dosyanın tanınmayan temsilli ilişkisi metne çevrilmez. read eşli ilişkinin alanını eşleme satırlarından doldurur. plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler.",
+      "summary": "Bağlı katmanı tablosuyla eşitler. write: katmanın değişikliklerini tabloya yazar, tek SQLite işleminde: yeni nesneler kalıcı kimlikleriyle eklenir (kentos_uids), değişenler fid'leriyle güncellenir, silinenler silinir, katmanın tabloda olmayan alanları sütun olarak eklenir; mekânsal dizin kendi tetikleyicileriyle izler, tanımadığı tablolara dokunulmaz. Dosya katman onunla son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi tablonun sütununa uymayan nesne geometry_mismatch (Z ve M de: Z'yi yasaklayan sütuna kotlu, isteyene kotsuz, hiçbirine kısmen kotlu nesne yazılmaz; M için de aynı, docs/adr/0584 §2); tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya yazılır. read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz (pending_changes, conflict). PostGIS tablosu da aynı kurallarla, tek veritabanı işleminde yazılır: tablo yazarlara kilitlenir, sürümü yeniden denetlenir, kalıcı kimlikler şemanın kentos_uids tablosunda; ulaşılamayan veritabanı source_unreachable. with (yalnız write) başka bağlı katmanları aynı işlemde yazar: üst kayıt ile alt kayıtları ya hep birlikte ya hiç (docs/adr/0532): her katman önce denetlenir, biri reddedilirse (source_readonly, geometry_mismatch, source_changed, relation_dangling) hiçbiri yazılmaz; katmanlar tek GeoPackage dosyasında ya da tek PostGIS veritabanında olmalıdır (docs/adr/0584 §1: veritabanında tablolar adlarının sırasıyla kilitlenir, her birinin satırları tabanına karşı denetlenir; iki kaynağa birden tek işlem olmaz, transaction_split); cevabın layers'ı her katmanın payı, relations'ı eşli ilişkilerin eşleme satırlarıdır. cad.sources.relate ile eşlenen çoktan çoğa ilişki katmanlarıyla birlikte yazılır: eşleme tablosunun satırları alt katmanın çok değerli alanını izler, alan metin sütunu olarak yazılmaz; eşlenmemiş çoktan çoğa başvuru “; ” ile birleşmiş metin olarak kalır ve relation_unmapped ile söylenir, dosyanın tanınmayan temsilli ilişkisi metne çevrilmez. read eşli ilişkinin alanını eşleme satırlarından doldurur. plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler.",
       "aliases": [
         "kaynakesitle"
       ],
@@ -1016119,11 +1017635,11 @@
             ]
           },
           "SyncTopology": {
-            "description": "How a write takes the table's rows outside a part's area (docs/adr/0531): those sharing a corner or an edge the\nwritten objects changed follow them, in the same transaction.",
+            "description": "How a write takes the table's rows outside a part's area (docs/adr/0531, 0585): those sharing a corner or an edge\nthe written objects changed follow them, in the same transaction. A row is read by the changes' box from the file\nor the database; a database's row is checked again under the table's lock (`source_changed` when someone changed it\nsince, `rows_denied` when the account may see but not change it: both profiles write nothing then).",
             "oneOf": [
               {
                 "const": "strict",
-                "description": "All or nothing: a row that would be left invalid refuses the whole write (`outside_neighbour_invalid`).",
+                "description": "All or nothing: a row that would be left invalid (too few vertices, or newly invalid: a ring crossing itself, of\nno area, a hole out of its ring) refuses the whole write (`outside_neighbour_invalid`).",
                 "type": "string"
               },
               {
@@ -1016135,7 +1017651,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,\n`source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:\n`source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and\nthe layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry\nfor stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep\ntheir pins), `label_pins_moved` (pins that followed their key, or without a key their geometry or nearest feature\nof the same kind within 0,05 m, to another row; docs/adr/0578 §2), `label_pins_parked` (pins of objects whose row\nis outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given\nback to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the\npins of those rows are not followed).\n\n`with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in\ntogether or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,\n`source_changed`, `relation_dangling` …) and nothing is written. The layers must lie in one GeoPackage file\n(`transaction_split`: another file, or a database, which writes one table a transaction), must not repeat, and\n`with` is for writing (`invalid_input` with `read`). A relation KentOS maps (`cad.sources.relate`) is written with\nits layers: its mapping rows follow the child's field (`relation_dangling`: a reference to an object the table\ndoes not hold, not even after this write; `relation_unmapped`, a warning: a multi-valued reference that stays text).",
+        "description": "Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,\n`source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`, `rows_denied` (a\ndatabase's rows the account may not change: privilege or row security, docs/adr/0585 §2); conflicts:\n`source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and\nthe layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry\nfor stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep\ntheir pins), `label_pins_moved` (pins that followed their key, or without a key their geometry or nearest feature\nof the same kind within 0,05 m, to another row; docs/adr/0578 §2), `label_pins_parked` (pins of objects whose row\nis outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given\nback to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the\npins of those rows are not followed).\n\n`with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in\ntogether or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,\n`source_changed`, `relation_dangling` …) and nothing is written. The layers must lie in one GeoPackage file\n(`transaction_split`: another file, or a database, which writes one table a transaction), must not repeat, and\n`with` is for writing (`invalid_input` with `read`). A relation KentOS maps (`cad.sources.relate`) is written with\nits layers: its mapping rows follow the child's field (`relation_dangling`: a reference to an object the table\ndoes not hold, not even after this write; `relation_unmapped`, a warning: a multi-valued reference that stays text).",
         "properties": {
           "direction": {
             "$ref": "#/$defs/SyncDirection"
@@ -1016157,10 +1017673,10 @@
                 "type": "null"
               }
             ],
-            "description": "Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners\nand edges follow in the same transaction. Reading refuses it (`topology_on_read`)."
+            "description": "Writing a part's working copy (docs/adr/0531, 0585): the table's rows outside the area that share the changed\ncorners and edges follow in the same transaction, a GeoPackage's or a PostGIS table's. Reading refuses it\n(`topology_on_read`)."
           },
           "with": {
-            "description": "Writing: more bound layers (by id) written in the same transaction.",
+            "description": "Writing: more bound layers (by id) written in the same transaction: of the same GeoPackage file or the same\nPostGIS database (docs/adr/0532 §1, 0584 §1); layers of two sources are `transaction_split`.",
             "items": {
               "type": "string"
             },
@@ -1016774,6 +1018290,7 @@
           "derived_dataset",
           "topology_on_read",
           "outside_neighbour_invalid",
+          "rows_denied",
           "invalid_input",
           "transaction_split",
           "relation_dangling"
@@ -1016786,7 +1018303,8 @@
           "label_pins_parked",
           "label_pins_restored",
           "key_not_unique",
-          "relation_unmapped"
+          "relation_unmapped",
+          "source_others"
         ]
       },
       "examples": [
@@ -1018362,6 +1019880,876 @@
             "of": "0192f5a1-25a0-7000-8000-000000000301",
             "relation": "parsel-malik",
             "side": "parents"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.sources.query",
+      "version": 1,
+      "title": "Kaynağı sorgula",
+      "summary": "Bir veri kümesini bulunduğu yerde sorgular: path ve table ile bir GeoPackage dosyasının ya da bir PostGIS adresinin (postgresql://…, parolasız) tablosunu, layer ile çizimin bir katmanını (scope loaded: çizimin nesneleri, bağlı katmanda çalışma kopyası; scope source: bağlı katmanın kaynağının bütün tablosu). bbox (projenin sisteminde; kaynağın sistemi başkaysa ona çevrilir) kutusu değen kayıtları, near (at, tolerance) yere tolerans içindeki kayıtları (tanımlama), filter İfadeyle seç'in dilinde koşulu tutan kayıtları verir. fields döndürülecek alanları, geometry kaydın geometrisini projenin sisteminde ISO WKT olarak seçer. Kayıtlar anahtar sırasıyla sayfa sayfadır (limit 0–10 000, varsayılan 100; cursor önceki sayfanın next'i); anahtar sırası ekleme ve silmede kararlıdır. count sorunun tuttuğu bütün kayıtları sayar; statistics alanların istatistiğini (kentos.statistics/1: okunan, atlanan, toplam, ortalama, en az, en çok, standart sapma; kesin ondalık metinler) sayfadan değil bütün kayıtlardan verir. Kutu, sütunlar ve süzgecin kaynağın denetleyebildiği kısmı kaynağa gider: koşul ifadenin tuttuğu her kaydı tutar, kaynaktan gelen her kayıt ifadeyle burada yeniden sınanır; sonuç kaynağın kurallarından bağımsızdır. plan ne yapıldığını söyler: kutu (index, geometry, local), okunan sütunlar, kaynağa giden koşul değerleriyle ve tam olup olmadığı, burada yapılanlar, sıra. Kayıtların kalıcı kimliği (uid) aynı kaynağı açan her pencerede ve bağlı katmanın çalışma kopyasında aynıdır. Parçası bağlı katmanın çalışma kopyası tam veri kümesi değildir: partial ve partial_scope uyarısı. Çizimi değiştirmez.",
+      "aliases": [
+        "kaynaksorgu",
+        "sourcequery"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "QueryNear": {
+            "additionalProperties": false,
+            "description": "Records near a place (what a click identifies).",
+            "properties": {
+              "at": {
+                "description": "The place, in the project's system: east, north.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "length"
+              },
+              "tolerance": {
+                "description": "How far from it a record's geometry may be.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "at",
+              "tolerance"
+            ],
+            "type": "object"
+          },
+          "QueryScope": {
+            "description": "What a layer's question is asked of.",
+            "oneOf": [
+              {
+                "const": "loaded",
+                "description": "The drawing's objects of the layer: a bound layer's working copy (of a part, a part only).",
+                "type": "string"
+              },
+              {
+                "const": "source",
+                "description": "A bound layer's source, the whole table.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.sources.query` v1: `layer`, or `path` and `table`.\n\nRefusals, checked in this order: `invalid_input` (neither or both of `layer` and `path`, `table` without `path`,\n`path` without `table`, `scope` without `layer`), `invalid_count` (`limit` past 10 000), `invalid_extent` (a box that\nis reversed or not finite), `invalid_tolerance`, `invalid_cursor` (not a cursor of this question), `invalid_expression`\n(the filter does not compile, reads `$sıra` or `$ölçek`, or looks at another layer), `layer_not_found`, `invalid_input`\n(`scope: source` on a layer that is not bound), `file_not_found`, `import_unreadable`, `table_not_found`,\n`field_not_found` (in `fields` or `statistics`), `source_unreachable`. A job stopped answers `cancelled`.",
+        "properties": {
+          "bbox": {
+            "description": "Records whose box meets this one, in the project's system: west, south, east, north.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "count": {
+            "description": "Count every record the question keeps.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "cursor": {
+            "description": "The page after the one whose `next` this is.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fields": {
+            "description": "The fields returned, by name; none: all of them.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "filter": {
+            "description": "A condition in İfadeyle seç's language: the records it holds for.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "geometry": {
+            "description": "Return each record's geometry in the project's system (ISO WKT).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "A layer of the drawing (its id).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "limit": {
+            "description": "How many records a page holds, 0–10 000; none: 100. 0 returns none (for a count or statistics).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "near": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryNear"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Records near a place."
+          },
+          "path": {
+            "description": "A GeoPackage file's path, or a database's address (`postgresql://…`, no password).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryScope"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `layer`: its working copy (the default) or its source's whole table."
+          },
+          "statistics": {
+            "description": "Fields whose statistics are of every record the question keeps (`kentos.statistics/1`).",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "table": {
+            "description": "With `path`: the table (`schema.table` in a database).",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "SourcesQuery",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "PlanBox": {
+            "description": "How the box was applied.",
+            "oneOf": [
+              {
+                "const": "index",
+                "description": "By the source's spatial index.",
+                "type": "string"
+              },
+              {
+                "const": "geometry",
+                "description": "By each geometry's box, in the source (no index).",
+                "type": "string"
+              },
+              {
+                "const": "local",
+                "description": "Here, over the drawing's objects.",
+                "type": "string"
+              }
+            ]
+          },
+          "QueriedKind": {
+            "description": "What a question was asked of.",
+            "oneOf": [
+              {
+                "const": "drawing",
+                "description": "The drawing's objects.",
+                "type": "string"
+              },
+              {
+                "const": "geopackage",
+                "description": "A GeoPackage file.",
+                "type": "string"
+              },
+              {
+                "const": "postgis",
+                "description": "A PostGIS database.",
+                "type": "string"
+              }
+            ]
+          },
+          "QueriedRow": {
+            "description": "A record a question returned.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The fields asked for, as the drawing's attributes read them (an empty value left out).",
+                "type": "object"
+              },
+              "key": {
+                "description": "Its key in the source (fid, primary key); none for a drawing's object.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "id"
+              },
+              "uid": {
+                "description": "Its lasting id: the same in every window and in a bound layer's working copy.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "Its geometry in the project's system, ISO WKT (with `geometry`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "uid",
+              "attrs"
+            ],
+            "type": "object"
+          },
+          "QueriedSource": {
+            "description": "The source a question read.",
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/QueriedKind"
+              },
+              "layer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "path": {
+                "description": "The file's path or the database's address.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The source's system (EPSG), when it is known.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "table": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "QueriedStatistic": {
+            "description": "A field's statistics over every record a question keeps: exact decimals as text.",
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "max": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "mean": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "problem": {
+                "description": "Why the sums are not given (too large to sum exactly).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "read": {
+                "description": "Values read as numbers.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Values given but not numbers.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "std": {
+                "description": "The sample standard deviation.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sum": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "field",
+              "read",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "QueryPlan": {
+            "description": "What the source did and what was done here (docs/adr/0581 §4).",
+            "properties": {
+              "box": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PlanBox"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "columns": {
+                "description": "The columns the source read.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "exact": {
+                "description": "Whether that condition is the whole filter and keeps exactly what it keeps.",
+                "type": "boolean"
+              },
+              "geometry": {
+                "description": "Whether the source read the geometry.",
+                "type": "boolean"
+              },
+              "local": {
+                "description": "What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,\n`statistics`.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "order": {
+                "description": "The order of the records: `key` (the source's) or `uid` (the drawing's).",
+                "type": "string"
+              },
+              "pushed": {
+                "description": "The condition the source checked, its values written in.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "columns",
+              "geometry",
+              "exact",
+              "local",
+              "order"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sources.query` v1, and its plan.",
+        "properties": {
+          "next": {
+            "description": "The cursor of the page after this one; none on the last.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "partial": {
+            "description": "The answer is of a bound layer's part, not of the whole data set.",
+            "type": "boolean"
+          },
+          "plan": {
+            "$ref": "#/$defs/QueryPlan"
+          },
+          "read": {
+            "description": "How many records the source handed over.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/QueriedRow"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/$defs/QueriedSource"
+          },
+          "stamp": {
+            "description": "A cheap mark of a file's state (its size and modification time); none for a database or the drawing.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "statistics": {
+            "items": {
+              "$ref": "#/$defs/QueriedStatistic"
+            },
+            "type": "array"
+          },
+          "total": {
+            "description": "How many records the question keeps (with `count` or `statistics`).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "source",
+          "rows",
+          "plan",
+          "partial",
+          "read",
+          "revision"
+        ],
+        "title": "SourcesQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "PlanBox": {
+            "description": "How the box was applied.",
+            "oneOf": [
+              {
+                "const": "index",
+                "description": "By the source's spatial index.",
+                "type": "string"
+              },
+              {
+                "const": "geometry",
+                "description": "By each geometry's box, in the source (no index).",
+                "type": "string"
+              },
+              {
+                "const": "local",
+                "description": "Here, over the drawing's objects.",
+                "type": "string"
+              }
+            ]
+          },
+          "QueriedKind": {
+            "description": "What a question was asked of.",
+            "oneOf": [
+              {
+                "const": "drawing",
+                "description": "The drawing's objects.",
+                "type": "string"
+              },
+              {
+                "const": "geopackage",
+                "description": "A GeoPackage file.",
+                "type": "string"
+              },
+              {
+                "const": "postgis",
+                "description": "A PostGIS database.",
+                "type": "string"
+              }
+            ]
+          },
+          "QueriedRow": {
+            "description": "A record a question returned.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The fields asked for, as the drawing's attributes read them (an empty value left out).",
+                "type": "object"
+              },
+              "key": {
+                "description": "Its key in the source (fid, primary key); none for a drawing's object.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "id"
+              },
+              "uid": {
+                "description": "Its lasting id: the same in every window and in a bound layer's working copy.",
+                "type": "string"
+              },
+              "wkt": {
+                "description": "Its geometry in the project's system, ISO WKT (with `geometry`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "uid",
+              "attrs"
+            ],
+            "type": "object"
+          },
+          "QueriedSource": {
+            "description": "The source a question read.",
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/QueriedKind"
+              },
+              "layer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "path": {
+                "description": "The file's path or the database's address.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The source's system (EPSG), when it is known.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "table": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "QueriedStatistic": {
+            "description": "A field's statistics over every record a question keeps: exact decimals as text.",
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "max": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "mean": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "problem": {
+                "description": "Why the sums are not given (too large to sum exactly).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "read": {
+                "description": "Values read as numbers.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Values given but not numbers.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "std": {
+                "description": "The sample standard deviation.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sum": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "field",
+              "read",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "QueryPlan": {
+            "description": "What the source did and what was done here (docs/adr/0581 §4).",
+            "properties": {
+              "box": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PlanBox"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "columns": {
+                "description": "The columns the source read.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "exact": {
+                "description": "Whether that condition is the whole filter and keeps exactly what it keeps.",
+                "type": "boolean"
+              },
+              "geometry": {
+                "description": "Whether the source read the geometry.",
+                "type": "boolean"
+              },
+              "local": {
+                "description": "What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,\n`statistics`.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "order": {
+                "description": "The order of the records: `key` (the source's) or `uid` (the drawing's).",
+                "type": "string"
+              },
+              "pushed": {
+                "description": "The condition the source checked, its values written in.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "columns",
+              "geometry",
+              "exact",
+              "local",
+              "order"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sources.query` v1, and its plan.",
+        "properties": {
+          "next": {
+            "description": "The cursor of the page after this one; none on the last.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "partial": {
+            "description": "The answer is of a bound layer's part, not of the whole data set.",
+            "type": "boolean"
+          },
+          "plan": {
+            "$ref": "#/$defs/QueryPlan"
+          },
+          "read": {
+            "description": "How many records the source handed over.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/QueriedRow"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/$defs/QueriedSource"
+          },
+          "stamp": {
+            "description": "A cheap mark of a file's state (its size and modification time); none for a database or the drawing.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "statistics": {
+            "items": {
+              "$ref": "#/$defs/QueriedStatistic"
+            },
+            "type": "array"
+          },
+          "total": {
+            "description": "How many records the question keeps (with `count` or `statistics`).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "source",
+          "rows",
+          "plan",
+          "partial",
+          "read",
+          "revision"
+        ],
+        "title": "SourcesQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "invalid_count",
+          "invalid_extent",
+          "invalid_tolerance",
+          "invalid_cursor",
+          "invalid_expression",
+          "layer_not_found",
+          "file_not_found",
+          "import_unreadable",
+          "table_not_found",
+          "field_not_found",
+          "source_unreachable",
+          "invalid_address",
+          "crs_mismatch",
+          "no_row_key",
+          "row_key_not_unique"
+        ],
+        "warnings": [
+          "partial_scope",
+          "rows_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Büyük parsellerin ilk sayfası, dosyadan",
+          "input": {
+            "fields": [
+              "ada",
+              "parsel_no",
+              "alan"
+            ],
+            "filter": "alan > 1000",
+            "limit": 50,
+            "path": "/veri/kadastro.gpkg",
+            "table": "parsel"
+          }
+        },
+        {
+          "title": "Bağlı katmanın kaynağındaki bütün parsellerin alan istatistiği",
+          "input": {
+            "count": true,
+            "layer": "parsel",
+            "limit": 0,
+            "scope": "source",
+            "statistics": [
+              "alan"
+            ]
           }
         }
       ]
@@ -1020215,7 +1022603,7 @@
       "id": "file.import.dwg",
       "version": 1,
       "title": "DWG içe aktar",
-      "summary": "path'teki DWG dosyasını açık çizime alır, masaüstünün DWG içe aktar penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile (ADR 0580), ağ veya uzak dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. Kaynak DWG sürümü ve bellek içi DXF aktarma biçimi report.source içinde ayrı söylenir. R14–2018 biçim imzaları desteklenir; korunmayan içerik report.skipped/notes içindedir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DWG: ad.dwg”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder.",
+      "summary": "path'teki DWG dosyasını açık çizime alır, masaüstünün DWG içe aktar penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile (ADR 0586), ağ veya uzak dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. Kaynak DWG sürümü ve bellek içi DXF aktarma biçimi report.source içinde ayrı söylenir. R14–2018 biçim imzaları desteklenir; korunmayan içerik report.skipped/notes içindedir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DWG: ad.dwg”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder.",
       "aliases": [
         "dwgin"
       ],
@@ -1070703,6 +1073091,12 @@
       "meaning": "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi."
     },
     {
+      "code": "rows_denied",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Hesap tablonun bazı satırlarını görür ama değiştiremez (yetki ya da satır güvenliği); hiçbir şey yazılmadı."
+    },
+    {
       "code": "not_a_pointcloud",
       "kind": "failed",
       "retryable": false,
@@ -1072099,6 +1074493,42 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "PDF sayfasındaki bazı içerik altlığa alınmadı (resimler, gölgelemeler, okunamayan yazılar)."
+    },
+    {
+      "code": "partial_scope",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Yanıt bağlı katmanın yüklenen parçasından; bütün veri kümesi için kapsamı kaynak yapın (scope: source)."
+    },
+    {
+      "code": "rows_unreadable",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Geometrisi okunamayan kayıtlar atlandı; iletisi kaçını söyler."
+    },
+    {
+      "code": "crs_unreached",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bazı nesneler projenin sistemine çevrilemiyor (sistemin dışında); hiçbir şey yazılmadı. uids onları söyler."
+    },
+    {
+      "code": "no_row_key",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "View ya da sorgu katmanında tam sayı bir anahtar sütunu (fid, id, gid, ogc_fid) yok."
+    },
+    {
+      "code": "row_key_not_unique",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "View ya da sorgu katmanının anahtarı birden çok satırda aynı."
+    },
+    {
+      "code": "source_others",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Alanın başka satırlarını başka biri değiştirdi; okuyarak katmana alın."
     },
     {
       "code": "underlay_measure",

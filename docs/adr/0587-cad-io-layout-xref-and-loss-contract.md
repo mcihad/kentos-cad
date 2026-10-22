@@ -1,6 +1,6 @@
-# 0581 — CAD değişimi: gerçek paftalar, dış başvurular ve kayıp sözleşmesi
+# 0587 — CAD değişimi: gerçek paftalar, dış başvurular ve kayıp sözleşmesi
 
-22 Ekim 2026. CAD-IO kabul kaydı; sağlayıcı ve Git güncelleme yolu [ADR 0580](0580-dwg-opencadcodec-git.md). Karar/özellik/lisans/platform matrisi [exchange-support.md](../cad/exchange-support.md).
+22 Ekim 2026. CAD-IO kabul kaydı; sağlayıcı ve Git güncelleme yolu [ADR 0586](0586-dwg-opencadcodec-git.md). Karar/özellik/lisans/platform matrisi [exchange-support.md](../cad/exchange-support.md).
 
 ## Uygulama
 
@@ -26,9 +26,9 @@ Mac ARM64 üzerinde native çalışma; codec adaptörü için Linux x64, Windows
 
 **CAD-IO-15 tamamlanmadı:** standart düzlemde width/bulge/closed/elevation ve blok nonuniform scale varsayılan korunmuş INSERT yolunda sınanır. Kotlu düz ve geniş çizginin sabit elevation'ı artık LWPOLYLINE'da kalır; JSON girişindeki width/closed/object override düşmesi giderildi. Fakat eğik OCS'nin geniş/yaylı yolunu WCS'ye izdüşürme, farklı köşe kotu ile genişlik/yay birleşimi ve kullanıcının nonuniform bloğu patlatması hâlâ kayıp/örnekleme doğurabilir. Bunlar tam kapatılmadan madde işaretlenmez; toleransı büyütmek çözüm değildir. Sonraki gereksinim, kaynak düzlem/3B dönüşümü düzenlenebilir modelde temsil etmek ve her affine dönüşümde analitik geniş konturu korumaktır.
 
-**Devam kaydı:** [ADR 0582](0582-polyline-integrity.md), ilave genişlik/ölçek/kapanış düzeltmelerini ve varsayılan ret/açık kabul kuralını içerir; CAD-IO-15 hâlâ açıktır.
+**Devam kaydı:** [ADR 0588](0588-polyline-integrity.md), ilave genişlik/ölçek/kapanış düzeltmelerini ve varsayılan ret/açık kabul kuralını içerir; CAD-IO-15 hâlâ açıktır.
 
-**CAD-IO-20 sahibin açık kararıyla atlandı.** AutoCAD çalıştırılmış sayılmaz. Bağımsız ezdxf planar kabulü sonraki ADR 0582’dedir; bağımsız DWG motoru kabulü değildir. Upstream'in decode ortasında iptal ve açılmış bellek kotası sınırları ADR 0580'de sürer.
+**CAD-IO-20 sahibin açık kararıyla atlandı.** AutoCAD çalıştırılmış sayılmaz. Bağımsız ezdxf planar kabulü sonraki ADR 0588’dedir; bağımsız DWG motoru kabulü değildir. Upstream'in decode ortasında iptal ve açılmış bellek kotası sınırları ADR 0586'de sürer.
 
 ## Çalıştırılan son doğrulamalar
 

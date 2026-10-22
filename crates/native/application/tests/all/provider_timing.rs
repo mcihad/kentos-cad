@@ -251,6 +251,39 @@ fn provider_timing() {
         "alan sınırlı katmanın yazma planı",
         t.elapsed().as_secs_f64() * 1000.0,
     );
+
+    // Questions of the source (docs/adr/0581): a view's first page with a filter sent, the whole table's count and
+    // statistics through the part's layer with the filter sent, and without one.
+    let mut ask = |what: &str, input: serde_json::Value| {
+        let t = Instant::now();
+        let a = registry::run(
+            &mut ExecutionContext::new(&mut part),
+            "cad.sources.query",
+            CallOp::Execute,
+            input,
+        )
+        .expect("runs");
+        assert_eq!(a["status"], "completed", "{a}");
+        let o = &a["output"];
+        report(
+            &format!("{what} ({} okundu, {} satır)", o["read"], o["rows"].as_array().map_or(0, Vec::len)),
+            t.elapsed().as_secs_f64() * 1000.0,
+        );
+    };
+    ask(
+        "sorgu: kutu ve süzgeç, ilk sayfa",
+        json!({ "path": path.display().to_string(), "table": "parsel", "bbox": [mx, my, mx + 400.0, my + 300.0],
+                "filter": "Parsel > 500", "fields": ["Ad"], "limit": 100 }),
+    );
+    ask(
+        "sorgu: kaynağın tümü, süzgeçli istatistik",
+        json!({ "layer": "import-parsel", "scope": "source", "filter": "Ada > 500", "statistics": ["Parsel"],
+                "count": true, "limit": 0 }),
+    );
+    ask(
+        "sorgu: kaynağın tümü, süzgeçsiz istatistik",
+        json!({ "layer": "import-parsel", "scope": "source", "statistics": ["Parsel"], "count": true, "limit": 0 }),
+    );
     drop(part);
 
     let mut doc = empty_drawing();

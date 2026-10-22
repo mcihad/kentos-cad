@@ -933,6 +933,7 @@ mod tests {
         children: Vec<LayerNode>,
     ) -> LayerNode {
         LayerNode {
+            source_crs: None,
             table_styles: Vec::new(),
             subtypes: None,
             contingents: Vec::new(),

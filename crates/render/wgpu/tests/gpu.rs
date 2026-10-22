@@ -234,6 +234,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         y: 4_420_187.52,
     };
     doc.layers = vec![LayerNode {
+        source_crs: None,
         table_styles: Vec::new(),
         subtypes: None,
         contingents: Vec::new(),
@@ -471,6 +472,8 @@ fn a_kept_picture_is_composed_again_with_the_hover_over_it(gpu: &mut Gpu) {
     let hover_a = scene::build_fixed(&one_line(E + 6.0), &palette(), origin);
     let hover_b = scene::build_fixed(&one_line(E - 6.0), &palette(), origin);
     let mut camera = Camera {
+        map: None,
+        map_ratio: 1.0,
         center: Vec2::new(E, N),
         scale: 2.0,
         width: f64::from(width),
@@ -543,6 +546,8 @@ fn turned_square() -> (DocumentSnapshotV1, Camera) {
     });
     doc.entities = vec![serde_json::from_value::<Entity>(json).expect("a polygon")];
     let camera = Camera {
+        map: None,
+        map_ratio: 1.0,
         center: Vec2::new(E, N),
         scale: 2.0,
         width: 64.0,
@@ -676,6 +681,8 @@ fn sub_pixel_pans_at_tm_coordinates_move_the_line_by_exactly_the_pan(gpu: &mut G
     let mut last: Option<f64> = None;
     for i in 0..40 {
         let camera = Camera {
+            map: None,
+            map_ratio: 1.0,
             center: Vec2::new(E + 0.000_01 * f64::from(i), N),
             scale: MAX_SCALE,
             width: f64::from(width),

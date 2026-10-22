@@ -7,8 +7,7 @@
 
 use iced::{Element, Task};
 use kentos_commands::{
-    CommandResult, SourceLink, SourcesEdit, SourcesEditOp, SourcesSync,
-    SyncDirection, SyncTopology,
+    CommandResult, SourceLink, SourcesEdit, SourcesEditOp, SourcesSync, SyncDirection, SyncTopology,
 };
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
@@ -211,6 +210,18 @@ impl App {
                 out.push(l.clone());
             }
         }
+        // The other layers of the same source with changes not yet written go in with it too (docs/adr/0584 §1).
+        for l in &settings.sources {
+            if l.kind == link.kind
+                && l.path == link.path
+                && l.layer != link.layer
+                && !out.iter().any(|o| o.id == l.id)
+                && kentos_native_application::sources::layer_digest(&doc.model, &l.layer)
+                    != l.digest
+            {
+                out.push(l.clone());
+            }
+        }
         out
     }
 
@@ -221,7 +232,7 @@ impl App {
         let name = self.bound_name(&link.layer);
         if related.is_empty() {
             self.warn(format!(
-                "“{name}” katmanına ilişkiyle bağlı, aynı dosyaya bağlı başka katman yok; Kaynağa yaz tek katmanı yazar."
+                "“{name}” katmanıyla aynı kaynakta ilişkiyle bağlı ya da yazılmamış değişikliği olan başka katman yok; Kaynağa yaz tek katmanı yazar."
             ));
             return;
         }
@@ -294,11 +305,13 @@ impl App {
         if layers.is_empty() {
             layers.push(count(output.added, output.modified, output.removed));
         }
-        let mut said = format!(
-            "{} dosyasına tek işlemde yazıldı: {}",
-            file_name(path),
-            layers.join("; ")
-        );
+        // A database by its address (a file by its name): docs/adr/0584 §1.
+        let place = if kentos_native_application::provider::is_database(path) {
+            format!("{path} veritabanına")
+        } else {
+            format!("{} dosyasına", file_name(path))
+        };
+        let mut said = format!("{place} tek işlemde yazıldı: {}", layers.join("; "));
         for r in output.relations.iter().filter(|r| r.added + r.removed > 0) {
             said.push_str(&format!(
                 "; ilişki satırları (“{}”): +{} −{}",
@@ -382,9 +395,12 @@ impl App {
                 }
             }
             // The file changed since: the two sides are put together, not written over (docs/adr/0538).
-            // The window says why; without a base the reconcile's refusal is said.
+            // The window says why; without a base the reconcile's refusal is said. A neighbour outside the area
+            // changed between the read and the lock (docs/adr/0585) is not the layer's: writing again reads it anew.
             CommandResult::Conflict { error }
-                if error.code == "source_changed" && direction == SyncDirection::Write =>
+                if error.code == "source_changed"
+                    && direction == SyncDirection::Write
+                    && error.path.as_deref() != Some("topology") =>
             {
                 self.open_reconcile(&link.layer, true);
             }

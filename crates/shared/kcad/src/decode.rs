@@ -28,12 +28,12 @@ mod views;
 use kentos_contracts::{
     AngleUnit, AnnotationHeights, AnnotationKind, AreaUnit, Bounds, DOCUMENT_FORMAT,
     DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV2, DrawingFont, DrawingUnit,
-    FieldChoice, LayerField, LayerFieldKind, LayerNode, LayerNodeType, LayerSnap, LayerState,
-    LayerStateNode, LayerStyle, LengthStyle, LineType, MAX_ANNOTATION_MM, MigrationSource,
-    PointStyle, PointSymbol, ProjectId, ProjectSettings, ProjectStyles, SurveySettings,
-    GeoidModel, HeightKind, HeightReference,
-    TopologyException, TopologyRule, TopologyRuleKind, TopologySettings, Vec2, Workspace,
-    annotation_mm_holds, layer_fields_problem, layer_states_problem,
+    FieldChoice, GeoidModel, HeightKind, HeightReference, LayerField, LayerFieldKind, LayerNode,
+    LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, LengthStyle, LineType,
+    MAX_ANNOTATION_MM, MigrationSource, PointStyle, PointSymbol, ProjectId, ProjectSettings,
+    ProjectStyles, SurveySettings, TopologyException, TopologyRule, TopologyRuleKind,
+    TopologySettings, Vec2, Workspace, annotation_mm_holds, layer_fields_problem,
+    layer_states_problem,
 };
 
 use crate::SCHEMAS;
@@ -503,6 +503,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut relations = Vec::new();
     let mut join_views = Vec::new();
     let mut linear_events = Vec::new();
+    let mut map_srid: Option<u32> = None;
     let mut source_bases: Vec<kentos_contracts::SourceBase> = Vec::new();
     let mut sources = Vec::new();
     let mut length_style = None;
@@ -702,16 +703,16 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "joinViews" if has.join_views => {
                 let at = r.position();
                 let value = r.opaque()?;
-                let list: Vec<kentos_contracts::JoinView> =
-                    serde_json::from_value(value.clone()).map_err(|e| {
-                        let words = e.to_string();
-                        let code = if words.contains("unknown field") {
-                            Code::UnknownField
-                        } else {
-                            Code::BadValue
-                        };
-                        r.fail_at(code, at, &format!("birleşik görünümler okunamadı: {words}"))
-                    })?;
+                let list: Vec<kentos_contracts::JoinView> = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                    let words = e.to_string();
+                    let code = if words.contains("unknown field") {
+                        Code::UnknownField
+                    } else {
+                        Code::BadValue
+                    };
+                    r.fail_at(code, at, &format!("birleşik görünümler okunamadı: {words}"))
+                })?;
                 if serde_json::to_value(&list).ok().as_ref() != Some(&value) {
                     return Err(r.fail_at(
                         Code::BadValue,
@@ -731,12 +732,30 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 join_views = list;
             }
+            // Schema 98 (docs/adr/0583 §3): the map's system.
+            "mapSrid" if has.source_crs => {
+                let at = r.position();
+                let v = r.uint(u64::from(u32::MAX))?;
+                // `srid` comes first in the encoded order: the project's own system is known.
+                let own = srid;
+                let map = u32::try_from(v)
+                    .ok()
+                    .filter(|&m| m > 0 && Some(m) != own && own != Some(0))
+                    .ok_or_else(|| {
+                        r.fail_at(
+                            Code::BadValue,
+                            at,
+                            "harita sistemi projeninkinden başka bir EPSG sistemi olmalı; yerel projenin harita sistemi olmaz",
+                        )
+                    })?;
+                map_srid = Some(map);
+            }
             // Schema 97 (docs/adr/0569): the project's links of event layers to their routes, read whole and checked.
             "linearEvents" if has.linear_events => {
                 let at = r.position();
                 let value = r.opaque()?;
-                let list: Vec<kentos_contracts::EventLink> =
-                    serde_json::from_value(value.clone()).map_err(|e| {
+                let list: Vec<kentos_contracts::EventLink> = serde_json::from_value(value.clone())
+                    .map_err(|e| {
                         let words = e.to_string();
                         let code = if words.contains("unknown field") {
                             Code::UnknownField
@@ -889,7 +908,16 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "topology" if has.topology => topology = Some(topology_settings(r)?),
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
             "connections" if has.services => connections = services::connections(r)?,
-            "networks" if has.networks => networks = networks::networks(r, has.network_turns, has.network_terminals, has.network_configs, has.network_profiles, has.timed_closures)?,
+            "networks" if has.networks => {
+                networks = networks::networks(
+                    r,
+                    has.network_turns,
+                    has.network_terminals,
+                    has.network_configs,
+                    has.network_profiles,
+                    has.timed_closures,
+                )?
+            }
             "variables" if has.variables => variables = variables::variables(r)?,
             "addressLocators" if has.addresses => {
                 address_locators = addresses::address_locators(r)?
@@ -908,7 +936,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "xrefPaths" if has.xref_paths => {
                 let at = r.position();
                 let paths = list(r, |r, _| text(r))?;
-                if paths.is_empty() || kentos_contracts::sanitized_xref_paths(paths.clone()) != paths {
+                if paths.is_empty()
+                    || kentos_contracts::sanitized_xref_paths(paths.clone()) != paths
+                {
                     return Err(r.fail_at(
                         Code::BadValue,
                         at,
@@ -1035,7 +1065,11 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     }
     // Ellipsoidal heights and an epoch rest on a datum: a project without a system has neither (docs/adr/0519 §1).
     let system = srid != 0 || custom_crs.is_some();
-    if !system && heights.as_ref().is_some_and(|h: &HeightReference| h.kind == HeightKind::Ellipsoidal) {
+    if !system
+        && heights
+            .as_ref()
+            .is_some_and(|h: &HeightReference| h.kind == HeightKind::Ellipsoidal)
+    {
         return Err(relation(
             "heights",
             "elipsoit yüksekliği bir koordinat sistemi ister; yerel projede yalnız ortometrik yükseklik olur",
@@ -1092,6 +1126,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         relations,
         join_views,
         linear_events,
+        map_srid,
         sources,
         length_style,
         domains,
@@ -1299,7 +1334,9 @@ fn height_reference(r: &mut Reader<'_>) -> Result<HeightReference, KcadError> {
                         return Err(r.fail_at(
                             Code::BadValue,
                             k_at,
-                            &format!("“{other}” bir yükseklik türü değil (ellipsoidal, orthometric)"),
+                            &format!(
+                                "“{other}” bir yükseklik türü değil (ellipsoidal, orthometric)"
+                            ),
                         ));
                     }
                 });
@@ -1444,6 +1481,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let (mut plot, mut frozen) = (None, None);
     let mut table_styles = Vec::new();
     let mut subtypes: Option<(usize, kentos_contracts::LayerSubtypes)> = None;
+    let mut source_crs: Option<kentos_contracts::LayerSourceCrs> = None;
     let mut contingents: Option<(usize, Vec<kentos_contracts::FieldGroup>)> = None;
     let mut rules: Option<(usize, Vec<kentos_contracts::LayerRule>)> = None;
     map(r, |r, key| {
@@ -1578,6 +1616,32 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 }
                 rules = Some((at, read));
             }
+            // Schema 98 (docs/adr/0583 §1): the system its objects came from, read whole and checked.
+            "sourceCrs" if has.source_crs => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let read: kentos_contracts::LayerSourceCrs = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("kaynak sistemi okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "kaynak sistemi yazıcının biçiminde değil (boş bir alan yazılmış)",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::layer_crs_problem(&read) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                source_crs = Some(read);
+            }
             "plot" if has.look => {
                 if r.bool()? {
                     return Err(r.fail(
@@ -1665,7 +1729,14 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             return Err(r.fail_at(Code::BadValue, *at, &problem));
         }
     }
+    if source_crs.is_some() && kind == Some(LayerNodeType::Group) {
+        return Err(r.fail(
+            Code::BadValue,
+            "grubun kaynak sistemi olmaz; yalnız katmanın olur",
+        ));
+    }
     Ok(LayerNode {
+        source_crs,
         rules: rules.map(|(_, c)| c).unwrap_or_default(),
         contingents: contingents.map(|(_, c)| c).unwrap_or_default(),
         subtypes: subtypes.map(|(_, s)| s),

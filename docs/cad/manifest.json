@@ -3005,7 +3005,7 @@
    "operation": null,
    "python": "Connection: file.export.dwg",
    "mcp": "file.export.dwg",
-   "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0580).",
+   "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0586).",
    "scope": "none",
    "desktop": "implemented",
    "tests": 0
@@ -3233,7 +3233,7 @@
    "operation": null,
    "python": "Connection: file.import.dwg",
    "mcp": "file.import.dwg",
-   "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0580).",
+   "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0586).",
    "scope": "none",
    "desktop": "implemented",
    "tests": 0
@@ -3672,6 +3672,22 @@
    "tests": 2
   },
   {
+   "id": "layer.crs",
+   "kind": "command",
+   "title": "Sistem ata…",
+   "level": "semantic",
+   "via": [
+    "cad.layers.crs"
+   ],
+   "operation": null,
+   "python": "kentos.cad.layers.crs",
+   "mcp": "cad.layers.crs",
+   "note": null,
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "layer.duplicate",
    "kind": "command",
    "title": "Kopyasını oluştur",
@@ -3877,6 +3893,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "layer.reproject",
+   "kind": "command",
+   "title": "Yeniden izdüşür",
+   "level": "semantic",
+   "via": [
+    "cad.layers.reproject"
+   ],
+   "operation": null,
+   "python": "kentos.cad.layers.reproject",
+   "mcp": "cad.layers.reproject",
+   "note": null,
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "layer.showAll",
@@ -12782,6 +12814,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "view.mapCrs",
+   "kind": "command",
+   "title": "Harita sistemi",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Harita sistemi projenin ayarıdır (mapSrid); nesneler değişmez, çizim görünümde dönüştürülür (ADR 0583).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "view.namedViews",

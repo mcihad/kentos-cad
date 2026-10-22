@@ -608,8 +608,9 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     // istatistik's nine, docs/adr/0238, Uzaktan algılama's eight, docs/adr/0242, Çok boyutlu veri's three,
     // docs/adr/0243, among them), the nine point cloud tools, the desktop's own for now (docs/adr/0207 §7), and
     // Adres's two, the desktop's while the web is paused (docs/adr/0229 §11, §12; docs/adr/0228), and the desktop's
-    // COG olarak kaydet (docs/adr/0515), Yerel Moran (docs/adr/0520) and Olay kaymasını denetle (docs/adr/0526).
-    assert_eq!(app.processing_meta(), "151 araç");
+    // COG olarak kaydet (docs/adr/0515), Yerel Moran (docs/adr/0520), Olay kaymasını denetle (docs/adr/0526) and
+    // DBSCAN parametre taraması (docs/adr/0574).
+    assert_eq!(app.processing_meta(), "152 araç");
     // Turkish letters folded: “kose numara” finds Köşe noktalarını numarala only (as the web's test).
     event(
         &mut app,

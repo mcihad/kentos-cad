@@ -5428,6 +5428,69 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Sistem ata (docs/adr/0583 §2), held together by fixtures/commands/v1/cad.layers.crs.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_CRS.into(),
+            version: crate::CAD_LAYERS_CRS_VERSION,
+            title: "Sistem ata".into(),
+            summary: "Katmanın kaynak sistemi kaydını yazar ya da siler (srid verilmezse ya da null ise): nesnelerinin hangi koordinat sisteminden geldiği; adı, WKT2'si, EPSG eksen sırası, birimi ve kullanım alanı kayıttan. \
+                      Nesneler her zaman projenin sistemindedir; atama hiçbir koordinatı değiştirmez (yanlış sistemde alınmış veriyi çevirmek için cad.layers.reproject). \
+                      Katman ağacının değişikliğidir: tek geri alma adımı “Sistem ata”; kayıt aynıysa hiçbir şey yazılmaz. Kilitli katmanda da çalışır, veri değişmez. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["sistemata".into(), "assigncrs".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersCrs>(),
+            output: schema::<crate::LayersCrsSet>(),
+            plan: Some(schema::<crate::LayersCrsSet>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Katmanın verisi WGS 84'ten geldi".into(),
+                    input: json!({ "layer": "gps", "srid": 4326 }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kaydı sil".into(),
+                    input: json!({ "layer": "gps" }),
+                    output: None,
+                },
+            ],
+        },
+        // Yeniden izdüşür (docs/adr/0583 §2), held together by fixtures/commands/v1/cad.layers.reproject.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_REPROJECT.into(),
+            version: crate::CAD_LAYERS_REPROJECT_VERSION,
+            title: "Yeniden izdüşür".into(),
+            summary: "Katmanın nesnelerini verilen sistemden (from; verilmezse katmanın kaynak sistemi) projenin sistemine çevirir: projenin sisteminde sanılarak alınmış veriyi düzeltir. \
+                      Kotlar ve ölçüler kalır; yay ve eğriler dönüşümün kuralıyla çevrilir. Çevrilemeyen nesne varsa hiçbir şey yazılmaz (crs_unreached, uids). \
+                      Katmanın kaynak sistemi from olur. Tek geri alma adımı “Yeniden izdüşür”. Kilitli katman reddedilir; projenin sistemi yoksa ya da from projeninkiyse crs_mismatch. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["izdusur".into(), "reproject".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersReproject>(),
+            output: schema::<crate::LayersReprojected>(),
+            plan: Some(schema::<crate::LayersReprojected>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "ED50 / TM36'da sanılan katmanı projenin sistemine çevir".into(),
+                input: json!({ "layer": "eski-pafta", "from": 2322 }),
+                output: None,
+            }],
+        },
         // Koşullu biçim (docs/adr/0413), held together by fixtures/commands/v1/cad.layers.table.json.
         // The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -7325,10 +7388,10 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_SOURCES_SYNC_VERSION,
             title: "Kaynakla eşitle".into(),
             summary: "Bağlı katmanı tablosuyla eşitler. write: katmanın değişikliklerini tabloya yazar, tek SQLite işleminde: yeni nesneler kalıcı kimlikleriyle eklenir (kentos_uids), değişenler fid'leriyle güncellenir, silinenler silinir, katmanın tabloda olmayan alanları sütun olarak eklenir; mekânsal dizin kendi tetikleyicileriyle izler, tanımadığı tablolara dokunulmaz. \
-                      Dosya katman onunla son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi tablonun sütununa uymayan nesne geometry_mismatch; tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya yazılır. \
+                      Dosya katman onunla son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi tablonun sütununa uymayan nesne geometry_mismatch (Z ve M de: Z'yi yasaklayan sütuna kotlu, isteyene kotsuz, hiçbirine kısmen kotlu nesne yazılmaz; M için de aynı, docs/adr/0584 §2); tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya yazılır. \
                       read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz (pending_changes, conflict). \
                       PostGIS tablosu da aynı kurallarla, tek veritabanı işleminde yazılır: tablo yazarlara kilitlenir, sürümü yeniden denetlenir, kalıcı kimlikler şemanın kentos_uids tablosunda; ulaşılamayan veritabanı source_unreachable. \
-                      with (yalnız write) başka bağlı katmanları aynı işlemde yazar: üst kayıt ile alt kayıtları ya hep birlikte ya hiç (docs/adr/0532): her katman önce denetlenir, biri reddedilirse (source_readonly, geometry_mismatch, source_changed, relation_dangling) hiçbiri yazılmaz; katmanlar tek GeoPackage dosyasında olmalıdır (transaction_split: ayrı dosya ya da bir tablo bir işlemde yazan veritabanı); cevabın layers'ı her katmanın payı, relations'ı eşli ilişkilerin eşleme satırlarıdır. \
+                      with (yalnız write) başka bağlı katmanları aynı işlemde yazar: üst kayıt ile alt kayıtları ya hep birlikte ya hiç (docs/adr/0532): her katman önce denetlenir, biri reddedilirse (source_readonly, geometry_mismatch, source_changed, relation_dangling) hiçbiri yazılmaz; katmanlar tek GeoPackage dosyasında ya da tek PostGIS veritabanında olmalıdır (docs/adr/0584 §1: veritabanında tablolar adlarının sırasıyla kilitlenir, her birinin satırları tabanına karşı denetlenir; iki kaynağa birden tek işlem olmaz, transaction_split); cevabın layers'ı her katmanın payı, relations'ı eşli ilişkilerin eşleme satırlarıdır. \
                       cad.sources.relate ile eşlenen çoktan çoğa ilişki katmanlarıyla birlikte yazılır: eşleme tablosunun satırları alt katmanın çok değerli alanını izler, alan metin sütunu olarak yazılmaz; eşlenmemiş çoktan çoğa başvuru “; ” ile birleşmiş metin olarak kalır ve relation_unmapped ile söylenir, dosyanın tanınmayan temsilli ilişkisi metne çevrilmez. read eşli ilişkinin alanını eşleme satırlarından doldurur. \
                       plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler."
                 .into(),
@@ -7475,6 +7538,44 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // A question asked of a data set where it is (docs/adr/0581), held together by
+        // fixtures/commands/v1/cad.sources.query.json.
+        CommandDescriptor {
+            id: crate::CAD_SOURCES_QUERY.into(),
+            version: crate::CAD_SOURCES_QUERY_VERSION,
+            title: "Kaynağı sorgula".into(),
+            summary: "Bir veri kümesini bulunduğu yerde sorgular: path ve table ile bir GeoPackage dosyasının ya da bir PostGIS adresinin (postgresql://…, parolasız) tablosunu, layer ile çizimin bir katmanını (scope loaded: çizimin nesneleri, bağlı katmanda çalışma kopyası; scope source: bağlı katmanın kaynağının bütün tablosu). \
+                      bbox (projenin sisteminde; kaynağın sistemi başkaysa ona çevrilir) kutusu değen kayıtları, near (at, tolerance) yere tolerans içindeki kayıtları (tanımlama), filter İfadeyle seç'in dilinde koşulu tutan kayıtları verir. fields döndürülecek alanları, geometry kaydın geometrisini projenin sisteminde ISO WKT olarak seçer. \
+                      Kayıtlar anahtar sırasıyla sayfa sayfadır (limit 0–10 000, varsayılan 100; cursor önceki sayfanın next'i); anahtar sırası ekleme ve silmede kararlıdır. count sorunun tuttuğu bütün kayıtları sayar; statistics alanların istatistiğini (kentos.statistics/1: okunan, atlanan, toplam, ortalama, en az, en çok, standart sapma; kesin ondalık metinler) sayfadan değil bütün kayıtlardan verir. \
+                      Kutu, sütunlar ve süzgecin kaynağın denetleyebildiği kısmı kaynağa gider: koşul ifadenin tuttuğu her kaydı tutar, kaynaktan gelen her kayıt ifadeyle burada yeniden sınanır; sonuç kaynağın kurallarından bağımsızdır. plan ne yapıldığını söyler: kutu (index, geometry, local), okunan sütunlar, kaynağa giden koşul değerleriyle ve tam olup olmadığı, burada yapılanlar, sıra. \
+                      Kayıtların kalıcı kimliği (uid) aynı kaynağı açan her pencerede ve bağlı katmanın çalışma kopyasında aynıdır. Parçası bağlı katmanın çalışma kopyası tam veri kümesi değildir: partial ve partial_scope uyarısı. Çizimi değiştirmez."
+                .into(),
+            aliases: vec!["kaynaksorgu".into(), "sourcequery".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::SourcesQuery>(),
+            output: schema::<crate::SourcesQueried>(),
+            plan: Some(schema::<crate::SourcesQueried>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Büyük parsellerin ilk sayfası, dosyadan".into(),
+                    input: json!({ "path": "/veri/kadastro.gpkg", "table": "parsel", "filter": "alan > 1000",
+                                   "fields": ["ada", "parsel_no", "alan"], "limit": 50 }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bağlı katmanın kaynağındaki bütün parsellerin alan istatistiği".into(),
+                    input: json!({ "layer": "parsel", "scope": "source", "limit": 0, "count": true, "statistics": ["alan"] }),
+                    output: None,
+                },
+            ],
+        },
         // A PDF page into the drawing (docs/adr/0352), held together by fixtures/commands/v1/file.import.pdf.json.
         CommandDescriptor {
             id: crate::FILE_IMPORT_PDF.into(),
@@ -7589,7 +7690,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::FILE_IMPORT_DWG.into(),
             version: crate::FILE_IMPORT_DWG_VERSION,
             title: "DWG içe aktar".into(),
-            summary: "path'teki DWG dosyasını açık çizime alır, masaüstünün DWG içe aktar penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile (ADR 0580), ağ veya uzak dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; \
+            summary: "path'teki DWG dosyasını açık çizime alır, masaüstünün DWG içe aktar penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile (ADR 0586), ağ veya uzak dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; \
                       yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. \
                       Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. \
                       Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). \
@@ -9078,10 +9179,12 @@ mod tests {
                         serde_json::from_value::<crate::ArraysEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_CONSTRAINTS_EDIT => {
-                        serde_json::from_value::<crate::ConstraintsEdit>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::ConstraintsEdit>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_CONSTRAINTS_QUERY => {
-                        serde_json::from_value::<crate::ConstraintsQuery>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::ConstraintsQuery>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_PARAMETERS_EDIT => {
                         serde_json::from_value::<crate::ParametersEdit>(e.input.clone()).map(|_| ())
@@ -9158,13 +9261,15 @@ mod tests {
                         serde_json::from_value::<crate::TagsEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_VIEWMARKS_CREATE => {
-                        serde_json::from_value::<crate::ViewMarksCreate>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::ViewMarksCreate>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_VIEWMARKS_EDIT => {
                         serde_json::from_value::<crate::ViewMarksEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_VIEWMARKS_REFERENCES => {
-                        serde_json::from_value::<crate::ViewMarksReferences>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::ViewMarksReferences>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_SPACES_FINISH => {
                         serde_json::from_value::<crate::SpacesFinish>(e.input.clone()).map(|_| ())
@@ -9185,7 +9290,8 @@ mod tests {
                         serde_json::from_value::<crate::ProfilesList>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_PROFILES_MIGRATE => {
-                        serde_json::from_value::<crate::ProfilesMigrate>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::ProfilesMigrate>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_SHEETS_SET => {
                         serde_json::from_value::<crate::SheetsSet>(e.input.clone()).map(|_| ())
@@ -9206,10 +9312,12 @@ mod tests {
                         serde_json::from_value::<crate::RastersMosaic>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_RASTERS_GPKGREAD => {
-                        serde_json::from_value::<crate::RastersGpkgRead>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::RastersGpkgRead>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_RASTERS_GPKGWRITE => {
-                        serde_json::from_value::<crate::RastersGpkgWrite>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::RastersGpkgWrite>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_INSERTS_CLIP => {
                         serde_json::from_value::<crate::InsertsClip>(e.input.clone()).map(|_| ())
@@ -9227,16 +9335,20 @@ mod tests {
                         serde_json::from_value::<crate::TimeQuery>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_POINTCLOUDS_DESCRIBE => {
-                        serde_json::from_value::<crate::PointCloudsDescribe>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::PointCloudsDescribe>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_POINTCLOUDS_QUERY => {
-                        serde_json::from_value::<crate::PointCloudsQuery>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::PointCloudsQuery>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_POINTCLOUDS_REGION => {
-                        serde_json::from_value::<crate::PointCloudsRegion>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::PointCloudsRegion>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_POINTCLOUDS_PROFILE => {
-                        serde_json::from_value::<crate::PointCloudsProfile>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::PointCloudsProfile>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_MESHES_DESCRIBE => {
                         serde_json::from_value::<crate::MeshesDescribe>(e.input.clone()).map(|_| ())
@@ -9245,7 +9357,8 @@ mod tests {
                         serde_json::from_value::<crate::MeshesQuery>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SCHEDULES_CREATE => {
-                        serde_json::from_value::<crate::SchedulesCreate>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::SchedulesCreate>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_SCHEDULES_EDIT => {
                         serde_json::from_value::<crate::SchedulesEdit>(e.input.clone()).map(|_| ())
@@ -9254,7 +9367,8 @@ mod tests {
                         serde_json::from_value::<crate::SpacesEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SPACES_QUANTITIES => {
-                        serde_json::from_value::<crate::SpacesQuantities>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::SpacesQuantities>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_OPENINGS_EDIT => {
                         serde_json::from_value::<crate::OpeningsEdit>(e.input.clone()).map(|_| ())
@@ -9263,7 +9377,8 @@ mod tests {
                         serde_json::from_value::<crate::EntitiesOrder>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ANNOTATIONS_SCALES => {
-                        serde_json::from_value::<crate::AnnotationsScales>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::AnnotationsScales>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_ENTITIES_OFFSET => {
                         serde_json::from_value::<crate::EntitiesOffset>(e.input.clone()).map(|_| ())
@@ -9387,10 +9502,12 @@ mod tests {
                         serde_json::from_value::<crate::NetworkDefine>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LINEARREF_DEFINE => {
-                        serde_json::from_value::<crate::LinearRefDefine>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::LinearRefDefine>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_SUBNETWORKS_FIND => {
-                        serde_json::from_value::<crate::SubnetworksFind>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::SubnetworksFind>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_SUBNETWORKS_UPDATE => {
                         serde_json::from_value::<crate::SubnetworksUpdate>(e.input.clone())
@@ -9401,8 +9518,7 @@ mod tests {
                             .map(|_| ())
                     }
                     crate::CAD_ADDRESSES_CHECK => {
-                        serde_json::from_value::<crate::AddressesCheck>(e.input.clone())
-                            .map(|_| ())
+                        serde_json::from_value::<crate::AddressesCheck>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LAYERS_TIME => {
                         serde_json::from_value::<crate::LayersTime>(e.input.clone()).map(|_| ())
@@ -9413,6 +9529,13 @@ mod tests {
                     crate::CAD_LAYERS_FILTER => {
                         serde_json::from_value::<crate::LayersFilter>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_CRS => {
+                        serde_json::from_value::<crate::LayersCrs>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_LAYERS_REPROJECT => {
+                        serde_json::from_value::<crate::LayersReproject>(e.input.clone())
+                            .map(|_| ())
+                    }
                     crate::CAD_LAYERS_TABLE => {
                         serde_json::from_value::<crate::LayersTable>(e.input.clone()).map(|_| ())
                     }
@@ -9420,7 +9543,8 @@ mod tests {
                         serde_json::from_value::<crate::LayersSubtypes>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LAYERS_CONTINGENTS => {
-                        serde_json::from_value::<crate::LayersContingents>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::LayersContingents>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_LAYERS_RULES => {
                         serde_json::from_value::<crate::LayersRules>(e.input.clone()).map(|_| ())
@@ -9469,7 +9593,8 @@ mod tests {
                         serde_json::from_value::<crate::LineTypesEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_HATCH_PATTERNS_EDIT => {
-                        serde_json::from_value::<crate::HatchPatternsEdit>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::HatchPatternsEdit>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_LIBRARY_EDIT => {
                         serde_json::from_value::<crate::LibraryEdit>(e.input.clone()).map(|_| ())
@@ -9529,7 +9654,8 @@ mod tests {
                         serde_json::from_value::<crate::FieldsMigrate>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ATTACHMENTS_INSPECT => {
-                        serde_json::from_value::<crate::AttachmentsInspect>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::AttachmentsInspect>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_SCHEMA_DESCRIBE => {
                         serde_json::from_value::<crate::SchemaDescribe>(e.input.clone()).map(|_| ())
@@ -9541,7 +9667,8 @@ mod tests {
                         serde_json::from_value::<crate::FormsImport>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_FORMS_TRANSITION => {
-                        serde_json::from_value::<crate::FormsTransition>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::FormsTransition>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_FORMS_COMPARE => {
                         serde_json::from_value::<crate::FormsCompare>(e.input.clone()).map(|_| ())
@@ -9553,7 +9680,8 @@ mod tests {
                         serde_json::from_value::<crate::RecordsCreate>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_RECORDS_DUPLICATE => {
-                        serde_json::from_value::<crate::RecordsDuplicate>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::RecordsDuplicate>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_SHEETS_EDIT => {
                         serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
@@ -9577,7 +9705,8 @@ mod tests {
                         serde_json::from_value::<crate::ExportGis>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SOURCES_DESCRIBE => {
-                        serde_json::from_value::<crate::SourcesDescribe>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::SourcesDescribe>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_SOURCES_EDIT => {
                         serde_json::from_value::<crate::SourcesEdit>(e.input.clone()).map(|_| ())
@@ -9589,22 +9718,28 @@ mod tests {
                         serde_json::from_value::<crate::SourcesRelate>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SOURCES_RECONCILE => {
-                        serde_json::from_value::<crate::SourcesReconcile>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::SourcesReconcile>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_RECORDS_PAGE => {
                         serde_json::from_value::<crate::RecordsPage>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SOURCES_QUERY => {
+                        serde_json::from_value::<crate::SourcesQuery>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_FIELDS_WRITE => {
                         serde_json::from_value::<crate::FieldsWrite>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_PROCESSING_TOOLS => {
-                        serde_json::from_value::<crate::ProcessingTools>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::ProcessingTools>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_PROCESSING_RUN => {
                         serde_json::from_value::<crate::ProcessingRun>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_PROCESSING_BATCH => {
-                        serde_json::from_value::<crate::ProcessingBatch>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::ProcessingBatch>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_CHANGESET_APPLY => {
                         serde_json::from_value::<crate::ChangesetApply>(e.input.clone()).map(|_| ())
@@ -9762,22 +9897,27 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_FIELDS_EDIT => {
-                            serde_json::from_value::<crate::FieldsEdited>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::FieldsEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_LEADERS_EDIT => {
-                            serde_json::from_value::<crate::LeadersEdited>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::LeadersEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_HATCHES_EDIT => {
-                            serde_json::from_value::<crate::HatchesEdited>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::HatchesEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_TABLES_EDIT => {
-                            serde_json::from_value::<crate::TablesEdited>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::TablesEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_TEXTS_EDIT => {
                             serde_json::from_value::<crate::TextsEdited>(output.clone()).map(|_| ())
                         }
                         crate::CAD_TEXTS_CHECK => {
-                            serde_json::from_value::<crate::TextsChecked>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::TextsChecked>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_FONTS_REPORT => {
                             serde_json::from_value::<crate::FontsReported>(output.clone())
@@ -9911,6 +10051,14 @@ mod tests {
                             serde_json::from_value::<crate::LayersFiltered>(output.clone())
                                 .map(|_| ())
                         }
+                        crate::CAD_LAYERS_CRS => {
+                            serde_json::from_value::<crate::LayersCrsSet>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_REPROJECT => {
+                            serde_json::from_value::<crate::LayersReprojected>(output.clone())
+                                .map(|_| ())
+                        }
                         crate::CAD_LAYERS_COMPOSE => {
                             serde_json::from_value::<crate::LayersComposed>(output.clone())
                                 .map(|_| ())
@@ -9959,8 +10107,7 @@ mod tests {
                             serde_json::from_value::<crate::LayersFound>(output.clone()).map(|_| ())
                         }
                         crate::CAD_FIELDS_USAGE => {
-                            serde_json::from_value::<crate::FieldsUsed>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::FieldsUsed>(output.clone()).map(|_| ())
                         }
                         crate::CAD_LAYERS_TRANSLATE => {
                             serde_json::from_value::<crate::LayersTranslated>(output.clone())
@@ -10028,8 +10175,7 @@ mod tests {
                             serde_json::from_value::<crate::ViewsEdited>(output.clone()).map(|_| ())
                         }
                         crate::CAD_FORMS_EDIT => {
-                            serde_json::from_value::<crate::FormsEdited>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::FormsEdited>(output.clone()).map(|_| ())
                         }
                         crate::CAD_FORMS_VALIDATE => {
                             serde_json::from_value::<crate::FormsValidated>(output.clone())
@@ -10040,16 +10186,13 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_FORMS_FILL => {
-                            serde_json::from_value::<crate::FormsFilled>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::FormsFilled>(output.clone()).map(|_| ())
                         }
                         crate::CAD_JOINS_EDIT => {
-                            serde_json::from_value::<crate::JoinsEdited>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::JoinsEdited>(output.clone()).map(|_| ())
                         }
                         crate::CAD_JOINS_QUERY => {
-                            serde_json::from_value::<crate::JoinsAnswer>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::JoinsAnswer>(output.clone()).map(|_| ())
                         }
                         crate::CAD_RELATIONS_EDIT => {
                             serde_json::from_value::<crate::RelationsEdited>(output.clone())
@@ -10060,8 +10203,7 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_FORMS_TEST => {
-                            serde_json::from_value::<crate::FormsTested>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::FormsTested>(output.clone()).map(|_| ())
                         }
                         crate::CAD_DOMAINS_EDIT => {
                             serde_json::from_value::<crate::DomainsEdited>(output.clone())
@@ -10084,8 +10226,7 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_FORMS_EXPORT => {
-                            serde_json::from_value::<crate::FormPackage>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::FormPackage>(output.clone()).map(|_| ())
                         }
                         crate::CAD_FORMS_IMPORT => {
                             serde_json::from_value::<crate::FormsImported>(output.clone())
@@ -10123,10 +10264,12 @@ mod tests {
                             serde_json::from_value::<crate::DxfImported>(output.clone()).map(|_| ())
                         }
                         crate::CAD_WALLS_CREATE => {
-                            serde_json::from_value::<crate::WallsCreated>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::WallsCreated>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_WALLS_FROM_LINES => {
-                            serde_json::from_value::<crate::WallsFromLinesDone>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::WallsFromLinesDone>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_WALLS_EDIT => {
                             serde_json::from_value::<crate::WallsEdited>(output.clone()).map(|_| ())
@@ -10135,16 +10278,20 @@ mod tests {
                             serde_json::from_value::<crate::WallsJoined>(output.clone()).map(|_| ())
                         }
                         crate::CAD_OPENINGS_CREATE => {
-                            serde_json::from_value::<crate::OpeningsCreated>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::OpeningsCreated>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_SPACES_CREATE => {
-                            serde_json::from_value::<crate::SpacesCreated>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::SpacesCreated>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_GRIDS_CREATE => {
-                            serde_json::from_value::<crate::GridsCreated>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::GridsCreated>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_OPENINGS_EDIT => {
-                            serde_json::from_value::<crate::OpeningsEdited>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::OpeningsEdited>(output.clone())
+                                .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),
                     };

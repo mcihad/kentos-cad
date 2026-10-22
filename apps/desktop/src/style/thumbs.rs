@@ -272,6 +272,8 @@ impl shader::Primitive for Frame {
         };
         let scale = viewport.scale_factor();
         let camera = Camera {
+            map: None,
+            map_ratio: 1.0,
             center: Vec2::new(0.0, 0.0),
             scale: self.built.px_per_mm,
             width: f64::from(bounds.width),

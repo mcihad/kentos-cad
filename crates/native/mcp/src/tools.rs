@@ -708,6 +708,10 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.subtypes"
             | "cad.layers.contingents"
             | "cad.layers.rules"
+            // Without srid it takes a layer's source system record away; reproject moves every object of the
+            // layer (docs/adr/0583 §2).
+            | "cad.layers.crs"
+            | "cad.layers.reproject"
             // The layer tree's, the styles' and the settings' commands remove layers,
             // groups, objects, definitions, states and styles, hide and rename, and
             // assign a coordinate system (docs/adr/0248).

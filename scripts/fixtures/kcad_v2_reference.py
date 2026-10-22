@@ -302,6 +302,8 @@ def settings(s):
                 # Schema 50 (docs/adr/0262 §1): inches and feet too, written only in schema 50.
                 "drawingUnit": (enum(("mm", "cm", "m", "in", "ft")), False),
                 "secondSrid": (uint, False),
+                # Schema 98 (docs/adr/0583 §3): the map's system.
+                "mapSrid": (uint, False),
                 "customCrs": (crs_definition, False),
                 "secondCustomCrs": (crs_definition, False),
                 "datumTransforms": (datum_transforms, False),
@@ -1307,6 +1309,8 @@ def layer_entries(n):
                 "contingents": (opaque, False),
                 # Schema 72 (docs/adr/0438 §1): the record rules, as their JSON.
                 "rules": (opaque, False),
+                # Schema 98 (docs/adr/0583 §1): the system its objects came from, as its JSON.
+                "sourceCrs": (opaque, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -2195,6 +2199,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 98 (docs/adr/0583): a layer's source system, the map's system.
+    def source_crs(nodes):
+        return any("sourceCrs" in n or source_crs(n.get("children", [])) for n in nodes)
+    if "mapSrid" in (settings or {}) or source_crs(layers):
+        return 98
     # Schema 97 (docs/adr/0569): the project's links of event layers to their routes.
     if "linearEvents" in (settings or {}):
         return 97
@@ -2766,7 +2775,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-98.kcad"] = container(root(cmap(parts), version=uint(98)))
+    files["schema-version-99.kcad"] = container(root(cmap(parts), version=uint(99)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4647,6 +4656,33 @@ def build():
     out["broken/linear-events-same-layer.kcad"] = events_broken(lambda d: d["settings"]["linearEvents"][1].update(events="kaza"))
     out["broken/linear-events-feeds-another.kcad"] = events_broken(lambda d: d["settings"]["linearEvents"][1].update(routes=["yol", "kaza"]))
     out["broken/linear-events-negative-tolerance.kcad"] = events_broken(lambda d: d["settings"]["linearEvents"][0].update(tolerance=-1.0))
+    # Source systems (docs/adr/0583): schema 98's; in schema 97 an unknown field; an unknown field of the record, a
+    # group's record, an axis order or a unit not known, the local system's code, an empty name; a map system that is
+    # the project's own, a map system of a local project.
+    out["source-crs.kcad"] = container(document(load("source-crs.json")))
+    crs_payload = document(load("source-crs.json"))
+    assert crs_payload.count(b"\x67version\x18\x62") == 1, "the source systems are schema 98"
+    out["broken/source-crs-in-schema-97.kcad"] = container(crs_payload.replace(b"\x67version\x18\x62", b"\x67version\x18\x61"))
+
+    def crs_broken(change):
+        d = copy.deepcopy(load("source-crs.json"))
+        change(d)
+        return container(document(d))
+
+    def recorded(d):
+        return next(n for n in d["layers"] if "sourceCrs" in n)["sourceCrs"]
+
+    out["broken/source-crs-unknown-field.kcad"] = crs_broken(lambda d: recorded(d).update(epoch=2005.0))
+    out["broken/source-crs-on-group.kcad"] = crs_broken(lambda d: d["layers"].append(
+        {"id": "grup", "name": "Grup", "type": "group", "visible": True, "locked": False, "expanded": True,
+         "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": [],
+         "sourceCrs": dict(recorded(d))}))
+    out["broken/source-crs-axis.kcad"] = crs_broken(lambda d: recorded(d).update(axisOrder="yx"))
+    out["broken/source-crs-unit.kcad"] = crs_broken(lambda d: recorded(d).update(unit="foot"))
+    out["broken/source-crs-local-srid.kcad"] = crs_broken(lambda d: recorded(d).update(srid=0))
+    out["broken/source-crs-empty-name.kcad"] = crs_broken(lambda d: recorded(d).update(name=" "))
+    out["broken/map-srid-own.kcad"] = crs_broken(lambda d: d["settings"].update(mapSrid=d["settings"]["srid"]))
+    out["broken/map-srid-local.kcad"] = crs_broken(lambda d: d["settings"].update(srid=0))
     # Recorded time (docs/adr/0537): schema 90's; in schema 89 an unknown field; an end without a start, a field the
     # valid time holds.
     out["recorded-time.kcad"] = container(document(load("recorded-time.json")))

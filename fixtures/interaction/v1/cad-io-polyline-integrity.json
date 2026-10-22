@@ -3,7 +3,7 @@
   "version": 1,
   "id": "cad-io-polyline-integrity",
   "title": "Çoklu çizgi kaybı önizlemesi ve açık kabul",
-  "source": "docs/adr/0582",
+  "source": "docs/adr/0588",
   "covers": [
     "CAD-IO-15"
   ],

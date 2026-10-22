@@ -92,6 +92,8 @@ impl Entry {
 }
 
 pub struct BatchSink {
+    /// The map's system (docs/adr/0583 §3): what comes in is moved there first.
+    map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
     origin: Vec2,
     entries: Vec<Entry>,
     index: HashMap<String, usize>,
@@ -200,7 +202,13 @@ impl BatchSink {
             group_json: String::new(),
             groups: HashMap::new(),
             band: 0,
+            map: None,
         }
+    }
+
+    /// The map's system what follows is drawn in (docs/adr/0583 §3); none: the project's.
+    pub fn set_map(&mut self, map: Option<&'static kentos_geometry_core::crs::map::MapProjection>) {
+        self.map = map;
     }
 
     /// The draw order band of what follows (docs/adr/0260 §3), until changed:
@@ -460,6 +468,16 @@ impl Sink for BatchSink {
         if self.hide_strokes {
             return;
         }
+        // On a map of another system the path is moved there, its edges split as they bend (docs/adr/0583 §3).
+        if let Some(m) = self.map {
+            let Some(moved) = m.path(path, closed) else {
+                return;
+            };
+            self.map = None;
+            self.stroke(style, &moved, closed);
+            self.map = Some(m);
+            return;
+        }
         // An empty path still makes its batch, as before tiles (the batches' order).
         let tile = path.first().map_or([0.0, 0.0], |&p| self.tile_of(p));
         let e = match self
@@ -508,12 +526,39 @@ impl Sink for BatchSink {
     }
 
     fn fill(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) {
+        if let Some(m) = self.map {
+            // Pictures, rasters and point clouds are not drawn on a map of another system.
+            if matches!(
+                paint,
+                FillPaint::Image { .. } | FillPaint::Raster { .. } | FillPaint::PointCloud { .. }
+            ) {
+                return;
+            }
+            let Some(moved) = rings
+                .iter()
+                .map(|r| m.path(r, true))
+                .collect::<Option<Vec<_>>>()
+            else {
+                return;
+            };
+            self.map = None;
+            self.fill(paint, &moved);
+            self.map = Some(m);
+            return;
+        }
         if let Some(e) = rings.first().and_then(|outer| self.queue(paint, outer)) {
             self.fills.push((e, rings.to_vec(), false));
         }
     }
 
     fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64) {
+        let at = match self.map {
+            None => at,
+            Some(m) => match m.forward(at) {
+                Some(p) => p,
+                None => return,
+            },
+        };
         self.place_marker(style, at, angle);
     }
 
@@ -533,6 +578,15 @@ impl BatchSink {
     /// An area whose ring is star-shaped from its first point (a pie's slice, docs/adr/0213 §2.5): its
     /// triangles are the fan from that point, made without the ear clipper's scans.
     pub fn fan(&mut self, paint: &FillPaint, ring: &[Vec2]) {
+        if let Some(m) = self.map {
+            let Some(moved) = m.path(ring, true) else {
+                return;
+            };
+            self.map = None;
+            self.fan(paint, &moved);
+            self.map = Some(m);
+            return;
+        }
         if let Some(e) = self.queue(paint, ring) {
             self.fills.push((e, vec![ring.to_vec()], true));
         }

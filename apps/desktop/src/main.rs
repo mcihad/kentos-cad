@@ -287,6 +287,8 @@ mod screen_scale;
 #[cfg(test)]
 mod screens;
 mod search;
+mod layer_crs;
+mod map_crs;
 mod second_crs;
 #[cfg(test)]
 mod segment_scenes;
@@ -403,6 +405,8 @@ mod traces;
 mod tracking;
 #[cfg(test)]
 mod transparent_tests;
+#[cfg(test)]
+mod map_crs_tests;
 #[cfg(test)]
 mod ui_screens;
 mod usage;

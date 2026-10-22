@@ -81,6 +81,7 @@ fn uid(i: usize) -> Uuid {
 
 fn opened(n: usize) -> Opened {
     let settings = ProjectSettings {
+        map_srid: None,
         leader_styles: Vec::new(),
         wall_styles: Vec::new(),
         arch: None,
@@ -126,6 +127,7 @@ fn opened(n: usize) -> Opened {
         sources: Vec::new(),
     };
     let layers = vec![LayerNode {
+        source_crs: None,
         table_styles: Vec::new(),
         subtypes: None,
         contingents: Vec::new(),

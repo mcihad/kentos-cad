@@ -38,7 +38,7 @@ impl Notation {
         if value == "dd" { Self::Dd } else { Self::Dms }
     }
 
-    fn write(self, deg: f64, latitude: bool) -> String {
+    pub fn write(self, deg: f64, latitude: bool) -> String {
         match self {
             Self::Dms => format_dms(deg, latitude, 4),
             Self::Dd => format_dd(deg, latitude, 7),
@@ -218,6 +218,7 @@ mod tests {
 
     fn settings(srid: u32, second: Option<u32>) -> ProjectSettings {
         ProjectSettings {
+            map_srid: None,
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,

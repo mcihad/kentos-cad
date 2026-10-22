@@ -131,7 +131,10 @@ impl Split {
 #[derive(Debug, Clone)]
 pub enum Event {
     /// A view's time chosen (docs/adr/0576 §1): the active view's or the other's.
-    Time { active: bool, ask: TimeAsk },
+    Time {
+        active: bool,
+        ask: TimeAsk,
+    },
     /// What the other view follows (docs/adr/0576 §2).
     Link(Link),
     /// What the other view shows (docs/adr/0576 §3); a file is asked for, then `RevisionPicked`.
@@ -220,10 +223,12 @@ impl App {
                 other.camera.twist = active.twist;
                 let b = other.bounds;
                 let a = self.viewport.bounds;
-                other.camera.center = self.viewport.world(Point::new(
+                let middle = self.viewport.world(Point::new(
                     b.x + b.width / 2.0 - a.x,
                     b.y + b.height / 2.0 - a.y,
                 ));
+                // A world point, on the map when there is one (docs/adr/0583 §3).
+                other.camera.center_on(middle);
             } else if split.link != Link::Off {
                 let got = view_link::follow(split.link, frame_of(&active), frame_of(&other.camera));
                 other.camera.center = kentos_render_wgpu::Vec2::new(got.centre.x, got.centre.y);
@@ -270,7 +275,9 @@ impl App {
         };
         let said = match split.link {
             Link::Off => "Görünümler bağımsız: her birinin kendi kamerası var.",
-            Link::Centre => "Görünümler bağlı: öbür görünüm etkin görünümün merkezini izler, ölçeğini korur.",
+            Link::Centre => {
+                "Görünümler bağlı: öbür görünüm etkin görünümün merkezini izler, ölçeğini korur."
+            }
             Link::CentreScale => {
                 "Görünümler bağlı: öbür görünüm etkin görünümün merkezini, ölçeğini ve dönüklüğünü izler."
             }
@@ -318,7 +325,9 @@ impl App {
                         (TimeAsk::Step(by), ViewTime::Own(m)) => {
                             ViewTime::Own(view_link::own_step(anchor, step, last, m, by))
                         }
-                        (TimeAsk::Step(_), ViewTime::Follow) | (TimeAsk::Follow, _) => ViewTime::Follow,
+                        (TimeAsk::Step(_), ViewTime::Follow) | (TimeAsk::Follow, _) => {
+                            ViewTime::Follow
+                        }
                     };
                 }
                 self.follow_split();
@@ -509,7 +518,9 @@ impl App {
             None => Some(0),
             Some(r) => sources.iter().position(|x| *x == r.source),
         };
-        let pick = Select::new(choices, at, move |i| Message::Split(Event::Source(sources[i])));
+        let pick = Select::new(choices, at, move |i| {
+            Message::Split(Event::Source(sources[i]))
+        });
         container(pick).width(Length::Fixed(CHOOSER)).into()
     }
 
@@ -609,7 +620,12 @@ impl App {
         let theme = self.theme();
         let (shown, spatial, selection, mark) = match &split.revision {
             Some(r) => (&r.doc, &r.spatial, &r.marked, Tokens::of(&theme).warning),
-            None => (doc, &self.spatial, &self.selection, Tokens::of(&theme).accent),
+            None => (
+                doc,
+                &self.spatial,
+                &self.selection,
+                Tokens::of(&theme).accent,
+            ),
         };
         let accent = crate::viewport::highlight_color(
             &self.settings.text("graphics.highlightColor"),
@@ -714,23 +730,28 @@ impl App {
         if split.swipe.is_some() {
             return stack![
                 active,
-                row![self.strip(true), Space::new().width(Fill), self.strip(false)]
+                row![
+                    self.strip(true),
+                    Space::new().width(Fill),
+                    self.strip(false)
+                ]
             ]
             .into();
         }
-        let other: Element<'a, Message> = container(stack![self.other_view(split, doc), self.strip(false)])
-        .padding(1)
-        .style(|theme: &iced::Theme| container::Style {
-            border: iced::Border {
-                color: kentos_ui::theme::Tokens::of(theme).border,
-                width: 1.0,
-                radius: 0.0.into(),
-            },
-            ..container::Style::default()
-        })
-        .width(Fill)
-        .height(Fill)
-        .into();
+        let other: Element<'a, Message> =
+            container(stack![self.other_view(split, doc), self.strip(false)])
+                .padding(1)
+                .style(|theme: &iced::Theme| container::Style {
+                    border: iced::Border {
+                        color: kentos_ui::theme::Tokens::of(theme).border,
+                        width: 1.0,
+                        radius: 0.0.into(),
+                    },
+                    ..container::Style::default()
+                })
+                .width(Fill)
+                .height(Fill)
+                .into();
         let active: Element<'a, Message> = container(stack![active, self.strip(true)])
             .padding(1)
             .style(|theme: &iced::Theme| container::Style {
@@ -838,7 +859,9 @@ mod tests {
         let revision = app.document.as_ref().expect("open").model.revision();
         let _ = app.update(Message::Run("view.splitLink"));
         assert!(
-            app.split.as_ref().is_some_and(|s| s.link == Link::CentreScale),
+            app.split
+                .as_ref()
+                .is_some_and(|s| s.link == Link::CentreScale),
             "Bağla splits first"
         );
         let _ = app.update(Message::Split(super::Event::Theme {

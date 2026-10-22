@@ -23,7 +23,7 @@ Dış bağımlılık değildir: kod bu depodadır ve kilide dış paket getirmez
 
 | Crate | Sürüm ve özellikler | Lisans | Hedef | Kullanan | Karar |
 |---|---|---|---|---|---|
-| acadrust (OpenCADCodec) | 0.6.4, Git `ff75fddc322bda4cf817c5f68535c5c2b316b9c4`, default-features kapalı | MPL-2.0 | native; web adaptörü ertelendi | kentos-dwg; OpenCADStudio ile aynı Git revizyonu, kaynak kopyası yok | [ADR 0580](../adr/0580-dwg-opencadcodec-git.md) |
+| acadrust (OpenCADCodec) | 0.6.4, Git `ff75fddc322bda4cf817c5f68535c5c2b316b9c4`, default-features kapalı | MPL-2.0 | native; web adaptörü ertelendi | kentos-dwg; OpenCADStudio ile aynı Git revizyonu, kaynak kopyası yok | [ADR 0586](../adr/0586-dwg-opencadcodec-git.md) |
 | serde | 1.0.229, `derive` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, dxf-wasm, application, api, kcad; processing (bir modelin adımlarındaki değerler yazıldığı sırayla okunur; kilide yeni paket girmedi, ADR 0116) | ADR 0001 |
 | serde_json | 1.0.151, `float_roundtrip` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, dxf-wasm, ncz-wasm, application, api; ncz (yalnız test); processing (işlem araçlarının değerleri, ADR 0084); test (domain, native-application dahil), kcad | ADR 0001, 0008 |
 | libm | 0.2.16 | MIT | native, wasm32 | geometry-core, formats, ncz, sheet | ADR 0008 |
