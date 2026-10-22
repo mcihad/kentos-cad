@@ -2989,6 +2989,7 @@ dependencies = [
 name = "kentos-postgis"
 version = "0.1.0"
 dependencies = [
+ "kentos-commands",
  "kentos-contracts",
  "kentos-domain",
  "kentos-geopackage",

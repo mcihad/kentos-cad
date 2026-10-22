@@ -61,7 +61,7 @@ pub fn register_as(host: &'static str) {
 
 struct Tools;
 
-fn refused(code: &str, message: String, path: Option<String>) -> Box<CommandError> {
+pub(crate) fn refused(code: &str, message: String, path: Option<String>) -> Box<CommandError> {
     Box::new(CommandError {
         code: code.to_owned(),
         message,
@@ -160,8 +160,8 @@ fn slots_of(doc: &Document, uids: &[String], path: &str) -> Result<Vec<Slot>, Bo
 }
 
 /// A run made ready: the tool, its values with the drawing's defaults, the selection and the box it reads.
-struct Ready {
-    tool: Tool,
+pub(crate) struct Ready {
+    pub(crate) tool: Tool,
     /// The model, when the tool is one (`model:…`): it runs its steps.
     model: Option<Model>,
     values: Values,
@@ -253,7 +253,7 @@ fn file_value(name: &str, v: &Value) -> Result<Value, Box<CommandError>> {
     Ok(json!({ "name": file, "rows": rows }))
 }
 
-fn ready(
+pub(crate) fn ready(
     registry: &Registry,
     doc: &Document,
     input: &ProcessingRun,
@@ -522,7 +522,7 @@ impl ToolHost for Tools {
             None => {
                 let stopped = || flow.stopped();
                 let (input, staged) =
-                    match crate::source_inputs::stage_inputs(&mut copy, input, &stopped) {
+                    match crate::source_inputs::stage_inputs(&mut copy, input, "", &stopped) {
                         Ok(s) => s,
                         Err(None) => return Ok(RunEnd::Cancelled),
                         Err(Some(e)) => return Err(e),
@@ -550,15 +550,12 @@ impl ToolHost for Tools {
         if flow.stopped() {
             return Ok(RunEnd::Cancelled);
         }
-        // An input read from its source says the table, what of it was read and how many records.
-        for s in &staged {
-            for i in ran.inputs.iter_mut().filter(|i| i.layer == s.layer) {
-                i.source = s.source.clone();
-                i.revision = s.revision.clone();
-                i.table = Some(s.table.clone());
-                i.rows = Some(s.rows);
-            }
-        }
+        // An input read from its source says the table, what of it was read and how many records; the record keeps
+        // the input as given, so its values run it again (docs/adr/0593 §3).
+        crate::source_inputs::said(&mut ran, &staged);
+        crate::source_inputs::given(&mut ran.record.parameters, input);
+        // The drawing's revision, not the copy's the records were read into (docs/adr/0593 §3).
+        ran.record.document_revision = doc.revision().to_string();
         let texts = if sink.tables {
             text_tables(&ran.outputs, &output_labels)
         } else {
@@ -566,7 +563,7 @@ impl ToolHost for Tools {
         };
         let lineage = Lineage {
             tool: (&tool_id, &tool_label),
-            request: input,
+            request: request_value(input),
             inputs: &ran.inputs,
             drawing: doc.revision().to_string(),
             run: &ran.record,
@@ -576,6 +573,7 @@ impl ToolHost for Tools {
             Sunk::Done(done) => {
                 let (exported, report, mut warnings) = *done;
                 warnings.splice(0..0, partial);
+                ran.record.sink = Some(record_sink(&target, &exported, &report, &BTreeMap::new()));
                 ran.sink = Some(exported);
                 ran.sink_report = Some(report);
                 ran.step = None;
@@ -592,8 +590,19 @@ impl ToolHost for Tools {
     ) -> Result<(), Box<CommandError>> {
         let registry = Registry::builtin();
         batch_size(input)?;
+        // The sink, and the batch's own inputs read from their source (docs/adr/0593 §1, §2).
+        if let Some(sink) = &input.sink {
+            sink_target(sink)?;
+        }
+        crate::source_inputs::check_sources(doc, &crate::batch_sink::common_run(input))?;
         for (i, row) in input.rows.iter().enumerate() {
-            ready(&registry, doc, &row_run(input, row)).map_err(|e| in_row(e, i, row))?;
+            let mut run = row_run(input, row);
+            run.sink = input.sink.clone();
+            crate::source_inputs::check_sources(doc, &run).map_err(|e| in_row(e, i, row))?;
+            // A source input is read when the batch runs; the rest is checked then.
+            if crate::source_inputs::source_params(&run).is_empty() {
+                ready(&registry, doc, &run).map_err(|e| in_row(e, i, row))?;
+            }
         }
         Ok(())
     }
@@ -602,6 +611,7 @@ impl ToolHost for Tools {
         &self,
         doc: &mut Document,
         input: &ProcessingBatch,
+        write: bool,
         flow: &dyn BatchFlow,
     ) -> Result<BatchEnd, Box<CommandError>> {
         let registry = Registry::builtin();
@@ -618,6 +628,10 @@ impl ToolHost for Tools {
                 Some("tool".into()),
             ));
         };
+        // With a sink the rows run on a copy and their results go to the file or the database (docs/adr/0593 §1).
+        if let Some(sink) = &input.sink {
+            return crate::batch_sink::batch_to_sink(doc, input, sink, &tool, write, flow);
+        }
         let total = input.rows.len() as u64;
         let stop = flow.stop_flag();
         // One undo step for all the rows, taken back whole when one stops (docs/adr/0529 §1); with `onError: continue`
@@ -724,6 +738,8 @@ impl ToolHost for Tools {
                 rows: ran_rows,
                 failed,
                 step: edited.then(|| format!("Toplu: {}", tool.label)),
+                sink: None,
+                sink_report: None,
                 record,
                 revision: doc.revision().to_string(),
             },
@@ -773,7 +789,7 @@ fn batch_size(input: &ProcessingBatch) -> Result<(), Box<CommandError>> {
 }
 
 /// A row's name in the answer: the label it gave, else “Satır N” (N from 1).
-fn row_label(i: usize, row: &kentos_commands::BatchRow) -> String {
+pub(crate) fn row_label(i: usize, row: &kentos_commands::BatchRow) -> String {
     row.label
         .as_deref()
         .map(str::trim)
@@ -782,7 +798,7 @@ fn row_label(i: usize, row: &kentos_commands::BatchRow) -> String {
 }
 
 /// A row as the run it is: the batch's values with the row's own over them, the batch's selection and view.
-fn row_run(input: &ProcessingBatch, row: &kentos_commands::BatchRow) -> ProcessingRun {
+pub(crate) fn row_run(input: &ProcessingBatch, row: &kentos_commands::BatchRow) -> ProcessingRun {
     let mut parameters = input.parameters.clone();
     for (k, v) in &row.parameters {
         parameters.insert(k.clone(), v.clone());
@@ -799,7 +815,7 @@ fn row_run(input: &ProcessingBatch, row: &kentos_commands::BatchRow) -> Processi
 
 /// A row's refusal with its parameter's path taken into the row (`rows[2].parameters.distance`) when the row gave
 /// that parameter its own value; a value every row shares keeps `parameters.…`.
-fn in_row(
+pub(crate) fn in_row(
     mut e: Box<CommandError>,
     i: usize,
     row: &kentos_commands::BatchRow,
@@ -978,12 +994,13 @@ fn record_of(
             records_out: ran.records_out,
         },
         failed: Vec::new(),
+        sink: None,
     }
 }
 
 /// A batch's record (docs/adr/0529 §2): its rows are the steps, the layers they read are its inputs.
 #[allow(clippy::too_many_arguments)]
-fn batch_record(
+pub(crate) fn batch_record(
     registry: &Registry,
     input: &ProcessingBatch,
     tool: &Tool,
@@ -1063,11 +1080,12 @@ fn batch_record(
                 message: f.message.clone(),
             })
             .collect(),
+        sink: None,
     }
 }
 
 /// Why a run did not end: refused (or stopped by the tool itself), or stopped by the host while it ran (docs/adr/0551 §4).
-enum Halt {
+pub(crate) enum Halt {
     Refused(Box<CommandError>),
     Cancelled,
 }
@@ -1081,7 +1099,7 @@ impl From<Box<CommandError>> for Halt {
 /// Runs a made-ready tool or model on `doc` (the drawing or a copy): what it did, with its record, and the objects it
 /// made. `stop` is the host's stop, read by the tool as it goes: a tool that polls its feedback stops inside the run,
 /// the drawing as it was.
-fn run_on(
+pub(crate) fn run_on(
     doc: &mut Document,
     ready: Ready,
     registry: &Registry,
@@ -1223,11 +1241,11 @@ fn run_on(
 /// The content digests taken so far, by the drawing's change mark and the layer (docs/adr/0529 §6, 0551 §5): hashing a
 /// big layer costs more than the run that reads it, and a change mark is one state of the objects (it moves with every
 /// object an edit, an undo or a taken-back row touches; the generation does not move inside a command's open step).
-type Digests = BTreeMap<(ChangeMark, String), String>;
+pub(crate) type Digests = BTreeMap<(ChangeMark, String), String>;
 
 /// The bound layers a run reads by the part of their table the drawing holds (`scope: layer` on a layer bound with an
 /// area, docs/adr/0592 §1): said, so a result of the part is not taken for the table's.
-fn partial_inputs(doc: &Document, ready: &Ready, read_whole: &[&str]) -> Vec<CommandWarning> {
+pub(crate) fn partial_inputs(doc: &Document, ready: &Ready, read_whole: &[&str]) -> Vec<CommandWarning> {
     let mut out = Vec::new();
     for p in &ready.tool.parameters {
         let (ParamKind::Features { .. }, Some(v)) = (&p.kind, ready.values.get(&p.name)) else {
@@ -1308,6 +1326,7 @@ fn inputs_of(doc: &Document, ready: &Ready, digests: &mut Digests) -> Vec<RunInp
             RunInput {
                 table: None,
                 rows: None,
+                path: None,
                 source: link.map(|s| s.id.clone()),
                 revision: link.map(|s| s.revision.clone()),
                 digest: digests
@@ -1324,7 +1343,7 @@ fn inputs_of(doc: &Document, ready: &Ready, digests: &mut Digests) -> Vec<RunInp
 
 /// Where a sink writes, and how: an absolute `.gpkg` path in a folder that is there; for a new file one that is there
 /// only with `overwrite`; for `addTables` and `replaceTables` a file that is there (docs/adr/0549 §1).
-struct Target {
+pub(crate) struct Target {
     path: PathBuf,
     mode: SinkMode,
     /// A PostGIS database's address and the schema the tables go into (docs/adr/0592 §2): written there, not to a file.
@@ -1332,7 +1351,7 @@ struct Target {
     overwrite: bool,
 }
 
-fn sink_target(sink: &RunSink) -> Result<Target, Box<CommandError>> {
+pub(crate) fn sink_target(sink: &RunSink) -> Result<Target, Box<CommandError>> {
     let at = Some("sink.path".to_owned());
     let path = sink.path.trim();
     if kentos_commands::is_database(path) {
@@ -1437,7 +1456,7 @@ fn sink_target(sink: &RunSink) -> Result<Target, Box<CommandError>> {
 
 /// The tool's outputs that are tables (`{ columns, rows }`, every cell the text the tool shows), as text tables to write
 /// (docs/adr/0551 §3), each named by its output's label (the name of the output when it has none).
-fn text_tables(
+pub(crate) fn text_tables(
     outputs: &BTreeMap<String, Value>,
     labels: &BTreeMap<String, String>,
 ) -> Vec<TextTable> {
@@ -1476,13 +1495,54 @@ fn text_tables(
 }
 
 /// What a result came from (docs/adr/0511): the tool, the request as given, the layers it read, the drawing's revision.
-struct Lineage<'a> {
-    tool: (&'a str, &'a str),
-    request: &'a ProcessingRun,
-    inputs: &'a [RunInput],
-    drawing: String,
+pub(crate) struct Lineage<'a> {
+    pub(crate) tool: (&'a str, &'a str),
+    /// The request as given (a run's or a batch's), its sink left out.
+    pub(crate) request: Value,
+    pub(crate) inputs: &'a [RunInput],
+    pub(crate) drawing: String,
     /// The run's own record (docs/adr/0551 §6): what it was made of and how it went, kept with each table it made.
-    run: &'a ProcessingRecord,
+    pub(crate) run: &'a ProcessingRecord,
+}
+
+/// A request as a lineage keeps it: its sink left out.
+pub(crate) fn request_value(request: &impl serde::Serialize) -> Value {
+    let mut v = serde_json::to_value(request).unwrap_or(Value::Null);
+    if let Some(o) = v.as_object_mut() {
+        o.remove("sink");
+    }
+    v
+}
+
+/// Where a run's result was written, as its record keeps it (docs/adr/0593 §3): the place, the tables and what each
+/// holds (`rows`: the batch row that made a layer or an output, by its id), the file's size and SHA-256.
+pub(crate) fn record_sink(
+    target: &Target,
+    exported: &GpkgExported,
+    report: &SinkReport,
+    rows: &BTreeMap<String, String>,
+) -> kentos_commands::RecordSink {
+    let file = target.database.is_none();
+    kentos_commands::RecordSink {
+        path: exported.path.clone(),
+        schema: target.database.as_ref().map(|(_, s)| s.clone()),
+        mode: report.mode,
+        tables: report
+            .tables
+            .iter()
+            .map(|t| {
+                let of = t.layer.clone().or_else(|| t.output.clone()).unwrap_or_default();
+                kentos_commands::RecordSinkTable {
+                    table: t.table.clone(),
+                    row: rows.get(&of).cloned(),
+                    of,
+                    rows: u64::from(t.rows),
+                }
+            })
+            .collect(),
+        bytes: file.then_some(exported.bytes),
+        sha256: file.then(|| exported.sha256.clone()),
+    }
 }
 
 /// The URI of KentOS's lineage document in `gpkg_metadata` (docs/adr/0511).
@@ -1491,10 +1551,7 @@ pub const LINEAGE_STANDARD: &str = "https://kentos.app/lineage/1";
 impl Lineage<'_> {
     /// The table's lineage document: `kentos.lineage` 1, as JSON.
     fn document(&self, table: &str, layer: Option<&str>, output: Option<&str>, made: &str) -> String {
-        let mut request = serde_json::to_value(self.request).unwrap_or(Value::Null);
-        if let Some(o) = request.as_object_mut() {
-            o.remove("sink");
-        }
+        let request = &self.request;
         json!({
             "format": "kentos.lineage",
             "version": 1,
@@ -1514,7 +1571,7 @@ impl Lineage<'_> {
 }
 
 /// Milliseconds since the Unix epoch now.
-fn now_ms() -> u64 {
+pub(crate) fn now_ms() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_millis() as u64)
@@ -1543,7 +1600,7 @@ fn utc_at(ms: u64) -> String {
 }
 
 /// How a sink's write ended.
-enum Sunk {
+pub(crate) enum Sunk {
     /// Written (or, for a plan, measured on a passing copy): what the file holds now, how it was made, what was lost.
     Done(Box<(GpkgExported, SinkReport, Vec<CommandWarning>)>),
     /// Stopped between two batches: the file is as it was.
@@ -1577,7 +1634,7 @@ fn passing_file(path: &Path) -> PathBuf {
 ///   itself: nothing of it is there until it commits, and a refusal, a failure or a stop rolls it back. A plan does
 ///   the same on a passing copy of the file, and removes the copy.
 /// - The rows go in batches of [`BATCH_ROWS`]; `flow` is asked before each.
-fn write_sink(
+pub(crate) fn write_sink(
     copy: &mut Document,
     added: &[Slot],
     texts: &[TextTable],

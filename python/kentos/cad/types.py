@@ -34413,6 +34413,9 @@ class ProcessingBatch(_Model):
             back only that row, writes the others and reports it in `failed` (docs/adr/0551 §1).
         parameters: The values every row takes unless it gives its own.
         selection: As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.
+        sink: Where the rows' results go instead of the drawing, as `cad.processing.run`'s (docs/adr/0593 §1): the rows run
+            one after another on a copy of the drawing and what they made is written in one write, a table for each layer
+            a row made. A row's or the batch's input read from its source (`scope: source`) needs it.
         view: Unit: length.
     """
     tool: str
@@ -34421,6 +34424,7 @@ class ProcessingBatch(_Model):
     on_error: BatchOnError | BatchOnErrorName | Unset = UNSET
     parameters: dict[str, Any] | None | Unset = UNSET
     selection: list[str] | Unset = UNSET
+    sink: RunSink | None | Unset = UNSET
     view: list[float] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -34435,6 +34439,8 @@ class ProcessingBatch(_Model):
             out["parameters"] = None if self.parameters is None else dict(self.parameters)
         if self.selection is not UNSET:
             out["selection"] = list(self.selection)
+        if self.sink is not UNSET:
+            out["sink"] = None if self.sink is None else self.sink.to_json()
         if self.view is not UNSET:
             out["view"] = None if self.view is None else [float(e0) for e0 in self.view]
         return out
@@ -34448,6 +34454,7 @@ class ProcessingBatch(_Model):
             on_error=_enum_in(BatchOnError, data["onError"]) if "onError" in data else UNSET,
             parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
             selection=list(data["selection"]) if "selection" in data else UNSET,
+            sink=UNSET if "sink" not in data else None if data["sink"] is None else RunSink.from_json(data["sink"]),
             view=UNSET if "view" not in data else None if data["view"] is None else [float(e0) for e0 in data["view"]],
         )
 
@@ -34459,6 +34466,8 @@ class ProcessingBatched(_Model):
         rows: Every row that ran, in order, as it ran (with `onError: continue`, the rows that stopped are in `failed`).
         record: The batch's own record: its rows as steps.
         failed: With `onError: continue`, the rows that stopped and were taken back: which, why (docs/adr/0551 §1).
+        sink: With a sink: the file or database the rows' results went to (or with `plan` would go to), and how
+            (docs/adr/0593 §1). The drawing then does not change.
         step: The undo step's name; none when the drawing did not change.
     """
     tool: str
@@ -34467,6 +34476,8 @@ class ProcessingBatched(_Model):
     record: ProcessingRecord
     revision: str
     failed: list[BatchRowFailed] | Unset = UNSET
+    sink: GpkgExported | None | Unset = UNSET
+    sink_report: SinkReport | None | Unset = UNSET
     step: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -34478,6 +34489,10 @@ class ProcessingBatched(_Model):
         out["revision"] = self.revision
         if self.failed is not UNSET:
             out["failed"] = [e0.to_json() for e0 in self.failed]
+        if self.sink is not UNSET:
+            out["sink"] = None if self.sink is None else self.sink.to_json()
+        if self.sink_report is not UNSET:
+            out["sinkReport"] = None if self.sink_report is None else self.sink_report.to_json()
         if self.step is not UNSET:
             out["step"] = self.step
         return out
@@ -34491,6 +34506,8 @@ class ProcessingBatched(_Model):
             record=ProcessingRecord.from_json(data["record"]),
             revision=data["revision"],
             failed=[BatchRowFailed.from_json(e0) for e0 in data["failed"]] if "failed" in data else UNSET,
+            sink=UNSET if "sink" not in data else None if data["sink"] is None else GpkgExported.from_json(data["sink"]),
+            sink_report=UNSET if "sinkReport" not in data else None if data["sinkReport"] is None else SinkReport.from_json(data["sinkReport"]),
             step=data.get("step", UNSET),
         )
 
@@ -34605,6 +34622,8 @@ class ProcessingRecord(_Model):
         inputs: The layers the features inputs read, each with its content digest when it was read (docs/adr/0511).
         seed: The seed a tool with one took (its `seed` parameter). Unit: 1.
         selection: The input's own `selection` and `view`.
+        sink: Where the result was written, when it went to a file or a database (docs/adr/0593 §3): the place, its tables
+            and their rows, the file's size and SHA-256 after the write. Changing the file afterwards changes nothing here.
         srid: The project's coordinate system (EPSG/SRID); none for a local project. Unit: epsg.
         view: Unit: length.
     """
@@ -34628,6 +34647,7 @@ class ProcessingRecord(_Model):
     inputs: list[RunInput] | Unset = UNSET
     seed: int | None | Unset = UNSET
     selection: list[str] | Unset = UNSET
+    sink: RecordSink | None | Unset = UNSET
     srid: int | None | Unset = UNSET
     view: list[float] | None | Unset = UNSET
 
@@ -34659,6 +34679,8 @@ class ProcessingRecord(_Model):
             out["seed"] = self.seed
         if self.selection is not UNSET:
             out["selection"] = list(self.selection)
+        if self.sink is not UNSET:
+            out["sink"] = None if self.sink is None else self.sink.to_json()
         if self.srid is not UNSET:
             out["srid"] = self.srid
         if self.view is not UNSET:
@@ -34688,6 +34710,7 @@ class ProcessingRecord(_Model):
             inputs=[RunInput.from_json(e0) for e0 in data["inputs"]] if "inputs" in data else UNSET,
             seed=data.get("seed", UNSET),
             selection=list(data["selection"]) if "selection" in data else UNSET,
+            sink=UNSET if "sink" not in data else None if data["sink"] is None else RecordSink.from_json(data["sink"]),
             srid=data.get("srid", UNSET),
             view=UNSET if "view" not in data else None if data["view"] is None else [float(e0) for e0 in data["view"]],
         )
@@ -39024,6 +39047,78 @@ class RecordRow(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RecordSink(_Model):
+    """Where a run's result was written (docs/adr/0593 §3).
+    Attributes:
+        path: The GeoPackage's path, or the database's address (without a password).
+        bytes: The file's size and SHA-256 once written; none for a database. Unit: bytes.
+        schema: The database's schema; none for a file.
+    """
+    path: str
+    mode: SinkMode | SinkModeName
+    tables: list[RecordSinkTable]
+    bytes: int | None | Unset = UNSET
+    schema: str | None | Unset = UNSET
+    sha256: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["mode"] = _enum_out(self.mode)
+        out["tables"] = [e0.to_json() for e0 in self.tables]
+        if self.bytes is not UNSET:
+            out["bytes"] = self.bytes
+        if self.schema is not UNSET:
+            out["schema"] = self.schema
+        if self.sha256 is not UNSET:
+            out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordSink:
+        return cls(
+            path=data["path"],
+            mode=_enum_in(SinkMode, data["mode"]),
+            tables=[RecordSinkTable.from_json(e0) for e0 in data["tables"]],
+            bytes=data.get("bytes", UNSET),
+            schema=data.get("schema", UNSET),
+            sha256=data.get("sha256", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordSinkTable(_Model):
+    """A table a run wrote: its name, the layer or the output it holds, the batch row that made it, its rows.
+    Attributes:
+        of: The layer's id, or the table output's name.
+        rows: Unit: count.
+        row: The batch row that made it (`rows[i]`); none for a run's.
+    """
+    table: str
+    of: str
+    rows: int
+    row: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["of"] = self.of
+        out["rows"] = self.rows
+        if self.row is not UNSET:
+            out["row"] = self.row
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordSinkTable:
+        return cls(
+            table=data["table"],
+            of=data["of"],
+            rows=data["rows"],
+            row=data.get("row", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RecordStep(_Model):
     """A step of a run (docs/adr/0529 §2).
     Attributes:
@@ -39803,12 +39898,15 @@ class RunInput(_Model):
     Attributes:
         digest: The layer's content when it was read: the SHA-256 of its objects' kinds, geometries and attributes by lasting id
             (`sources::layer_digest`; docs/adr/0511), so a result tells which state of its input it came from.
+        path: The file or the database address (without a password) it was read from (docs/adr/0593 §3): what running it
+            again reads, and where `revision`'s SHA-256 is compared.
         rows: Unit: count.
         table: For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the
             bound layer's) and how many of its records were read.
     """
     layer: str
     digest: str
+    path: str | None | Unset = UNSET
     revision: str | None | Unset = UNSET
     rows: int | None | Unset = UNSET
     source: str | None | Unset = UNSET
@@ -39818,6 +39916,8 @@ class RunInput(_Model):
         out: dict[str, Any] = {}
         out["layer"] = self.layer
         out["digest"] = self.digest
+        if self.path is not UNSET:
+            out["path"] = self.path
         if self.revision is not UNSET:
             out["revision"] = self.revision
         if self.rows is not UNSET:
@@ -39833,6 +39933,7 @@ class RunInput(_Model):
         return cls(
             layer=data["layer"],
             digest=data["digest"],
+            path=data.get("path", UNSET),
             revision=data.get("revision", UNSET),
             rows=data.get("rows", UNSET),
             source=data.get("source", UNSET),
@@ -62385,6 +62486,8 @@ __all__ = [
     "RecordFailure",
     "RecordGrid",
     "RecordRow",
+    "RecordSink",
+    "RecordSinkTable",
     "RecordStep",
     "RecordTotal",
     "RecordsCreate",

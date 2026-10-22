@@ -28,6 +28,7 @@
 )]
 
 pub mod address;
+mod batch_sink;
 pub mod batch_table;
 pub mod builtin;
 pub mod categories;

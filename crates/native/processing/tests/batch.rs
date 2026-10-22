@@ -108,6 +108,7 @@ fn three_rows(doc: &Document) -> ProcessingBatch {
         view: None,
         drawing: None,
         on_error: Default::default(),
+        sink: None,
     }
 }
 
@@ -128,7 +129,7 @@ fn a_stop_between_rows_takes_back_the_rows_before_it() {
     let flow = Flow::new(2);
     let end = tools()
         .expect("registered")
-        .batch(&mut doc, &batch, &flow)
+        .batch(&mut doc, &batch, true, &flow)
         .expect("not refused");
     assert!(matches!(end, BatchEnd::Cancelled));
     assert!(!doc.can_undo(), "nothing was written");
@@ -145,7 +146,7 @@ fn a_batch_is_one_undo_step_and_tells_its_progress() {
     let flow = Flow::new(u32::MAX);
     let end = tools()
         .expect("registered")
-        .batch(&mut doc, &batch, &flow)
+        .batch(&mut doc, &batch, true, &flow)
         .expect("not refused");
     let BatchEnd::Ran(ran, _) = end else {
         panic!("ran");
@@ -173,7 +174,7 @@ fn a_batch_record_has_its_rows_as_steps() {
     let batch = three_rows(&doc);
     let BatchEnd::Ran(ran, _) = tools()
         .expect("registered")
-        .batch(&mut doc, &batch, &Flow::new(u32::MAX))
+        .batch(&mut doc, &batch, true, &Flow::new(u32::MAX))
         .expect("not refused")
     else {
         panic!("ran");
@@ -377,11 +378,12 @@ fn batch_timing() {
         view: None,
         drawing: None,
         on_error: Default::default(),
+        sink: None,
     };
     let clock = std::time::Instant::now();
     let BatchEnd::Ran(ran, _) = tools()
         .expect("registered")
-        .batch(&mut doc, &batch, &Flow::new(u32::MAX))
+        .batch(&mut doc, &batch, true, &Flow::new(u32::MAX))
         .expect("runs")
     else {
         panic!("ran");
@@ -409,11 +411,12 @@ fn batch_timing() {
         view: None,
         drawing: None,
         on_error: Default::default(),
+        sink: None,
     };
     let clock = std::time::Instant::now();
     let BatchEnd::Ran(..) = tools()
         .expect("registered")
-        .batch(&mut doc, &choose, &Flow::new(u32::MAX))
+        .batch(&mut doc, &choose, true, &Flow::new(u32::MAX))
         .expect("runs")
     else {
         panic!("ran");
@@ -510,6 +513,7 @@ fn tree_rows(on_error: BatchOnError, values_of: [&str; 3]) -> ProcessingBatch {
         view: None,
         drawing: None,
         on_error,
+        sink: None,
     }
 }
 
@@ -530,7 +534,7 @@ fn with_continue_a_row_that_stops_is_taken_back_alone_and_the_others_are_written
     let batch = tree_rows(BatchOnError::Continue, ["5", "'çok'", "7"]);
     let BatchEnd::Ran(ran, warnings) = tools()
         .expect("registered")
-        .batch(&mut doc, &batch, &Flow::new(u32::MAX))
+        .batch(&mut doc, &batch, true, &Flow::new(u32::MAX))
         .expect("not refused")
     else {
         panic!("ran");
@@ -573,7 +577,7 @@ fn with_stop_the_same_batch_takes_everything_back() {
     let batch = tree_rows(BatchOnError::Stop, ["5", "'çok'", "7"]);
     let error = tools()
         .expect("registered")
-        .batch(&mut doc, &batch, &Flow::new(u32::MAX))
+        .batch(&mut doc, &batch, true, &Flow::new(u32::MAX))
         .err()
         .expect("refused");
     assert_eq!(error.code, "batch_row_failed");
@@ -592,7 +596,7 @@ fn with_continue_a_batch_whose_rows_all_stop_writes_nothing() {
     let batch = tree_rows(BatchOnError::Continue, ["'a'", "'b'", "'c'"]);
     let BatchEnd::Ran(ran, warnings) = tools()
         .expect("registered")
-        .batch(&mut doc, &batch, &Flow::new(u32::MAX))
+        .batch(&mut doc, &batch, true, &Flow::new(u32::MAX))
         .expect("not refused")
     else {
         panic!("ran");
@@ -638,10 +642,11 @@ fn with_continue_a_model_row_that_stops_in_the_middle_leaves_no_layer_behind() {
         view: None,
         drawing: None,
         on_error: BatchOnError::Continue,
+        sink: None,
     };
     let BatchEnd::Ran(ran, _) = tools()
         .expect("registered")
-        .batch(&mut doc, &batch, &Flow::new(u32::MAX))
+        .batch(&mut doc, &batch, true, &Flow::new(u32::MAX))
         .expect("not refused")
     else {
         panic!("ran");
@@ -671,7 +676,7 @@ fn a_stop_heard_inside_a_row_takes_the_whole_batch_back() {
         assert!(flow.flag.as_ref().is_some_and(|f| f.load(Ordering::Relaxed)));
         let end = tools()
             .expect("registered")
-            .batch(&mut doc, &batch, &flow)
+            .batch(&mut doc, &batch, true, &flow)
             .expect("not refused");
         assert!(matches!(end, BatchEnd::Cancelled), "{on_error:?}");
         assert_eq!(trees(&doc), before);
@@ -721,7 +726,7 @@ fn a_row_that_reads_what_the_row_before_it_wrote_takes_a_new_digest() {
     let ran: Result<kentos_commands::ProcessingBatched, ()> = doc.transact("Komut", |doc| {
         match tools()
             .expect("registered")
-            .batch(doc, &batch, &Flow::new(u32::MAX))
+            .batch(doc, &batch, true, &Flow::new(u32::MAX))
             .map_err(|_| ())?
         {
             BatchEnd::Ran(ran, _) => Ok(ran),
@@ -767,4 +772,216 @@ fn a_run_with_a_request_id_keeps_its_record_in_the_projects_ledger() {
     assert_eq!(record["tool"], "attributes.calculate");
     assert_eq!(record["inputs"][0]["layer"], "parsel");
     assert!(record["inputs"][0]["digest"].as_str().is_some_and(|d| d.len() == 64));
+}
+
+/// A copy of the sources' GeoPackage in a folder of its own, and that folder.
+fn source_copy(name: &str) -> (std::path::PathBuf, std::path::PathBuf) {
+    let dir = std::env::temp_dir().join(format!("kentos-batch-{name}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let file = dir.join("sorgu.gpkg");
+    std::fs::copy(
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/sources/v1/sorgu.gpkg"),
+        &file,
+    )
+    .expect("copied");
+    (dir, file)
+}
+
+/// docs/adr/0593 §3, §4: a run and a batch reading their input from a file keep the input as given, the file and its
+/// SHA-256 in the record; the result's file is in the journal's row with its size and SHA-256; when the source file
+/// changes, running the record again meets changed data, whatever the drawing's revision.
+#[test]
+fn a_record_of_a_source_keeps_the_file_and_the_journal_the_result() {
+    use kentos_commands::{CallOp, ProcessingBatched, ProcessingRan};
+    use kentos_native_application::{ExecutionContext, registry};
+    kentos_processing::command::register();
+    let (dir, file) = source_copy("kaynak");
+    let mut doc = load("parcels.kcad");
+    let given = json!({ "scope": "source", "path": file.display().to_string(), "table": "bina",
+                        "filter": "kat >= 3" });
+    let out = dir.join("sonuc.gpkg");
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.processing.run",
+        CallOp::Execute,
+        json!({ "tool": "convert.toPoints", "parameters": { "input": given },
+                "sink": { "path": out.display().to_string() } }),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let ran: ProcessingRan = serde_json::from_value(answer["output"].clone()).expect("an answer");
+    let record = &ran.record;
+    assert_eq!(record.parameters["input"], given, "the input as given runs it again");
+    let input = &record.inputs[0];
+    assert_eq!(input.path.as_deref(), Some(file.to_str().expect("a path")));
+    assert_eq!(input.table.as_deref(), Some("sorgu.gpkg › bina"));
+    let sink = record.sink.as_ref().expect("where it went");
+    let made = ran.sink.as_ref().expect("the file");
+    assert_eq!(sink.sha256.as_deref(), Some(made.sha256.as_str()));
+    assert_eq!(sink.tables[0].table, "Merkezler");
+    let row = doc.journal().last().expect("a row").clone();
+    assert_eq!(row.command.as_deref(), Some("cad.processing.run"));
+    assert_eq!(row.effects.len(), 1);
+    assert_eq!(row.effects[0].path, out.display().to_string());
+    assert_eq!((row.effects[0].bytes, row.effects[0].sha256.as_str()), (made.bytes, made.sha256.as_str()));
+    assert_eq!(rerun_kind(record, &doc), Rerun::SameRevision);
+
+    // A batch to a second file: its record and its journal row say the same.
+    let out2 = dir.join("toplu.gpkg");
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.processing.batch",
+        CallOp::Execute,
+        json!({ "tool": "convert.toPoints", "parameters": { "input": given },
+                "rows": [{ "parameters": { "layer": { "newName": "Bir" } } },
+                         { "parameters": { "layer": { "newName": "İki" } } }],
+                "sink": { "path": out2.display().to_string() } }),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let done: ProcessingBatched = serde_json::from_value(answer["output"].clone()).expect("an answer");
+    let tables: Vec<(&str, Option<&str>)> = done
+        .record
+        .sink
+        .as_ref()
+        .expect("where it went")
+        .tables
+        .iter()
+        .map(|t| (t.table.as_str(), t.row.as_deref()))
+        .collect();
+    assert_eq!(tables, [("Bir", Some("rows[0]")), ("İki", Some("rows[1]"))]);
+    let row = doc.journal().last().expect("a row");
+    assert_eq!(row.command.as_deref(), Some("cad.processing.batch"));
+    assert_eq!(row.effects[0].path, out2.display().to_string());
+    assert_eq!(rerun_kind(&done.record, &doc), Rerun::SameRevision);
+
+    // The source changes: both records meet changed data, the result files they name are as they were.
+    {
+        use std::io::Write;
+        let mut f = std::fs::OpenOptions::new().append(true).open(&file).expect("opens");
+        f.write_all(b"\0").expect("writes");
+    }
+    let changed = Rerun::ChangedData(vec!["sorgu.gpkg › bina".into()]);
+    assert_eq!(rerun_kind(record, &doc), changed);
+    assert_eq!(rerun_kind(&done.record, &doc), changed);
+    assert!(changed.sentence().contains("sorgu.gpkg › bina"));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// docs/adr/0593 §3: an input read from a database is said as not known when the record is run again.
+#[test]
+fn a_record_of_a_database_source_is_not_known_again() {
+    let doc = load("parcels.kcad");
+    let record = kentos_commands::ProcessingRecord {
+        format: "kentos.run-record".into(),
+        version: 1,
+        kind: "tool".into(),
+        tool: "convert.toPoints".into(),
+        label: "Nesneden nokta".into(),
+        tool_version: 1,
+        definition: None,
+        parameters: BTreeMap::new(),
+        selection: Vec::new(),
+        view: None,
+        inputs: vec![kentos_commands::RunInput {
+            layer: "kaynak-input".into(),
+            digest: String::new(),
+            source: None,
+            revision: None,
+            table: Some("PostGIS: localhost/vt › bina".into()),
+            rows: Some(12),
+            path: Some("postgresql://kentos@localhost/vt".into()),
+        }],
+        document_revision: doc.revision().to_string(),
+        srid: None,
+        seed: None,
+        engine: String::new(),
+        host: "headless".into(),
+        started_at: String::new(),
+        ms: 0,
+        grids: Vec::new(),
+        steps: Vec::new(),
+        total: kentos_commands::RecordTotal {
+            records_in: 0,
+            records_out: 0,
+        },
+        failed: Vec::new(),
+        sink: None,
+    };
+    assert_eq!(
+        rerun_kind(&record, &doc),
+        Rerun::UnknownSource(vec!["PostGIS: localhost/vt › bina".into()])
+    );
+}
+
+/// docs/adr/0593 §1, §2: a model reads its input from a file and writes to another, as a tool does; in a batch each
+/// row runs the whole model. The parcel model's three steps on the 12 squares of `bina`: 48 corners numbered (12 × 4,
+/// the squares apart), their lengths as texts (no GeoPackage counterpart: said), the area written to the squares of
+/// the copy (not the drawing's, not the file's).
+#[test]
+fn a_model_reads_its_source_and_writes_to_a_file_alone_and_in_a_batch() {
+    use kentos_commands::{CallOp, ProcessingBatched, ProcessingRan};
+    use kentos_native_application::{ExecutionContext, registry};
+    kentos_processing::command::register();
+    let (dir, file) = source_copy("model");
+    let mut doc = load("parcels.kcad");
+    let before = doc.revision();
+    let given = json!({ "scope": "source", "path": file.display().to_string(), "table": "bina" });
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.processing.run",
+        CallOp::Execute,
+        json!({ "tool": "model:builtin.parcelSheet", "parameters": { "parcels": given },
+                "sink": { "path": dir.join("model.gpkg").display().to_string() } }),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let ran: ProcessingRan = serde_json::from_value(answer["output"].clone()).expect("an answer");
+    assert_eq!(ran.record.kind, "model");
+    assert_eq!(ran.record.steps.len(), 3);
+    assert_eq!(ran.record.parameters["parcels"], given);
+    assert_eq!(ran.inputs[0].rows, Some(12));
+    let tables: Vec<(&str, u32)> = ran
+        .sink
+        .as_ref()
+        .expect("the file")
+        .tables
+        .iter()
+        .map(|t| (t.table.as_str(), t.rows))
+        .collect();
+    assert_eq!(tables, [("Köşe noktaları", 48)]);
+    assert!(
+        answer["warnings"]
+            .as_array()
+            .is_some_and(|w| w.iter().any(|w| w["code"] == "export_losses")),
+        "the lengths' texts are said: {answer}"
+    );
+    assert_eq!(doc.revision(), before, "the drawing does not change");
+
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.processing.batch",
+        CallOp::Execute,
+        json!({ "tool": "model:builtin.parcelSheet", "parameters": { "parcels": given },
+                "rows": [{ "parameters": { "prefix": "A" } }, { "parameters": { "prefix": "B" } }],
+                "sink": { "path": dir.join("toplu-model.gpkg").display().to_string() } }),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let done: ProcessingBatched = serde_json::from_value(answer["output"].clone()).expect("an answer");
+    assert_eq!(done.record.kind, "batch");
+    assert!(done.rows.iter().all(|r| r.ran.record.steps.len() == 3));
+    // Both rows write to the model's one layer. Numbering finds the first row's corners where the second's would go
+    // and numbers them again (as on the drawing): one table of 48 corners, made by the first row, named by the second.
+    let sink = done.record.sink.as_ref().expect("where it went");
+    assert_eq!(sink.tables.len(), 1);
+    assert_eq!(
+        (sink.tables[0].rows, sink.tables[0].row.as_deref()),
+        (48, Some("rows[0]"))
+    );
+    assert!(done.rows[1].ran.added.iter().all(|u| !done.rows[0].ran.added.contains(u)));
+    assert_eq!(doc.revision(), before);
+    let _ = std::fs::remove_dir_all(&dir);
 }

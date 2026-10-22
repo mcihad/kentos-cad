@@ -168,7 +168,7 @@ def answer(n, the_input, sink_path, *, mode="new", table="Merkezler", columns=No
 
 def staged(table, n, layer=None, src=False):
     out = {"layer": layer or "kaynak-input", "digest": ANY, "revision": sha256(),
-           "table": f"sorgu.gpkg › {table}", "rows": n}
+           "table": f"sorgu.gpkg › {table}", "rows": n, "path": FX}
     if src:
         out["source"] = ANY
     return out

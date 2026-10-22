@@ -2,7 +2,7 @@
 //! runner the desktop's İşlemler window runs, one undo step named by the tool. `plan` runs it on a copy of the
 //! drawing: what it would write, by the same algorithm (the new objects' ids are the copy's).
 
-use kentos_commands::{CommandResult, ProcessingRan, ProcessingRun};
+use kentos_commands::{CommandResult, FileEffect, ProcessingRan, ProcessingRun};
 
 use crate::ExecutionContext;
 use crate::processing_host::{JobFlow, RunEnd, host};
@@ -43,13 +43,27 @@ pub fn execute(
 ) -> CommandResult<ProcessingRan> {
     // A plan through the protocol runs this on a reading copy: a sink's file is not written then (docs/adr/0532 §4).
     let dry = cx.dry();
-    crate::call::recorded(
+    crate::call::recorded_with(
         cx,
         kentos_commands::CAD_PROCESSING_RUN,
         kentos_commands::CAD_PROCESSING_RUN_VERSION,
         input,
         move |cx, input| write_execute(cx, input, dry),
+        |out: &ProcessingRan| file_effects(out.sink.as_ref()),
     )
+}
+
+/// The file a sink wrote, as the journal keeps a file command's write (docs/adr/0593 §4): its path, size and SHA-256.
+/// A database is no file; a plan's passing copy is none either.
+pub(crate) fn file_effects(sink: Option<&kentos_commands::GpkgExported>) -> Vec<FileEffect> {
+    sink.filter(|s| !kentos_commands::is_database(&s.path) && !s.sha256.is_empty())
+        .map(|s| FileEffect {
+            path: s.path.clone(),
+            bytes: s.bytes,
+            sha256: s.sha256.clone(),
+        })
+        .into_iter()
+        .collect()
 }
 
 fn write_execute(

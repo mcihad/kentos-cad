@@ -17,6 +17,7 @@ sqlx = { workspace = true, features = ["tls-rustls-ring-native-roots"] }
 tokio = { workspace = true }
 
 [dev-dependencies]
+kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-domain = { path = "../domain" }
 kentos-processing = { path = "../processing" }
 serde_json = { workspace = true }

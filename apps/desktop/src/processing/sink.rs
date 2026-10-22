@@ -147,7 +147,7 @@ impl LocalSink {
     }
 
     /// The sink the run is given; none for the drawing.
-    fn sink(&self) -> Option<RunSink> {
+    pub(crate) fn sink(&self) -> Option<RunSink> {
         let path = match self.place {
             Place::Drawing => return None,
             Place::File => self.path.trim().to_owned(),
@@ -160,6 +160,27 @@ impl LocalSink {
             mode: self.mode,
             tables: false,
         })
+    }
+
+    /// The window's values with each input read whole from its source as chosen (`scope: source` on its layer), when
+    /// the result does not go to the drawing.
+    pub(crate) fn read_whole(
+        &self,
+        mut parameters: std::collections::BTreeMap<String, Value>,
+    ) -> std::collections::BTreeMap<String, Value> {
+        if self.place == Place::Drawing {
+            return parameters;
+        }
+        for b in &self.bound {
+            if self.whole.contains(&b.param) {
+                let mut v = json!({ "scope": "source", "layer": b.layer });
+                if let Some(kinds) = parameters.get(&b.param).and_then(|p| p.get("kinds")) {
+                    v["kinds"] = kinds.clone();
+                }
+                parameters.insert(b.param.clone(), v);
+            }
+        }
+        parameters
     }
 
     /// What keeps Çalıştır from asking: an empty path or address.
@@ -445,16 +466,10 @@ impl App {
     /// from their source as chosen), the objects chosen, the box on screen, the sink.
     pub(crate) fn processing_sink_input(&self) -> Option<ProcessingRun> {
         let (doc, window) = (self.document.as_ref()?, self.processing.dialog.as_ref()?);
-        let mut parameters = command_values(&doc.model, &window.tool, &window.values);
-        for b in &window.sink.bound {
-            if window.sink.whole.contains(&b.param) {
-                let mut v = json!({ "scope": "source", "layer": b.layer });
-                if let Some(kinds) = parameters.get(&b.param).and_then(|p| p.get("kinds")) {
-                    v["kinds"] = kinds.clone();
-                }
-                parameters.insert(b.param.clone(), v);
-            }
-        }
+        let parameters =
+            window
+                .sink
+                .read_whole(command_values(&doc.model, &window.tool, &window.values));
         let selection: Vec<String> = self
             .selection
             .ids()

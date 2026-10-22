@@ -309,6 +309,11 @@ pub struct RunInput {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: Option<u64>,
+    /// The file or the database address (without a password) it was read from (docs/adr/0593 §3): what running it
+    /// again reads, and where `revision`'s SHA-256 is compared.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub path: Option<String>,
 }
 
 /// A note the tool made while it ran.
@@ -464,6 +469,55 @@ pub struct ProcessingRecord {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RecordFailure>>", optional))]
     pub failed: Vec<RecordFailure>,
+    /// Where the result was written, when it went to a file or a database (docs/adr/0593 §3): the place, its tables
+    /// and their rows, the file's size and SHA-256 after the write. Changing the file afterwards changes nothing here.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sink: Option<RecordSink>,
+}
+
+/// Where a run's result was written (docs/adr/0593 §3).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordSink {
+    /// The GeoPackage's path, or the database's address (without a password).
+    pub path: String,
+    /// The database's schema; none for a file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub schema: Option<String>,
+    pub mode: SinkMode,
+    pub tables: Vec<RecordSinkTable>,
+    /// The file's size and SHA-256 once written; none for a database.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
+    pub bytes: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sha256: Option<String>,
+}
+
+/// A table a run wrote: its name, the layer or the output it holds, the batch row that made it, its rows.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordSinkTable {
+    pub table: String,
+    /// The layer's id, or the table output's name.
+    pub of: String,
+    /// The batch row that made it (`rows[i]`); none for a run's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub row: Option<String>,
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub rows: u64,
 }
 
 /// A row of a batch that stopped and was taken back (docs/adr/0551 §1): which row, why.
@@ -632,6 +686,12 @@ pub struct ProcessingBatch {
     #[serde(default, skip_serializing_if = "is_stop")]
     #[cfg_attr(feature = "ts", ts(as = "Option<BatchOnError>", optional))]
     pub on_error: BatchOnError,
+    /// Where the rows' results go instead of the drawing, as `cad.processing.run`'s (docs/adr/0593 §1): the rows run
+    /// one after another on a copy of the drawing and what they made is written in one write, a table for each layer
+    /// a row made. A row's or the batch's input read from its source (`scope: source`) needs it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sink: Option<RunSink>,
 }
 
 fn is_stop(on_error: &BatchOnError) -> bool {
@@ -702,6 +762,14 @@ pub struct ProcessingBatched {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub step: Option<String>,
+    /// With a sink: the file or database the rows' results went to (or with `plan` would go to), and how
+    /// (docs/adr/0593 §1). The drawing then does not change.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sink: Option<crate::GpkgExported>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sink_report: Option<SinkReport>,
     /// The batch's own record: its rows as steps.
     pub record: ProcessingRecord,
     pub revision: String,

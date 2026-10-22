@@ -73,6 +73,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         on_error: BatchOnError | BatchOnErrorName | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
+        sink: RunSink | None | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -112,6 +113,9 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
                 back only that row, writes the others and reports it in `failed` (docs/adr/0551 §1).
             parameters: The values every row takes unless it gives its own.
             selection: As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.
+            sink: Where the rows' results go instead of the drawing, as `cad.processing.run`'s (docs/adr/0593 §1): the rows run
+                one after another on a copy of the drawing and what they made is written in one write, a table for each layer
+                a row made. A row's or the batch's input read from its source (`scope: source`) needs it.
             view: Unit: length.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -132,6 +136,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             on_error=on_error,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
+            sink=sink,
             view=_opt(view, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
@@ -146,6 +151,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         on_error: BatchOnError | BatchOnErrorName | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
+        sink: RunSink | None | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
     ) -> ProcessingBatched:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -158,6 +164,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             on_error=on_error,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
+            sink=sink,
             view=_opt(view, lambda x: list(x)),
         ))
 
@@ -172,6 +179,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         on_error: BatchOnError | BatchOnErrorName | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
+        sink: RunSink | None | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -184,6 +192,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             on_error=on_error,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
+            sink=sink,
             view=_opt(view, lambda x: list(x)),
         ))
 
@@ -198,6 +207,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         on_error: BatchOnError | BatchOnErrorName | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
+        sink: RunSink | None | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -215,6 +225,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             on_error=on_error,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
+            sink=sink,
             view=_opt(view, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 

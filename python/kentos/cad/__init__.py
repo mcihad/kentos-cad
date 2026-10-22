@@ -1497,6 +1497,8 @@ __all__ = [
     "RecordFailure",
     "RecordGrid",
     "RecordRow",
+    "RecordSink",
+    "RecordSinkTable",
     "RecordStep",
     "RecordTotal",
     "RecordsCreate",

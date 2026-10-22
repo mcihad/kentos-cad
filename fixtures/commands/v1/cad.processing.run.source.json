@@ -105,7 +105,8 @@
          "digest": "$any",
          "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
          "table": "sorgu.gpkg › bina",
-         "rows": 12
+         "rows": 12,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
         }
        ],
        "record": "$any",
@@ -208,7 +209,8 @@
          "digest": "$any",
          "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
          "table": "sorgu.gpkg › bina",
-         "rows": 12
+         "rows": 12,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
         }
        ],
        "record": "$any",
@@ -336,7 +338,8 @@
          "digest": "$any",
          "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
          "table": "sorgu.gpkg › bina",
-         "rows": 6
+         "rows": 6,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
         }
        ],
        "record": "$any",
@@ -431,7 +434,8 @@
          "digest": "$any",
          "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
          "table": "sorgu.gpkg › bina",
-         "rows": 3
+         "rows": 3,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
         }
        ],
        "record": "$any",
@@ -524,7 +528,8 @@
          "digest": "$any",
          "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
          "table": "sorgu.gpkg › bina",
-         "rows": 1
+         "rows": 1,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
         }
        ],
        "record": "$any",
@@ -658,7 +663,8 @@
          "digest": "$any",
          "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
          "table": "sorgu.gpkg › bina",
-         "rows": 4
+         "rows": 4,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
         }
        ],
        "record": "$any",
@@ -758,7 +764,8 @@
          "digest": "$any",
          "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
          "table": "sorgu.gpkg › bina",
-         "rows": 2
+         "rows": 2,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
         }
        ],
        "record": "$any",
@@ -900,7 +907,8 @@
          "digest": "$any",
          "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
          "table": "sorgu.gpkg › nokta",
-         "rows": 50
+         "rows": 50,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
         }
        ],
        "record": "$any",
@@ -1050,7 +1058,8 @@
          "digest": "$any",
          "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
          "table": "sorgu.gpkg › nokta",
-         "rows": 50
+         "rows": 50,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
         }
        ],
        "record": "$any",
@@ -1186,6 +1195,7 @@
          "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
          "table": "sorgu.gpkg › bina",
          "rows": 12,
+         "path": "$fixture:sources/v1/sorgu.gpkg",
          "source": "$any"
         }
        ],
@@ -1430,6 +1440,7 @@
          "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
          "table": "sorgu.gpkg › bina",
          "rows": 3,
+         "path": "$fixture:sources/v1/sorgu.gpkg",
          "source": "$any"
         }
        ],

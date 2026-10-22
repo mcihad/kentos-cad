@@ -22,6 +22,8 @@ pub(crate) struct Staged {
     /// The file's SHA-256 when the table is a GeoPackage's (what was read); none for a database.
     pub revision: Option<String>,
     pub rows: u64,
+    /// The file or the database's address read.
+    pub path: Option<String>,
 }
 
 fn refused(code: &str, message: String, path: String) -> Box<CommandError> {
@@ -113,11 +115,13 @@ pub(crate) fn check_sources(
     Ok(())
 }
 
-/// The source inputs read into `copy`, and the input with each of them naming its layer of the copy. `Err(None)`:
-/// stopped.
+/// The source inputs read into `copy`, and the input with each of them naming its layer of the copy. A table read into
+/// a layer of its own makes `kaynak-<parameter><suffix>` (a batch row's suffix keeps rows' layers apart, docs/adr/0593
+/// §2). `Err(None)`: stopped.
 pub(crate) fn stage_inputs(
     copy: &mut Document,
     input: &ProcessingRun,
+    suffix: &str,
     stop: &dyn Fn() -> bool,
 ) -> Result<(ProcessingRun, Vec<Staged>), Option<Box<CommandError>>> {
     check_sources(copy, input).map_err(Some)?;
@@ -185,8 +189,11 @@ pub(crate) fn stage_inputs(
                 l.layer.clone()
             }
             None => {
-                let mut new = NewLayer::layer(table.rsplit('.').next().unwrap_or(&table));
-                new.id = Some(format!("kaynak-{name}"));
+                // Named apart from the table (“bina (kaynak)”): a tool's output layer named as the table is a new layer, not
+                // this one reused by its name (docs/adr/0593 §2).
+                let short = table.rsplit('.').next().unwrap_or(&table);
+                let mut new = NewLayer::layer(format!("{short} (kaynak)"));
+                new.id = Some(format!("kaynak-{name}{suffix}"));
                 new.fields = staging.fields.clone().unwrap_or_default();
                 copy.add_layer(new, None, false)
                     .map_err(|r| Some(refused(codes::TOOL_FAILED, r.0, at.clone())))?
@@ -224,9 +231,40 @@ pub(crate) fn stage_inputs(
             source: link.map(|l| l.id),
             revision,
             rows,
+            path: read.source.path.clone(),
         });
     }
     Ok((out, staged))
+}
+
+/// The inputs `staged` read from their source said in a run's answer and its record: the table, the records read,
+/// the file's SHA-256 (docs/adr/0592 §1, 0593 §3).
+pub(crate) fn said(ran: &mut kentos_commands::ProcessingRan, staged: &[Staged]) {
+    for s in staged {
+        for i in ran
+            .inputs
+            .iter_mut()
+            .chain(ran.record.inputs.iter_mut())
+            .filter(|i| i.layer == s.layer)
+        {
+            i.source = s.source.clone();
+            i.revision = s.revision.clone();
+            i.table = Some(s.table.clone());
+            i.rows = Some(s.rows);
+            i.path = s.path.clone();
+        }
+    }
+}
+
+/// A record's values with each source input as it was given, not the layer of the copy it was read into: giving them
+/// to `cad.processing.run` reads the source again (docs/adr/0593 §3).
+pub(crate) fn given(
+    parameters: &mut std::collections::BTreeMap<String, Value>,
+    input: &ProcessingRun,
+) {
+    for name in source_params(input) {
+        parameters.insert(name.clone(), input.parameters[&name].clone());
+    }
 }
 
 /// A file's SHA-256, read as it streams.

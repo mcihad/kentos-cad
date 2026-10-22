@@ -246,6 +246,7 @@ pub fn input(
         view,
         drawing: None,
         on_error: table.on_error,
+        sink: None,
     })
 }
 

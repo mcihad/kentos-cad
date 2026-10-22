@@ -183,6 +183,20 @@ def check(c, seen, before):
     if lineage.get("format") != "kentos.lineage" or lineage.get("table") != "sonuc.Merkezler" \
             or lineage.get("tool", {}).get("id") != "convert.toPoints" or lineage.get("inputs", [{}])[0].get("rows") != 12:
         problems.append(f"sonucun soyu {lineage}")
+    # A batch reading that table back, a row for each filter, to a schema of its own (docs/adr/0593 §1): the points
+    # where the centres are, split by the filters, their lasting ids, a lineage that is the batch's.
+    for table, keep in [("Yüksek", lambda k: k >= 3), ("Alçak", lambda k: k < 3)]:
+        cur.execute(f'SELECT ad, kat, ST_X(geom), ST_Y(geom) FROM toplu."{table}" ORDER BY ad')
+        got = sorted(cur.fetchall())
+        if got != sorted(c_ for c_ in centres if keep(int(c_[1]))) or len(got) != 6:
+            problems.append(f"toplu işin {table} tablosu {got}")
+        cur.execute(f"SELECT obj_description('toplu.\"{table}\"'::regclass, 'pg_class')")
+        lineage = json.loads(cur.fetchone()[0] or "{}")
+        if lineage.get("run", {}).get("kind") != "batch" or len(lineage.get("request", {}).get("rows", [])) != 2:
+            problems.append(f"toplu işin {table} tablosunun soyu {lineage}")
+    cur.execute("SELECT count(*) FROM toplu.kentos_uids")
+    if cur.fetchone()[0] != 12:
+        problems.append("toplu işin kalıcı kimlikleri 12 değil")
     cur.execute("SELECT data_type FROM information_schema.columns WHERE table_schema = 'kadastro' "
                 "AND table_name = 'parsel' AND column_name = 'durum'")
     if [r[0] for r in cur.fetchall()] != ["text"]:

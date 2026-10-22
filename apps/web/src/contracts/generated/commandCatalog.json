@@ -1015366,6 +1015366,17 @@
                 },
                 "type": "array"
               },
+              "sink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RecordSink"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the result was written, when it went to a file or a database (docs/adr/0593 §3): the place, its tables\nand their rows, the file's size and SHA-256 after the write. Changing the file afterwards changes nothing here."
+              },
               "srid": {
                 "description": "The project's coordinate system (EPSG/SRID); none for a local project.",
                 "format": "uint32",
@@ -1015556,6 +1015567,84 @@
             ],
             "type": "object"
           },
+          "RecordSink": {
+            "description": "Where a run's result was written (docs/adr/0593 §3).",
+            "properties": {
+              "bytes": {
+                "description": "The file's size and SHA-256 once written; none for a database.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "bytes"
+              },
+              "mode": {
+                "$ref": "#/$defs/SinkMode"
+              },
+              "path": {
+                "description": "The GeoPackage's path, or the database's address (without a password).",
+                "type": "string"
+              },
+              "schema": {
+                "description": "The database's schema; none for a file.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/RecordSinkTable"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "mode",
+              "tables"
+            ],
+            "type": "object"
+          },
+          "RecordSinkTable": {
+            "description": "A table a run wrote: its name, the layer or the output it holds, the batch row that made it, its rows.",
+            "properties": {
+              "of": {
+                "description": "The layer's id, or the table output's name.",
+                "type": "string"
+              },
+              "row": {
+                "description": "The batch row that made it (`rows[i]`); none for a run's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "of",
+              "rows"
+            ],
+            "type": "object"
+          },
           "RecordStep": {
             "description": "A step of a run (docs/adr/0529 §2).",
             "properties": {
@@ -1015635,6 +1015724,13 @@
               },
               "layer": {
                 "type": "string"
+              },
+              "path": {
+                "description": "The file or the database address (without a password) it was read from (docs/adr/0593 §3): what running it\nagain reads, and where `revision`'s SHA-256 is compared.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "revision": {
                 "type": [
@@ -1016120,6 +1016216,17 @@
                 },
                 "type": "array"
               },
+              "sink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RecordSink"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the result was written, when it went to a file or a database (docs/adr/0593 §3): the place, its tables\nand their rows, the file's size and SHA-256 after the write. Changing the file afterwards changes nothing here."
+              },
               "srid": {
                 "description": "The project's coordinate system (EPSG/SRID); none for a local project.",
                 "format": "uint32",
@@ -1016310,6 +1016417,84 @@
             ],
             "type": "object"
           },
+          "RecordSink": {
+            "description": "Where a run's result was written (docs/adr/0593 §3).",
+            "properties": {
+              "bytes": {
+                "description": "The file's size and SHA-256 once written; none for a database.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "bytes"
+              },
+              "mode": {
+                "$ref": "#/$defs/SinkMode"
+              },
+              "path": {
+                "description": "The GeoPackage's path, or the database's address (without a password).",
+                "type": "string"
+              },
+              "schema": {
+                "description": "The database's schema; none for a file.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/RecordSinkTable"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "mode",
+              "tables"
+            ],
+            "type": "object"
+          },
+          "RecordSinkTable": {
+            "description": "A table a run wrote: its name, the layer or the output it holds, the batch row that made it, its rows.",
+            "properties": {
+              "of": {
+                "description": "The layer's id, or the table output's name.",
+                "type": "string"
+              },
+              "row": {
+                "description": "The batch row that made it (`rows[i]`); none for a run's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "of",
+              "rows"
+            ],
+            "type": "object"
+          },
           "RecordStep": {
             "description": "A step of a run (docs/adr/0529 §2).",
             "properties": {
@@ -1016389,6 +1016574,13 @@
               },
               "layer": {
                 "type": "string"
+              },
+              "path": {
+                "description": "The file or the database address (without a password) it was read from (docs/adr/0593 §3): what running it\nagain reads, and where `revision`'s SHA-256 is compared.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "revision": {
                 "type": [
@@ -1016842,6 +1017034,57 @@
               }
             },
             "type": "object"
+          },
+          "RunSink": {
+            "description": "A run's result written to a GeoPackage or a PostGIS database instead of the drawing (docs/adr/0508 §4, 0549, 0592\n§2): the tool runs on a copy,\nthe objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the\ndrawing does not change. A new file is written whole or not at all (one that is there is replaced only with\n`overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one\ntransaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.",
+            "properties": {
+              "mode": {
+                "$ref": "#/$defs/SinkMode",
+                "description": "New file (the default), tables added to a file that is there, or tables added and same-named ones replaced."
+              },
+              "overwrite": {
+                "type": "boolean"
+              },
+              "path": {
+                "description": "The GeoPackage's path (`.gpkg`), or a PostGIS database's address (`postgresql://…`, without a password; the\ntables go in `schema`, docs/adr/0592 §2).",
+                "type": "string"
+              },
+              "schema": {
+                "description": "The database schema the tables go in (`public` when none); a GeoPackage has none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tables": {
+                "description": "Also write the tool's table outputs (a summary, a report) as attribute tables, each named by its output's\nlabel, beside the layers' tables (docs/adr/0551 §3). A tool whose result is only a table writes only that.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "type": "object"
+          },
+          "SinkMode": {
+            "description": "What a sink does with the file at its path (docs/adr/0508 §4, 0549 §1).",
+            "oneOf": [
+              {
+                "const": "new",
+                "description": "A new file: one that is there is replaced only with `overwrite`.",
+                "type": "string"
+              },
+              {
+                "const": "addTables",
+                "description": "The tables are added to a GeoPackage that is there; a table of the same name is refused (`table_exists`), no\ntable of the file is touched.",
+                "type": "string"
+              },
+              {
+                "const": "replaceTables",
+                "description": "As `addTables`, but a feature or attribute table of the same name is replaced by the new one; no other table\nof the file is touched.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1016878,6 +1017121,17 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "sink": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RunSink"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where the rows' results go instead of the drawing, as `cad.processing.run`'s (docs/adr/0593 §1): the rows run\none after another on a copy of the drawing and what they made is written in one write, a table for each layer\na row made. A row's or the batch's input read from its source (`scope: source`) needs it."
           },
           "tool": {
             "type": "string"
@@ -1017222,6 +1017476,17 @@
                 },
                 "type": "array"
               },
+              "sink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RecordSink"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the result was written, when it went to a file or a database (docs/adr/0593 §3): the place, its tables\nand their rows, the file's size and SHA-256 after the write. Changing the file afterwards changes nothing here."
+              },
               "srid": {
                 "description": "The project's coordinate system (EPSG/SRID); none for a local project.",
                 "format": "uint32",
@@ -1017412,6 +1017677,84 @@
             ],
             "type": "object"
           },
+          "RecordSink": {
+            "description": "Where a run's result was written (docs/adr/0593 §3).",
+            "properties": {
+              "bytes": {
+                "description": "The file's size and SHA-256 once written; none for a database.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "bytes"
+              },
+              "mode": {
+                "$ref": "#/$defs/SinkMode"
+              },
+              "path": {
+                "description": "The GeoPackage's path, or the database's address (without a password).",
+                "type": "string"
+              },
+              "schema": {
+                "description": "The database's schema; none for a file.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/RecordSinkTable"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "mode",
+              "tables"
+            ],
+            "type": "object"
+          },
+          "RecordSinkTable": {
+            "description": "A table a run wrote: its name, the layer or the output it holds, the batch row that made it, its rows.",
+            "properties": {
+              "of": {
+                "description": "The layer's id, or the table output's name.",
+                "type": "string"
+              },
+              "row": {
+                "description": "The batch row that made it (`rows[i]`); none for a run's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "of",
+              "rows"
+            ],
+            "type": "object"
+          },
           "RecordStep": {
             "description": "A step of a run (docs/adr/0529 §2).",
             "properties": {
@@ -1017491,6 +1017834,13 @@
               },
               "layer": {
                 "type": "string"
+              },
+              "path": {
+                "description": "The file or the database address (without a password) it was read from (docs/adr/0593 §3): what running it\nagain reads, and where `revision`'s SHA-256 is compared.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "revision": {
                 "type": [
@@ -1017731,6 +1018081,27 @@
               "$ref": "#/$defs/BatchRowRan"
             },
             "type": "array"
+          },
+          "sink": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/GpkgExported"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With a sink: the file or database the rows' results went to (or with `plan` would go to), and how\n(docs/adr/0593 §1). The drawing then does not change."
+          },
+          "sinkReport": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SinkReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "step": {
             "description": "The undo step's name; none when the drawing did not change.",
@@ -1018075,6 +1018446,17 @@
                 },
                 "type": "array"
               },
+              "sink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RecordSink"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the result was written, when it went to a file or a database (docs/adr/0593 §3): the place, its tables\nand their rows, the file's size and SHA-256 after the write. Changing the file afterwards changes nothing here."
+              },
               "srid": {
                 "description": "The project's coordinate system (EPSG/SRID); none for a local project.",
                 "format": "uint32",
@@ -1018265,6 +1018647,84 @@
             ],
             "type": "object"
           },
+          "RecordSink": {
+            "description": "Where a run's result was written (docs/adr/0593 §3).",
+            "properties": {
+              "bytes": {
+                "description": "The file's size and SHA-256 once written; none for a database.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "bytes"
+              },
+              "mode": {
+                "$ref": "#/$defs/SinkMode"
+              },
+              "path": {
+                "description": "The GeoPackage's path, or the database's address (without a password).",
+                "type": "string"
+              },
+              "schema": {
+                "description": "The database's schema; none for a file.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/RecordSinkTable"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "mode",
+              "tables"
+            ],
+            "type": "object"
+          },
+          "RecordSinkTable": {
+            "description": "A table a run wrote: its name, the layer or the output it holds, the batch row that made it, its rows.",
+            "properties": {
+              "of": {
+                "description": "The layer's id, or the table output's name.",
+                "type": "string"
+              },
+              "row": {
+                "description": "The batch row that made it (`rows[i]`); none for a run's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "of",
+              "rows"
+            ],
+            "type": "object"
+          },
           "RecordStep": {
             "description": "A step of a run (docs/adr/0529 §2).",
             "properties": {
@@ -1018344,6 +1018804,13 @@
               },
               "layer": {
                 "type": "string"
+              },
+              "path": {
+                "description": "The file or the database address (without a password) it was read from (docs/adr/0593 §3): what running it\nagain reads, and where `revision`'s SHA-256 is compared.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "revision": {
                 "type": [
@@ -1018585,6 +1019052,27 @@
             },
             "type": "array"
           },
+          "sink": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/GpkgExported"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With a sink: the file or database the rows' results went to (or with `plan` would go to), and how\n(docs/adr/0593 §1). The drawing then does not change."
+          },
+          "sinkReport": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SinkReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "step": {
             "description": "The undo step's name; none when the drawing did not change.",
             "type": [
@@ -1018618,10 +1019106,28 @@
           "invalid_uid",
           "entity_not_found",
           "invalid_parameters",
-          "batch_row_failed"
+          "invalid_input",
+          "invalid_address",
+          "invalid_file_path",
+          "file_exists",
+          "file_not_found",
+          "layer_not_found",
+          "batch_row_failed",
+          "invalid_extent",
+          "table_not_found",
+          "invalid_expression",
+          "import_unreadable",
+          "input_too_large",
+          "source_unreachable",
+          "nothing_to_export",
+          "table_exists",
+          "file_unwritable",
+          "crs_mismatch"
         ],
         "warnings": [
-          "batch_rows_failed"
+          "batch_rows_failed",
+          "export_losses",
+          "partial_scope"
         ]
       },
       "examples": [

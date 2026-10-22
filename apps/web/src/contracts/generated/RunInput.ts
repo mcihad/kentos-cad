@@ -13,4 +13,9 @@ digest: string, source?: string, revision?: string,
  * For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the
  * bound layer's) and how many of its records were read.
  */
-table?: string, rows?: bigint, };
+table?: string, rows?: bigint, 
+/**
+ * The file or the database address (without a password) it was read from (docs/adr/0593 §3): what running it
+ * again reads, and where `revision`'s SHA-256 is compared.
+ */
+path?: string, };

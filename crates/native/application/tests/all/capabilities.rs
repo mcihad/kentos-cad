@@ -87,6 +87,26 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    (
+        "cad.processing.batch",
+        "crs_mismatch",
+        "toplu işin sonucu cad.processing.run'ın yazıcısıyla yazılır (batch_sink.rs → write_sink): sistemi başka dosya orada sınanır (ADR 0549 §1, 0593 §1)",
+    ),
+    (
+        "cad.processing.batch",
+        "file_unwritable",
+        "yazılamayan disk ortak durumda kurulamaz; yazıcı cad.processing.run'ınkiyle aynı (ADR 0593 §1)",
+    ),
+    (
+        "cad.processing.batch",
+        "input_too_large",
+        "kaynaktan okumanın sınırı cad.processing.run'ınkiyle aynı stage'te, a_source_input_stops_at_its_cap testinde (ADR 0592 §1, 0593 §2)",
+    ),
+    (
+        "cad.processing.batch",
+        "export_losses",
+        "kayıplar cad.processing.run'ın yazıcısının sözü (sink_answer); toplu iş aynı yazıcıdan geçer (ADR 0593 §1)",
+    ),
     ("file.import.dwg", "polyline_geometry_loss", "DWG codec bridge ve plan/execute değişmezliği headless::dwg::polyline_integrity testinde gerçek binary ile sınanır; ortak bağımsız ASCII korpusu file.import.polyline-policy.json içindedir."),
     ("file.import.dxf", "cad_file_too_large", "256 MiB sınırı; bu boyutta veri ortak korpusa alınmaz, preflight sınırlar (CAD-IO-09/19)"),
     ("file.import.dxf", "unsupported_cad_format", "yanlış DWG seçimi preflight'ın biçim testinde sınanır"),

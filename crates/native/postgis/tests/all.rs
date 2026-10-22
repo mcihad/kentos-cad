@@ -1282,5 +1282,46 @@ fn processing_results_go_to_postgis() {
             .as_str()
             .is_some_and(|t| t.starts_with("PostGIS: ") && t.ends_with(" › sonuc.Merkezler"))
     );
+    // A batch reading that table, a row for each filter, to a schema of its own (docs/adr/0593 §1): a table for
+    // each row's layer in one transaction; the record keeps the schema and no file, the journal no file either.
+    let rows = |filter: &str, name: &str| {
+        json!({ "parameters": {
+            "input": { "scope": "source", "path": url, "table": "sonuc.Merkezler", "filter": filter },
+            "layer": { "newName": name } } })
+    };
+    let batch = run(
+        &mut d,
+        "cad.processing.batch",
+        CallOp::Execute,
+        json!({ "tool": "convert.toPoints", "rows": [rows("kat >= 3", "Yüksek"), rows("kat < 3", "Alçak")],
+                "sink": { "path": url, "schema": "toplu" } }),
+    );
+    let out = ok(&batch);
+    let tables: Vec<(&str, u64)> = out["sink"]["tables"]
+        .as_array()
+        .expect("tables")
+        .iter()
+        .map(|t| {
+            (
+                t["table"].as_str().unwrap_or(""),
+                t["rows"].as_u64().unwrap_or(0),
+            )
+        })
+        .collect();
+    assert_eq!(tables, [("toplu.Yüksek", 6), ("toplu.Alçak", 6)], "{out}");
+    let record: kentos_commands::ProcessingRecord =
+        serde_json::from_value(out["record"].clone()).expect("a record");
+    let sink = record.sink.as_ref().expect("where it went");
+    assert_eq!(
+        (sink.schema.as_deref(), sink.bytes, sink.sha256.as_deref()),
+        (Some("toplu"), None, None)
+    );
+    assert_eq!(sink.tables[1].row.as_deref(), Some("rows[1]"));
+    assert!(d.journal().last().is_some_and(|r| r.effects.is_empty()));
+    assert!(matches!(
+        kentos_processing::record::rerun_kind(&record, &d),
+        kentos_processing::record::Rerun::UnknownSource(_)
+    ));
+    assert!(!d.can_undo(), "the drawing does not change");
     let _ = std::fs::remove_dir_all(&dir);
 }
