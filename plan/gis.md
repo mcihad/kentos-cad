@@ -470,7 +470,9 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/07/10/36/42. Çok gigabaytlı ortofoto ilk görünüm için bütünüyle indirilmemeli; veri transferi ve ilk yararlı görüntü süresi ölçülmeli. Mozaik birleşiminde seam/NoData delikleri veya yanlış band ölçeği oluşmamalı. Kaynak versiyonu değişince eski tile karışmamalı; desteklenmeyen sıkıştırmada açık native conversion yolu sunulmalı.
 
-- [ ] **CBS-29 — Georeferans GCP/check point ve warp işlem kaydını kalıcılaştır — P1**
+- [x] **CBS-29 — Georeferans GCP/check point ve warp işlem kaydını kalıcılaştır — P1**
+
+  *Tamam (23 Ekim 2026; [ADR 0594](../docs/adr/0594-georeference-target-definitions.md)): hedeflerin sistemi EPSG kodu yanında tanımla da verilir (WKT 1, WKT 2, PROJ dizesi; dış sağlayıcının, `.points` dosyasının ya da kurumun kendi TM'si): kayıttaki sistemin kendisi kodu olarak, başkası verildiği gibi kayıtta (`.kcad` şema 100), hedefler projenin datum seçimleriyle çevrilir; `.points`'in `#CRS:` satırı okunur ve yazılır, QGIS dosyayı sistemiyle açar; Raster oturt'ta tanım satırı. Bağımsız denetim: 20 ortak durum PROJ'la ve numpy'la. Sonraya: KentOS'un okumadığı izdüşümler (Lambert …), çıktının başka sistemde yazılması, PostGIS raster.*
 
   *Kısmen (19 Ekim 2026; [ADR 0518](../docs/adr/0518-georeference-record.md)): rasterin oturtma kaydı (yöntem, kontrol ve denetim noktaları piksel köşeleriyle, hedeflerin sistemi, kaynak ve SHA-256, m0, denetimin karesel ortalama ve en büyük hatası, çıktı ızgarası ve örnekleme; `.kcad` şema 88), anlamsal `cad.rasters.georef` (yeniden örnekleme kaynağı değiştirmez, kayıtla yeniden çalıştırma aynı ızgarayı verir), Raster oturt'ta Denetim ve kayıttan açılış, `.points` dosyası, Python ve MCP. Kalan: dış sağlayıcının sistemine adaptör, projenin özel tanımında hedefler.*
 

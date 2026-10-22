@@ -2205,6 +2205,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 100 (docs/adr/0594 §1): a georeference record's targets' system as a definition.
+    if any(e["kind"] == "raster" and "crs" in e.get("georef", {}) for e in entities):
+        return 100
     # Schema 99 (docs/adr/0589): a topology exception's geometry digest.
     if any("digest" in x for x in (settings or {}).get("topology", {}).get("exceptions", [])):
         return 99
@@ -2784,7 +2787,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-100.kcad"] = container(root(cmap(parts), version=uint(100)))
+    files["schema-version-101.kcad"] = container(root(cmap(parts), version=uint(101)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4680,6 +4683,20 @@ def build():
     assert digest_payload.count(text(good)) == 1
     for name, value in (("upper", "00FF00FF00FF00FF"), ("short", "00ff00ff")):
         out[f"broken/topology-digest-{name}.kcad"] = container(digest_payload.replace(text(good), text(value)))
+    # A georeference record's targets' system as a definition (docs/adr/0594 §1): schema 100's; in schema 99 an
+    # unknown field; with an EPSG code beside it, empty.
+    out["georef-crs.kcad"] = container(document(load("georef-crs.json")))
+    defined_payload = document(load("georef-crs.json"))
+    assert defined_payload.count(b"\x67version\x18\x64") == 1, "the record's definition is schema 100"
+    out["broken/georef-crs-in-schema-99.kcad"] = container(defined_payload.replace(b"\x67version\x18\x64", b"\x67version\x18\x63"))
+
+    def defined_broken(change):
+        d = copy.deepcopy(load("georef-crs.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/georef-crs-and-srid.kcad"] = defined_broken(lambda d: d["entities"][0]["georef"].update(srid=4326))
+    out["broken/georef-crs-empty.kcad"] = defined_broken(lambda d: d["entities"][0]["georef"].update(crs=" "))
     crs_payload = document(load("source-crs.json"))
     assert crs_payload.count(b"\x67version\x18\x62") == 1, "the source systems are schema 98"
     out["broken/source-crs-in-schema-97.kcad"] = container(crs_payload.replace(b"\x67version\x18\x62", b"\x67version\x18\x61"))

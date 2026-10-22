@@ -15,7 +15,12 @@ points: Array<GeorefPoint>,
 /**
  * The targets' coordinate system (EPSG) when it is not the project's; they were carried to the project's.
  */
-srid?: number, source: GeorefSource, 
+srid?: number, 
+/**
+ * The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a
+ * `.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.
+ */
+crs?: string, source: GeorefSource, 
 /**
  * The control points' m0 (the project's length unit); none for the thin plate or without redundancy.
  */

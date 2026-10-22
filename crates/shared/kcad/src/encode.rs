@@ -1879,6 +1879,12 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || recorded(&n.children)
         })
     }
+    // Schema 100 (docs/adr/0594 §1): a georeference record's targets' system as a definition.
+    if doc.entities.iter().any(
+        |e| matches!(e, Entity::Raster(r) if r.raster.georef.as_ref().is_some_and(|g| g.crs.is_some())),
+    ) {
+        return crate::SCHEMA_WITH_GEOREF_CRS;
+    }
     // Schema 99 (docs/adr/0589): a topology exception's geometry digest.
     if doc
         .settings

@@ -37972,6 +37972,8 @@ class RasterGeoref(_Model):
         points: The control, check and left-out points, as given.
         check_max: Unit: length.
         check_rmse: The check points' root mean square error and largest error (the project's length unit). Unit: length.
+        crs: The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a
+            `.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.
         m0: The control points' m0 (the project's length unit); none for the thin plate or without redundancy. Unit: length.
         output: The output grid, for a resampled raster (projective, polynomials, thin plate).
         srid: The targets' coordinate system (EPSG) when it is not the project's; they were carried to the project's. Unit: epsg.
@@ -37981,6 +37983,7 @@ class RasterGeoref(_Model):
     source: GeorefSource
     check_max: float | None | Unset = UNSET
     check_rmse: float | None | Unset = UNSET
+    crs: str | None | Unset = UNSET
     m0: float | None | Unset = UNSET
     output: GeorefOutput | None | Unset = UNSET
     srid: int | None | Unset = UNSET
@@ -37994,6 +37997,8 @@ class RasterGeoref(_Model):
             out["checkMax"] = None if self.check_max is None else float(self.check_max)
         if self.check_rmse is not UNSET:
             out["checkRmse"] = None if self.check_rmse is None else float(self.check_rmse)
+        if self.crs is not UNSET:
+            out["crs"] = self.crs
         if self.m0 is not UNSET:
             out["m0"] = None if self.m0 is None else float(self.m0)
         if self.output is not UNSET:
@@ -38010,6 +38015,7 @@ class RasterGeoref(_Model):
             source=GeorefSource.from_json(data["source"]),
             check_max=UNSET if "checkMax" not in data else None if data["checkMax"] is None else float(data["checkMax"]),
             check_rmse=UNSET if "checkRmse" not in data else None if data["checkRmse"] is None else float(data["checkRmse"]),
+            crs=data.get("crs", UNSET),
             m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
             output=UNSET if "output" not in data else None if data["output"] is None else GeorefOutput.from_json(data["output"]),
             srid=data.get("srid", UNSET),
@@ -38102,6 +38108,9 @@ class RastersGeoref(_Model):
     Attributes:
         uid: The raster.
         points: Control, check and left-out points; the pixels are the source's (a resampled raster's record's source).
+        crs: The targets' system as a WKT (1 or 2) or a PROJ string when it is no EPSG code (docs/adr/0594 §1): a `.points`
+            file's `#CRS:` line, a provider's or a project's own definition. One that is a registered system exactly is
+            recorded as its EPSG code.
         drawing: The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
         made: The output the host resampled itself by the plan's grid; none: the command resamples.
         output: Where a resampled linked raster is written (absolute, or relative to the drawing's folder); none: beside its
@@ -38112,6 +38121,7 @@ class RastersGeoref(_Model):
     uid: str
     method: GeorefMethod | GeorefMethodName
     points: list[GeorefPoint]
+    crs: str | None | Unset = UNSET
     drawing: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     made: GeorefMade | None | Unset = UNSET
@@ -38125,6 +38135,8 @@ class RastersGeoref(_Model):
         out["uid"] = self.uid
         out["method"] = _enum_out(self.method)
         out["points"] = [e0.to_json() for e0 in self.points]
+        if self.crs is not UNSET:
+            out["crs"] = self.crs
         if self.drawing is not UNSET:
             out["drawing"] = self.drawing
         if self.expected_revision is not UNSET:
@@ -38147,6 +38159,7 @@ class RastersGeoref(_Model):
             uid=data["uid"],
             method=_enum_in(GeorefMethod, data["method"]),
             points=[GeorefPoint.from_json(e0) for e0 in data["points"]],
+            crs=data.get("crs", UNSET),
             drawing=data.get("drawing", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             made=UNSET if "made" not in data else None if data["made"] is None else GeorefMade.from_json(data["made"]),

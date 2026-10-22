@@ -1844,6 +1844,9 @@ const ENTRIES: &[Entry] = &[
             ],
             &[
                 "unknown_srid",
+                // docs/adr/0594: the targets' system as a definition.
+                "invalid_input",
+                "crs_text_unreadable",
                 "target_not_converted",
                 "too_few_control_points",
                 "control_points_duplicate",

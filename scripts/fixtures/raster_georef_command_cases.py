@@ -316,9 +316,12 @@ def with_roles(points, checks=(), off=(), names=False):
 
 # ── The answer ────────────────────────────────────────────────────────────
 
-def solved(method, points, *, srid=None, src=(333, 257)):
-    """Residuals, counts, m0, check errors and the forward of the control points."""
-    if srid == 4326:
+def solved(method, points, *, srid=None, src=(333, 257), carried=None):
+    """Residuals, counts, m0, check errors and the forward of the control points; `carried`: the targets already in
+    the project's system (another script's, docs/adr/0594)."""
+    if carried is not None:
+        targets = carried
+    elif srid == 4326:
         targets = [tm33(*p["target"]) for p in points]
     else:
         targets = [tuple(p["target"]) for p in points]
@@ -654,4 +657,5 @@ def main():
     print(f"{len(cases)} durum yazıldı")
 
 
-main()
+if __name__ == "__main__":
+    main()

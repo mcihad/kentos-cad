@@ -25,6 +25,12 @@ points: Array<GeorefPoint>,
  */
 srid?: number, 
 /**
+ * The targets' system as a WKT (1 or 2) or a PROJ string when it is no EPSG code (docs/adr/0594 §1): a `.points`
+ * file's `#CRS:` line, a provider's or a project's own definition. One that is a registered system exactly is
+ * recorded as its EPSG code.
+ */
+crs?: string, 
+/**
  * A resampled output's pixel side; none: the transform's mean scale at the control points.
  */
 pixel?: number, resampling?: RasterResampling, 

@@ -14575,6 +14575,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -43850,6 +43857,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -61506,6 +61520,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -71953,6 +71974,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -82375,6 +82403,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -93051,6 +93086,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -103436,6 +103478,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -113836,6 +113885,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -124535,6 +124591,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -132343,6 +132406,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -140465,6 +140535,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -151059,6 +151136,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -161746,6 +161830,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -173615,6 +173706,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -184520,6 +184618,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -196777,6 +196882,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -207445,6 +207557,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -217866,6 +217985,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -228369,6 +228495,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -241493,6 +241626,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -255195,6 +255335,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -269039,6 +269186,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -280067,6 +280221,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -291231,6 +291392,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -301655,6 +301823,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -312104,6 +312279,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -322602,6 +322784,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -333253,6 +333442,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -343743,6 +343939,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -354465,6 +354668,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -364658,6 +364868,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -376489,6 +376706,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -386981,6 +387205,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -397173,6 +397404,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -408560,6 +408798,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -419206,6 +419451,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -429717,6 +429969,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -440215,6 +440474,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -450768,6 +451034,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -460941,6 +461214,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -471464,6 +471744,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -481793,6 +482080,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -491965,6 +492259,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -502603,6 +502904,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -513000,6 +513308,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -523172,6 +523487,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -533969,6 +534291,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -544149,6 +544478,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -555594,6 +555930,13 @@
         "additionalProperties": false,
         "description": "Input of `cad.rasters.georef` v1. Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_a_raster`,\n`layer_locked`, `invalid_control_point`, `unknown_srid`, `target_not_converted`, `too_few_control_points`,\n`control_points_duplicate`, `control_points_collinear`, `georef_singular`, `invalid_pixel_size`, `georef_grid`,\n`invalid_file_path`, `file_not_found`, `import_unreadable`, `unknown_asset`, `georef_output_mismatch`,\n`invalid_revision`, `revision_conflict`.",
         "properties": {
+          "crs": {
+            "description": "The targets' system as a WKT (1 or 2) or a PROJ string when it is no EPSG code (docs/adr/0594 §1): a `.points`\nfile's `#CRS:` line, a provider's or a project's own definition. One that is a registered system exactly is\nrecorded as its EPSG code.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "drawing": {
             "description": "The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.",
             "type": [
@@ -556085,6 +556428,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -556787,6 +557137,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -557089,6 +557446,8 @@
           "layer_locked",
           "invalid_control_point",
           "unknown_srid",
+          "invalid_input",
+          "crs_text_unreadable",
           "target_not_converted",
           "too_few_control_points",
           "control_points_duplicate",
@@ -573855,6 +574214,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -584371,6 +584737,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -594549,6 +594922,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -605134,6 +605514,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -615807,6 +616194,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -625987,6 +626381,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -636541,6 +636942,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -647633,6 +648041,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -658406,6 +658821,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -669991,6 +670413,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -680831,6 +681260,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -692195,6 +692631,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -702932,6 +703375,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -713405,6 +713855,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -724183,6 +724640,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -734753,6 +735217,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -745227,6 +745698,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -755729,6 +756207,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -766153,6 +766638,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -776538,6 +777030,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -786982,6 +787481,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -797331,6 +797837,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -807795,6 +808308,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -818302,6 +818822,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -828798,6 +829325,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -839630,6 +840164,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -847203,6 +847744,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -855331,6 +855879,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -866013,6 +866568,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -877166,6 +877728,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -888261,6 +888830,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -899526,6 +900102,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -910881,6 +911464,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -921085,6 +921675,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -932167,6 +932764,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -1005897,6 +1006501,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -1032857,6 +1033468,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -1043305,6 +1043923,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -1053880,6 +1054505,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -1076225,6 +1076857,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Noktanın pikseli ya da hedefi sonlu değil, adı kurala uymuyor ya da kullanılmayan nokta denetim noktası yapılmış."
+    },
+    {
+      "code": "crs_text_unreadable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Koordinat sistemi tanımı okunamadı: WKT ya da PROJ dizesi değil ya da KentOS'un desteklemediği bir izdüşüm."
     },
     {
       "code": "target_not_converted",

@@ -34,11 +34,17 @@ fn points_are_written_as_the_reference_writes_them() {
     for case in cases["writes"].as_array().expect("writes") {
         let points: Vec<GeorefPoint> = serde_json::from_value(case["points"].clone()).expect("points");
         let residuals: Vec<Option<[f64; 2]>> = serde_json::from_value(case["residuals"].clone()).expect("residuals");
-        let text = gcp::write(&points, &residuals);
+        let crs = case["crs"].as_str();
+        let text = gcp::write(&points, &residuals, crs);
         assert_eq!(text, case["text"].as_str().expect("text"));
         // Read back: the same points, a comma dropped from a name.
         let back = gcp::read(&text).expect("reads back");
         assert_eq!(back.points.len(), points.len());
+        // The system read back is the definition as written, on one line.
+        assert_eq!(
+            back.crs,
+            crs.map(|c| c.split_whitespace().collect::<Vec<_>>().join(" "))
+        );
         for (a, b) in back.points.iter().zip(&points) {
             assert_eq!((a.pixel, a.target, a.check, a.off), (b.pixel, b.target, b.check, b.off));
         }

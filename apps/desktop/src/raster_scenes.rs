@@ -7,7 +7,7 @@
 //! 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=raster-vadi,raster-orto,raster-dem,raster-ekle,raster-stili,raster-oturt,raster-oturt-ince-plaka,raster-oturt-kayit cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=raster-vadi,raster-orto,raster-dem,raster-ekle,raster-stili,raster-oturt,raster-oturt-ince-plaka,raster-oturt-kayit,raster-oturt-tanim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -181,6 +181,37 @@ const FIT_ROWS: [[&str; 7]; 6] = [
 ];
 
 /// The rows into Raster oturt's window, solved.
+/// The rows' targets written in a definition's system (the project's carried by the core), the window given the
+/// definition as a `.points` file's `#CRS:` line gives it (docs/adr/0594 §3).
+fn fit_in_definition(app: &mut App, definition: &str) {
+    let read = kentos_geometry_core::crs::text::read_text(definition).expect("the definition reads");
+    let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
+    let own = kentos_project::systems::own(&settings)
+        .and_then(|n| n.system)
+        .expect("the project's system");
+    let choices = kentos_project::systems::choices(&settings);
+    for row in &mut app.calc.raster_fit.rows {
+        let (Ok(e), Ok(n)) = (row[5].parse::<f64>(), row[6].parse::<f64>()) else {
+            continue;
+        };
+        let p = kentos_geometry_core::crs::transform_in(
+            &own,
+            &read.system,
+            kentos_geometry_core::vec2::Vec2::new(e, n),
+            &choices,
+        )
+        .expect("carried")
+        .point;
+        row[5] = format!("{:.3}", p.x);
+        row[6] = format!("{:.3}", p.y);
+    }
+    let form = &mut app.calc.raster_fit;
+    form.crs = Some(definition.to_owned());
+    form.srid.clear();
+    let doc = app.document.as_ref().expect("a drawing");
+    app.calc.raster_fit.solve(&doc.model);
+}
+
 fn fit_rows(app: &mut App, rows: &[[&str; 7]]) {
     let form = &mut app.calc.raster_fit;
     form.rows = rows
@@ -296,6 +327,27 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                 run(app, "raster.georef");
                 app.calc.raster_fit.method = kentos_commands::GeorefMethod::ThinPlate;
                 fit_rows(app, &FIT_ROWS);
+            },
+            tiles_made,
+        ),
+        // The targets in a municipality's TM given by a `.points` file's `#CRS:` line: the definition under the EPSG field,
+        // solved through it (docs/adr/0594 §3).
+        (
+            "raster-oturt-tanim",
+            |app| {
+                opened(app, [X0 - 360.0, Y0 - 540.0, X0 + 800.0, Y0 + 20.0]);
+                select(app, "tarama");
+                run(app, "raster.georef");
+                fit_rows(app, &FIT_ROWS);
+                fit_in_definition(
+                    app,
+                    "PROJCS[\"Belediye TM 36.5\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",\
+                     SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],\
+                     UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],\
+                     PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",36.5],\
+                     PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],\
+                     PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]",
+                );
             },
             tiles_made,
         ),

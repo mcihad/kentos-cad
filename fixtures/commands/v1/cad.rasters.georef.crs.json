@@ -1,0 +1,5553 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.rasters.georef",
+ "commandVersion": 1,
+ "title": "Raster oturt: hedeflerin sistemi tanımla (WKT, PROJ)",
+ "note": "Üretici: scripts/fixtures/raster_georef_crs_cases.py (docs/adr/0594); hedefler PROJ'la, dönüşümler raster_georef_command_cases.py'nin numpy hesabıyla, KentOS kodu olmadan.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Oturtma",
+  "settings": {
+   "srid": 5255,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "pafta",
+    "name": "Pafta",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "pafta",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Afin: hedefler TUREF datumlu, 33,5° meridyenli TM tanımında (WKT 1); kayıtta tanım",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "name": "N1",
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         444368.408,
+         4420479.625
+        ]
+       },
+       {
+        "name": "N2",
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         444435.04,
+         4420481.92
+        ]
+       },
+       {
+        "name": "N3",
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         444501.672,
+         4420484.215
+        ]
+       },
+       {
+        "name": "N4",
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         444371.208,
+         4420428.218
+        ]
+       },
+       {
+        "name": "N5",
+        "pixel": [
+         99.9,
+         77.1
+        ],
+        "target": [
+         444403.126,
+         4420455.097
+        ],
+        "check": true
+       },
+       {
+        "name": "N6",
+        "pixel": [
+         233.1,
+         179.9
+        ],
+        "target": [
+         444472.555,
+         4420405.974
+        ],
+        "check": true
+       }
+      ],
+      "crs": "PROJCS[\"TUREF / TM 33.5 yerel\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",33.5],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "residuals": [
+        {
+         "dx": -7.77e-07,
+         "dy": -5.7e-08,
+         "d": 7.79e-07,
+         "target": [
+          487117.401259553,
+          4420287.792254065
+         ]
+        },
+        {
+         "dx": 1.555e-06,
+         "dy": 1.13e-07,
+         "d": 1.559e-06,
+         "target": [
+          487184.016964631,
+          4420290.460248424
+         ]
+        },
+        {
+         "dx": -7.77e-07,
+         "dy": -5.7e-08,
+         "d": 7.79e-07,
+         "target": [
+          487250.632674374,
+          4420293.128243121
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487120.48897225,
+          4420236.403591536
+         ]
+        },
+        {
+         "dx": -0.001842178,
+         "dy": -0.028008793,
+         "d": 0.028069309,
+         "target": [
+          487152.254811396,
+          4420263.459928829
+         ]
+        },
+        {
+         "dx": 0.001097565,
+         "dy": -0.01698516,
+         "d": 0.017020585,
+         "target": [
+          487221.955292539,
+          4420214.728237252
+         ]
+        }
+       ],
+       "control": 4,
+       "checks": 2,
+       "raster": {
+        "affine": [
+         487099.975403554,
+         0.500117924,
+         0.030036123,
+         4420299.972420995,
+         0.020029989,
+         -0.499889713
+        ],
+        "width": 333,
+        "height": 257,
+        "bands": 1,
+        "sample": "u8",
+        "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+        "srid": 5255,
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ]
+        },
+        "georef": {
+         "method": "affine",
+         "points": [
+          {
+           "name": "N1",
+           "pixel": [
+            33.3,
+            25.7
+           ],
+           "target": [
+            444368.408,
+            4420479.625
+           ]
+          },
+          {
+           "name": "N2",
+           "pixel": [
+            166.5,
+            25.7
+           ],
+           "target": [
+            444435.04,
+            4420481.92
+           ]
+          },
+          {
+           "name": "N3",
+           "pixel": [
+            299.7,
+            25.7
+           ],
+           "target": [
+            444501.672,
+            4420484.215
+           ]
+          },
+          {
+           "name": "N4",
+           "pixel": [
+            33.3,
+            128.5
+           ],
+           "target": [
+            444371.208,
+            4420428.218
+           ]
+          },
+          {
+           "name": "N5",
+           "pixel": [
+            99.9,
+            77.1
+           ],
+           "target": [
+            444403.126,
+            4420455.097
+           ],
+           "check": true
+          },
+          {
+           "name": "N6",
+           "pixel": [
+            233.1,
+            179.9
+           ],
+           "target": [
+            444472.555,
+            4420405.974
+           ],
+           "check": true
+          }
+         ],
+         "source": {
+          "width": 333,
+          "height": 257,
+          "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+          "digest": "41cc170e04ce53d7856af4f03080739dd09f69af21da91007e8ba58b01c3336e"
+         },
+         "m0": 1.35e-06,
+         "checkRmse": 0.023211919,
+         "checkMax": 0.028069309,
+         "crs": "PROJCS[\"TUREF / TM 33.5 yerel\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",33.5],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]"
+        }
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-05,
+     "expect": {
+      "canUndo": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Helmert: belediyenin WKT 2 tanımı (32,75°, k 0,9999, 400 000 m)",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "helmert",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         408490.946,
+         4419839.617
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         408557.548,
+         4419842.471
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         408624.149,
+         4419845.326
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         408494.178,
+         4419788.243
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         408560.779,
+         4419791.097
+        ]
+       },
+       {
+        "pixel": [
+         233.1,
+         179.9
+        ],
+        "target": [
+         408595.694,
+         4419766.853
+        ],
+        "check": true
+       }
+      ],
+      "crs": "PROJCRS[\"Belediye TM\",BASEGEOGCRS[\"TUREF\",DATUM[\"Turkish National Reference Frame\",ELLIPSOID[\"GRS 1980\",6378137,298.257222101,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"Transverse Mercator\",METHOD[\"Transverse Mercator\"],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],PARAMETER[\"Longitude of natural origin\",32.75,ANGLEUNIT[\"degree\",0.0174532925199433]],PARAMETER[\"Scale factor at natural origin\",0.9999,SCALEUNIT[\"unity\",1]],PARAMETER[\"False easting\",400000,LENGTHUNIT[\"metre\",1]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1]]],CS[Cartesian,2],AXIS[\"easting\",east,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"northing\",north,ORDER[2],LENGTHUNIT[\"metre\",1]]]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "residuals": [
+        {
+         "dx": 0.474926351,
+         "dy": -0.260186606,
+         "d": 0.54152757,
+         "target": [
+          487117.400725119,
+          4420287.791918526
+         ]
+        },
+        {
+         "dx": 0.29236524,
+         "dy": 0.007182262,
+         "d": 0.292453447,
+         "target": [
+          487184.01719218,
+          4420290.45970314
+         ]
+        },
+        {
+         "dx": 0.110803756,
+         "dy": 0.273548421,
+         "d": 0.295137614,
+         "target": [
+          487250.632659615,
+          4420293.128490462
+         ]
+        },
+        {
+         "dx": -0.348267258,
+         "dy": -0.143954174,
+         "d": 0.376845972,
+         "target": [
+          487120.48918733,
+          4420236.403872793
+         ]
+        },
+        {
+         "dx": -0.529828089,
+         "dy": 0.123410099,
+         "d": 0.544010897,
+         "target": [
+          487187.104654112,
+          4420239.071662001
+         ]
+        },
+        {
+         "dx": -1.030749473,
+         "dy": 0.299201358,
+         "d": 1.073296757,
+         "target": [
+          487221.955162773,
+          4420214.727540832
+         ]
+        }
+       ],
+       "control": 5,
+       "checks": 1,
+       "raster": {
+        "affine": [
+         487100.700857831,
+         0.498753048,
+         0.022035687,
+         4420299.615896874,
+         0.022035687,
+         -0.498753048
+        ],
+        "width": 333,
+        "height": 257,
+        "bands": 1,
+        "sample": "u8",
+        "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+        "srid": 5255,
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ]
+        },
+        "georef": {
+         "method": "helmert",
+         "points": [
+          {
+           "pixel": [
+            33.3,
+            25.7
+           ],
+           "target": [
+            408490.946,
+            4419839.617
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            25.7
+           ],
+           "target": [
+            408557.548,
+            4419842.471
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            25.7
+           ],
+           "target": [
+            408624.149,
+            4419845.326
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            128.5
+           ],
+           "target": [
+            408494.178,
+            4419788.243
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            128.5
+           ],
+           "target": [
+            408560.779,
+            4419791.097
+           ]
+          },
+          {
+           "pixel": [
+            233.1,
+            179.9
+           ],
+           "target": [
+            408595.694,
+            4419766.853
+           ],
+           "check": true
+          }
+         ],
+         "source": {
+          "width": 333,
+          "height": 257,
+          "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+          "digest": "41cc170e04ce53d7856af4f03080739dd09f69af21da91007e8ba58b01c3336e"
+         },
+         "m0": 0.388125427,
+         "checkRmse": 1.073296757,
+         "checkMax": 1.073296757,
+         "crs": "PROJCRS[\"Belediye TM\",BASEGEOGCRS[\"TUREF\",DATUM[\"Turkish National Reference Frame\",ELLIPSOID[\"GRS 1980\",6378137,298.257222101,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"Transverse Mercator\",METHOD[\"Transverse Mercator\"],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],PARAMETER[\"Longitude of natural origin\",32.75,ANGLEUNIT[\"degree\",0.0174532925199433]],PARAMETER[\"Scale factor at natural origin\",0.9999,SCALEUNIT[\"unity\",1]],PARAMETER[\"False easting\",400000,LENGTHUNIT[\"metre\",1]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1]]],CS[Cartesian,2],AXIS[\"easting\",east,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"northing\",north,ORDER[2],LENGTHUNIT[\"metre\",1]]]"
+        }
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-05,
+     "expect": {
+      "canUndo": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Afin: PROJ dizesi, sıfır +towgs84; denetim noktası yoksa uyarılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         401618.657,
+         4420910.879
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         401685.307,
+         4420912.801
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         401751.956,
+         4420914.723
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         401621.17,
+         4420859.454
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         401687.819,
+         4420861.376
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         128.5
+        ],
+        "target": [
+         401754.469,
+         4420863.298
+        ]
+       }
+      ],
+      "crs": "+proj=tmerc +lat_0=0 +lon_0=34 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "residuals": [
+        {
+         "dx": 0.000164767,
+         "dy": 5.361e-06,
+         "d": 0.000164854,
+         "target": [
+          487117.400913531,
+          4420287.791851574
+         ]
+        },
+        {
+         "dx": -0.000330162,
+         "dy": -3.525e-06,
+         "d": 0.000330181,
+         "target": [
+          487184.017412717,
+          4420290.459905591
+         ]
+        },
+        {
+         "dx": 0.000165395,
+         "dy": -1.836e-06,
+         "d": 0.000165405,
+         "target": [
+          487250.632921417,
+          4420293.127949033
+         ]
+        },
+        {
+         "dx": -0.000167878,
+         "dy": -5.569e-06,
+         "d": 0.00016797,
+         "target": [
+          487120.489356673,
+          4420236.404238302
+         ]
+        },
+        {
+         "dx": 0.000336384,
+         "dy": 3.943e-06,
+         "d": 0.000336407,
+         "target": [
+          487187.104856668,
+          4420239.072273921
+         ]
+        },
+        {
+         "dx": -0.000168506,
+         "dy": 1.626e-06,
+         "d": 0.000168514,
+         "target": [
+          487253.721365815,
+          4420241.74032137
+         ]
+        }
+       ],
+       "control": 6,
+       "checks": 0,
+       "raster": {
+        "affine": [
+         487099.975049609,
+         0.500120152,
+         0.030039985,
+         4420299.971751701,
+         0.020030369,
+         -0.499879613
+        ],
+        "width": 333,
+        "height": 257,
+        "bands": 1,
+        "sample": "u8",
+        "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+        "srid": 5255,
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ]
+        },
+        "georef": {
+         "method": "affine",
+         "points": [
+          {
+           "pixel": [
+            33.3,
+            25.7
+           ],
+           "target": [
+            401618.657,
+            4420910.879
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            25.7
+           ],
+           "target": [
+            401685.307,
+            4420912.801
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            25.7
+           ],
+           "target": [
+            401751.956,
+            4420914.723
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            128.5
+           ],
+           "target": [
+            401621.17,
+            4420859.454
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            128.5
+           ],
+           "target": [
+            401687.819,
+            4420861.376
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            128.5
+           ],
+           "target": [
+            401754.469,
+            4420863.298
+           ]
+          }
+         ],
+         "source": {
+          "width": 333,
+          "height": 257,
+          "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+          "digest": "41cc170e04ce53d7856af4f03080739dd09f69af21da91007e8ba58b01c3336e"
+         },
+         "m0": 0.000235703,
+         "crs": "+proj=tmerc +lat_0=0 +lon_0=34 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
+        }
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "no_check_points",
+        "message": "Denetim noktası yok: m0 yalnız kontrol noktalarının uyumunu söyler; dönüşüme girmeyen, rastere yayılmış denetim noktaları ekleyin.",
+        "path": "points"
+       }
+      ]
+     },
+     "within": 1e-05,
+     "expect": {
+      "canUndo": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Afin: kullanılmayan nokta tanımın sisteminden de çevrilir, dönüşüme girmez",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         408490.946,
+         4419839.617
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         408557.548,
+         4419842.471
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         408624.149,
+         4419845.326
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         408494.178,
+         4419788.243
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         408560.779,
+         4419791.097
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         128.5
+        ],
+        "target": [
+         408627.381,
+         4419793.952
+        ],
+        "off": true
+       },
+       {
+        "pixel": [
+         33.3,
+         231.3
+        ],
+        "target": [
+         408497.409,
+         4419736.869
+        ],
+        "check": true
+       }
+      ],
+      "crs": "PROJCRS[\"Belediye TM\",BASEGEOGCRS[\"TUREF\",DATUM[\"Turkish National Reference Frame\",ELLIPSOID[\"GRS 1980\",6378137,298.257222101,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"Transverse Mercator\",METHOD[\"Transverse Mercator\"],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],PARAMETER[\"Longitude of natural origin\",32.75,ANGLEUNIT[\"degree\",0.0174532925199433]],PARAMETER[\"Scale factor at natural origin\",0.9999,SCALEUNIT[\"unity\",1]],PARAMETER[\"False easting\",400000,LENGTHUNIT[\"metre\",1]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1]]],CS[Cartesian,2],AXIS[\"easting\",east,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"northing\",north,ORDER[2],LENGTHUNIT[\"metre\",1]]]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "residuals": [
+        {
+         "dx": 0.000266698,
+         "dy": -6.7766e-05,
+         "d": 0.000275172,
+         "target": [
+          487117.400725119,
+          4420287.791918526
+         ]
+        },
+        {
+         "dx": -0.000333209,
+         "dy": 0.000334236,
+         "d": 0.000471955,
+         "target": [
+          487184.01719218,
+          4420290.45970314
+         ]
+        },
+        {
+         "dx": 6.6511e-05,
+         "dy": -0.00026647,
+         "d": 0.000274645,
+         "target": [
+          487250.632659615,
+          4420293.128490462
+         ]
+        },
+        {
+         "dx": -0.000200186,
+         "dy": -0.000198703,
+         "d": 0.00028206,
+         "target": [
+          487120.48918733,
+          4420236.403872793
+         ]
+        },
+        {
+         "dx": 0.000200186,
+         "dy": 0.000198703,
+         "d": 0.00028206,
+         "target": [
+          487187.104654112,
+          4420239.071662001
+         ]
+        },
+        {
+         "dx": -0.000400008,
+         "dy": -0.000400995,
+         "d": 0.000566395,
+         "target": [
+          487253.721121461,
+          4420241.740448316
+         ]
+        },
+        {
+         "dx": 0.000331643,
+         "dy": -0.000332606,
+         "d": 0.000469696,
+         "target": [
+          487123.576650828,
+          4420185.015830024
+         ]
+        }
+       ],
+       "control": 5,
+       "checks": 1,
+       "raster": {
+        "affine": [
+         487099.975026196,
+         0.500119123,
+         0.030038865,
+         4420299.971848274,
+         0.020031431,
+         -0.499884987
+        ],
+        "width": 333,
+        "height": 257,
+        "bands": 1,
+        "sample": "u8",
+        "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+        "srid": 5255,
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ]
+        },
+        "georef": {
+         "method": "affine",
+         "points": [
+          {
+           "pixel": [
+            33.3,
+            25.7
+           ],
+           "target": [
+            408490.946,
+            4419839.617
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            25.7
+           ],
+           "target": [
+            408557.548,
+            4419842.471
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            25.7
+           ],
+           "target": [
+            408624.149,
+            4419845.326
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            128.5
+           ],
+           "target": [
+            408494.178,
+            4419788.243
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            128.5
+           ],
+           "target": [
+            408560.779,
+            4419791.097
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            128.5
+           ],
+           "target": [
+            408627.381,
+            4419793.952
+           ],
+           "off": true
+          },
+          {
+           "pixel": [
+            33.3,
+            231.3
+           ],
+           "target": [
+            408497.409,
+            4419736.869
+           ],
+           "check": true
+          }
+         ],
+         "source": {
+          "width": 333,
+          "height": 257,
+          "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+          "digest": "41cc170e04ce53d7856af4f03080739dd09f69af21da91007e8ba58b01c3336e"
+         },
+         "m0": 0.000365037,
+         "checkRmse": 0.000469696,
+         "checkMax": 0.000469696,
+         "crs": "PROJCRS[\"Belediye TM\",BASEGEOGCRS[\"TUREF\",DATUM[\"Turkish National Reference Frame\",ELLIPSOID[\"GRS 1980\",6378137,298.257222101,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"Transverse Mercator\",METHOD[\"Transverse Mercator\"],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],PARAMETER[\"Longitude of natural origin\",32.75,ANGLEUNIT[\"degree\",0.0174532925199433]],PARAMETER[\"Scale factor at natural origin\",0.9999,SCALEUNIT[\"unity\",1]],PARAMETER[\"False easting\",400000,LENGTHUNIT[\"metre\",1]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1]]],CS[Cartesian,2],AXIS[\"easting\",east,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"northing\",north,ORDER[2],LENGTHUNIT[\"metre\",1]]]"
+        }
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-05,
+     "expect": {
+      "canUndo": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan: afin, tanımla, yazmadan",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         444368.408,
+         4420479.625
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         444435.04,
+         4420481.92
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         444501.672,
+         4420484.215
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         444371.208,
+         4420428.218
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         444437.84,
+         4420430.513
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         128.5
+        ],
+        "target": [
+         444504.473,
+         4420432.808
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         231.3
+        ],
+        "target": [
+         444374.008,
+         4420376.812
+        ],
+        "check": true
+       },
+       {
+        "pixel": [
+         166.5,
+         231.3
+        ],
+        "target": [
+         444440.641,
+         4420379.107
+        ],
+        "check": true
+       }
+      ],
+      "crs": "PROJCS[\"TUREF / TM 33.5 yerel\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",33.5],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "residuals": [
+        {
+         "dx": -0.000250932,
+         "dy": 3.42e-07,
+         "d": 0.000250932,
+         "target": [
+          487117.401259553,
+          4420287.792254065
+         ]
+        },
+        {
+         "dx": 1.555e-06,
+         "dy": 1.13e-07,
+         "d": 1.559e-06,
+         "target": [
+          487184.016964631,
+          4420290.460248424
+         ]
+        },
+        {
+         "dx": 0.000249377,
+         "dy": -4.54e-07,
+         "d": 0.000249377,
+         "target": [
+          487250.632674374,
+          4420293.128243121
+         ]
+        },
+        {
+         "dx": 8.2719e-05,
+         "dy": -1.388e-06,
+         "d": 8.273e-05,
+         "target": [
+          487120.48897225,
+          4420236.403591536
+         ]
+        },
+        {
+         "dx": 0.000334871,
+         "dy": 1.979e-06,
+         "d": 0.000334877,
+         "target": [
+          487187.104677663,
+          4420239.0715823
+         ]
+        },
+        {
+         "dx": -0.00041759,
+         "dy": -5.91e-07,
+         "d": 0.00041759,
+         "target": [
+          487253.721387688,
+          4420241.739579
+         ]
+        },
+        {
+         "dx": 0.000424739,
+         "dy": -0.001002752,
+         "d": 0.001088998,
+         "target": [
+          487123.576676578,
+          4420185.015928642
+         ]
+        },
+        {
+         "dx": -0.000323391,
+         "dy": -0.001001389,
+         "d": 0.001052312,
+         "target": [
+          487190.193382273,
+          4420187.683921409
+         ]
+        }
+       ],
+       "control": 6,
+       "checks": 2,
+       "raster": {
+        "affine": [
+         487099.975007643,
+         0.500119802,
+         0.030039361,
+         4420299.972421939,
+         0.020029986,
+         -0.49988973
+        ],
+        "width": 333,
+        "height": 257,
+        "bands": 1,
+        "sample": "u8",
+        "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+        "srid": 5255,
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ]
+        },
+        "georef": {
+         "method": "affine",
+         "points": [
+          {
+           "pixel": [
+            33.3,
+            25.7
+           ],
+           "target": [
+            444368.408,
+            4420479.625
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            25.7
+           ],
+           "target": [
+            444435.04,
+            4420481.92
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            25.7
+           ],
+           "target": [
+            444501.672,
+            4420484.215
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            128.5
+           ],
+           "target": [
+            444371.208,
+            4420428.218
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            128.5
+           ],
+           "target": [
+            444437.84,
+            4420430.513
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            128.5
+           ],
+           "target": [
+            444504.473,
+            4420432.808
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            231.3
+           ],
+           "target": [
+            444374.008,
+            4420376.812
+           ],
+           "check": true
+          },
+          {
+           "pixel": [
+            166.5,
+            231.3
+           ],
+           "target": [
+            444440.641,
+            4420379.107
+           ],
+           "check": true
+          }
+         ],
+         "source": {
+          "width": 333,
+          "height": 257,
+          "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+          "digest": "41cc170e04ce53d7856af4f03080739dd09f69af21da91007e8ba58b01c3336e"
+         },
+         "m0": 0.000264111,
+         "checkRmse": 0.001070812,
+         "checkMax": 0.001088998,
+         "crs": "PROJCS[\"TUREF / TM 33.5 yerel\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",33.5],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]"
+        }
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-05,
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Helmert: yalnız iki kontrol noktası ve bir denetim noktası, PROJ dizesiyle",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "helmert",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         401618.657,
+         4420910.879
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         401685.307,
+         4420912.801
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         401751.956,
+         4420914.723
+        ],
+        "check": true
+       }
+      ],
+      "crs": "+proj=tmerc +lat_0=0 +lon_0=34 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "residuals": [
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487117.400913531,
+          4420287.791851574
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487184.017412717,
+          4420290.459905591
+         ]
+        },
+        {
+         "dx": 0.000990487,
+         "dy": 1.0574e-05,
+         "d": 0.000990543,
+         "target": [
+          487250.632921417,
+          4420293.127949033
+         ]
+        }
+       ],
+       "control": 2,
+       "checks": 1,
+       "raster": {
+        "affine": [
+         487100.23200654,
+         0.500123868,
+         0.020030436,
+         4420299.978021471,
+         0.020030436,
+         -0.500123868
+        ],
+        "width": 333,
+        "height": 257,
+        "bands": 1,
+        "sample": "u8",
+        "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+        "srid": 5255,
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ]
+        },
+        "georef": {
+         "method": "helmert",
+         "points": [
+          {
+           "pixel": [
+            33.3,
+            25.7
+           ],
+           "target": [
+            401618.657,
+            4420910.879
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            25.7
+           ],
+           "target": [
+            401685.307,
+            4420912.801
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            25.7
+           ],
+           "target": [
+            401751.956,
+            4420914.723
+           ],
+           "check": true
+          }
+         ],
+         "source": {
+          "width": 333,
+          "height": 257,
+          "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+          "digest": "41cc170e04ce53d7856af4f03080739dd09f69af21da91007e8ba58b01c3336e"
+         },
+         "checkRmse": 0.000990543,
+         "checkMax": 0.000990543,
+         "crs": "+proj=tmerc +lat_0=0 +lon_0=34 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
+        }
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-05,
+     "expect": {
+      "canUndo": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Afin: tanım kayıttaki TUREF / TM30'un kendisi; kayda EPSG:5254 yazılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         743628.023,
+         4424165.817
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         743694.56,
+         4424170.726
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         743761.097,
+         4424175.634
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         743632.84,
+         4424114.524
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         743699.377,
+         4424119.433
+        ],
+        "check": true
+       }
+      ],
+      "crs": "PROJCS[\"TUREF / TM30\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",30],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "residuals": [
+        {
+         "dx": 1.0245e-05,
+         "dy": 0.000166975,
+         "d": 0.000167289,
+         "target": [
+          487117.400993607,
+          4420287.792334743
+         ]
+        },
+        {
+         "dx": -2.0491e-05,
+         "dy": -0.00033395,
+         "d": 0.000334578,
+         "target": [
+          487184.016846797,
+          4420290.460491018
+         ]
+        },
+        {
+         "dx": 1.0245e-05,
+         "dy": 0.000166975,
+         "d": 0.000167289,
+         "target": [
+          487250.632638516,
+          4420293.127645444
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487120.489214625,
+          4420236.403857527
+         ]
+        },
+        {
+         "dx": -2.7879e-05,
+         "dy": -0.000522408,
+         "d": 0.000523151,
+         "target": [
+          487187.105064958,
+          4420239.072035286
+         ]
+        }
+       ],
+       "control": 4,
+       "checks": 1,
+       "raster": {
+        "affine": [
+         487099.974995546,
+         0.500118787,
+         0.030040961,
+         4420299.972748928,
+         0.020027443,
+         -0.499889535
+        ],
+        "width": 333,
+        "height": 257,
+        "bands": 1,
+        "sample": "u8",
+        "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+        "srid": 5255,
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ]
+        },
+        "georef": {
+         "method": "affine",
+         "points": [
+          {
+           "pixel": [
+            33.3,
+            25.7
+           ],
+           "target": [
+            743628.023,
+            4424165.817
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            25.7
+           ],
+           "target": [
+            743694.56,
+            4424170.726
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            25.7
+           ],
+           "target": [
+            743761.097,
+            4424175.634
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            128.5
+           ],
+           "target": [
+            743632.84,
+            4424114.524
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            128.5
+           ],
+           "target": [
+            743699.377,
+            4424119.433
+           ],
+           "check": true
+          }
+         ],
+         "srid": 5254,
+         "source": {
+          "width": 333,
+          "height": 257,
+          "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+          "digest": "41cc170e04ce53d7856af4f03080739dd09f69af21da91007e8ba58b01c3336e"
+         },
+         "m0": 0.000289753,
+         "checkRmse": 0.000523151,
+         "checkMax": 0.000523151
+        }
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-05,
+     "expect": {
+      "canUndo": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Afin: tanım kayıttaki TUREF coğrafi sistemi; kayda EPSG:5252 yazılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         32.849322066,
+         39.916673074
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         32.850101167,
+         39.916698113
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         32.85088027,
+         39.916723146
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         32.849359198,
+         39.916210306
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         32.850138294,
+         39.916235344
+        ],
+        "check": true
+       }
+      ],
+      "crs": "GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "residuals": [
+        {
+         "dx": -2.0157e-05,
+         "dy": 1.4216e-05,
+         "d": 2.4666e-05,
+         "target": [
+          487117.401015865,
+          4420287.791958158
+         ]
+        },
+        {
+         "dx": 4.0315e-05,
+         "dy": -2.843e-05,
+         "d": 4.9331e-05,
+         "target": [
+          487184.016961813,
+          4420290.460000559
+         ]
+        },
+        {
+         "dx": -2.0157e-05,
+         "dy": 1.4216e-05,
+         "d": 2.4666e-05,
+         "target": [
+          487250.633028704,
+          4420293.127957668
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487120.489027507,
+          4420236.404037826
+         ]
+        },
+        {
+         "dx": 4.1038e-05,
+         "dy": 3.9862e-05,
+         "d": 5.7211e-05,
+         "target": [
+          487187.104992889,
+          4420239.071997718
+         ]
+        }
+       ],
+       "control": 4,
+       "checks": 1,
+       "raster": {
+        "affine": [
+         487099.974986153,
+         0.500120168,
+         0.03003922,
+         4420299.971956071,
+         0.020030028,
+         -0.499882632
+        ],
+        "width": 333,
+        "height": 257,
+        "bands": 1,
+        "sample": "u8",
+        "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+        "srid": 5255,
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ]
+        },
+        "georef": {
+         "method": "affine",
+         "points": [
+          {
+           "pixel": [
+            33.3,
+            25.7
+           ],
+           "target": [
+            32.849322066,
+            39.916673074
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            25.7
+           ],
+           "target": [
+            32.850101167,
+            39.916698113
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            25.7
+           ],
+           "target": [
+            32.85088027,
+            39.916723146
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            128.5
+           ],
+           "target": [
+            32.849359198,
+            39.916210306
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            128.5
+           ],
+           "target": [
+            32.850138294,
+            39.916235344
+           ],
+           "check": true
+          }
+         ],
+         "srid": 5252,
+         "source": {
+          "width": 333,
+          "height": 257,
+          "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+          "digest": "41cc170e04ce53d7856af4f03080739dd09f69af21da91007e8ba58b01c3336e"
+         },
+         "m0": 4.2722e-05,
+         "checkRmse": 5.7211e-05,
+         "checkMax": 5.7211e-05
+        }
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-05,
+     "expect": {
+      "canUndo": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Helmert: tanım projenin kendi sistemi (TUREF / TM33); çevrilmez, kayda yazılmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "helmert",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         487117.401,
+         4420287.792
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         487184.017,
+         4420290.46
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         487250.633,
+         4420293.128
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         487120.489,
+         4420236.404
+        ],
+        "check": true
+       }
+      ],
+      "crs": "PROJCS[\"TUREF / TM33\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",33],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "residuals": [
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487117.401,
+          4420287.792
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487184.017,
+          4420290.46
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487250.633,
+          4420293.128
+         ]
+        },
+        {
+         "dx": -1.028912913,
+         "dy": -0.024348348,
+         "d": 1.029200964,
+         "target": [
+          487120.489,
+          4420236.404
+         ]
+        }
+       ],
+       "control": 3,
+       "checks": 1,
+       "raster": {
+        "affine": [
+         487100.232228228,
+         0.50012012,
+         0.02003003,
+         4420299.978087087,
+         0.02003003,
+         -0.50012012
+        ],
+        "width": 333,
+        "height": 257,
+        "bands": 1,
+        "sample": "u8",
+        "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+        "srid": 5255,
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ]
+        },
+        "georef": {
+         "method": "helmert",
+         "points": [
+          {
+           "pixel": [
+            33.3,
+            25.7
+           ],
+           "target": [
+            487117.401,
+            4420287.792
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            25.7
+           ],
+           "target": [
+            487184.017,
+            4420290.46
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            25.7
+           ],
+           "target": [
+            487250.633,
+            4420293.128
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            128.5
+           ],
+           "target": [
+            487120.489,
+            4420236.404
+           ],
+           "check": true
+          }
+         ],
+         "source": {
+          "width": 333,
+          "height": 257,
+          "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+          "digest": "41cc170e04ce53d7856af4f03080739dd09f69af21da91007e8ba58b01c3336e"
+         },
+         "m0": 0.0,
+         "checkRmse": 1.029200964,
+         "checkMax": 1.029200964
+        }
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-05,
+     "expect": {
+      "canUndo": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan: projektif, hedefler 33,5° TM tanımında, 0,5 m piksel; ızgara çevrilen hedeflerden",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "projective",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         444369.652,
+         4420479.01
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         444435.166,
+         4420481.599
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         444501.638,
+         4420483.799
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         444371.688,
+         4420428.12
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         444437.84,
+         4420430.513
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         128.5
+        ],
+        "target": [
+         444504.953,
+         4420432.902
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         231.3
+        ],
+        "target": [
+         444373.719,
+         4420376.59
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         231.3
+        ],
+        "target": [
+         444440.511,
+         4420378.788
+        ]
+       },
+       {
+        "pixel": [
+         99.9,
+         77.1
+        ],
+        "target": [
+         444403.422,
+         4420454.979
+        ],
+        "check": true
+       }
+      ],
+      "crs": "PROJCS[\"TUREF / TM 33.5 yerel\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",33.5],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]",
+      "pixel": 0.5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "residuals": [
+        {
+         "dx": -0.057999259,
+         "dy": -0.067905953,
+         "d": 0.089303597,
+         "target": [
+          487118.648638971,
+          4420287.18425178
+         ]
+        },
+        {
+         "dx": 0.121979836,
+         "dy": -0.145736319,
+         "d": 0.19004777,
+         "target": [
+          487184.144755598,
+          4420290.139970554
+         ]
+        },
+        {
+         "dx": -0.013184499,
+         "dy": 0.188311538,
+         "d": 0.188772525,
+         "target": [
+          487250.601005566,
+          4420292.71207419
+         ]
+        },
+        {
+         "dx": -0.055837535,
+         "dy": 0.119484679,
+         "d": 0.131887902,
+         "target": [
+          487120.969496183,
+          4420236.308284389
+         ]
+        },
+        {
+         "dx": 0.067421467,
+         "dy": 0.009254212,
+         "d": 0.068053616,
+         "target": [
+          487187.104677663,
+          4420239.0715823
+         ]
+        },
+        {
+         "dx": -0.113903615,
+         "dy": -0.076075207,
+         "d": 0.136972518,
+         "target": [
+          487254.200836574,
+          4420241.836261938
+         ]
+        },
+        {
+         "dx": -0.011718382,
+         "dy": 0.062311898,
+         "d": 0.063404204,
+         "target": [
+          487123.288934611,
+          4420184.792321867
+         ]
+        },
+        {
+         "dx": 0.063240744,
+         "dy": -0.089670629,
+         "d": 0.109727907,
+         "target": [
+          487190.065175227,
+          4420187.364209948
+         ]
+        },
+        {
+         "dx": 0.097947694,
+         "dy": -0.082529467,
+         "d": 0.128081472,
+         "target": [
+          487152.551456849,
+          4420263.343592405
+         ]
+        }
+       ],
+       "control": 8,
+       "checks": 1,
+       "raster": {
+        "affine": [
+         487101.5,
+         0.5,
+         0.0,
+         4420306.5,
+         0.0,
+         -0.5
+        ],
+        "width": 349,
+        "height": 271,
+        "bands": 4,
+        "sample": "u8",
+        "file": "$fixture:raster/v1/files/gray-lzw-strips-oturtulmus.tif",
+        "srid": 5255,
+        "style": {
+         "render": "rgb",
+         "bands": [
+          1,
+          2,
+          3,
+          4
+         ]
+        },
+        "georef": {
+         "method": "projective",
+         "points": [
+          {
+           "pixel": [
+            33.3,
+            25.7
+           ],
+           "target": [
+            444369.652,
+            4420479.01
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            25.7
+           ],
+           "target": [
+            444435.166,
+            4420481.599
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            25.7
+           ],
+           "target": [
+            444501.638,
+            4420483.799
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            128.5
+           ],
+           "target": [
+            444371.688,
+            4420428.12
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            128.5
+           ],
+           "target": [
+            444437.84,
+            4420430.513
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            128.5
+           ],
+           "target": [
+            444504.953,
+            4420432.902
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            231.3
+           ],
+           "target": [
+            444373.719,
+            4420376.59
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            231.3
+           ],
+           "target": [
+            444440.511,
+            4420378.788
+           ]
+          },
+          {
+           "pixel": [
+            99.9,
+            77.1
+           ],
+           "target": [
+            444403.422,
+            4420454.979
+           ],
+           "check": true
+          }
+         ],
+         "source": {
+          "width": 333,
+          "height": 257,
+          "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+          "digest": "41cc170e04ce53d7856af4f03080739dd09f69af21da91007e8ba58b01c3336e"
+         },
+         "m0": 0.130659789,
+         "checkRmse": 0.128081472,
+         "checkMax": 0.128081472,
+         "output": {
+          "affine": [
+           487101.5,
+           0.5,
+           0.0,
+           4420306.5,
+           0.0,
+           -0.5
+          ],
+          "width": 349,
+          "height": 271,
+          "pixel": 0.5
+         },
+         "crs": "PROJCS[\"TUREF / TM 33.5 yerel\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",33.5],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]"
+        }
+       },
+       "written": "$fixture:raster/v1/files/gray-lzw-strips-oturtulmus.tif",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-05,
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan: polinom 2, WKT 2 tanımı, 0,6 m piksel",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "poly2",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         408492.196,
+         4419839.013
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         408557.677,
+         4419842.152
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         408624.119,
+         4419844.909
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         408494.658,
+         4419788.148
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         408560.779,
+         4419791.097
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         128.5
+        ],
+        "target": [
+         408627.861,
+         4419794.049
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         231.3
+        ],
+        "target": [
+         408497.122,
+         4419736.644
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         231.3
+        ],
+        "target": [
+         408563.884,
+         4419739.403
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         231.3
+        ],
+        "target": [
+         408631.604,
+         4419742.548
+        ]
+       },
+       {
+        "pixel": [
+         99.9,
+         77.1
+        ],
+        "target": [
+         408526.161,
+         4419815.27
+        ],
+        "check": true
+       }
+      ],
+      "crs": "PROJCRS[\"Belediye TM\",BASEGEOGCRS[\"TUREF\",DATUM[\"Turkish National Reference Frame\",ELLIPSOID[\"GRS 1980\",6378137,298.257222101,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"Transverse Mercator\",METHOD[\"Transverse Mercator\"],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],PARAMETER[\"Longitude of natural origin\",32.75,ANGLEUNIT[\"degree\",0.0174532925199433]],PARAMETER[\"Scale factor at natural origin\",0.9999,SCALEUNIT[\"unity\",1]],PARAMETER[\"False easting\",400000,LENGTHUNIT[\"metre\",1]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1]]],CS[Cartesian,2],AXIS[\"easting\",east,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"northing\",north,ORDER[2],LENGTHUNIT[\"metre\",1]]]",
+      "pixel": 0.6
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "residuals": [
+        {
+         "dx": -7.1138e-05,
+         "dy": 0.063895813,
+         "d": 0.063895853,
+         "target": [
+          487118.649155409,
+          4420287.184359656
+         ]
+        },
+        {
+         "dx": -2.5342e-05,
+         "dy": -0.128124506,
+         "d": 0.128124509,
+         "target": [
+          487184.145311486,
+          4420290.140310916
+         ]
+        },
+        {
+         "dx": 9.648e-05,
+         "dy": 0.064228693,
+         "d": 0.064228765,
+         "target": [
+          487250.601489053,
+          4420292.711533943
+         ]
+        },
+        {
+         "dx": 6.22e-07,
+         "dy": 0.000222225,
+         "d": 0.000222226,
+         "target": [
+          487120.968967999,
+          4420236.307519515
+         ]
+        },
+        {
+         "dx": 0.00033399,
+         "dy": 0.00022131,
+         "d": 0.000400659,
+         "target": [
+          487187.104654112,
+          4420239.071662001
+         ]
+        },
+        {
+         "dx": -0.000334613,
+         "dy": -0.000443535,
+         "d": 0.000555598,
+         "target": [
+          487254.201439713,
+          4420241.836113703
+         ]
+        },
+        {
+         "dx": 7.0516e-05,
+         "dy": -0.064118038,
+         "d": 0.064118077,
+         "target": [
+          487123.288992907,
+          4420184.791611761
+         ]
+        },
+        {
+         "dx": -0.000308649,
+         "dy": 0.127903196,
+         "d": 0.127903568,
+         "target": [
+          487190.065209162,
+          4420187.363942729
+         ]
+        },
+        {
+         "dx": 0.000238133,
+         "dy": -0.063785158,
+         "d": 0.063785603,
+         "target": [
+          487257.800596987,
+          4420190.31962857
+         ]
+        },
+        {
+         "dx": 0.046068095,
+         "dy": -0.103917672,
+         "d": 0.113671245,
+         "target": [
+          487152.550975193,
+          4420263.34394553
+         ]
+        }
+       ],
+       "control": 9,
+       "checks": 1,
+       "raster": {
+        "affine": [
+         487101.6,
+         0.6,
+         0.0,
+         4420306.2,
+         0.0,
+         -0.6
+        ],
+        "width": 291,
+        "height": 226,
+        "bands": 4,
+        "sample": "u8",
+        "file": "$fixture:raster/v1/files/gray-lzw-strips-oturtulmus.tif",
+        "srid": 5255,
+        "style": {
+         "render": "rgb",
+         "bands": [
+          1,
+          2,
+          3,
+          4
+         ]
+        },
+        "georef": {
+         "method": "poly2",
+         "points": [
+          {
+           "pixel": [
+            33.3,
+            25.7
+           ],
+           "target": [
+            408492.196,
+            4419839.013
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            25.7
+           ],
+           "target": [
+            408557.677,
+            4419842.152
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            25.7
+           ],
+           "target": [
+            408624.119,
+            4419844.909
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            128.5
+           ],
+           "target": [
+            408494.658,
+            4419788.148
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            128.5
+           ],
+           "target": [
+            408560.779,
+            4419791.097
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            128.5
+           ],
+           "target": [
+            408627.861,
+            4419794.049
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            231.3
+           ],
+           "target": [
+            408497.122,
+            4419736.644
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            231.3
+           ],
+           "target": [
+            408563.884,
+            4419739.403
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            231.3
+           ],
+           "target": [
+            408631.604,
+            4419742.548
+           ]
+          },
+          {
+           "pixel": [
+            99.9,
+            77.1
+           ],
+           "target": [
+            408526.161,
+            4419815.27
+           ],
+           "check": true
+          }
+         ],
+         "source": {
+          "width": 333,
+          "height": 257,
+          "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+          "digest": "41cc170e04ce53d7856af4f03080739dd09f69af21da91007e8ba58b01c3336e"
+         },
+         "m0": 0.090520234,
+         "checkRmse": 0.113671245,
+         "checkMax": 0.113671245,
+         "output": {
+          "affine": [
+           487101.6,
+           0.6,
+           0.0,
+           4420306.2,
+           0.0,
+           -0.6
+          ],
+          "width": 291,
+          "height": 226,
+          "pixel": 0.6
+         },
+         "crs": "PROJCRS[\"Belediye TM\",BASEGEOGCRS[\"TUREF\",DATUM[\"Turkish National Reference Frame\",ELLIPSOID[\"GRS 1980\",6378137,298.257222101,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"Transverse Mercator\",METHOD[\"Transverse Mercator\"],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],PARAMETER[\"Longitude of natural origin\",32.75,ANGLEUNIT[\"degree\",0.0174532925199433]],PARAMETER[\"Scale factor at natural origin\",0.9999,SCALEUNIT[\"unity\",1]],PARAMETER[\"False easting\",400000,LENGTHUNIT[\"metre\",1]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1]]],CS[Cartesian,2],AXIS[\"easting\",east,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"northing\",north,ORDER[2],LENGTHUNIT[\"metre\",1]]]"
+        }
+       },
+       "written": "$fixture:raster/v1/files/gray-lzw-strips-oturtulmus.tif",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-05,
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan: ince plaka, PROJ dizesi; kontrol noktalarından tam geçer",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "thinPlate",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         401619.898,
+         4420910.257
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         401685.431,
+         4420912.48
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         401751.919,
+         4420914.307
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         401621.649,
+         4420859.352
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         401687.819,
+         4420861.376
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         128.5
+        ],
+        "target": [
+         401754.95,
+         4420863.388
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         231.3
+        ],
+        "target": [
+         401623.392,
+         4420807.807
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         231.3
+        ],
+        "target": [
+         401690.2,
+         4420809.632
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         231.3
+        ],
+        "target": [
+         401757.973,
+         4420811.829
+        ]
+       },
+       {
+        "pixel": [
+         233.1,
+         179.9
+        ],
+        "target": [
+         401722.662,
+         4420836.593
+        ],
+        "check": true
+       },
+       {
+        "pixel": [
+         99.9,
+         192.75
+        ],
+        "target": [
+         401655.938,
+         4420828.191
+        ],
+        "check": true
+       }
+      ],
+      "crs": "+proj=tmerc +lat_0=0 +lon_0=34 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "residuals": [
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487118.648656088,
+          4420287.183861083
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487184.144985256,
+          4420290.1403519
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487250.600586758,
+          4420292.711609344
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487120.969412834,
+          4420236.307620805
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487187.104856668,
+          4420239.072273921
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487254.201271603,
+          4420241.835691787
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487123.28933266,
+          4420184.791405555
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487190.064890947,
+          4420187.364231942
+         ]
+        },
+        {
+         "dx": 0.0,
+         "dy": 0.0,
+         "d": 0.0,
+         "target": [
+          487257.801119549,
+          4420190.319798804
+         ]
+        },
+        {
+         "dx": 0.04628348,
+         "dy": 0.000364825,
+         "d": 0.046284918,
+         "target": [
+          487222.219135843,
+          4420214.68391941
+         ]
+        },
+        {
+         "dx": -0.04721089,
+         "dy": -0.075297749,
+         "d": 0.088874176,
+         "target": [
+          487155.601211375,
+          4420205.536211545
+         ]
+        }
+       ],
+       "control": 9,
+       "checks": 2,
+       "raster": {
+        "affine": [
+         487101.304183524,
+         0.499930008,
+         0.0,
+         4420306.142312981,
+         0.0,
+         -0.499930008
+        ],
+        "width": 349,
+        "height": 270,
+        "bands": 4,
+        "sample": "u8",
+        "file": "$fixture:raster/v1/files/gray-lzw-strips-oturtulmus.tif",
+        "srid": 5255,
+        "style": {
+         "render": "rgb",
+         "bands": [
+          1,
+          2,
+          3,
+          4
+         ]
+        },
+        "georef": {
+         "method": "thinPlate",
+         "points": [
+          {
+           "pixel": [
+            33.3,
+            25.7
+           ],
+           "target": [
+            401619.898,
+            4420910.257
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            25.7
+           ],
+           "target": [
+            401685.431,
+            4420912.48
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            25.7
+           ],
+           "target": [
+            401751.919,
+            4420914.307
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            128.5
+           ],
+           "target": [
+            401621.649,
+            4420859.352
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            128.5
+           ],
+           "target": [
+            401687.819,
+            4420861.376
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            128.5
+           ],
+           "target": [
+            401754.95,
+            4420863.388
+           ]
+          },
+          {
+           "pixel": [
+            33.3,
+            231.3
+           ],
+           "target": [
+            401623.392,
+            4420807.807
+           ]
+          },
+          {
+           "pixel": [
+            166.5,
+            231.3
+           ],
+           "target": [
+            401690.2,
+            4420809.632
+           ]
+          },
+          {
+           "pixel": [
+            299.7,
+            231.3
+           ],
+           "target": [
+            401757.973,
+            4420811.829
+           ]
+          },
+          {
+           "pixel": [
+            233.1,
+            179.9
+           ],
+           "target": [
+            401722.662,
+            4420836.593
+           ],
+           "check": true
+          },
+          {
+           "pixel": [
+            99.9,
+            192.75
+           ],
+           "target": [
+            401655.938,
+            4420828.191
+           ],
+           "check": true
+          }
+         ],
+         "source": {
+          "width": 333,
+          "height": 257,
+          "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+          "digest": "41cc170e04ce53d7856af4f03080739dd09f69af21da91007e8ba58b01c3336e"
+         },
+         "checkRmse": 0.070855179,
+         "checkMax": 0.088874176,
+         "output": {
+          "affine": [
+           487101.304183524,
+           0.499930008,
+           0.0,
+           4420306.142312981,
+           0.0,
+           -0.499930008
+          ],
+          "width": 349,
+          "height": 270,
+          "pixel": 0.499930008
+         },
+         "crs": "+proj=tmerc +lat_0=0 +lon_0=34 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
+        }
+       },
+       "written": "$fixture:raster/v1/files/gray-lzw-strips-oturtulmus.tif",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 0.001,
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: hem EPSG kodu hem tanım",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         487117.401,
+         4420287.792
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         487184.017,
+         4420290.46
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         487250.633,
+         4420293.128
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         487120.489,
+         4420236.404
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         487187.105,
+         4420239.072
+        ],
+        "check": true
+       }
+      ],
+      "srid": 4326,
+      "crs": "PROJCS[\"TUREF / TM 33.5 yerel\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",33.5],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Hedeflerin sistemi ya EPSG kodu (srid) ya tanım metni (crs) olarak verilir, ikisi birden değil.",
+       "path": "crs"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: boş tanım",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         487117.401,
+         4420287.792
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         487184.017,
+         4420290.46
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         487250.633,
+         4420293.128
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         487120.489,
+         4420236.404
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         487187.105,
+         4420239.072
+        ],
+        "check": true
+       }
+      ],
+      "crs": "   "
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Hedeflerin sisteminin tanımı boş olmamalı, en çok 16 KB olmalı.",
+       "path": "crs"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: 16 KB'tan uzun tanım",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         487117.401,
+         4420287.792
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         487184.017,
+         4420290.46
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         487250.633,
+         4420293.128
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         487120.489,
+         4420236.404
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         487187.105,
+         4420239.072
+        ],
+        "check": true
+       }
+      ],
+      "crs": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Hedeflerin sisteminin tanımı boş olmamalı, en çok 16 KB olmalı.",
+       "path": "crs"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: WKT de PROJ dizesi de olmayan metin",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         487117.401,
+         4420287.792
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         487184.017,
+         4420290.46
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         487250.633,
+         4420293.128
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         487120.489,
+         4420236.404
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         487187.105,
+         4420239.072
+        ],
+        "check": true
+       }
+      ],
+      "crs": "Türkiye'nin yerel sistemi"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_text_unreadable",
+       "message": "Hedeflerin sisteminin tanımı okunamadı. Metin okunamadı: WKT (PROJCS[…], GEOGCS[…], PROJCRS[…] …) ya da +proj= ile başlayan bir PROJ dizesi yapıştırın.",
+       "path": "crs"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: Lambert izdüşümü okunmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         487117.401,
+         4420287.792
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         487184.017,
+         4420290.46
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         487250.633,
+         4420293.128
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         487120.489,
+         4420236.404
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         487187.105,
+         4420239.072
+        ],
+        "check": true
+       }
+      ],
+      "crs": "+proj=lcc +lat_1=36 +lat_2=42 +lat_0=39 +lon_0=35 +x_0=0 +y_0=0 +ellps=GRS80 +units=m"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_text_unreadable",
+       "message": "$any",
+       "path": "crs"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: ayak birimli tanım okunmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         487117.401,
+         4420287.792
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         487184.017,
+         4420290.46
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         487250.633,
+         4420293.128
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         487120.489,
+         4420236.404
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         487187.105,
+         4420239.072
+        ],
+        "check": true
+       }
+      ],
+      "crs": "+proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +units=us-ft"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_text_unreadable",
+       "message": "$any",
+       "path": "crs"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: yerel projede tanımla verilen hedefler",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         487117.401,
+         4420287.792
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         487184.017,
+         4420290.46
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         487250.633,
+         4420293.128
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         487120.489,
+         4420236.404
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         487187.105,
+         4420239.072
+        ],
+        "check": true
+       }
+      ],
+      "crs": "PROJCS[\"TUREF / TM 33.5 yerel\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",33.5],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "target_not_converted",
+       "message": "Hedefler “TUREF / TM 33.5 yerel” sisteminde; projenin koordinat sistemi yok (yerel proje). Hedefleri projenin koordinatlarıyla verin.",
+       "path": "crs"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tanım kayıttaki bir sistem ama yerel projede",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Oturtma",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "pafta",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.25,
+       0.0,
+       4420100.0,
+       0.0,
+       -0.25
+      ],
+      "width": 333,
+      "height": 257,
+      "bands": 1,
+      "sample": "u8",
+      "file": "$fixture:raster/v1/files/gray-lzw-strips.tif",
+      "srid": 0,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "id": 1
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "method": "affine",
+      "points": [
+       {
+        "pixel": [
+         33.3,
+         25.7
+        ],
+        "target": [
+         487117.401,
+         4420287.792
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         25.7
+        ],
+        "target": [
+         487184.017,
+         4420290.46
+        ]
+       },
+       {
+        "pixel": [
+         299.7,
+         25.7
+        ],
+        "target": [
+         487250.633,
+         4420293.128
+        ]
+       },
+       {
+        "pixel": [
+         33.3,
+         128.5
+        ],
+        "target": [
+         487120.489,
+         4420236.404
+        ]
+       },
+       {
+        "pixel": [
+         166.5,
+         128.5
+        ],
+        "target": [
+         487187.105,
+         4420239.072
+        ],
+        "check": true
+       }
+      ],
+      "crs": "PROJCS[\"TUREF / TM30\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",30],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "target_not_converted",
+       "message": "Hedefler EPSG:5254 sisteminde; projenin koordinat sistemi yok (yerel proje). Hedefleri projenin koordinatlarıyla verin.",
+       "path": "crs"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

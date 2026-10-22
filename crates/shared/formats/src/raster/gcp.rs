@@ -121,9 +121,16 @@ fn text(v: f64) -> String {
     }
 }
 
-/// The points as a `.points` file, with each point's residual (the transformed pixel less its target) when known.
-pub fn write(points: &[GeorefPoint], residuals: &[Option<[f64; 2]>]) -> String {
-    let mut out = String::from(HEADER);
+/// The points as a `.points` file, with each point's residual (the transformed pixel less its target) when known; the
+/// targets' system, when given, a `#CRS:` line first as QGIS writes it, the definition on one line (docs/adr/0594 §2).
+pub fn write(points: &[GeorefPoint], residuals: &[Option<[f64; 2]>], crs: Option<&str>) -> String {
+    let mut out = String::new();
+    if let Some(crs) = crs.filter(|c| !c.trim().is_empty()) {
+        out.push_str("#CRS: ");
+        out.push_str(&crs.split_whitespace().collect::<Vec<_>>().join(" "));
+        out.push('\n');
+    }
+    out.push_str(HEADER);
     out.push('\n');
     for (k, p) in points.iter().enumerate() {
         let (dx, dy) = residuals

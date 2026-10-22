@@ -123,6 +123,8 @@ pub enum Event {
     Method(GeorefMethod),
     Pick(usize, Side),
     Srid(String),
+    /// The targets' definition dropped: the EPSG field (or the project's system) again.
+    ClearCrs,
     Pixel(String),
     Nearest(bool),
     World(bool),
@@ -148,6 +150,9 @@ pub struct Form {
     pub rows: Vec<Row>,
     /// The targets' system, an EPSG code (empty: the project's).
     pub srid: String,
+    /// The targets' system as a definition (a `.points` file's `#CRS:` line, a record's), when it is no EPSG code
+    /// (docs/adr/0594 §3); the EPSG field is empty then.
+    pub crs: Option<String>,
     /// The output's pixel as typed (empty: the transform's mean scale).
     pub pixel: String,
     pub nearest: bool,
@@ -171,6 +176,7 @@ impl Default for Form {
             method: GeorefMethod::Affine,
             rows: vec![Default::default(); 4],
             srid: String::new(),
+            crs: None,
             pixel: String::new(),
             nearest: false,
             world: false,
@@ -187,6 +193,11 @@ impl Default for Form {
 }
 
 impl Table for Form {
+    /// The targets' columns wider: a northing to the millimetre is eleven figures.
+    fn portion(&self, col: usize) -> u16 {
+        if matches!(col, 5 | 6) { 3 } else { 2 }
+    }
+
     fn columns(&self) -> usize {
         COLUMNS.len()
     }
@@ -302,6 +313,7 @@ fn input_of_record(uid: String, g: &RasterGeoref) -> RastersGeoref {
         method: g.method,
         points: g.points.clone(),
         srid: g.srid,
+        crs: g.crs.clone(),
         pixel: g.output.as_ref().map(|o| o.pixel),
         resampling: g.output.as_ref().map_or(RasterResampling::Bilinear, |o| o.resampling),
         output: None,
@@ -328,6 +340,7 @@ impl Form {
             method: self.method,
             points: self.points(),
             srid: self.srid.trim().parse::<u32>().ok().filter(|s| *s > 0),
+            crs: self.crs.clone(),
             pixel: read_number(&self.pixel),
             resampling: if self.nearest { RasterResampling::Nearest } else { RasterResampling::Bilinear },
             output: None,
@@ -365,6 +378,7 @@ impl Form {
             None if self.opened.is_some() && self.opened != self.raster => {
                 self.rows = vec![Default::default(); 4];
                 self.srid.clear();
+                self.crs = None;
                 self.pixel.clear();
             }
             None => {}
@@ -372,11 +386,21 @@ impl Form {
         self.opened = self.raster;
     }
 
+    /// The targets' definition's name, when one is given.
+    fn crs_name(&self) -> Option<String> {
+        let text = self.crs.as_deref()?;
+        Some(
+            kentos_geometry_core::crs::text::read_text(text)
+                .map_or_else(|_| "okunamayan tanım".to_owned(), |r| r.name),
+        )
+    }
+
     /// The rows, method and options of a record.
     pub fn load(&mut self, g: &RasterGeoref) {
         self.method = g.method;
         self.rows = g.points.iter().map(row_of).collect();
         self.srid = g.srid.map(|s| s.to_string()).unwrap_or_default();
+        self.crs = g.crs.clone();
         self.pixel = g.output.as_ref().map(|o| number(o.pixel)).unwrap_or_default();
         self.nearest = g.output.as_ref().is_some_and(|o| o.resampling == RasterResampling::Nearest);
     }
@@ -500,6 +524,15 @@ impl Form {
                 if let Some(srid) = f.srid {
                     out.push((Line::Info, format!("Hedefler EPSG:{srid} sisteminden projenin sistemine çevrildi.")));
                 }
+                if f.crs.is_some() {
+                    out.push((
+                        Line::Info,
+                        format!(
+                            "Hedefler “{}” tanımından projenin sistemine çevrildi.",
+                            self.crs_name().unwrap_or_default()
+                        ),
+                    ));
+                }
                 if let Some(grid) = &f.grid {
                     out.push((
                         Line::Info,
@@ -599,7 +632,18 @@ impl Form {
         ]
         .spacing(8)
         .align_y(iced::Alignment::Center);
-        let mut body = column![row![container(raster).width(Fill), srid].spacing(16), method].spacing(16);
+        let mut body = column![row![container(raster).width(Fill), srid].spacing(16)].spacing(16);
+        if let Some(name) = self.crs_name() {
+            body = body.push(
+                row![
+                    label::body(format!("Hedeflerin sistemi: {name} (tanım)")).width(Fill),
+                    words::ghost("Kaldır", Some(raster_fit_event(Event::ClearCrs)))
+                ]
+                .spacing(8)
+                .align_y(iced::Alignment::Center),
+            );
+        }
+        body = body.push(method);
         body = body.push(column![files, table].spacing(8));
         if let Some(s) = summary(self.summary_lines(model)) {
             body = body.push(s);
@@ -696,7 +740,14 @@ impl App {
                 self.calc.raster_fit.picking = Some((row, side));
                 self.calc_pick(TITLE, label);
             }
-            Event::Srid(t) => self.calc.raster_fit.srid = t,
+            Event::Srid(t) => {
+                // A code typed takes the place of a definition.
+                if !t.trim().is_empty() {
+                    self.calc.raster_fit.crs = None;
+                }
+                self.calc.raster_fit.srid = t;
+            }
+            Event::ClearCrs => self.calc.raster_fit.crs = None,
             Event::Pixel(t) => self.calc.raster_fit.pixel = t,
             Event::Nearest(on) => self.calc.raster_fit.nearest = on,
             Event::World(on) => self.calc.raster_fit.world = on,
@@ -778,16 +829,30 @@ impl App {
                 form.rows = r.points.iter().map(row_of).collect();
                 form.status = None;
                 let n = r.points.len();
+                // The `#CRS:` line is the targets' system (docs/adr/0594 §3): a registered system exactly is its code.
+                let said = match r.crs.as_deref().map(kentos_geometry_core::crs::text::read_text) {
+                    None => String::new(),
+                    Some(Ok(read)) => match read.registry {
+                        Some((srid, true)) => {
+                            form.srid = srid.to_string();
+                            form.crs = None;
+                            format!(" Hedeflerin sistemi dosyadan: EPSG:{srid}.")
+                        }
+                        _ => {
+                            form.srid.clear();
+                            form.crs = r.crs.clone();
+                            format!(" Hedeflerin sistemi dosyanın tanımı: {}.", read.name)
+                        }
+                    },
+                    Some(Err(_)) => {
+                        " Dosyanın koordinat sistemi satırı okunamadı; hedeflerin sistemini pencerede verin.".to_owned()
+                    }
+                };
                 self.say(
                     Level::Info,
                     format!(
-                        "{TITLE}: “{}” dosyasından {n} nokta alındı.{}",
+                        "{TITLE}: “{}” dosyasından {n} nokta alındı.{said}",
                         path.file_name().map_or_else(String::new, |n| n.to_string_lossy().into_owned()),
-                        if r.crs.is_some() {
-                            " Dosyanın koordinat sistemi satırı okunmadı; hedeflerin sistemini pencerede verin."
-                        } else {
-                            ""
-                        }
                     ),
                 );
             }
@@ -824,7 +889,14 @@ impl App {
             Some(Ok(f)) => f.residuals.iter().map(|v| Some([v.dx?, v.dy?])).collect(),
             _ => vec![None; points.len()],
         };
-        match std::fs::write(&path, gcp::write(&points, &residuals)) {
+        // The targets' system as QGIS reads it (docs/adr/0594 §2): the definition, the code's WKT, the project's.
+        let crs = form.crs.clone().or_else(|| {
+            let srid = form.srid.trim().parse::<u32>().ok().filter(|s| *s > 0).or_else(|| {
+                self.document.as_ref().map(|d| d.model.settings().srid).filter(|s| *s > 0)
+            })?;
+            kentos_project::crs::system(srid).and_then(kentos_project::wkt2::wkt2)
+        });
+        match std::fs::write(&path, gcp::write(&points, &residuals, crs.as_deref())) {
             Ok(()) => self.say(
                 Level::Info,
                 format!("{TITLE}: {} nokta “{}” dosyasına yazıldı.", points.len(), path.display()),

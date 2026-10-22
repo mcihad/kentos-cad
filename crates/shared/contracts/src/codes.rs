@@ -1696,6 +1696,8 @@ codes! {
     NOT_A_RASTER = "not_a_raster", Failed, false, "Verilen nesne bir raster değil.";
     /// A point's numbers, name or roles are not a point's.
     INVALID_CONTROL_POINT = "invalid_control_point", Failed, false, "Noktanın pikseli ya da hedefi sonlu değil, adı kurala uymuyor ya da kullanılmayan nokta denetim noktası yapılmış.";
+    /// The targets' system given as a text is not one KentOS reads (docs/adr/0594 §1).
+    CRS_TEXT_UNREADABLE = "crs_text_unreadable", Failed, false, "Koordinat sistemi tanımı okunamadı: WKT ya da PROJ dizesi değil ya da KentOS'un desteklemediği bir izdüşüm.";
     /// The targets' system does not reach the project's.
     TARGET_NOT_CONVERTED = "target_not_converted", Failed, false, "Hedef koordinatları projenin sistemine çevrilemedi: projenin sistemi yok ya da iki sistem arasında yol yok.";
     /// Fewer control points than the transform needs.

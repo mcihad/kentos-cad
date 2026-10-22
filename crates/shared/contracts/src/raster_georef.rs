@@ -20,6 +20,8 @@ pub const CAD_RASTERS_GEOREF_VERSION: u32 = 1;
 pub const MAX_GEOREF_POINTS: usize = 1000;
 /// The longest a point's name may be, in letters.
 pub const MAX_GEOREF_NAME: usize = 64;
+/// The longest definition of the targets' system a record keeps (docs/adr/0594 §1): a WKT is a few kilobytes.
+pub const MAX_GEOREF_CRS: usize = 16 * 1024;
 
 /// A transform from the source's pixels to the drawing (docs/adr/0204 §6).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -228,6 +230,11 @@ pub struct RasterGeoref {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
+    /// The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a
+    /// `.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub crs: Option<String>,
     pub source: GeorefSource,
     /// The control points' m0 (the project's length unit); none for the thin plate or without redundancy.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -247,6 +254,24 @@ pub struct RasterGeoref {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub output: Option<GeorefOutput>,
+}
+
+/// Why the targets' system is not given rightly: an EPSG code or a definition, not both; a definition not empty and not
+/// longer than [`MAX_GEOREF_CRS`].
+pub fn crs_problem(srid: Option<u32>, crs: Option<&str>) -> Option<String> {
+    let crs = crs?;
+    if srid.is_some() {
+        return Some(
+            "Hedeflerin sistemi ya EPSG kodu (srid) ya tanım metni (crs) olarak verilir, ikisi birden değil.".into(),
+        );
+    }
+    if crs.trim().is_empty() || crs.len() > MAX_GEOREF_CRS {
+        return Some(format!(
+            "Hedeflerin sisteminin tanımı boş olmamalı, en çok {} KB olmalı.",
+            MAX_GEOREF_CRS / 1024
+        ));
+    }
+    None
 }
 
 fn digest_problem(d: &Option<String>) -> Option<String> {
@@ -289,6 +314,9 @@ impl RasterGeoref {
         }
         if self.srid == Some(0) {
             return Some("Hedeflerin sistemi verildiyse bir EPSG kodu olmalı.".into());
+        }
+        if let Some(why) = crs_problem(self.srid, self.crs.as_deref()) {
+            return Some(why);
         }
         let s = &self.source;
         if !(1..=MAX_RASTER_SIDE).contains(&s.width) || !(1..=MAX_RASTER_SIDE).contains(&s.height) {
@@ -413,6 +441,12 @@ pub struct RastersGeoref {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
+    /// The targets' system as a WKT (1 or 2) or a PROJ string when it is no EPSG code (docs/adr/0594 §1): a `.points`
+    /// file's `#CRS:` line, a provider's or a project's own definition. One that is a registered system exactly is
+    /// recorded as its EPSG code.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub crs: Option<String>,
     /// A resampled output's pixel side; none: the transform's mean scale at the control points.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
