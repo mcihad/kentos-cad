@@ -93,6 +93,13 @@ fn conflict(code: &str, message: impl Into<String>, path: &str) -> Stop {
     Stop::conflict(error(code, message.into(), Some(path.into())))
 }
 
+/// A conflict about some objects: their lasting ids with it (docs/adr/0582 §2).
+fn conflict_on(code: &str, message: impl Into<String>, path: &str, uids: &[Uuid]) -> Stop {
+    let mut e = error(code, message.into(), Some(path.into()));
+    e.uids = uids.iter().map(Uuid::to_string).collect();
+    Stop::conflict(e)
+}
+
 fn completed<T>(r: Result<(T, Vec<CommandWarning>), Stop>) -> CommandResult<T> {
     match r {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
@@ -430,6 +437,29 @@ pub(crate) fn provider_stop(e: provider::ProviderError, address: &str, at: At<'_
             format!("{address} veritabanına yazılamadı, hiçbir şey değişmedi: {why}"),
             at.table,
         ),
+        provider::ProviderError::RowsChanged(keys) => conflict(
+            codes::SOURCE_CHANGED,
+            format!(
+                "{address} tablosunun {} satırını katman onlarla son eşleştiğinden beri başka biri değiştirdi; hiçbir şey yazılmadı.",
+                keys.len()
+            ),
+            at.table,
+        ),
+        provider::ProviderError::NoKey(name) => refuse(
+            codes::NO_ROW_KEY,
+            format!("“{name}” view ya da sorgusunda tam sayı bir anahtar sütunu (fid, id, gid ya da ogc_fid) yok; sorguya ekleyin."),
+            at.table,
+        ),
+        provider::ProviderError::Unreadable(why) => refuse(
+            codes::IMPORT_UNREADABLE,
+            format!("{address} veritabanının sorgusu okunamadı: {why}"),
+            at.table,
+        ),
+        provider::ProviderError::KeyRepeats(name, key) => refuse(
+            codes::ROW_KEY_NOT_UNIQUE,
+            format!("“{name}” view ya da sorgusunda {key} anahtarı birden çok satırda; anahtar her satırda farklı olmalı."),
+            at.table,
+        ),
     }
 }
 
@@ -443,10 +473,15 @@ pub(crate) fn database_name(address: &str) -> &str {
     tail.split_once('?').map_or(tail, |(d, _)| d)
 }
 
-fn load_database(address: &str, table: &str, at: At<'_>) -> Result<Stored, Stop> {
+fn load_database(
+    address: &str,
+    table: &str,
+    at: At<'_>,
+    area: Option<[f64; 4]>,
+) -> Result<Stored, Stop> {
     let p = database_provider(at.address)?;
     let r = p
-        .read(address, table)
+        .read(address, table, area)
         .map_err(|e| provider_stop(e, address, at))?;
     let database = database_name(address).to_owned();
     let name = r.layer.name.clone();
@@ -460,6 +495,45 @@ fn load_database(address: &str, table: &str, at: At<'_>) -> Result<Stored, Stop>
         writable: r.writable,
         sha256: r.revision,
         ..stored_of(r.layer, &mut raw, t)
+    })
+}
+
+/// A database table's area in its own system (docs/adr/0582 §1), its shape asked first: a table without geometry has
+/// no area, a system the project cannot reach none either.
+fn database_area(
+    doc: &Document,
+    address: &str,
+    table: &str,
+    extent: Option<[f64; 4]>,
+) -> Result<Option<[f64; 4]>, Stop> {
+    let at = At {
+        address: "edit.path",
+        table: "edit.table",
+    };
+    let p = database_provider(at.address)?;
+    let shape = p
+        .describe(address, table)
+        .map_err(|e| provider_stop(e, address, at))?;
+    if shape.layer.geometry.is_none() {
+        return Err(refuse(
+            codes::INVALID_EXTENT,
+            format!("“{table}” tablosunun geometrisi yok; alan sınırı geometrili tabloda olur."),
+            "edit.extent",
+        ));
+    }
+    let mover = mover_for(doc, shape.srid).map_err(|why| {
+        refuse(
+            codes::CRS_MISMATCH,
+            format!("“{table}” bağlanamaz: {why}."),
+            "edit.reproject",
+        )
+    })?;
+    table_area(extent, mover.as_ref()).map_err(|()| {
+        refuse(
+            codes::INVALID_EXTENT,
+            format!("Alan sınırı “{table}” tablosunun sistemine çevrilemiyor."),
+            "edit.extent",
+        )
     })
 }
 
@@ -507,7 +581,7 @@ fn load_at(
 ) -> Result<Stored, Stop> {
     match origin {
         Origin::File(path) => load_or_refuse(path, table, at.table, area),
-        Origin::Database(address) => load_database(address, table, at),
+        Origin::Database(address) => load_database(address, table, at, area),
     }
 }
 
@@ -661,6 +735,106 @@ fn same_value(a: &Value, b: &Value, kind: Option<&gpkg::ColumnKind>) -> bool {
         Some(k) => gp::same_cell(a, b, k),
         None => a == b,
     }
+}
+
+/// Keeps of `d` only what the layer changed since its base (docs/adr/0582 §2): a row someone else changed and the
+/// layer did not is left as the table holds it, a row the layer did not change is not written back. Whether the table
+/// holds changes not the layer's; a refusal when an object the layer changed is a row someone else deleted.
+fn mine_only(
+    doc: &Document,
+    layer: &str,
+    stored: &Stored,
+    base: &HashMap<Uuid, base::BaseObj>,
+    d: &mut Diff,
+) -> Result<bool, Stop> {
+    let fid_uid: HashMap<i64, Uuid> = stored.rows.iter().map(|(u, (f, ..))| (*f, *u)).collect();
+    let now: HashMap<Uuid, &kentos_commands::Entity> = doc.by_layer_with_uids(layer).collect();
+    let mine = |u: &Uuid| match (now.get(u), base.get(u)) {
+        (Some(e), Some(b)) => base::hash_of(e) != b.layer,
+        (None, Some(_)) | (Some(_), None) => true,
+        (None, None) => false,
+    };
+    let mut others = false;
+    d.update.retain(|(fid, _)| {
+        let keep = fid_uid.get(fid).is_some_and(&mine);
+        others |= !keep;
+        keep
+    });
+    d.delete.retain(|fid| {
+        let keep = fid_uid
+            .get(fid)
+            .is_some_and(|u| base.contains_key(u) && mine(u));
+        others |= !keep;
+        keep
+    });
+    let mut gone = Vec::new();
+    d.insert.retain(|(uid, _)| {
+        let Ok(u) = Uuid::parse_str(uid) else {
+            return true;
+        };
+        match base.get(&u) {
+            None => true,
+            Some(_) if mine(&u) => {
+                gone.push(u);
+                false
+            }
+            Some(_) => {
+                others = true;
+                false
+            }
+        }
+    });
+    if !gone.is_empty() {
+        return Err(conflict_on(
+            codes::SOURCE_CHANGED,
+            format!(
+                "Katmanda değiştirilen {} nesnenin satırını başka biri tablodan sildi; hiçbir şey yazılmadı. Tablodan okuyun (direction read) ya da o nesnelerdeki değişikliği bırakın.",
+                gone.len()
+            ),
+            "layer",
+            &gone,
+        ));
+    }
+    Ok(others)
+}
+
+/// The keys of `keys` whose rows are not as the base's table side holds them: changed, or gone (docs/adr/0582 §2).
+fn rows_changed(
+    base: Option<&HashMap<Uuid, base::BaseObj>>,
+    layer: &gpkg::Layer,
+    rows: &[gpkg::Row],
+    keys: &[i64],
+    fid_uid: &HashMap<i64, Uuid>,
+    mover: Option<&Mover>,
+) -> Vec<i64> {
+    let Some(base) = base else {
+        return Vec::new();
+    };
+    let found: HashMap<i64, &gpkg::Row> = rows.iter().map(|r| (r.fid, r)).collect();
+    let mut out = Vec::new();
+    for key in keys {
+        let Some(uid) = fid_uid.get(key) else { continue };
+        let same = found.get(key).is_some_and(|row| {
+            let Ok(t) = gp::table_of_rows(layer, std::slice::from_ref(*row), &HashMap::new(), &|_| *uid)
+            else {
+                return false;
+            };
+            t.objects.into_iter().next().is_some_and(|(_, mut e)| {
+                if let Some(m) = mover
+                    && kentos_formats::reproject::move_entity(&mut e, &m.source, &m.project, &m.choices).is_err()
+                {
+                    return false;
+                }
+                base.get(uid).is_some_and(|b| base::hash_of(&e) == b.table)
+            })
+        });
+        if !same {
+            out.push(*key);
+        }
+    }
+    out.sort_unstable();
+    out.dedup();
+    out
 }
 
 fn diff(doc: &Document, layer: &str, s: &Stored, mover: Option<&Mover>) -> Diff {
@@ -1442,7 +1616,7 @@ fn state_of(doc: &Document, link: &SourceLink, ties: &[relations::Tie]) -> Sourc
         }
         // A database is there when it answers.
         Origin::Database(address) => {
-            let s = load_database(address, &link.table, at_one("")).ok();
+            let s = load_database(address, &link.table, at_one(""), area).ok();
             state.found = s.is_some();
             s
         }
@@ -1619,12 +1793,6 @@ fn link_table(
                 "Var olan katmana bağlamada alan sınırı olmaz: katman tablonun bütün nesnelerini taşır. Yeni katmana bağlayın (layer vermeden).".to_owned()
             })
         });
-        let why = why.or_else(|| {
-            matches!(at, Origin::Database(_)).then(|| {
-                "Veritabanı tablosunda alan sınırı henüz yok; GeoPackage tablosu için verin."
-                    .to_owned()
-            })
-        });
         if let Some(why) = why {
             return Err(refuse(codes::INVALID_EXTENT, why, "edit.extent"));
         }
@@ -1661,6 +1829,14 @@ fn link_table(
             "edit.table",
         ));
     }
+    // A database table bound by an area reads only the area's rows (docs/adr/0582 §1): its shape first, for the
+    // area in its system.
+    let db_area = match at {
+        Origin::Database(address) if extent.is_some() => {
+            database_area(doc, address, table, extent)?
+        }
+        _ => None,
+    };
     // Onto a new layer from a file the import reads the rows; the table's own rows are read only to compare a layer.
     let mut stored = match at {
         Origin::File(p) if layer.is_none() => {
@@ -1673,7 +1849,7 @@ fn link_table(
                 address: "edit.path",
                 table: "edit.table",
             },
-            None,
+            db_area,
         )?,
     };
     let project = doc.settings().srid;
@@ -2041,14 +2217,11 @@ fn change_extent(
     };
     if let Some(e) = &extent {
         let why = kentos_commands::extent_problem(e).map(|w| format!("Alan sınırının {w}."));
-        let why = why.or_else(|| {
-            (link.kind != SourceKind::Geopackage).then(|| {
-                "Veritabanı tablosunda alan sınırı henüz yok; GeoPackage tablosu için verin."
-                    .to_owned()
-            })
-        });
         if let Some(why) = why {
             return Err(refuse(codes::INVALID_EXTENT, why, "edit.extent"));
+        }
+        if let Origin::Database(address) = origin_of(&link) {
+            database_area(doc, address, &link.table, extent)?;
         }
         if let Origin::File(p) = origin_of(&link)
             && p.is_file()
@@ -2415,7 +2588,13 @@ fn sync_run(
                     "layer",
                 ));
             }
-            if stored.sha256 != link.revision {
+            // A database table is written row by row against the layer's base (docs/adr/0582 §2); a file, or a layer
+            // without a base, as a whole against its revision.
+            let rows_base = match source {
+                Origin::Database(_) => base::of(doc, &link),
+                Origin::File(_) => None,
+            };
+            if rows_base.is_none() && stored.sha256 != link.revision {
                 return Err(conflict(
                     codes::SOURCE_CHANGED,
                     format!(
@@ -2425,7 +2604,11 @@ fn sync_run(
                     "layer",
                 ));
             }
-            let d = diff(doc, &link.layer, &stored, mover.as_ref());
+            let mut d = diff(doc, &link.layer, &stored, mover.as_ref());
+            let mut others = stored.sha256 != link.revision;
+            if let Some(b) = &rows_base {
+                others |= mine_only(doc, &link.layer, &stored, b, &mut d)?;
+            }
             if let Some((uid, why)) = &d.mismatch {
                 return Err(refuse(
                     codes::GEOMETRY_MISMATCH,
@@ -2451,6 +2634,16 @@ fn sync_run(
                 warnings.push(CommandWarning {
                     code: codes::EXPORT_LOSSES.into(),
                     message: format!("{}: {}.", link.table, losses.join("; ")),
+                    path: Some("layer".into()),
+                });
+            }
+            if others && rows_base.is_some() {
+                warnings.push(CommandWarning {
+                    code: codes::SOURCE_OTHERS.into(),
+                    message: format!(
+                        "“{}” tablosunda başka birinin değiştirdiği satırlar var; onlara dokunulmadı. Katmana almak için tablodan okuyun (direction read).",
+                        link.table
+                    ),
                     path: Some("layer".into()),
                 });
             }
@@ -2513,10 +2706,38 @@ fn sync_run(
                     // In one transaction, after checking under a lock that the table is still at the revision.
                     Origin::Database(address) => {
                         let p = database_provider("layer")?;
-                        let (_, revision) = p
-                            .edit(address, &link.table, &link.revision, &edits)
-                            .map_err(|e| provider_stop(e, address, at_one("layer")))?;
-                        link.revision = revision;
+                        let fid_uid: HashMap<i64, Uuid> =
+                            stored.rows.iter().map(|(u, (f, ..))| (*f, *u)).collect();
+                        let mut changed: Vec<Uuid> = Vec::new();
+                        let mut check = |layer: &gpkg::Layer, rows: &[gpkg::Row]| {
+                            let mut keys: Vec<i64> = edits.update.iter().map(|(f, _)| *f).collect();
+                            keys.extend(edits.delete.iter().copied());
+                            let bad = rows_changed(rows_base.as_ref(), layer, rows, &keys, &fid_uid, mover.as_ref());
+                            changed = bad.iter().filter_map(|f| fid_uid.get(f).copied()).collect();
+                            if bad.is_empty() { Ok(()) } else { Err(bad) }
+                        };
+                        let check: Option<&mut provider::RowCheck<'_>> =
+                            rows_base.is_some().then_some(&mut check as &mut provider::RowCheck<'_>);
+                        let edited = p
+                            .edit(address, &link.table, area, &link.revision, check, &edits)
+                            .map_err(|e| match e {
+                                provider::ProviderError::RowsChanged(_) => conflict_on(
+                                    codes::SOURCE_CHANGED,
+                                    format!(
+                                        "“{}” tablosunun {} satırını, katman onlarla son eşleştiğinden beri başka biri değiştirdi; hiçbir şey yazılmadı. Tablodan okuyun (direction read) ya da o nesnelerdeki değişikliği bırakın.",
+                                        link.table,
+                                        changed.len()
+                                    ),
+                                    "layer",
+                                    &changed,
+                                ),
+                                e => provider_stop(e, address, at_one("layer")),
+                            })?;
+                        others |= edited.before != link.revision;
+                        // Someone else's rows in the area keep the link “changed” until a read takes them.
+                        if !others || rows_base.is_none() {
+                            link.revision = edited.after;
+                        }
                     }
                 }
             }

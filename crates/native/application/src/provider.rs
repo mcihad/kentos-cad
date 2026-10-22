@@ -27,9 +27,9 @@ pub struct ProviderTable {
     pub m: bool,
 }
 
-/// A table read whole: its definition as a GeoPackage layer (`name` is `schema.table`, `fid` the primary key), its
-/// rows, the lasting ids KentOS wrote for some of them, its system, and the revision of its content (the SHA-256 of
-/// its rows in key order).
+/// A table (or a view, or a query) read whole or by an area: its definition as a GeoPackage layer (`name` is
+/// `schema.table`, `fid` the key), its rows, the lasting ids KentOS wrote for some of them, its system, and the
+/// revision of what was read (the SHA-256 of the rows in key order, with the area; docs/adr/0582 §1).
 #[derive(Clone, Debug, PartialEq)]
 pub struct ProviderRead {
     pub layer: gpkg::Layer,
@@ -51,6 +51,27 @@ pub enum ProviderError {
     Changed,
     /// The edit failed and was rolled back.
     Refused(String),
+    /// Rows the edit touches changed since the layer last matched them (their keys): nothing was written
+    /// (docs/adr/0582 §2).
+    RowsChanged(Vec<i64>),
+    /// A view or a query without an integer key column (docs/adr/0582 §3).
+    NoKey(String),
+    /// A view or a query whose key repeats: the key (docs/adr/0582 §3).
+    KeyRepeats(String, i64),
+    /// A query that cannot be read: not one statement, not a select, or refused by the database (docs/adr/0582 §3).
+    Unreadable(String),
+}
+
+/// What an edit asks of the rows it touches, read again under the lock: `Err` with the keys of the rows that are not
+/// as the layer last matched them (docs/adr/0582 §2).
+pub type RowCheck<'a> = dyn FnMut(&gpkg::Layer, &[gpkg::Row]) -> Result<(), Vec<i64>> + 'a;
+
+/// What an edit did: the inserted rows' keys, the area's revision before the edits (under the lock) and after.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Edited {
+    pub inserted: Vec<i64>,
+    pub before: String,
+    pub after: String,
 }
 
 /// A table's shape for a question (docs/adr/0581 §2): its definition (`indexed` when its geometry has a spatial
@@ -82,16 +103,24 @@ pub struct ProviderScan<'a> {
 /// A provider of database tables.
 pub trait TableProvider: Send + Sync {
     fn tables(&self, address: &str) -> Result<Vec<ProviderTable>, ProviderError>;
-    fn read(&self, address: &str, table: &str) -> Result<ProviderRead, ProviderError>;
-    /// The edits in one transaction, after checking under a lock that the table is still at `revision`: the
-    /// inserted rows' keys and the table's revision after.
+    /// The rows, all of them or those whose box meets `area` (in the table's system).
+    fn read(
+        &self,
+        address: &str,
+        table: &str,
+        area: Option<[f64; 4]>,
+    ) -> Result<ProviderRead, ProviderError>;
+    /// The edits in one transaction under a lock on the table. With `check`, the rows the edits update or delete are
+    /// read again and checked (docs/adr/0582 §2); without, the area must still be at `revision`.
     fn edit(
         &self,
         address: &str,
         table: &str,
+        area: Option<[f64; 4]>,
         revision: &str,
+        check: Option<&mut RowCheck<'_>>,
         edits: &gpkg::Edits,
-    ) -> Result<(Vec<i64>, String), ProviderError>;
+    ) -> Result<Edited, ProviderError>;
     /// The table's shape for a question.
     fn describe(&self, _address: &str, table: &str) -> Result<ProviderShape, ProviderError> {
         Err(ProviderError::Refused(format!("{table}: bu sağlayıcı sorgulanamaz")))

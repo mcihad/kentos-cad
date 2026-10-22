@@ -373,6 +373,31 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "1000 bağlı katmanlık kurulum durum dosyasını büyütür; sınır sources.rs'te ve sözleşmenin sources_problem'inde",
     ),
     (
+        "cad.sources.edit",
+        "no_row_key",
+        "view ve sorgu katmanı yalnız veritabanında; ev sahibinin sağlayıcısı uygulamanın testlerinde kayıtlı değil, durum kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
+    ),
+    (
+        "cad.sources.edit",
+        "row_key_not_unique",
+        "view ve sorgu katmanı yalnız veritabanında; ev sahibinin sağlayıcısı uygulamanın testlerinde kayıtlı değil, durum kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
+    ),
+    (
+        "cad.sources.query",
+        "no_row_key",
+        "view ve sorgu katmanı yalnız veritabanında; ev sahibinin sağlayıcısı uygulamanın testlerinde kayıtlı değil, durum kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
+    ),
+    (
+        "cad.sources.query",
+        "row_key_not_unique",
+        "view ve sorgu katmanı yalnız veritabanında; ev sahibinin sağlayıcısı uygulamanın testlerinde kayıtlı değil, durum kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
+    ),
+    (
+        "cad.sources.sync",
+        "source_others",
+        "satır düzeyinde yazma yalnız veritabanında; aynı tabloyu ikinci düzenleyici (QGIS) değiştirir, kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
+    ),
+    (
         "cad.sources.describe",
         "source_unreachable",
         "veritabanına ulaşılıp ulaşılmadığı ev sahibinin sağlayıcısına bağlı (Python kaydeder, uygulamanın testleri kaydetmez); sağlayıcısız ret sources.rs'te, ulaşılamayan veritabanı kentos-postgis'in testlerinde (ADR 0505)",

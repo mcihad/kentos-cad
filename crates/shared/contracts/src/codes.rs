@@ -1655,6 +1655,12 @@ codes! {
     PARTIAL_SCOPE = "partial_scope", Warning, false, "Yanıt bağlı katmanın yüklenen parçasından; bütün veri kümesi için kapsamı kaynak yapın (scope: source).";
     /// Records a source handed over that could not be read (docs/adr/0581 §4).
     ROWS_UNREADABLE = "rows_unreadable", Warning, false, "Geometrisi okunamayan kayıtlar atlandı; iletisi kaçını söyler.";
+    /// A view or a query without an integer key column (docs/adr/0582 §3).
+    NO_ROW_KEY = "no_row_key", Failed, false, "View ya da sorgu katmanında tam sayı bir anahtar sütunu (fid, id, gid, ogc_fid) yok.";
+    /// A view or a query whose key repeats (docs/adr/0582 §3).
+    ROW_KEY_NOT_UNIQUE = "row_key_not_unique", Failed, false, "View ya da sorgu katmanının anahtarı birden çok satırda aynı.";
+    /// A write that went through while someone else changed other rows of the area (docs/adr/0582 §2).
+    SOURCE_OTHERS = "source_others", Warning, false, "Alanın başka satırlarını başka biri değiştirdi; okuyarak katmana alın.";
     /// A point snapped or measured on a PDF underlay: a picture of a drawing, not its geometry.
     UNDERLAY_MEASURE = "underlay_measure", Warning, false, "Nokta bir PDF altlığından alındı; altlık bir çizimin resmidir, ölçüsü kanıtlanmış CAD geometrisi değildir.";
     /// A pasted block or style whose name this drawing has, renamed.

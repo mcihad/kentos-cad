@@ -1011807,7 +1011807,9 @@
           "invalid_extent",
           "invalid_key",
           "derived_dataset",
-          "pending_changes"
+          "pending_changes",
+          "no_row_key",
+          "row_key_not_unique"
         ],
         "warnings": [
           "crs_undeclared",
@@ -1016786,7 +1016788,8 @@
           "label_pins_parked",
           "label_pins_restored",
           "key_not_unique",
-          "relation_unmapped"
+          "relation_unmapped",
+          "source_others"
         ]
       },
       "examples": [
@@ -1019198,7 +1019201,9 @@
           "field_not_found",
           "source_unreachable",
           "invalid_address",
-          "crs_mismatch"
+          "crs_mismatch",
+          "no_row_key",
+          "row_key_not_unique"
         ],
         "warnings": [
           "partial_scope",
@@ -1071519,6 +1071524,24 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Geometrisi okunamayan kayıtlar atlandı; iletisi kaçını söyler."
+    },
+    {
+      "code": "no_row_key",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "View ya da sorgu katmanında tam sayı bir anahtar sütunu (fid, id, gid, ogc_fid) yok."
+    },
+    {
+      "code": "row_key_not_unique",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "View ya da sorgu katmanının anahtarı birden çok satırda aynı."
+    },
+    {
+      "code": "source_others",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Alanın başka satırlarını başka biri değiştirdi; okuyarak katmana alın."
     },
     {
       "code": "underlay_measure",

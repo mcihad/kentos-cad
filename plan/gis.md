@@ -111,7 +111,7 @@ dönüşüm yoktur. Küçük dilimlerle devam etmek madde kapatmaz.
 1. **CBS-02, ortak sağlayıcı sözleşmesi** (bitti, 22 Ekim, ADR 0581)**:** genel `Source`/`Dataset` arayüzü; kaynağa itilen kutu, sütun ve süzgeç sorgusu; kararlı sayfa ve akış;
    sorgu planının açıklaması. Önce GeoPackage'la (`kentos-geopackage`), sonra PostGIS'le (`kentos-postgis`). Önce ADR'yi yazın, çünkü bu karar
    çizimi, keneti, seçimi, tabloyu ve analizleri etkiler.
-2. **CBS-04, PostGIS'e itilen sorgu:** sayfa sayfa ilk harita, view ve SQL katmanı, milyon satır ölçümü, QGIS'le eşzamanlı düzenleme.
+2. **CBS-04, PostGIS'e itilen sorgu** (bitti, 22 Ekim, ADR 0582)**:** sayfa sayfa ilk harita, view ve SQL katmanı, milyon satır ölçümü, QGIS'le eşzamanlı düzenleme.
 3. **CBS-07, her katmanın kendi sistemi:** çizimde anında dönüşüm, ters dönüşümlü tıklama ve kenet, WKT2 ve kullanım alanı.
 
 Bunlar bitince kalanları kapanabilir hâle gelenler: CBS-11, 12, 14, 15, 20, 23, 24, 29, 33, 36 ve 42. CBS-42'nin bütçeleri (görünür küme,
@@ -173,7 +173,10 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/06/36; ilk sürümde vektör+tablo, sonra raster tile/ilişkili tablo profilleri. QGIS **4.2'de üretilen gerçek GeoPackage** açılıp düzenlenmeli; QGIS'te yeniden açıldığında kimlik, Türkçe alan/değer, null, delik, multipart ve desteklenen Z/M kaybolmamalı. Yazma ortasında iptal/çökme dosyayı yarım şemayla bırakmamalı; ağ paylaşımı çok yazarlı sunucu gibi sunulmamalı.
 
-- [ ] **CBS-04 — Kurumun mevcut PostGIS tablo/view'larına doğrudan bağlan — P1**
+- [x] **CBS-04 — Kurumun mevcut PostGIS tablo/view'larına doğrudan bağlan — P1**
+
+  *Bitti (22 Ekim 2026; [ADR 0582](../docs/adr/0582-postgis-area-views-and-row-conflicts.md)): PostGIS'te alan sınırı (bağlama ve `extent` işlemi; okuma `&&` ile dizinden, alanın sürümü alanın satırlarından): 1 milyon parselde ilk harita 51 ms. View ve SQL sorgu katmanı salt okunur bağlanır (anahtar `fid`, `id`, `gid` ya da `ogc_fid`; sorgu tek deyim, `READ ONLY` işlemde; `no_row_key`, `row_key_not_unique`). Yazma satır düzeyinde: kilit altında yalnız katmanın değiştirdiği satırlar tabana karşı denetlenir, başkasının değiştirdiği aynı satır `source_changed` ile reddedilir ve `uids` onu söyler, başka satırlardaki değişiklikler yazmayı engellemez (`source_others`). QGIS 4.2.3'ün PostgreSQL sağlayıcısıyla eşzamanlı düzenleme senaryosu geçici PostGIS'te geçti. Masaüstünde PostGIS'e bağlan view'ları, sorgu katmanını ve yalnız görünen alanı sunar. Kalan: tetikleyici ya da outbox ile bildirim (bugün yoklama), yazılabilir view, birden çok geometri sütunu.*
+
 
   *Kısmen (17 Ekim 2026; [ADR 0505](../docs/adr/0505-postgis-bound-layers.md)): PostGIS tablosu bağlı katman olarak açılır (`cad.sources.*`'ın adresle çalışması), TLS'li sqlx sağlayıcısı `kentos-postgis` ev sahiplerince kaydedilir; sürüm satırların SHA-256'sı (`xmin` değil), yazma kilit altında sürüm denetimiyle tek işlemde, kalıcı kimlikler `kentos_uids`'te; parola projeye yazılmaz; masaüstünde PostGIS'e bağlan. Geçici PostGIS'te ogr2ogr ve psycopg2'yle denetlendi. Kalan: sorguyu kaynağa itmek ve sayfa sayfa ilk harita, view ve SQL katmanı, tetikleyici/outbox izleme, milyon satır ölçümü, QGIS'le eşzamanlı düzenleme senaryosu.*
 

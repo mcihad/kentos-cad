@@ -14,8 +14,8 @@ use std::time::Duration;
 use kentos_contracts::encoding::sha256_hex;
 use kentos_geopackage::{self as gpkg, ColumnKind, DataType, Value};
 use kentos_native_application::provider::{
-    Param, ProviderError, ProviderRead, ProviderScan, ProviderShape, ProviderTable, TableProvider,
-    register_postgis,
+    Edited, Param, ProviderError, ProviderRead, ProviderScan, ProviderShape, ProviderTable, RowCheck,
+    TableProvider, register_postgis,
 };
 use sqlx::postgres::{PgConnectOptions, PgConnection, PgRow};
 use sqlx::{Connection, Executor, Row};
@@ -126,14 +126,143 @@ fn read_as(c: &gpkg::Column) -> String {
     }
 }
 
-/// A table's shape as the catalogue says it.
+/// A table's, a view's or a query's shape: its definition, system, whether rows can be written, and what a select
+/// reads from (`schema.table` quoted, or the query as a subquery; docs/adr/0582 §3).
 struct Shape {
     layer: gpkg::Layer,
     srid: Option<u32>,
     writable: bool,
+    from: String,
+    /// The schema whose `kentos_uids` keeps lasting ids; none for a query.
+    schema: Option<String>,
+}
+
+/// The integer columns a view or a query is keyed by, in the order looked for (QGIS's habits).
+const KEYS: [&str; 4] = ["fid", "id", "gid", "ogc_fid"];
+
+/// What `table` names: a query when it starts with `SELECT` or `WITH`, else a table or a view.
+fn is_query(table: &str) -> bool {
+    let word: String = table
+        .trim_start()
+        .chars()
+        .take_while(char::is_ascii_alphabetic)
+        .collect::<String>()
+        .to_ascii_lowercase();
+    word == "select" || word == "with"
+}
+
+/// A query's own checks and its name (`sorgu_` and the first 16 digits of its SHA-256: the same query, the same
+/// lasting ids).
+fn query_of(table: &str) -> Result<(String, String), ProviderError> {
+    let sql = table.trim();
+    if sql.contains(';') {
+        return Err(ProviderError::Unreadable(
+            "sorgu katmanı tek bir SELECT deyimidir; noktalı virgül olmaz".into(),
+        ));
+    }
+    Ok((sql.to_owned(), format!("sorgu_{}", &sha256_hex(sql.as_bytes())[..16])))
+}
+
+/// A view's or a query's key: the first of `KEYS` among its integer columns.
+fn key_among(name: &str, attributes: &[(String, String)]) -> Result<String, ProviderError> {
+    KEYS.iter()
+        .find_map(|k| {
+            attributes
+                .iter()
+                .find(|(n, d)| n == k && kind_of(d) == ColumnKind::Integer)
+                .map(|(n, _)| n.clone())
+        })
+        .ok_or_else(|| ProviderError::NoKey(name.to_owned()))
+}
+
+/// A geometry column's type and system from its declared type (`geometry(MultiPolygon,5256)`, `geometry`).
+fn geometry_decl(decl: &str) -> Option<(String, Option<u32>)> {
+    let d = decl.trim();
+    if !d.to_ascii_lowercase().starts_with("geometry") {
+        return None;
+    }
+    let inner = d
+        .split_once('(')
+        .map(|(_, r)| r.trim_end_matches(')').to_owned());
+    let Some(inner) = inner else {
+        return Some(("GEOMETRY".into(), None));
+    };
+    let mut parts = inner.split(',');
+    let kind = parts.next().unwrap_or("Geometry").trim().to_ascii_uppercase();
+    let srid = parts
+        .next()
+        .and_then(|s| s.trim().parse::<u32>().ok())
+        .filter(|&s| s > 0);
+    Some((kind, srid))
+}
+
+/// The geometry column of a type and dimension as `geometry_columns` says it.
+fn geometry_column(name: String, kind: &str, dims: i32) -> gpkg::GeometryColumn {
+    let up = kind.to_ascii_uppercase();
+    let (base, z, m) = if let Some(b) = up.strip_suffix("ZM") {
+        (b.to_owned(), 1, 1)
+    } else if let Some(b) = up.strip_suffix('Z') {
+        (b.to_owned(), 1, 0)
+    } else if let Some(b) = up.strip_suffix('M') {
+        (b.to_owned(), 0, 1)
+    } else {
+        (up, u8::from(dims >= 3), u8::from(dims >= 4))
+    };
+    gpkg::GeometryColumn {
+        name,
+        type_name: base,
+        z,
+        m,
+    }
+}
+
+fn layer_of(
+    name: String,
+    geometry: Option<gpkg::GeometryColumn>,
+    srid: Option<u32>,
+    fid: String,
+    columns: Vec<gpkg::Column>,
+) -> gpkg::Layer {
+    gpkg::Layer {
+        name,
+        data_type: if geometry.is_some() {
+            DataType::Features
+        } else {
+            DataType::Attributes
+        },
+        identifier: None,
+        description: None,
+        bounds: None,
+        srs_id: srid.and_then(|s| i32::try_from(s).ok()),
+        geometry,
+        fid,
+        columns,
+        indexed: false,
+    }
+}
+
+fn columns_of(
+    attributes: Vec<(String, String, bool, Option<String>)>,
+    fid: &str,
+    geometry: Option<&String>,
+) -> Vec<gpkg::Column> {
+    attributes
+        .into_iter()
+        .filter(|(n, ..)| n != fid && Some(n) != geometry)
+        .map(|(name, decl, not_null, default)| gpkg::Column {
+            kind: kind_of(&decl),
+            name,
+            decl,
+            not_null,
+            default,
+        })
+        .collect()
 }
 
 async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, ProviderError> {
+    if is_query(table) {
+        return query_shape(conn, table).await;
+    }
     let (sql_name, schema, name) = qualified(table);
     let exists: Option<String> = sqlx::query_scalar("SELECT to_regclass($1)::text")
         .bind(&sql_name)
@@ -143,21 +272,45 @@ async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, ProviderEr
     if exists.is_none() {
         return Err(ProviderError::NoTable(table.to_owned()));
     }
-    let keys: Vec<(String, String)> = sqlx::query_as(
-        "SELECT a.attname::text, format_type(a.atttypid, a.atttypmod) FROM pg_index i
-         JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
-         WHERE i.indrelid = $1::regclass AND i.indisprimary",
+    let relkind: String = sqlx::query_scalar("SELECT relkind::text FROM pg_class WHERE oid = $1::regclass")
+        .bind(&sql_name)
+        .fetch_one(&mut *conn)
+        .await
+        .map_err(unreachable)?;
+    let view = matches!(relkind.as_str(), "v" | "m");
+    let attributes: Vec<(String, String, bool, Option<String>)> = sqlx::query_as(
+        "SELECT a.attname::text, format_type(a.atttypid, a.atttypmod), a.attnotnull, pg_get_expr(d.adbin, d.adrelid)
+         FROM pg_attribute a LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+         WHERE a.attrelid = $1::regclass AND a.attnum > 0 AND NOT a.attisdropped ORDER BY a.attnum",
     )
     .bind(&sql_name)
     .fetch_all(&mut *conn)
     .await
     .map_err(unreachable)?;
-    let fid = match keys.as_slice() {
-        [(k, t)] if matches!(t.as_str(), "smallint" | "integer" | "bigint") => k.clone(),
-        _ => {
-            return Err(ProviderError::NoTable(format!(
-                "{table} (tam sayı birincil anahtarı yok)"
-            )));
+    let full = format!("{schema}.{name}");
+    let fid = if view {
+        let named: Vec<(String, String)> = attributes
+            .iter()
+            .map(|(n, d, ..)| (n.clone(), d.clone()))
+            .collect();
+        key_among(&full, &named)?
+    } else {
+        let keys: Vec<(String, String)> = sqlx::query_as(
+            "SELECT a.attname::text, format_type(a.atttypid, a.atttypmod) FROM pg_index i
+             JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+             WHERE i.indrelid = $1::regclass AND i.indisprimary",
+        )
+        .bind(&sql_name)
+        .fetch_all(&mut *conn)
+        .await
+        .map_err(unreachable)?;
+        match keys.as_slice() {
+            [(k, t)] if matches!(t.as_str(), "smallint" | "integer" | "bigint") => k.clone(),
+            _ => {
+                return Err(ProviderError::NoTable(format!(
+                    "{table} (tam sayı birincil anahtarı yok)"
+                )));
+            }
         }
     };
     let geometry: Option<(String, String, i32, i32)> = sqlx::query_as(
@@ -169,29 +322,10 @@ async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, ProviderEr
     .fetch_optional(&mut *conn)
     .await
     .map_err(unreachable)?;
-    let attributes: Vec<(String, String, bool, Option<String>)> = sqlx::query_as(
-        "SELECT a.attname::text, format_type(a.atttypid, a.atttypmod), a.attnotnull, pg_get_expr(d.adbin, d.adrelid)
-         FROM pg_attribute a LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
-         WHERE a.attrelid = $1::regclass AND a.attnum > 0 AND NOT a.attisdropped ORDER BY a.attnum",
-    )
-    .bind(&sql_name)
-    .fetch_all(&mut *conn)
-    .await
-    .map_err(unreachable)?;
     let gname = geometry.as_ref().map(|g| g.0.clone());
-    let columns = attributes
-        .into_iter()
-        .filter(|(n, ..)| *n != fid && Some(n) != gname.as_ref())
-        .map(|(name, decl, not_null, default)| gpkg::Column {
-            kind: kind_of(&decl),
-            name,
-            decl,
-            not_null,
-            default,
-        })
-        .collect();
-    let writable: bool =
-        sqlx::query_scalar("SELECT has_table_privilege($1::regclass, 'INSERT,UPDATE,DELETE')")
+    let columns = columns_of(attributes, &fid, gname.as_ref());
+    let writable: bool = !view
+        && sqlx::query_scalar("SELECT has_table_privilege($1::regclass, 'INSERT,UPDATE,DELETE')")
             .bind(&sql_name)
             .fetch_one(&mut *conn)
             .await
@@ -200,96 +334,189 @@ async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, ProviderEr
         .as_ref()
         .and_then(|g| u32::try_from(g.2).ok())
         .filter(|&s| s > 0);
-    let geometry = geometry.map(|(column, kind, _, dims)| {
-        let up = kind.to_ascii_uppercase();
-        let (base, z, m) = if let Some(b) = up.strip_suffix("ZM") {
-            (b.to_owned(), 1, 1)
-        } else if let Some(b) = up.strip_suffix('Z') {
-            (b.to_owned(), 1, 0)
-        } else if let Some(b) = up.strip_suffix('M') {
-            (b.to_owned(), 0, 1)
-        } else {
-            (up, u8::from(dims >= 3), u8::from(dims >= 4))
-        };
-        gpkg::GeometryColumn {
-            name: column,
-            type_name: base,
-            z,
-            m,
-        }
-    });
+    let geometry = geometry.map(|(column, kind, _, dims)| geometry_column(column, &kind, dims));
     Ok(Shape {
-        layer: gpkg::Layer {
-            name: format!("{schema}.{name}"),
-            data_type: if geometry.is_some() {
-                DataType::Features
-            } else {
-                DataType::Attributes
-            },
-            identifier: None,
-            description: None,
-            bounds: None,
-            srs_id: srid.and_then(|s| i32::try_from(s).ok()),
-            geometry,
-            fid,
-            columns,
-            indexed: false,
-        },
+        layer: layer_of(full, geometry, srid, fid, columns),
         srid,
         writable,
+        from: sql_name,
+        schema: Some(schema),
     })
 }
 
-/// Every row in key order, and the table's revision (the SHA-256 of what was read).
+/// A query's shape (docs/adr/0582 §3): its columns as a temporary view says them, in a transaction rolled back (a view
+/// is only made, the query does not run; PostgreSQL refuses a view that would write), its geometry the first geometry
+/// column, its system the declared one or the first geometry's.
+async fn query_shape(conn: &mut PgConnection, table: &str) -> Result<Shape, ProviderError> {
+    let (sql, name) = query_of(table)?;
+    let attributes: Vec<(String, String, bool, Option<String>)> = {
+        let mut tx = conn.begin().await.map_err(unreachable)?;
+        tx.execute(sqlx::AssertSqlSafe(format!(
+            "CREATE TEMP VIEW kentos_sorgu AS {sql}"
+        )))
+        .await
+        .map_err(|e| ProviderError::Unreadable(e.to_string()))?;
+        let found = sqlx::query_as(
+            "SELECT a.attname::text, format_type(a.atttypid, a.atttypmod), false, NULL::text FROM pg_attribute a
+             WHERE a.attrelid = 'pg_temp.kentos_sorgu'::regclass AND a.attnum > 0 AND NOT a.attisdropped
+             ORDER BY a.attnum",
+        )
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(unreachable)?;
+        tx.rollback().await.map_err(unreachable)?;
+        found
+    };
+    let named: Vec<(String, String)> = attributes
+        .iter()
+        .map(|(n, d, ..)| (n.clone(), d.clone()))
+        .collect();
+    let fid = key_among(&name, &named)?;
+    let from = format!("({sql}) AS q");
+    let geometry = attributes
+        .iter()
+        .find_map(|(n, d, ..)| geometry_decl(d).map(|(kind, srid)| (n.clone(), kind, srid)));
+    let srid = match &geometry {
+        None => None,
+        Some((_, _, Some(s))) => Some(*s),
+        Some((g, ..)) => {
+            let first: Option<i32> = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+                "SELECT ST_SRID({q}) FROM {from} WHERE {q} IS NOT NULL LIMIT 1",
+                q = quote(g)
+            )))
+            .fetch_optional(&mut *conn)
+            .await
+            .map_err(|e| ProviderError::Unreadable(e.to_string()))?;
+            first.and_then(|s| u32::try_from(s).ok()).filter(|&s| s > 0)
+        }
+    };
+    let gname = geometry.as_ref().map(|g| g.0.clone());
+    let columns = columns_of(attributes, &fid, gname.as_ref());
+    let geometry = geometry.map(|(column, kind, _)| geometry_column(column, &kind, 2));
+    Ok(Shape {
+        layer: layer_of(name, geometry, srid, fid, columns),
+        srid,
+        writable: false,
+        from,
+        schema: None,
+    })
+}
+
+/// What a select reads of a row: its key, its geometry as WKB (or none) and `columns`' values.
+fn select_of(s: &Shape, columns: &[gpkg::Column], geometry: bool) -> String {
+    let mut select = vec![format!("{}::bigint", quote(&s.layer.fid))];
+    select.push(match (&s.layer.geometry, geometry) {
+        (Some(g), true) => format!("ST_AsBinary({})", quote(&g.name)),
+        _ => "NULL::bytea".into(),
+    });
+    select.extend(columns.iter().map(read_as));
+    select.join(", ")
+}
+
+/// A row read by `select_of`.
+fn row_of(r: &PgRow, columns: &[gpkg::Column]) -> Result<(gpkg::Row, Option<Vec<u8>>), ProviderError> {
+    let fid: i64 = r.try_get(0).map_err(unreachable)?;
+    let wkb: Option<Vec<u8>> = r.try_get(1).map_err(unreachable)?;
+    Ok((
+        gpkg::Row {
+            fid,
+            geometry: wkb.as_deref().map(gpkg::read_wkb),
+            values: values_of(r, columns, 2)?,
+        },
+        wkb,
+    ))
+}
+
+/// The box condition of `area` on the shape's geometry (its placeholders from `$first`), none without one.
+fn area_where(s: &Shape, area: Option<[f64; 4]>, first: usize) -> Option<String> {
+    let (g, _) = (s.layer.geometry.as_ref()?, area?);
+    Some(format!(
+        "{} && ST_MakeEnvelope(${}, ${}, ${}, ${}, {})",
+        quote(&g.name),
+        first,
+        first + 1,
+        first + 2,
+        first + 3,
+        s.srid.unwrap_or(0)
+    ))
+}
+
+/// The rows in key order, all of them or those whose box meets `area`, and their revision (the SHA-256 of what was
+/// read, the area first; docs/adr/0582 §1). A key seen twice is refused (a view's or a query's).
 async fn rows(
     conn: &mut PgConnection,
     s: &Shape,
+    area: Option<[f64; 4]>,
 ) -> Result<(Vec<gpkg::Row>, String), ProviderError> {
-    let (sql_name, ..) = qualified(&s.layer.name);
-    let mut select = vec![format!("{}::bigint", quote(&s.layer.fid))];
-    select.push(match &s.layer.geometry {
-        Some(g) => format!("ST_AsBinary({})", quote(&g.name)),
-        None => "NULL::bytea".into(),
-    });
-    select.extend(s.layer.columns.iter().map(read_as));
+    let boxed = area_where(s, area, 1);
     let sql = format!(
-        "SELECT {} FROM {sql_name} ORDER BY {}",
-        select.join(", "),
+        "SELECT {} FROM {} {} ORDER BY {}",
+        select_of(s, &s.layer.columns, true),
+        s.from,
+        boxed.as_ref().map_or(String::new(), |w| format!("WHERE {w}")),
         quote(&s.layer.fid)
     );
-    let found: Vec<PgRow> = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
-        .fetch_all(&mut *conn)
-        .await
-        .map_err(unreachable)?;
+    let mut q = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()));
+    if boxed.is_some()
+        && let Some(a) = area
+    {
+        for v in a {
+            q = q.bind(v);
+        }
+    }
+    let found: Vec<PgRow> = q.fetch_all(&mut *conn).await.map_err(unreachable)?;
     let mut digest = Vec::new();
-    let mut out = Vec::with_capacity(found.len());
+    if let (Some(a), Some(_)) = (area, &boxed) {
+        digest.extend_from_slice(b"area");
+        for v in a {
+            digest.extend_from_slice(&v.to_le_bytes());
+        }
+    }
+    let mut out: Vec<gpkg::Row> = Vec::with_capacity(found.len());
     for r in &found {
-        let fid: i64 = r.try_get(0).map_err(unreachable)?;
-        digest.extend_from_slice(&fid.to_le_bytes());
-        let wkb: Option<Vec<u8>> = r.try_get(1).map_err(unreachable)?;
-        let geometry = match &wkb {
+        let (row, wkb) = row_of(r, &s.layer.columns)?;
+        if out.last().is_some_and(|p| p.fid == row.fid) {
+            return Err(ProviderError::KeyRepeats(s.layer.name.clone(), row.fid));
+        }
+        digest.extend_from_slice(&row.fid.to_le_bytes());
+        match &wkb {
             Some(b) => {
                 digest.extend_from_slice(&(b.len() as u64).to_le_bytes());
                 digest.extend_from_slice(b);
-                Some(gpkg::read_wkb(b))
             }
-            None => {
-                digest.extend_from_slice(&u64::MAX.to_le_bytes());
-                None
-            }
-        };
-        let values = values_of(r, &s.layer.columns, 2)?;
-        for v in &values {
+            None => digest.extend_from_slice(&u64::MAX.to_le_bytes()),
+        }
+        for v in &row.values {
             digest.extend_from_slice(format!("{v:?}").as_bytes());
             digest.push(0);
         }
-        out.push(gpkg::Row {
-            fid,
-            geometry,
-            values,
-        });
+        out.push(row);
     }
     Ok((out, sha256_hex(&digest)))
+}
+
+/// The rows of `keys`, as they now are, in key order (docs/adr/0582 §2).
+async fn rows_by_keys(
+    conn: &mut PgConnection,
+    s: &Shape,
+    keys: &[i64],
+) -> Result<Vec<gpkg::Row>, ProviderError> {
+    let sql = format!(
+        "SELECT {} FROM {} WHERE {} = ANY($1) ORDER BY {}",
+        select_of(s, &s.layer.columns, true),
+        s.from,
+        quote(&s.layer.fid),
+        quote(&s.layer.fid)
+    );
+    let found: Vec<PgRow> = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
+        .bind(keys)
+        .fetch_all(&mut *conn)
+        .await
+        .map_err(unreachable)?;
+    found
+        .iter()
+        .map(|r| row_of(r, &s.layer.columns).map(|(row, _)| row))
+        .collect()
 }
 
 /// A row's values for `columns`, read from `first` on.
@@ -330,7 +557,11 @@ async fn indexed(conn: &mut PgConnection, s: &Shape) -> Result<bool, ProviderErr
     let Some(g) = &s.layer.geometry else {
         return Ok(false);
     };
-    let (sql_name, ..) = qualified(&s.layer.name);
+    // A query's rows have no index of their own.
+    if s.schema.is_none() {
+        return Ok(false);
+    }
+    let sql_name = s.from.clone();
     sqlx::query_scalar(
         "SELECT EXISTS (SELECT 1 FROM pg_index i JOIN pg_class c ON c.oid = i.indexrelid
          JOIN pg_am am ON am.oid = c.relam
@@ -352,7 +583,7 @@ async fn scan(
     q: &ProviderScan<'_>,
     f: &mut dyn FnMut(Vec<gpkg::Row>) -> bool,
 ) -> Result<u64, ProviderError> {
-    let (sql_name, ..) = qualified(&s.layer.name);
+    let sql_name = s.from.clone();
     let columns: Vec<gpkg::Column> = match q.columns {
         None => s.layer.columns.clone(),
         Some(list) => list
@@ -481,14 +712,34 @@ fn bound(v: &Value) -> Bound {
     }
 }
 
+/// A transaction that cannot change the database: a view's and a query's rows are read in one (docs/adr/0582 §3).
+async fn read_only(
+    conn: &mut PgConnection,
+) -> Result<sqlx::Transaction<'_, sqlx::Postgres>, ProviderError> {
+    let mut tx = conn.begin().await.map_err(unreachable)?;
+    tx.execute("SET TRANSACTION READ ONLY")
+        .await
+        .map_err(unreachable)?;
+    Ok(tx)
+}
+
+/// The lasting ids KentOS keeps for the rows of `s` (none for a query).
+async fn uids_of(conn: &mut PgConnection, s: &Shape) -> Result<HashMap<i64, String>, ProviderError> {
+    match &s.schema {
+        Some(schema) => uids(conn, schema, &s.layer.name).await,
+        None => Ok(HashMap::new()),
+    }
+}
+
 impl TableProvider for PostGis {
     fn tables(&self, address: &str) -> Result<Vec<ProviderTable>, ProviderError> {
         self.runtime.block_on(async {
             let mut conn = connect(address).await?;
             let names: Vec<(String, String)> = sqlx::query_as(
                 "SELECT n.nspname::text, c.relname::text FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-                 WHERE c.relkind IN ('r', 'p') AND n.nspname NOT IN ('pg_catalog', 'information_schema', 'topology', 'tiger')
-                   AND n.nspname NOT LIKE 'pg_toast%' AND c.relname NOT IN ('spatial_ref_sys', 'kentos_uids')
+                 WHERE c.relkind IN ('r', 'p', 'v', 'm') AND n.nspname NOT IN ('pg_catalog', 'information_schema', 'topology', 'tiger')
+                   AND n.nspname NOT LIKE 'pg_toast%'
+                   AND c.relname NOT IN ('spatial_ref_sys', 'kentos_uids', 'geometry_columns', 'geography_columns')
                  ORDER BY n.nspname, c.relname",
             )
             .fetch_all(&mut conn)
@@ -497,10 +748,9 @@ impl TableProvider for PostGis {
             let mut out = Vec::new();
             for (schema, name) in names {
                 let table = format!("{schema}.{name}");
-                // Tables without a single integer key are not read, so not listed.
+                // Tables without a single integer key and views without one of KEYS are not read, so not listed.
                 let Ok(s) = shape(&mut conn, &table).await else { continue };
-                let (sql_name, ..) = qualified(&table);
-                let rows: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(format!("SELECT count(*) FROM {sql_name}")))
+                let rows: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(format!("SELECT count(*) FROM {}", s.from)))
                     .fetch_one(&mut conn)
                     .await
                     .map_err(unreachable)?;
@@ -522,13 +772,22 @@ impl TableProvider for PostGis {
         })
     }
 
-    fn read(&self, address: &str, table: &str) -> Result<ProviderRead, ProviderError> {
+    fn read(
+        &self,
+        address: &str,
+        table: &str,
+        area: Option<[f64; 4]>,
+    ) -> Result<ProviderRead, ProviderError> {
         self.runtime.block_on(async {
             let mut conn = connect(address).await?;
             let s = shape(&mut conn, table).await?;
-            let (rows, revision) = rows(&mut conn, &s).await?;
-            let (_, schema, name) = qualified(table);
-            let uids = uids(&mut conn, &schema, &format!("{schema}.{name}")).await?;
+            let uids = uids_of(&mut conn, &s).await?;
+            let (rows, revision) = {
+                let mut tx = read_only(&mut conn).await?;
+                let read = rows(&mut tx, &s, area).await?;
+                tx.rollback().await.map_err(unreachable)?;
+                read
+            };
             let _ = conn.close().await;
             Ok(ProviderRead {
                 layer: s.layer,
@@ -546,8 +805,7 @@ impl TableProvider for PostGis {
             let mut conn = connect(address).await?;
             let mut s = shape(&mut conn, table).await?;
             s.layer.indexed = indexed(&mut conn, &s).await?;
-            let (_, schema, name) = qualified(table);
-            let uids = uids(&mut conn, &schema, &format!("{schema}.{name}")).await?;
+            let uids = uids_of(&mut conn, &s).await?;
             let _ = conn.close().await;
             Ok(ProviderShape {
                 layer: s.layer,
@@ -567,7 +825,12 @@ impl TableProvider for PostGis {
         self.runtime.block_on(async {
             let mut conn = connect(address).await?;
             let s = shape(&mut conn, table).await?;
-            let handed = scan(&mut conn, &s, q, f).await?;
+            let handed = {
+                let mut tx = read_only(&mut conn).await?;
+                let handed = scan(&mut tx, &s, q, f).await?;
+                tx.rollback().await.map_err(unreachable)?;
+                handed
+            };
             let _ = conn.close().await;
             Ok(handed)
         })
@@ -577,20 +840,40 @@ impl TableProvider for PostGis {
         &self,
         address: &str,
         table: &str,
+        area: Option<[f64; 4]>,
         revision: &str,
+        check: Option<&mut RowCheck<'_>>,
         edits: &gpkg::Edits,
-    ) -> Result<(Vec<i64>, String), ProviderError> {
+    ) -> Result<Edited, ProviderError> {
         self.runtime.block_on(async {
             let mut conn = connect(address).await?;
             let mut tx = conn.begin().await.map_err(unreachable)?;
-            let (sql_name, schema, name) = qualified(table);
-            let full = format!("{schema}.{name}");
+            let s = shape(&mut tx, table).await?;
+            if !s.writable {
+                return Err(refused(format!("{} salt okunur", s.layer.name)));
+            }
+            let sql_name = s.from.clone();
+            let full = s.layer.name.clone();
+            let schema = s.schema.clone().unwrap_or_default();
             tx.execute(sqlx::AssertSqlSafe(format!("LOCK TABLE {sql_name} IN SHARE ROW EXCLUSIVE MODE")))
                 .await
                 .map_err(refused)?;
-            let s = shape(&mut tx, table).await?;
-            let (_, now) = rows(&mut tx, &s).await?;
-            if now != revision {
+            // The rows the edits touch, as they now are, against the layer's base (docs/adr/0582 §2).
+            let checked = check.is_some();
+            if let Some(check) = check {
+                let mut touched: Vec<i64> = edits.update.iter().map(|(fid, _)| *fid).collect();
+                touched.extend(edits.delete.iter().copied());
+                touched.sort_unstable();
+                touched.dedup();
+                if !touched.is_empty() {
+                    let now = rows_by_keys(&mut tx, &s, &touched).await?;
+                    if let Err(changed) = check(&s.layer, &now) {
+                        return Err(ProviderError::RowsChanged(changed));
+                    }
+                }
+            }
+            let (_, before) = rows(&mut tx, &s, area).await?;
+            if !checked && before != revision {
                 return Err(ProviderError::Changed);
             }
             for c in &edits.add_columns {
@@ -718,10 +1001,14 @@ impl TableProvider for PostGis {
                 }
             }
             let s = shape(&mut tx, table).await?;
-            let (_, after) = rows(&mut tx, &s).await?;
+            let (_, after) = rows(&mut tx, &s, area).await?;
             tx.commit().await.map_err(refused)?;
             let _ = conn.close().await;
-            Ok((inserted, after))
+            Ok(Edited {
+                inserted,
+                before,
+                after,
+            })
         })
     }
 }

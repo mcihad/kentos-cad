@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """A bound layer on PostGIS, end to end against a throwaway database (docs/adr/0505, plan/gis.md CBS-04).
 
-    /usr/bin/python3 scripts/fixtures/postgis_cases.py [--screens]
+    /usr/bin/python3 scripts/fixtures/postgis_cases.py [--screens] [--timing]
 
 1. Starts postgis/postgis:18-3.6 in docker on a free port (never the developer's database on 5432) and loads QGIS's
    GeoPackage (fixtures/geopackage/v1/qgis.gpkg) and the WGS 84 one into the schema `kadastro` with GDAL's ogr2ogr,
@@ -138,6 +138,9 @@ def main():
                                      layerCreationOptions=["SCHEMA=sorgu", "FID=fid", "GEOMETRY_NAME=geom"],
                                      preserveFID=True))
         c.cursor().execute("UPDATE sorgu.nokta SET kot = NULL WHERE fid = 60")
+        # A view keyed by fid and one without a key (docs/adr/0582 §3).
+        c.cursor().execute("CREATE VIEW sorgu.nokta_v AS SELECT fid, ad, tur, geom FROM sorgu.nokta WHERE fid <= 50")
+        c.cursor().execute("CREATE VIEW sorgu.anahtarsiz AS SELECT ad, geom FROM sorgu.nokta")
         before = catalogue(c)
         out = Path(tempfile.mkstemp(suffix=".json")[1])
         env = dict(os.environ, KENTOS_PG_URL=f"postgresql://postgres@127.0.0.1:{port}/postgres",
@@ -152,6 +155,30 @@ def main():
                                "--", "--ignored"], cwd=ROOT, env=env)
         if desk.returncode != 0:
             print("masaüstünün PostGIS penceresi düştü", file=sys.stderr)
+            return 1
+        if "--timing" in sys.argv:
+            # A million parcels for docs/adr/0582 §5, made by the database itself.
+            cur = c.cursor()
+            cur.execute("CREATE SCHEMA zaman")
+            cur.execute("CREATE TABLE zaman.parsel (fid bigint PRIMARY KEY, ada integer, parsel integer, ad text, "
+                        "geom geometry(Polygon, 5256))")
+            cur.execute("INSERT INTO zaman.parsel SELECT g, g / 1000 + 1, g % 1000 + 1, 'Parsel ' || g, "
+                        "ST_MakeEnvelope(500000 + (g % 1000) * 20, 4400000 + (g / 1000) * 20, "
+                        "500020 + (g % 1000) * 20, 4400020 + (g / 1000) * 20, 5256) "
+                        "FROM generate_series(0, 999999) AS g")
+            cur.execute("CREATE INDEX ON zaman.parsel USING gist (geom)")
+            cur.execute("ANALYZE zaman.parsel")
+            timing = subprocess.run(["cargo", "test", "--release", "-q", "-p", "kentos-postgis", "--test", "all",
+                                     "postgis_timing", "--", "--ignored", "--nocapture"],
+                                    cwd=ROOT, env=dict(env, KENTOS_PG_TIMING="1"))
+            if timing.returncode != 0:
+                print("PostGIS ölçümü düştü", file=sys.stderr)
+                return 1
+        # KentOS and QGIS 4.2 on the same table (docs/adr/0582 §2), with the Python SDK's interpreter.
+        qgis = subprocess.run([str(ROOT / ".run/py/bin/python"), str(ROOT / "scripts/fixtures/postgis_qgis_cases.py")],
+                              cwd=ROOT, env=dict(env, KENTOS_PG_PORT=str(port)))
+        if qgis.returncode != 0:
+            print("QGIS ile eşzamanlı düzenleme düştü", file=sys.stderr)
             return 1
         if "--screens" in sys.argv:
             subprocess.run(["cargo", "test", "-q", "-p", "kentos-desktop", "exchange::postgis_tests::screens", "--",

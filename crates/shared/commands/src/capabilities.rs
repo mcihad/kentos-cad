@@ -2981,6 +2981,8 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             &["crs_mismatch", "entity_exists", "source_bound", "source_differs", "source_not_found", "source_changed", "too_many_sources", "invalid_extent", "invalid_key", "derived_dataset"],
             &["pending_changes"],
+            // docs/adr/0582 §3: a view's or a query's key.
+            &["no_row_key", "row_key_not_unique"],
         ],
         warnings: &["crs_undeclared", "import_losses", "label_pins_lost", "label_pins_moved", "label_pins_parked", "label_pins_restored", "key_not_unique"],
         targets: none,
@@ -3044,7 +3046,7 @@ const ENTRIES: &[Entry] = &[
             // docs/adr/0532 §1: layers written together, and the mapped relations' rows.
             &["invalid_input", "transaction_split", "relation_dangling"],
         ],
-        warnings: &["export_losses", "neighbours_left", "label_pins_lost", "label_pins_moved", "label_pins_parked", "label_pins_restored", "key_not_unique", "relation_unmapped"],
+        warnings: &["export_losses", "neighbours_left", "label_pins_lost", "label_pins_moved", "label_pins_parked", "label_pins_restored", "key_not_unique", "relation_unmapped", "source_others"],
         targets: none,
     },
     Entry {
@@ -3085,7 +3087,7 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &["invalid_input", "invalid_count", "invalid_extent", "invalid_tolerance", "invalid_cursor"],
             &["invalid_expression", "layer_not_found", "file_not_found", "import_unreadable", "table_not_found"],
-            &["field_not_found", "source_unreachable", "invalid_address", "crs_mismatch"],
+            &["field_not_found", "source_unreachable", "invalid_address", "crs_mismatch", "no_row_key", "row_key_not_unique"],
         ],
         warnings: &["partial_scope", "rows_unreadable"],
         targets: none,

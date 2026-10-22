@@ -169,7 +169,7 @@ fn a_postgis_table_is_bound_written_and_read_again() {
             .by_layer_with_uids(&fresh_layer)
             .any(|(u, _)| u.to_string() == drawn)
     );
-    // Another writer changes the table: the old binding's write is refused, its read takes the change.
+    // Another writer deletes a parcel the old binding then changes: refused, with that object's id (docs/adr/0582 §2).
     ok(&run(
         &mut fresh,
         "cad.entities.delete",
@@ -188,7 +188,7 @@ fn a_postgis_table_is_bound_written_and_read_again() {
         &mut d,
         "cad.entities.set",
         CallOp::Execute,
-        json!({ "uids": [drawn], "attrs": { "ada": "çakışma" }, "operation": "attributes" }),
+        json!({ "uids": [uids[0]], "attrs": { "ada": "çakışma" }, "operation": "attributes" }),
     ));
     let refused = run(
         &mut d,
@@ -197,6 +197,7 @@ fn a_postgis_table_is_bound_written_and_read_again() {
         json!({ "layer": layer, "direction": "write" }),
     );
     assert_eq!(refused["error"]["code"], "source_changed", "{refused}");
+    assert_eq!(refused["error"]["uids"], json!([uids[0]]), "{refused}");
     let read = ok(&run(
         &mut d,
         "cad.sources.sync",
@@ -204,11 +205,83 @@ fn a_postgis_table_is_bound_written_and_read_again() {
         json!({ "layer": layer, "direction": "read", "discard": true }),
     ))
     .clone();
-    assert_eq!(
-        (read["removed"].clone(), read["modified"].clone()),
-        (json!(1), json!(1)),
-        "{read}"
+    assert_eq!(read["removed"], json!(1), "{read}");
+    // Two writers on different rows: both go through; the second is told of the first's row and reads it.
+    ok(&run(
+        &mut fresh,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [drawn], "attrs": { "ada": "taze" }, "operation": "attributes" }),
+    ));
+    ok(&run(
+        &mut fresh,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": fresh_layer, "direction": "write" }),
+    ));
+    ok(&run(
+        &mut d,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [uids[2]], "attrs": { "ada": "eski" }, "operation": "attributes" }),
+    ));
+    let both = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write" }),
     );
+    let written = ok(&both).clone();
+    assert_eq!(written["modified"], json!(1), "{both}");
+    assert_eq!(both["warnings"][0]["code"], "source_others", "{both}");
+    assert_eq!(state(&mut d)["changed"], true);
+    let read = ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "read" }),
+    ))
+    .clone();
+    assert_eq!(read["modified"], json!(1), "{read}");
+    // The same row by both: the second is refused with it.
+    ok(&run(
+        &mut fresh,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": fresh_layer, "direction": "read", "discard": true }),
+    ));
+    ok(&run(
+        &mut fresh,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [uids[2]], "attrs": { "ada": "taze" }, "operation": "attributes" }),
+    ));
+    ok(&run(
+        &mut fresh,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": fresh_layer, "direction": "write" }),
+    ));
+    ok(&run(
+        &mut d,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [uids[2]], "attrs": { "ada": "benim" }, "operation": "attributes" }),
+    ));
+    let refused = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write" }),
+    );
+    assert_eq!(refused["error"]["code"], "source_changed", "{refused}");
+    assert_eq!(refused["error"]["uids"], json!([uids[2]]), "{refused}");
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "read", "discard": true }),
+    ));
     // A table in another system: the WGS 84 point bound with reproject.
     let refused = run(
         &mut d,
@@ -316,4 +389,227 @@ fn the_queries_answer_alike_from_postgis() {
         assert_eq!(b["source"]["kind"], "postgis");
         eprintln!("{k}: {} satır; PostGIS planı {}", rows(b).len(), b["plan"]);
     }
+}
+
+/// Views, queries and areas (docs/adr/0582): a view and a query bound read-only, keyed by `fid`; a view without a key
+/// refused; a query that would be two statements refused; a table bound by an area holds only the area's rows, and its
+/// area moves.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn views_queries_and_areas() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    let mut d = doc();
+    let tables = ok(&run(
+        &mut d,
+        "cad.sources.describe",
+        CallOp::Execute,
+        json!({ "path": url }),
+    ))
+    .clone();
+    let view = tables["tables"]
+        .as_array()
+        .expect("tables")
+        .iter()
+        .find(|t| t["name"] == "sorgu.nokta_v")
+        .cloned()
+        .expect("the view is listed");
+    assert_eq!(view["capabilities"]["update"], false, "{view}");
+    assert!(
+        !tables["tables"]
+            .as_array()
+            .expect("tables")
+            .iter()
+            .any(|t| t["name"] == "sorgu.anahtarsiz"),
+        "a view without a key is not listed"
+    );
+    // The view: bound read-only.
+    let linked = ok(&run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": "sorgu.nokta_v" } }),
+    ))
+    .clone();
+    assert_eq!(linked["objects"], json!(50), "{linked}");
+    assert_eq!(linked["link"]["writable"], false, "{linked}");
+    let layer = linked["link"]["layer"].as_str().expect("layer").to_owned();
+    let first = d
+        .by_layer_with_uids(&layer)
+        .next()
+        .map(|(u, _)| u.to_string())
+        .expect("a point");
+    ok(&run(
+        &mut d,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [first], "attrs": { "ad": "yeni" }, "operation": "attributes" }),
+    ));
+    let refused = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write" }),
+    );
+    assert_eq!(refused["error"]["code"], "source_readonly", "{refused}");
+    // A view without a key, and a query of two statements, refused.
+    let refused = run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": "sorgu.anahtarsiz" } }),
+    );
+    assert_eq!(refused["error"]["code"], "no_row_key", "{refused}");
+    let refused = run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": "SELECT fid, geom FROM sorgu.nokta; DROP TABLE sorgu.nokta" } }),
+    );
+    assert_eq!(refused["error"]["code"], "import_unreadable", "{refused}");
+    let refused = run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": "SELECT 1 AS fid UNION ALL SELECT 1" } }),
+    );
+    assert_eq!(refused["error"]["code"], "row_key_not_unique", "{refused}");
+    // A query: its rows, the same ids twice.
+    let query = "SELECT fid, ad, tur, geom FROM sorgu.nokta WHERE tur = 'direk'";
+    let linked = ok(&run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": query } }),
+    ))
+    .clone();
+    assert_eq!(linked["objects"], json!(50), "{linked}");
+    let asked = ok(&run(
+        &mut d,
+        "cad.sources.query",
+        CallOp::Execute,
+        json!({ "path": url, "table": query, "filter": "ad içinde ('N1', 'N6', 'N7', 'N11')", "count": true,
+                "fields": ["ad"] }),
+    ))
+    .clone();
+    // N7 is not a pole: three of the four.
+    assert_eq!(asked["total"], json!(3), "{asked}");
+    // A table by an area: the area's rows only, then the area moved.
+    let mut part = doc();
+    let linked = ok(&run(
+        &mut part,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": "sorgu.nokta",
+                          "extent": [486995.0, 4419995.0, 487105.0, 4420025.0] } }),
+    ))
+    .clone();
+    assert_eq!(linked["objects"], json!(12), "{linked}");
+    let id = linked["link"]["id"].as_str().expect("id").to_owned();
+    let moved = ok(&run(
+        &mut part,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "extent", "id": id, "extent": [486995.0, 4419995.0, 487105.0, 4420065.0] } }),
+    ))
+    .clone();
+    assert_eq!(moved["link"]["extent"][3], json!(4420065.0), "{moved}");
+    let layer = part.settings().sources[0].layer.clone();
+    assert_eq!(part.by_layer_with_uids(&layer).count(), 24);
+}
+
+/// The measurement of docs/adr/0582 §5 on `zaman.parsel`, a million parcels `postgis_cases.py --timing` makes with
+/// `generate_series` (a 1000 × 1000 grid of 20 m squares, a GiST index): the first map by the view's area, the area's
+/// state, a row written with its check, a question's first page and the whole table's statistics. Run in release:
+/// `KENTOS_PG_TIMING=1`.
+#[test]
+#[ignore = "a measurement on the throwaway PostGIS of scripts/fixtures/postgis_cases.py --timing"]
+fn postgis_timing() {
+    let (Ok(url), Ok(_)) = (
+        std::env::var("KENTOS_PG_URL"),
+        std::env::var("KENTOS_PG_TIMING"),
+    ) else {
+        return;
+    };
+    kentos_postgis::register();
+    let report = |what: &str, t: std::time::Instant| {
+        println!("{what:<56} {:>10.1} ms", t.elapsed().as_secs_f64() * 1000.0);
+    };
+    let mut d = doc();
+    // A view of 400 × 300 m in the middle of the city.
+    let (mx, my) = (510_000.0, 4_410_000.0);
+    let t = std::time::Instant::now();
+    let linked = ok(&run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": "zaman.parsel",
+                          "extent": [mx, my, mx + 400.0, my + 300.0] } }),
+    ))
+    .clone();
+    report(
+        &format!("alanla bağlama, ilk harita ({} nesne)", linked["objects"]),
+        t,
+    );
+    let layer = linked["link"]["layer"].as_str().expect("layer").to_owned();
+    let t = std::time::Instant::now();
+    let st = state(&mut d);
+    report(&format!("alanın durumu (changed {})", st["changed"]), t);
+    let first = d
+        .by_layer_with_uids(&layer)
+        .next()
+        .map(|(u, _)| u.to_string())
+        .expect("a parcel");
+    ok(&run(
+        &mut d,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [first], "attrs": { "ad": "ölçüldü" }, "operation": "attributes" }),
+    ));
+    let t = std::time::Instant::now();
+    let written = ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write" }),
+    ))
+    .clone();
+    report(
+        &format!(
+            "bir satırın yazılması, satır denetimiyle ({})",
+            written["modified"]
+        ),
+        t,
+    );
+    let t = std::time::Instant::now();
+    let page = ok(&run(
+        &mut d,
+        "cad.sources.query",
+        CallOp::Execute,
+        json!({ "path": url, "table": "zaman.parsel", "bbox": [mx, my, mx + 400.0, my + 300.0],
+                "filter": "parsel > 500", "fields": ["ad"], "limit": 100 }),
+    ))
+    .clone();
+    report(
+        &format!("sorgu: kutu ve süzgeç, ilk sayfa ({} okundu)", page["read"]),
+        t,
+    );
+    let t = std::time::Instant::now();
+    let all = ok(&run(
+        &mut d,
+        "cad.sources.query",
+        CallOp::Execute,
+        json!({ "path": url, "table": "zaman.parsel", "filter": "ada > 500", "statistics": ["parsel"],
+                "count": true, "limit": 0 }),
+    ))
+    .clone();
+    report(
+        &format!(
+            "sorgu: bütün tablo, süzgeçli istatistik ({} okundu)",
+            all["read"]
+        ),
+        t,
+    );
 }
