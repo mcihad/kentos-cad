@@ -1,7 +1,7 @@
 //! Rich map frames through the same CPU shaders as the desktop, with bundled-font text (CAD-SHEET-06).
 use crate::{
     images::Images,
-    maps::{MapLabel, MapSource, built_layers},
+    maps::{MapLabel, MapSource, built_layers_profile},
 };
 use kentos_native_style::cpu::{CpuView, paint};
 use kentos_sheet::{
@@ -15,6 +15,7 @@ pub(crate) fn map(
     labels: &[MapLabel],
     dpi: u16,
     drawing: Option<&str>,
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
 ) -> Result<RasterMap, String> {
     let raw = [
         f64::from(m.clip.width) * f64::from(dpi) / 25400.,
@@ -29,9 +30,11 @@ pub(crate) fn map(
         (raw[1] * cap).ceil().max(1.) as u32,
     );
     if u64::from(w) * u64::from(h) > 32_100_000 {
-        return Err("Harita resmi 32 milyon pikseli aşıyor; paftanın dpi değerini düşürün.".into());
+        return Err(
+            "Harita resmi 32 milyon pikseli aşıyor; paftanın dpi değerini düşürün.".into(),
+        );
     }
-    let image = render_image(src, m, labels, [w, h], drawing)?;
+    let image = render_image_profile(src, m, labels, [w, h], drawing, profile)?;
     Ok(RasterMap {
         png: png(&image.rgba, image.width, image.height)?,
     })
@@ -50,6 +53,16 @@ pub fn render_image(
     labels: &[MapLabel],
     size: [u32; 2],
     drawing: Option<&str>,
+) -> Result<MapImage, String> {
+    render_image_profile(src, m, labels, size, drawing, None)
+}
+pub fn render_image_profile(
+    src: &MapSource<'_>,
+    m: &MapPrim,
+    labels: &[MapLabel],
+    size: [u32; 2],
+    drawing: Option<&str>,
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
 ) -> Result<MapImage, String> {
     let center = m.view.center.ok_or("Haritanın merkezi yok.")?;
     let extent = m.extent.ok_or("Haritanın kapsamı yok.")?;
@@ -74,14 +87,34 @@ pub fn render_image(
         dpr: physical.paper_pixels_per_mm(ppm) * crate::maps::PX_MM,
         scale,
     };
-    let built = built_layers(src, &m.layers, &m.layer_overrides, m.view.scale, extent);
+    let mut built = built_layers_profile(
+        src,
+        &m.layers,
+        &m.layer_overrides,
+        m.view.scale,
+        extent,
+        profile,
+    );
     let images = Images::new(src.doc, drawing);
     for (_, _, layer) in &built {
         images.made(layer);
     }
-    let layers: Vec<_> = built.iter().map(|(_, _, l)| l).collect();
-    let rgba =
-        paint(w, h, &view, &layers, &images).ok_or("Harita resmi için bellek ayrılamadı.")?;
+    let mut pixmap = if let Some(profile) = profile {
+        crate::plot_ink::render(
+            w,
+            h,
+            &view,
+            &mut built,
+            &images,
+            profile,
+            [src.origin.x, src.origin.y],
+        )?
+    } else {
+        let layers: Vec<_> = built.iter().map(|(_, _, l)| l).collect();
+        let rgba = paint(w, h, &view, &layers, &images)
+            .ok_or("Harita resmi için bellek ayrılamadı.")?;
+        tiny(&rgba, w, h).ok_or("Harita resmi açılamadı.")?
+    };
     let missing: Vec<_> = images.missing.borrow().iter().cloned().collect();
     if !missing.is_empty() {
         return Err(format!(
@@ -89,14 +122,23 @@ pub fn render_image(
             missing.join(", ")
         ));
     }
-    let mut pixmap = tiny(&rgba, w, h).ok_or("Harita resmi açılamadı.")?;
+    let mut writing = labels.to_vec();
+    if let Some(profile) = profile {
+        let resolved = kentos_sheet::plot_profile::apply::Resolved::new(profile);
+        for l in &mut writing {
+            if let Some(s) = resolved.model(&l.layer) {
+                l.color = kentos_sheet::plot_profile::apply::color(&l.color, s);
+            }
+        }
+    }
     draw_labels(
         &mut pixmap,
         &view,
         [src.origin.x, src.origin.y],
-        labels,
+        &writing,
         &images,
         scale,
+        profile,
     );
     let straight: Vec<u8> = pixmap
         .pixels()
@@ -129,7 +171,7 @@ pub(crate) fn png(rgba: &[u8], w: u32, h: u32) -> Result<Vec<u8>, String> {
     Ok(bytes)
 }
 
-fn tiny(rgba: &[u8], w: u32, h: u32) -> Option<resvg::tiny_skia::Pixmap> {
+pub(crate) fn tiny(rgba: &[u8], w: u32, h: u32) -> Option<resvg::tiny_skia::Pixmap> {
     let mut pixmap = resvg::tiny_skia::Pixmap::new(w, h)?;
     for (dst, src) in pixmap.pixels_mut().iter_mut().zip(rgba.chunks_exact(4)) {
         *dst = resvg::tiny_skia::ColorU8::from_rgba(src[0], src[1], src[2], src[3]).premultiply();
@@ -137,7 +179,7 @@ fn tiny(rgba: &[u8], w: u32, h: u32) -> Option<resvg::tiny_skia::Pixmap> {
     Some(pixmap)
 }
 
-fn ink(color: &str) -> resvg::tiny_skia::Paint<'static> {
+pub(crate) fn ink(color: &str) -> resvg::tiny_skia::Paint<'static> {
     let c = kentos_native_style::color::parse_hex(color, 1.);
     let mut p = resvg::tiny_skia::Paint {
         anti_alias: true,
@@ -159,8 +201,13 @@ fn draw_labels(
     labels: &[MapLabel],
     _images: &Images<'_>,
     scale: f64,
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
 ) {
-    use resvg::tiny_skia::{FillRule, PathBuilder, Stroke, Transform};
+    use resvg::tiny_skia::{
+        FillRule, PathBuilder, Stroke, Transform, StrokeDash, LineCap, LineJoin,
+    };
+    let styles = profile.map(kentos_sheet::plot_profile::apply::Resolved::new);
+    let px_mm = view.dpr / crate::maps::PX_MM;
     let pixel = |p: [f64; 2]| {
         let x = p[0] - origin[0];
         let y = p[1] - origin[1];
@@ -185,6 +232,7 @@ fn draw_labels(
         b.finish()
     };
     for l in labels {
+        let style = styles.as_ref().and_then(|s| s.model(&l.layer));
         for (ring, color) in [
             (l.fill.as_deref(), l.color.as_str()),
             (l.mask.as_deref(), "#ffffff"),
@@ -206,8 +254,41 @@ fn draw_labels(
                 &p,
                 &ink(&l.color),
                 &Stroke {
-                    width: view.dpr as f32,
-                    ..Default::default()
+                    width: style
+                        .and_then(|s| s.line_weight)
+                        .map_or(view.dpr as f32, |w| {
+                            if w == 0 {
+                                1.
+                            } else {
+                                (f64::from(w) / 1000. * px_mm) as f32
+                            }
+                        }),
+                    line_cap: match style
+                        .and_then(|s| s.cap)
+                        .unwrap_or(kentos_sheet::LineCap::Butt)
+                    {
+                        kentos_sheet::LineCap::Butt => LineCap::Butt,
+                        kentos_sheet::LineCap::Round => LineCap::Round,
+                        kentos_sheet::LineCap::Square => LineCap::Square,
+                    },
+                    line_join: match style
+                        .and_then(|s| s.join)
+                        .unwrap_or(kentos_sheet::LineJoin::Miter)
+                    {
+                        kentos_sheet::LineJoin::Miter => LineJoin::Miter,
+                        kentos_sheet::LineJoin::Round => LineJoin::Round,
+                        kentos_sheet::LineJoin::Bevel => LineJoin::Bevel,
+                    },
+                    miter_limit: 10.,
+                    dash: style.and_then(|s| s.dash.as_ref()).and_then(|d| {
+                        StrokeDash::new(
+                            kentos_sheet::plot_profile::apply::dash_um(d)
+                                .iter()
+                                .map(|v| (f64::from(*v) / 1000. * px_mm) as f32)
+                                .collect(),
+                            0.,
+                        )
+                    }),
                 },
                 Transform::identity(),
                 None,

@@ -725,11 +725,11 @@ impl AtlasPlanned {
                     continue;
                 }
                 if self.atlas_maps.contains(&m.item) {
-                    if let Some(map) = drawer.draw(&book, m) {
+                    if let Some(map) = drawer.draw(&book, m,&sheet.id) {
                         maps.push(map);
                     }
                 } else if !shared.iter().any(|x| x.item == m.item)
-                    && let Some(map) = drawer.draw(&book, m)
+                    && let Some(map) = drawer.draw(&book, m,&sheet.id)
                 {
                     shared.push(map);
                 }

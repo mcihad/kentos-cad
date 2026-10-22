@@ -27,5 +27,6 @@ pub mod labels;
 pub mod layers;
 pub mod maps;
 mod raster;
-pub use raster::{MapImage, render_image as render_map_image};
+mod plot_ink;
+pub use raster::{MapImage, render_image as render_map_image,render_image_profile as render_map_image_profile};
 pub mod vectors;

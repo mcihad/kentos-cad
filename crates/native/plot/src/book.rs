@@ -22,7 +22,7 @@ use kentos_sheet::profile::Capabilities;
 use kentos_sheet::project::read_project_sheets;
 
 use crate::inputs::{crs_info, pdf_crs, sheet_data, sheet_variable};
-use crate::maps::{MapSource, vector_content};
+use crate::maps::{MapSource, vector_content_profile};
 
 /// A PDF of the book, the sheets it holds in order, and what it writes
 /// differently from the window's.
@@ -169,14 +169,15 @@ impl<'a> MapDrawer<'a> {
         &mut self,
         book: &SheetBook,
         m: &kentos_sheet::display::MapPrim,
+        sheet: &str,
     ) -> Option<PdfMap> {
         let doc = self.doc;
         let extent = m.extent?;
         let center = m.view.center?;
         let origin = kentos_geometry_core::Vec2::new(center.x, center.y);
         let at = m.view.scale.max(1e-6);
-        let annotation=m.view.annotation_denominator();
-        let key = (at.to_bits(),annotation.to_bits());
+        let annotation = m.view.annotation_denominator();
+        let key = (at.to_bits(), annotation.to_bits());
         // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
         let walls = Spatial::walls_differ_at(doc, at);
         if (self.annotative || walls) && !self.scaled.contains_key(&key) {
@@ -218,13 +219,16 @@ impl<'a> MapDrawer<'a> {
             _ => self.spatial,
         };
         let labels = crate::labels::map_labels(src.doc, label_spatial, m);
-        let content = match vector_content(
+        let content = match vector_content_profile(
             src,
             &m.layers,
             &m.layer_overrides,
             m.view.scale,
             extent,
             &labels,
+            kentos_sheet::plot_profile::for_sheet(book, sheet)
+                .ok()
+                .flatten(),
         ) {
             Ok(content) => content,
             Err(unsupported) => {
@@ -234,7 +238,16 @@ impl<'a> MapDrawer<'a> {
                     .map(|s| s.export.dpi)
                     .max()
                     .unwrap_or(300);
-                match crate::raster::map(src, m, &labels, dpi, self.drawing.as_deref()) {
+                match crate::raster::map(
+                    src,
+                    m,
+                    &labels,
+                    dpi,
+                    self.drawing.as_deref(),
+                    kentos_sheet::plot_profile::for_sheet(book, sheet)
+                        .ok()
+                        .flatten(),
+                ) {
                     Ok(png) => {
                         self.notes.push(format!("“{}” haritası {} dpi hedefiyle resim olarak yazıldı (en çok 8192 px/32 MP): {}.",book.item(&m.item).map_or(m.item.as_str(),|i|i.name.as_str()),dpi,
                             unsupported.iter().map(|(name,why)|format!("{name} ({})",why.join(", "))).collect::<Vec<_>>().join("; ")));
@@ -248,7 +261,7 @@ impl<'a> MapDrawer<'a> {
             }
         };
         Some(PdfMap {
-            sheet:None,
+            sheet: None,
             item: m.item.clone(),
             content,
             corners: None,
@@ -303,8 +316,16 @@ pub fn book_pdf_at(
     let library = library_of(doc);
     let mut render = base_inputs(doc, user, date);
     for id in &chosen {
-        let findings=kentos_sheet::preflight::preflight(&book,id,&render).map_err(|e|PlotError::new(&e.code,e.message))?;
-        if let Some(f)=findings.iter().find(|f|matches!(f.code.as_str(),"missing_named_view"|"bad_scale"|"bad_value")) {return Err(PlotError::new(&f.code,&f.message));}
+        let findings = kentos_sheet::preflight::preflight(&book, id, &render)
+            .map_err(|e| PlotError::new(&e.code, e.message))?;
+        if let Some(f) = findings.iter().find(|f| {
+            matches!(
+                f.code.as_str(),
+                "missing_named_view" | "bad_scale" | "bad_value"
+            )
+        }) {
+            return Err(PlotError::new(&f.code, &f.message));
+        }
     }
     // Each sheet's tables, coordinate lists and legends, from the ground its maps cover.
     for id in &chosen {
@@ -327,11 +348,15 @@ pub fn book_pdf_at(
             let Prim::Map(m) = p else {
                 continue;
             };
-            if m.view.center.is_none() || maps.iter().any(|x| x.item == m.item && x.sheet.as_ref()==Some(id)) {
+            if m.view.center.is_none()
+                || maps
+                    .iter()
+                    .any(|x| x.item == m.item && x.sheet.as_ref() == Some(id))
+            {
                 continue;
             }
-            if let Some(mut map) = drawer.draw(&book, m) {
-                map.sheet=Some(id.clone());
+            if let Some(mut map) = drawer.draw(&book, m, id) {
+                map.sheet = Some(id.clone());
                 maps.push(map);
             }
         }

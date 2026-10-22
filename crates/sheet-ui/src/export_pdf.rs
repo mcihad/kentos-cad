@@ -129,7 +129,7 @@ impl Designer {
                 } else if m.view.center.is_none() {
                     (false, texts::UNPLACED.to_owned())
                 } else {
-                    match painter.no_vectors(&MapRequest::of(m, size, k, true)) {
+                    match painter.no_vectors(&MapRequest::of(m, size, k, true).for_sheet(&id)) {
                         None => (true, String::new()),
                         Some(why) => (false, why),
                     }

@@ -2072,3 +2072,87 @@ fn editing_offsets_or_saving_a_preset_keeps_an_archived_profile_after_library_re
  for m in [P::Open,P::Offset(0,5.),P::Apply,P::Open,P::Name("Arşiv baskısı".into()),P::Save] {d.update(Message::PageSetup(m));}
  assert!(d.error().is_none(),"{:?}",d.error());assert_eq!(d.open_sheet().unwrap().plot.as_ref().unwrap().settings.profile_snapshot,Some(p.clone()));assert_eq!(d.book().page_setups[0].settings.profile_snapshot,Some(p));
 }
+
+#[test]
+fn twenty_plot_ink_drafts_use_the_same_fields_assignments_capture_and_single_undo() {
+    use kentos_sheet_ui::plot_profiles::{PlotMessage as P, ColorMode};
+    use kentos_sheet::plot_profile::{PlotProfile, PlotColor};
+    let data: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/sheet/v1/plot-ink.json")).unwrap();
+    for c in data["cases"].as_array().unwrap() {
+        let expected: PlotProfile = serde_json::from_value(c["profile"].clone()).unwrap();
+        let style = &expected.entries[0].style;
+        let mut d = Designer::new(Context {
+            layers: vec![("cizim".into(), "Çizim".into())],
+            ..context()
+        });
+        let mut book = kentos_sheet::SheetBook::default();
+        book.sheets
+            .push(serde_json::from_value(c["sheet"].clone()).unwrap());
+        d.load(book);
+        d.update(Message::Tab(1));
+        d.update(Message::Select(vec!["box".into()]));
+        let before = d.book().clone();
+        let mode = match style.color {
+            PlotColor::Object => ColorMode::Object,
+            PlotColor::Black => ColorMode::Black,
+            PlotColor::Grayscale => ColorMode::Gray,
+            PlotColor::Color { .. } => ColorMode::Color,
+        };
+        let mut edits = vec![
+            P::Open,
+            P::New(expected.kind),
+            P::Name(expected.name.clone()),
+            P::Key(expected.entries[0].key.clone()),
+            P::ColorMode(mode),
+            P::Screening(f64::from(style.screening)),
+            P::Weight(true),
+            P::WeightMm(f64::from(style.line_weight.unwrap()) / 1000.),
+            P::Dash(true),
+            P::DashText(
+                style
+                    .dash
+                    .as_ref()
+                    .unwrap()
+                    .iter()
+                    .map(|v| (f64::from(*v) / 1000.).to_string())
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            ),
+            P::Opacity(true),
+            P::Alpha(f64::from(style.opacity.unwrap())),
+            P::Cap(style.cap),
+            P::Join(style.join),
+            P::AssignLayer("cizim".into()),
+            P::AssignSelected,
+        ];
+        if let PlotColor::Color { value } = &style.color {
+            edits.push(P::Color(value.clone()));
+        }
+        edits.push(P::Save(true));
+        for edit in edits {
+            d.update(Message::PlotProfiles(edit));
+        }
+        assert!(d.error().is_none(), "{} {:?}", c["name"], d.error());
+        let p = &d.book().plot_profiles[0];
+        assert_eq!(p.entries, expected.entries);
+        assert_eq!(p.assignments, expected.assignments);
+        assert_eq!(p.default_style, expected.default_style);
+        assert_eq!(
+            d.open_sheet()
+                .unwrap()
+                .plot
+                .as_ref()
+                .unwrap()
+                .settings
+                .profile_snapshot
+                .as_ref(),
+            Some(p)
+        );
+        assert_eq!(d.open_sheet().unwrap().items, before.sheets[0].items);
+        d.update(Message::Undo);
+        assert_eq!(d.book(), &before);
+        d.update(Message::Redo);
+        assert_eq!(d.book().plot_profiles.len(), 1);
+    }
+}

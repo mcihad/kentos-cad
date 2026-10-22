@@ -101,13 +101,16 @@ pub(super) fn vector(
     m: &MapPrim,
     map: &VectorMap,
     groups: Option<&BTreeMap<String, (String, Ref)>>,
+    profile: Option<&crate::plot_profile::PlotProfile>,
 ) {
     let frame = Frame::of(m);
     let Some(extent) = frame.extent() else {
         return placeholder(page, m);
     };
     clip_to(page, &frame);
+    let resolved = profile.map(crate::plot_profile::apply::Resolved::new);
     for layer in &map.layers {
+        let style = resolved.as_ref().and_then(|p| p.model(&layer.id));
         let group = groups.and_then(|g| g.get(&layer.id));
         if let Some((name, r)) = group {
             page.properties.insert(name.clone(), *r);
@@ -116,10 +119,10 @@ pub(super) fn vector(
                 .properties_named(Name(name.as_bytes()));
         }
         for p in &layer.paths {
-            path(page, &frame, &extent, p);
+            path(page, &frame, &extent, p, style);
         }
         for t in &layer.texts {
-            text(page, &frame, t);
+            text(page, &frame, t, style);
         }
         if group.is_some() {
             page.c.end_marked_content();
@@ -145,12 +148,35 @@ fn meets(extent: &[f64; 4], pts: &[[f64; 2]], margin: f64) -> bool {
         && b[3] >= extent[1] - margin
 }
 
-fn path(page: &mut Page<'_>, frame: &Frame, extent: &[f64; 4], p: &MapPath) {
+fn path(
+    page: &mut Page<'_>,
+    frame: &Frame,
+    extent: &[f64; 4],
+    p: &MapPath,
+    style: Option<&crate::plot_profile::PlotStyle>,
+) {
     if p.points.len() < 2 && !(p.closed && p.points.len() >= 3) {
         return;
     }
+    let mut pen = p.stroke.clone();
+    if let (Some(stroke), Some(style)) = (&mut pen, style) {
+        crate::plot_profile::apply::map_stroke(stroke, style);
+    }
+    let fill_source = p.fill.as_deref().map(|c| {
+        style.map_or(std::borrow::Cow::Borrowed(c), |s| {
+            std::borrow::Cow::Owned(crate::plot_profile::apply::color(c, s))
+        })
+    });
     // A line's half width and its caps may reach in from outside the frame.
-    let margin = p.stroke.as_ref().map_or(0.0, |s| s.width * 1000.0) * frame.metres_per_um();
+    let margin = pen.as_ref().map_or(0., |s| {
+        s.width
+            * 1000.
+            * if s.join == crate::LineJoin::Miter {
+                5.
+            } else {
+                1.
+            }
+    }) * frame.metres_per_um();
     if !meets(extent, &p.points, margin) {
         return;
     }
@@ -158,11 +184,8 @@ fn path(page: &mut Page<'_>, frame: &Frame, extent: &[f64; 4], p: &MapPath) {
     let Some(paper) = paper else {
         return;
     };
-    let fill = p.fill.as_deref().filter(|_| p.closed).and_then(color);
-    let line = p
-        .stroke
-        .as_ref()
-        .and_then(|s| color(&s.color).map(|c| (s, c)));
+    let fill = fill_source.as_deref().filter(|_| p.closed).and_then(color);
+    let line = pen.as_ref().and_then(|s| color(&s.color).map(|c| (s, c)));
     if fill.is_none() && line.is_none() {
         return;
     }
@@ -206,7 +229,12 @@ fn stroke_style(page: &mut Page<'_>, s: &MapStroke) {
     page.line_style(mm(s.width), &dash, s.cap, s.join);
 }
 
-fn text(page: &mut Page<'_>, frame: &Frame, t: &MapText) {
+fn text(
+    page: &mut Page<'_>,
+    frame: &Frame,
+    t: &MapText,
+    style: Option<&crate::plot_profile::PlotStyle>,
+) {
     if t.text.trim().is_empty() || t.size <= 0.0 {
         return;
     }
@@ -244,6 +272,9 @@ fn text(page: &mut Page<'_>, frame: &Frame, t: &MapText) {
     };
     let (s, c) = (libm::sin(turn), libm::cos(turn));
     let start = [p0[0] + along * c - down * s, p0[1] + along * s + down * c];
+    let ink = style.map_or(std::borrow::Cow::Borrowed(t.color.as_str()), |s| {
+        std::borrow::Cow::Owned(crate::plot_profile::apply::color(&t.color, s))
+    });
     page.text_shaped(
         &t.text,
         (&t.font, t.weight, t.italic),
@@ -251,7 +282,7 @@ fn text(page: &mut Page<'_>, frame: &Frame, t: &MapText) {
         start,
         turn,
         shape,
-        &t.color,
+        &ink,
         t.halo.as_deref(),
     );
 }

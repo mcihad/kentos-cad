@@ -1326,6 +1326,14 @@ impl Designer {
                     .on_press(Message::PageSetup(crate::page_setup::SetupMessage::Open))
                     .style(style::button::secondary),
             )
+            .row(
+                "Mürekkep",
+                button(label::body("Baskı profilleri…"))
+                    .on_press(Message::PlotProfiles(
+                        crate::plot_profiles::PlotMessage::Open,
+                    ))
+                    .style(style::button::secondary),
+            )
             .section(
                 "Kâğıt",
                 self.open_section("paper"),

@@ -26,3 +26,5 @@ mod viewport_annotations;
 mod page_setups;
 
 mod plot_profiles;
+
+mod plot_ink;

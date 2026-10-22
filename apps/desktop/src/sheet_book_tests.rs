@@ -2163,3 +2163,79 @@ fn sheet19_plot_profile_screens() {
         );
     }
 }
+
+#[test]
+#[ignore="GPU plot ink controls and real PDF, run alone"]
+fn sheet20_plot_ink_screens() {
+    use kentos_sheet_ui::plot_profiles::{PlotMessage as P, ColorMode};
+    use kentos_sheet::{plot_profile::TableKind, LineCap, LineJoin};
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme, text, w, h) in [
+        ("light", 13, 1440., 900.),
+        ("dark", 13, 1440., 900.),
+        ("dark", 18, 1100., 650.),
+    ] {
+        let mut app = multipage_set_app(theme, text);
+        sheet(&mut app, Sheet::Tab(3));
+        for m in [
+            P::Open,
+            P::New(TableKind::Named),
+            P::Name("Mimari · gri ve ince".into()),
+            P::ColorMode(ColorMode::Gray),
+            P::Screening(70.),
+            P::Weight(true),
+            P::WeightMm(0.35),
+            P::Dash(true),
+            P::DashText("2 1".into()),
+            P::Opacity(true),
+            P::Alpha(80.),
+            P::Cap(Some(LineCap::Round)),
+            P::Join(Some(LineJoin::Miter)),
+        ] {
+            sheet(&mut app, Sheet::PlotProfiles(m));
+        }
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(w, h)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet20-ink-top-{theme}-{text}.png")))
+            .unwrap();
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Scroll(iced::Point::new(w / 2., h / 2.), -25.),
+        );
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet20-ink-bottom-{theme}-{text}.png")))
+            .unwrap();
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Click(iced::Point::new(
+                if text == 18 { 930. } else { 990. },
+                h - 32.,
+            )),
+        );
+        assert!(
+            app.sheets.book().sheets[2]
+                .plot
+                .as_ref()
+                .is_some_and(|p| p.settings.profile_snapshot.is_some())
+        );
+        assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
+        if theme == "light" {
+            let painter = app.sheet_painter();
+            std::fs::write(
+                out.join("sheet20-ink.pdf"),
+                app.sheets.pdf(&painter, app.sheet_pdf_host()).unwrap(),
+            )
+            .unwrap();
+        }
+    }
+}

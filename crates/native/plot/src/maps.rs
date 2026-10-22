@@ -108,16 +108,24 @@ pub struct MapSource<'a> {
 }
 
 /// Styled layers shared by vector PDF and the headless/desktop CPU painter.
-pub(crate) fn built_layers(
+pub(crate) fn built_layers_profile(
     src: &MapSource<'_>,
     layers: &MapLayers,
     overrides: &[kentos_sheet::kinds::LayerOverride],
     scale: f64,
     extent: [f64; 4],
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
 ) -> Vec<(String, String, kentos_native_style::StyledLayer)> {
     let doc = src.doc;
     let scale = scale.max(1e-6);
-    let pad = kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(20.);
+    let pen_mm = profile
+        .into_iter()
+        .flat_map(|p| &p.entries)
+        .filter_map(|e| e.style.line_weight)
+        .map(|w| f64::from(w) / 1000. * 5.)
+        .fold(20., f64::max);
+    let pad =
+        kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(pen_mm);
     let reach = [
         extent[0] - pad,
         extent[1] - pad,
@@ -205,9 +213,27 @@ pub fn vector_content(
     extent: [f64; 4],
     labels: &[MapLabel],
 ) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
+    vector_content_profile(src, layers, overrides, scale, extent, labels, None)
+}
+pub fn vector_content_profile(
+    src: &MapSource<'_>,
+    layers: &MapLayers,
+    overrides: &[kentos_sheet::kinds::LayerOverride],
+    scale: f64,
+    extent: [f64; 4],
+    labels: &[MapLabel],
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
+) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
     let doc = src.doc;
     let scale = scale.max(1e-6);
-    let pad = kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(20.);
+    let pen_mm = profile
+        .into_iter()
+        .flat_map(|p| &p.entries)
+        .filter_map(|e| e.style.line_weight)
+        .map(|w| f64::from(w) / 1000. * 5.)
+        .fold(20., f64::max);
+    let pad =
+        kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(pen_mm);
     let reach = [
         extent[0] - pad,
         extent[1] - pad,
@@ -226,7 +252,9 @@ pub fn vector_content(
     };
     let mut shapes = Vec::new();
     let mut unsupported = Vec::new();
-    for (id, name, styled) in built_layers(src, layers, overrides, scale, extent) {
+    for (id, name, styled) in
+        built_layers_profile(src, layers, overrides, scale, extent, profile)
+    {
         let (paths, missing) = layer_paths(&styled, &o, Some(reach));
         if !missing.is_empty() {
             unsupported.push((name.clone(), missing));

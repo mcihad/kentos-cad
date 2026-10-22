@@ -50,6 +50,8 @@ pub mod text;
 mod update;
 pub mod viewport_clip;
 pub mod page_setup;
+pub mod plot_profiles;
+mod plot_profiles_view;
 pub mod model_scope;
 pub mod variables;
 pub mod view;

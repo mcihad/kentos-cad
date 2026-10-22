@@ -16,3 +16,5 @@ mod viewport_annotations;
 mod multipage_sets;
 
 mod page_setups;
+
+mod plot_ink;

@@ -865,9 +865,29 @@ fn build_with(
     scene: &Scene<'_>,
     sheet: &Sheet,
     inputs: &RenderInputs,
-    drawn: Vec<(Item, bool)>,
+    mut drawn: Vec<(Item, bool)>,
     mut notes: Vec<Note>,
 ) -> Result<(DisplayList, Vec<Note>)> {
+    let profile = if inputs.mode == RenderMode::Export {
+        crate::plot_profile::for_sheet(ctx.book, &sheet.id)?
+    } else {
+        None
+    };
+    let mut materialized = std::collections::BTreeSet::new();
+    if let Some(profile) = profile {
+        let resolved = crate::plot_profile::apply::Resolved::new(profile);
+        for (it, _) in &mut drawn {
+            let style = if matches!(it.kind, ItemKind::Map(_) | ItemKind::Group(_)) {
+                resolved.explicit_paper(&it.id)
+            } else {
+                resolved.paper(&it.id)
+            };
+            if let Some(alpha) = style.and_then(|s| s.opacity) {
+                it.opacity = alpha;
+                materialized.insert(it.id.clone());
+            }
+        }
+    }
     // Tables that continue elsewhere lay their rows out first, so a continuation frame below them in the order has its rows.
     for (it, _) in &drawn {
         if let ItemKind::Table(_) | ItemKind::CoordinateList(_) = &it.kind {
@@ -876,7 +896,8 @@ fn build_with(
     }
     let mut prims = Vec::new();
     let export = inputs.mode == RenderMode::Export;
-    let list_of = |master: bool| -> &[Item] { if master { &scene.master } else { &sheet.items } };
+    let list_of =
+        |master: bool| -> &[Item] { if master { &scene.master } else { &sheet.items } };
     for (it, master) in &drawn {
         if it.is_group()
             || !shown(list_of(*master), it, &drawn, *master)
@@ -884,7 +905,12 @@ fn build_with(
         {
             continue;
         }
-        let opacity = opacity(list_of(*master), it);
+        let opacity = opacity(it, drawn.len(), |id| {
+            drawn
+                .iter()
+                .find(|(parent, scope)| parent.id == id && scope == master)
+                .map(|p| &p.0)
+        });
         if opacity < 100 {
             prims.push(Prim::PushGroup(GroupPrim {
                 item: it.id.clone(),
@@ -905,7 +931,7 @@ fn build_with(
         }
     }
     glyphs(&mut prims, &mut notes);
-    let list = DisplayList {
+    let mut list = DisplayList {
         sheet: sheet.id.clone(),
         size: sheet.page.size,
         paper: sheet
@@ -916,6 +942,9 @@ fn build_with(
         prims,
         master_items: scene.master.iter().map(|i| i.id.clone()).collect(),
     };
+    if let Some(profile) = profile {
+        crate::plot_profile::apply::paper(&mut list, profile, &materialized);
+    }
     Ok((list, notes))
 }
 
@@ -965,23 +994,17 @@ fn printable(list: &[Item], it: &Item) -> bool {
 }
 
 /// An item's opacity with its groups' (multiplied).
-fn opacity(list: &[Item], it: &Item) -> u8 {
+fn opacity<'a>(it: &Item, limit: usize, parent: impl Fn(&str) -> Option<&'a Item>) -> u8 {
     let mut o = u32::from(it.opacity.min(100));
-    let mut up = it
-        .group
-        .as_deref()
-        .and_then(|g| list.iter().find(|y| y.id == g));
+    let mut up = it.group.as_deref().and_then(&parent);
     let mut n = 0;
     while let Some(g) = up {
         o = o * u32::from(g.opacity.min(100)) / 100;
         n += 1;
-        if n > list.len() {
+        if n > limit {
             break;
         }
-        up = g
-            .group
-            .as_deref()
-            .and_then(|x| list.iter().find(|y| y.id == x));
+        up = g.group.as_deref().and_then(&parent);
     }
     o as u8
 }

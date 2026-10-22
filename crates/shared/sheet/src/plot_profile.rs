@@ -1,4 +1,5 @@
 //! Native, versioned plot tables: indexed colours and named styles are different key spaces.
+pub mod apply;
 use serde::{Serialize, Deserialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
@@ -211,11 +212,11 @@ pub fn validate(p: &PlotProfile) -> Result<()> {
             || s.line_weight.is_some_and(|v| !(0..=100000).contains(&v))
             || s.dash
                 .as_ref()
-                .is_some_and(|v| v.len() > 64 || v.iter().any(|d| *d <= 0 || *d > 1000000))
+                .is_some_and(|v| v.len() > 64 || v.iter().any(|d| *d < 0 || *d > 1000000) || (!v.is_empty() && v.iter().all(|d|*d==0)))
         {
             return Err(bad(
                 "bad_plot_style",
-                "Tarama ve opaklık %0–100, kalınlık 0–100 mm, çizgi aralıkları pozitif olmalı.",
+                "Tarama ve opaklık %0–100, kalınlık 0–100 mm, çizgi aralıkları negatif olmamalı ve tümü sıfır olmamalı.",
             ));
         }
         if let PlotColor::Color { value } = &s.color

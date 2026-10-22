@@ -40,6 +40,7 @@ const SVG_MAP_DPI: f64 = 200.0;
 
 /// One map's content, alone, for an SVG.
 struct MapOnly<'a> {
+    sheet: Option<&'a str>,
     prim: &'a MapPrim,
     k: f64,
     painter: &'a dyn MapPainter,
@@ -57,7 +58,8 @@ impl<'a, M> canvas::Program<M> for MapOnly<'a> {
         _: mouse::Cursor,
     ) -> Vec<canvas::Geometry> {
         let mut f = Frame::new(renderer, bounds.size());
-        let request = crate::painter::MapRequest::of(self.prim, bounds.size(), self.k, true);
+        let mut request = crate::painter::MapRequest::of(self.prim, bounds.size(), self.k, true);
+        request.sheet=self.sheet;
         if !self.painter.paint(&request, &mut f) {
             paint::placeholder(&mut f, Rectangle::new(Point::ORIGIN, bounds.size()), 1.0);
         }
@@ -215,11 +217,11 @@ impl Designer {
                     (f64::from(m.clip.width) * k) as f32,
                     (f64::from(m.clip.height) * k) as f32,
                 );
-                let request = crate::painter::MapRequest::of(m, size, k, true);
+                let request = crate::painter::MapRequest::of(m, size, k, true).for_sheet(id);
                 let content = match painter.vector(&request) {
                     Some(v) => v,
                     None => MapContent::Raster(RasterMap {
-                        png: self.map_png(painter, m, self.export_dpi)?,
+                        png: self.map_png_for_sheet(painter, m, self.export_dpi,Some(id))?,
                     }),
                 };
                 maps.push(PdfMap {
@@ -286,8 +288,14 @@ impl Designer {
         result
     }
 
-    /// One map's content as a PNG at `dpi` (a PDF's picture of a map the painter has no vectors for).
-    fn map_png(&self, painter: &dyn MapPainter, m: &MapPrim, dpi: u16) -> Result<Vec<u8>, String> {
+    /// One map's content for its owner page; a shared master may have different plot profiles on each page.
+    fn map_png_for_sheet(
+        &self,
+        painter: &dyn MapPainter,
+        m: &MapPrim,
+        dpi: u16,
+        sheet: Option<&str>,
+    ) -> Result<Vec<u8>, String> {
         let k = f64::from(dpi) / 25_400.0;
         let w = (f64::from(m.clip.width) * k).round().max(1.0) as u32;
         let h = (f64::from(m.clip.height) * k).round().max(1.0) as u32;
@@ -297,6 +305,7 @@ impl Designer {
             ));
         }
         let view: Element<'_, ()> = canvas_widget(MapOnly {
+            sheet,
             prim: m,
             k,
             painter,
@@ -331,6 +340,7 @@ impl Designer {
                 }
                 let size = Size::new(w as f32, h as f32);
                 let view: Element<'_, ()> = canvas_widget(MapOnly {
+                    sheet:Some(&list.sheet),
                     prim: m,
                     k,
                     painter,

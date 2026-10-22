@@ -305,12 +305,12 @@ pub(super) fn document(
                         )) =>
                     {
                         let pic = picture(&r.png).ok_or_else(|| {
-                        SheetError::at(
-                            "pdf_map_bad",
-                            m.item.clone(),
-                            "Haritanın resmi PNG değil ya da bozuk: haritayı yeniden çizdirip aktarın.",
-                        )
-                    })?;
+                    SheetError::at(
+                        "pdf_map_bad",
+                        m.item.clone(),
+                        "Haritanın resmi PNG değil ya da bozuk: haritayı yeniden çizdirip aktarın.",
+                    )
+                })?;
                         let id = write_picture(&mut doc, &pic);
                         rasters.insert(
                             (l.sheet.clone(), l.page, m.item.clone()),
@@ -388,7 +388,13 @@ pub(super) fn document(
                 Prim::Map(m) => {
                     match content_of(inputs, l.page, &l.sheet, &m.item) {
                         Some(MapContent::Vector(v)) => {
-                            maps::vector(&mut page, m, v, options.layers.then_some(&layers));
+                            maps::vector(
+                                &mut page,
+                                m,
+                                v,
+                                options.layers.then_some(&layers),
+                                crate::plot_profile::for_sheet(book, &l.sheet)?,
+                            );
                         }
                         Some(MapContent::Raster(_)) => {
                             match rasters.get(&(l.sheet.clone(), l.page, m.item.clone())) {

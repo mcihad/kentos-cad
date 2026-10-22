@@ -456,6 +456,8 @@ fn color(c: [u8; 4]) -> iced::Color {
 /// what the drawing area writes, labels.rs), as the web's map frames draw
 /// them. It borrows the open drawing for as long as the view lives.
 pub(crate) struct SheetPainter<'a> {
+    book: Option<&'a kentos_sheet::SheetBook>,
+    sheet: Option<&'a str>,
     interaction: Option<&'a App>,
     maps: &'a SheetMaps,
     doc: Option<&'a kentos_domain::Document>,
@@ -475,7 +477,7 @@ impl MapPainter for SheetPainter<'_> {
     fn interaction(&self,r:&MapRequest<'_>,frame:&mut Frame) { crate::sheet_model::paint(self.interaction,r,frame); }
     fn paint(&self, r: &MapRequest<'_>, frame: &mut Frame) -> bool {
         if let Some(primitive) = r.primitive
-            && !primitive.clip_shape.is_frame()
+            && (!primitive.clip_shape.is_frame() || self.plot_profile(r).is_some())
         {
             let mut keep = None;
             let (drawing, spatial) = self.source(r.view, &mut keep);
@@ -502,8 +504,14 @@ impl MapPainter for SheetPainter<'_> {
                 .drawing
                 .and_then(|d| d.path.as_ref())
                 .and_then(|p| p.to_str());
-            let Ok(image) = kentos_plot::render_map_image(&src, primitive, &labels, size, path)
-            else {
+            let Ok(image) = kentos_plot::render_map_image_profile(
+                &src,
+                primitive,
+                &labels,
+                size,
+                path,
+                self.plot_profile(r),
+            ) else {
                 return false;
             };
             kentos_sheet_ui::paint::draw_pixels(
@@ -571,8 +579,16 @@ impl MapPainter for SheetPainter<'_> {
                 |p| Vec2::new(p.x, p.y),
             ),
         };
-        kentos_plot::maps::vector_content(&src, r.layers, r.overrides, r.view.scale, extent, &texts)
-            .ok()
+        kentos_plot::maps::vector_content_profile(
+            &src,
+            r.layers,
+            r.overrides,
+            r.view.scale,
+            extent,
+            &texts,
+            self.plot_profile(r),
+        )
+        .ok()
     }
 
     fn vectors(&self) -> bool {
@@ -593,7 +609,9 @@ pub(crate) fn painter_of<'a>(
     images: &'a crate::style::images::Images,
 ) -> SheetPainter<'a> {
     SheetPainter {
-        interaction:None,
+        book: None,
+        sheet: None,
+        interaction: None,
         maps,
         doc: doc.map(|d| &d.model),
         drawing: doc,
@@ -611,6 +629,15 @@ pub(crate) fn painter_of<'a>(
 type Source<'s> = (Option<&'s Document>, &'s Spatial);
 
 impl SheetPainter<'_> {
+    fn plot_profile(&self, r: &MapRequest<'_>) -> Option<&kentos_sheet::plot_profile::PlotProfile> {
+        if !r.export {
+            return None;
+        }
+        kentos_sheet::plot_profile::for_sheet(self.book?, r.sheet.or(self.sheet)?)
+            .ok()
+            .flatten()
+    }
+
     /// The drawing and store a map at `scale` draws from (docs/adr/0323 §2): the copy at that scale
     /// when an annotative object draws otherwise there; `keep` holds the copy while it is used.
     fn source<'s>(
@@ -1162,14 +1189,16 @@ impl App {
 
     /// The maps' painter of the open drawing (its scene and its text).
     pub(crate) fn sheet_painter(&self) -> SheetPainter<'_> {
-        let mut painter=painter_of(
+        let mut painter = painter_of(
             &self.sheet_maps,
             self.document.as_ref(),
             &self.spatial,
             &self.styles.library,
             &self.styles.images,
         );
-        painter.interaction=Some(self);
+        painter.interaction = Some(self);
+        painter.book = Some(self.sheets.book());
+        painter.sheet = self.sheets.open_sheet().map(|s| s.id.as_str());
         painter
     }
 
@@ -2360,6 +2389,7 @@ mod tests {
             };
             let layers = MapLayers::default();
             let r = MapRequest {
+                sheet:None,
                 primitive: None,
                 overrides: &[],
                 item: "m",
@@ -2455,6 +2485,7 @@ mod tests {
         };
         let layers = MapLayers::default();
         let request = |k: f64| MapRequest {
+            sheet:None,
             primitive: None,
             overrides: &[],
             item: "m",

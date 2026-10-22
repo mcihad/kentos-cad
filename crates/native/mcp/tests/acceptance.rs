@@ -921,3 +921,46 @@ fn an_agent_keeps_twenty_native_plot_profiles_before_any_sheet_exists() {
     }
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn an_agent_exports_a_real_ink_profile_with_the_common_pen_fields() {
+    let data: Value =
+        serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/plot-ink.json"))
+            .unwrap();
+    let c = &data["cases"][17];
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-sheet20-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let source = dir.join("source.kcad");
+    std::fs::write(&source, serde_json::to_vec(&c["model"]).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":[{"op":"savePlotProfiles","profiles":[c["profile"]]},{"op":"savePageSetups","setups":[c["setup"]]},{"op":"addSheet","sheet":c["sheet"]},{"op":"applyPageSetup","sheet":"page","setup":"office"}]}),
+    );
+    let path = dir.join("ink.pdf");
+    call(
+        &mut server,
+        "drawing.exportPdf",
+        json!({"drawing":drawing,"path":path}),
+    );
+    let pdf = std::fs::read(&path).unwrap();
+    let pages = files::pdf_pages(&pdf);
+    let pen = pages[0]
+        .ink
+        .iter()
+        .find(|p| {
+            p.segment
+                .iter()
+                .zip([80., 72., 180., 72.])
+                .all(|(a, b)| (a - b).abs() < 0.002)
+        })
+        .unwrap();
+    assert!((pen.width - c["expected"]["widthMm"].as_f64().unwrap()).abs() < 0.0002);
+    assert_eq!(pen.dash.len(), 6);
+    assert_eq!(pen.cap, 2);
+    assert_eq!(pen.join, 2);
+    std::fs::remove_dir_all(dir).unwrap();
+}
