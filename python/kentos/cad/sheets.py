@@ -489,7 +489,10 @@ fit = _SheetsFit()
 
 class _SheetsSet(LocalCommand[SheetsSet, SheetsSetResult, SheetsSetResult]):
     """``cad.sheets.set`` v1. Pafta seti: Projenin pafta kitabını pafta seti olarak
-    listeler; çizimi ve kitabı değiştirmez. Paftalar kitabın sırasıyla, adlarının
+    listeler; çizimi ve kitabı değiştirmez. details=true tam kitap, sistem şablonları,
+    standardRatios ve güncel namedViews listesini verir; pictures=true gömülü resim
+    baytlarını ekler. Canlı adlı görünümün çerçeve ölçeği ve köşeleri güncel kaynaktan
+    hesaplanır; book içindeki capture değişmez. Paftalar kitabın sırasıyla, adlarının
     numarasıyla serilere ayrılır (A-101 → A-1 Planlar; A-2 Görünüşler, A-3 Kesitler, A-5
     Detaylar; numarasız Diğer, en sonda). Her harita çerçevesi: kimliği, adı, ölçeği,
     gösterdiği zemin (dört köşesi doğu ve kuzey, metre; kutusu) ve ona bakan görünüm
@@ -520,7 +523,10 @@ class _SheetsSet(LocalCommand[SheetsSet, SheetsSetResult, SheetsSetResult]):
         expected: Expected | None = None,
     ) -> SheetsSetResult:
         """Pafta seti: Projenin pafta kitabını pafta seti olarak listeler; çizimi ve kitabı
-        değiştirmez. Paftalar kitabın sırasıyla, adlarının numarasıyla serilere ayrılır
+        değiştirmez. details=true tam kitap, sistem şablonları, standardRatios ve güncel
+        namedViews listesini verir; pictures=true gömülü resim baytlarını ekler. Canlı adlı
+        görünümün çerçeve ölçeği ve köşeleri güncel kaynaktan hesaplanır; book içindeki
+        capture değişmez. Paftalar kitabın sırasıyla, adlarının numarasıyla serilere ayrılır
         (A-101 → A-1 Planlar; A-2 Görünüşler, A-3 Kesitler, A-5 Detaylar; numarasız Diğer,
         en sonda). Her harita çerçevesi: kimliği, adı, ölçeği, gösterdiği zemin (dört köşesi
         doğu ve kuzey, metre; kutusu) ve ona bakan görünüm işaretleri; atlas gibi sabit

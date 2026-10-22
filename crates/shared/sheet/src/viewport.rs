@@ -1,4 +1,4 @@
-//! CAD viewport configuration; captures are explicit snapshots (live named-view links are CAD-SHEET-14).
+//! Explicit drawing, captured and live model sources with physical CAD viewport cameras.
 use crate::{
     GroundPoint, Item, ItemKind, MapView, Result, SheetError,
     ops::{Op, SetItemProps},
@@ -99,8 +99,19 @@ pub enum Source {
     Drawing,
     /// A capture, not a live link. The stable id/name and original view are retained.
     ViewSnapshot { view: kentos_contracts::NamedView },
+    /// Stable named-view link. The capture identifies the link; rendering requires the current view.
+    ViewLink { view: kentos_contracts::NamedView },
 }
 impl Source {
+    pub fn captured_view(&self) -> Option<&NamedModelView> {
+        match self {
+            Self::Drawing => None,
+            Self::ViewSnapshot { view } | Self::ViewLink { view } => Some(view),
+        }
+    }
+    pub fn is_link(&self) -> bool {
+        matches!(self, Self::ViewLink { .. })
+    }
     pub fn is_drawing(&self) -> bool {
         matches!(self, Self::Drawing)
     }
@@ -180,6 +191,12 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
         || input.ratio.is_some()
         || input.scale.is_some()
         || input.rotation.is_some();
+    if map.source.is_link() && camera && input.source.is_none() {
+        return Err(SheetError::new(
+            "linked_view",
+            "Kamera adlı görünüme bağlı. Elle değiştirmek için kaynağı Bu çizim yapın.",
+        ));
+    }
     if map.view_locked && input.locked != Some(false) && camera {
         return Err(SheetError::new(
             "item_locked",
@@ -204,7 +221,7 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
     let mut view = old.clone();
     let frame = crate::display::map_content_rect(item, map);
     if let Some(source) = &input.source {
-        if let Source::ViewSnapshot { view: source_view } = source {
+        if let Some(source_view) = source.captured_view() {
             if !kentos_contracts::view_holds(source_view)
                 || !kentos_contracts::view_name_ok(&source_view.name)
             {
@@ -235,7 +252,7 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
             });
         }
         changed.source = source.clone();
-        if let Source::ViewSnapshot { view } = &mut changed.source
+        if let Source::ViewSnapshot { view } | Source::ViewLink { view } = &mut changed.source
             && view.id.is_empty()
         {
             view.id = kentos_contracts::view_key(view);
@@ -314,6 +331,16 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
 
 pub(crate) fn guard(before: &Item, after: &Item) -> Result<()> {
     if let (ItemKind::Map(a), ItemKind::Map(b)) = (&before.kind, &after.kind)
+        && a.source.is_link()
+        && a.source == b.source
+        && a.view != b.view
+    {
+        return Err(SheetError::new(
+            "linked_view",
+            "Kamera canlı adlı görünüme bağlı; önce kaynağı ayırın.",
+        ));
+    }
+    if let (ItemKind::Map(a), ItemKind::Map(b)) = (&before.kind, &after.kind)
         && a.view_locked
         && b.view_locked
         && (a.view != b.view || a.source != b.source)
@@ -345,4 +372,83 @@ pub(crate) fn serialize_denominator<S: serde::Serializer>(
     } else {
         serializer.serialize_f64(*value)
     }
+}
+
+/// Current camera for a linked view. Missing links fail closed instead of showing an old capture.
+pub fn effective_fixed_view(
+    item: &Item,
+    views: &[NamedModelView],
+) -> Result<crate::kinds::FixedView> {
+    let ItemKind::Map(map) = &item.kind else {
+        return Err(SheetError::new(
+            "not_fixed_map",
+            "Öğe model görünümü değil.",
+        ));
+    };
+    let MapView::Fixed(stored) = &map.view else {
+        return Err(SheetError::new(
+            "not_fixed_map",
+            "Atlas görünümü sabit kamera değil.",
+        ));
+    };
+    let Source::ViewLink { view: link } = &map.source else {
+        return Ok(stored.clone());
+    };
+    let view = views
+        .iter()
+        .find(|v| view_key(v) == view_key(link))
+        .ok_or_else(|| {
+            SheetError::new(
+                "missing_named_view",
+                format!("{} adlı görünüm bağlantısı bulunamadı.", link.name),
+            )
+        })?;
+    if !kentos_contracts::view_holds(view) {
+        return Err(SheetError::new("bad_value", "Kaynak görünüm geçersiz."));
+    }
+    let frame = crate::display::map_content_rect(item, map);
+    let denominator = crate::projection::fitting_denominator(view.width, view.height, &frame, 0);
+    if crate::projection::Scale::new(denominator).is_none() {
+        return Err(SheetError::new(
+            "bad_scale",
+            "Bağlı görünüm fiziksel ölçek sınırını aşıyor.",
+        ));
+    }
+    let mut result = stored.clone();
+    result.center = Some(GroundPoint {
+        x: view.center.x,
+        y: view.center.y,
+    });
+    result.rotation =
+        crate::units::norm_mdeg((view.twist * 180000. / core::f64::consts::PI).round() as i64);
+    result.ratio = Some(ScaleRatio {
+        paper: 1.,
+        model: denominator,
+    });
+    Ok(result)
+}
+
+/// Detaching a live source retains its current effective camera when the registry is available.
+/// The operation remains explicit; replay and undo do not need a host registry.
+pub fn prepare_source(
+    book: &crate::SheetBook,
+    input: &SetViewport,
+    views: &[NamedModelView],
+) -> Result<SetViewport> {
+    let mut request = input.clone();
+    if matches!(input.source, Some(Source::Drawing))
+        && input.center.is_none()
+        && input.bounds.is_none()
+        && input.ratio.is_none()
+        && input.scale.is_none()
+        && input.rotation.is_none()
+        && let Some(item) = book.item(&input.id)
+        && matches!(&item.kind,ItemKind::Map(m) if m.source.is_link())
+        && let Ok(view) = effective_fixed_view(item, views)
+    {
+        request.center = view.center;
+        request.ratio = view.ratio;
+        request.rotation = Some(view.rotation);
+    }
+    Ok(request)
 }

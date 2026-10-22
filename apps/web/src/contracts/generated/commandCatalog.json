@@ -553897,7 +553897,7 @@
       "id": "cad.sheets.set",
       "version": 1,
       "title": "Pafta seti",
-      "summary": "Projenin pafta kitabını pafta seti olarak listeler; çizimi ve kitabı değiştirmez. Paftalar kitabın sırasıyla, adlarının numarasıyla serilere ayrılır (A-101 → A-1 Planlar; A-2 Görünüşler, A-3 Kesitler, A-5 Detaylar; numarasız Diğer, en sonda). Her harita çerçevesi: kimliği, adı, ölçeği, gösterdiği zemin (dört köşesi doğu ve kuzey, metre; kutusu) ve ona bakan görünüm işaretleri; atlas gibi sabit görünümü olmayan çerçevenin zemini yoktur. uids verilince etkilenen çerçeveler: nesnelerden birinin kutusu çerçevenin zemin kutusuyla kesişen (shows), nesnelerden bir görünüm işaretinin hedefi olan (marked) ve zemini bilinmeyen (unknown) çerçeveler, kitabın sırasıyla; paftaları yeniden basılacaklardır. Kutu kesişimidir: fazladan pafta listelenebilir, eksik listelenmez.",
+      "summary": "Projenin pafta kitabını pafta seti olarak listeler; çizimi ve kitabı değiştirmez. details=true tam kitap, sistem şablonları, standardRatios ve güncel namedViews listesini verir; pictures=true gömülü resim baytlarını ekler. Canlı adlı görünümün çerçeve ölçeği ve köşeleri güncel kaynaktan hesaplanır; book içindeki capture değişmez. Paftalar kitabın sırasıyla, adlarının numarasıyla serilere ayrılır (A-101 → A-1 Planlar; A-2 Görünüşler, A-3 Kesitler, A-5 Detaylar; numarasız Diğer, en sonda). Her harita çerçevesi: kimliği, adı, ölçeği, gösterdiği zemin (dört köşesi doğu ve kuzey, metre; kutusu) ve ona bakan görünüm işaretleri; atlas gibi sabit görünümü olmayan çerçevenin zemini yoktur. uids verilince etkilenen çerçeveler: nesnelerden birinin kutusu çerçevenin zemin kutusuyla kesişen (shows), nesnelerden bir görünüm işaretinin hedefi olan (marked) ve zemini bilinmeyen (unknown) çerçeveler, kitabın sırasıyla; paftaları yeniden basılacaklardır. Kutu kesişimidir: fazladan pafta listelenebilir, eksik listelenmez.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -558279,6 +558279,24 @@
                   "view"
                 ],
                 "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Stable named-view link. The capture identifies the link; rendering requires the current view.",
+                "properties": {
+                  "type": {
+                    "const": "viewLink",
+                    "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/NamedView"
+                  }
+                },
+                "required": [
+                  "type",
+                  "view"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -558527,6 +558545,16 @@
               {
                 "type": "null"
               }
+            ]
+          },
+          "namedViews": {
+            "description": "With details: the same current named-view registry the desktop source picker uses.",
+            "items": {
+              "$ref": "#/$defs/NamedView"
+            },
+            "type": [
+              "array",
+              "null"
             ]
           },
           "pictures": {
@@ -562924,6 +562952,24 @@
                   "view"
                 ],
                 "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Stable named-view link. The capture identifies the link; rendering requires the current view.",
+                "properties": {
+                  "type": {
+                    "const": "viewLink",
+                    "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/NamedView"
+                  }
+                },
+                "required": [
+                  "type",
+                  "view"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -563172,6 +563218,16 @@
               {
                 "type": "null"
               }
+            ]
+          },
+          "namedViews": {
+            "description": "With details: the same current named-view registry the desktop source picker uses.",
+            "items": {
+              "$ref": "#/$defs/NamedView"
+            },
+            "type": [
+              "array",
+              "null"
             ]
           },
           "pictures": {
@@ -1036578,6 +1036634,24 @@
                   "view"
                 ],
                 "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Stable named-view link. The capture identifies the link; rendering requires the current view.",
+                "properties": {
+                  "type": {
+                    "const": "viewLink",
+                    "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/NamedView"
+                  }
+                },
+                "required": [
+                  "type",
+                  "view"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -1043313,6 +1043387,24 @@
                 "properties": {
                   "type": {
                     "const": "viewSnapshot",
+                    "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/NamedView"
+                  }
+                },
+                "required": [
+                  "type",
+                  "view"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Stable named-view link. The capture identifies the link; rendering requires the current view.",
+                "properties": {
+                  "type": {
+                    "const": "viewLink",
                     "type": "string"
                   },
                   "view": {

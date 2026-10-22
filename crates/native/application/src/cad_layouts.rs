@@ -413,7 +413,7 @@ pub fn export(doc: &Document) -> (Vec<CadLayout>, Vec<ReportItem>) {
                     {
                         omitted += 1;
                     }
-                    if let MapView::Fixed(view) = &map.view
+                    if let Ok(view) = kentos_sheet::viewport::effective_fixed_view(item,&doc.settings().named_views)
                         && let Some(center) = &view.center
                     {
                         let rect = kentos_sheet::display::map_content_rect(item, map);

@@ -201,6 +201,10 @@ pub struct SheetsSetResult {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub standard_ratios: Option<Vec<kentos_contracts::PaperScaleRatio>>,
+    /// With details: the same current named-view registry the desktop source picker uses.
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    #[cfg_attr(feature="ts",ts(optional))]
+    pub named_views:Option<Vec<kentos_contracts::NamedView>>,
 }
 
 #[cfg(test)]

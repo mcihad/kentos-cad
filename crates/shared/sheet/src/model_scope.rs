@@ -16,6 +16,14 @@ pub struct Viewport {
 }
 impl Viewport {
     pub fn resolve(book: &SheetBook, sheet: &str, id: &str) -> Result<Self> {
+        Self::resolve_with_views(book, sheet, id, &[])
+    }
+    pub fn resolve_with_views(
+        book: &SheetBook,
+        sheet: &str,
+        id: &str,
+        views: &[crate::viewport::NamedModelView],
+    ) -> Result<Self> {
         let s = book
             .sheets
             .iter()
@@ -26,21 +34,25 @@ impl Viewport {
             .iter()
             .find(|i| i.id == id)
             .ok_or_else(|| SheetError::new("scope_mismatch", "Görünüm bu paftada değil."))?;
-        Self::of(item)
+        Self::of_with_views(item, views)
     }
     pub fn of(item: &Item) -> Result<Self> {
+        Self::of_with_views(item, &[])
+    }
+    pub fn of_with_views(item: &Item, views: &[crate::viewport::NamedModelView]) -> Result<Self> {
         let ItemKind::Map(map) = &item.kind else {
             return Err(SheetError::new(
                 "not_viewport",
                 "Öğe bir model görünümü değil.",
             ));
         };
-        let MapView::Fixed(view) = &map.view else {
+        let MapView::Fixed(_) = &map.view else {
             return Err(SheetError::new(
                 "atlas_scope",
                 "Atlas sayfası model düzenleme kapsamı olamaz.",
             ));
         };
+        let view = crate::viewport::effective_fixed_view(item, views)?;
         let center = view
             .center
             .ok_or_else(|| SheetError::new("unplaced_viewport", "Görünümün model merkezi yok."))?;
@@ -105,6 +117,12 @@ pub struct NavigateViewport {
     pub anchor: Option<[f64; 2]>,
 }
 pub fn navigate(item: &Item, input: &NavigateViewport) -> Result<crate::ops::Op> {
+    if matches!(&item.kind,ItemKind::Map(m) if m.source.is_link()) {
+        return Err(SheetError::new(
+            "linked_view",
+            "Kaydırmak için önce canlı görünüm bağını Bu çizim yapın.",
+        ));
+    }
     let v = Viewport::of(item)?;
     if !input.delta.iter().all(|x| x.is_finite())
         || !input.factor.is_finite()

@@ -51,13 +51,19 @@ impl Designer {
         )
     }
     pub fn active_viewport(&self) -> Option<Viewport> {
-        Viewport::resolve(&self.book, self.open.as_deref()?, self.model_scope()?).ok()
+        Viewport::resolve_with_views(
+            &self.book,
+            self.open.as_deref()?,
+            self.model_scope()?,
+            &self.ctx.named_views,
+        )
+        .ok()
     }
     pub(crate) fn enter_model(&mut self, id: &str) -> Vec<Effect> {
         let Some(sheet) = self.open.as_deref() else {
             return vec![];
         };
-        match Viewport::resolve(&self.book, sheet, id) {
+        match Viewport::resolve_with_views(&self.book, sheet, id, &self.ctx.named_views) {
             Ok(_) => {
                 self.model_scope = Some(id.into());
                 self.drag = None;

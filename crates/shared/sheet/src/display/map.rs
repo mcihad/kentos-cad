@@ -86,7 +86,7 @@ pub fn content_rect(item: &Item, m: &MapItem) -> RectUm {
 /// A map's frame as drawn: its view, or an atlas page's.
 pub(crate) fn frame_of(item: &Item, m: &MapItem, inputs: &RenderInputs) -> Option<MapFrame> {
     let (center, scale, view_rot) = match &m.view {
-        MapView::Fixed(f) => (f.center, f.denominator(), f.rotation),
+        MapView::Fixed(_) => { let f=crate::viewport::effective_fixed_view(item,&inputs.named_views).ok()?; (f.center,f.denominator(),f.rotation) },
         MapView::Atlas(a) => {
             let page = inputs
                 .atlas

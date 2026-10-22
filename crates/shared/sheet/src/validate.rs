@@ -525,7 +525,7 @@ fn kind(path: &str, item: &Item) -> Result<()> {
     match &item.kind {
         ItemKind::Map(m) => {
             m.clip.validate()?;
-            if let crate::viewport::Source::ViewSnapshot { view } = &m.source
+            if let Some(view) = m.source.captured_view()
                 && (!kentos_contracts::view_holds(view)
                     || !kentos_contracts::view_name_ok(&view.name))
             {

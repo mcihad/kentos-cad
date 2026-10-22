@@ -641,3 +641,57 @@ fn explicitly_scoped_viewport_model_commands_and_navigation_replay_independent_c
         );
     }
 }
+
+#[test]
+fn live_named_view_is_resolved_by_mcp_without_rewriting_its_capture() {
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/viewport-links.json"
+    ))
+    .unwrap();
+    let c = &fixture["cases"][0];
+    let mut server = Server::new();
+    let opened = call(
+        &mut server,
+        "drawing.open",
+        json!({"path":concat!(env!("CARGO_MANIFEST_DIR"),"/../../../fixtures/kcad/v2/sheets.kcad")}),
+    );
+    let drawing = opened["drawing"].as_str().unwrap();
+    let first = call(
+        &mut server,
+        "cad.views.edit",
+        json!({"drawing":drawing,"edit":{"kind":"save","name":"Canlı plan","center":{"x":2.5,"y":1.5},"width":38.,"height":11.}}),
+    );
+    let source = first["output"]["views"][0].clone();
+    call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":[{"op":"addSheet","sheet":c["sheet"]},{"op":"setViewport","id":"viewport","source":{"type":"viewLink","view":source}}]}),
+    );
+    call(
+        &mut server,
+        "cad.views.edit",
+        json!({"drawing":drawing,"edit":{"kind":"save","name":"Canlı plan","center":{"x":12.5,"y":21.5},"width":19.,"height":5.5}}),
+    );
+    let read = call(
+        &mut server,
+        "cad.sheets.set",
+        json!({"drawing":drawing,"details":true}),
+    );
+    let page = read["output"]["sheets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["id"] == "page")
+        .unwrap();
+    assert_eq!(page["frames"][0]["scale"], 50.);
+    let page = read["output"]["book"]["sheets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["id"] == "page")
+        .unwrap();
+    assert_eq!(
+        page["items"][0]["kind"]["source"]["view"]["center"]["x"],
+        2.5
+    );
+}

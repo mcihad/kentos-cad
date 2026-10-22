@@ -1,0 +1,2665 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "live 0.5 rotation 0",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 0.19,
+          "height": 0.055,
+          "twist": 0.0
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 0.5,
+        "rotation": 0
+      }
+    },
+    {
+      "name": "live 0.5 rotation 30",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 0.19,
+          "height": 0.055,
+          "twist": 0.5235987755982988
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 0.5,
+        "rotation": 30000
+      }
+    },
+    {
+      "name": "live 0.5 rotation 90",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 0.19,
+          "height": 0.055,
+          "twist": 1.5707963267948966
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 0.5,
+        "rotation": 90000
+      }
+    },
+    {
+      "name": "live 0.5 rotation 137",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 0.19,
+          "height": 0.055,
+          "twist": 2.3911010752322315
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 0.5,
+        "rotation": 137000
+      }
+    },
+    {
+      "name": "live 20 rotation 0",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 7.6,
+          "height": 2.2,
+          "twist": 0.0
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 20,
+        "rotation": 0
+      }
+    },
+    {
+      "name": "live 20 rotation 30",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 7.6,
+          "height": 2.2,
+          "twist": 0.5235987755982988
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 20,
+        "rotation": 30000
+      }
+    },
+    {
+      "name": "live 20 rotation 90",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 7.6,
+          "height": 2.2,
+          "twist": 1.5707963267948966
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 20,
+        "rotation": 90000
+      }
+    },
+    {
+      "name": "live 20 rotation 137",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 7.6,
+          "height": 2.2,
+          "twist": 2.3911010752322315
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 20,
+        "rotation": 137000
+      }
+    },
+    {
+      "name": "live 37.5 rotation 0",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 14.25,
+          "height": 4.125,
+          "twist": 0.0
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 37.5,
+        "rotation": 0
+      }
+    },
+    {
+      "name": "live 37.5 rotation 30",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 14.25,
+          "height": 4.125,
+          "twist": 0.5235987755982988
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 37.5,
+        "rotation": 30000
+      }
+    },
+    {
+      "name": "live 37.5 rotation 90",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 14.25,
+          "height": 4.125,
+          "twist": 1.5707963267948966
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 37.5,
+        "rotation": 90000
+      }
+    },
+    {
+      "name": "live 37.5 rotation 137",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 14.25,
+          "height": 4.125,
+          "twist": 2.3911010752322315
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 37.5,
+        "rotation": 137000
+      }
+    },
+    {
+      "name": "live 50 rotation 0",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 19.0,
+          "height": 5.5,
+          "twist": 0.0
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 50,
+        "rotation": 0
+      }
+    },
+    {
+      "name": "live 50 rotation 30",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 19.0,
+          "height": 5.5,
+          "twist": 0.5235987755982988
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 50,
+        "rotation": 30000
+      }
+    },
+    {
+      "name": "live 50 rotation 90",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 19.0,
+          "height": 5.5,
+          "twist": 1.5707963267948966
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 50,
+        "rotation": 90000
+      }
+    },
+    {
+      "name": "live 50 rotation 137",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 19.0,
+          "height": 5.5,
+          "twist": 2.3911010752322315
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 50,
+        "rotation": 137000
+      }
+    },
+    {
+      "name": "live 100 rotation 0",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 38.0,
+          "height": 11.0,
+          "twist": 0.0
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 100,
+        "rotation": 0
+      }
+    },
+    {
+      "name": "live 100 rotation 30",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 38.0,
+          "height": 11.0,
+          "twist": 0.5235987755982988
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 100,
+        "rotation": 30000
+      }
+    },
+    {
+      "name": "live 100 rotation 90",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 38.0,
+          "height": 11.0,
+          "twist": 1.5707963267948966
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 100,
+        "rotation": 90000
+      }
+    },
+    {
+      "name": "live 100 rotation 137",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 3000,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 2000,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "source": {
+          "type": "viewLink",
+          "view": {
+            "id": "detail-a",
+            "name": "Detay A",
+            "center": {
+              "x": 2.5,
+              "y": 1.5
+            },
+            "width": 5.0,
+            "height": 3.0,
+            "twist": 0.0
+          }
+        }
+      },
+      "views": [
+        {
+          "id": "other",
+          "name": "Detay A",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 100.0,
+          "twist": 0.0
+        },
+        {
+          "id": "detail-a",
+          "name": "Detay A güncel",
+          "center": {
+            "x": 500002.5,
+            "y": 4500001.5
+          },
+          "width": 38.0,
+          "height": 11.0,
+          "twist": 2.3911010752322315
+        }
+      ],
+      "expected": {
+        "center": {
+          "x": 500002.5,
+          "y": 4500001.5
+        },
+        "scale": 100,
+        "rotation": 137000
+      }
+    }
+  ]
+}

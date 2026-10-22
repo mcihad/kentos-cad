@@ -139,7 +139,7 @@ impl Spatial {
     /// Whether a sheet's map at 1:`scale` draws `doc`'s walls otherwise than the drawing does (docs/adr/0339 §4):
     /// then the map wants a store of its own.
     pub fn walls_differ_at(doc: &Document, scale: f64) -> bool {
-        doc.has_walls()
+        doc.has_scale_dependent_geometry()
             && kentos_native_application::walls::view_at(doc.settings(), scale)
                 != kentos_native_application::walls::view_of(doc.settings())
     }

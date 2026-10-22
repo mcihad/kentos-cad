@@ -2739,7 +2739,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_SHEETS_SET.into(),
             version: crate::CAD_SHEETS_SET_VERSION,
             title: "Pafta seti".into(),
-            summary: "Projenin pafta kitabını pafta seti olarak listeler; çizimi ve kitabı değiştirmez. Paftalar kitabın sırasıyla, adlarının numarasıyla serilere ayrılır (A-101 → A-1 Planlar; A-2 Görünüşler, A-3 Kesitler, A-5 Detaylar; numarasız Diğer, en sonda). Her harita çerçevesi: kimliği, adı, ölçeği, gösterdiği zemin (dört köşesi doğu ve kuzey, metre; kutusu) ve ona bakan görünüm işaretleri; atlas gibi sabit görünümü olmayan çerçevenin zemini yoktur. \
+            summary: "Projenin pafta kitabını pafta seti olarak listeler; çizimi ve kitabı değiştirmez. details=true tam kitap, sistem şablonları, standardRatios ve güncel namedViews listesini verir; pictures=true gömülü resim baytlarını ekler. Canlı adlı görünümün çerçeve ölçeği ve köşeleri güncel kaynaktan hesaplanır; book içindeki capture değişmez. Paftalar kitabın sırasıyla, adlarının numarasıyla serilere ayrılır (A-101 → A-1 Planlar; A-2 Görünüşler, A-3 Kesitler, A-5 Detaylar; numarasız Diğer, en sonda). Her harita çerçevesi: kimliği, adı, ölçeği, gösterdiği zemin (dört köşesi doğu ve kuzey, metre; kutusu) ve ona bakan görünüm işaretleri; atlas gibi sabit görünümü olmayan çerçevenin zemini yoktur. \
                       uids verilince etkilenen çerçeveler: nesnelerden birinin kutusu çerçevenin zemin kutusuyla kesişen (shows), nesnelerden bir görünüm işaretinin hedefi olan (marked) ve zemini bilinmeyen (unknown) çerçeveler, kitabın sırasıyla; paftaları yeniden basılacaklardır. Kutu kesişimidir: fazladan pafta listelenebilir, eksik listelenmez."
                 .into(),
             aliases: vec![],

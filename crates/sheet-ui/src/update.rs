@@ -402,7 +402,10 @@ impl Designer {
             Message::Pdf(m) => return self.pdf_update(m),
             Message::ViewportClip(m) => self.viewport_clip_update(m),
             Message::MapConfigure(input) => {
-                self.commit(vec![Op::SetViewport(*input)]);
+                match kentos_sheet::viewport::prepare_source(&self.book,&input,&self.ctx.named_views) {
+                    Ok(input)=>{self.commit(vec![Op::SetViewport(input)]);}
+                    Err(e)=>self.error=Some(e.message),
+                }
             }
             Message::MapScaleFromDrawing => {
                 if let Some(scale)=self.ctx.exact_plot_scale.or_else(||self.ctx.capabilities.plot_scale.map(f64::from)).filter(|s|s.is_finite()&&(1e-6..=1e8).contains(s)) {

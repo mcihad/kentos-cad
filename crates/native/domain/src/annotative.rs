@@ -18,6 +18,23 @@ impl Document {
             .any(|s| annotative_of(&s.entity).is_some())
     }
 
+    /// Architecture whose detail or paper-sized words depend on a viewport's scale.
+    pub fn has_scale_dependent_geometry(&self) -> bool {
+        self.store.iter().any(|s| {
+            matches!(
+                &*s.entity,
+                kentos_contracts::Entity::Wall(_)
+                    | kentos_contracts::Entity::Space(_)
+                    | kentos_contracts::Entity::Grid(_)
+                    | kentos_contracts::Entity::Column(_)
+                    | kentos_contracts::Entity::Stair(_)
+                    | kentos_contracts::Entity::Ramp(_)
+                    | kentos_contracts::Entity::Tag(_)
+                    | kentos_contracts::Entity::ViewMark(_)
+            )
+        })
+    }
+
     /// Whether the drawing has a wall (docs/adr/0339 §4): a map at another scale may draw it at another detail.
     pub fn has_walls(&self) -> bool {
         self.store

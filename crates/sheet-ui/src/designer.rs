@@ -677,6 +677,7 @@ impl Designer {
     pub(crate) fn inputs(&self, mode: RenderMode) -> RenderInputs {
         let mut i = self.data.clone();
         i.mode = mode;
+        i.named_views=self.ctx.named_views.clone();
         i.project = self.ctx.project.clone();
         i.capabilities = self.ctx.capabilities.clone();
         if self.ctx.crs.is_some() {
@@ -846,6 +847,7 @@ impl Designer {
 /// Inputs with nothing of the host's yet.
 pub fn empty_inputs() -> RenderInputs {
     RenderInputs {
+        named_views:Vec::new(),
         mode: RenderMode::Design,
         project: ProjectInfo::default(),
         capabilities: Capabilities::default(),

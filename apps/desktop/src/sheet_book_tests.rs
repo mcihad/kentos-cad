@@ -1501,3 +1501,166 @@ fn sheet13_model_scope_screens() {
         }
     }
 }
+
+#[test]
+#[ignore="GPU images and independent PDF, run alone"]
+fn sheet14_named_view_screens() {
+    use kentos_sheet::{ItemKind, MapView, viewport::Source};
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/viewport-links.json"
+    ))
+    .unwrap();
+    let mut page: kentos_sheet::Sheet =
+        serde_json::from_value(data["cases"][0]["sheet"].clone()).unwrap();
+    page.name = "A-101 · Canlı görünüm ve kopya".into();
+    let mut items = Vec::new();
+    let captured = kentos_commands::NamedView {
+        id: "model-plan".into(),
+        name: "Plan ilk kayıt".into(),
+        center: kentos_commands::Vec2 { x: 2.5, y: 1.5 },
+        width: 14.,
+        height: 6.,
+        twist: 0.,
+    };
+    let current = kentos_commands::NamedView {
+        name: "Plan güncel".into(),
+        width: 7.,
+        height: 3.,
+        ..captured.clone()
+    };
+    for (id, left, source) in [
+        (
+            "live",
+            35000,
+            Source::ViewLink {
+                view: captured.clone(),
+            },
+        ),
+        (
+            "copy",
+            235000,
+            Source::ViewSnapshot {
+                view: captured.clone(),
+            },
+        ),
+    ] {
+        let mut item = page.items[0].clone();
+        item.id = id.into();
+        item.name = if id == "live" {
+            "Canlı · Plan güncel"
+        } else {
+            "Kopya · İlk kayıt"
+        }
+        .into();
+        item.frame = kentos_sheet::units::RectUm::new(left, 60000, 150000, 120000);
+        let ItemKind::Map(map) = &mut item.kind else {
+            panic!()
+        };
+        map.source = source;
+        let MapView::Fixed(view) = &mut map.view else {
+            panic!()
+        };
+        view.center = Some(kentos_sheet::GroundPoint { x: 2.5, y: 1.5 });
+        view.scale = 100;
+        view.ratio = None;
+        view.rotation = 0;
+        items.push(item);
+        let mut kind = kentos_sheet::kinds::default_kind("text").unwrap();
+        let ItemKind::Text(t) = &mut kind else {
+            panic!()
+        };
+        t.content = if id == "live" {
+            "Canlı görünüm · [% @olcek %]"
+        } else {
+            "Kopya görünüm · [% @olcek %]"
+        }
+        .into();
+        t.map = Some(id.into());
+        t.style.size = 3000;
+        items.push(kentos_sheet::Item::new(
+            &format!("title-{id}"),
+            &format!("Başlık {id}"),
+            kentos_sheet::units::RectUm::new(left, 190000, 150000, 15000),
+            kind,
+        ));
+    }
+    page.items = items;
+    let mut book = kentos_sheet::SheetBook::default();
+    book.sheets.push(page);
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/commands/v1/cad.sheets.fit.json"
+    ))
+    .unwrap();
+    let mut snapshot: kentos_commands::DocumentSnapshotV1 =
+        serde_json::from_value(fixture["setup"].clone()).unwrap();
+    snapshot.settings.named_views = vec![current];
+    snapshot.entities.clear();
+    snapshot.entities.push(serde_json::from_value(serde_json::json!({"kind":"polyline","id":1,"layerId":"cizim","attrs":{},"closed":true,"color":"#1747aa","pts":[{"x":0.,"y":0.},{"x":5.,"y":0.},{"x":5.,"y":3.},{"x":0.,"y":3.}]})).unwrap());
+    let mut model = kentos_domain::Document::from_snapshot(snapshot).unwrap();
+    model
+        .set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
+        .unwrap();
+    let answer=kentos_native_application::registry::run(&mut kentos_native_application::ExecutionContext::new(&mut model),"cad.viewmarks.create",kentos_commands::CallOp::Execute,serde_json::json!({"layerId":"cizim","marks":[{"form":"elevation","points":[{"x":2.5,"y":1.5}],"mark":"42","size":2.5}]})).unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    let pdf = kentos_plot::book::book_pdf(&model, &[], "Test", "2026-10-22").unwrap();
+    std::fs::write(out.join("sheet14-view-links.pdf"), pdf.bytes).unwrap();
+    for (theme, text, w, h) in [
+        ("light", 13, 1440., 900.),
+        ("dark", 13, 1440., 900.),
+        ("dark", 18, 1100., 650.),
+    ] {
+        let (mut app, _store) = app_with_store("sheet14-links");
+        app.settings.choose(&[
+            ("appearance.theme", serde_json::json!(theme)),
+            ("appearance.textSize", serde_json::json!(text)),
+        ]);
+        app.apply_settings();
+        let doc = Document::from_v2(model.to_snapshot_v2(), None).unwrap();
+        let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        drive(&mut app, task);
+        sheet(&mut app, Sheet::Tab(1));
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(w, h)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        sheet(&mut app, Sheet::Select(vec!["live".into()]));
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet14-view-links-{theme}-{text}.png")))
+            .unwrap();
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Scroll(
+                iced::Point::new(w - 100., h - 140.),
+                if text == 18 { -15. } else { -8. },
+            ),
+        );
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet14-view-source-{theme}-{text}.png")))
+            .unwrap();
+        let maps: Vec<_> = app
+            .sheets
+            .display_list()
+            .unwrap()
+            .prims
+            .iter()
+            .filter_map(|p| {
+                if let kentos_sheet::display::Prim::Map(m) = p {
+                    Some(m)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        assert_eq!(maps.len(), 2);
+        assert!((maps[0].view.scale - 50.).abs() < 1e-10);
+        assert_eq!(maps[1].view.scale, 100.);
+    }
+}

@@ -326,6 +326,8 @@ pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Res
             );
         }
         if let ItemKind::Map(m) = &it.kind {
+            let effective=crate::viewport::effective_fixed_view(it,&inputs.named_views);
+            if m.source.is_link() && let Err(e)=&effective { out.add(Severity::Error,&e.code,Some(it),e.message.clone(),"Görünümü yeniden bağlayın veya kaynağı Bu çizim yapın.",Vec::new()); }
             if let Some(o) = &m.overview_of
                 && !is_map(o)
             {
@@ -341,14 +343,14 @@ pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Res
                     Vec::new(),
                 );
             }
-            if let MapView::Fixed(f) = &m.view
+            if let Ok(f) = &effective
                 && m.overview_of.is_none()
                 && !paper::standard_scales()
                     .iter()
                     .any(|s| f64::from(*s) == f.denominator())
                 && !crate::viewport::standard_ratios().iter().any(|r|r.denominator()==f.denominator())
             {
-                let fixes = nearest_standard(f.denominator().round().clamp(1.,u32::MAX as f64) as u32)
+                let fixes = if m.source.is_link() || m.view_locked || it.locked {Vec::new()} else {nearest_standard(f.denominator().round().clamp(1.,u32::MAX as f64) as u32)
                     .map(|s| {
                         vec![op_fix(
                             &format!("Ölçeği 1/{s} yap"),
@@ -361,7 +363,7 @@ pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Res
                             }),
                         )]
                     })
-                    .unwrap_or_default();
+                    .unwrap_or_default()};
                 out.add(
                     Severity::Warning,
                     "non_standard_scale",

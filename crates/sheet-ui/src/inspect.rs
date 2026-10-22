@@ -426,7 +426,16 @@ pub(crate) fn refresh_fields(d: &mut Designer) {
     let maps = maps_of(d.items());
     let jsons: Vec<Json> = chosen
         .iter()
-        .filter_map(|i| serde_json::to_value(i).ok())
+        .filter_map(|i| {
+            let mut item = (**i).clone();
+            if let Ok(view) =
+                kentos_sheet::viewport::effective_fixed_view(i, &d.ctx.named_views)
+                && let kentos_sheet::ItemKind::Map(m) = &mut item.kind
+            {
+                m.view = kentos_sheet::MapView::Fixed(view);
+            }
+            serde_json::to_value(item).ok()
+        })
         .collect();
     // A north arrow's typed declination and its year: only while it is typed by hand (the year
     // then shown empty when there is none, to be typed).
@@ -436,7 +445,9 @@ pub(crate) fn refresh_fields(d: &mut Designer) {
     });
     let mut out = Vec::new();
     for p in props_of(kind.unwrap_or_default()) {
-        if p.path==["kind","viewLocked"]&&chosen.len()==1{continue;}
+        if p.path == ["kind", "viewLocked"] && chosen.len() == 1 {
+            continue;
+        }
         if p.path.starts_with(&["kind", "view", "ratio"])
             && !chosen
                 .iter()
@@ -469,26 +480,26 @@ pub(crate) fn refresh_fields(d: &mut Designer) {
         }
         let varies = values.windows(2).any(|w| w[0] != w[1]);
         out.push(KindField {
-            field: {
-                let field = field_of(&p, &maps);
-                if p.path.starts_with(&["kind", "view"])
-                    && chosen
-                        .iter()
-                        .any(|i| matches!(&i.kind,kentos_sheet::ItemKind::Map(m)if m.view_locked))
-                {
-                    field.read_only()
-                } else {
-                    field
-                }
-            },
-            value: if varies {
-                Value::Null
+        field: {
+            let field = field_of(&p, &maps);
+            if p.path.starts_with(&["kind", "view"])
+                && chosen
+                    .iter()
+                    .any(|i| matches!(&i.kind,kentos_sheet::ItemKind::Map(m)if m.view_locked||m.source.is_link()))
+            {
+                field.read_only()
             } else {
-                values.into_iter().next().unwrap_or_default()
-            },
-            varies,
-            prop: p,
-        });
+                field
+            }
+        },
+        value: if varies {
+            Value::Null
+        } else {
+            values.into_iter().next().unwrap_or_default()
+        },
+        varies,
+        prop: p,
+    });
     }
     d.kind_fields = out;
     d.chosen_constraints = constraints;

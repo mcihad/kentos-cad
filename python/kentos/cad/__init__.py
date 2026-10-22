@@ -2219,6 +2219,7 @@ __all__ = [
     "VertexCornerPick",
     "VertexSubPlace",
     "VerticalConstraintRule",
+    "ViewLinkPaperViewportSource",
     "ViewMarkBreak",
     "ViewMarkBreakName",
     "ViewMarkEntity",

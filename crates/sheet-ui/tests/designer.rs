@@ -1881,3 +1881,64 @@ fn model_scope_replays_twenty_four_rotated_paper_probes_and_navigation_keeps_pap
         assert!(d.model_scope().is_none());
     }
 }
+
+#[test]
+fn twenty_live_view_links_follow_context_and_inspector_but_keep_the_capture() {
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/viewport-links.json"
+    ))
+    .unwrap();
+    for c in data["cases"].as_array().unwrap() {
+        let mut book = kentos_sheet::SheetBook::default();
+        book.sheets
+            .push(serde_json::from_value(c["sheet"].clone()).unwrap());
+        let mut d = Designer::new(context());
+        d.load(book);
+        d.update(Message::Tab(1));
+        let mut raw = c["operation"].clone();
+        raw.as_object_mut().unwrap().remove("op");
+        d.update(Message::MapConfigure(Box::new(
+            serde_json::from_value(raw).unwrap(),
+        )));
+        let saved = d.book().clone();
+        assert!(d.findings().iter().any(|f| f.code == "missing_named_view"));
+        let mut ctx = context();
+        ctx.named_views = serde_json::from_value(c["views"].clone()).unwrap();
+        d.set_context(ctx);
+        let map = d
+            .display_list()
+            .unwrap()
+            .prims
+            .iter()
+            .find_map(|p| match p {
+                kentos_sheet::display::Prim::Map(m) => Some(m),
+                _ => None,
+            })
+            .unwrap();
+        assert!((map.view.scale - c["expected"]["scale"].as_f64().unwrap()).abs() < 1e-10);
+        assert_eq!(d.book(), &saved);
+        assert!(!d.findings().iter().any(|f| f.code == "missing_named_view"));
+        d.update(Message::Select(vec!["viewport".into()]));
+        assert_eq!(
+            d.update(Message::EnterModel("viewport".into())),
+            vec![Effect::ModelScope(true)]
+        );
+        assert!(
+            (d.active_viewport().unwrap().denominator
+                - c["expected"]["scale"].as_f64().unwrap())
+            .abs()
+                < 1e-10
+        );
+        d.update(Message::ReturnPaper);
+        d.update(Message::MapConfigure(Box::new(
+            kentos_sheet::viewport::SetViewport {
+                id: "viewport".into(),
+                source: Some(kentos_sheet::viewport::Source::Drawing),
+                ..Default::default()
+            },
+        )));
+        assert!(
+            !matches!(&d.book().item("viewport").unwrap().kind,ItemKind::Map(m) if m.source.is_link())
+        );
+    }
+}

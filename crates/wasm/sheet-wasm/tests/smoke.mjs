@@ -419,6 +419,20 @@ for (const f of files('kpafta/invalid')) {
  }
 }
 
+// CAD-SHEET-14: a live source resolves by stable view id from common render inputs.
+{
+ const root=json('ops/book.json');
+ for(const c of json('viewport-links.json').cases){
+  const before=bookText({...root,sheets:[c.sheet],masters:[],assets:[],variables:[]},c.name);
+  const result=ok(engine.applyOp(before,JSON.stringify(c.operation)),c.name);
+  const list=ok(engine.displayList(JSON.stringify(result.book),'page',JSON.stringify({namedViews:c.views})),c.name);
+  const map=list.prims.find(p=>p.type==='map');assert.ok(map,c.name);
+  assert.ok(Math.abs(map.view.scale-c.expected.scale)<1e-10,c.name);assert.deepStrictEqual(map.view.center,c.expected.center,c.name);assert.equal(map.view.rotation,c.expected.rotation,c.name);
+  const missing=ok(engine.displayList(JSON.stringify(result.book),'page','{}'),c.name);assert.ok(!missing.prims.some(p=>p.type==='map'),c.name);
+  count('viewport-links');
+ }
+}
+
 const info = ok(engine.engineInfo(), 'engineInfo');
 console.log(
   `Pafta çekirdeği WASM ${info.version} (${info.bookSchema}): ` +

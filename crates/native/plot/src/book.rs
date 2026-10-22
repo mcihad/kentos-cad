@@ -80,6 +80,7 @@ pub(crate) fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInput
     let name = crs_name(settings);
     RenderInputs {
         mode: RenderMode::Export,
+        named_views:settings.named_views.clone(),
         project: ProjectInfo {
             name: doc.name().to_owned(),
             user: user.to_owned(),
@@ -299,6 +300,10 @@ pub fn book_pdf_at(
     spatial.reload(doc);
     let library = library_of(doc);
     let mut render = base_inputs(doc, user, date);
+    for id in &chosen {
+        let findings=kentos_sheet::preflight::preflight(&book,id,&render).map_err(|e|PlotError::new(&e.code,e.message))?;
+        if let Some(f)=findings.iter().find(|f|matches!(f.code.as_str(),"missing_named_view"|"bad_scale"|"bad_value")) {return Err(PlotError::new(&f.code,&f.message));}
+    }
     // Each sheet's tables, coordinate lists and legends, from the ground its maps cover.
     for id in &chosen {
         let Some(sheet) = book.sheet(id) else {

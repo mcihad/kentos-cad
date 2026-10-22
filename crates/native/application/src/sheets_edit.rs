@@ -75,7 +75,9 @@ fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
     // One by one, so a refusal names its operation; the inverse undoes them all, last first.
     let mut inverse: Vec<Op> = Vec::new();
     let mut labels = Vec::new();
-    for (i, op) in parsed.iter().enumerate() {
+    for (i, original) in parsed.iter().enumerate() {
+        let prepared=match original {Op::SetViewport(input)=>Some(Op::SetViewport(kentos_sheet::viewport::prepare_source(&book,input,&doc.settings().named_views).map_err(|e|Stop::failed(error(&e.code,e.message,Some(format!("ops[{i}]")))))?)),_=>None};
+        let op=prepared.as_ref().unwrap_or(original);
         let applied = ops::apply(&book, op).map_err(|e| {
             let at = match &e.path {
                 Some(p) => format!("ops[{i}].{p}"),
@@ -136,7 +138,11 @@ fn put_picture(pictures: &mut Pictures, sha: String, bytes: Vec<u8>) {
 }
 
 /// The book's sheets as the answer lists them: page size in millimetres, map frames with their scales.
-pub fn sheets_of(book: &SheetBook) -> Vec<SheetInfo> {
+pub fn sheets_of(book:&SheetBook)->Vec<SheetInfo> {sheets_of_with_views(book,&[])}
+pub fn sheets_of_with_views(
+    book: &SheetBook,
+    views: &[kentos_sheet::viewport::NamedModelView],
+) -> Vec<SheetInfo> {
     book.sheets
         .iter()
         .map(|s| SheetInfo {
@@ -153,7 +159,11 @@ pub fn sheets_of(book: &SheetBook) -> Vec<SheetInfo> {
                         item: item.id.clone(),
                         name: item.name.clone(),
                         scale: match &m.view {
-                            MapView::Fixed(f) => Some(f.denominator()),
+                            MapView::Fixed(_) => {
+                                kentos_sheet::viewport::effective_fixed_view(item, views)
+                                    .ok()
+                                    .map(|f| f.denominator())
+                            }
                             MapView::Atlas(_) => None,
                         },
                     }),
@@ -171,7 +181,7 @@ pub fn sheets_in(doc: &Document) -> Option<Vec<SheetInfo>> {
         None => Some(Vec::new()),
         Some(kept) => read_project_sheets(kept)
             .ok()
-            .map(|(book, _)| sheets_of(&book)),
+            .map(|(book, _)| sheets_of_with_views(&book,&doc.settings().named_views)),
     }
 }
 
@@ -204,7 +214,7 @@ fn write(doc: &mut Document, next: Next) -> Result<SheetsEdited, Stop> {
             .filter_map(|op| serde_json::to_value(op).ok())
             .collect(),
         inverse_pictures,
-        sheets: sheets_of(&next.book),
+        sheets: sheets_of_with_views(&next.book,&doc.settings().named_views),
         revision: doc.revision().to_string(),
     })
 }

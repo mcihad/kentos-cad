@@ -6787,6 +6787,7 @@ class PaperViewportSource(_Union):
 
     - :class:`DrawingPaperViewportSource` (``type: drawing``)
     - :class:`ViewSnapshotPaperViewportSource` (``type: viewSnapshot``)
+    - :class:`ViewLinkPaperViewportSource` (``type: viewLink``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "type"
@@ -43809,12 +43810,14 @@ class SheetsSetResult(_Model):
         series: The series, sorted by their letters and digit; `Diğer` last.
         sheets: The sheets, in the book's order.
         affected: With `uids`: the frames affected, in the book's order; their sheets are the ones to print again.
+        named_views: With details: the same current named-view registry the desktop source picker uses.
     """
     series: list[SheetSeries]
     sheets: list[SetSheet]
     revision: str
     affected: list[AffectedFrame] | None | Unset = UNSET
     book: PaperSheetBook | None | Unset = UNSET
+    named_views: list[NamedView] | None | Unset = UNSET
     pictures: list[SheetPicture] | None | Unset = UNSET
     standard_ratios: list[PaperScaleRatio] | None | Unset = UNSET
     templates: list[PaperTemplate] | None | Unset = UNSET
@@ -43828,6 +43831,8 @@ class SheetsSetResult(_Model):
             out["affected"] = None if self.affected is None else [e0.to_json() for e0 in self.affected]
         if self.book is not UNSET:
             out["book"] = None if self.book is None else self.book.to_json()
+        if self.named_views is not UNSET:
+            out["namedViews"] = None if self.named_views is None else [e0.to_json() for e0 in self.named_views]
         if self.pictures is not UNSET:
             out["pictures"] = None if self.pictures is None else [e0.to_json() for e0 in self.pictures]
         if self.standard_ratios is not UNSET:
@@ -43844,6 +43849,7 @@ class SheetsSetResult(_Model):
             revision=data["revision"],
             affected=UNSET if "affected" not in data else None if data["affected"] is None else [AffectedFrame.from_json(e0) for e0 in data["affected"]],
             book=UNSET if "book" not in data else None if data["book"] is None else PaperSheetBook.from_json(data["book"]),
+            named_views=UNSET if "namedViews" not in data else None if data["namedViews"] is None else [NamedView.from_json(e0) for e0 in data["namedViews"]],
             pictures=UNSET if "pictures" not in data else None if data["pictures"] is None else [SheetPicture.from_json(e0) for e0 in data["pictures"]],
             standard_ratios=UNSET if "standardRatios" not in data else None if data["standardRatios"] is None else [PaperScaleRatio.from_json(e0) for e0 in data["standardRatios"]],
             templates=UNSET if "templates" not in data else None if data["templates"] is None else [PaperTemplate.from_json(e0) for e0 in data["templates"]],
@@ -62215,6 +62221,24 @@ class ViewSnapshotPaperViewportSource(PaperViewportSource):
 
 
 @dataclass(kw_only=True, slots=True)
+class ViewLinkPaperViewportSource(PaperViewportSource):
+    """Stable named-view link. The capture identifies the link; rendering requires the current view."""
+    TAG_VALUE: ClassVar[str] = "viewLink"
+    view: NamedView
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "viewLink"}
+        out["view"] = self.view.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewLinkPaperViewportSource:
+        return cls(
+            view=NamedView.from_json(data["view"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddParameterEdit(ParameterEdit):
     """A user parameter: its name, kind, expression and optional range and description."""
     TAG_VALUE: ClassVar[str] = "add"
@@ -65815,7 +65839,7 @@ _PAPER_TABLE_SOURCE: dict[str, type[PaperTableSource]] = {"fixed": FixedPaperTab
 _PAPER_VIEWPORT_CLIP: dict[str, type[PaperViewportClip]] = {"frame": FramePaperViewportClip, "rectangle": RectanglePaperViewportClip, "polygon": PolygonPaperViewportClip}
 
 
-_PAPER_VIEWPORT_SOURCE: dict[str, type[PaperViewportSource]] = {"drawing": DrawingPaperViewportSource, "viewSnapshot": ViewSnapshotPaperViewportSource}
+_PAPER_VIEWPORT_SOURCE: dict[str, type[PaperViewportSource]] = {"drawing": DrawingPaperViewportSource, "viewSnapshot": ViewSnapshotPaperViewportSource, "viewLink": ViewLinkPaperViewportSource}
 
 
 _PARAMETER_EDIT: dict[str, type[ParameterEdit]] = {"add": AddParameterEdit, "set": SetParameterEdit, "rename": RenameParameterEdit, "remove": RemoveParameterEdit}
@@ -68017,6 +68041,7 @@ __all__ = [
     "VertexCornerPick",
     "VertexSubPlace",
     "VerticalConstraintRule",
+    "ViewLinkPaperViewportSource",
     "ViewMarkBreak",
     "ViewMarkBreakName",
     "ViewMarkEntity",
