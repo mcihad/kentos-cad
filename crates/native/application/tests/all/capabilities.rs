@@ -212,6 +212,36 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "sistemsiz yerel projede tarafın projeninki olması; durum dosyasının tek kurulumu TUREF / TM30 projesidir, ret crs_transform.rs'in side'ındadır; Python SDK'nın test_crs.py'si yerel projede sınar (ADR 0519 §3)",
     ),
     (
+        "cad.constructions.create",
+        "invalid_attribute",
+        "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.entities.create'in durumlarında; yapımlar onun yolundan yazar (ADR 0199 §2, 0622 §9)",
+    ),
+    (
+        "cad.constructions.create",
+        "attribute_required",
+        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.entities.create'in durumlarında; yapımlar onun yolundan yazar (ADR 0199 §2, 0622 §9)",
+    ),
+    (
+        "cad.parcels.create",
+        "not_a_layer",
+        "parselin katmanı sabittir (parsel): yeni projede ve aynı adımda açılan hep katmandır; parsel adında bir grup ancak elle kurulur, denetimi cad.polygon.create'in ortak yolundadır (checks::layer, ADR 0622 §9)",
+    ),
+    (
+        "cad.parcels.create",
+        "invalid_attribute",
+        "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında; parsel onun yolundan yazar (ADR 0199 §2, 0622 §9)",
+    ),
+    (
+        "cad.parcels.create",
+        "attribute_required",
+        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında; parsel onun yolundan yazar (ADR 0199 §2, 0622 §9)",
+    ),
+    (
+        "cad.parcels.create",
+        "neighbours_locked",
+        "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); kilitli komşu cad.polygon.create.area-rules.json'da sınanır (ADR 0622 §9)",
+    ),
+    (
         "cad.crs.transform",
         "no_datum_link",
         "projenin WGS 84'e yolu olmayan kendi datumu; kayıttaki sistemlerle kurulamaz, geometri-core'un datum testi (Gap::NoLink) sınar (ADR 0168 §2, 0519 §3)",

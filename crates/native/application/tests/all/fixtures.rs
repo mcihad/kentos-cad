@@ -76,7 +76,7 @@ use kentos_native_application::{
     layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_rules,
     layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
     layers_translate, leaders_edit, line, linearref_define, network_define, nurbs, offset,
-    openings_create, openings_edit, point, points_construct, polygon, polygon_regular, polyline, revcloud_create, sector_create, adjoin_cmd, parcels,
+    openings_create, openings_edit, point, points_construct, polygon, polygon_regular, polyline, revcloud_create, sector_create, adjoin_cmd, parcels, constructions, areas,
     rectangle_create, scenarios_edit, set, settings_set, sheets_edit, sheets_create, sheets_fit, snap_find, spaces_create,
     spaces_edit, spaces_quantities, styles_edit, tables_edit, texts_check, texts_edit, transform,
     ucs_set, units_change, views_edit, walls_create, walls_edit, walls_from_lines, walls_joins,
@@ -1461,6 +1461,53 @@ impl Input for kentos_commands::ParcelsCreate {
         let (i, axis) = path.strip_prefix("pts[")?.split_once("].")?;
         let p = self.pts.get_mut(i.parse::<usize>().ok()?)?;
         match axis {
+            "x" => Some(&mut p.x),
+            "y" => Some(&mut p.y),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_commands::AreasEdit {
+    /// `work.line[i].x`, `work.ring[i].y`, `work.at.x` (the shared cases spoil only these).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_commands::AreaWork as A;
+        let rest = path.strip_prefix("work.")?;
+        let (list, place) = match &mut self.work {
+            A::Split { line: Some(pts), .. } => (pts, rest.strip_prefix("line[")?),
+            A::HoleAdd { ring, .. } => (ring, rest.strip_prefix("ring[")?),
+            A::HoleRemove { at, .. } | A::HoleFill { at, .. } => {
+                return match rest {
+                    "at.x" => Some(&mut at.x),
+                    "at.y" => Some(&mut at.y),
+                    _ => None,
+                };
+            }
+            _ => return None,
+        };
+        let (i, axis) = place.split_once("].")?;
+        let p = list.get_mut(i.parse::<usize>().ok()?)?;
+        match axis {
+            "x" => Some(&mut p.x),
+            "y" => Some(&mut p.y),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_commands::ConstructionsCreate {
+    /// `lineWeight`, `construction.axis[i].x` (the shared cases spoil only these).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_commands::Construction as C;
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let C::Parallel { axis, .. } = &mut self.construction else {
+            return None;
+        };
+        let (i, axis_name) = path.strip_prefix("construction.axis[")?.split_once("].")?;
+        let p = axis.get_mut(i.parse::<usize>().ok()?)?;
+        match axis_name {
             "x" => Some(&mut p.x),
             "y" => Some(&mut p.y),
             _ => None,
@@ -3277,6 +3324,10 @@ fn run_op(
         kentos_commands::CAD_REVCLOUD_CREATE => run!(revcloud_create, kentos_commands::RevcloudCreate),
         kentos_commands::CAD_ENTITIES_ADJOIN => run!(adjoin_cmd, kentos_commands::EntitiesAdjoin),
         kentos_commands::CAD_PARCELS_CREATE => run!(parcels, kentos_commands::ParcelsCreate),
+        kentos_commands::CAD_CONSTRUCTIONS_CREATE => {
+            run!(constructions, kentos_commands::ConstructionsCreate)
+        }
+        kentos_commands::CAD_AREAS_EDIT => run!(areas, kentos_commands::AreasEdit),
         kentos_commands::CAD_ENTITIES_VERTEX => {
             run!(entities_vertex, kentos_commands::EntitiesVertex)
         }

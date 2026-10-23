@@ -18,7 +18,7 @@
 //! 180°); the directions are the shared core's (`xline_direction`,
 //! `unit_toward`).
 
-use kentos_commands::EntityGeometry;
+use kentos_commands::{Construction, EntityGeometry};
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geometry::angle_deg;
 use kentos_geometry_core::tools::drawing::{unit_toward, xline_direction, xline_offset};
@@ -177,18 +177,20 @@ impl Xline {
         side: Vec2,
         cx: &mut Context<'_>,
     ) {
-        let Some((p, dir)) = xline_offset(a, b, distance, side) else {
+        if xline_offset(a, b, distance, side).is_none() {
             cx.say(
                 Level::Warn,
                 "Kenarın bir yanını gösterin: nokta kenarın doğrusunun üstünde.",
             );
             return;
+        }
+        let construction = Construction::XlineOffset {
+            a: wire(a),
+            b: wire(b),
+            side: wire(side),
+            distance,
         };
-        let geometry = EntityGeometry::Xline {
-            p: wire(p),
-            dir: wire(dir),
-        };
-        if let Some(out) = points::write_objects(vec![geometry], None, cx) {
+        if let Some(out) = points::write_construction(construction, cx) {
             if let Some(&id) = out.ids.first() {
                 self.d.note(id, cx);
             }
@@ -219,11 +221,25 @@ impl Xline {
             return;
         }
         let Some(dir) = self.dir_for(p) else { return };
-        let geometry = EntityGeometry::Xline {
-            p: wire(self.base_for(p)),
-            dir: wire(dir),
+        // Açıortay through `cad.constructions.create` (docs/adr/0622 §9); the other modes draw the line shown.
+        let written = match (self.mode, self.d.pts.as_slice()) {
+            (Mode::Bisect, &[vertex, p1]) => {
+                let construction = Construction::Bisector {
+                    vertex: wire(vertex),
+                    p1: wire(p1),
+                    p2: wire(p),
+                };
+                points::write_construction(construction, cx)
+            }
+            _ => {
+                let geometry = EntityGeometry::Xline {
+                    p: wire(self.base_for(p)),
+                    dir: wire(dir),
+                };
+                points::write_objects(vec![geometry], None, cx)
+            }
         };
-        if let Some(out) = points::write_objects(vec![geometry], None, cx) {
+        if let Some(out) = written {
             if let Some(&id) = out.ids.first() {
                 self.d.note(id, cx);
             }

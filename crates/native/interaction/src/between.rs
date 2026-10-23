@@ -20,7 +20,6 @@
 //! step (“Ekle”): “3 nokta kondu.” Where they fall is the shared core's
 //! (`construct::points_between`).
 
-use kentos_commands::EntityGeometry;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::tools::construct::{Between, points_between};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
@@ -169,21 +168,20 @@ impl PointsBetween {
             }
         };
         let n = pts.len();
-        let objects = pts
-            .into_iter()
-            .map(|p| EntityGeometry::Point {
-                p: wire(p),
-                z: None,
-                parts: None,
-            })
-            .collect();
-        if points::write_objects(
-            objects,
-            Some(kentos_commands::CreateOperation::PointsBetween),
-            cx,
-        )
-        .is_some()
-        {
+        let m = self.memory();
+        let (parts, distances, ratios) = match self.method {
+            Method::Parts => (Some(m.between_parts), None, None),
+            Method::Distances => (None, Some(m.between_distances.as_slice().to_vec()), None),
+            Method::Ratios => (None, None, Some(m.between_ratios.as_slice().to_vec())),
+        };
+        let construction = kentos_commands::Construction::PointsBetween {
+            a: wire(a),
+            b: wire(b),
+            parts,
+            distances,
+            ratios,
+        };
+        if points::write_construction(construction, cx).is_some() {
             cx.say(Level::Success, format!("{n} nokta kondu."));
         }
         self.d.reset();

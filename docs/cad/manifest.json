@@ -9234,14 +9234,14 @@
    "id": "tool.areaIntersect",
    "kind": "tool",
    "title": "Alan kesiştir",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.areas.edit"
    ],
-   "operation": "areaIntersect",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.areas.edit",
+   "mcp": "cad.areas.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -9250,14 +9250,14 @@
    "id": "tool.areaSplit",
    "kind": "tool",
    "title": "Alan böl",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.areas.edit"
    ],
-   "operation": "areaSplit",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.areas.edit",
+   "mcp": "cad.areas.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -9266,14 +9266,14 @@
    "id": "tool.areaSubtract",
    "kind": "tool",
    "title": "Alan çıkar",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.areas.edit"
    ],
-   "operation": "areaSubtract",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.areas.edit",
+   "mcp": "cad.areas.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -9282,14 +9282,14 @@
    "id": "tool.areaUnion",
    "kind": "tool",
    "title": "Alan birleştir",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.areas.edit"
    ],
-   "operation": "areaUnion",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.areas.edit",
+   "mcp": "cad.areas.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -10346,14 +10346,14 @@
    "id": "tool.fourthCorner",
    "kind": "tool",
    "title": "Dördüncü köşe",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "fourthCorner",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
+   "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -10442,14 +10442,14 @@
    "id": "tool.holeAdd",
    "kind": "tool",
    "title": "Delik ekle",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.areas.edit"
    ],
-   "operation": "holeAdd",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.areas.edit",
+   "mcp": "cad.areas.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -10458,14 +10458,14 @@
    "id": "tool.holeFill",
    "kind": "tool",
    "title": "Deliği doldur",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.areas.edit"
    ],
-   "operation": "holeFill",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.areas.edit",
+   "mcp": "cad.areas.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -10474,14 +10474,14 @@
    "id": "tool.holeRemove",
    "kind": "tool",
    "title": "Deliği sil",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.areas.edit"
    ],
-   "operation": "holeRemove",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.areas.edit",
+   "mcp": "cad.areas.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -10536,14 +10536,14 @@
    "id": "tool.intersectPoint",
    "kind": "tool",
    "title": "Kesişim noktası",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "intersectPoint",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
+   "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -10552,13 +10552,13 @@
    "id": "tool.intersectPoint#İki doğru",
    "kind": "method",
    "title": "Kesişim noktası: İki doğru",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "intersectPoint",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -10568,13 +10568,13 @@
    "id": "tool.intersectPoint#İki doğrultu",
    "kind": "method",
    "title": "Kesişim noktası: İki doğrultu",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "intersectPoint",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -10584,13 +10584,13 @@
    "id": "tool.intersectPoint#İki uzaklık",
    "kind": "method",
    "title": "Kesişim noktası: İki uzaklık",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "intersectPoint",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -11104,14 +11104,14 @@
    "id": "tool.parallel",
    "kind": "tool",
    "title": "Paralel çizgi",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "parallel",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
+   "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
@@ -11136,14 +11136,14 @@
    "id": "tool.partsJoin",
    "kind": "tool",
    "title": "Parçaları birleştir",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.areas.edit"
    ],
-   "operation": "partsJoin",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.areas.edit",
+   "mcp": "cad.areas.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -11152,14 +11152,14 @@
    "id": "tool.partsSplit",
    "kind": "tool",
    "title": "Parçalara ayır",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.areas.edit"
    ],
-   "operation": "partsSplit",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.areas.edit",
+   "mcp": "cad.areas.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -11168,14 +11168,14 @@
    "id": "tool.perpIn",
    "kind": "tool",
    "title": "Dik in",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "perpendicularIn",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
+   "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
@@ -11184,14 +11184,14 @@
    "id": "tool.perpOut",
    "kind": "tool",
    "title": "Dik çık",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "perpendicularOut",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
+   "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
@@ -11248,14 +11248,14 @@
    "id": "tool.pointsBetween",
    "kind": "tool",
    "title": "Ara nokta",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "pointsBetween",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
+   "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -11264,13 +11264,13 @@
    "id": "tool.pointsBetween#Eşit aralık",
    "kind": "method",
    "title": "Ara nokta: Eşit aralık",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "pointsBetween",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -11280,13 +11280,13 @@
    "id": "tool.pointsBetween#Oranla",
    "kind": "method",
    "title": "Ara nokta: Oranla",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "pointsBetween",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -11296,13 +11296,13 @@
    "id": "tool.pointsBetween#Uzaklıkla",
    "kind": "method",
    "title": "Ara nokta: Uzaklıkla",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "pointsBetween",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -11392,14 +11392,14 @@
    "id": "tool.rangeRings",
    "kind": "tool",
    "title": "Menzil halkaları",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "rangeRings",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
+   "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -12233,14 +12233,14 @@
    "id": "tool.tangentLine",
    "kind": "tool",
    "title": "İki daireye teğet",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.constructions.create"
    ],
-   "operation": "tangentLine",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.constructions.create",
+   "mcp": "cad.constructions.create",
+   "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
@@ -12377,14 +12377,14 @@
    "id": "tool.toArea",
    "kind": "tool",
    "title": "Alana çevir",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.areas.edit"
    ],
-   "operation": "toArea",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.areas.edit",
+   "mcp": "cad.areas.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -12393,14 +12393,14 @@
    "id": "tool.toPolyline",
    "kind": "tool",
    "title": "Çizgiye çevir",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.areas.edit"
    ],
-   "operation": "toPolyline",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.areas.edit",
+   "mcp": "cad.areas.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -12847,7 +12847,7 @@
    "operation": null,
    "python": "kentos.cad.entities.create",
    "mcp": "cad.entities.create",
-   "note": null,
+   "note": "Açıortay ve Paralel cad.constructions.create ile (ADR 0622 §9).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 2
@@ -12872,7 +12872,7 @@
    "id": "tool.xline#Açıortay",
    "kind": "method",
    "title": "Yardımcı çizgi: Açıortay",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
     "cad.entities.create"
    ],
@@ -12904,7 +12904,7 @@
    "id": "tool.xline#Paralel",
    "kind": "method",
    "title": "Yardımcı çizgi: Paralel",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
     "cad.entities.create"
    ],

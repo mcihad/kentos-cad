@@ -285,6 +285,48 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.areas.edit",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_uid",
+                "entity_not_found",
+                "too_few_objects",
+                "not_an_area",
+                "no_overlap",
+                "degenerate_shape",
+                "invalid_input",
+                "no_hole",
+                "invalid_hole",
+                "mixed_kinds",
+                "not_multi_part",
+                "layer_locked",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.constructions.create",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_distance",
+                "invalid_count",
+                "degenerate_shape",
+                "no_intersection",
+                "too_few_points",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.entities.adjoin",
         refusals: &[
             &[

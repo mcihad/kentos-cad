@@ -26,6 +26,7 @@
 //! core's (`construct::distance_distance`, `bearing_bearing`,
 //! `intersect::line_line`).
 
+use kentos_commands::Meeting;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::intersect::line_line;
 use kentos_geometry_core::geometry::dist;
@@ -314,13 +315,31 @@ impl IntersectPoint {
     /// Writes the point, and asks for the next one.
     fn finish(&mut self, at: Option<Vec2>, cx: &mut Context<'_>) {
         let Some(p) = at else { return };
-        let point = kentos_commands::EntityGeometry::Point {
-            p: points::wire(p),
-            z: None,
-            parts: None,
+        // The same point through `cad.constructions.create` (docs/adr/0622 §9); of two meetings the one chosen.
+        let w = |i: usize| points::wire(self.d.pts[i]);
+        let meeting = match self.method {
+            Method::Distances => Meeting::Distances {
+                a: w(0),
+                da: self.vals[0],
+                b: w(1),
+                db: self.vals[1],
+                near: Some(points::wire(p)),
+            },
+            Method::Bearings => Meeting::Bearings {
+                a: w(0),
+                ta: self.vals[0],
+                b: w(1),
+                tb: self.vals[1],
+            },
+            Method::Lines => Meeting::Lines {
+                a: w(0),
+                b: w(1),
+                c: w(2),
+                d: w(3),
+            },
         };
-        let operation = Some(kentos_commands::CreateOperation::IntersectPoint);
-        if let Some(out) = points::write_objects(vec![point], operation, cx) {
+        let construction = kentos_commands::Construction::Intersection { meeting };
+        if let Some(out) = points::write_construction(construction, cx) {
             let slot = out
                 .created
                 .first()

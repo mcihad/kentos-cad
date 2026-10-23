@@ -8168,6 +8168,89 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_AREAS_EDIT.into(),
+            version: crate::CAD_AREAS_EDIT_VERSION,
+            title: "Alan işlemleri".into(),
+            summary: "Alan işlemlerini kalıcı kimlikleriyle verilen nesnelerde yapar; geometriyi komut ortak çekirdeğin kesin \
+                      alan cebiriyle hesaplar (yaylar yay kalır, köşeler koordinatlarını korur): Alan birleştir (union; \
+                      single ile değmeyenler tek çok parçalı alan), Alan kesiştir (intersect; erase ile kaynaklar silinir), \
+                      Alan çıkar (subtract: from'dan cut çıkar; içteki alan delik bırakır), Alan böl (split: line noktaları \
+                      ya da cutter nesnesiyle; ilk parça alanın kendisi), Alana çevir (toArea: kapalı nesneler yerinde, \
+                      çizgilerin kapattığı bölgeler yeni alan), Çizgiye çevir (toPolyline), Parçaları birleştir ve \
+                      Parçalara ayır (partsJoin, partsSplit: alan, çizgi ya da nokta), Delik ekle (holeAdd: halka), \
+                      Deliği sil ve Deliği doldur (holeRemove, holeFill: delikteki nokta). Cevap yazılanları, sonucun \
+                      nesnelerini (result) ve ölçülerini (alan m², parça sayısı) verir. Tek geri alma adımı, aracın adıyla."
+                .into(),
+            aliases: vec!["alan-islemleri".into(), "areas".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AreasEdit>(),
+            output: schema::<crate::AreasEdited>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "İki parseli birleştir (tevhit)".into(),
+                    input: json!({ "work": { "kind": "union", "ids": [
+                        "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002" ] } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Parseli iki noktadan geçen çizgiyle böl (ifraz)".into(),
+                    input: json!({ "work": { "kind": "split", "ids": [ "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001" ],
+                        "line": [ { "x": 423510.0, "y": 4512290.0 }, { "x": 423510.0, "y": 4512340.0 } ] } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_CONSTRUCTIONS_CREATE.into(),
+            version: crate::CAD_CONSTRUCTIONS_CREATE_VERSION,
+            title: "Yapım yardımcıları".into(),
+            summary: "Yapım araçlarının nesnelerini verilen katmana ekler; geometriyi komut hesaplar: Paralel çizgi (eksenin iki \
+                      yanı, isteğe bağlı eksen ya da koridor alanı), Dik in (noktalardan çizgiye ya da daireye dikler), Dik çık \
+                      (dik ayak ve dik boyla), İki daireye teğet (tıklamalara en yakın ortak teğet), Dördüncü köşe (nokta ya da \
+                      paralelkenar alanı), Menzil halkaları (aralık, sayı, ışın), Ara nokta (eşit parçalar, uzaklıklar ya da \
+                      oranlar), Kesişim noktası (iki uzaklık, iki doğrultu ya da iki doğru), yardımcı çizginin Açıortay'ı ve \
+                      Paralel'i. Uzaklıklar çizim biriminde, doğrultular kuzeyden saat yönünde radyan. Teğeti ya da kesişimi \
+                      olmayan yapım no_intersection, çakışan ya da aynı doğrudaki noktalar degenerate_shape ile reddedilir. \
+                      Araç, Python ve ajan aynı girdiye aynı nesneleri alır; tek geri alma adımı, aracın adıyla."
+                .into(),
+            aliases: vec!["yapim".into(), "construction".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ConstructionsCreate>(),
+            output: schema::<crate::EntitiesCreated>(),
+            plan: Some(schema::<crate::EntitiesCreatePlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Eksenin iki yanında 3 m'lik paralel çizgiler".into(),
+                    input: json!({ "layerId": "yol", "construction": { "kind": "parallel",
+                        "axis": [ { "x": 423500.0, "y": 4512300.0 }, { "x": 423560.0, "y": 4512330.0 } ],
+                        "left": 3.0, "right": 3.0 } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İki noktadan uzaklıklarla kesişim noktası".into(),
+                    input: json!({ "layerId": "nokta", "construction": { "kind": "intersection", "meeting": {
+                        "method": "distances", "a": { "x": 423500.0, "y": 4512300.0 }, "da": 25.0,
+                        "b": { "x": 423530.0, "y": 4512300.0 }, "db": 20.0 } } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_ENTITIES_VERTEX.into(),
             version: crate::CAD_ENTITIES_VERTEX_VERSION,
             title: "Köşe ve kenar".into(),
@@ -10099,6 +10182,13 @@ mod tests {
                     }
                     crate::CAD_SECTOR_CREATE => {
                         serde_json::from_value::<crate::SectorCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_AREAS_EDIT => {
+                        serde_json::from_value::<crate::AreasEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_CONSTRUCTIONS_CREATE => {
+                        serde_json::from_value::<crate::ConstructionsCreate>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_PARCELS_CREATE => {
                         serde_json::from_value::<crate::ParcelsCreate>(e.input.clone()).map(|_| ())

@@ -372,6 +372,13 @@ class Case:
                 # The project's address data (docs/adr/0229 §2).
                 settings = json.loads(self.doc._session.summary())["settings"]
                 same(settings.get("addressLocators", []), want, f"{at}: addressLocators")
+            elif key == "shapes":
+                # An area's shape whatever corner its rings start from (docs/adr/0622 §9).
+                slots = self.slots()
+                for slot, w in want.items():
+                    record = slots.get(int(slot))
+                    assert record is not None, f"{at}: no object in slot {slot}"
+                    same(shape_summary(record.entity.to_json()), w, f"{at}: object {slot} shape")
             else:
                 raise AssertionError(f"{at}: unknown expectation {key}")
 
@@ -429,6 +436,31 @@ def wire(outcome: cad.Outcome[Any]) -> dict[str, Any]:
         notes.append(note)
     output = outcome.output.to_json() if outcome.output is not None else None
     return {"status": outcome.status, "output": output, "warnings": notes}
+
+
+def shape_summary(entity: dict[str, Any]) -> dict[str, Any]:
+    """An area's every ring corner sorted, its net area (to a millionth), its parts and holes: as the Rust runner's."""
+
+    def ring(pts: Any) -> list[tuple[float, float]]:
+        return [(p["x"], p["y"]) for p in pts or []]
+
+    def area(r: list[tuple[float, float]]) -> float:
+        if not r:
+            return 0.0
+        ox, oy = r[0]
+        n = len(r)
+        return abs(sum((r[i][0] - ox) * (r[(i + 1) % n][1] - oy) - (r[(i + 1) % n][0] - ox) * (r[i][1] - oy)
+                       for i in range(n))) / 2.0
+
+    outers = [ring(entity.get("pts"))]
+    holes = [ring(h.get("pts")) for h in entity.get("holes") or []]
+    for part in entity.get("parts") or []:
+        outers.append(ring(part.get("pts")))
+        holes.extend(ring(h.get("pts")) for h in part.get("holes") or [])
+    net = sum(area(r) for r in outers) - sum(area(r) for r in holes)
+    corners = sorted(p for r in outers + holes for p in r)
+    return {"corners": [[x, y] for x, y in corners], "area": round(net * 1e6) / 1e6, "parts": len(outers),
+            "holes": len(holes)}
 
 
 def same(got: Any, want: Any, at: str, within: float | None = None) -> None:

@@ -1,0 +1,5144 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.areas.edit",
+  "commandVersion": 1,
+  "title": "Alan işlemleri",
+  "note": "Written by scripts/fixtures/areas_edit_cases.py from the area operations' definitions on unit cells (docs/adr/0622 §9, 0065, 0143, 0173); do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "arsiv",
+        "name": "Arşiv",
+        "type": "group",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "eski",
+            "name": "Eski",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "taslak",
+        "name": "Taslak",
+        "type": "group",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "notlar",
+            "name": "Notlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "yapi",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "yapi",
+        "attrs": {
+          "Ada": "101",
+          "Parsel": "5"
+        },
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420000
+          },
+          {
+            "x": 487010,
+            "y": 4420000
+          },
+          {
+            "x": 487010,
+            "y": 4420010
+          },
+          {
+            "x": 487000,
+            "y": 4420010
+          }
+        ],
+        "label": "5"
+      },
+      {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "yapi",
+        "attrs": {
+          "Ada": "101",
+          "Parsel": "6"
+        },
+        "pts": [
+          {
+            "x": 487005,
+            "y": 4420000
+          },
+          {
+            "x": 487015,
+            "y": 4420000
+          },
+          {
+            "x": 487015,
+            "y": 4420010
+          },
+          {
+            "x": 487005,
+            "y": 4420010
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 3,
+        "layerId": "yapi",
+        "attrs": {
+          "Ada": "102",
+          "Parsel": "1"
+        },
+        "pts": [
+          {
+            "x": 487030,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420010
+          },
+          {
+            "x": 487030,
+            "y": 4420010
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 4,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487002,
+            "y": 4420002
+          },
+          {
+            "x": 487004,
+            "y": 4420002
+          },
+          {
+            "x": 487004,
+            "y": 4420004
+          },
+          {
+            "x": 487002,
+            "y": 4420004
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 5,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420020
+          },
+          {
+            "x": 487010,
+            "y": 4420020
+          },
+          {
+            "x": 487010,
+            "y": 4420030
+          },
+          {
+            "x": 487000,
+            "y": 4420030
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487035,
+          "y": 4419995
+        },
+        "b": {
+          "x": 487035,
+          "y": 4420015
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 7,
+        "layerId": "yapi",
+        "attrs": {
+          "Ada": "103",
+          "Parsel": "2"
+        },
+        "pts": [
+          {
+            "x": 487050,
+            "y": 4420000
+          },
+          {
+            "x": 487060,
+            "y": 4420000
+          },
+          {
+            "x": 487060,
+            "y": 4420010
+          },
+          {
+            "x": 487050,
+            "y": 4420010
+          }
+        ],
+        "holes": [
+          {
+            "pts": [
+              {
+                "x": 487053,
+                "y": 4420003
+              },
+              {
+                "x": 487057,
+                "y": 4420003
+              },
+              {
+                "x": 487057,
+                "y": 4420007
+              },
+              {
+                "x": 487053,
+                "y": 4420007
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 8,
+        "layerId": "yapi",
+        "attrs": {
+          "Ada": "104"
+        },
+        "pts": [
+          {
+            "x": 487070,
+            "y": 4420000
+          },
+          {
+            "x": 487075,
+            "y": 4420000
+          },
+          {
+            "x": 487075,
+            "y": 4420005
+          },
+          {
+            "x": 487070,
+            "y": 4420005
+          }
+        ],
+        "parts": [
+          {
+            "pts": [
+              {
+                "x": 487080,
+                "y": 4420000
+              },
+              {
+                "x": 487085,
+                "y": 4420000
+              },
+              {
+                "x": 487085,
+                "y": 4420005
+              },
+              {
+                "x": 487080,
+                "y": 4420005
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 9,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487090,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487095,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 10,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487090,
+          "y": 4420005
+        },
+        "b": {
+          "x": 487095,
+          "y": 4420005
+        }
+      },
+      {
+        "kind": "line",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487100,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487110,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 12,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487110,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487110,
+          "y": 4420010
+        }
+      },
+      {
+        "kind": "line",
+        "id": 13,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487110,
+          "y": 4420010
+        },
+        "b": {
+          "x": 487100,
+          "y": 4420010
+        }
+      },
+      {
+        "kind": "line",
+        "id": 14,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487100,
+          "y": 4420010
+        },
+        "b": {
+          "x": 487100,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "point",
+        "id": 15,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+          "x": 487120,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "point",
+        "id": 16,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+          "x": 487125,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "polyline",
+        "id": 17,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487130,
+            "y": 4420000
+          },
+          {
+            "x": 487135,
+            "y": 4420000
+          }
+        ],
+        "parts": [
+          {
+            "pts": [
+              {
+                "x": 487130,
+                "y": 4420005
+              },
+              {
+                "x": 487135,
+                "y": 4420005
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "point",
+        "id": 18,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+          "x": 487140,
+          "y": 4420000
+        },
+        "parts": [
+          {
+            "p": {
+              "x": 487145,
+              "y": 4420000
+            }
+          },
+          {
+            "p": {
+              "x": 487150,
+              "y": 4420000
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Birleştir: iki örtüşen alan tek alan, ilkinin verisiyle; adım “Alan birleştir”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "union",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": "$any",
+              "result": [
+                "$uidOf:19"
+              ],
+              "objects": 2,
+              "pieces": 1,
+              "size": 150,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "19": {
+                "corners": [
+                  [
+                    487000,
+                    4420000
+                  ],
+                  [
+                    487000,
+                    4420010
+                  ],
+                  [
+                    487005,
+                    4420000
+                  ],
+                  [
+                    487005,
+                    4420010
+                  ],
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ],
+                  [
+                    487015,
+                    4420000
+                  ],
+                  [
+                    487015,
+                    4420010
+                  ]
+                ],
+                "area": 150,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "fields": {
+              "19": {
+                "attrs": {
+                  "Ada": "101",
+                  "Parsel": "5"
+                },
+                "label": "5"
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan birleştir",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir, Tek nesne: değmeyen iki alan iki parçalı tek alan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "union",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:3"
+              ],
+              "single": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": "$any",
+              "result": [
+                "$uidOf:19"
+              ],
+              "objects": 2,
+              "pieces": 2,
+              "size": 200,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              2,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "19": {
+                "corners": [
+                  [
+                    487000,
+                    4420000
+                  ],
+                  [
+                    487000,
+                    4420010
+                  ],
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ],
+                  [
+                    487030,
+                    4420000
+                  ],
+                  [
+                    487030,
+                    4420010
+                  ],
+                  [
+                    487040,
+                    4420000
+                  ],
+                  [
+                    487040,
+                    4420010
+                  ]
+                ],
+                "area": 200,
+                "parts": 2,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan birleştir",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: aynı kimlik iki kez bir sayılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "union",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:2",
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": "$any",
+              "result": [
+                "$uidOf:19"
+              ],
+              "objects": 2,
+              "pieces": 1,
+              "size": 150,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "19": {
+                "corners": [
+                  [
+                    487000,
+                    4420000
+                  ],
+                  [
+                    487000,
+                    4420010
+                  ],
+                  [
+                    487005,
+                    4420000
+                  ],
+                  [
+                    487005,
+                    4420010
+                  ],
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ],
+                  [
+                    487015,
+                    4420000
+                  ],
+                  [
+                    487015,
+                    4420010
+                  ]
+                ],
+                "area": 150,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan birleştir",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: tek alan yetmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "union",
+              "ids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_objects",
+              "message": "Birleştirmek için en az iki alan seçin (kapalı alan, daire, elips ya da kapalı eğri).",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: çizgi alan sayılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "union",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:6"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_objects",
+              "message": "Birleştirmek için en az iki alan seçin (kapalı alan, daire, elips ya da kapalı eğri).",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: kilitli katmandaki alan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "union",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:5"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.",
+              "path": "work"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan kimlik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "union",
+              "ids": [
+                "$uidOf:1",
+                "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "work.ids[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlik değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "union",
+              "ids": [
+                "parsel-5"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“parsel-5” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "work.ids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kesiştir: ortak parça yeni, boş alan; kaynaklar kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "intersect",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": [],
+              "result": [
+                "$uidOf:19"
+              ],
+              "objects": 2,
+              "pieces": 1,
+              "size": 50,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "19": {
+                "corners": [
+                  [
+                    487005,
+                    4420000
+                  ],
+                  [
+                    487005,
+                    4420010
+                  ],
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ]
+                ],
+                "area": 50,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "fields": {
+              "19": {
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan kesiştir",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kesiştir, Kaynakları sil: ortak parça ilkinin verisini alır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "intersect",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ],
+              "erase": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": "$any",
+              "result": [
+                "$uidOf:19"
+              ],
+              "objects": 2,
+              "pieces": 1,
+              "size": 50,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "19": {
+                "corners": [
+                  [
+                    487005,
+                    4420000
+                  ],
+                  [
+                    487005,
+                    4420010
+                  ],
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ]
+                ],
+                "area": 50,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "fields": {
+              "19": {
+                "attrs": {
+                  "Ada": "101",
+                  "Parsel": "5"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan kesiştir",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kesiştir: ortak parça yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "intersect",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:3"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_overlap",
+              "message": "Seçili alanların ortak bir parçası yok.",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kesiştir: tek alan yetmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "intersect",
+              "ids": [
+                "$uidOf:2"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_objects",
+              "message": "Kesiştirmek için en az iki alan seçin (kapalı alan, daire, elips ya da kapalı eğri).",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çıkar: kalan parça kaynağın verisiyle yeni alan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "subtract",
+              "from": [
+                "$uidOf:1"
+              ],
+              "cut": [
+                "$uidOf:2"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": "$any",
+              "result": [
+                "$uidOf:19"
+              ],
+              "objects": 1,
+              "pieces": 1,
+              "size": 50,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "19": {
+                "corners": [
+                  [
+                    487000,
+                    4420000
+                  ],
+                  [
+                    487000,
+                    4420010
+                  ],
+                  [
+                    487005,
+                    4420000
+                  ],
+                  [
+                    487005,
+                    4420010
+                  ]
+                ],
+                "area": 50,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "fields": {
+              "19": {
+                "attrs": {
+                  "Ada": "101",
+                  "Parsel": "5"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan çıkar",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çıkar: içteki alan delik bırakır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "subtract",
+              "from": [
+                "$uidOf:1"
+              ],
+              "cut": [
+                "$uidOf:4"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": "$any",
+              "result": [
+                "$uidOf:19"
+              ],
+              "objects": 1,
+              "pieces": 1,
+              "size": 96,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "19": {
+                "corners": [
+                  [
+                    487000,
+                    4420000
+                  ],
+                  [
+                    487000,
+                    4420010
+                  ],
+                  [
+                    487002,
+                    4420002
+                  ],
+                  [
+                    487002,
+                    4420004
+                  ],
+                  [
+                    487004,
+                    4420002
+                  ],
+                  [
+                    487004,
+                    4420004
+                  ],
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ]
+                ],
+                "area": 96,
+                "parts": 1,
+                "holes": 1
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan çıkar",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çıkar, Çıkarılanları sil: kesen alan da gider",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "subtract",
+              "from": [
+                "$uidOf:1"
+              ],
+              "cut": [
+                "$uidOf:2"
+              ],
+              "erase": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": "$any",
+              "result": [
+                "$uidOf:19"
+              ],
+              "objects": 1,
+              "pieces": 1,
+              "size": 50,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "19": {
+                "corners": [
+                  [
+                    487000,
+                    4420000
+                  ],
+                  [
+                    487000,
+                    4420010
+                  ],
+                  [
+                    487005,
+                    4420000
+                  ],
+                  [
+                    487005,
+                    4420010
+                  ]
+                ],
+                "area": 50,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan çıkar",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çıkar: iki kesen birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "subtract",
+              "from": [
+                "$uidOf:2"
+              ],
+              "cut": [
+                "$uidOf:1",
+                "$uidOf:3"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": "$any",
+              "result": [
+                "$uidOf:19"
+              ],
+              "objects": 1,
+              "pieces": 1,
+              "size": 50,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "19": {
+                "corners": [
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ],
+                  [
+                    487015,
+                    4420000
+                  ],
+                  [
+                    487015,
+                    4420010
+                  ]
+                ],
+                "area": 50,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan çıkar",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çıkar, Çıkarılanları sil: kilitli katmandaki kesen kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "subtract",
+              "from": [
+                "$uidOf:2"
+              ],
+              "cut": [
+                "$uidOf:1",
+                "$uidOf:5"
+              ],
+              "erase": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": "$any",
+              "result": [
+                "$uidOf:19"
+              ],
+              "objects": 1,
+              "pieces": 1,
+              "size": 50,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "19": {
+                "corners": [
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ],
+                  [
+                    487015,
+                    4420000
+                  ],
+                  [
+                    487015,
+                    4420010
+                  ]
+                ],
+                "area": 50,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan çıkar",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çıkar: örtüşmeyen alan hiçbir şeyi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "subtract",
+              "from": [
+                "$uidOf:1"
+              ],
+              "cut": [
+                "$uidOf:3"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_overlap",
+              "message": "Çıkarılan alanlar kesilecek alanlarla örtüşmüyor; hiçbir alan değişmedi.",
+              "path": "work.cut"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çıkar: kesilecek alan yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "subtract",
+              "from": [
+                "$uidOf:6"
+              ],
+              "cut": [
+                "$uidOf:2"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_objects",
+              "message": "Önce kesilecek alanları seçin (kapalı alan, daire, elips ya da kapalı eğri).",
+              "path": "work.from"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çıkar: çıkarılacak alan kendisi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "subtract",
+              "from": [
+                "$uidOf:1"
+              ],
+              "cut": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_objects",
+              "message": "Çıkarılacak en az bir alan seçin (kapalı alan, daire, elips ya da kapalı eğri).",
+              "path": "work.cut"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Böl: çizgi alanı geçmiyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "split",
+              "ids": [
+                "$uidOf:1"
+              ],
+              "line": [
+                {
+                  "x": 487020,
+                  "y": 4419995
+                },
+                {
+                  "x": 487020,
+                  "y": 4420015
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_overlap",
+              "message": "Kesme çizgisi alanı baştan başa geçmiyor; çizgi alanın sınırını iki yerden kesmeli.",
+              "path": "work.line"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Böl: tek nokta çizgi değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "split",
+              "ids": [
+                "$uidOf:1"
+              ],
+              "line": [
+                {
+                  "x": 487005,
+                  "y": 4419995
+                },
+                {
+                  "x": 487005,
+                  "y": 4419995
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "degenerate_shape",
+              "message": "Kesme çizgisi için en az iki ayrı nokta gösterin.",
+              "path": "work.line"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Böl: çizgi de kesici de verilmedi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "split",
+              "ids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "Kesme çizgisini noktalarıyla (line) ya da kesici nesneyle (cutter) verin; ikisi birden değil.",
+              "path": "work.line"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Böl: kesme çizgisinin noktası sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "split",
+              "ids": [
+                "$uidOf:1"
+              ],
+              "line": [
+                {
+                  "x": 487004,
+                  "y": 4419995
+                },
+                {
+                  "x": 487004,
+                  "y": 4420015
+                }
+              ]
+            }
+          },
+          "nonFinite": {
+            "work.line[0].x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Kesme çizgisinin noktasının doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "work.line[0].x"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Böl: alan değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "split",
+              "ids": [
+                "$uidOf:6"
+              ],
+              "line": [
+                {
+                  "x": 487005,
+                  "y": 4419995
+                },
+                {
+                  "x": 487005,
+                  "y": 4420015
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_an_area",
+              "message": "Bölünecek bir alan seçin (kapalı alan, daire, elips ya da kapalı eğri).",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Böl: noktalarla kesilen alan iki parça, ilki yerinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "split",
+              "ids": [
+                "$uidOf:1"
+              ],
+              "line": [
+                {
+                  "x": 487004,
+                  "y": 4419995
+                },
+                {
+                  "x": 487004,
+                  "y": 4420015
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [
+                "$uidOf:1"
+              ],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": [],
+              "result": [
+                "$uidOf:1",
+                "$uidOf:19"
+              ],
+              "objects": 1,
+              "pieces": 2,
+              "size": 100,
+              "more": 0,
+              "sizes": [
+                40,
+                60
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "1": {
+                "corners": [
+                  [
+                    487000,
+                    4420000
+                  ],
+                  [
+                    487000,
+                    4420010
+                  ],
+                  [
+                    487004,
+                    4420000
+                  ],
+                  [
+                    487004,
+                    4420010
+                  ]
+                ],
+                "area": 40,
+                "parts": 1,
+                "holes": 0
+              },
+              "19": {
+                "corners": [
+                  [
+                    487004,
+                    4420000
+                  ],
+                  [
+                    487004,
+                    4420010
+                  ],
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ]
+                ],
+                "area": 60,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "fields": {
+              "19": {
+                "attrs": {
+                  "Ada": "101",
+                  "Parsel": "5"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan böl",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Böl, Çizgiyle kes: kesici çizgi alanı ikiye böler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "split",
+              "ids": [
+                "$uidOf:3",
+                "$uidOf:6"
+              ],
+              "cutter": "$uidOf:6"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [
+                "$uidOf:3"
+              ],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": [],
+              "result": [
+                "$uidOf:3",
+                "$uidOf:19"
+              ],
+              "objects": 1,
+              "pieces": 2,
+              "size": 100,
+              "more": 0,
+              "sizes": [
+                50,
+                50
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "3": {
+                "corners": [
+                  [
+                    487030,
+                    4420000
+                  ],
+                  [
+                    487030,
+                    4420010
+                  ],
+                  [
+                    487035,
+                    4420000
+                  ],
+                  [
+                    487035,
+                    4420010
+                  ]
+                ],
+                "area": 50,
+                "parts": 1,
+                "holes": 0
+              },
+              "19": {
+                "corners": [
+                  [
+                    487035,
+                    4420000
+                  ],
+                  [
+                    487035,
+                    4420010
+                  ],
+                  [
+                    487040,
+                    4420000
+                  ],
+                  [
+                    487040,
+                    4420010
+                  ]
+                ],
+                "area": 50,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "fields": {
+              "19": {
+                "attrs": {
+                  "Ada": "102",
+                  "Parsel": "1"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan böl",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alana çevir: kapalı bölge oluşturan dört çizgi yeni alan, çizgiler kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "toArea",
+              "ids": [
+                "$uidOf:11",
+                "$uidOf:12",
+                "$uidOf:13",
+                "$uidOf:14"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": [],
+              "result": [
+                "$uidOf:19"
+              ],
+              "objects": 0,
+              "pieces": 1,
+              "size": 100,
+              "more": 1,
+              "sizes": [
+                100
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "19": {
+                "corners": [
+                  [
+                    487100,
+                    4420000
+                  ],
+                  [
+                    487100,
+                    4420010
+                  ],
+                  [
+                    487110,
+                    4420000
+                  ],
+                  [
+                    487110,
+                    4420010
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "fields": {
+              "19": {
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alana çevir",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alana çevir: zaten alan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "toArea",
+              "ids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_an_area",
+              "message": "Seçili nesneler zaten alan.",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alana çevir: kapanmayan çizgiler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "toArea",
+              "ids": [
+                "$uidOf:9",
+                "$uidOf:10"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_an_area",
+              "message": "Alana çevrilecek kapalı nesne ya da kapalı bölge oluşturan çizgi bulunamadı. Çizgilerin uçları birleşmeli ya da kesişmeli.",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizgiye çevir: delikli alanın dışı yerinde, deliği yeni çoklu çizgi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "toPolyline",
+              "ids": [
+                "$uidOf:7"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [
+                "$uidOf:7"
+              ],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": [],
+              "result": [
+                "$uidOf:7",
+                "$uidOf:19"
+              ],
+              "objects": 1,
+              "pieces": 2,
+              "size": 0,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {},
+            "canUndo": true,
+            "dirty": true,
+            "fields": {
+              "7": {
+                "kind": "polyline",
+                "attrs": {
+                  "Ada": "103",
+                  "Parsel": "2"
+                }
+              },
+              "19": {
+                "kind": "polyline",
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Çizgiye çevir",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizgiye çevir: alan değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "toPolyline",
+              "ids": [
+                "$uidOf:6"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_an_area",
+              "message": "Çizgiye çevrilecek bir kapalı alan seçin.",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delik ekle: halka alanın içinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "holeAdd",
+              "id": "$uidOf:1",
+              "ring": [
+                {
+                  "x": 487003,
+                  "y": 4420003
+                },
+                {
+                  "x": 487007,
+                  "y": 4420003
+                },
+                {
+                  "x": 487007,
+                  "y": 4420007
+                },
+                {
+                  "x": 487003,
+                  "y": 4420007
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [
+                "$uidOf:1"
+              ],
+              "created": [],
+              "removed": [],
+              "result": [
+                "$uidOf:1"
+              ],
+              "objects": 1,
+              "pieces": 1,
+              "size": 84,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "shapes": {
+              "1": {
+                "corners": [
+                  [
+                    487000,
+                    4420000
+                  ],
+                  [
+                    487000,
+                    4420010
+                  ],
+                  [
+                    487003,
+                    4420003
+                  ],
+                  [
+                    487003,
+                    4420007
+                  ],
+                  [
+                    487007,
+                    4420003
+                  ],
+                  [
+                    487007,
+                    4420007
+                  ],
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ]
+                ],
+                "area": 84,
+                "parts": 1,
+                "holes": 1
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Delik ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delik ekle: deliğe değen halka onunla birleşir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "holeAdd",
+              "id": "$uidOf:7",
+              "ring": [
+                {
+                  "x": 487055,
+                  "y": 4420003
+                },
+                {
+                  "x": 487058,
+                  "y": 4420003
+                },
+                {
+                  "x": 487058,
+                  "y": 4420007
+                },
+                {
+                  "x": 487055,
+                  "y": 4420007
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [
+                "$uidOf:7"
+              ],
+              "created": [],
+              "removed": [],
+              "result": [
+                "$uidOf:7"
+              ],
+              "objects": 1,
+              "pieces": 1,
+              "size": 80,
+              "more": 1,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "shapes": {
+              "7": {
+                "corners": [
+                  [
+                    487050,
+                    4420000
+                  ],
+                  [
+                    487050,
+                    4420010
+                  ],
+                  [
+                    487053,
+                    4420003
+                  ],
+                  [
+                    487053,
+                    4420007
+                  ],
+                  [
+                    487055,
+                    4420003
+                  ],
+                  [
+                    487055,
+                    4420007
+                  ],
+                  [
+                    487057,
+                    4420003
+                  ],
+                  [
+                    487057,
+                    4420007
+                  ],
+                  [
+                    487058,
+                    4420003
+                  ],
+                  [
+                    487058,
+                    4420007
+                  ],
+                  [
+                    487060,
+                    4420000
+                  ],
+                  [
+                    487060,
+                    4420010
+                  ]
+                ],
+                "area": 80,
+                "parts": 1,
+                "holes": 1
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Delik ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delik ekle: sınırı aşan halka",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "holeAdd",
+              "id": "$uidOf:1",
+              "ring": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                },
+                {
+                  "x": 487012,
+                  "y": 4420005
+                },
+                {
+                  "x": 487012,
+                  "y": 4420008
+                },
+                {
+                  "x": 487005,
+                  "y": 4420008
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_hole",
+              "message": "Delik alanın içinde kalmalı; sınırı aşan bölümü çıkarmak için Alan çıkar'ı kullanın.",
+              "path": "work.ring"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delik ekle: çizgiye delik eklenmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "holeAdd",
+              "id": "$uidOf:6",
+              "ring": [
+                {
+                  "x": 487001,
+                  "y": 4420001
+                },
+                {
+                  "x": 487002,
+                  "y": 4420001
+                },
+                {
+                  "x": 487002,
+                  "y": 4420002
+                },
+                {
+                  "x": 487001,
+                  "y": 4420002
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_an_area",
+              "message": "Delik yalnız kapalı alana eklenir.",
+              "path": "work.id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deliği sil: alan doluya döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "holeRemove",
+              "id": "$uidOf:7",
+              "at": {
+                "x": 487055,
+                "y": 4420005
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [
+                "$uidOf:7"
+              ],
+              "created": [],
+              "removed": [],
+              "result": [
+                "$uidOf:7"
+              ],
+              "objects": 1,
+              "pieces": 1,
+              "size": 100,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "shapes": {
+              "7": {
+                "corners": [
+                  [
+                    487050,
+                    4420000
+                  ],
+                  [
+                    487050,
+                    4420010
+                  ],
+                  [
+                    487060,
+                    4420000
+                  ],
+                  [
+                    487060,
+                    4420010
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Deliği sil",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deliği doldur: deliğin halkası yeni alan, delik kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "holeFill",
+              "id": "$uidOf:7",
+              "at": {
+                "x": 487055,
+                "y": 4420005
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": [],
+              "result": [
+                "$uidOf:19"
+              ],
+              "objects": 1,
+              "pieces": 1,
+              "size": 16,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "19": {
+                "corners": [
+                  [
+                    487053,
+                    4420003
+                  ],
+                  [
+                    487053,
+                    4420007
+                  ],
+                  [
+                    487057,
+                    4420003
+                  ],
+                  [
+                    487057,
+                    4420007
+                  ]
+                ],
+                "area": 16,
+                "parts": 1,
+                "holes": 0
+              },
+              "7": {
+                "corners": [
+                  [
+                    487050,
+                    4420000
+                  ],
+                  [
+                    487050,
+                    4420010
+                  ],
+                  [
+                    487053,
+                    4420003
+                  ],
+                  [
+                    487053,
+                    4420007
+                  ],
+                  [
+                    487057,
+                    4420003
+                  ],
+                  [
+                    487057,
+                    4420007
+                  ],
+                  [
+                    487060,
+                    4420000
+                  ],
+                  [
+                    487060,
+                    4420010
+                  ]
+                ],
+                "area": 84,
+                "parts": 1,
+                "holes": 1
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Deliği doldur",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deliği sil: nokta delikte değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "holeRemove",
+              "id": "$uidOf:7",
+              "at": {
+                "x": 487051,
+                "y": 4420001
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_hole",
+              "message": "Bir deliğin içine tıklayın.",
+              "path": "work.at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parçaları birleştir: değmeyen iki alan iki parçalı tek alan, ilkinin yerinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "partsJoin",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:3"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [
+                "$uidOf:1"
+              ],
+              "created": [],
+              "removed": "$any",
+              "result": [
+                "$uidOf:1"
+              ],
+              "objects": 2,
+              "pieces": 2,
+              "size": 200,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "shapes": {
+              "1": {
+                "corners": [
+                  [
+                    487000,
+                    4420000
+                  ],
+                  [
+                    487000,
+                    4420010
+                  ],
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ],
+                  [
+                    487030,
+                    4420000
+                  ],
+                  [
+                    487030,
+                    4420010
+                  ],
+                  [
+                    487040,
+                    4420000
+                  ],
+                  [
+                    487040,
+                    4420010
+                  ]
+                ],
+                "area": 200,
+                "parts": 2,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Parçaları birleştir",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parçaları birleştir: örtüşenler tek parça",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "partsJoin",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [
+                "$uidOf:1"
+              ],
+              "created": [],
+              "removed": "$any",
+              "result": [
+                "$uidOf:1"
+              ],
+              "objects": 2,
+              "pieces": 1,
+              "size": 150,
+              "more": 1,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "shapes": {
+              "1": {
+                "corners": [
+                  [
+                    487000,
+                    4420000
+                  ],
+                  [
+                    487000,
+                    4420010
+                  ],
+                  [
+                    487005,
+                    4420000
+                  ],
+                  [
+                    487005,
+                    4420010
+                  ],
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ],
+                  [
+                    487015,
+                    4420000
+                  ],
+                  [
+                    487015,
+                    4420010
+                  ]
+                ],
+                "area": 150,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Parçaları birleştir",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parçaları birleştir: türler karışık",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "partsJoin",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:6"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "mixed_kinds",
+              "message": "Parçaları birleştir aynı türden nesneleri birleştirir: alanları, çizgileri ya da noktaları.",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parçaları birleştir: tek nokta",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "partsJoin",
+              "ids": [
+                "$uidOf:15"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_objects",
+              "message": "Parçaları birleştirmek için en az iki nokta seçin.",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parçaları birleştir: iki nokta tek nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "partsJoin",
+              "ids": [
+                "$uidOf:15",
+                "$uidOf:16"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [
+                "$uidOf:15"
+              ],
+              "created": [],
+              "removed": "$any",
+              "result": [
+                "$uidOf:15"
+              ],
+              "objects": 2,
+              "pieces": 2,
+              "size": 0,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              17,
+              18
+            ],
+            "shapes": {},
+            "canUndo": true,
+            "dirty": true,
+            "fields": {
+              "15": {
+                "p": {
+                  "x": 487120,
+                  "y": 4420000
+                },
+                "parts": [
+                  {
+                    "p": {
+                      "x": 487125,
+                      "y": 4420000
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Parçaları birleştir",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parçaları birleştir: iki çizgi çok parçalı çoklu çizgi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "partsJoin",
+              "ids": [
+                "$uidOf:9",
+                "$uidOf:10"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [
+                "$uidOf:9"
+              ],
+              "created": [],
+              "removed": "$any",
+              "result": [
+                "$uidOf:9"
+              ],
+              "objects": 2,
+              "pieces": 2,
+              "size": 10,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "shapes": {},
+            "canUndo": true,
+            "dirty": true,
+            "fields": {
+              "9": {
+                "kind": "polyline",
+                "pts": [
+                  {
+                    "x": 487090,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487095,
+                    "y": 4420000
+                  }
+                ],
+                "parts": [
+                  {
+                    "pts": [
+                      {
+                        "x": 487090,
+                        "y": 4420005
+                      },
+                      {
+                        "x": 487095,
+                        "y": 4420005
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Parçaları birleştir",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parçalara ayır: çok parçalı alan, ilk parça yerinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "partsSplit",
+              "ids": [
+                "$uidOf:8"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [
+                "$uidOf:8"
+              ],
+              "created": [
+                "$uidOf:19"
+              ],
+              "removed": [],
+              "result": [
+                "$uidOf:8",
+                "$uidOf:19"
+              ],
+              "objects": 1,
+              "pieces": 2,
+              "size": 0,
+              "more": 1,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487070,
+                    4420000
+                  ],
+                  [
+                    487070,
+                    4420005
+                  ],
+                  [
+                    487075,
+                    4420000
+                  ],
+                  [
+                    487075,
+                    4420005
+                  ]
+                ],
+                "area": 25,
+                "parts": 1,
+                "holes": 0
+              },
+              "19": {
+                "corners": [
+                  [
+                    487080,
+                    4420000
+                  ],
+                  [
+                    487080,
+                    4420005
+                  ],
+                  [
+                    487085,
+                    4420000
+                  ],
+                  [
+                    487085,
+                    4420005
+                  ]
+                ],
+                "area": 25,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "fields": {
+              "19": {
+                "attrs": {
+                  "Ada": "104"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Parçalara ayır",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parçalara ayır: alan önce, sonra çizgi ve nokta",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "partsSplit",
+              "ids": [
+                "$uidOf:18",
+                "$uidOf:17",
+                "$uidOf:8"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current",
+              "changed": [
+                "$uidOf:8",
+                "$uidOf:18",
+                "$uidOf:17"
+              ],
+              "created": [
+                "$uidOf:19",
+                "$uidOf:20",
+                "$uidOf:21",
+                "$uidOf:22"
+              ],
+              "removed": [],
+              "result": [
+                "$uidOf:8",
+                "$uidOf:19",
+                "$uidOf:18",
+                "$uidOf:20",
+                "$uidOf:21",
+                "$uidOf:17",
+                "$uidOf:22"
+              ],
+              "objects": 3,
+              "pieces": 7,
+              "size": 0,
+              "more": 0,
+              "sizes": []
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487070,
+                    4420000
+                  ],
+                  [
+                    487070,
+                    4420005
+                  ],
+                  [
+                    487075,
+                    4420000
+                  ],
+                  [
+                    487075,
+                    4420005
+                  ]
+                ],
+                "area": 25,
+                "parts": 1,
+                "holes": 0
+              },
+              "19": {
+                "corners": [
+                  [
+                    487080,
+                    4420000
+                  ],
+                  [
+                    487080,
+                    4420005
+                  ],
+                  [
+                    487085,
+                    4420000
+                  ],
+                  [
+                    487085,
+                    4420005
+                  ]
+                ],
+                "area": 25,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "fields": {
+              "18": {
+                "p": {
+                  "x": 487140,
+                  "y": 4420000
+                }
+              },
+              "20": {
+                "p": {
+                  "x": 487145,
+                  "y": 4420000
+                }
+              },
+              "21": {
+                "p": {
+                  "x": 487150,
+                  "y": 4420000
+                }
+              },
+              "22": {
+                "pts": [
+                  {
+                    "x": 487130,
+                    "y": 4420005
+                  },
+                  {
+                    "x": 487135,
+                    "y": 4420005
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Parçalara ayır",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parçalara ayır: tek parçalı nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "partsSplit",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:6"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_multi_part",
+              "message": "Parçalarına ayrılacak çok parçalı bir nesne seçin: alan, çoklu çizgi ya da çok noktalı nesne.",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: birleşim yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "work": {
+              "kind": "union",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": "$any",
+              "removed": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sürüm değiştiyse hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "base"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "partsJoin",
+              "ids": [
+                "$uidOf:15",
+                "$uidOf:16"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "union",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ]
+            },
+            "expectedRevision": "$base"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sürüm yazısı geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "union",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ]
+            },
+            "expectedRevision": "012"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “012” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

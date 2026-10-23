@@ -339,6 +339,37 @@ pub(crate) fn write_objects_each(
     written(result, cx)
 }
 
+/// A construction tool's objects written through `cad.constructions.create` (docs/adr/0622 §9): the active layer, the
+/// current colour, weight and line type, and an object template's attributes, label and symbol, as
+/// [`write_objects`] gives them; the command computes the objects and names the undo step after the tool.
+pub(crate) fn write_construction(
+    construction: kentos_commands::Construction,
+    cx: &mut Context<'_>,
+) -> Option<kentos_commands::EntitiesCreated> {
+    use kentos_native_application::{ExecutionContext, constructions};
+    let input = construction_input(construction, cx);
+    let result = constructions::execute(&mut ExecutionContext::new(cx.doc), input);
+    written(result, cx)
+}
+
+/// The command's input for a construction, as [`write_construction`] sends it (a tool's preview asks with it too).
+pub(crate) fn construction_input(
+    construction: kentos_commands::Construction,
+    cx: &Context<'_>,
+) -> kentos_commands::ConstructionsCreate {
+    kentos_commands::ConstructionsCreate {
+        layer_id: cx.doc.layers().active().to_owned(),
+        construction,
+        color: cx.draft.color_text(),
+        line_weight: cx.draft.line_weight,
+        line_type: cx.draft.line_type,
+        attrs: cx.template_attrs(None),
+        label: cx.template_label(),
+        symbol: cx.template_symbol(),
+        expected_revision: None,
+    }
+}
+
 /// Points as the contracts carry them.
 pub(crate) fn wire_all(pts: &[Vec2]) -> Vec<kentos_commands::Vec2> {
     pts.iter().map(|p| wire(*p)).collect()

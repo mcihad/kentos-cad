@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 98 | 225 | 43 | 45 | 411 |
-| geometry | 8 | 62 | 1 | 3 | 74 |
+| semantic | 104 | 246 | 43 | 45 | 438 |
+| geometry | 2 | 41 | 1 | 3 | 47 |
 | processing | 0 | 130 | 22 | 2 | 154 |
 | none | 0 | 14 | 6 | 2 | 22 |
 | query | 6 | 24 | 2 | 8 | 40 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 814 satırdan 106'i: geometry 71, none 20, processing 3, query 12.
+CBS'ye özgü olmayan 814 satırdan 79'i: geometry 44, none 20, processing 3, query 12.
 
-### Sonucu çağıran hesaplar (geometry) — 71
+### Sonucu çağıran hesaplar (geometry) — 44
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -45,41 +45,19 @@ CBS'ye özgü olmayan 814 satırdan 106'i: geometry 71, none 20, processing 3, q
 | `calc.traverse` | Poligon hesabı… | shared | cad.entities.create `traverse` |  |
 | `cogo.update` | Kayıtlı ölçüleri çizimden yaz | shared | cad.entities.set |  |
 | `crs.points` | Nokta listesi içe aktar… | shared | cad.entities.create |  |
-| `tool.areaIntersect` | Alan kesiştir | shared | cad.entities.edit `areaIntersect` |  |
-| `tool.areaSplit` | Alan böl | shared | cad.entities.edit `areaSplit` |  |
-| `tool.areaSubtract` | Alan çıkar | shared | cad.entities.edit `areaSubtract` |  |
-| `tool.areaUnion` | Alan birleştir | shared | cad.entities.edit `areaUnion` |  |
 | `tool.centerline` | Orta hat | shared | cad.entities.create `centerline` |  |
 | `tool.continue` | Sürdür | shared | cad.entities.edit `continue` |  |
 | `tool.coordinateLabel` | Koordinat yaz | shared | cad.entities.create `coordinates` |  |
 | `tool.coordinateVertices` | Köşelere koordinat yaz | shared | cad.entities.create `coordinates` |  |
 | `tool.copyToLayer` | Katmana kopyala | shared | cad.entities.create |  |
 | `tool.edgeShift` | Paralel kaydır | shared | cad.entities.edit `edgeShift` |  |
-| `tool.fourthCorner` | Dördüncü köşe | shared | cad.entities.create `fourthCorner` |  |
-| `tool.holeAdd` | Delik ekle | shared | cad.entities.edit `holeAdd` |  |
-| `tool.holeFill` | Deliği doldur | shared | cad.entities.edit `holeFill` |  |
-| `tool.holeRemove` | Deliği sil | shared | cad.entities.edit `holeRemove` |  |
 | `tool.imageClip` | Resmi kırp | shared | cad.entities.edit `imageClip` |  |
-| `tool.intersectPoint` | Kesişim noktası | shared | cad.entities.create `intersectPoint` |  |
-| `tool.intersectPoint#İki doğru` | Kesişim noktası: İki doğru | shared | cad.entities.create `intersectPoint` |  |
-| `tool.intersectPoint#İki doğrultu` | Kesişim noktası: İki doğrultu | shared | cad.entities.create `intersectPoint` |  |
-| `tool.intersectPoint#İki uzaklık` | Kesişim noktası: İki uzaklık | shared | cad.entities.create `intersectPoint` |  |
 | `tool.labelsToText` | Etiketleri yazıya çevir | shared | cad.entities.create `labels` |  |
 | `tool.medianClose` | Refüj kapat | shared | cad.entities.edit `medianClose` |  |
-| `tool.parallel` | Paralel çizgi | cad | cad.entities.create `parallel` |  |
-| `tool.partsJoin` | Parçaları birleştir | shared | cad.entities.edit `partsJoin` |  |
-| `tool.partsSplit` | Parçalara ayır | shared | cad.entities.edit `partsSplit` |  |
-| `tool.perpIn` | Dik in | cad | cad.entities.create `perpendicularIn` |  |
-| `tool.perpOut` | Dik çık | cad | cad.entities.create `perpendicularOut` |  |
 | `tool.placeTextFile` | Metin dosyası yerleştir | cad | cad.entities.create `textFile` |  |
 | `tool.planRoad` | Plan yolu | shared | cad.entities.create `planRoad` |  |
-| `tool.pointsBetween` | Ara nokta | shared | cad.entities.create `pointsBetween` |  |
-| `tool.pointsBetween#Eşit aralık` | Ara nokta: Eşit aralık | shared | cad.entities.create `pointsBetween` |  |
-| `tool.pointsBetween#Oranla` | Ara nokta: Oranla | shared | cad.entities.create `pointsBetween` |  |
-| `tool.pointsBetween#Uzaklıkla` | Ara nokta: Uzaklıkla | shared | cad.entities.create `pointsBetween` |  |
 | `tool.polygonize` | Toplu alan | shared | cad.entities.create `polygonize` |  |
 | `tool.quickDimension` | Hızlı ölçü | cad | cad.entities.create |  |
-| `tool.rangeRings` | Menzil halkaları | shared | cad.entities.create `rangeRings` |  |
 | `tool.readable` | Okunur yap | shared | cad.entities.edit `readable` |  |
 | `tool.reshape` | Biçim değiştir | shared | cad.entities.edit `reshape` |  |
 | `tool.roadJunctions` | Kavşak temizle | shared | cad.entities.edit `roadJunctions` |  |
@@ -94,18 +72,13 @@ CBS'ye özgü olmayan 814 satırdan 106'i: geometry 71, none 20, processing 3, q
 | `tool.split#Uzunluktan` | Parçala: Uzunluktan | shared | cad.entities.edit `split` |  |
 | `tool.stationLabels` | Km yaz | shared | cad.entities.create `stations` |  |
 | `tool.subdivide` | İfraz | none | — |  |
-| `tool.tangentLine` | İki daireye teğet | cad | cad.entities.create `tangentLine` |  |
 | `tool.textAlong` | Eğri boyunca yazı | shared | cad.entities.create `textAlong` |  |
 | `tool.textCurve` | Yazıyı eğriye oturt | shared | cad.entities.edit `textPath` |  |
 | `tool.textCurve#Doğrultuya döndür` | Yazıyı eğriye oturt: Doğrultuya döndür | shared | cad.entities.edit `textPath` |  |
 | `tool.textCurve#Düzleştir` | Yazıyı eğriye oturt: Düzleştir | shared | cad.entities.edit `textPath` |  |
 | `tool.textCurve#Eğriye oturt` | Yazıyı eğriye oturt: Eğriye oturt | shared | cad.entities.edit `textPath` |  |
-| `tool.toArea` | Alana çevir | shared | cad.entities.edit `toArea` |  |
-| `tool.toPolyline` | Çizgiye çevir | shared | cad.entities.edit `toPolyline` |  |
 | `tool.topology` | Topolojik temizlik | shared | cad.entities.edit `topology` |  |
 | `tool.vertexPoints` | Köşelere nokta | shared | cad.entities.create `vertexPoints` |  |
-| `tool.xline#Açıortay` | Yardımcı çizgi: Açıortay | cad | cad.entities.create |  |
-| `tool.xline#Paralel` | Yardımcı çizgi: Paralel | cad | cad.entities.create |  |
 | `transform.edgematch` | Kenar eşleme… | shared | cad.entities.edit `edgematch` |  |
 | `transform.fit` | Vektör oturtma… | shared | cad.entities.transform | Dönüşüm araçta kontrol noktalarından çözülür. |
 

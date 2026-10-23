@@ -17,16 +17,14 @@
 //! the corridor and its area are the shared core's (`parallel_sides`,
 //! `corridor_area`, `net_area`); none is computed here.
 
-use kentos_commands::{CreateOperation, EntityGeometry};
+use kentos_commands::Construction;
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
 use kentos_geometry_core::geom::parallel::{clean_axis, corridor_area, parallel_sides};
 use kentos_geometry_core::geom::region::net_area;
 use kentos_geometry_core::geometry::{bearing_grad, dist};
-use kentos_geometry_core::ops::areas::polygon_of_area;
 use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::geometry::edit_geometry;
 
 use crate::Vec2;
 use crate::format::Format;
@@ -169,9 +167,8 @@ impl Parallel {
         self.d.pts.push(p);
     }
 
-    /// The sides (or the corridor) and the axis, written through
-    /// `cad.entities.create` (docs/adr/0057) as one undo step, “Paralel
-    /// çizgi”: all of them, or none with the command's reason.
+    /// The sides (or the corridor) and the axis, written through `cad.constructions.create` (docs/adr/0622 §9) as
+    /// one undo step, “Paralel çizgi”: all of them, or none with the command's reason.
     fn commit(&mut self, closed: bool, cx: &mut Context<'_>) {
         let axis = clean_axis(&self.d.pts, closed);
         if axis.len() < if closed { 3 } else { 2 } {
@@ -180,59 +177,26 @@ impl Parallel {
         }
         let m = *cx.memory;
         let format = cx.format();
-        let line = |pts: &[Vec2]| {
-            if closed {
-                EntityGeometry::Polygon {
-                    pts: wire_all(pts),
-                    bulges: None,
-                    holes: None,
-                    zs: None,
-                    parts: None,
-                }
-            } else {
-                EntityGeometry::Polyline {
-                    ms: None,
-                    pts: wire_all(pts),
-                    bulges: None,
-                    zs: None,
-                    parts: None,
-                    closed: false,
-                    widths: None,
-                }
-            }
+        let construction = Construction::Parallel {
+            axis: wire_all(&self.d.pts),
+            closed,
+            left: m.parallel_left,
+            right: m.parallel_right,
+            with_axis: m.parallel_axis,
+            area: m.parallel_area,
         };
-        let mut objects = Vec::new();
-        let mut summary = String::new();
-        if m.parallel_area {
-            if let Some(area) = corridor_area(&axis, m.parallel_left, m.parallel_right, closed)
-                && let Some(polygon) = edit_geometry(polygon_of_area(&area).shape)
-            {
-                objects.push(polygon);
-                summary = format!(", alan {}", format.area(net_area(&area)));
-            }
-        } else {
-            let sides = parallel_sides(&axis, m.parallel_left, m.parallel_right, closed);
-            objects.extend([sides.left, sides.right].iter().flatten().map(|s| line(s)));
-        }
-        if m.parallel_axis {
-            objects.push(line(&axis));
-        }
-        let made = objects.len();
-        // The web's `!(S.left > 0)`: a distance that is not above zero, NaN included.
-        let positive = |v: f64| v > 0.0;
-        if made == 0 {
-            if !m.parallel_axis && !positive(m.parallel_left) && !positive(m.parallel_right) {
-                cx.say(
-                    Level::Warn,
-                    "Sol ve sağ mesafe sıfır ve eksen çizilmiyor: çizilecek bir şey yok.",
-                );
-            }
-        } else if let Some(out) =
-            points::write_objects(objects, Some(CreateOperation::Parallel), cx)
-        {
+        if let Some(out) = points::write_construction(construction, cx) {
             if let Some(&id) = out.ids.first() {
                 self.d.note(id, cx);
             }
+            let made = out.ids.len();
+            // The corridor's area, said as the tool said it (display only; the command wrote the shape).
+            let summary = match m.parallel_area {
+                true => corridor_area(&axis, m.parallel_left, m.parallel_right, closed)
+                    .map(|area| format!(", alan {}", format.area(net_area(&area))))
+                    .unwrap_or_default(),
+                false => String::new(),
+            };
             let width = format.length(m.parallel_left + m.parallel_right);
             cx.say(
                 Level::Success,

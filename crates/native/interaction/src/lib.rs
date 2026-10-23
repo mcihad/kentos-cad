@@ -172,7 +172,6 @@ pub mod layer_tools;
 pub mod leader;
 pub mod lengthen;
 pub mod line;
-mod line_parts;
 pub mod locks;
 mod log;
 pub mod look;

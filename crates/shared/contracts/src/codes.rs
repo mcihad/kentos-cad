@@ -115,6 +115,17 @@ codes! {
     /// A warning: the layer is hidden, by itself or a group above it.
     LAYER_HIDDEN = "layer_hidden", Warning, false, "Katman ya da üstündeki bir grup gizli; yazılan görünmez.";
     NO_REGION = "no_region", Failed, false, "Yol komşu alanlarla kapalı bir bölge oluşturmuyor.";
+    /// An object that encloses no area where an area operation needs one (docs/adr/0622 §9).
+    NOT_AN_AREA = "not_an_area", Failed, false, "Nesne alan değil ya da işleme uygun alan yok: kapalı alan, daire, elips ya da kapalı eğri verin.";
+    /// Areas with nothing in common, a cut that cuts nothing (docs/adr/0622 §9).
+    NO_OVERLAP = "no_overlap", Failed, false, "Alanlar örtüşmüyor ya da kesme çizgisi alanı geçmiyor; hiçbir alan değişmez.";
+    /// A point in no hole of the area (Deliği sil, Deliği doldur).
+    NO_HOLE = "no_hole", Failed, false, "Gösterilen nokta alanın bir deliğinin içinde değil.";
+    /// A hole's ring not wholly inside the area, or one that would split it (Delik ekle).
+    INVALID_HOLE = "invalid_hole", Failed, false, "Delik alanın içinde kalmalı ve alanı parçalara ayırmamalı.";
+    /// No multi-part object where one is split into its parts (Parçalara ayır).
+    NOT_MULTI_PART = "not_multi_part", Failed, false, "Çok parçalı nesne yok: alan, çoklu çizgi ya da çok noktalı nesne verin.";
+    NO_INTERSECTION = "no_intersection", Failed, false, "Yapımın aradığı teğet ya da kesişim yok: daireler, uzaklıklar ya da doğrultular buluşmuyor.";
     INVALID_PARCEL_NUMBER = "invalid_parcel_number", Failed, false, "Parsel numarası boş.";
     PARCEL_NUMBER_TAKEN = "parcel_number_taken", Warning, false, "Verilen parsel numarası başka bir parselde de var; yine verildi.";
     AREA_COVERED = "area_covered", Failed, false, "Yeni alan kaçınılan katmanların alanlarının içinde kalıyor; yazılacak bir kısmı yok.";
@@ -161,7 +172,7 @@ codes! {
     /// A rubber sheet's links that give no sheet (docs/adr/0158).
     INVALID_LINKS = "invalid_links", Failed, false, "Kauçuk levhanın bağları bir levha vermiyor: 3'ten az ya da 1000'den çok, aynı noktadan iki, kaynakları bir doğru üstünde ya da tek çözümü yok.";
     /// A spread of Hizala ve dağıt with fewer than three objects off locked layers (docs/adr/0194).
-    TOO_FEW_OBJECTS = "too_few_objects", Failed, false, "Dağıtmak için kilitsiz katmanlarda en az üç nesne gerekir.";
+    TOO_FEW_OBJECTS = "too_few_objects", Failed, false, "İşlemin istediğinden az nesne verildi (dağıtmak için kilitsiz katmanlarda en az üç, birleştirmek için en az iki alan).";
     /// Shapes on a rubber sheet whose kept edges or curves lie over 0.1 mm
     /// from their true image (a warning, docs/adr/0158).
     RUBBER_BENDS = "rubber_bends", Warning, false, "Kauçuk levhada bazı kenarlar ya da eğriler gerçek görüntülerinden 0,1 mm'den uzak kaldı.";
@@ -1598,7 +1609,7 @@ codes! {
     /// A field the object's kind does not have.
     FIELD_NOT_FOR_KIND = "field_not_for_kind", Failed, false, "Verilen alan bu nesnenin türünde yok (örneğin aksın genişliği, kolonun etiketi dışında kolonun rıhtı).";
     /// Objects of more than one kind where one is asked.
-    MIXED_KINDS = "mixed_kinds", Failed, false, "Numaralanacak nesneler tek türden olmalı: ya akslar ya kolonlar.";
+    MIXED_KINDS = "mixed_kinds", Failed, false, "Nesneler tek türden olmalı: numaralanacaklar ya akslar ya kolonlar, parçaları birleştirilecekler ya alanlar ya çizgiler ya noktalar.";
     /// Risers that do not fit the stair's walking line.
     STAIR_SHORT = "stair_short", Warning, false, "Merdivenin yolu rıhtlara yetmiyor: bazı basamaklar sığmadı. Yolu uzatın, basamağı daraltın ya da rıht sayısını azaltın.";
     /// A walking line longer than the risers use.

@@ -3138,6 +3138,136 @@
           }
         }
       ]
+    },
+    {
+      "name": "Yay değerleri köşelerden az",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "bulges": [
+              0,
+              0,
+              0
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "bulge_count",
+              "message": "Yay değerleri köşe sayısı kadar olmalı, kapanış kenarı dahil her kenara bir değer: 4 köşe, 3 yay değeri verildi. Eksik ya da fazla değerleri düzeltin.",
+              "path": "bulges"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "13",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          }
+        }
+      ]
     }
   ]
 }

@@ -1012,6 +1012,9 @@ Liste:
   - Akışta sarma: çekirdeğin `wrap` düzenlemesi WASM'ın `exprFlowEdit`'inden zaten gelir; web'in akış görünümü işleç düğmesinde ve çift
     tıkta onu çağırmalı. Okunamayan metinde “Metin'de düzelt”.
   - Tamamlamanın harf sırası eşleşmesi çekirdektedir, web'e kendiliğinden gelir.
+- [ ] Araçların anlamsal komutları (ADR 0622 §9, 23–24 Ekim): web'in işleyicileri ve araçları `cad.donut.create`,
+  `cad.sector.create`, `cad.revcloud.create`, `cad.entities.adjoin`, `cad.parcels.create`, `cad.constructions.create`, `cad.areas.edit` ve şekil
+  komutlarının `rules`'uyla yazmalı; ortak durumlar `fixtures/commands/v1/`'de hazır.
 
 ## 1. Koddan doğrulanan mevcut durum
 
@@ -1281,11 +1284,14 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
     (Bitişik alan: yol, komşu katmanlar, görünümün kutusu); Kapalı alan, Alan olarak çiz, Dikdörtgen, Döndürülmüş
     dikdörtgen, Düzgün çokgen, Daire dilimi, Revizyon bulutu ve Bitişik alan komutla yazar; ortak 24 + 24 durum hücre
     başvurusundan (ADR 0622 §9).
-  - [ ] P0 yapım yardımcıları: Dik in ve çık, Paralel çizgi, İki daireye teğet, Dördüncü köşe, Menzil halkaları, Ara nokta,
-    Kesişim noktası, Yardımcı çizginin Açıortay ve Paralel'i.
+  - [x] P0 yapım yardımcıları: Dik in ve çık, Paralel çizgi, İki daireye teğet, Dördüncü köşe, Menzil halkaları, Ara nokta,
+    Kesişim noktası, Yardımcı çizginin Açıortay ve Paralel'i tek komutla: `cad.constructions.create` (`kind`), ortak 54
+    durum, araçlar komutla yazar (ADR 0622 §9).
   - [x] Parsel oluştur: `cad.parcels.create` (numara, öznitelikler ve parsel katmanı komutta; `parcel_number_taken`,
-    `invalid_parcel_number`), ortak 21 durum, araç komutla yazar (ADR 0622 §9).
-  - [ ] P1 alan işlemleri, delikler, Biçim değiştir, Sürdür, Paralel kaydır; Parçala ve Sadeleştir; Kot ver, Okunur yap, eğri
+    `invalid_parcel_number`), ortak 23 durum, araç komutla yazar (ADR 0622 §9).
+  - [x] P1 alan işlemleri ve delikler: `cad.areas.edit` (birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, parçaları
+    birleştir ve ayır, delik ekle, sil, doldur), ortak 51 durum, araçlar komutla yazar (ADR 0622 §9).
+  - [ ] P1 Biçim değiştir, Sürdür, Paralel kaydır; Parçala ve Sadeleştir; Kot ver, Okunur yap, eğri
     boyunca yazı, Koordinat yaz, Km yaz, Etiketleri yazıya çevir, Köşelere nokta; plan yolu, Orta hat, Toplu alan, Hızlı
     ölçü, Katmana kopyala; ölçme hesap pencereleri; Resmi kırp, Yeni sürüm, ağ sonuçlarını yazma.
   - [ ] P2 ürün komutu olmayanlar: dosya alışverişinin kalanı (GeoJSON, GPX, KML, NCN dışa; GNSS, NCN, NCZ, fotoğraf içe),

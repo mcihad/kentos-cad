@@ -5247,6 +5247,36 @@ class ArchOperation(_Union):
         return _variant(_ARCH_OPERATION, "ArchOperation", "kind", data).from_json(data)
 
 
+class AreaWork(_Union):
+    """The operation, with what it works on.
+
+    One of:
+
+    - :class:`UnionAreaWork` (``kind: union``)
+    - :class:`IntersectAreaWork` (``kind: intersect``)
+    - :class:`SubtractAreaWork` (``kind: subtract``)
+    - :class:`SplitAreaWork` (``kind: split``)
+    - :class:`ToAreaAreaWork` (``kind: toArea``)
+    - :class:`ToPolylineAreaWork` (``kind: toPolyline``)
+    - :class:`PartsJoinAreaWork` (``kind: partsJoin``)
+    - :class:`PartsSplitAreaWork` (``kind: partsSplit``)
+    - :class:`HoleAddAreaWork` (``kind: holeAdd``)
+    - :class:`HoleRemoveAreaWork` (``kind: holeRemove``)
+    - :class:`HoleFillAreaWork` (``kind: holeFill``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AreaWork:
+        return _variant(_AREA_WORK, "AreaWork", "kind", data).from_json(data)
+
+
 class ArrayEdit(_Union):
     """What changes in the array (AutoCAD ARRAYEDIT's properties, Replace, Reset; an item's erase).
 
@@ -5573,6 +5603,35 @@ class ConstructedCurve(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ConstructedCurve:
         return _variant(_CONSTRUCTED_CURVE, "ConstructedCurve", "kind", data).from_json(data)
+
+
+class Construction(_Union):
+    """The construction.
+
+    One of:
+
+    - :class:`ParallelConstruction` (``kind: parallel``)
+    - :class:`PerpendicularInConstruction` (``kind: perpendicularIn``)
+    - :class:`PerpendicularOutConstruction` (``kind: perpendicularOut``)
+    - :class:`TangentLineConstruction` (``kind: tangentLine``)
+    - :class:`FourthCornerConstruction` (``kind: fourthCorner``)
+    - :class:`RangeRingsConstruction` (``kind: rangeRings``)
+    - :class:`PointsBetweenConstruction` (``kind: pointsBetween``)
+    - :class:`IntersectionConstruction` (``kind: intersection``)
+    - :class:`BisectorConstruction` (``kind: bisector``)
+    - :class:`XlineOffsetConstruction` (``kind: xlineOffset``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Construction:
+        return _variant(_CONSTRUCTION, "Construction", "kind", data).from_json(data)
 
 
 class CornerPick(_Union):
@@ -6386,6 +6445,33 @@ class MeasuredPoint(_Union):
         return _variant(_MEASURED_POINT, "MeasuredPoint", "kind", data).from_json(data)
 
 
+class Meeting(_Union):
+    """How Kesişim noktası finds its point.
+
+    One of:
+
+    - :class:`DistancesMeeting` (``method: distances``)
+    - :class:`BearingsMeeting` (``method: bearings``)
+    - :class:`LinesMeeting` (``method: lines``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "method"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        a: Vec2
+        b: Vec2
+
+    @property
+    def method(self) -> str:
+        """The name of the variant (``method`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Meeting:
+        return _variant(_MEETING, "Meeting", "method", data).from_json(data)
+
+
 class MigrationStep(_Union):
     """A step of a migration.
 
@@ -7082,6 +7168,28 @@ class ParameterEdit(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ParameterEdit:
         return _variant(_PARAMETER_EDIT, "ParameterEdit", "kind", data).from_json(data)
+
+
+class PerpendicularReference(_Union):
+    """What a perpendicular is dropped onto (Dik in): a straight edge from `a` (its start) to `b`, taken as its whole
+    line, or a circle, the perpendicular then running through its centre.
+
+    One of:
+
+    - :class:`LinePerpendicularReference` (``kind: line``)
+    - :class:`CirclePerpendicularReference` (``kind: circle``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PerpendicularReference:
+        return _variant(_PERPENDICULAR_REFERENCE, "PerpendicularReference", "kind", data).from_json(data)
 
 
 class PointConstruction(_Union):
@@ -8983,6 +9091,90 @@ class AreaSource(_Model):
             level=_enum_in(AreaLevel, data["level"]),
             name=data["name"],
             district=data.get("district", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AreasEdit(_Model):
+    """`cad.areas.edit`'s input.
+
+    Refusals, in this order: `not_finite`, `entity_not_found`, `too_few_objects` (fewer areas than the operation needs),
+    `not_an_area` (an object that encloses no area where one must), `no_overlap` (nothing in common, nothing cut),
+    `degenerate_shape` (a cut line or a ring of too few points), `no_hole` (no hole at the point), `invalid_hole` (the
+    ring not inside the area), then `cad.entities.edit`'s (`layer_locked` …).
+    """
+    work: AreaWork
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["work"] = self.work.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AreasEdit:
+        return cls(
+            work=AreaWork.from_json(data["work"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AreasEdited(_Model):
+    """What `cad.areas.edit` wrote.
+    Attributes:
+        changed: The objects updated or replaced in place.
+        created: The new objects' persistent ids.
+        removed: The objects deleted.
+        result: The objects the result is: what the tool selects, in order.
+        objects: How many objects the operation acted on (areas joined, cut, split, converted). Unit: count.
+        pieces: How many pieces the result has (areas, parts, polylines, points). Unit: count.
+        size: The result's net area in square metres: the union, the overlap, what is left, the pieces, the regions; the
+            area's after a hole changes; a joined line's length in metres. Unit: 1.
+        more: Alan çıkar: areas wholly cut away. Parçaları birleştir: 1 when overlapping areas merged. Delik ekle: 1 when the
+            ring merged with a hole. Alana çevir: the regions the lines closed. Unit: count.
+        sizes: Each piece's net area in square metres, for Alan böl and Alana çevir's regions. Unit: 1.
+    """
+    changed: list[str]
+    created: list[str]
+    removed: list[str]
+    result: list[str]
+    objects: int
+    pieces: int
+    size: float
+    more: int
+    sizes: list[float]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["created"] = list(self.created)
+        out["removed"] = list(self.removed)
+        out["result"] = list(self.result)
+        out["objects"] = self.objects
+        out["pieces"] = self.pieces
+        out["size"] = float(self.size)
+        out["more"] = self.more
+        out["sizes"] = [float(e0) for e0 in self.sizes]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AreasEdited:
+        return cls(
+            changed=list(data["changed"]),
+            created=list(data["created"]),
+            removed=list(data["removed"]),
+            result=list(data["result"]),
+            objects=data["objects"],
+            pieces=data["pieces"],
+            size=float(data["size"]),
+            more=data["more"],
+            sizes=[float(e0) for e0 in data["sizes"]],
+            revision=data["revision"],
         )
 
 
@@ -13435,6 +13627,98 @@ class ConstructionEntity(_Model):
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ConstructionRound(_Model):
+    """A circle, or an arc of it (`a0` to `a1`, radians counter-clockwise from east).
+    Attributes:
+        c: Unit: length.
+        r: Unit: length.
+        a0: Unit: rad.
+        a1: Unit: rad.
+    """
+    c: Vec2
+    r: float
+    a0: float | None | Unset = UNSET
+    a1: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["c"] = _vec2_out(self.c)
+        out["r"] = float(self.r)
+        if self.a0 is not UNSET:
+            out["a0"] = None if self.a0 is None else float(self.a0)
+        if self.a1 is not UNSET:
+            out["a1"] = None if self.a1 is None else float(self.a1)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConstructionRound:
+        return cls(
+            c=Vec2.from_json(data["c"]),
+            r=float(data["r"]),
+            a0=UNSET if "a0" not in data else None if data["a0"] is None else float(data["a0"]),
+            a1=UNSET if "a1" not in data else None if data["a1"] is None else float(data["a1"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ConstructionsCreate(_Model):
+    """`cad.constructions.create`'s input: the construction, the layer and the look its objects take.
+
+    Refusals, in this order: `not_finite` (a point or a number), `invalid_distance` (a side, a radius, a spacing not
+    above zero where one is needed), `invalid_count` (parts, rings or rays out of range), `degenerate_shape` (points
+    that fall together or lie on a line where they must not, a reference of no length, a centre given as the point),
+    `no_intersection` (no tangent, no meeting), then `cad.entities.create`'s.
+    Attributes:
+        label: Each object's label (an object template's, docs/adr/0176 §3).
+        line_weight: Unit: paper-mm.
+        symbol: Each object's symbol from the style library (an object template's).
+    """
+    layer_id: str
+    construction: Construction
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["construction"] = self.construction.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConstructionsCreate:
+        return cls(
+            layer_id=data["layerId"],
+            construction=Construction.from_json(data["construction"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
         )
 
 
@@ -36712,6 +36996,30 @@ class PdfTaken(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PerpendicularStation(_Model):
+    """Dik çık's foot along the line (dik ayak, from its start) and the length square to it (dik boy, right plus).
+    Attributes:
+        along: Unit: length.
+        offset: Unit: length.
+    """
+    along: float
+    offset: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["along"] = float(self.along)
+        out["offset"] = float(self.offset)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PerpendicularStation:
+        return cls(
+            along=float(data["along"]),
+            offset=float(data["offset"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PickedEntity(_Model):
     """An object a click falls on and its sub-object.
     Attributes:
@@ -54861,6 +55169,265 @@ class DetachArchOperation(ArchOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class UnionAreaWork(AreaWork):
+    """Alan birleştir: the areas go, their union comes from the first (its layer, colour and data); areas that do not
+    touch stay apart, or with `single` make one multi-part area. A multi-part area takes part whole.
+    """
+    TAG_VALUE: ClassVar[str] = "union"
+    ids: list[str]
+    single: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "union"}
+        out["ids"] = list(self.ids)
+        out["single"] = self.single
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnionAreaWork:
+        return cls(
+            ids=list(data["ids"]),
+            single=data["single"] if "single" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IntersectAreaWork(AreaWork):
+    """Alan kesiştir: the areas' common part, a new blank area; with `erase` the areas go and it takes the first one's
+    data.
+    """
+    TAG_VALUE: ClassVar[str] = "intersect"
+    ids: list[str]
+    erase: bool = False
+    single: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "intersect"}
+        out["ids"] = list(self.ids)
+        out["erase"] = self.erase
+        out["single"] = self.single
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IntersectAreaWork:
+        return cls(
+            ids=list(data["ids"]),
+            erase=data["erase"] if "erase" in data else False,
+            single=data["single"] if "single" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SubtractAreaWork(AreaWork):
+    """Alan çıkar: the areas `cut` taken out of the areas `from`, each piece left with its source's data; one wholly
+    inside leaves a hole; with `erase` the cutters go too (but not those on a locked layer).
+    """
+    TAG_VALUE: ClassVar[str] = "subtract"
+    from_: list[str]
+    cut: list[str]
+    erase: bool = False
+    single: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "subtract"}
+        out["from"] = list(self.from_)
+        out["cut"] = list(self.cut)
+        out["erase"] = self.erase
+        out["single"] = self.single
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SubtractAreaWork:
+        return cls(
+            from_=list(data["from"]),
+            cut=list(data["cut"]),
+            erase=data["erase"] if "erase" in data else False,
+            single=data["single"] if "single" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SplitAreaWork(AreaWork):
+    """Alan böl: the areas split along a cut line through `line`'s points, or along the object `cutter` (Çizgiyle
+    kes); the first piece is the area itself, the others new with its data.
+    Attributes:
+        line: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "split"
+    ids: list[str]
+    cutter: str | None | Unset = UNSET
+    line: list[Vec2] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "split"}
+        out["ids"] = list(self.ids)
+        if self.cutter is not UNSET:
+            out["cutter"] = self.cutter
+        if self.line is not UNSET:
+            out["line"] = None if self.line is None else [_vec2_out(e0) for e0 in self.line]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SplitAreaWork:
+        return cls(
+            ids=list(data["ids"]),
+            cutter=data.get("cutter", UNSET),
+            line=UNSET if "line" not in data else None if data["line"] is None else [Vec2.from_json(e0) for e0 in data["line"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ToAreaAreaWork(AreaWork):
+    """Alana çevir: closed objects become areas in their places; the regions the line work among them closes become
+    new blank areas on the first line's layer (the lines stay).
+    """
+    TAG_VALUE: ClassVar[str] = "toArea"
+    ids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "toArea"}
+        out["ids"] = list(self.ids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ToAreaAreaWork:
+        return cls(
+            ids=list(data["ids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ToPolylineAreaWork(AreaWork):
+    """Çizgiye çevir: each area's outer ring becomes a closed polyline in its place; its holes new blank polylines."""
+    TAG_VALUE: ClassVar[str] = "toPolyline"
+    ids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "toPolyline"}
+        out["ids"] = list(self.ids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ToPolylineAreaWork:
+        return cls(
+            ids=list(data["ids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PartsJoinAreaWork(AreaWork):
+    """Parçaları birleştir: areas, lines or points (one kind) become one multi-part object in the first one's place."""
+    TAG_VALUE: ClassVar[str] = "partsJoin"
+    ids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "partsJoin"}
+        out["ids"] = list(self.ids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PartsJoinAreaWork:
+        return cls(
+            ids=list(data["ids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PartsSplitAreaWork(AreaWork):
+    """Parçalara ayır: multi-part objects come apart, the first part keeping the place, the others new with its data."""
+    TAG_VALUE: ClassVar[str] = "partsSplit"
+    ids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "partsSplit"}
+        out["ids"] = list(self.ids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PartsSplitAreaWork:
+        return cls(
+            ids=list(data["ids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HoleAddAreaWork(AreaWork):
+    """Delik ekle: the ring cut from the area as a hole; one touching a hole merges with it.
+    Attributes:
+        ring: Unit: length.
+        bulges: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "holeAdd"
+    id: str
+    ring: list[Vec2]
+    bulges: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "holeAdd"}
+        out["id"] = self.id
+        out["ring"] = [_vec2_out(e0) for e0 in self.ring]
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HoleAddAreaWork:
+        return cls(
+            id=data["id"],
+            ring=[Vec2.from_json(e0) for e0 in data["ring"]],
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HoleRemoveAreaWork(AreaWork):
+    """Deliği sil: the area's hole around `at` removed.
+    Attributes:
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "holeRemove"
+    id: str
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "holeRemove"}
+        out["id"] = self.id
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HoleRemoveAreaWork:
+        return cls(
+            id=data["id"],
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HoleFillAreaWork(AreaWork):
+    """Deliği doldur: the area's hole around `at` filled with a new area from it, the hole kept.
+    Attributes:
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "holeFill"
+    id: str
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "holeFill"}
+        out["id"] = self.id
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HoleFillAreaWork:
+        return cls(
+            id=data["id"],
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayoutArrayEdit(ArrayEdit):
     """The rows, columns, count, spacing, fill or path: every item is laid out again. An item keeps its number
     (a grid's its row and column); a removed one stays removed, a kept one where it is; the places that are new
@@ -56301,6 +56868,318 @@ class EllipseConstructedCurve(ConstructedCurve):
             ratio=float(data["ratio"]),
             t0=float(data["t0"]),
             t1=float(data["t1"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParallelConstruction(Construction):
+    """Paralel çizgi: the sides of an axis at `left` and `right` (miter joins), as lines or (`area`) as the corridor
+    between them; with `withAxis` the axis too. A closed axis makes closed sides.
+    Attributes:
+        axis: Unit: length.
+        left: Unit: length.
+        right: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "parallel"
+    axis: list[Vec2]
+    left: float
+    right: float
+    area: bool = False
+    closed: bool = False
+    with_axis: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "parallel"}
+        out["axis"] = [_vec2_out(e0) for e0 in self.axis]
+        out["left"] = float(self.left)
+        out["right"] = float(self.right)
+        out["area"] = self.area
+        out["closed"] = self.closed
+        out["withAxis"] = self.with_axis
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParallelConstruction:
+        return cls(
+            axis=[Vec2.from_json(e0) for e0 in data["axis"]],
+            left=float(data["left"]),
+            right=float(data["right"]),
+            area=data["area"] if "area" in data else False,
+            closed=data["closed"] if "closed" in data else False,
+            with_axis=data["withAxis"] if "withAxis" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PerpendicularInConstruction(Construction):
+    """Dik in: from each point a line to its foot on the reference.
+    Attributes:
+        points: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "perpendicularIn"
+    reference: PerpendicularReference
+    points: list[Vec2]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "perpendicularIn"}
+        out["reference"] = self.reference.to_json()
+        out["points"] = [_vec2_out(e0) for e0 in self.points]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PerpendicularInConstruction:
+        return cls(
+            reference=PerpendicularReference.from_json(data["reference"]),
+            points=[Vec2.from_json(e0) for e0 in data["points"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PerpendicularOutConstruction(Construction):
+    """Dik çık: on the line from `a` to `b`, a line from each station's foot square to it.
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "perpendicularOut"
+    a: Vec2
+    b: Vec2
+    stations: list[PerpendicularStation]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "perpendicularOut"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        out["stations"] = [e0.to_json() for e0 in self.stations]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PerpendicularOutConstruction:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+            stations=[PerpendicularStation.from_json(e0) for e0 in data["stations"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TangentLineConstruction(Construction):
+    """İki daireye teğet: the common tangent of two circles or arcs nearest the two points.
+    Attributes:
+        near_first: Unit: length.
+        near_second: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "tangentLine"
+    first: ConstructionRound
+    second: ConstructionRound
+    near_first: Vec2
+    near_second: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "tangentLine"}
+        out["first"] = self.first.to_json()
+        out["second"] = self.second.to_json()
+        out["nearFirst"] = _vec2_out(self.near_first)
+        out["nearSecond"] = _vec2_out(self.near_second)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TangentLineConstruction:
+        return cls(
+            first=ConstructionRound.from_json(data["first"]),
+            second=ConstructionRound.from_json(data["second"]),
+            near_first=Vec2.from_json(data["nearFirst"]),
+            near_second=Vec2.from_json(data["nearSecond"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FourthCornerConstruction(Construction):
+    """Dördüncü köşe: the parallelogram's corner opposite `b`, a point, or (`area`) the parallelogram.
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+        c: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "fourthCorner"
+    a: Vec2
+    b: Vec2
+    c: Vec2
+    area: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "fourthCorner"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        out["c"] = _vec2_out(self.c)
+        out["area"] = self.area
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FourthCornerConstruction:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+            c=Vec2.from_json(data["c"]),
+            area=data["area"] if "area" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RangeRingsConstruction(Construction):
+    """Menzil halkaları: `count` rings at `spacing` round `centre`, and `rays` from it to the outer one, the first due
+    north.
+    Attributes:
+        centre: Unit: length.
+        spacing: Unit: length.
+        count: Unit: count.
+        rays: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "rangeRings"
+    centre: Vec2
+    spacing: float
+    count: int
+    rays: int = 0
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rangeRings"}
+        out["centre"] = _vec2_out(self.centre)
+        out["spacing"] = float(self.spacing)
+        out["count"] = self.count
+        out["rays"] = self.rays
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RangeRingsConstruction:
+        return cls(
+            centre=Vec2.from_json(data["centre"]),
+            spacing=float(data["spacing"]),
+            count=data["count"],
+            rays=data["rays"] if "rays" in data else 0,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointsBetweenConstruction(Construction):
+    """Ara nokta: points on the line from `a` to `b`: in `parts` equal parts, at `distances` from `a`, or at `ratios`
+    of the way (one of them).
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+        distances: Unit: length.
+        parts: Unit: count.
+        ratios: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "pointsBetween"
+    a: Vec2
+    b: Vec2
+    distances: list[float] | None | Unset = UNSET
+    parts: int | None | Unset = UNSET
+    ratios: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "pointsBetween"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        if self.distances is not UNSET:
+            out["distances"] = None if self.distances is None else [float(e0) for e0 in self.distances]
+        if self.parts is not UNSET:
+            out["parts"] = self.parts
+        if self.ratios is not UNSET:
+            out["ratios"] = None if self.ratios is None else [float(e0) for e0 in self.ratios]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointsBetweenConstruction:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+            distances=UNSET if "distances" not in data else None if data["distances"] is None else [float(e0) for e0 in data["distances"]],
+            parts=data.get("parts", UNSET),
+            ratios=UNSET if "ratios" not in data else None if data["ratios"] is None else [float(e0) for e0 in data["ratios"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IntersectionConstruction(Construction):
+    """Kesişim noktası: one point."""
+    TAG_VALUE: ClassVar[str] = "intersection"
+    meeting: Meeting
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "intersection"}
+        out["meeting"] = self.meeting.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IntersectionConstruction:
+        return cls(
+            meeting=Meeting.from_json(data["meeting"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BisectorConstruction(Construction):
+    """Yardımcı çizgi, Açıortay: the construction line through `vertex` halving the angle between the arms to `p1` and
+    `p2` (square to opposite arms).
+    Attributes:
+        vertex: Unit: length.
+        p1: Unit: length.
+        p2: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "bisector"
+    vertex: Vec2
+    p1: Vec2
+    p2: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "bisector"}
+        out["vertex"] = _vec2_out(self.vertex)
+        out["p1"] = _vec2_out(self.p1)
+        out["p2"] = _vec2_out(self.p2)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BisectorConstruction:
+        return cls(
+            vertex=Vec2.from_json(data["vertex"]),
+            p1=Vec2.from_json(data["p1"]),
+            p2=Vec2.from_json(data["p2"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class XlineOffsetConstruction(Construction):
+    """Yardımcı çizgi, Paralel: the construction line parallel to the edge `a`→`b`, `distance` from it on `side`'s
+    side, or through `side` without a distance.
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+        side: Unit: length.
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "xlineOffset"
+    a: Vec2
+    b: Vec2
+    side: Vec2
+    distance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "xlineOffset"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        out["side"] = _vec2_out(self.side)
+        if self.distance is not UNSET:
+            out["distance"] = None if self.distance is None else float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> XlineOffsetConstruction:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+            side=Vec2.from_json(data["side"]),
+            distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
         )
 
 
@@ -61296,6 +62175,111 @@ class PlaceMeasuredPoint(MeasuredPoint):
 
 
 @dataclass(kw_only=True, slots=True)
+class DistancesMeeting(Meeting):
+    """İki uzaklık: `da` from `a` and `db` from `b`; of two points the one nearest `near`, else the one right of a→b.
+    Attributes:
+        a: Unit: length.
+        da: Unit: length.
+        b: Unit: length.
+        db: Unit: length.
+        near: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "distances"
+    a: Vec2
+    da: float
+    b: Vec2
+    db: float
+    near: Vec2 | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"method": "distances"}
+        out["a"] = _vec2_out(self.a)
+        out["da"] = float(self.da)
+        out["b"] = _vec2_out(self.b)
+        out["db"] = float(self.db)
+        if self.near is not UNSET:
+            out["near"] = None if self.near is None else _vec2_out(self.near)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DistancesMeeting:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            da=float(data["da"]),
+            b=Vec2.from_json(data["b"]),
+            db=float(data["db"]),
+            near=UNSET if "near" not in data else None if data["near"] is None else Vec2.from_json(data["near"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BearingsMeeting(Meeting):
+    """İki doğrultu: from `a` along the survey bearing `ta` and from `b` along `tb` (radians from grid north,
+    clockwise); the meeting ahead of both.
+    Attributes:
+        a: Unit: length.
+        ta: Unit: rad.
+        b: Unit: length.
+        tb: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "bearings"
+    a: Vec2
+    ta: float
+    b: Vec2
+    tb: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"method": "bearings"}
+        out["a"] = _vec2_out(self.a)
+        out["ta"] = float(self.ta)
+        out["b"] = _vec2_out(self.b)
+        out["tb"] = float(self.tb)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BearingsMeeting:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            ta=float(data["ta"]),
+            b=Vec2.from_json(data["b"]),
+            tb=float(data["tb"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LinesMeeting(Meeting):
+    """İki doğru: the line through `a` and `b` and the one through `c` and `d`, wherever they extend to.
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+        c: Unit: length.
+        d: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "lines"
+    a: Vec2
+    b: Vec2
+    c: Vec2
+    d: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"method": "lines"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        out["c"] = _vec2_out(self.c)
+        out["d"] = _vec2_out(self.d)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LinesMeeting:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+            c=Vec2.from_json(data["c"]),
+            d=Vec2.from_json(data["d"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RenameLayerMigrationStep(MigrationStep):
     """The layer at the path is renamed (its place in the tree stays)."""
     TAG_VALUE: ClassVar[str] = "renameLayer"
@@ -64966,6 +65950,56 @@ class RemoveParameterEdit(ParameterEdit):
 
 
 @dataclass(kw_only=True, slots=True)
+class LinePerpendicularReference(PerpendicularReference):
+    """
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "line"
+    a: Vec2
+    b: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "line"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LinePerpendicularReference:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CirclePerpendicularReference(PerpendicularReference):
+    """
+    Attributes:
+        c: Unit: length.
+        r: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "circle"
+    c: Vec2
+    r: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "circle"}
+        out["c"] = _vec2_out(self.c)
+        out["r"] = float(self.r)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CirclePerpendicularReference:
+        return cls(
+            c=Vec2.from_json(data["c"]),
+            r=float(data["r"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MidPointConstruction(PointConstruction):
     """İki nokta ortası: halfway from `a` to `b`."""
     TAG_VALUE: ClassVar[str] = "mid"
@@ -68348,6 +69382,9 @@ class BindXrefsOperation(XrefsOperation):
 _ARCH_OPERATION: dict[str, type[ArchOperation]] = {"set": SetArchOperation, "renumber": RenumberArchOperation, "attach": AttachArchOperation, "detach": DetachArchOperation}
 
 
+_AREA_WORK: dict[str, type[AreaWork]] = {"union": UnionAreaWork, "intersect": IntersectAreaWork, "subtract": SubtractAreaWork, "split": SplitAreaWork, "toArea": ToAreaAreaWork, "toPolyline": ToPolylineAreaWork, "partsJoin": PartsJoinAreaWork, "partsSplit": PartsSplitAreaWork, "holeAdd": HoleAddAreaWork, "holeRemove": HoleRemoveAreaWork, "holeFill": HoleFillAreaWork}
+
+
 _ARRAY_EDIT: dict[str, type[ArrayEdit]] = {"layout": LayoutArrayEdit, "placement": PlacementArrayEdit, "replace": ReplaceArrayEdit, "remove": RemoveArrayEdit, "reset": ResetArrayEdit}
 
 
@@ -68385,6 +69422,9 @@ _CONSTRAINT_RULE: dict[str, type[ConstraintRule]] = {"coincident": CoincidentCon
 
 
 _CONSTRUCTED_CURVE: dict[str, type[ConstructedCurve]] = {"circle": CircleConstructedCurve, "arc": ArcConstructedCurve, "ellipse": EllipseConstructedCurve}
+
+
+_CONSTRUCTION: dict[str, type[Construction]] = {"parallel": ParallelConstruction, "perpendicularIn": PerpendicularInConstruction, "perpendicularOut": PerpendicularOutConstruction, "tangentLine": TangentLineConstruction, "fourthCorner": FourthCornerConstruction, "rangeRings": RangeRingsConstruction, "pointsBetween": PointsBetweenConstruction, "intersection": IntersectionConstruction, "bisector": BisectorConstruction, "xlineOffset": XlineOffsetConstruction}
 
 
 _CORNER_PICK: dict[str, type[CornerPick]] = {"vertex": VertexCornerPick, "lines": LinesCornerPick, "all": AllCornerPick}
@@ -68477,6 +69517,9 @@ _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChang
 _MEASURED_POINT: dict[str, type[MeasuredPoint]] = {"at": AtMeasuredPoint, "place": PlaceMeasuredPoint}
 
 
+_MEETING: dict[str, type[Meeting]] = {"distances": DistancesMeeting, "bearings": BearingsMeeting, "lines": LinesMeeting}
+
+
 _MIGRATION_STEP: dict[str, type[MigrationStep]] = {"renameLayer": RenameLayerMigrationStep, "renameField": RenameFieldMigrationStep, "changeFieldType": ChangeFieldTypeMigrationStep, "mapValues": MapValuesMigrationStep, "retireCode": RetireCodeMigrationStep}
 
 
@@ -68565,6 +69608,9 @@ _PAPER_VIEWPORT_SOURCE: dict[str, type[PaperViewportSource]] = {"drawing": Drawi
 
 
 _PARAMETER_EDIT: dict[str, type[ParameterEdit]] = {"add": AddParameterEdit, "set": SetParameterEdit, "rename": RenameParameterEdit, "remove": RemoveParameterEdit}
+
+
+_PERPENDICULAR_REFERENCE: dict[str, type[PerpendicularReference]] = {"line": LinePerpendicularReference, "circle": CirclePerpendicularReference}
 
 
 _POINT_CONSTRUCTION: dict[str, type[PointConstruction]] = {"mid": MidPointConstruction, "extension": ExtensionPointConstruction, "parallel": ParallelPointConstruction, "track": TrackPointConstruction, "polar": PolarPointConstruction, "along": AlongPointConstruction}
@@ -68750,6 +69796,9 @@ __all__ = [
     "AreaTrimBoundaries",
     "AreaUnit",
     "AreaUnitName",
+    "AreaWork",
+    "AreasEdit",
+    "AreasEdited",
     "AreasTableSource",
     "ArrangeMode",
     "ArrangeModeName",
@@ -68816,9 +69865,11 @@ __all__ = [
     "BatchRow",
     "BatchRowFailed",
     "BatchRowRan",
+    "BearingsMeeting",
     "BezierPaperCadGeometry",
     "BindLeaderEdit",
     "BindXrefsOperation",
+    "BisectorConstruction",
     "BitsStacMask",
     "BlackPaperPlotColor",
     "BlendMode",
@@ -68913,6 +69964,7 @@ __all__ = [
     "CircleEntity",
     "CircleEntityGeometry",
     "CirclePaperCadGeometry",
+    "CirclePerpendicularReference",
     "CirclePlan",
     "CircleSelectRegion",
     "CircleTangentTangentRadiusCurveConstruction",
@@ -68987,7 +70039,10 @@ __all__ = [
     "ConstraintsListed",
     "ConstraintsQuery",
     "ConstructedCurve",
+    "Construction",
     "ConstructionEntity",
+    "ConstructionRound",
+    "ConstructionsCreate",
     "ContainingSelectRegion",
     "ContentLeaderEdit",
     "ContinueDimensionMeasure",
@@ -69106,6 +70161,7 @@ __all__ = [
     "DistanceAxisName",
     "DistanceConstraintRule",
     "DistanceOffsetBy",
+    "DistancesMeeting",
     "DistributePaperOp",
     "DivideBlock",
     "DivideEnds",
@@ -69372,6 +70428,7 @@ __all__ = [
     "FormsValidate",
     "FormsValidated",
     "FoundSnap",
+    "FourthCornerConstruction",
     "FrameInsertsClipOperation",
     "FramePaperViewportClip",
     "FrameTableEdit",
@@ -69471,6 +70528,9 @@ __all__ = [
     "HidePaperEmptyTable",
     "HidePaperOp",
     "HistoryCompareAgainst",
+    "HoleAddAreaWork",
+    "HoleFillAreaWork",
+    "HoleRemoveAreaWork",
     "HorizontalConstraintRule",
     "ImageEntity",
     "ImageEntityGeometry",
@@ -69514,6 +70574,8 @@ __all__ = [
     "InsertsClipOperation",
     "InsertsClipped",
     "InspectedObject",
+    "IntersectAreaWork",
+    "IntersectionConstruction",
     "InvertInsertsClipOperation",
     "InvertSelectRegion",
     "InvitationChange",
@@ -69687,6 +70749,7 @@ __all__ = [
     "LineLabelMode",
     "LineLabelModeName",
     "LinePaperItemKind",
+    "LinePerpendicularReference",
     "LinePlan",
     "LineType",
     "LineTypeDef",
@@ -69705,6 +70768,7 @@ __all__ = [
     "LinearRefDefineOperationName",
     "LinearRefDefined",
     "LinesCornerPick",
+    "LinesMeeting",
     "LinkDomainsOp",
     "LinkSourcesEditOp",
     "LinkTablesOperation",
@@ -69747,6 +70811,7 @@ __all__ = [
     "MatchPropertyName",
     "MatchSizePaperOp",
     "MeasuredPoint",
+    "Meeting",
     "MergePolicy",
     "MergePolicyName",
     "MergeSpacesOperation",
@@ -70057,6 +71122,7 @@ __all__ = [
     "PaperZoneMarks",
     "ParagraphLayout",
     "ParallelConstraintRule",
+    "ParallelConstruction",
     "ParallelPointConstruction",
     "ParamValue",
     "ParameterEdit",
@@ -70074,6 +71140,8 @@ __all__ = [
     "ParkedInfo",
     "ParkedPin",
     "PartsDivision",
+    "PartsJoinAreaWork",
+    "PartsSplitAreaWork",
     "PasteConflicts",
     "PasteConflictsName",
     "PasteRenamed",
@@ -70099,6 +71167,10 @@ __all__ = [
     "PdfTaken",
     "PercentLengthenChange",
     "PerpendicularConstraintRule",
+    "PerpendicularInConstruction",
+    "PerpendicularOutConstruction",
+    "PerpendicularReference",
+    "PerpendicularStation",
     "PhaseView",
     "PhaseViewName",
     "PickedEntity",
@@ -70149,6 +71221,7 @@ __all__ = [
     "PointSymbolName",
     "PointcloudEntity",
     "PointcloudEntityGeometry",
+    "PointsBetweenConstruction",
     "PointsConstruct",
     "PointsConstructed",
     "PolarArrayLayout",
@@ -70280,6 +71353,7 @@ __all__ = [
     "RampsCreate",
     "RampsCreated",
     "RampsPlan",
+    "RangeRingsConstruction",
     "RasterDataset",
     "RasterEntity",
     "RasterEntityGeometry",
@@ -70617,6 +71691,7 @@ __all__ = [
     "SpacesQuantities",
     "SplineEntity",
     "SplineEntityGeometry",
+    "SplitAreaWork",
     "SplitPolicy",
     "SplitPolicyName",
     "SplitSpacesOperation",
@@ -70687,6 +71762,7 @@ __all__ = [
     "SubnetworksFound",
     "SubnetworksUpdate",
     "SubnetworksUpdated",
+    "SubtractAreaWork",
     "Subtype",
     "SubtypeField",
     "SurveySettings",
@@ -70736,6 +71812,7 @@ __all__ = [
     "TagsEdited",
     "TagsPlan",
     "TangentConstraintRule",
+    "TangentLineConstruction",
     "TangentsCurveEdit",
     "TargetReference",
     "TemplatesApplied",
@@ -70776,7 +71853,9 @@ __all__ = [
     "TitleBlockPaperItemKind",
     "TmCrsSystem",
     "TmDefinition",
+    "ToAreaAreaWork",
     "ToBoundChange",
+    "ToPolylineAreaWork",
     "ToPolylineCurveEdit",
     "ToSplineCurveEdit",
     "ToleranceKind",
@@ -70825,6 +71904,7 @@ __all__ = [
     "UnderlayXrefsOperation",
     "UnfieldTableEdit",
     "UngroupPaperOp",
+    "UnionAreaWork",
     "UnitDecision",
     "UnitGeometry",
     "UnitGeometryName",
@@ -70935,6 +72015,7 @@ __all__ = [
     "WritePolicyName",
     "XlineEntity",
     "XlineEntityGeometry",
+    "XlineOffsetConstruction",
     "XrefBindMode",
     "XrefBindModeName",
     "XrefInfo",

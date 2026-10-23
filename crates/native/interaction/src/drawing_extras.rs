@@ -22,7 +22,7 @@
 //! Çıktı, Aralık, Sayı and Işın stay for as long as the app lives
 //! ([`crate::tool::Memory`]).
 
-use kentos_commands::{CreateOperation, EntityGeometry};
+use kentos_commands::{Construction, ConstructionRound, EntityGeometry};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::tessellate_circle;
 use kentos_geometry_core::geometry::dist;
@@ -68,6 +68,16 @@ fn round_under(p: &Pointer, cx: &Context<'_>, besides: Option<Slot>) -> Option<(
                 .is_some_and(|e| matches!(e.kind(), "circle" | "arc"))
     })?;
     Some((slot, Round::of(&shape(cx.doc.get(slot)?))?))
+}
+
+/// A circle or an arc as `cad.constructions.create` takes it.
+fn round_wire(round: &Round) -> ConstructionRound {
+    ConstructionRound {
+        c: wire(round.c),
+        r: round.r,
+        a0: round.span.map(|(a0, _)| a0),
+        a1: round.span.map(|(_, a1)| a1),
+    }
 }
 
 /// What a tangent is called beside the cursor.
@@ -182,13 +192,13 @@ impl Tool for TangentLine {
             cx.say(Level::Warn, no_tangent(&first, &second));
             return;
         };
-        let line = EntityGeometry::Line {
-            ms: None,
-            a: wire(t.a),
-            b: wire(t.b),
-            zs: None,
+        let construction = Construction::TangentLine {
+            first: round_wire(&first),
+            second: round_wire(&second),
+            near_first: wire(p1),
+            near_second: wire(p.raw),
         };
-        if points::write_objects(vec![line], Some(CreateOperation::TangentLine), cx).is_some() {
+        if points::write_construction(construction, cx).is_some() {
             cx.say(
                 Level::Success,
                 format!(
@@ -331,23 +341,13 @@ impl FourthCorner {
             return;
         }
         let d = fourth_corner(a, b, c);
-        let geometry = if self.area() {
-            EntityGeometry::Polygon {
-                pts: points::wire_all(&[a, b, c, d]),
-                bulges: None,
-                holes: None,
-                zs: None,
-                parts: None,
-            }
-        } else {
-            EntityGeometry::Point {
-                p: wire(d),
-                z: None,
-                parts: None,
-            }
+        let construction = Construction::FourthCorner {
+            a: wire(a),
+            b: wire(b),
+            c: wire(c),
+            area: self.area(),
         };
-        if points::write_objects(vec![geometry], Some(CreateOperation::FourthCorner), cx).is_some()
-        {
+        if points::write_construction(construction, cx).is_some() {
             let f = cx.format();
             let what = if self.area() {
                 "Paralelkenar alanı eklendi"
@@ -578,10 +578,17 @@ impl RangeRings {
     fn write(&mut self, c: Vec2, cx: &mut Context<'_>) {
         self.see(cx);
         self.d.begin(c, cx);
-        let Some((objects, n, k)) = self.objects(c) else {
+        let Some((_, n, k)) = self.objects(c) else {
             return;
         };
-        if points::write_objects(objects, Some(CreateOperation::RangeRings), cx).is_some() {
+        let m = self.memory();
+        let construction = Construction::RangeRings {
+            centre: wire(c),
+            spacing: m.ring_spacing,
+            count: m.ring_count,
+            rays: m.ring_rays,
+        };
+        if points::write_construction(construction, cx).is_some() {
             let what = if k == 0 {
                 format!("{n} halka eklendi.")
             } else {

@@ -87,6 +87,12 @@ pub fn execute(
     )
 }
 
+/// [`execute`]'s write, for a command that writes its objects as this one does inside its own recorded step
+/// (`cad.constructions.create`, docs/adr/0622 §9).
+pub(crate) fn write_in(cx: &mut ExecutionContext<'_>, input: EntitiesCreate) -> CommandResult<EntitiesCreated> {
+    write_execute(cx, input)
+}
+
 /// [`execute`]'s write; `call::recorded` runs it as one step of the
 /// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
 fn write_execute(

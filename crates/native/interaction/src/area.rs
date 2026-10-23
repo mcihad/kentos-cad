@@ -20,7 +20,7 @@
 //!   the first one's place, overlapping ones merged into one part, the parts
 //!   from the largest to the smallest; Parçalara ayır: a multi-part area
 //!   becomes an area a part, the first keeping its place (docs/adr/0143).
-//!   Lines and points join and come apart likewise (`line_parts`, docs/adr/0174).
+//!   Lines and points join and come apart likewise (docs/adr/0174).
 //!
 //! Birleştir, kesiştir and çıkar take a multi-part area whole, as the union
 //! of its parts; with Tek nesne (T) their result is one multi-part area
@@ -32,30 +32,24 @@
 //! layers are left out before the command. The area algebra is the shared
 //! core's (exact: arcs stay arcs, input corners keep their coordinates).
 
-use kentos_commands::{
-    AreaPart, EditOperation, EntitiesEdited, Entity, EntityEdit, EntityGeometry,
-};
+use kentos_commands::{AreaWork, AreasEdit, AreasEdited, Entity};
 use kentos_domain::{Document, Slot, Uuid};
-use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, polygon_ring};
+use kentos_geometry_core::entity::{Shape, polygon_ring};
 use kentos_geometry_core::geom::arrangement::{Area, Source};
 use kentos_geometry_core::geom::intersect::Edge;
-use kentos_geometry_core::geom::region::{
-    FaceIndex, intersect_area_sets, net_area, split_area, subtract_areas, union_areas,
-};
+use kentos_geometry_core::geom::region::{net_area, split_area};
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::ops::areas::{
-    area_of_entity, areas_of_entity, line_source, polygon_of_area, polylines_of_polygon,
-};
-use kentos_geometry_core::ops::parts::one_area;
+use kentos_geometry_core::ops::areas::{area_of_entity, areas_of_entity};
 use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::geometry::{edit_geometry, shape};
+use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, areas};
 
 use crate::Vec2;
 use crate::edge::{self, Outline};
 use crate::format::Format;
-use crate::line_parts;
 use crate::log::Level;
 use crate::modify::{Modify, Stages};
+use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{self, Context, Flow, Memory, Pointer, Preview, Stroke, Tag, Tone};
 
@@ -94,7 +88,6 @@ fn areas_of(slots: &[Slot], doc: &Document) -> Vec<Picked> {
 #[derive(Clone, Debug)]
 struct Whole {
     slot: Slot,
-    e: Entity,
     parts: Vec<Area>,
 }
 
@@ -105,25 +98,8 @@ fn wholes_of(slots: &[Slot], doc: &Document) -> Vec<Whole> {
         .filter_map(|&slot| {
             let e = doc.get(slot)?;
             let parts = areas_of_entity(&shape(e));
-            (!parts.is_empty()).then(|| Whole {
-                slot,
-                e: e.clone(),
-                parts,
-            })
+            (!parts.is_empty()).then_some(Whole { slot, parts })
         })
-        .collect()
-}
-
-/// New areas made from the object `from` names, as `add_areas` makes them;
-/// with `one`, one multi-part area of them all (Tek nesne).
-fn add_result(areas: &[Area], from: &str, keep_data: bool, one: bool) -> Vec<EntityEdit> {
-    if !one || areas.len() < 2 {
-        return add_areas(areas, from, keep_data);
-    }
-    one_area(areas)
-        .and_then(|e| edit_geometry(e.shape))
-        .map(|geometry| EntityEdit::add(from.to_owned(), geometry, Some(keep_data)))
-        .into_iter()
         .collect()
 }
 
@@ -137,114 +113,9 @@ fn one_object(prompt: Prompt, memory: &Memory) -> Prompt {
     prompt.option_with("Tek nesne", "T", yes_no(memory.area_one_object))
 }
 
-/// An object's parts as the contract has them, each with its size: a
-/// polygon's own fields and parts (elevations kept), else the one area it
-/// encloses as a polygon.
-fn contract_parts(x: &Whole) -> Vec<(f64, AreaPart)> {
-    let Entity::Polygon(p) = &x.e else {
-        return x
-            .parts
-            .iter()
-            .filter_map(|a| match edit_geometry(polygon_of_area(a).shape)? {
-                EntityGeometry::Polygon {
-                    pts, bulges, holes, ..
-                } => Some((
-                    net_area(a),
-                    AreaPart {
-                        ms: None,
-                        pts,
-                        bulges,
-                        holes,
-                        zs: None,
-                    },
-                )),
-                _ => None,
-            })
-            .collect();
-    };
-    let own = AreaPart {
-        ms: None,
-        pts: p.pts.clone(),
-        bulges: p.bulges.clone(),
-        holes: p.holes.clone(),
-        zs: p.zs.clone(),
-    };
-    std::iter::once(own)
-        .chain(p.parts.iter().flatten().cloned())
-        .map(|part| {
-            let size = area_of_entity(&shape(&Entity::Polygon(kentos_commands::PathEntity {
-                ms: None,
-                base: p.base.clone(),
-                pts: part.pts.clone(),
-                bulges: part.bulges.clone(),
-                holes: part.holes.clone(),
-                zs: None,
-                parts: None,
-                closed: false,
-                widths: None,
-            })))
-            .map_or(0.0, |a| net_area(&a));
-            (size, part)
-        })
-        .collect()
-}
-
 /// How the result of a tool with Tek nesne is said: “n parçalı tek alan”.
 fn one_said(pieces: usize) -> String {
     format!("{pieces} parçalı tek alan")
-}
-
-fn total_area(list: &[Area]) -> f64 {
-    list.iter().map(net_area).sum()
-}
-
-/// New areas made from the object `from` names (`add`): its layer and
-/// colour, and with `keep_data` its attributes and label; never its symbol
-/// (the web's `addAreas`).
-fn add_areas(areas: &[Area], from: &str, keep_data: bool) -> Vec<EntityEdit> {
-    areas
-        .iter()
-        .filter_map(|a| edit_geometry(polygon_of_area(a).shape))
-        .map(|geometry| EntityEdit::add(from.to_owned(), geometry, Some(keep_data)))
-        .collect()
-}
-
-/// The object at `slot` goes (`remove`).
-fn removal(slot: Slot, doc: &Document) -> EntityEdit {
-    EntityEdit::Remove {
-        uid: edge::uid(doc, slot),
-    }
-}
-
-/// The object at `slot` becomes the area `a` in its place, keeping its
-/// data (`replace` with keepData).
-fn replacement(slot: Slot, a: &Area, doc: &Document) -> Option<EntityEdit> {
-    Some(EntityEdit::Replace {
-        uid: edge::uid(doc, slot),
-        geometry: edit_geometry(polygon_of_area(a).shape)?,
-        keep_data: Some(true),
-    })
-}
-
-/// Each object followed by the `n` new ones made from it, in order: what a
-/// split or a polygon's holes select (the web's `flatMap` over `made`).
-fn interleaved(each: &[(Slot, usize)], made: &[Slot]) -> Vec<Slot> {
-    let mut out = Vec::with_capacity(each.len() + made.len());
-    let mut rest = made.iter();
-    for &(slot, n) in each {
-        out.push(slot);
-        out.extend(rest.by_ref().take(n));
-    }
-    out
-}
-
-/// The slots of the objects an edit made, in its order (the web's `createdIds`).
-fn created(out: &EntitiesEdited, doc: &Document) -> Vec<Slot> {
-    out.created
-        .iter()
-        .filter_map(|uid| Uuid::parse_str(uid).ok())
-        .filter_map(|uid| doc.slot_of(uid))
-        .collect()
 }
 
 /// An area's rings as the preview draws them: the outer ring, then the holes.
@@ -266,7 +137,7 @@ fn outlined(a: &Area) -> tool::Area {
     }
 }
 
-/// A straight cut line through the clicked points (the web's `pathSource`).
+/// A straight cut line through the clicked points, as the preview cuts with it (the command cuts with the same).
 fn path_source(pts: &[Vec2]) -> Source {
     Source {
         edges: pts
@@ -276,6 +147,29 @@ fn path_source(pts: &[Vec2]) -> Source {
         points: Some(pts.to_vec()),
         cut: Some(true),
     }
+}
+
+/// The objects' persistent ids, in order.
+fn uids(slots: &[Slot], doc: &Document) -> Vec<String> {
+    slots.iter().map(|&s| edge::uid(doc, s)).collect()
+}
+
+/// The objects at the persistent ids, in order.
+fn slots(uids: &[String], doc: &Document) -> Vec<Slot> {
+    uids.iter()
+        .filter_map(|u| Uuid::parse_str(u).ok())
+        .filter_map(|u| doc.slot_of(u))
+        .collect()
+}
+
+/// The work through `cad.areas.edit` (docs/adr/0622 §9), one undo step named after the tool; a refusal is said.
+pub(crate) fn write_work(work: AreaWork, cx: &mut Context<'_>) -> Option<AreasEdited> {
+    let input = AreasEdit {
+        work,
+        expected_revision: None,
+    };
+    let result = areas::execute(&mut ExecutionContext::new(cx.doc), input);
+    points::written(result, cx)
 }
 
 /// The selection's objects not on a locked layer; how many were left out
@@ -349,248 +243,110 @@ impl AreaAction {
         Self::tool(Kind::PartsSplit)
     }
 
-    /// Parçaları birleştir: the areas as one in the first one's place. When
-    /// no two overlap, every part is kept as it was, its elevations too;
-    /// else the overlapping ones merge into one part (docs/adr/0143).
+    /// Parçaları birleştir: the areas as one multi-part area in the first one's place, the lines one multi-part
+    /// polyline, the points one multi-point object; overlapping areas merge into one part (docs/adr/0143, 0174).
     fn parts_join_run(&self, targets: &[Slot], cx: &mut Context<'_>) {
-        // Lines and points join as their own kind, kinds mixed are refused (docs/adr/0174 §4).
-        let kinds = line_parts::kinds(targets, cx.doc);
-        if kinds.present() > 1 {
-            cx.say(Level::Warn, line_parts::MIXED);
-            return;
-        }
-        match (kinds.lines.len(), kinds.points.len()) {
-            (1, _) => return cx.say(Level::Warn, line_parts::ONE_LINE),
-            (_, 1) => return cx.say(Level::Warn, line_parts::ONE_POINT),
-            (n, _) if n > 1 => return line_parts::join_lines(&kinds.lines, cx),
-            (_, n) if n > 1 => return line_parts::join_points(&kinds.points, cx),
-            _ => {}
-        }
-        let list = wholes_of(targets, cx.doc);
-        if list.len() < 2 {
-            cx.say(
-                Level::Warn,
-                format!("Parçaları birleştirmek için en az iki alan seçin ({AREA_KINDS})."),
-            );
-            return;
-        }
-        let all: Vec<Area> = list.iter().flat_map(|x| x.parts.clone()).collect();
-        let merged = union_areas(&all);
-        let size = total_area(&all);
-        let apart =
-            merged.len() == all.len() && (total_area(&merged) - size).abs() <= 1e-9 * size.max(1.0);
-        let geometry = if apart {
-            // Each part as the contract has it, sized by its area, the largest first.
-            let mut parts: Vec<(f64, AreaPart)> = list.iter().flat_map(contract_parts).collect();
-            parts.sort_by(|a, b| b.0.total_cmp(&a.0));
-            let mut parts = parts.into_iter().map(|(_, p)| p);
-            parts.next().map(|first| EntityGeometry::Polygon {
-                pts: first.pts,
-                bulges: first.bulges,
-                holes: first.holes,
-                zs: first.zs,
-                parts: Some(parts.collect()),
-            })
-        } else {
-            one_area(&merged).and_then(|e| edit_geometry(e.shape))
+        let work = AreaWork::PartsJoin {
+            ids: uids(targets, cx.doc),
         };
-        let Some(geometry) = geometry else {
+        let Some(out) = write_work(work, cx) else {
             return;
         };
-        // The first picked lends its place, id, layer and data; a circle becomes the area.
-        let doc = &*cx.doc;
-        let first = &list[0];
-        let uid = edge::uid(doc, first.slot);
-        let mut changes = vec![match first.e {
-            Entity::Polygon(_) => EntityEdit::Update { uid, geometry },
-            _ => EntityEdit::Replace {
-                uid,
-                geometry,
-                keep_data: Some(true),
-            },
-        }];
-        changes.extend(list[1..].iter().map(|x| removal(x.slot, doc)));
-        if edge::write(EditOperation::PartsJoin, changes, cx).is_none() {
-            return;
-        }
-        cx.selection.set(vec![first.slot]);
-        let (pieces, total, note) = if apart {
-            (all.len(), size, "")
-        } else {
-            (merged.len(), total_area(&merged), "örtüşenler birleşti, ")
+        let first = slots(&out.result, cx.doc);
+        let kind = first.first().and_then(|&s| cx.doc.get(s)).map(Entity::kind);
+        cx.selection.set(first);
+        let (n, pieces) = (out.objects, out.pieces);
+        let text = match kind {
+            Some("point") => format!("{n} nokta tek nesnede birleşti: {pieces} nokta."),
+            Some("polyline") => format!(
+                "{n} çizgi tek çoklu çizgide birleşti: {pieces} parça, toplam {}.",
+                cx.format().length(out.size)
+            ),
+            _ => {
+                let note = if out.more == 1 {
+                    "örtüşenler birleşti, "
+                } else {
+                    ""
+                };
+                format!(
+                    "{n} alan tek alanda birleşti: {note}{pieces} parça, toplam {}.",
+                    cx.format().area(out.size)
+                )
+            }
         };
-        let total = cx.format().area(total);
+        cx.say(Level::Success, text);
+    }
+
+    /// Parçalara ayır: each multi-part area an area a part, the first keeping its place and id, the others new with
+    /// its data (docs/adr/0143); a multi-part polyline and a multi-point object likewise (docs/adr/0174).
+    fn parts_split_run(&self, targets: &[Slot], cx: &mut Context<'_>) {
+        let work = AreaWork::PartsSplit {
+            ids: uids(targets, cx.doc),
+        };
+        let Some(out) = write_work(work, cx) else {
+            return;
+        };
+        let made = slots(&out.result, cx.doc);
+        let count = made.len();
+        cx.selection.set(made);
+        let noun = if out.more == 1 { "alan" } else { "nesne" };
         cx.say(
             Level::Success,
             format!(
-                "{} alan tek alanda birleşti: {note}{pieces} parça, toplam {total}.",
-                list.len()
+                "{} {noun} parçalarına ayrıldı ({count} {noun}).",
+                out.objects
             ),
         );
     }
 
-    /// Parçalara ayır: each multi-part area an area a part; the first keeps
-    /// its place and id, the others are new with its data, each part as it
-    /// was (docs/adr/0143); a multi-part polyline and a multi-point object
-    /// likewise (docs/adr/0174).
-    fn parts_split_run(&self, targets: &[Slot], cx: &mut Context<'_>) {
-        let doc = &*cx.doc;
-        let areas: Vec<(Slot, &kentos_commands::PathEntity)> = targets
-            .iter()
-            .filter_map(|&s| match doc.get(s) {
-                Some(Entity::Polygon(p)) if p.parts.as_ref().is_some_and(|q| !q.is_empty()) => {
-                    Some((s, p))
-                }
-                _ => None,
-            })
-            .collect();
-        let others: Vec<(Slot, (Vec<EntityEdit>, usize))> = targets
-            .iter()
-            .filter_map(|&s| Some((s, line_parts::split(doc.get(s)?, &edge::uid(doc, s))?)))
-            .collect();
-        if areas.is_empty() && others.is_empty() {
-            cx.say(
-                Level::Warn,
-                "Parçalarına ayrılacak çok parçalı bir nesne seçin: alan, çoklu çizgi ya da çok noktalı nesne.",
-            );
-            return;
-        }
-        let mut changes = Vec::new();
-        let mut each = Vec::new();
-        for (slot, p) in &areas {
-            let uid = edge::uid(doc, *slot);
-            changes.push(EntityEdit::Update {
-                uid: uid.clone(),
-                geometry: EntityGeometry::Polygon {
-                    pts: p.pts.clone(),
-                    bulges: p.bulges.clone(),
-                    holes: p.holes.clone(),
-                    zs: p.zs.clone(),
-                    parts: None,
-                },
-            });
-            let parts = p.parts.iter().flatten();
-            changes.extend(parts.map(|part| {
-                EntityEdit::add(
-                    uid.clone(),
-                    EntityGeometry::Polygon {
-                        pts: part.pts.clone(),
-                        bulges: part.bulges.clone(),
-                        holes: part.holes.clone(),
-                        zs: part.zs.clone(),
-                        parts: None,
-                    },
-                    Some(true),
-                )
-            }));
-            each.push((*slot, p.parts.as_ref().map_or(0, Vec::len)));
-        }
-        // The lines' and the points' after the areas', in the selection's order.
-        let only_areas = others.is_empty();
-        for (slot, (more, n)) in others {
-            changes.extend(more);
-            each.push((slot, n));
-        }
-        let n = each.len();
-        let Some(out) = edge::write(EditOperation::PartsSplit, changes, cx) else {
-            return;
-        };
-        let made = interleaved(&each, &created(&out, cx.doc));
-        let count = made.len();
-        cx.selection.set(made);
-        let noun = if only_areas { "alan" } else { "nesne" };
-        cx.say(
-            Level::Success,
-            format!("{n} {noun} parçalarına ayrıldı ({count} {noun})."),
-        );
-    }
-
     fn union_run(&self, targets: &[Slot], cx: &mut Context<'_>) {
-        let list = wholes_of(targets, cx.doc);
-        if list.len() < 2 {
-            cx.say(
-                Level::Warn,
-                format!("Birleştirmek için en az iki alan seçin ({AREA_KINDS})."),
-            );
-            return;
-        }
-        let all: Vec<Area> = list.iter().flat_map(|x| x.parts.clone()).collect();
-        let result = union_areas(&all);
         let one = cx.memory.area_one_object;
-        // The first picked area lends its layer, colour and data (tevhit: the parcel kept).
-        let doc = &*cx.doc;
-        let mut changes: Vec<EntityEdit> = list.iter().map(|x| removal(x.slot, doc)).collect();
-        changes.extend(add_result(
-            &result,
-            &edge::uid(doc, list[0].slot),
-            true,
-            one,
-        ));
-        let Some(out) = edge::write(EditOperation::AreaUnion, changes, cx) else {
+        let work = AreaWork::Union {
+            ids: uids(targets, cx.doc),
+            single: one,
+        };
+        let Some(out) = write_work(work, cx) else {
             return;
         };
-        let made = created(&out, cx.doc);
-        cx.selection.set(made);
-        let parts = if result.len() == 1 {
+        cx.selection.set(slots(&out.result, cx.doc));
+        let parts = if out.pieces == 1 {
             "tek alan".to_owned()
         } else if one {
-            one_said(result.len())
+            one_said(out.pieces as usize)
         } else {
             format!(
                 "{} ayrı alan (birbirine değmeyenler ayrı kalır)",
-                result.len()
+                out.pieces
             )
         };
-        let total = cx.format().area(total_area(&result));
+        let total = cx.format().area(out.size);
         cx.say(
             Level::Success,
             format!(
                 "{} alan birleştirildi: {parts}, toplam {total}.",
-                list.len()
+                out.objects
             ),
         );
     }
 
     fn intersect_run(&self, targets: &[Slot], cx: &mut Context<'_>) {
-        let list = wholes_of(targets, cx.doc);
-        if list.len() < 2 {
-            cx.say(
-                Level::Warn,
-                format!("Kesiştirmek için en az iki alan seçin ({AREA_KINDS})."),
-            );
-            return;
-        }
-        let result = intersect_area_sets(&list.iter().map(|x| x.parts.clone()).collect::<Vec<_>>());
-        if result.is_empty() {
-            cx.say(Level::Warn, "Seçili alanların ortak bir parçası yok.");
-            return;
-        }
         let (erase, one) = (cx.memory.area_intersect_erase, cx.memory.area_one_object);
-        // Kept sources keep their data; the overlap is a new, blank area. Erased, it takes the first one's data.
-        let doc = &*cx.doc;
-        let mut changes: Vec<EntityEdit> = if erase {
-            list.iter().map(|x| removal(x.slot, doc)).collect()
-        } else {
-            Vec::new()
-        };
-        changes.extend(add_result(
-            &result,
-            &edge::uid(doc, list[0].slot),
+        let work = AreaWork::Intersect {
+            ids: uids(targets, cx.doc),
             erase,
-            one,
-        ));
-        let Some(out) = edge::write(EditOperation::AreaIntersect, changes, cx) else {
+            single: one,
+        };
+        let Some(out) = write_work(work, cx) else {
             return;
         };
-        let made = created(&out, cx.doc);
-        cx.selection.set(made);
-        let pieces = match result.len() {
+        cx.selection.set(slots(&out.result, cx.doc));
+        let pieces = match out.pieces {
             1 => String::new(),
-            n if one => format!(" ({})", one_said(n)),
+            n if one => format!(" ({})", one_said(n as usize)),
             n => format!(" ({n} parça)"),
         };
         let erased = if erase { "; kaynaklar silindi" } else { "" };
-        let total = cx.format().area(total_area(&result));
+        let total = cx.format().area(out.size);
         cx.say(
             Level::Success,
             format!("Ortak alan: {total}{pieces}{erased}."),
@@ -598,134 +354,42 @@ impl AreaAction {
     }
 
     fn to_area_run(&self, targets: &[Slot], cx: &mut Context<'_>) {
-        let doc = &*cx.doc;
-        let not_polygons: Vec<Slot> = targets
-            .iter()
-            .copied()
-            .filter(|&s| !matches!(doc.get(s), Some(Entity::Polygon(_))))
-            .collect();
-        let closed = areas_of(&not_polygons, doc);
-        let lines: Vec<(Slot, Entity)> = targets
-            .iter()
-            .filter_map(|&s| doc.get(s).map(|e| (s, e.clone())))
-            .filter(|(_, e)| {
-                area_of_entity(&shape(e)).is_none()
-                    && matches!(
-                        e,
-                        Entity::Line(_)
-                            | Entity::Arc(_)
-                            | Entity::Polyline(_)
-                            | Entity::Spline(_)
-                            | Entity::Nurbs(_)
-                            | Entity::Ellipse(_)
-                    )
-            })
-            .collect();
-        let faces = if lines.is_empty() {
-            Vec::new()
-        } else {
-            let work: Vec<CoreEntity> = lines
-                .iter()
-                .map(|(_, e)| CoreEntity::new(shape(e)))
-                .collect();
-            FaceIndex::new(&[line_source(&work)]).all()
+        let work = AreaWork::ToArea {
+            ids: uids(targets, cx.doc),
         };
-        if closed.is_empty() && faces.is_empty() {
-            let already = targets
-                .iter()
-                .any(|&s| matches!(doc.get(s), Some(Entity::Polygon(_))));
-            cx.say(
-                Level::Warn,
-                if already {
-                    "Seçili nesneler zaten alan."
-                } else {
-                    "Alana çevrilecek kapalı nesne ya da kapalı bölge oluşturan çizgi bulunamadı. Çizgilerin uçları birleşmeli ya da kesişmeli."
-                },
-            );
-            return;
-        }
-        // The object itself becomes an area: it keeps its slot and persistent id (docs/adr/0014).
-        // Line work stays; the regions it closes become new, blank areas on its layer.
-        let mut changes: Vec<EntityEdit> = closed
-            .iter()
-            .filter_map(|x| replacement(x.slot, &x.a, doc))
-            .collect();
-        if let Some((first, _)) = lines.first()
-            && !faces.is_empty()
-        {
-            changes.extend(add_areas(&faces, &edge::uid(doc, *first), false));
-        }
-        let Some(out) = edge::write(EditOperation::ToArea, changes, cx) else {
+        let Some(out) = write_work(work, cx) else {
             return;
         };
-        let mut made: Vec<Slot> = closed.iter().map(|x| x.slot).collect();
-        made.extend(created(&out, cx.doc));
-        cx.selection.set(made);
+        cx.selection.set(slots(&out.result, cx.doc));
         let mut parts = Vec::new();
-        if !closed.is_empty() {
-            parts.push(format!("{} nesne alana çevrildi", closed.len()));
+        if out.objects > 0 {
+            parts.push(format!("{} nesne alana çevrildi", out.objects));
         }
-        if !faces.is_empty() {
+        if out.more > 0 {
             parts.push(format!(
                 "çizgilerden {} alan oluştu ({})",
-                faces.len(),
-                cx.format().area(total_area(&faces))
+                out.more,
+                cx.format().area(out.size)
             ));
         }
         cx.say(Level::Success, format!("{}.", parts.join("; ")));
     }
 
     fn to_polyline_run(&self, targets: &[Slot], cx: &mut Context<'_>) {
-        let polys: Vec<(Slot, Entity)> = targets
-            .iter()
-            .filter_map(|&s| match cx.doc.get(s) {
-                Some(e @ Entity::Polygon(_)) => Some((s, e.clone())),
-                _ => None,
-            })
-            .collect();
-        if polys.is_empty() {
-            cx.say(Level::Warn, "Çizgiye çevrilecek bir kapalı alan seçin.");
-            return;
-        }
-        // The outer ring is the area itself, now a polyline (its slot, persistent id and
-        // data kept, docs/adr/0014); holes become new, blank polylines from it.
-        let doc = &*cx.doc;
-        let mut changes = Vec::new();
-        let mut holes = Vec::new();
-        for (slot, e) in &polys {
-            let Ok(rings) = polylines_of_polygon(&shape(e)) else {
-                continue;
-            };
-            let uid = edge::uid(doc, *slot);
-            let mut more = 0;
-            for (i, ring) in rings.into_iter().enumerate() {
-                let Some(geometry) = edit_geometry(ring.shape) else {
-                    continue;
-                };
-                if i == 0 {
-                    changes.push(EntityEdit::Replace {
-                        uid: uid.clone(),
-                        geometry,
-                        keep_data: Some(true),
-                    });
-                } else {
-                    changes.push(EntityEdit::add(uid.clone(), geometry, Some(false)));
-                    more += 1;
-                }
-            }
-            holes.push((*slot, more));
-        }
-        let Some(out) = edge::write(EditOperation::ToPolyline, changes, cx) else {
+        let work = AreaWork::ToPolyline {
+            ids: uids(targets, cx.doc),
+        };
+        let Some(out) = write_work(work, cx) else {
             return;
         };
-        let made = interleaved(&holes, &created(&out, cx.doc));
+        let made = slots(&out.result, cx.doc);
         let count = made.len();
         cx.selection.set(made);
         cx.say(
             Level::Success,
             format!(
                 "{} alan kapalı çoklu çizgiye çevrildi ({count} çizgi).",
-                polys.len()
+                out.objects
             ),
         );
     }
@@ -842,56 +506,21 @@ impl AreaSubtract {
     }
 
     fn apply(&self, from: &[Whole], cutters: &[Whole], cx: &mut Context<'_>) {
-        let cut: Vec<Area> = cutters.iter().flat_map(|x| x.parts.clone()).collect();
         let (erase, one) = (cx.memory.area_subtract_erase, cx.memory.area_one_object);
         let doc = &*cx.doc;
-        let mut changes = Vec::new();
-        let (mut changed, mut gone) = (0usize, 0usize);
-        for t in from {
-            let rest = subtract_areas(&t.parts, &cut);
-            // Untouched areas stay as they are (a circle is not turned into a polygon for nothing).
-            let size = total_area(&t.parts);
-            if rest.len() == t.parts.len()
-                && (total_area(&rest) - size).abs() <= 1e-9 * size.max(1.0)
-            {
-                continue;
-            }
-            changes.push(removal(t.slot, doc));
-            changes.extend(add_result(&rest, &edge::uid(doc, t.slot), true, one));
-            changed += 1;
-            if rest.is_empty() {
-                gone += 1;
-            }
-        }
-        if changed == 0 {
-            cx.say(
-                Level::Warn,
-                "Çıkarılan alanlar kesilecek alanlarla örtüşmüyor; hiçbir alan değişmedi.",
-            );
-            return;
-        }
-        // The cutters go too when asked, but not those on a locked layer: they are left out here.
-        if erase {
-            changes.extend(
-                cutters
-                    .iter()
-                    .filter(|x| !doc.layers().is_locked(&x.e.base().layer_id))
-                    .map(|x| removal(x.slot, doc)),
-            );
-        }
-        let Some(out) = edge::write(EditOperation::AreaSubtract, changes, cx) else {
+        let work = AreaWork::Subtract {
+            from: from.iter().map(|x| edge::uid(doc, x.slot)).collect(),
+            cut: cutters.iter().map(|x| edge::uid(doc, x.slot)).collect(),
+            erase,
+            single: one,
+        };
+        let Some(out) = write_work(work, cx) else {
             return;
         };
-        let created = created(&out, cx.doc);
-        let left: Vec<Area> = created
-            .iter()
-            .filter_map(|&s| cx.doc.get(s))
-            .flat_map(|e| areas_of_entity(&shape(e)))
-            .collect();
-        cx.selection.set(created);
-        let left = cx.format().area(total_area(&left));
-        let gone = if gone > 0 {
-            format!(", {gone} alan tamamen silindi")
+        cx.selection.set(slots(&out.result, cx.doc));
+        let left = cx.format().area(out.size);
+        let gone = if out.more > 0 {
+            format!(", {} alan tamamen silindi", out.more)
         } else {
             String::new()
         };
@@ -902,7 +531,10 @@ impl AreaSubtract {
         };
         cx.say(
             Level::Success,
-            format!("{changed} alandan çıkarıldı; kalan {left}{gone}{erased}."),
+            format!(
+                "{} alandan çıkarıldı; kalan {left}{gone}{erased}.",
+                out.objects
+            ),
         );
     }
 }
@@ -1047,51 +679,31 @@ impl AreaSplit {
         Modify::with(Self::default())
     }
 
-    /// The pieces the line cuts from the areas, with the area of each (the web's `split`).
-    fn split(&mut self, cut: &Source, cutter: Option<Slot>, cx: &mut Context<'_>) -> Flow {
+    /// The pieces the line (its points, or the object `cutter`) cuts from the areas, with the area of each.
+    fn split(
+        &mut self,
+        line: Option<Vec<Vec2>>,
+        cutter: Option<Slot>,
+        cx: &mut Context<'_>,
+    ) -> Flow {
         let doc = &*cx.doc;
-        let mut changes = Vec::new();
-        // Each split area and how many new pieces come from it, in order.
-        let mut split: Vec<(Slot, usize)> = Vec::new();
-        let mut sizes = Vec::new();
-        for t in &self.list {
-            if Some(t.slot) == cutter {
-                continue;
-            }
-            let pieces = split_area(&t.a, cut);
-            if pieces.len() < 2 {
-                continue;
-            }
-            // The first piece is the area itself, split: it keeps its slot and
-            // persistent id; the rest are new (docs/adr/0014).
-            let Some(first) = replacement(t.slot, &pieces[0], doc) else {
-                continue;
-            };
-            changes.push(first);
-            changes.extend(add_areas(&pieces[1..], &edge::uid(doc, t.slot), true));
-            split.push((t.slot, pieces.len() - 1));
-            sizes.extend(pieces.iter().map(net_area));
-        }
-        let changed = split.len();
-        if changed == 0 {
+        let work = AreaWork::Split {
+            ids: self.list.iter().map(|t| edge::uid(doc, t.slot)).collect(),
+            line: line.map(|pts| pts.into_iter().map(points::wire).collect()),
+            cutter: cutter.map(|s| edge::uid(doc, s)),
+        };
+        let Some(out) = write_work(work, cx) else {
             self.pts.clear();
-            cx.say(
-                Level::Warn,
-                "Kesme çizgisi alanı baştan başa geçmiyor; çizgi alanın sınırını iki yerden kesmeli.",
-            );
-            return Flow::Stay;
-        }
-        let Some(out) = edge::write(EditOperation::AreaSplit, changes, cx) else {
             return Flow::Stay;
         };
-        let created = interleaved(&split, &created(&out, cx.doc));
+        let created = slots(&out.result, cx.doc);
         let count = created.len();
         cx.selection.set(created);
         let format = cx.format();
-        let list = if sizes.len() <= 4 {
+        let list = if out.sizes.len() <= 4 {
             format!(
                 ": {}",
-                sizes
+                out.sizes
                     .iter()
                     .map(|&s| format.area(s))
                     .collect::<Vec<_>>()
@@ -1103,7 +715,8 @@ impl AreaSplit {
         cx.say(
             Level::Success,
             format!(
-                "{changed} alan {count} parçaya bölündü{list}. Parçalar özgün alanın özniteliklerini taşır; parsel numaralarını güncelleyin."
+                "{} alan {count} parçaya bölündü{list}. Parçalar özgün alanın özniteliklerini taşır; parsel numaralarını güncelleyin.",
+                out.objects
             ),
         );
         Flow::Exit
@@ -1204,8 +817,8 @@ impl Stages for AreaSplit {
             );
             return Some(Flow::Stay);
         };
-        let cut = line_source(&[CoreEntity::new(shape(&e))]);
-        Some(self.split(&cut, Some(slot), cx))
+        let _ = e;
+        Some(self.split(None, Some(slot), cx))
     }
 
     fn typed(&mut self, text: &str, cx: &mut Context<'_>) -> Option<Flow> {
@@ -1234,8 +847,8 @@ impl Stages for AreaSplit {
                 Flow::Stay
             }
             _ => {
-                let cut = path_source(&self.pts);
-                self.split(&cut, None, cx)
+                let line = self.pts.clone();
+                self.split(Some(line), None, cx)
             }
         }
     }

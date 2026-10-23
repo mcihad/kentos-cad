@@ -1,0 +1,3629 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.constructions.create",
+  "commandVersion": 1,
+  "title": "Yapım yardımcıları",
+  "note": "Written by scripts/fixtures/construction_cases.py from the constructions' definitions (docs/adr/0622 §9, 0197, 0057); do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "arsiv",
+        "name": "Arşiv",
+        "type": "group",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "eski",
+            "name": "Eski",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "taslak",
+        "name": "Taslak",
+        "type": "group",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "notlar",
+            "name": "Notlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "yapi",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": []
+  },
+  "cases": [
+    {
+      "name": "Paralel çizgi: L ekseni, sol 2 ve sağ 3",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "parallel",
+              "axis": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              ],
+              "left": 2,
+              "right": 3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1,
+                2
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "entities": {
+              "1": {
+                "kind": "polyline",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420002
+                  },
+                  {
+                    "x": 487018,
+                    "y": 4420002
+                  },
+                  {
+                    "x": 487018,
+                    "y": 4420010
+                  }
+                ],
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "2": {
+                "kind": "polyline",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4419997
+                  },
+                  {
+                    "x": 487023,
+                    "y": 4419997
+                  },
+                  {
+                    "x": 487023,
+                    "y": 4420010
+                  }
+                ],
+                "id": 2,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Paralel çizgi",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Paralel çizgi: eksen de çizilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "parallel",
+              "axis": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              ],
+              "left": 2,
+              "right": 0,
+              "withAxis": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1,
+                2
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "entities": {
+              "1": {
+                "kind": "polyline",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420002
+                  },
+                  {
+                    "x": 487018,
+                    "y": 4420002
+                  },
+                  {
+                    "x": 487018,
+                    "y": 4420010
+                  }
+                ],
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "2": {
+                "kind": "polyline",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420010
+                  }
+                ],
+                "id": 2,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Paralel çizgi",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Paralel çizgi: kapalı eksen",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "parallel",
+              "axis": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                {
+                  "x": 487000,
+                  "y": 4420010
+                }
+              ],
+              "closed": true,
+              "left": 1,
+              "right": 2
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1,
+                2
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "pts": [
+                  {
+                    "x": 487001,
+                    "y": 4420001
+                  },
+                  {
+                    "x": 487009,
+                    "y": 4420001
+                  },
+                  {
+                    "x": 487009,
+                    "y": 4420009
+                  },
+                  {
+                    "x": 487001,
+                    "y": 4420009
+                  }
+                ],
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "2": {
+                "kind": "polygon",
+                "pts": [
+                  {
+                    "x": 486998,
+                    "y": 4419998
+                  },
+                  {
+                    "x": 487012,
+                    "y": 4419998
+                  },
+                  {
+                    "x": 487012,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 486998,
+                    "y": 4420012
+                  }
+                ],
+                "id": 2,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Paralel çizgi",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Paralel çizgi: açık eksenin koridoru alan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "parallel",
+              "axis": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              ],
+              "left": 2,
+              "right": 3,
+              "area": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4419997
+                  },
+                  {
+                    "x": 487023,
+                    "y": 4419997
+                  },
+                  {
+                    "x": 487023,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487018,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487018,
+                    "y": 4420002
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420002
+                  }
+                ],
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Paralel çizgi",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Paralel çizgi: kapalı eksenin koridoru delikli alan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "parallel",
+              "axis": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                {
+                  "x": 487000,
+                  "y": 4420010
+                }
+              ],
+              "closed": true,
+              "left": 1,
+              "right": 2,
+              "area": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "pts": [
+                  {
+                    "x": 486998,
+                    "y": 4419998
+                  },
+                  {
+                    "x": 487012,
+                    "y": 4419998
+                  },
+                  {
+                    "x": 487012,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 486998,
+                    "y": 4420012
+                  }
+                ],
+                "holes": [
+                  {
+                    "pts": [
+                      {
+                        "x": 487001,
+                        "y": 4420009
+                      },
+                      {
+                        "x": 487009,
+                        "y": 4420009
+                      },
+                      {
+                        "x": 487009,
+                        "y": 4420001
+                      },
+                      {
+                        "x": 487001,
+                        "y": 4420001
+                      }
+                    ]
+                  }
+                ],
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Paralel çizgi",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Paralel çizgi: yinelenen eksen noktası düşer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "parallel",
+              "axis": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              ],
+              "left": 2,
+              "right": 3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1,
+                2
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "entities": {
+              "1": {
+                "kind": "polyline",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420002
+                  },
+                  {
+                    "x": 487018,
+                    "y": 4420002
+                  },
+                  {
+                    "x": 487018,
+                    "y": 4420010
+                  }
+                ],
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "2": {
+                "kind": "polyline",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4419997
+                  },
+                  {
+                    "x": 487023,
+                    "y": 4419997
+                  },
+                  {
+                    "x": 487023,
+                    "y": 4420010
+                  }
+                ],
+                "id": 2,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Paralel çizgi",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dik in: iki nokta, hattın uzantısına da",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "perpendicularIn",
+              "reference": {
+                "kind": "line",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              },
+              "points": [
+                {
+                  "x": 487004,
+                  "y": 4420007
+                },
+                {
+                  "x": 487015,
+                  "y": 4419997
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1,
+                2
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "entities": {
+              "1": {
+                "kind": "line",
+                "a": {
+                  "x": 487004,
+                  "y": 4420007
+                },
+                "b": {
+                  "x": 487004,
+                  "y": 4420000
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "2": {
+                "kind": "line",
+                "a": {
+                  "x": 487015,
+                  "y": 4419997
+                },
+                "b": {
+                  "x": 487015,
+                  "y": 4420000
+                },
+                "id": 2,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dik in",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dik in: eğik hat (3-4-5)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "perpendicularIn",
+              "reference": {
+                "kind": "line",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420040
+                }
+              },
+              "points": [
+                {
+                  "x": 487050,
+                  "y": 4420000
+                }
+              ]
+            }
+          },
+          "within": 1e-08,
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "line",
+                "a": {
+                  "x": 487050,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487018,
+                  "y": 4420024
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dik in",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dik in: daireye, merkezden geçerek",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "perpendicularIn",
+              "reference": {
+                "kind": "circle",
+                "c": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "r": 5
+              },
+              "points": [
+                {
+                  "x": 487012,
+                  "y": 4420000
+                },
+                {
+                  "x": 487000,
+                  "y": 4419991
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1,
+                2
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "entities": {
+              "1": {
+                "kind": "line",
+                "a": {
+                  "x": 487012,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487005,
+                  "y": 4420000
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "2": {
+                "kind": "line",
+                "a": {
+                  "x": 487000,
+                  "y": 4419991
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4419995
+                },
+                "id": 2,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dik in",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dik çık: sağa artı, sola eksi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "perpendicularOut",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487010,
+                "y": 4420000
+              },
+              "stations": [
+                {
+                  "along": 5,
+                  "offset": 4
+                },
+                {
+                  "along": 12,
+                  "offset": -3
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1,
+                2
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "entities": {
+              "1": {
+                "kind": "line",
+                "a": {
+                  "x": 487005,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487005,
+                  "y": 4419996
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "2": {
+                "kind": "line",
+                "a": {
+                  "x": 487012,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487012,
+                  "y": 4420003
+                },
+                "id": 2,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dik çık",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki daireye teğet: üstteki dış teğet",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "tangentLine",
+              "first": {
+                "c": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "r": 3
+              },
+              "second": {
+                "c": {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                "r": 5
+              },
+              "nearFirst": {
+                "x": 487000,
+                "y": 4420003
+              },
+              "nearSecond": {
+                "x": 487020,
+                "y": 4420005
+              }
+            }
+          },
+          "within": 1e-08,
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "line",
+                "a": {
+                  "x": 486999.7,
+                  "y": 4420002.984962312
+                },
+                "b": {
+                  "x": 487019.5,
+                  "y": 4420004.974937186
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "İki daireye teğet",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki daireye teğet: iç teğet",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "tangentLine",
+              "first": {
+                "c": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "r": 3
+              },
+              "second": {
+                "c": {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                "r": 5
+              },
+              "nearFirst": {
+                "x": 487000,
+                "y": 4420003
+              },
+              "nearSecond": {
+                "x": 487020,
+                "y": 4419995
+              }
+            }
+          },
+          "within": 1e-08,
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "line",
+                "a": {
+                  "x": 487001.2,
+                  "y": 4420002.749545417
+                },
+                "b": {
+                  "x": 487018,
+                  "y": 4419995.417424305
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "İki daireye teğet",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dördüncü köşe: nokta",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "fourthCorner",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487010,
+                "y": 4420000
+              },
+              "c": {
+                "x": 487014,
+                "y": 4420006
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "point",
+                "p": {
+                  "x": 487004,
+                  "y": 4420006
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dördüncü köşe",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dördüncü köşe: paralelkenar alanı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "fourthCorner",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487010,
+                "y": 4420000
+              },
+              "c": {
+                "x": 487014,
+                "y": 4420006
+              },
+              "area": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487014,
+                    "y": 4420006
+                  },
+                  {
+                    "x": 487004,
+                    "y": 4420006
+                  }
+                ],
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dördüncü köşe",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Menzil halkaları: üç halka, dört ışın",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "rangeRings",
+              "centre": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "spacing": 5,
+              "count": 3,
+              "rays": 4
+            }
+          },
+          "within": 1e-08,
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "1": {
+                "kind": "circle",
+                "c": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "r": 5,
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "2": {
+                "kind": "circle",
+                "c": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "r": 10,
+                "id": 2,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "3": {
+                "kind": "circle",
+                "c": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "r": 15,
+                "id": 3,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "4": {
+                "kind": "line",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420015
+                },
+                "id": 4,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "5": {
+                "kind": "line",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487015,
+                  "y": 4420000
+                },
+                "id": 5,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "6": {
+                "kind": "line",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4419985
+                },
+                "id": 6,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "7": {
+                "kind": "line",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 486985,
+                  "y": 4420000
+                },
+                "id": 7,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Menzil halkaları",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Menzil halkaları: ışınsız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "rangeRings",
+              "centre": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "spacing": 2.5,
+              "count": 2
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1,
+                2
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "entities": {
+              "1": {
+                "kind": "circle",
+                "c": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "r": 2.5,
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "2": {
+                "kind": "circle",
+                "c": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "r": 5,
+                "id": 2,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Menzil halkaları",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ara nokta: dört eşit parça",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "pointsBetween",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "parts": 4
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1,
+                2,
+                3
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "entities": {
+              "1": {
+                "kind": "point",
+                "p": {
+                  "x": 487003,
+                  "y": 4420000
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "2": {
+                "kind": "point",
+                "p": {
+                  "x": 487006,
+                  "y": 4420000
+                },
+                "id": 2,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "3": {
+                "kind": "point",
+                "p": {
+                  "x": 487009,
+                  "y": 4420000
+                },
+                "id": 3,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ara nokta",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ara nokta: uzaklıklarla, uzantıda da",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "pointsBetween",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "distances": [
+                3,
+                15
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1,
+                2
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "entities": {
+              "1": {
+                "kind": "point",
+                "p": {
+                  "x": 487003,
+                  "y": 4420000
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "2": {
+                "kind": "point",
+                "p": {
+                  "x": 487015,
+                  "y": 4420000
+                },
+                "id": 2,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ara nokta",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ara nokta: oranlarla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "pointsBetween",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "ratios": [
+                0.25,
+                0.5
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1,
+                2
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "entities": {
+              "1": {
+                "kind": "point",
+                "p": {
+                  "x": 487003,
+                  "y": 4420000
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              },
+              "2": {
+                "kind": "point",
+                "p": {
+                  "x": 487006,
+                  "y": 4420000
+                },
+                "id": 2,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ara nokta",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kesişim noktası: iki uzaklık, A'dan B'ye sağdaki",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "intersection",
+              "meeting": {
+                "method": "distances",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "da": 6,
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "db": 8
+              }
+            }
+          },
+          "within": 1e-08,
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "point",
+                "p": {
+                  "x": 487003.6,
+                  "y": 4419995.2
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kesişim noktası",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kesişim noktası: iki uzaklık, yakındaki",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "intersection",
+              "meeting": {
+                "method": "distances",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "da": 6,
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "db": 8,
+                "near": {
+                  "x": 487003,
+                  "y": 4420006
+                }
+              }
+            }
+          },
+          "within": 1e-08,
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "point",
+                "p": {
+                  "x": 487003.6,
+                  "y": 4420004.8
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kesişim noktası",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kesişim noktası: iki doğrultu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "intersection",
+              "meeting": {
+                "method": "bearings",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "ta": 0.7853981633974483,
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "tb": -0.7853981633974483
+              }
+            }
+          },
+          "within": 1e-08,
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "point",
+                "p": {
+                  "x": 487005,
+                  "y": 4420005
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kesişim noktası",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kesişim noktası: iki doğru, uzantılarında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "intersection",
+              "meeting": {
+                "method": "lines",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487004,
+                  "y": 4420000
+                },
+                "c": {
+                  "x": 487010,
+                  "y": 4420005
+                },
+                "d": {
+                  "x": 487010,
+                  "y": 4420008
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "point",
+                "p": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kesişim noktası",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yardımcı çizgi, Açıortay: dik açının ortası",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "bisector",
+              "vertex": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "p1": {
+                "x": 487010,
+                "y": 4420000
+              },
+              "p2": {
+                "x": 487000,
+                "y": 4420010
+              }
+            }
+          },
+          "within": 1e-08,
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "xline",
+                "p": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "dir": {
+                  "x": 0.7071067811865475,
+                  "y": 0.7071067811865475
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yardımcı çizgi, Açıortay: zıt kollara dik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "bisector",
+              "vertex": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "p1": {
+                "x": 487010,
+                "y": 4420000
+              },
+              "p2": {
+                "x": 486995,
+                "y": 4420000
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "xline",
+                "p": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "dir": {
+                  "x": 0,
+                  "y": 1
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yardımcı çizgi, Paralel: uzaklıkla, noktanın yanına",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "xlineOffset",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487010,
+                "y": 4420000
+              },
+              "side": {
+                "x": 487003,
+                "y": 4419996
+              },
+              "distance": 2
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "xline",
+                "p": {
+                  "x": 487000,
+                  "y": 4419998
+                },
+                "dir": {
+                  "x": 1,
+                  "y": 0
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yardımcı çizgi, Paralel: noktadan geçerek",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "xlineOffset",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487010,
+                "y": 4420000
+              },
+              "side": {
+                "x": 487003,
+                "y": 4420004
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "xline",
+                "p": {
+                  "x": 487003,
+                  "y": 4420004
+                },
+                "dir": {
+                  "x": 1,
+                  "y": 0
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Renk, kalınlık ve öznitelik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "fourthCorner",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "c": {
+                "x": 487014,
+                "y": 4420006
+              }
+            },
+            "color": "#E5484D",
+            "lineWeight": 0.5,
+            "attrs": {
+              "Tür": "Yapım"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "point",
+                "p": {
+                  "x": 487002,
+                  "y": 4420006
+                },
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Yapım"
+                },
+                "color": "#E5484D"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dördüncü köşe",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmana uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "construction": {
+              "kind": "fourthCorner",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "c": {
+                "x": 487014,
+                "y": 4420006
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "entities": {
+              "1": {
+                "kind": "point",
+                "p": {
+                  "x": 487002,
+                  "y": 4420006
+                },
+                "id": 1,
+                "layerId": "gizli",
+                "attrs": {}
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dördüncü köşe",
+          "expect": {
+            "ids": [],
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksenin köşesi sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "parallel",
+              "axis": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              ],
+              "left": 2,
+              "right": 3
+            }
+          },
+          "nonFinite": {
+            "construction.axis[1].x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Eksenin köşesinin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "construction.axis[1].x"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sol mesafe eksi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "parallel",
+              "axis": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              ],
+              "left": -1,
+              "right": 3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Sol ve sağ mesafe sıfır ya da daha büyük olmalı.",
+              "path": "construction.left"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mesafeler sıfır ve eksen yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "parallel",
+              "axis": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              ],
+              "left": 0,
+              "right": 0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Sol ve sağ mesafe sıfır ve eksen çizilmiyor: çizilecek bir şey yok.",
+              "path": "construction.left"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksen tek noktaya iner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "parallel",
+              "axis": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487000,
+                  "y": 4420000
+                }
+              ],
+              "left": 2,
+              "right": 3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "degenerate_shape",
+              "message": "Eksenin en az iki ayrı noktası olmalı.",
+              "path": "construction.axis"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dik in: nokta hattın üzerinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "perpendicularIn",
+              "reference": {
+                "kind": "line",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              },
+              "points": [
+                {
+                  "x": 487004,
+                  "y": 4420000
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "degenerate_shape",
+              "message": "Nokta zaten hattın üzerinde.",
+              "path": "construction.points[0]"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dik in: nokta dairenin merkezinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "perpendicularIn",
+              "reference": {
+                "kind": "circle",
+                "c": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "r": 5
+              },
+              "points": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "degenerate_shape",
+              "message": "Bu noktadan dik inilemez: nokta dairenin merkezinde.",
+              "path": "construction.points[0]"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dik çık: dik boy sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "perpendicularOut",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487010,
+                "y": 4420000
+              },
+              "stations": [
+                {
+                  "along": 5,
+                  "offset": 0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Dik boy sıfır olamaz.",
+              "path": "construction.stations[0].offset"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dik çık: hattın uzunluğu yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "perpendicularOut",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "stations": [
+                {
+                  "along": 5,
+                  "offset": 1
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "degenerate_shape",
+              "message": "Çizginin iki noktası çakışıyor; uzunluğu olan bir çizgi verin.",
+              "path": "construction.b"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Teğet yok: daire ötekinin içinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "tangentLine",
+              "first": {
+                "c": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "r": 10
+              },
+              "second": {
+                "c": {
+                  "x": 487001,
+                  "y": 4420000
+                },
+                "r": 2
+              },
+              "nearFirst": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "nearSecond": {
+                "x": 487001,
+                "y": 4420000
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_intersection",
+              "message": "İki dairenin ortak teğeti yok: biri ötekinin içinde ya da teğetin noktası yayın dışında.",
+              "path": "construction.second"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dördüncü köşe: üç köşe bir doğruda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "fourthCorner",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487005,
+                "y": 4420000
+              },
+              "c": {
+                "x": 487010,
+                "y": 4420000
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "degenerate_shape",
+              "message": "Üç köşe bir doğru üzerinde: paralelkenar olmaz. Başka bir köşe verin.",
+              "path": "construction.c"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Menzil halkaları: 101 halka",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "rangeRings",
+              "centre": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "spacing": 5,
+              "count": 101
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_count",
+              "message": "Halka sayısı 1 ile 100 arasında olmalı.",
+              "path": "construction.count"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Menzil halkaları: aralık sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "rangeRings",
+              "centre": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "spacing": 0,
+              "count": 3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Halkaların aralığı sıfırdan büyük olmalı.",
+              "path": "construction.spacing"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ara nokta: iki yöntem birden",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "pointsBetween",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "parts": 3,
+              "ratios": [
+                0.5
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_count",
+              "message": "Parça sayısı (parts), uzaklıklar (distances) ya da oranlardan (ratios) yalnız birini verin.",
+              "path": "construction.parts"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ara nokta: tek parça",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "pointsBetween",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "parts": 1
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_count",
+              "message": "Parça sayısı 2 ile 10 000 arasında olmalı.",
+              "path": "construction.parts"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kesişim: daireler buluşmuyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "intersection",
+              "meeting": {
+                "method": "distances",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "da": 2,
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "db": 3
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_intersection",
+              "message": "Uzaklıklar kesişmiyor: daireler birbirine ulaşmıyor ya da biri ötekinin içinde.",
+              "path": "construction.meeting.db"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kesişim: doğrultular arkada buluşuyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "intersection",
+              "meeting": {
+                "method": "bearings",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "ta": -0.7853981633974483,
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "tb": 0.7853981633974483
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_intersection",
+              "message": "Doğrultular kesişmiyor: paralel ya da kesişim noktalardan birinin arkasında kalıyor.",
+              "path": "construction.meeting.tb"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kesişim: doğrular paralel",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "intersection",
+              "meeting": {
+                "method": "lines",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487004,
+                  "y": 4420000
+                },
+                "c": {
+                  "x": 487000,
+                  "y": 4420005
+                },
+                "d": {
+                  "x": 487004,
+                  "y": 4420005
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_intersection",
+              "message": "Doğrular paralel; kesişmiyorlar.",
+              "path": "construction.meeting.d"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Paralel yardımcı çizgi: nokta kenarın doğrusunda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "xlineOffset",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487010,
+                "y": 4420000
+              },
+              "side": {
+                "x": 487020,
+                "y": 4420000
+              },
+              "distance": 2
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "degenerate_shape",
+              "message": "Yanın noktası kenarın doğrusunun üstünde; bir yan gösterin.",
+              "path": "construction.side"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kilitli",
+            "construction": {
+              "kind": "fourthCorner",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "c": {
+                "x": 487014,
+                "y": 4420006
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dik in: nokta yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "perpendicularIn",
+              "reference": {
+                "kind": "line",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              },
+              "points": []
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_points",
+              "message": "Dik inilecek en az bir nokta verin.",
+              "path": "construction.points"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kalınlık 100 mm'den büyük (paralelkenar alanı)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "fourthCorner",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "c": {
+                "x": 487014,
+                "y": 4420006
+              },
+              "area": true
+            },
+            "lineWeight": 101
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_line_weight",
+              "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.",
+              "path": "lineWeight"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "construction": {
+              "kind": "fourthCorner",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "c": {
+                "x": 487014,
+                "y": 4420006
+              },
+              "area": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Katman değil grup",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "pafta",
+            "construction": {
+              "kind": "fourthCorner",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "c": {
+                "x": 487014,
+                "y": 4420006
+              },
+              "area": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "fourthCorner",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "c": {
+                "x": 487014,
+                "y": 4420006
+              },
+              "area": true
+            },
+            "expectedRevision": "012"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “012” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "fourthCorner",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "c": {
+                "x": 487014,
+                "y": 4420006
+              },
+              "area": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": "$any",
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "construction": {
+              "kind": "fourthCorner",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487012,
+                "y": 4420000
+              },
+              "c": {
+                "x": 487014,
+                "y": 4420006
+              },
+              "area": true
+            },
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

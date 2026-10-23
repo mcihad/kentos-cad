@@ -166,6 +166,8 @@ pub mod shapes;
 mod area_rules;
 pub mod adjoin_cmd;
 pub mod parcels;
+pub mod areas;
+pub mod constructions;
 pub mod donut_create;
 /// `cad.rectangle.create` as the registry runs it ([`shapes`]).
 pub mod rectangle_create {
@@ -748,6 +750,8 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_REVCLOUD_CREATE, kentos_commands::CAD_REVCLOUD_CREATE_VERSION),
     (kentos_commands::CAD_ENTITIES_ADJOIN, kentos_commands::CAD_ENTITIES_ADJOIN_VERSION),
     (kentos_commands::CAD_PARCELS_CREATE, kentos_commands::CAD_PARCELS_CREATE_VERSION),
+    (kentos_commands::CAD_CONSTRUCTIONS_CREATE, kentos_commands::CAD_CONSTRUCTIONS_CREATE_VERSION),
+    (kentos_commands::CAD_AREAS_EDIT, kentos_commands::CAD_AREAS_EDIT_VERSION),
     // A path's vertices and edges ([`entities_vertex`], docs/adr/0279).
     (
         kentos_commands::CAD_ENTITIES_VERTEX,

@@ -692,7 +692,21 @@ def parcel_cases():
            poly["invalid_revision"]["message"], "expectedRevision"),
         no("Kaçınılan katman yok", {**base, "rules": {"avoid": ["yok"]}}, "layer_not_found",
            "Kaçınılacak “yok” katmanı çizimde yok. Var olan bir katmanın kimliğini verin.", "rules.avoid[0]"),
+        no("Yay değerleri köşelerden az", {**base, "bulges": [0, 0, 0]}, "bulge_count",
+           "Yay değerleri köşe sayısı kadar olmalı, kapanış kenarı dahil her kenara bir değer: 4 köşe, 3 yay değeri "
+           "verildi. Eksik ya da fazla değerleri düzeltin.", "bulges"),
     ]
+    ids = [e["id"] for e in SETUP_PARCEL["entities"]]
+    nid = max(ids) + 1
+    out.append({"name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz", "steps": [
+        {"op": "captureRevision", "as": "old"},
+        {"op": "execute", "input": base,
+         "result": {"status": "completed", "output": {"uid": "$uid", "id": nid, "number": next_number(SETUP_PARCEL),
+                                                      "opened": False, "revision": "$current"}, "warnings": []}},
+        {"op": "execute", "input": {**base, "expectedRevision": "$old"},
+         "result": {"status": "conflict", "error": {"code": "revision_conflict",
+                                                    "message": poly["revision_conflict"]["message"],
+                                                    "path": "expectedRevision", "revision": "$current"}}}]})
     return out
 
 

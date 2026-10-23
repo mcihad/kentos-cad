@@ -628,6 +628,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.stretch"
             // Köşeyi sil takes a vertex away (docs/adr/0279).
             | "cad.entities.vertex"
+            // The area operations delete and replace their sources (docs/adr/0622 §9).
+            | "cad.areas.edit"
             | "cad.entities.break"
             | "cad.entities.join"
             // Yönü çevir turns the objects in place (docs/adr/0296).

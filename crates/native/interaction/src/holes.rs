@@ -14,18 +14,19 @@
 //! command carries elevations by where the vertices lie (docs/adr/0142). The
 //! geometry is the shared core's (`ops::holes`); none is computed here.
 
-use kentos_commands::{EditOperation, Entity, EntityEdit};
+use kentos_commands::{AreaWork, Entity};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::{Shape, area_parts, polygon_ring};
 use kentos_geometry_core::geom::arrangement::Ring;
-use kentos_geometry_core::ops::holes::{HoleRefusal, hole_add, hole_remove, hole_ring};
+use kentos_geometry_core::ops::holes::hole_ring;
 
 use crate::Vec2;
+use crate::area;
 use crate::edge;
 use crate::format::Format;
 use crate::log::Level;
+use crate::points;
 use crate::prompt::Prompt;
-use crate::spatial::measures;
 use crate::tool::{self, Context, Flow, Pointer, Preview, Tag, Tone, Tool};
 
 /// Delik ekle: `tool.holeAdd` (the path tool's `Shape::Hole`).
@@ -91,68 +92,19 @@ pub fn rings_of(slot: Slot, cx: &Context<'_>) -> Vec<Vec<Vec2>> {
     rings
 }
 
-/// The refusal in the tools' words.
-fn refusal_text(why: &HoleRefusal) -> &'static str {
-    match why {
-        HoleRefusal::NotArea => "Delik yalnız kapalı alana eklenir.",
-        HoleRefusal::Degenerate => "Delik en az üç köşeli, alanı olan bir halka olmalı.",
-        HoleRefusal::Outside => {
-            "Delik alanın içinde kalmalı; sınırı aşan bölümü çıkarmak için Alan çıkar'ı kullanın."
-        }
-        HoleRefusal::Splits => {
-            "Delik alanı parçalara ayırırdı; alanı bölmek için Alan böl'ü kullanın."
-        }
-        HoleRefusal::NotInHole => NOT_IN_HOLE,
-    }
-}
-
-/// How many holes an area has, in all its parts.
-fn hole_count(shape: &Shape) -> usize {
-    area_parts(shape)
-        .iter()
-        .map(|part| match part {
-            Shape::Polygon { holes: Some(h), .. } => h.len(),
-            _ => 0,
-        })
-        .sum()
-}
-
-/// The area's net size now, as the log says it.
-fn area_text(slot: Slot, cx: &Context<'_>) -> String {
-    let area = cx.doc.get(slot).and_then(|e| measures(e).0).unwrap_or(0.0);
-    cx.format().area(area)
-}
-
-/// Delik ekle: the ring cut from the area at `slot`, one undo step. Whether
-/// it was written; the refusal said otherwise.
+/// Delik ekle: the ring cut from the area at `slot` through `cad.areas.edit` (docs/adr/0622 §9), one undo step.
+/// Whether it was written; the refusal said otherwise.
 pub fn add(slot: Slot, ring: Ring, cx: &mut Context<'_>) -> bool {
-    let Some(e) = cx.doc.get(slot) else {
+    let work = AreaWork::HoleAdd {
+        id: edge::uid(cx.doc, slot),
+        ring: ring.pts.iter().map(|&p| points::wire(p)).collect(),
+        bulges: ring.bulges.clone(),
+    };
+    let Some(out) = area::write_work(work, cx) else {
         return false;
     };
-    let before = edge::core(e).shape;
-    let after = match hole_add(&before, &ring) {
-        Ok(shape) => shape,
-        Err(why) => {
-            cx.say(Level::Warn, refusal_text(&why));
-            return false;
-        }
-    };
-    let merged = hole_count(&after) <= hole_count(&before);
-    let Some(geometry) = edge::geometry(&after) else {
-        return false;
-    };
-    let uid = edge::uid(cx.doc, slot);
-    if edge::write(
-        EditOperation::HoleAdd,
-        vec![EntityEdit::Update { uid, geometry }],
-        cx,
-    )
-    .is_none()
-    {
-        return false;
-    }
-    let size = area_text(slot, cx);
-    let text = if merged {
+    let size = cx.format().area(out.size);
+    let text = if out.more == 1 {
         format!("Delik eklendi, var olan delikle birleşti; alan {size} oldu.")
     } else {
         format!("Delik eklendi; alan {size} oldu.")
@@ -207,58 +159,37 @@ impl HoleClick {
     }
 
     fn remove_at(&self, hole: &Found, cx: &mut Context<'_>) {
-        let Some(e) = cx.doc.get(hole.slot) else {
-            return;
+        let work = AreaWork::HoleRemove {
+            id: edge::uid(cx.doc, hole.slot),
+            at: points::wire(hole.at),
         };
-        let after = match hole_remove(&edge::core(e).shape, hole.at) {
-            Ok(shape) => shape,
-            Err(why) => return cx.say(Level::Warn, refusal_text(&why)),
-        };
-        let Some(geometry) = edge::geometry(&after) else {
-            return;
-        };
-        let uid = edge::uid(cx.doc, hole.slot);
-        if edge::write(
-            EditOperation::HoleRemove,
-            vec![EntityEdit::Update { uid, geometry }],
-            cx,
-        )
-        .is_some()
-        {
-            let text = format!("Delik silindi; alan {} oldu.", area_text(hole.slot, cx));
+        if let Some(out) = area::write_work(work, cx) {
+            let text = format!("Delik silindi; alan {} oldu.", cx.format().area(out.size));
             cx.say(Level::Success, text);
         }
     }
 
     fn fill_at(&self, hole: &Found, cx: &mut Context<'_>) {
-        let shape = Shape::Polygon {
-            pts: hole.ring.pts.clone(),
-            bulges: hole.ring.bulges.clone(),
-            holes: None,
-            parts: None,
+        let work = AreaWork::HoleFill {
+            id: edge::uid(cx.doc, hole.slot),
+            at: points::wire(hole.at),
         };
-        let Some(geometry) = edge::geometry(&shape) else {
-            return;
-        };
-        let from = edge::uid(cx.doc, hole.slot);
-        let Some(out) = edge::write(
-            EditOperation::HoleFill,
-            vec![EntityEdit::add(from, geometry, None)],
-            cx,
-        ) else {
+        let Some(out) = area::write_work(work, cx) else {
             return;
         };
         let made: Vec<Slot> = out
-            .created
+            .result
             .iter()
             .filter_map(|uid| kentos_domain::Uuid::parse_str(uid).ok())
             .filter_map(|uid| cx.doc.slot_of(uid))
             .collect();
-        let size = made.first().map_or_else(String::new, |&s| area_text(s, cx));
         cx.selection.set(made);
         cx.say(
             Level::Success,
-            format!("Delik dolduruldu: yeni alan {size}."),
+            format!(
+                "Delik dolduruldu: yeni alan {}.",
+                cx.format().area(out.size)
+            ),
         );
     }
 }

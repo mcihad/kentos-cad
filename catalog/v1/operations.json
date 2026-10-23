@@ -2291,9 +2291,10 @@
         "Yatay": "semantic",
         "Düşey": "semantic",
         "Açı": "semantic",
-        "Açıortay": "geometry",
-        "Paralel": "geometry"
-      }
+        "Açıortay": "semantic",
+        "Paralel": "semantic"
+      },
+      "note": "Açıortay ve Paralel cad.constructions.create ile (ADR 0622 §9)."
     },
     "ray": {
       "level": "semantic"
@@ -2382,16 +2383,28 @@
       "note": "Merkez ve iç/dış çap komutta hesaplanır; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "parallel": {
-      "level": "geometry",
-      "operation": "parallel"
+      "level": "semantic",
+      "via": [
+        "cad.constructions.create"
+      ],
+      "was": "cad.entities.create",
+      "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "perpIn": {
-      "level": "geometry",
-      "operation": "perpendicularIn"
+      "level": "semantic",
+      "via": [
+        "cad.constructions.create"
+      ],
+      "was": "cad.entities.create",
+      "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "perpOut": {
-      "level": "geometry",
-      "operation": "perpendicularOut"
+      "level": "semantic",
+      "via": [
+        "cad.constructions.create"
+      ],
+      "was": "cad.entities.create",
+      "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "divide": {
       "level": "semantic",
@@ -2402,34 +2415,54 @@
       "note": "Nesne, parça sayısı ya da aralık, başlangıç ucu, ilk uzaklık, uçlar ve hizalı blok komuta verilir (ADR 0254 §5, 0299)."
     },
     "pointsBetween": {
-      "level": "geometry",
-      "operation": "pointsBetween",
+      "level": "semantic",
+      "via": [
+        "cad.constructions.create"
+      ],
+      "was": "cad.entities.create",
       "methods": {
-        "Eşit aralık": "geometry",
-        "Uzaklıkla": "geometry",
-        "Oranla": "geometry"
-      }
+        "Eşit aralık": "semantic",
+        "Uzaklıkla": "semantic",
+        "Oranla": "semantic"
+      },
+      "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "intersectPoint": {
-      "level": "geometry",
-      "operation": "intersectPoint",
+      "level": "semantic",
+      "via": [
+        "cad.constructions.create"
+      ],
+      "was": "cad.entities.create",
       "methods": {
-        "İki uzaklık": "geometry",
-        "İki doğrultu": "geometry",
-        "İki doğru": "geometry"
-      }
+        "İki uzaklık": "semantic",
+        "İki doğrultu": "semantic",
+        "İki doğru": "semantic"
+      },
+      "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "tangentLine": {
-      "level": "geometry",
-      "operation": "tangentLine"
+      "level": "semantic",
+      "via": [
+        "cad.constructions.create"
+      ],
+      "was": "cad.entities.create",
+      "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "fourthCorner": {
-      "level": "geometry",
-      "operation": "fourthCorner"
+      "level": "semantic",
+      "via": [
+        "cad.constructions.create"
+      ],
+      "was": "cad.entities.create",
+      "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "rangeRings": {
-      "level": "geometry",
-      "operation": "rangeRings"
+      "level": "semantic",
+      "via": [
+        "cad.constructions.create"
+      ],
+      "was": "cad.entities.create",
+      "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "centerline": {
       "level": "geometry",
@@ -2838,48 +2871,92 @@
       "operation": "medianClose"
     },
     "areaUnion": {
-      "level": "geometry",
-      "operation": "areaUnion"
+      "level": "semantic",
+      "via": [
+        "cad.areas.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "areaIntersect": {
-      "level": "geometry",
-      "operation": "areaIntersect"
+      "level": "semantic",
+      "via": [
+        "cad.areas.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "areaSubtract": {
-      "level": "geometry",
-      "operation": "areaSubtract"
+      "level": "semantic",
+      "via": [
+        "cad.areas.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "areaSplit": {
-      "level": "geometry",
-      "operation": "areaSplit"
+      "level": "semantic",
+      "via": [
+        "cad.areas.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "toArea": {
-      "level": "geometry",
-      "operation": "toArea"
+      "level": "semantic",
+      "via": [
+        "cad.areas.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "toPolyline": {
-      "level": "geometry",
-      "operation": "toPolyline"
+      "level": "semantic",
+      "via": [
+        "cad.areas.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "partsJoin": {
-      "level": "geometry",
-      "operation": "partsJoin"
+      "level": "semantic",
+      "via": [
+        "cad.areas.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "partsSplit": {
-      "level": "geometry",
-      "operation": "partsSplit"
+      "level": "semantic",
+      "via": [
+        "cad.areas.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "holeAdd": {
-      "level": "geometry",
-      "operation": "holeAdd"
+      "level": "semantic",
+      "via": [
+        "cad.areas.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "holeRemove": {
-      "level": "geometry",
-      "operation": "holeRemove"
+      "level": "semantic",
+      "via": [
+        "cad.areas.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "holeFill": {
-      "level": "geometry",
-      "operation": "holeFill"
+      "level": "semantic",
+      "via": [
+        "cad.areas.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (kesme çizgisi, halka, delikteki nokta) komutta; şekli komut hesaplar. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "identify": {
       "level": "query",

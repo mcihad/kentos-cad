@@ -19,7 +19,7 @@
 //! offsets are the shared core's (`side_offsets`, `side_point`,
 //! `radial_point`).
 
-use kentos_commands::{CreateOperation, Entity, EntityGeometry};
+use kentos_commands::{Construction, Entity, PerpendicularReference, PerpendicularStation};
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::intersect::{Edge, closest_on_edge};
@@ -81,6 +81,17 @@ impl Reference {
                 };
                 (dist(a, b) > 1e-9).then_some(Reference::Seg { a, b })
             }
+        }
+    }
+
+    /// The reference as `cad.constructions.create` takes it.
+    fn wire(self) -> PerpendicularReference {
+        match self {
+            Reference::Seg { a, b } => PerpendicularReference::Line {
+                a: wire(a),
+                b: wire(b),
+            },
+            Reference::Arc { c, r } => PerpendicularReference::Circle { c: wire(c), r },
         }
     }
 
@@ -147,23 +158,19 @@ impl Perpendicular {
         if self.out { OUT_LABEL } else { IN_LABEL }
     }
 
-    /// The perpendicular from `a` to `b`, one undo step named after the tool.
-    fn add_line(&self, a: Vec2, b: Vec2, cx: &mut Context<'_>) -> Added {
+    /// The perpendicular from `a` to `b` through `cad.constructions.create` (docs/adr/0622 §9), one undo step named
+    /// after the tool: `construction` is the same line as the command computes it.
+    fn add_line(
+        &self,
+        a: Vec2,
+        b: Vec2,
+        construction: Construction,
+        cx: &mut Context<'_>,
+    ) -> Added {
         if dist(a, b) < 1e-9 {
             return Added::Short;
         }
-        let operation = if self.out {
-            CreateOperation::PerpendicularOut
-        } else {
-            CreateOperation::PerpendicularIn
-        };
-        let line = EntityGeometry::Line {
-            ms: None,
-            a: wire(a),
-            b: wire(b),
-            zs: None,
-        };
-        match points::write_objects(vec![line], Some(operation), cx) {
+        match points::write_construction(construction, cx) {
             Some(_) => Added::Written,
             None => Added::Refused,
         }
@@ -182,7 +189,11 @@ impl Perpendicular {
                 );
                 return;
             };
-            match self.add_line(p, foot, cx) {
+            let construction = Construction::PerpendicularIn {
+                reference: reference.wire(),
+                points: vec![wire(p)],
+            };
+            match self.add_line(p, foot, construction, cx) {
                 Added::Short => cx.say(Level::Warn, "Nokta zaten hattın üzerinde."),
                 Added::Written => {
                     let line =
@@ -216,7 +227,15 @@ impl Perpendicular {
         ) else {
             return;
         };
-        match self.add_line(foot, end, cx) {
+        let construction = Construction::PerpendicularOut {
+            a: wire(a),
+            b: wire(b),
+            stations: vec![PerpendicularStation {
+                along: absis,
+                offset: ordinat,
+            }],
+        };
+        match self.add_line(foot, end, construction, cx) {
             Added::Short => cx.say(Level::Warn, "Dik boy sıfır olamaz."),
             Added::Refused => {}
             Added::Written => {

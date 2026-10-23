@@ -222,3 +222,81 @@ fn semantic_tool_screens() {
         println!("{}", file.display());
     }
 }
+
+/// Dördüncü köşe: three corners clicked; `cad.constructions.create` computes the fourth (docs/adr/0622 §9).
+fn draw_fourth_corner(snapshot: &mut Snapshot, app: &mut App) {
+    start(snapshot, app, "tool.fourthCorner");
+    for (fx, fy) in [(0.30, 0.70), (0.40, 0.70), (0.44, 0.60)] {
+        let p = at(app, fx, fy);
+        click(snapshot, app, p);
+    }
+}
+
+/// Two overlapping squares drawn as closed areas, then joined by Alan birleştir through `cad.areas.edit`.
+fn union_two_squares(snapshot: &mut Snapshot, app: &mut App) {
+    draw_ring(snapshot, app, "tool.polygon", &[(0.55, 0.30), (0.65, 0.30), (0.65, 0.42), (0.55, 0.42)]);
+    draw_ring(snapshot, app, "tool.polygon", &[(0.60, 0.36), (0.70, 0.36), (0.70, 0.48), (0.60, 0.48)]);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let mut slots: Vec<u32> = doc.entities_with_uids().map(|(_, e)| e.base().id).collect();
+    slots.sort_unstable();
+    let last: Vec<kentos_domain::Slot> = slots.iter().rev().take(2).map(|&s| kentos_domain::Slot(s)).collect();
+    app.selection.set(last);
+    start(snapshot, app, "tool.areaUnion");
+    snapshot.settle(app, App::view, &mut update);
+}
+
+#[test]
+fn the_construction_and_area_tools_write_through_their_commands() {
+    let mut snapshot = crate::files_testing::offscreen(Size::new(1440.0, 900.0));
+    let mut app = opened(&mut snapshot, "dark");
+    let before = app.document.as_ref().expect("a drawing").model.len();
+    draw_fourth_corner(&mut snapshot, &mut app);
+    let (command, input) = last_call(&app);
+    assert_eq!(command, "cad.constructions.create");
+    assert_eq!(input["construction"]["kind"], "fourthCorner", "{input}");
+    assert!(input["construction"].get("d").is_none(), "the user's corners, not the answer: {input}");
+    assert_eq!(app.document.as_ref().expect("a drawing").model.len(), before + 1);
+    union_two_squares(&mut snapshot, &mut app);
+    let (command, input) = last_call(&app);
+    assert_eq!(command, "cad.areas.edit");
+    assert_eq!(input["work"]["kind"], "union", "{input}");
+    assert_eq!(input["work"]["ids"].as_array().map(Vec::len), Some(2), "{input}");
+    // Two areas in, one out: the fourth corner's point and the union.
+    assert_eq!(app.document.as_ref().expect("a drawing").model.len(), before + 2);
+    assert!(
+        app.python.repl.entries().any(|e| e.text.contains("cad.areas.edit")),
+        "the echo carries the call"
+    );
+}
+
+/// The construction and the area command as the owner looks at them (`.run/shots/arac-komut-yapim-alan*`):
+///
+/// ```text
+/// cargo test -p kentos-desktop --bin kentos-cad construction_area_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn construction_area_screens() {
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, suffix) in [
+        ("dark", Size::new(1440.0, 900.0), ""),
+        ("light", Size::new(1100.0, 650.0), "-acik-1100"),
+    ] {
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut app = opened(&mut snapshot, theme);
+        let _ = app.update(Message::WindowResized(size));
+        snapshot.settle(&mut app, App::view, &mut update);
+        draw_fourth_corner(&mut snapshot, &mut app);
+        union_two_squares(&mut snapshot, &mut app);
+        app.show_bottom(crate::bottom::BottomTab::Python);
+        app.bottom_dragged(Some(260.0), std::time::Instant::now());
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("arac-komut-yapim-alan{suffix}.png"));
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

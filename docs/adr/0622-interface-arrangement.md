@@ -440,16 +440,39 @@ Bu dilimde düzeltilenler:
   Parsel, Mahalle, Nitelik “Arsa”, Tapu alanı (m²), Pafta; verilenler üstüne, Parsel numaradır, boşlar kanonik biçimde
   yazılmaz; etiket numaradır, tapu alanı tapunundur ve boş kalır. Kilitli parsel katmanı aracın sözüyle reddedilir.
   Araç köşeleri ve oturumun kurallarını verir, parseli seçer, açılan katmanı söyler; aracın kendi numaralaması, kırpması
-  ve köşe bağlaması (`junctions.rs`, `overlap.rs`'in kırpması) kalktı. `area_rules_cases.py` 21 durum üretir.
+  ve köşe bağlaması (`junctions.rs`, `overlap.rs`'in kırpması) kalktı. `area_rules_cases.py` 23 durum üretir.
+- **Yapım yardımcıları:** `cad.constructions.create` tek komuttur; girdisi yapımın türü (`kind`) ve kullanıcının
+  verdikleridir: Paralel çizgi (eksen, kapalı, sol ve sağ uzaklık, eksen de, alan), Dik in (hat ya da daire ve noktalar),
+  Dik çık (hat ve dik ayak, dik boy satırları), İki daireye teğet (iki daire ya da yay, iki tıklama), Dördüncü köşe (üç
+  köşe, nokta ya da paralelkenar alanı), Menzil halkaları (merkez, aralık, sayı, ışın), Ara nokta (eşit parça, uzaklıklar
+  ya da oranlar), Kesişim noktası (iki uzaklık yakın noktayla, iki doğrultu, iki doğru) ve Yardımcı çizginin Açıortay
+  ile Paralel'i. Nesneleri komut çekirdeğin aynı işlevleriyle hesaplar, `cad.entities.create`'in yazıcısıyla aracın
+  adındaki tek adımda yazar; çizgi kalınlığı ve tipi yalnız çizgi çizen nesnelere gider, nesne şablonunun öznitelikleri,
+  etiketi ve sembolü girdidedir. Retler `not_finite`, `invalid_distance`, `invalid_count`, `degenerate_shape`, yeni
+  `no_intersection`, `too_few_points`, sonra yazıcınınkiler; yolları yapımın alanlarıdır (`construction.left`). Araçlar
+  kendi uyarılarını ve önizlemelerini korur, yazmayı komutla yapar. `construction_cases.py` KentOS kodu olmadan 54 durum
+  üretir.
+- **Alan işlemleri:** `cad.areas.edit` tek komuttur; girdisi işin türü (`work.kind`), nesnelerin kalıcı kimlikleri ve
+  kullanıcının verdikleridir: Alan birleştir (`union`, Tek nesne `single`), Alan kesiştir (`intersect`, `erase`), Alan
+  çıkar (`subtract`: `from`, `cut`), Alan böl (`split`: kesme çizgisinin noktaları `line` ya da kesici nesne `cutter`),
+  Alana çevir, Çizgiye çevir, Parçaları birleştir ve Parçalara ayır (alan, çizgi ya da nokta), Delik ekle (halka),
+  Deliği sil ve Deliği doldur (delikteki nokta). Şekilleri komut çekirdeğin kesin alan cebiriyle hesaplar ve
+  `cad.entities.edit`'in yazıcısıyla aracın adındaki tek adımda yazar; cevap yazılanları, sonucun nesnelerini
+  (`result`, aracın seçtiği sırayla) ve ölçülerini (`size` m², `pieces`, `more`, `sizes`) verir. Yeni retler
+  `not_an_area`, `no_overlap`, `no_hole`, `invalid_hole`, `not_multi_part`; `too_few_objects` ve `mixed_kinds` genişledi.
+  Kilitli katmandaki kesen Çıkarılanları sil'de silinmez ama keser. Araçlar seçimi, önizlemeyi ve sözlerini korur,
+  hesabı ve yazmayı komuta bırakır (`line_parts.rs` kalktı). `areas_edit_cases.py` birim hücrelerle, KentOS kodu
+  olmadan 51 durum üretir; bindirmenin girdi köşelerini sınırda tuttuğu ve Böl'ün ilk parçasının batıdaki olduğu
+  başvurunun kuralıdır.
 - **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
   de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
   çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu
   varsayılanlar yalnız girdi şemasında aynen tanımlıysa kabul edilir; verilen değerlerin değişmesi gizlenmez. Bu son denetim dosya yazma testi değildir;
   mevcut başsız dosya testlerinin yanında kodun/kataloğun bütünlüğünü sınar.
 
-Bu bölüm `UX-14`'ün bütün tarihsel araç borcunu kapattığı anlamına gelmez. Halka, Daire dilimi, Revizyon bulutu,
-Çakışma/Topoloji, Bitişik alan ve Parsel oluştur dilimleri kapandı; diğer açık araçlar (yapım yardımcıları, P1 ve P2)
-listedeki sıralarıyla kalır.
+Bu bölüm `UX-14`'ün bütün tarihsel araç borcunu kapattığı anlamına gelmez. Halka, Daire dilimi, Revizyon bulutu, yapım yardımcıları, alan işlemleri,
+Çakışma/Topoloji, Bitişik alan ve Parsel oluştur dilimleri kapandı; diğer açık araçlar (P1 ve P2) listedeki sıralarıyla
+kalır.
 
 ### 9.1 Bu devamın doğrulaması
 
