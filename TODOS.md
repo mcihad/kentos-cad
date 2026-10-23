@@ -1272,7 +1272,9 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
   23 Ekim'deki denetimde (şeridin 742 tekil öğesi) ölü düğme ya da Python'a çevrilemeyen girdi yok; boşluklar şunlar:
   - [x] Halka: `cad.donut.create`, ortak 25 durum, Python/MCP ve gerçek klavye/fareyle üç görünüşte kabul
     (ADR 0622 §9).
-  - [ ] P0 çizim temelleri: Daire dilimi, Revizyon bulutu (`cad.sector.create`, `cad.revcloud.create`).
+  - [x] Daire dilimi: `cad.sector.create` (merkez, yarıçap, iki açı), ortak 27 durum, araç komutla yazar ve önizler,
+    gerçek fareyle ve Python yankısıyla sınandı (ADR 0622 §9).
+  - [ ] P0 çizim temelleri: Revizyon bulutu (`cad.revcloud.create`).
   - [ ] P0 Çakışma ve Topoloji açıkken kapalı alan ailesi ve Bitişik alan: şekil komutlarına `overlap` ve `topology`
     seçenekleri, `cad.entities.adjoin`.
   - [ ] P0 yapım yardımcıları: Dik in ve çık, Paralel çizgi, İki daireye teğet, Dördüncü köşe, Menzil halkaları, Ara nokta,

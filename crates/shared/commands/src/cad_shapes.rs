@@ -21,6 +21,10 @@ pub const CAD_RECTANGLE_CREATE_VERSION: u32 = 1;
 pub const CAD_POLYGON_REGULAR: &str = "cad.polygon.regular";
 pub const CAD_POLYGON_REGULAR_VERSION: u32 = 1;
 
+/// Writes a pie slice (Daire dilimi, docs/adr/0622 §9).
+pub const CAD_SECTOR_CREATE: &str = "cad.sector.create";
+pub const CAD_SECTOR_CREATE_VERSION: u32 = 1;
+
 /// The most sides a regular polygon has.
 pub const MOST_SIDES: u32 = 1024;
 
@@ -194,6 +198,56 @@ pub struct RegularPolygonCreate {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub sides: u32,
     pub frame: RegularFrame,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub line_weight: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_type: Option<crate::layer::LineType>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attrs: Option<BTreeMap<String, String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub symbol: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// `cad.sector.create`'s input (Daire dilimi): a closed pie slice by its centre, radius and the arc swept
+/// counter-clockwise from `a0` to `a1`. The command makes the ring (the centre, the arc's start and end, the arc as the
+/// middle edge) and writes it as `cad.polygon.create` writes an area; a sweep of nothing or of a whole turn, or a radius
+/// not above zero, is refused (`degenerate_shape`, `invalid_distance`). No active layer, unit or remembered tool option
+/// is read.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SectorCreate {
+    pub layer_id: String,
+    /// The centre: x east (Y), y north (X), in the project's units (m).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub c: Vec2,
+    /// The radius, above zero.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub r: f64,
+    /// Where the arc starts: radians counter-clockwise from east (a geometry angle, not a bearing).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub a0: f64,
+    /// Where it ends: the slice is swept counter-clockwise from `a0` to `a1`.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub a1: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,

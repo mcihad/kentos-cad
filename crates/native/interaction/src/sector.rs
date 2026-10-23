@@ -14,16 +14,18 @@
 //! click starts the slice over, or leaves when none is begun.
 //!
 //! The slice is one closed area, its ring the centre, the arc's start and end
-//! with the arc as the middle edge, written through `cad.polygon.create`
-//! with its bulges: one undo step, “Ekle”. The ring is the shared core's
-//! (`construct::sector`).
+//! with the arc as the middle edge, written by `cad.sector.create` (docs/adr/0622
+//! §9): one undo step, “Ekle”. The preview is the command's ring
+//! (`shapes::sector_ring`); with Çakışma or Topoloji changing the area it is
+//! written as any area is (`points::write_area_by`).
 
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::{TAU, atan2};
-use kentos_geometry_core::tools::construct::sector;
+use kentos_commands::SectorCreate;
 use kentos_geometry_core::tools::point_text::js_trim;
+use kentos_native_application::{ExecutionContext, shapes};
 
 use crate::Vec2;
 use crate::edge::Outline;
@@ -107,20 +109,62 @@ impl Sector {
         }
     }
 
+    /// The command's input for the slice to `end`, as the tool gives it: the active layer and the drafting look.
+    fn request(c: Vec2, r: f64, a0: f64, end: f64, cx: &Context<'_>) -> SectorCreate {
+        SectorCreate {
+            layer_id: cx.doc.layers().active().to_owned(),
+            c: points::wire(c),
+            r,
+            a0,
+            a1: end,
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            line_type: cx.draft.line_type,
+            attrs: cx.template_attrs(None),
+            label: cx.template_label(),
+            symbol: cx.template_symbol(),
+            expected_revision: None,
+        }
+    }
+
+    /// The slice to `end` as the command makes it: the preview's ring.
+    fn ring(c: Vec2, r: f64, a0: f64, end: f64) -> Option<(Vec<Vec2>, Option<Vec<f64>>)> {
+        let input = SectorCreate {
+            layer_id: String::new(),
+            c: points::wire(c),
+            r,
+            a0,
+            a1: end,
+            color: None,
+            line_weight: None,
+            line_type: None,
+            attrs: None,
+            label: None,
+            symbol: None,
+            expected_revision: None,
+        };
+        shapes::sector_ring(&input).ok()
+    }
+
     /// The slice from the start to `end`, written; a sweep of nothing or of a
     /// whole turn is said and the tool waits for another end.
     fn write(&mut self, end: f64, cx: &mut Context<'_>) {
         let (Some(c), Some(r), Some(a0)) = (self.centre(), self.radius, self.start) else {
             return;
         };
-        let Some(ring) = sector(c, r, a0, end) else {
+        let Some((pts, bulges)) = Self::ring(c, r, a0, end) else {
             cx.say(
                 Level::Warn,
                 "Bitiş doğrultusu başlangıçla aynı; dilim oluşmuyor. Başka bir doğrultu ya da açı verin.",
             );
             return;
         };
-        if points::write_area(&mut self.d, &ring.pts, ring.bulges, cx).is_some() {
+        let input = Self::request(c, r, a0, end, cx);
+        let mut write = |cx: &mut Context<'_>| {
+            let result = shapes::execute_sector(&mut ExecutionContext::new(cx.doc), input.clone());
+            points::written(result, cx).map(|out| out.id)
+        };
+        if points::write_area_by(&mut self.d, &pts, bulges, cx, Some(&mut write)).is_some() {
             let f = cx.format();
             let sweep = (end - a0).rem_euclid(TAU);
             cx.say(
@@ -160,7 +204,7 @@ impl Sector {
         let f = self.format;
         let tag = |lines: Vec<String>| Tag { at: hover, lines };
         let at = |a: f64| Vec2::new(c.x + r * a.cos(), c.y + r * a.sin());
-        let Some(ring) = sector(c, r, a0, end) else {
+        let Some((pts, bulges)) = Self::ring(c, r, a0, end) else {
             return Preview {
                 strokes: vec![Stroke::solid(vec![c, at(a0)], false)],
                 tag: Some(tag(vec!["Süpürme yok".to_owned()])),
@@ -168,7 +212,7 @@ impl Sector {
                 ..Preview::default()
             };
         };
-        let outline = bulge_path_outline(&ring.pts, ring.bulges.as_deref(), true, STEP);
+        let outline = bulge_path_outline(&pts, bulges.as_deref(), true, STEP);
         Preview {
             areas: vec![Area {
                 rings: vec![outline],

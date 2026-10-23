@@ -249,27 +249,13 @@ pub(crate) fn write_ring(
     }
 }
 
-/// A new area a tool built by its outline (a rectangle, a regular polygon,
-/// a sector), written as [`write_ring`] writes it, the overlap control
-/// first (docs/adr/0162 §2; the web's `writeArea`): what overlaps the
-/// neighbours is cut away and what is left written as one object through
-/// `cad.entities.create`. With Topoloji on, it is joined with its
-/// neighbours corner by corner in the same step (§4). Its area as written;
-/// `None` when nothing was.
-pub(crate) fn write_area(
-    d: &mut Taken,
-    pts: &[Vec2],
-    bulges: Option<Vec<f64>>,
-    cx: &mut Context<'_>,
-) -> Option<f64> {
-    write_area_by(d, pts, bulges, cx, None)
-}
-
 /// A shape command's writer: the object it wrote, by its slot.
 pub(crate) type Writer<'w> = &'w mut dyn FnMut(&mut Context<'_>) -> Option<u32>;
 
-/// [`write_area`], the plain area written by `writer` when one is given (a shape tool's own command,
-/// docs/adr/0290) and neither the overlap control nor Topoloji changed it; otherwise as [`write_area`] writes.
+/// A new area a tool built by its outline (a rectangle, a regular polygon, a sector), the overlap control first
+/// (docs/adr/0162 §2; the web's `writeArea`): what overlaps the neighbours is cut away and the rest written as one
+/// object; the plain area is written by `writer` when one is given (a shape tool's own command, docs/adr/0290) and
+/// neither the overlap control nor Topoloji changed it.
 pub(crate) fn write_area_by(
     d: &mut Taken,
     pts: &[Vec2],

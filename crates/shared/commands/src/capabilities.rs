@@ -248,6 +248,22 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.sector.create",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_distance",
+                "degenerate_shape",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.polygon.regular",
         refusals: &[
             &[

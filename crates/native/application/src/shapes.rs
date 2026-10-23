@@ -1,4 +1,4 @@
-//! `cad.rectangle.create` and `cad.polygon.regular` v1 (docs/adr/0290): a rectangle by two corners, a corner with a
+//! `cad.rectangle.create`, `cad.polygon.regular` (docs/adr/0290) and `cad.sector.create` v1 (docs/adr/0622 §9): a rectangle by two corners, a corner with a
 //! size or an area, or an edge with a width, its corners sharp, rounded or cut; a regular polygon by its centre and
 //! first corner or first edge's middle, or by an edge. The ring is the shared core's (`geom::shapes`,
 //! `ops::fillet::corners_of_ring`), here only; the tools draw their previews from [`rectangle_ring`] and
@@ -8,7 +8,7 @@
 
 use kentos_commands::{
     CommandResult, PolygonCreate, PolygonCreated, PolygonPlan, RectangleCorners, RectangleCreate,
-    RectangleFrame, RegularFrame, RegularPolygonCreate, Vec2 as Wire,
+    RectangleFrame, RegularFrame, RegularPolygonCreate, SectorCreate, Vec2 as Wire,
 };
 use kentos_geometry_core::geom::shapes::{
     rect_from_corners, rect_from_edge, rect_from_size, rect_side_for_area, regular_polygon,
@@ -330,6 +330,77 @@ pub fn execute_regular(
         input,
         |cx, input| match regular_ring_in(&input) {
             Ok(pts) => polygon::write(cx, regular_polygon_input(&input, pts)),
+            Err(stop) => stop.into(),
+        },
+    )
+}
+
+// ── cad.sector.create ──────────────────────────────────────────────────────────────────────────────────────────
+
+const SECTOR_DEGENERATE: &str = "Dilimin süpürmesi yok: bitiş açısı başlangıçla aynı ya da tam tur. Başka bir bitiş açısı verin.";
+
+/// The slice's ring as the command writes it (`construct::sector`), or why not.
+fn sector_ring_in(input: &SectorCreate) -> Result<Ring, Stop> {
+    checks::point(input.c, "Merkezin", "c")?;
+    length(input.r, "Yarıçap", "r")?;
+    length(input.a0, "Başlangıç açısı", "a0")?;
+    length(input.a1, "Bitiş açısı", "a1")?;
+    // The core's own bound for a radius (a nanometre), so a radius it would not draw is said as a radius.
+    if input.r <= 1e-9 {
+        return Err(refuse(codes::INVALID_DISTANCE, "Yarıçap sıfırdan büyük olmalı.", "r"));
+    }
+    let path = kentos_geometry_core::tools::construct::sector(v(input.c), input.r, input.a0, input.a1)
+        .ok_or_else(|| refuse(codes::DEGENERATE_SHAPE, SECTOR_DEGENERATE, "a1"))?;
+    Ok((path.pts, path.bulges))
+}
+
+/// The slice's ring as the command writes it, or the command's refusal: the tool's preview.
+pub fn sector_ring(input: &SectorCreate) -> Result<Ring, Box<kentos_commands::CommandError>> {
+    sector_ring_in(input).map_err(|stop| Box::new(stop.into_error()))
+}
+
+fn sector_polygon(input: &SectorCreate, (pts, bulges): Ring) -> PolygonCreate {
+    PolygonCreate {
+        layer_id: input.layer_id.clone(),
+        pts: pts.into_iter().map(w).collect(),
+        bulges,
+        holes: None,
+        color: input.color.clone(),
+        line_weight: input.line_weight,
+        line_type: input.line_type,
+        wipeout: None,
+        attrs: input.attrs.clone(),
+        label: input.label.clone(),
+        symbol: input.symbol.clone(),
+        expected_revision: input.expected_revision.clone(),
+    }
+}
+
+/// The slice's checks, then the polygon's.
+pub fn validate_sector(cx: &ExecutionContext<'_>, input: &SectorCreate) -> CommandResult<()> {
+    match sector_ring_in(input) {
+        Ok(ring) => polygon::validate(cx, &sector_polygon(input, ring)),
+        Err(stop) => stop.into(),
+    }
+}
+
+/// The slice as it would be written.
+pub fn plan_sector(cx: &ExecutionContext<'_>, input: &SectorCreate) -> CommandResult<PolygonPlan> {
+    match sector_ring_in(input) {
+        Ok(ring) => polygon::plan(cx, &sector_polygon(input, ring)),
+        Err(stop) => stop.into(),
+    }
+}
+
+/// Writes the slice, one undo step.
+pub fn execute_sector(cx: &mut ExecutionContext<'_>, input: SectorCreate) -> CommandResult<PolygonCreated> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_SECTOR_CREATE,
+        kentos_commands::CAD_SECTOR_CREATE_VERSION,
+        input,
+        |cx, input| match sector_ring_in(&input) {
+            Ok(ring) => polygon::write(cx, sector_polygon(&input, ring)),
             Err(stop) => stop.into(),
         },
     )

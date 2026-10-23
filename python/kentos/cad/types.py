@@ -44063,6 +44063,74 @@ class SchemaItem(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SectorCreate(_Model):
+    """`cad.sector.create`'s input (Daire dilimi): a closed pie slice by its centre, radius and the arc swept
+    counter-clockwise from `a0` to `a1`. The command makes the ring (the centre, the arc's start and end, the arc as the
+    middle edge) and writes it as `cad.polygon.create` writes an area; a sweep of nothing or of a whole turn, or a radius
+    not above zero, is refused (`degenerate_shape`, `invalid_distance`). No active layer, unit or remembered tool option
+    is read.
+    Attributes:
+        c: The centre: x east (Y), y north (X), in the project's units (m). Unit: length.
+        r: The radius, above zero. Unit: length.
+        a0: Where the arc starts: radians counter-clockwise from east (a geometry angle, not a bearing). Unit: rad.
+        a1: Where it ends: the slice is swept counter-clockwise from `a0` to `a1`. Unit: rad.
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    c: Vec2
+    r: float
+    a0: float
+    a1: float
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["c"] = _vec2_out(self.c)
+        out["r"] = float(self.r)
+        out["a0"] = float(self.a0)
+        out["a1"] = float(self.a1)
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectorCreate:
+        return cls(
+            layer_id=data["layerId"],
+            c=Vec2.from_json(data["c"]),
+            r=float(data["r"]),
+            a0=float(data["a0"]),
+            a1=float(data["a1"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SelectLeftOut(_Model):
     """What the kinds and the layers left out of the region's objects, and the objects given that are not shown.
     Attributes:
@@ -69945,6 +70013,7 @@ __all__ = [
     "SchemaItem",
     "SchemaKind",
     "SchemaKindName",
+    "SectorCreate",
     "SegmentCadElement",
     "SelectKind",
     "SelectKindName",

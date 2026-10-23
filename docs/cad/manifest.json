@@ -11758,14 +11758,14 @@
    "id": "tool.sector",
    "kind": "tool",
    "title": "Daire dilimi",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.polygon.create"
+    "cad.sector.create"
    ],
    "operation": null,
-   "python": "kentos.cad.polygon.create",
-   "mcp": "cad.polygon.create",
-   "note": null,
+   "python": "kentos.cad.sector.create",
+   "mcp": "cad.sector.create",
+   "note": "Merkez, yarıçap ve iki açı komutta; halka çekirdeğin construct::sector'ü. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

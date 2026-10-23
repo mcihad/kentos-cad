@@ -1,9 +1,9 @@
-"""The shared cases of cad.rectangle.create and cad.polygon.regular (docs/adr/0290).
+"""The shared cases of cad.rectangle.create, cad.polygon.regular (docs/adr/0290) and cad.sector.create (docs/adr/0622 §9).
 
     python3 scripts/fixtures/shape_command_cases.py           # writes the files
     python3 scripts/fixtures/shape_command_cases.py --check   # writes nothing; compares
 
-Writes fixtures/commands/v1/cad.rectangle.create.json and cad.polygon.regular.json. The checks, their order, codes,
+Writes fixtures/commands/v1/cad.rectangle.create.json, cad.polygon.regular.json and cad.sector.create.json. The checks, their order, codes,
 paths and messages are written here by hand from the ADR; the polygon's own (layer, revision, line weight) are the
 contract's of cad.polygon.create (docs/adr/0022). The rings follow the shapes' definitions in the order of their
 arithmetic, without KentOS code:
@@ -17,7 +17,10 @@ arithmetic, without KentOS code:
   distance along both;
 - a regular polygon by its centre: the radius from the centre to the given point (to an edge's middle: over
   cos(π/n), the start half a step back), corners at start + 2πk/n; by an edge, each corner one side length on from
-  the last at the edge's direction + 2πk/n.
+  the last at the edge's direction + 2πk/n;
+- a pie slice: sweep = fmod(a1 − a0, 2π), 2π added when negative; none for a radius not above a nanometre or a sweep
+  within a nanoradian of nothing or of a whole turn; its ring the centre, c + r·(cos a0, sin a0) and
+  c + r·(cos(a0 + sweep), sin(a0 + sweep)), the arc's bulge tan(sweep / 4) on the middle edge.
 
 Square roots are Python's (correctly rounded, as Rust's); hypot is ECMAScript's, as the core writes it; sin, cos,
 tan and acos are computed to 60 digits by their series and rounded to the nearest double, not by the platform's
@@ -201,6 +204,19 @@ def regular_edge(p1, p2, sides):
         t = a + (2.0 * math.pi * k) / n
         out.append(p2 if k == 0 else (q[0] + cos_(t) * s, q[1] + sin_(t) * s))
     return out
+
+
+def sector(c, r, a0, a1):
+    sweep = math.fmod(a1 - a0, math.tau)
+    if sweep < 0.0:
+        sweep += math.tau
+    if not r > 1e-9 or sweep < 1e-9 or math.tau - sweep < 1e-9:
+        return None
+
+    def on(a):
+        return (c[0] + r * cos_(a), c[1] + r * sin_(a))
+
+    return [c, on(a0), on(a0 + sweep)], [0.0, tan_(sweep / 4.0), 0.0]
 
 
 # ── The fixture ──────────────────────────────────────────────────────────────────────────────────────────────────
@@ -437,9 +453,71 @@ def regular_cases():
     return out
 
 
+SECTOR_DEGENERATE = "Dilimin süpürmesi yok: bitiş açısı başlangıçla aynı ya da tam tur. Başka bir bitiş açısı verin."
+
+
+def sec(r, a0, a1, **extra):
+    return {"layerId": "yapi", "c": P(20, 20), "r": r, "a0": a0, "a1": a1, **extra}
+
+
+def sector_written(name, r, a0, a1, **kw):
+    pts, bulges = sector(at(20, 20), float(r), float(a0), float(a1))
+    extra = {k: v for k, v in kw.items() if k in ("color", "lineWeight", "attrs", "label")}
+    rest = {k: v for k, v in kw.items() if k not in extra}
+    return written(name, sec(r, a0, a1, **extra), pts, bulges, extra=extra or None, **rest)
+
+
+def sector_cases():
+    pi = math.pi
+    out = [
+        sector_written("Çeyrek dilim: doğudan kuzeye, yarıçap 10; adım “Ekle”", 10, 0.0, pi / 2),
+        sector_written("Yarım dilim: doğudan batıya", 10, 0.0, pi),
+        sector_written("Üç çeyrek: kuzeyden doğuya saat yönünün tersine dolanarak", 10, pi / 2, 0.0),
+        sector_written("Eksi başlangıç açısı: güneyden doğuya", 10, -pi / 2, 0.0),
+        sector_written("Tam turu aşan bitiş açısı tur kadar indirilir", 10, 0.0, 5 * pi / 2),
+        sector_written("Batıdan güneye", 6, pi, 3 * pi / 2),
+        sector_written("Kuzeyden batıya, yarıçap yarım metre", 0.5, pi / 2, pi),
+        sector_written("Neredeyse tam tur: güneyden doğunun hemen altına", 10, -pi / 2, -pi / 2 - 0.25),
+        sector_written("Renk, kalınlık, öznitelik ve etiket taşınır", 10, 0.0, pi / 2, color="#E5484D", lineWeight=0.5,
+                       attrs={"Tür": "Dilim"}, label="A"),
+        sector_written("Gizli katmana uyarıyla", 10, 0.0, pi / 2,
+                       warnings=[{"code": "layer_hidden", "message": HIDDEN, "path": "layerId"}], layer="gizli"),
+    ]
+    # The hidden layer's case writes on it.
+    out[-1]["steps"][0]["input"]["layerId"] = "gizli"
+    pts, bulges = sector(at(20, 20), 10.0, 0.0, pi / 2)
+    out.append(planned("Plan: dilim olacağı gibi, yuvası 0", sec(10, 0.0, pi / 2), pts, bulges))
+    base = sec(10, 0.0, pi / 2)
+    out += [
+        refused("Merkez sonlu değil", base, "not_finite", not_finite_point("Merkezin", "x"), "c.x", {"c.x": "NaN"}),
+        refused("Merkezin kuzeyi sonlu değil", base, "not_finite", not_finite_point("Merkezin", "y"), "c.y", {"c.y": "Infinity"}),
+        refused("Yarıçap sonlu değil", base, "not_finite", not_finite_number("Yarıçap"), "r", {"r": "Infinity"}),
+        refused("Başlangıç açısı sonlu değil", base, "not_finite", not_finite_number("Başlangıç açısı"), "a0", {"a0": "NaN"}),
+        refused("Bitiş açısı sonlu değil", base, "not_finite", not_finite_number("Bitiş açısı"), "a1", {"a1": "-Infinity"}),
+        refused("Yarıçap sıfır", sec(0, 0.0, pi / 2), "invalid_distance", "Yarıçap sıfırdan büyük olmalı.", "r"),
+        refused("Yarıçap eksi", sec(-3, 0.0, pi / 2), "invalid_distance", "Yarıçap sıfırdan büyük olmalı.", "r"),
+        refused("Yarıçap bir nanometreden küçük", sec(1e-10, 0.0, pi / 2), "invalid_distance", "Yarıçap sıfırdan büyük olmalı.", "r"),
+        refused("Bitiş açısı başlangıçla aynı: süpürme yok", sec(10, 1.0, 1.0), "degenerate_shape", SECTOR_DEGENERATE, "a1"),
+        refused("Tam tur dilim değildir", sec(10, 0.0, 2 * pi), "degenerate_shape", SECTOR_DEGENERATE, "a1"),
+    ]
+    for case in sector_cases_pathless():
+        out.append(case)
+    out += polygon_refusals(base)
+    return out
+
+
+def sector_cases_pathless():
+    """Asserts on the reference itself: the slice is a ring of three points with one arc."""
+    pts, bulges = sector(at(20, 20), 10.0, 0.0, math.pi / 2)
+    assert len(pts) == 3 and bulges[0] == 0.0 and bulges[2] == 0.0 and bulges[1] > 0
+    assert sector(at(20, 20), 10.0, 0.0, 0.0) is None and sector(at(20, 20), 0.0, 0.0, 1.0) is None
+    return []
+
+
 FILES = [
     ("cad.rectangle.create", "Dikdörtgen oluştur", rectangle_cases),
     ("cad.polygon.regular", "Düzgün çokgen oluştur", regular_cases),
+    ("cad.sector.create", "Daire dilimi oluştur", sector_cases),
 ]
 
 
@@ -448,7 +526,8 @@ def main() -> int:
     bad = False
     for command, title, cases in FILES:
         doc = {"format": "kentos.command-cases", "version": 1, "command": command, "commandVersion": 1, "title": title,
-               "note": "Written by scripts/fixtures/shape_command_cases.py from the shapes' definitions (docs/adr/0290); do not edit by hand.",
+               "note": "Written by scripts/fixtures/shape_command_cases.py from the shapes' definitions (docs/adr/"
+                       + ("0622 §9" if command == "cad.sector.create" else "0290") + "); do not edit by hand.",
                "setup": SETUP, "cases": cases()}
         assert_no_negative_zero(doc, command)
         text = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"

@@ -176,6 +176,12 @@ pub mod polygon_regular {
         execute_regular as execute, plan_regular as plan, validate_regular as validate,
     };
 }
+/// `cad.sector.create` as the registry runs it ([`shapes`]).
+pub mod sector_create {
+    pub use crate::shapes::{
+        execute_sector as execute, plan_sector as plan, validate_sector as validate,
+    };
+}
 pub mod curves_construct;
 pub mod cad_layouts;
 mod cad_paper;
@@ -729,6 +735,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_POLYGON_REGULAR,
         kentos_commands::CAD_POLYGON_REGULAR_VERSION,
     ),
+    (kentos_commands::CAD_SECTOR_CREATE, kentos_commands::CAD_SECTOR_CREATE_VERSION),
     // A path's vertices and edges ([`entities_vertex`], docs/adr/0279).
     (
         kentos_commands::CAD_ENTITIES_VERTEX,

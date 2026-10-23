@@ -397,6 +397,14 @@ Bu dilimde düzeltilenler:
   görünüştür. Dış çap iç çaptan büyük, iç çap sıfır veya pozitiftir; sıfır iç çap disk yapar. Tek dolu tarama, iki
   yarım daire yayıyla kesin dış ve iç sınır, tek geri alma adımı. Araç bu komutla yazar; Python/MCP geometri
   hesaplamaz. `donut_command_cases.py` KentOS yüklemeden 60 basamaklı trigonometrik başvuruyla 25 durum üretir.
+- **Daire dilimi:** `cad.sector.create` eklendi. Girdi merkez `c`, yarıçap `r` (metre), başlangıç ve bitiş açısı
+  `a0`, `a1` (radyan, saat yönü tersine; süpürme `a1 − a0`'ın tam tura göre kalanı), katman ve görünüştür. Halka merkez,
+  başlangıçtaki ve bitişteki yay noktasıdır; yay kenarı `tan(süpürme/4)` bükümüyle kesindir. Sıfır ya da tam tur
+  süpürme `degenerate_shape`, sıfır yarıçap `invalid_distance` ile reddedilir. Araç önizlemeyi komutun halkasından
+  (`shapes::sector_ring`) alır, Çakışma ve Topoloji alanı değiştirmedikçe komutla yazar (`points::write_area_by`);
+  komutu kullanmayan eski `write_area` kalktı. `shape_command_cases.py` KentOS yüklemeden 27 durum üretir; masaüstünde
+  `semantic_tool_tests.rs` aracı gerçek fare olaylarıyla sürer: kayıttaki son çağrı `cad.sector.create`'tir, girdi
+  hazır halka değil kullanıcının verdiğidir, Python yankısı aynı çağrıyı taşır, sağ tık nesne koymaz.
 - **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
   de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
   çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu
@@ -404,7 +412,7 @@ Bu dilimde düzeltilenler:
   mevcut başsız dosya testlerinin yanında kodun/kataloğun bütünlüğünü sınar.
 
 Bu bölüm `UX-14`'ün bütün tarihsel araç borcunu kapattığı anlamına gelmez. Halka ve denetimin dosya komutları dilimi
-ayrıdır; Daire dilimi, Revizyon bulutu, Çakışma/Topoloji ve diğer açık araçlar listedeki sıralarıyla kalır.
+ayrıdır; Revizyon bulutu, Çakışma/Topoloji ve diğer açık araçlar listedeki sıralarıyla kalır.
 
 ### 9.1 Bu devamın doğrulaması
 

@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 94 | 222 | 43 | 45 | 404 |
-| geometry | 12 | 65 | 1 | 3 | 81 |
+| semantic | 94 | 223 | 43 | 45 | 405 |
+| geometry | 12 | 64 | 1 | 3 | 80 |
 | processing | 0 | 130 | 22 | 2 | 154 |
 | none | 0 | 14 | 6 | 2 | 22 |
 | query | 6 | 24 | 2 | 8 | 40 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 814 satırdan 113'i: geometry 78, none 20, processing 3, query 12.
+CBS'ye özgü olmayan 814 satırdan 112'i: geometry 77, none 20, processing 3, query 12.
 
-### Sonucu çağıran hesaplar (geometry) — 78
+### Sonucu çağıran hesaplar (geometry) — 77
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -89,7 +89,6 @@ CBS'ye özgü olmayan 814 satırdan 113'i: geometry 78, none 20, processing 3, q
 | `tool.revcloud#Nesne` | Revizyon bulutu: Nesne | cad | cad.polygon.create |  |
 | `tool.revcloud#Çokgen` | Revizyon bulutu: Çokgen | cad | cad.polygon.create |  |
 | `tool.roadJunctions` | Kavşak temizle | shared | cad.entities.edit `roadJunctions` |  |
-| `tool.sector` | Daire dilimi | shared | cad.polygon.create |  |
 | `tool.setElevation` | Kot ver | shared | cad.entities.edit `elevation` |  |
 | `tool.setElevation#Artır` | Kot ver: Artır | shared | cad.entities.edit `elevation` |  |
 | `tool.setElevation#Sabit` | Kot ver: Sabit | shared | cad.entities.edit `elevation` |  |

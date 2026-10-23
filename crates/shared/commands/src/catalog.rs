@@ -8046,6 +8046,35 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_SECTOR_CREATE.into(),
+            version: crate::CAD_SECTOR_CREATE_VERSION,
+            title: "Daire dilimi oluştur".into(),
+            summary: "Verilen katmana kapalı bir daire dilimi alan ekler: merkez (c), yarıçap (r) ve yayın doğudan saat yönünün \
+                      tersine a0'dan a1'e süpürüldüğü açılar (radyan). Halkayı komut hesaplar: merkez, yayın başı ve sonu, ortadaki \
+                      kenar kesin yay; alan cad.polygon.create gibi yazılır. Süpürmesi sıfır ya da tam tur olan dilim degenerate_shape, \
+                      sıfırdan büyük olmayan yarıçap invalid_distance ile reddedilir. Daire dilimi aracı, Python ve ajan aynı girdiye \
+                      aynı dilimi alır; tek geri alma adımı."
+                .into(),
+            aliases: vec!["dilim".into(), "sector".into(), "pie".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SectorCreate>(),
+            output: schema::<crate::PolygonCreated>(),
+            plan: Some(schema::<crate::PolygonPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Yarıçapı 10 m, doğudan kuzeye çeyrek dilim".into(),
+                input: json!({ "layerId": "yapi", "c": { "x": 423500.0, "y": 4512300.0 }, "r": 10.0,
+                               "a0": 0.0, "a1": std::f64::consts::FRAC_PI_2 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_ENTITIES_VERTEX.into(),
             version: crate::CAD_ENTITIES_VERTEX_VERSION,
             title: "Köşe ve kenar".into(),
@@ -9974,6 +10003,9 @@ mod tests {
                     crate::CAD_POLYGON_REGULAR => {
                         serde_json::from_value::<crate::RegularPolygonCreate>(e.input.clone())
                             .map(|_| ())
+                    }
+                    crate::CAD_SECTOR_CREATE => {
+                        serde_json::from_value::<crate::SectorCreate>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_VERTEX => {
                         serde_json::from_value::<crate::EntitiesVertex>(e.input.clone()).map(|_| ())

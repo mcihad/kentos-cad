@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linearref, linetypes, meshes, network, nurbs, openings, parameters, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linearref, linetypes, meshes, network, nurbs, openings, parameters, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, sector, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -1898,6 +1898,7 @@ __all__ = [
     "SchemaItem",
     "SchemaKind",
     "SchemaKindName",
+    "SectorCreate",
     "SegmentCadElement",
     "SelectKind",
     "SelectKindName",
@@ -2461,6 +2462,7 @@ __all__ = [
     "scenarios",
     "schedules",
     "schema",
+    "sector",
     "settings",
     "sheets",
     "snap",
