@@ -195,6 +195,10 @@ pub fn merge_with_source(
             }
         }
         for (i, view) in layout.viewports.iter().enumerate() {
+            // A viewport under a millimetre is no frame a sheet holds (`diagnostics` says it).
+            if !usable_viewport(view) {
+                continue;
+            }
             let scale =
                 kentos_sheet::projection::Scale::from_lengths(view.view_height, view.height_mm)
                     .ok_or_else(|| {
@@ -270,6 +274,17 @@ pub fn merge_with_source(
     }))
 }
 
+/// The smallest side of a viewport the sheet book holds, mm (the book's 1000 µm item).
+const MIN_VIEWPORT_MM: f64 = 1.;
+
+/// Whether a file's viewport makes a sheet frame: finite sides of at least a millimetre.
+fn usable_viewport(view: &CadViewport) -> bool {
+    view.width_mm.is_finite()
+        && view.height_mm.is_finite()
+        && view.width_mm >= MIN_VIEWPORT_MM
+        && view.height_mm >= MIN_VIEWPORT_MM
+}
+
 pub fn diagnostics(layouts: &[CadLayout]) -> Vec<ReportItem> {
     let skipped = layouts
         .iter()
@@ -278,6 +293,21 @@ pub fn diagnostics(layouts: &[CadLayout]) -> Vec<ReportItem> {
         .count();
     let formatted_text = layouts.iter().flat_map(|l| &l.entities).filter(|e| matches!(e, Entity::Text(t) if t.align.is_some() || t.width_factor.is_some_and(|w| w != 1.) || t.face.oblique.is_some() || !t.paragraph.runs.is_empty() || t.paragraph.layout.is_some() || t.mask)).count();
     let mut out = Vec::new();
+    let tiny = layouts
+        .iter()
+        .flat_map(|l| &l.viewports)
+        .filter(|v| !usable_viewport(v))
+        .count();
+    if tiny > 0 {
+        out.push(ReportItem {
+            severity: Some(ReportSeverity::Warning),
+            what: "Görünüm penceresi (VIEWPORT)".into(),
+            count: tiny as u32,
+            reason: "1 mm'den küçük görünüm pencereleri pafta kitabına alınmadı; kaynak dosyada durur.".into(),
+            lines: Vec::new(),
+            details: Vec::new(),
+        });
+    }
     let paths: Vec<_> = layouts
         .iter()
         .flat_map(|l| &l.entities)

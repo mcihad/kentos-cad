@@ -195,7 +195,18 @@ fn read_file(doc: &Document, input: &ImportDxf, format: CadFormat) -> Result<Rea
 
 /// The same resolved paths and sheet validation for a window's already-read bytes and a command's read.
 fn prepare_cad(doc: &Document, path: &Path, result: &mut ImportResult) -> Result<(), Stop> {
-    crate::cad_layouts::merge(doc, &result.layouts).map_err(|message| refuse(codes::IMPORT_UNREADABLE, message, "path"))?;
+    // A sheet the book cannot hold does not cost the drawing: the model comes in, the file's sheets stay out and are said.
+    if let Err(message) = crate::cad_layouts::merge(doc, &result.layouts) {
+        result.report.notes.push(kentos_commands::ReportItem {
+            severity: Some(kentos_commands::ReportSeverity::Warning),
+            what: "Pafta (LAYOUT)".into(),
+            count: result.layouts.len() as u32,
+            reason: format!("Dosyanın paftaları alınmadı: {message} Model olduğu gibi alındı."),
+            lines: Vec::new(),
+            details: Vec::new(),
+        });
+        result.layouts.clear();
+    }
     for note in crate::cad_layouts::diagnostics(&result.layouts) {
         if !result.report.notes.iter().any(|n| n.what == note.what && n.reason == note.reason) { result.report.notes.push(note); }
     }

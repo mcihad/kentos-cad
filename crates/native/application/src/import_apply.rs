@@ -259,9 +259,9 @@ impl ImportedBlocks {
         Self { defs, ids, renamed }
     }
 
-    /// The definitions into the drawing (inside the import's transaction).
+    /// The definitions into the drawing (inside the import's transaction), each after the blocks it places.
     fn add(&mut self, doc: &mut Document) -> Result<(), String> {
-        for d in std::mem::take(&mut self.defs) {
+        for d in placing_order(std::mem::take(&mut self.defs)) {
             doc.add_block(d).map_err(|r| {
                 format!(
                     "Dosyanın blokları çizime uymuyor ({r}). Hiçbir şey eklenmedi; dosyayla birlikte bildirin."
@@ -270,6 +270,44 @@ impl ImportedBlocks {
         }
         Ok(())
     }
+}
+
+/// The definitions in an order each comes after the imported blocks it places: a file's BLOCKS section may define a
+/// block after one that places it, and the drawing takes a definition only when the blocks it places are there. A
+/// definition left in a loop keeps the file's order and the drawing refuses it with its reason.
+fn placing_order(defs: Vec<BlockDefinition>) -> Vec<BlockDefinition> {
+    let ids: HashSet<BlockId> = defs.iter().map(|d| d.id).collect();
+    let needs: Vec<Vec<BlockId>> = defs
+        .iter()
+        .map(|d| {
+            d.entities
+                .iter()
+                .filter_map(|e| match e {
+                    Entity::Insert(i) if i.block != d.id && ids.contains(&i.block) => Some(i.block),
+                    _ => None,
+                })
+                .collect()
+        })
+        .collect();
+    let mut placed = HashSet::with_capacity(ids.len());
+    let mut slots: Vec<Option<BlockDefinition>> = defs.into_iter().map(Some).collect();
+    let mut out = Vec::with_capacity(slots.len());
+    loop {
+        let mut moved = false;
+        for (k, slot) in slots.iter_mut().enumerate() {
+            let ready = slot.is_some() && needs[k].iter().all(|n| placed.contains(n));
+            if ready && let Some(d) = slot.take() {
+                placed.insert(d.id);
+                out.push(d);
+                moved = true;
+            }
+        }
+        if !moved {
+            break;
+        }
+    }
+    out.extend(slots.into_iter().flatten());
+    out
 }
 
 /// The first object placing a block the import did not bring (a reader never

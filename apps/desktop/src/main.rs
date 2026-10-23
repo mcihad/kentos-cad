@@ -7,6 +7,8 @@
 #[cfg(test)]
 mod acceptance_tests;
 #[cfg(test)]
+mod measure_probe_tests;
+#[cfg(test)]
 mod annotative_sheet_tests;
 #[cfg(test)]
 mod text_outputs_tests;
