@@ -15,6 +15,7 @@ from .types import (  # noqa: F401
     QueryOrder,
     QueryScope,
     QueryScopeName,
+    QueryTime,
     ReconcileSide,
     ReconcileSideName,
     ReconcileTake,
@@ -344,6 +345,7 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
         scope: QueryScope | QueryScopeName | None | Unset = UNSET,
         statistics: Sequence[str] | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
+        time: QueryTime | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> SourcesQueried:
@@ -387,6 +389,8 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
             scope: With `layer`: its working copy (the default) or its source's whole table.
             statistics: Fields whose statistics are of every record the question keeps (`kentos.statistics/1`).
             table: With `path`: the table (`schema.table` in a database).
+            time: The records of a valid time and a day known, as `cad.time.query` reads them (docs/adr/0595): the source is sent
+                a condition that keeps at least them, each record is checked here by the layer time's rules.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -415,6 +419,7 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
             scope=scope,
             statistics=_opt(statistics, lambda x: list(x)),
             table=table,
+            time=time,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -437,6 +442,7 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
         scope: QueryScope | QueryScopeName | None | Unset = UNSET,
         statistics: Sequence[str] | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
+        time: QueryTime | None | Unset = UNSET,
     ) -> SourcesQueried:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -457,6 +463,7 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
             scope=scope,
             statistics=_opt(statistics, lambda x: list(x)),
             table=table,
+            time=time,
         ))
 
     def validate(
@@ -479,6 +486,7 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
         scope: QueryScope | QueryScopeName | None | Unset = UNSET,
         statistics: Sequence[str] | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
+        time: QueryTime | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -499,6 +507,7 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
             scope=scope,
             statistics=_opt(statistics, lambda x: list(x)),
             table=table,
+            time=time,
         ))
 
     def answer(
@@ -521,6 +530,7 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
         scope: QueryScope | QueryScopeName | None | Unset = UNSET,
         statistics: Sequence[str] | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
+        time: QueryTime | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -546,6 +556,7 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
             scope=scope,
             statistics=_opt(statistics, lambda x: list(x)),
             table=table,
+            time=time,
         ), op=op, request_id=request_id, expected=expected)
 
 

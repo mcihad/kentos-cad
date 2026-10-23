@@ -142,6 +142,38 @@ pub struct SourcesQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_stamp: Option<String>,
+    /// The records of a valid time and a day known, as `cad.time.query` reads them (docs/adr/0595): the source is sent
+    /// a condition that keeps at least them, each record is checked here by the layer time's rules.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub time: Option<QueryTime>,
+}
+
+/// A question's time (docs/adr/0595 §1): the valid time at an instant (`at`) or over a period [`from`, `to`), the day
+/// known (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table
+/// (or a layer without them) names them in `fields`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct QueryTime {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub at: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub from: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub to: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub known_at: Option<String>,
+    /// The fields holding the times, as a layer's time settings name them; none: the layer's own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fields: Option<crate::LayerTime>,
 }
 
 /// What a question was asked of.
@@ -278,7 +310,7 @@ pub struct QueryPlan {
     /// Whether that condition is the whole filter and keeps exactly what it keeps.
     pub exact: bool,
     /// What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,
-    /// `statistics`.
+    /// `statistics`, `time` (every record checked by the layer time's rules, docs/adr/0595).
     pub local: Vec<String>,
     /// The order of the records: `key` (the source's), `uid` (the drawing's), `column` (the source ordered them by the
     /// field) or `here` (ordered here, docs/adr/0591 §2).

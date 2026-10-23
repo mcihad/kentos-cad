@@ -37429,7 +37429,7 @@ class QueryPlan(_Model):
         geometry: Whether the source read the geometry.
         exact: Whether that condition is the whole filter and keeps exactly what it keeps.
         local: What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,
-            `statistics`.
+            `statistics`, `time` (every record checked by the layer time's rules, docs/adr/0595).
         order: The order of the records: `key` (the source's), `uid` (the drawing's), `column` (the source ordered them by the
             field) or `here` (ordered here, docs/adr/0591 §2).
         pushed: The condition the source checked, its values written in.
@@ -37465,6 +37465,45 @@ class QueryPlan(_Model):
             order=data["order"],
             box=UNSET if "box" not in data else None if data["box"] is None else _enum_in(PlanBox, data["box"]),
             pushed=data.get("pushed", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class QueryTime(_Model):
+    """A question's time (docs/adr/0595 §1): the valid time at an instant (`at`) or over a period [`from`, `to`), the day
+    known (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table
+    (or a layer without them) names them in `fields`.
+    Attributes:
+        fields: The fields holding the times, as a layer's time settings name them; none: the layer's own.
+    """
+    at: str | None | Unset = UNSET
+    fields: LayerTime | None | Unset = UNSET
+    from_: str | None | Unset = UNSET
+    known_at: str | None | Unset = UNSET
+    to: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.fields is not UNSET:
+            out["fields"] = None if self.fields is None else self.fields.to_json()
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.known_at is not UNSET:
+            out["knownAt"] = self.known_at
+        if self.to is not UNSET:
+            out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> QueryTime:
+        return cls(
+            at=data.get("at", UNSET),
+            fields=UNSET if "fields" not in data else None if data["fields"] is None else LayerTime.from_json(data["fields"]),
+            from_=data.get("from", UNSET),
+            known_at=data.get("knownAt", UNSET),
+            to=data.get("to", UNSET),
         )
 
 
@@ -42349,6 +42388,8 @@ class SourcesQuery(_Model):
         scope: With `layer`: its working copy (the default) or its source's whole table.
         statistics: Fields whose statistics are of every record the question keeps (`kentos.statistics/1`).
         table: With `path`: the table (`schema.table` in a database).
+        time: The records of a valid time and a day known, as `cad.time.query` reads them (docs/adr/0595): the source is sent
+            a condition that keeps at least them, each record is checked here by the layer time's rules.
     """
     bbox: list[float] | None | Unset = UNSET
     count: bool | None | Unset = UNSET
@@ -42365,6 +42406,7 @@ class SourcesQuery(_Model):
     scope: QueryScope | QueryScopeName | None | Unset = UNSET
     statistics: list[str] | None | Unset = UNSET
     table: str | None | Unset = UNSET
+    time: QueryTime | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -42398,6 +42440,8 @@ class SourcesQuery(_Model):
             out["statistics"] = None if self.statistics is None else list(self.statistics)
         if self.table is not UNSET:
             out["table"] = self.table
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else self.time.to_json()
         return out
 
     @classmethod
@@ -42418,6 +42462,7 @@ class SourcesQuery(_Model):
             scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(QueryScope, data["scope"]),
             statistics=UNSET if "statistics" not in data else None if data["statistics"] is None else list(data["statistics"]),
             table=data.get("table", UNSET),
+            time=UNSET if "time" not in data else None if data["time"] is None else QueryTime.from_json(data["time"]),
         )
 
 
@@ -62454,6 +62499,7 @@ __all__ = [
     "QueryPlan",
     "QueryScope",
     "QueryScopeName",
+    "QueryTime",
     "RadiusConstraintRule",
     "RadiusDimensionMeasure",
     "RampEntity",

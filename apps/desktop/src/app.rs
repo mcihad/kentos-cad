@@ -1877,7 +1877,10 @@ impl App {
             Message::TopologyRules(event) => return self.topology_rules_event(event),
             Message::Networks(event) => return self.networks_event(event),
             Message::Address(event) => return self.address_event(event),
-            Message::Time(event) => return self.time_event(event),
+            Message::Time(event) => {
+                let moved = self.time_event(event);
+                return Task::batch([moved, self.time_sources()]);
+            }
             Message::Vertices(event) => return self.vertices_event(event),
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),

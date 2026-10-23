@@ -233,6 +233,34 @@ def main():
                                  layers=["olay"],
                                  layerCreationOptions=["SCHEMA=sira", "FID=fid", "GEOMETRY_NAME=geom"],
                                  preserveFID=True))
+        # The time cases' file (docs/adr/0595): its tables in the schema zaman with the dates as texts, as written,
+        # and `surum` once more with date and timestamptz columns (a text no date can hold made NULL).
+        # (GDAL would write a date as text 2021/03/01: the texts are copied as stored, by sqlite3 and psycopg2.)
+        c.cursor().execute("CREATE SCHEMA zaman")
+        z = sqlite3.connect(f"file:{ROOT / 'fixtures/sources/v1/zaman.gpkg'}?mode=ro", uri=True)
+        typed = [r for r in z.execute("SELECT fid, ad, bas, bit, kayit, silindi FROM surum ORDER BY fid")]
+        events = [r for r in z.execute("SELECT fid, ad, zaman FROM olay ORDER BY fid")]
+        z.close()
+        cur = c.cursor()
+        cur.execute("CREATE TABLE zaman.surum (fid bigint PRIMARY KEY, ad text, bas text, bit text, kayit text, "
+                    "silindi text, geom geometry(Point, 5256))")
+        for fid, ad, bas, bit, kayit, silindi in typed:
+            cur.execute("INSERT INTO zaman.surum VALUES (%s, %s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 5256))",
+                        (fid, ad, bas, bit, kayit, silindi, 487000.0 + fid * 20, 4420000.0))
+        cur.execute("CREATE TABLE zaman.olay (fid bigint PRIMARY KEY, ad text, zaman text, geom geometry(Point, 5256))")
+        for fid, ad, zaman in events:
+            cur.execute("INSERT INTO zaman.olay VALUES (%s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 5256))",
+                        (fid, ad, zaman, 487000.0 + fid * 20, 4420100.0))
+        cur.execute("CREATE TABLE zaman.surum_tipli (fid bigint PRIMARY KEY, ad text, bas date, bit date, "
+                    "kayit timestamptz, silindi timestamptz, geom geometry(Point, 5256))")
+
+        def as_date(v):
+            return v if v and len(v) == 10 and v[4] == "-" else None
+
+        for fid, ad, bas, bit, kayit, silindi in typed:
+            cur.execute("INSERT INTO zaman.surum_tipli VALUES (%s, %s, %s, %s, %s, %s, "
+                        "ST_SetSRID(ST_MakePoint(%s, %s), 5256))",
+                        (fid, ad, as_date(bas), as_date(bit), kayit, silindi, 487000.0 + fid * 20, 4420000.0))
         # A view keyed by fid and one without a key (docs/adr/0582 §3).
         c.cursor().execute("CREATE VIEW sorgu.nokta_v AS SELECT fid, ad, tur, geom FROM sorgu.nokta WHERE fid <= 50")
         c.cursor().execute("CREATE VIEW sorgu.anahtarsiz AS SELECT ad, geom FROM sorgu.nokta")

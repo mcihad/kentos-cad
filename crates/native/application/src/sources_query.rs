@@ -233,6 +233,8 @@ struct Asked {
     cursor: Option<Cursor>,
     order: Option<QueryOrder>,
     expected_stamp: Option<String>,
+    /// The valid time and the day known (docs/adr/0595).
+    time: Option<crate::time_filter::TimeFilter>,
 }
 
 impl Asked {
@@ -261,6 +263,9 @@ impl Asked {
         }
         if !self.statistics.is_empty() {
             out.push("statistics".to_owned());
+        }
+        if self.time.is_some() {
+            out.push("time".to_owned());
         }
         out
     }
@@ -398,7 +403,20 @@ fn asked(input: &SourcesQuery, settings: &ProjectSettings) -> Result<Asked, Stop
             Some(f)
         }
     };
+    let time = match &input.time {
+        None => None,
+        Some(q) => Some(crate::time_filter::TimeFilter::read(
+            q,
+            None,
+            if input.layer.is_some() {
+                "Katmanın"
+            } else {
+                "Tablonun"
+            },
+        )?),
+    };
     Ok(Asked {
+        time,
         limit: limit as usize,
         bbox: input.bbox,
         near,
@@ -568,7 +586,38 @@ fn passing(
             out[k] = met[i];
         }
     }
+    // The valid time and the day known, by the layer time's rules (docs/adr/0595).
+    if let Some(t) = &asked.time {
+        for (k, (_, _, e)) in list.iter().enumerate() {
+            if out[k] {
+                out[k] = t.passes(&e.base().attrs);
+            }
+        }
+    }
     out
+}
+
+/// The question with a temporal layer's own time fields where its time names none (docs/adr/0595 §1).
+fn with_layer_time<'a>(
+    doc: &Document,
+    input: &'a SourcesQuery,
+) -> std::borrow::Cow<'a, SourcesQuery> {
+    let own = match (&input.time, &input.layer) {
+        (Some(t), Some(layer)) if t.fields.is_none() => {
+            doc.layers().get(layer).and_then(|n| n.time.clone())
+        }
+        _ => None,
+    };
+    match own {
+        None => std::borrow::Cow::Borrowed(input),
+        Some(fields) => {
+            let mut q = input.clone();
+            if let Some(t) = q.time.as_mut() {
+                t.fields = Some(fields);
+            }
+            std::borrow::Cow::Owned(q)
+        }
+    }
 }
 
 // ── The drawing's objects ────────────────────────────────────────────────────
@@ -701,7 +750,7 @@ fn drawing(
                 columns: Vec::new(),
                 geometry: false,
                 pushed: None,
-                exact: asked.filter.is_none(),
+                exact: asked.filter.is_none() && asked.time.is_none(),
                 local: asked.local(),
                 order: if asked.order.is_some() { "here" } else { "uid" }.into(),
             },
@@ -833,6 +882,17 @@ fn source(
             ));
         }
     }
+    if let Some(t) = &asked.time {
+        for (at, f) in t.columns() {
+            if column(f).is_none() {
+                return Err(fail(
+                    codes::FIELD_NOT_FOUND,
+                    format!("“{f}” sütunu “{table}” tablosunda yok."),
+                    at,
+                ));
+            }
+        }
+    }
     // The order's column, and who orders by it (docs/adr/0591 §2): the source, unless it holds text.
     let order_column = match &asked.order {
         None => None,
@@ -912,6 +972,9 @@ fn source(
     if let Some(o) = &asked.order {
         want(&o.field);
     }
+    if let Some(t) = &asked.time {
+        t.columns().into_iter().for_each(|(_, f)| want(f));
+    }
     read_columns.sort_unstable();
     let order_at = order_column.and_then(|i| read_columns.iter().position(|&c| c == i));
     let mut projected = found.layer.clone();
@@ -937,6 +1000,36 @@ fn source(
                 Some((named, sort_of(&c.kind)))
             };
             pushdown::push(e, &columns, dialect)
+        }
+    };
+    // The time's condition beside it (docs/adr/0595 §2): a superset, the rules checked here.
+    let pushed = match &asked.time {
+        None => pushed,
+        Some(t) => {
+            let name = |field: &str| {
+                let c = found.layer.columns.iter().find(|c| c.name == field)?;
+                let q = gpkg::quote(&c.name);
+                Some(match dialect {
+                    Dialect::Sqlite => format!("t.{q}"),
+                    Dialect::Postgres => q,
+                })
+            };
+            let (sql, values) = t.sql(dialect, &name, pushed.params.len() + 1);
+            if sql.is_empty() {
+                pushed
+            } else {
+                let mut params = pushed.params;
+                params.extend(values.into_iter().map(Param::Text));
+                Pushed {
+                    sql: if pushed.sql.is_empty() {
+                        sql
+                    } else {
+                        format!("({}) AND {sql}", pushed.sql)
+                    },
+                    params,
+                    exact: false,
+                }
+            }
         }
     };
     let read_geometry = geometry || (sent.is_some() && !found.layer.indexed);
@@ -1136,7 +1229,7 @@ fn source(
         columns: projected.columns.iter().map(|c| c.name.clone()).collect(),
         geometry: read_geometry,
         pushed: shown,
-        exact: asked.filter.is_none() || pushed.exact,
+        exact: (asked.filter.is_none() || pushed.exact) && asked.time.is_none(),
         local: asked.local(),
         order: match (&asked.order, here) {
             (None, _) => "key",
@@ -1179,6 +1272,7 @@ fn run(
     input: &SourcesQuery,
     stop: &dyn Fn() -> bool,
 ) -> Result<(SourcesQueried, Vec<CommandWarning>), Stop> {
+    let input = &*with_layer_time(doc, input);
     let asked = asked(input, doc.settings())?;
     if let Some(layer) = &input.layer {
         let node = doc
@@ -1306,33 +1400,38 @@ pub fn stage(
     from: &StageFrom<'_>,
     filter: Option<&str>,
     bbox: Option<[f64; 4]>,
+    time: Option<&kentos_commands::QueryTime>,
     at: &str,
     stop: &dyn Fn() -> bool,
 ) -> Result<(Staging, SourcesQueried), Option<Box<kentos_commands::CommandError>>> {
-    stage_at_most(settings, from, filter, bbox, at, stop, MOST_STAGED)
+    stage_at_most(settings, from, filter, bbox, time, at, stop, MOST_STAGED)
 }
 
 /// [`stage`] with another cap (a test's).
+#[allow(clippy::too_many_arguments)]
 pub fn stage_at_most(
     settings: &ProjectSettings,
     from: &StageFrom<'_>,
     filter: Option<&str>,
     bbox: Option<[f64; 4]>,
+    time: Option<&kentos_commands::QueryTime>,
     at: &str,
     stop: &dyn Fn() -> bool,
     most: usize,
 ) -> Result<(Staging, SourcesQueried), Option<Box<kentos_commands::CommandError>>> {
-    staged(settings, from, filter, bbox, at, stop, most).map_err(|s| match s {
+    staged(settings, from, filter, bbox, time, at, stop, most).map_err(|s| match s {
         Stop::Cancelled => None,
         other => Some(Box::new(other.into_error())),
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn staged(
     settings: &ProjectSettings,
     from: &StageFrom<'_>,
     filter: Option<&str>,
     bbox: Option<[f64; 4]>,
+    time: Option<&kentos_commands::QueryTime>,
     at: &str,
     stop: &dyn Fn() -> bool,
     most: usize,
@@ -1346,6 +1445,7 @@ fn staged(
         table: Some(name.to_owned()),
         filter: filter.map(str::to_owned),
         bbox,
+        time: time.cloned(),
         limit: Some(0),
         count: Some(true),
         ..SourcesQuery::default()
@@ -1391,7 +1491,10 @@ fn staged(
 fn at_place(stop: Stop, at: &str) -> Stop {
     match stop {
         Stop::Failed(mut e) => {
-            if let Some(p @ ("filter" | "bbox" | "table" | "path" | "layer")) = e.path.as_deref() {
+            if let Some(p) = e.path.as_deref().filter(|p| {
+                matches!(*p, "filter" | "bbox" | "table" | "path" | "layer")
+                    || p.starts_with("time")
+            }) {
                 e.path = Some(format!("{at}.{p}"));
             }
             Stop::Failed(e)
@@ -1401,7 +1504,7 @@ fn at_place(stop: Stop, at: &str) -> Stop {
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &SourcesQuery) -> CommandResult<()> {
-    match asked(input, cx.doc.settings()) {
+    match asked(&with_layer_time(cx.doc, input), cx.doc.settings()) {
         Ok(_) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),

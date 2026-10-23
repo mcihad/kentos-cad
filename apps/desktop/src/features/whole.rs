@@ -52,6 +52,8 @@ pub mod words {
     pub const FILTER_SENT: &str = "süzgeç kaynakta";
     pub const FILTER_BOTH: &str = "süzgeç kaynakta ve burada";
     pub const FILTER_HERE: &str = "süzgeç burada";
+    /// docs/adr/0595 §4: the slider's time asked of the source and checked here.
+    pub const TIME_BOTH: &str = "Zaman sürgüsünün anı kaynakta ve burada";
     pub fn read(shown: usize, total: Option<u64>) -> String {
         match total {
             Some(t) => format!("{shown} / {t} kayıt okundu"),
@@ -174,6 +176,7 @@ impl App {
         else {
             return Task::none();
         };
+        let time = self.source_time(&layer);
         let p = &mut self.features.whole;
         if let Some(stop) = p.running.take() {
             stop.store(true, Ordering::Relaxed);
@@ -208,6 +211,8 @@ impl App {
             expected_stamp: if more { p.stamp.clone() } else { None },
             ..SourcesQuery::default()
         };
+        // A temporal layer's rows at the slider's time (docs/adr/0595 §4).
+        let input = SourcesQuery { time, ..input };
         let settings = doc.model.settings().clone();
         let revision = doc.model.revision().to_string();
         let stop = Arc::new(AtomicBool::new(false));
@@ -370,8 +375,14 @@ impl App {
                 }
                 .to_owned(),
             );
+            if plan.local.iter().any(|l| l == "time") {
+                out.push(words::TIME_BOTH.into());
+            }
             let filtered = plan.local.iter().any(|l| l == "filter");
+            // A time alone sends its own condition, no filter's.
+            let timed_only = !filtered && plan.local.iter().any(|l| l == "time");
             match (&plan.pushed, filtered && !plan.exact) {
+                _ if timed_only => {}
                 (Some(_), false) => out.push(words::FILTER_SENT.into()),
                 (Some(_), true) => out.push(words::FILTER_BOTH.into()),
                 (None, _) if filtered => out.push(words::FILTER_HERE.into()),

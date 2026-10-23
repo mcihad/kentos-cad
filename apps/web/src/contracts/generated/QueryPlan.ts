@@ -23,7 +23,7 @@ pushed?: string,
 exact: boolean, 
 /**
  * What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,
- * `statistics`.
+ * `statistics`, `time` (every record checked by the layer time's rules, docs/adr/0595).
  */
 local: Array<string>, 
 /**

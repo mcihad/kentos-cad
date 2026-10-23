@@ -2,6 +2,7 @@
 import type { QueryNear } from "./QueryNear";
 import type { QueryOrder } from "./QueryOrder";
 import type { QueryScope } from "./QueryScope";
+import type { QueryTime } from "./QueryTime";
 
 /**
  * Input of `cad.sources.query` v1: `layer`, or `path` and `table`.
@@ -76,4 +77,9 @@ order?: QueryOrder,
 /**
  * The file's `stamp` the first page gave back: a later page is read only of the same file (docs/adr/0591 §3).
  */
-expectedStamp?: string, };
+expectedStamp?: string, 
+/**
+ * The records of a valid time and a day known, as `cad.time.query` reads them (docs/adr/0595): the source is sent
+ * a condition that keeps at least them, each record is checked here by the layer time's rules.
+ */
+time?: QueryTime, };

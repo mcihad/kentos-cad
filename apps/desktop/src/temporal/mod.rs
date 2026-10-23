@@ -323,6 +323,54 @@ pub fn scenario_of<'a>(layers: &'a kentos_domain::LayerTree, id: &str) -> Option
 }
 
 impl App {
+    /// The slider's time as a source question asks it of a temporal layer (docs/adr/0595 §4): the window and the day
+    /// known while the slider is open, the layer's own time fields; none for a layer without them or a closed slider.
+    pub(crate) fn source_time(&self, layer: &str) -> Option<kentos_commands::QueryTime> {
+        let s = &self.time.slider;
+        let fields = self
+            .document
+            .as_ref()?
+            .model
+            .layers()
+            .get(layer)?
+            .time
+            .clone()?;
+        let utc = |t: f64| {
+            let w = time::write(t, false);
+            if w.contains('T') { format!("{w}Z") } else { w }
+        };
+        let mut q = kentos_commands::QueryTime {
+            fields: Some(fields.clone()),
+            ..Default::default()
+        };
+        match s.window()? {
+            Window::Instant(a) => q.at = Some(utc(a)),
+            Window::Range(a, b) => {
+                q.from = Some(utc(a));
+                q.to = Some(utc(b));
+            }
+        }
+        if fields.recorded() {
+            q.known_at = s.known_at.map(utc);
+        }
+        Some(q)
+    }
+
+    /// The source questions open on a temporal layer asked again when the slider's time changes (docs/adr/0595 §4):
+    /// the attribute table's Kaynağın tümü and İstatistik's.
+    pub(crate) fn time_sources(&mut self) -> Task<Message> {
+        let mut tasks = Vec::new();
+        if let Some(layer) = self.features.whole.layer.clone()
+            && self.whole_link(Some(&layer)).is_some()
+            && self.features.whole.asked.as_ref().map(|a| a.2.time.clone())
+                != Some(self.source_time(&layer))
+        {
+            tasks.push(self.whole_ask(false));
+        }
+        tasks.push(self.stats_whole());
+        Task::batch(tasks)
+    }
+
     /// The slider's window into the geometry store, which every query and the styled layers follow.
     fn time_apply(&mut self) {
         let window = self.time.slider.window();

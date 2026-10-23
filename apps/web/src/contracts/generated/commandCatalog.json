@@ -1017537,7 +1017537,8 @@
           "invalid_expression",
           "input_too_large",
           "invalid_address",
-          "source_unreachable"
+          "source_unreachable",
+          "invalid_moment"
         ],
         "warnings": [
           "export_losses",
@@ -1022105,6 +1022106,51 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
+            ],
+            "type": "object"
+          },
           "QueryNear": {
             "additionalProperties": false,
             "description": "Records near a place (what a click identifies).",
@@ -1022163,6 +1022209,48 @@
                 "type": "string"
               }
             ]
+          },
+          "QueryTime": {
+            "additionalProperties": false,
+            "description": "A question's time (docs/adr/0595 §1): the valid time at an instant (`at`) or over a period [`from`, `to`), the day\nknown (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table\n(or a layer without them) names them in `fields`.",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fields": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The fields holding the times, as a layer's time settings name them; none: the layer's own."
+              },
+              "from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "knownAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1022301,6 +1022389,17 @@
               "string",
               "null"
             ]
+          },
+          "time": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryTime"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The records of a valid time and a day known, as `cad.time.query` reads them (docs/adr/0595): the source is sent\na condition that keeps at least them, each record is checked here by the layer time's rules."
           }
         },
         "title": "SourcesQuery",
@@ -1022521,7 +1022620,7 @@
                 "type": "boolean"
               },
               "local": {
-                "description": "What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,\n`statistics`.",
+                "description": "What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,\n`statistics`, `time` (every record checked by the layer time's rules, docs/adr/0595).",
                 "items": {
                   "type": "string"
                 },
@@ -1022835,7 +1022934,7 @@
                 "type": "boolean"
               },
               "local": {
-                "description": "What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,\n`statistics`.",
+                "description": "What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,\n`statistics`, `time` (every record checked by the layer time's rules, docs/adr/0595).",
                 "items": {
                   "type": "string"
                 },
@@ -1022941,6 +1023040,10 @@
           "invalid_extent",
           "invalid_tolerance",
           "invalid_cursor",
+          "invalid_period",
+          "invalid_moment",
+          "not_temporal",
+          "not_recorded",
           "invalid_expression",
           "layer_not_found",
           "file_not_found",

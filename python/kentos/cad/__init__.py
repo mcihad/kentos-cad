@@ -1451,6 +1451,7 @@ __all__ = [
     "QueryPlan",
     "QueryScope",
     "QueryScopeName",
+    "QueryTime",
     "RadiusConstraintRule",
     "RadiusDimensionMeasure",
     "RampEntity",

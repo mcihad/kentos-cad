@@ -464,6 +464,118 @@ fn orders_answer_alike_from_postgis() {
     }
 }
 
+/// A question's time from PostGIS (docs/adr/0595): the same records as from the GeoPackage, the dates as texts as written
+/// or as date and timestamptz columns (but the one text a date column cannot hold), the condition sent as a regular
+/// expression on the column's text.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn times_answer_alike_from_postgis() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        eprintln!("KENTOS_PG_URL yok: atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/sources/v1/zaman.gpkg")
+        .display()
+        .to_string();
+    let versions =
+        json!({ "start": "bas", "end": "bit", "recordedStart": "kayit", "recordedEnd": "silindi" });
+    let events = json!({ "start": "zaman" });
+    let questions = [
+        ("surum", json!({ "at": "2021-06-01" }), versions.clone()),
+        ("surum", json!({ "at": "2022-06-01" }), versions.clone()),
+        (
+            "surum",
+            json!({ "from": "2022-01-01", "to": "2023-01-01" }),
+            versions.clone(),
+        ),
+        ("surum", json!({ "at": "2024-03-01" }), versions.clone()),
+        (
+            "surum",
+            json!({ "at": "2022-06-01", "knownAt": "2022-06-02" }),
+            versions.clone(),
+        ),
+        (
+            "surum",
+            json!({ "at": "2022-01-01", "knownAt": "2025-03-01" }),
+            versions.clone(),
+        ),
+        (
+            "surum",
+            json!({ "knownAt": "2022-06-03T10:00:00Z" }),
+            versions.clone(),
+        ),
+        (
+            "olay",
+            json!({ "at": "2024-06-01T10:00:00Z" }),
+            events.clone(),
+        ),
+        (
+            "olay",
+            json!({ "from": "2024-06-01", "to": "2024-06-02" }),
+            events.clone(),
+        ),
+    ];
+    let names = |v: &Value| -> Vec<String> {
+        ok(v)["rows"]
+            .as_array()
+            .expect("rows")
+            .iter()
+            .map(|r| r["attrs"]["ad"].as_str().unwrap_or("").to_owned())
+            .collect()
+    };
+    let mut d = doc();
+    for (table, at, fields) in &questions {
+        let mut time = at.clone();
+        time["fields"] = fields.clone();
+        let asked = |path: &str, table: &str, filter: Option<&str>| {
+            let mut q =
+                json!({ "path": path, "table": table, "time": time.clone(), "limit": 1000 });
+            if let Some(f) = filter {
+                q["filter"] = json!(f);
+            }
+            q
+        };
+        let a = run(
+            &mut d,
+            "cad.sources.query",
+            CallOp::Execute,
+            asked(&file, table, None),
+        );
+        let b = run(
+            &mut d,
+            "cad.sources.query",
+            CallOp::Execute,
+            asked(&url, &format!("zaman.{table}"), None),
+        );
+        assert_eq!(names(&a), names(&b), "{table} {at}");
+        let pushed = ok(&b)["plan"]["pushed"].as_str().unwrap_or("").to_owned();
+        assert!(
+            pushed.contains("!~") && pushed.contains("left(CAST("),
+            "{pushed}"
+        );
+        assert_eq!(ok(&b)["plan"]["local"], json!(["time"]));
+        // The typed columns: the same records, but P4 whose start no date column holds.
+        if *table == "surum" {
+            let a = run(
+                &mut d,
+                "cad.sources.query",
+                CallOp::Execute,
+                asked(&file, table, Some("ad != 'P4'")),
+            );
+            let c = run(
+                &mut d,
+                "cad.sources.query",
+                CallOp::Execute,
+                asked(&url, "zaman.surum_tipli", Some("ad != 'P4'")),
+            );
+            assert_eq!(names(&a), names(&c), "{table} {at}: tipli");
+        }
+        eprintln!("{table} {at}: {:?}", names(&a));
+    }
+}
+
 /// Views, queries and areas (docs/adr/0582): a view and a query bound read-only, keyed by `fid`; a view without a key
 /// refused; a query that would be two statements refused; a table bound by an area holds only the area's rows, and its
 /// area moves.

@@ -224,5 +224,77 @@ fn whole_screens() {
         ev(&mut app, WholeEvent::More);
         answer(&mut app);
         picture(&mut app, "4-burada-suzgec");
+        // The slider's time on the layer (docs/adr/0595 §4): the rows of its month, asked of the source.
+        let _ = app.update(Message::Features(Event::Filter(String::new())));
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        let _ = registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.layers.time",
+            CallOp::Execute,
+            serde_json::json!({ "layer": LAYER, "time": { "start": "tarih" } }),
+        );
+        let _ = app.update(Message::Run("time.slider"));
+        ev(&mut app, WholeEvent::Toggle(false));
+        ev(&mut app, WholeEvent::Toggle(true));
+        answer(&mut app);
+        picture(&mut app, "5-zaman");
     }
+}
+
+/// The slider's time on a temporal bound layer (docs/adr/0595 §4): Kaynağın tümü asks the source for the rows of the
+/// slider's moment, every row it shows is of it, and moving the slider asks again.
+#[test]
+fn the_whole_source_is_read_at_the_sliders_time() {
+    let mut app = scene("tablo-tumu-zaman");
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let set = registry::run(
+        &mut ExecutionContext::new(doc),
+        "cad.layers.time",
+        CallOp::Execute,
+        serde_json::json!({ "layer": LAYER, "time": { "start": "tarih" } }),
+    )
+    .expect("runs");
+    assert_eq!(set["status"], "completed", "{set}");
+    let _ = app.update(Message::Run("time.slider"));
+    assert!(app.time.slider.open, "the slider opens");
+    ev(&mut app, WholeEvent::Toggle(true));
+    let (_, _, first) = app.features.whole.asked.clone().expect("a question");
+    let time = first.time.clone().expect("the slider's time");
+    assert_eq!(
+        time.fields.as_ref().map(|f| f.start.as_str()),
+        Some("tarih")
+    );
+    answer(&mut app);
+    let last = app.features.whole.last.clone().expect("a page");
+    assert!(
+        last.plan.local.iter().any(|l| l == "time"),
+        "{:?}",
+        last.plan
+    );
+    let window = app.time.slider.window().expect("a window");
+    for r in &app.features.whole.rows {
+        let at = r
+            .attrs
+            .get("tarih")
+            .map_or(kentos_geometry_core::time::Read::Empty, |t| {
+                kentos_geometry_core::time::read(t)
+            });
+        if let kentos_geometry_core::time::Read::Moment(t) = at {
+            let shown = kentos_geometry_core::time::Time {
+                s: t,
+                e: t,
+                mode: kentos_geometry_core::time::Mode::Instant,
+            };
+            assert!(kentos_geometry_core::time::shows(&shown, &window), "{r:?}");
+        }
+    }
+    // The slider moves: the question is asked again at its new time.
+    let step = if app.time.slider.position > 0 {
+        crate::temporal::Event::First
+    } else {
+        crate::temporal::Event::Next
+    };
+    let _ = app.update(Message::Time(step));
+    let (_, _, again) = app.features.whole.asked.clone().expect("a question");
+    assert_ne!(again.time, first.time);
 }

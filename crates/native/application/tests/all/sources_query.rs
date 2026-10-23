@@ -418,24 +418,25 @@ fn a_source_input_stops_at_its_cap() {
         table: "nokta",
     };
     let at = "parameters.input";
-    let refused = match stage_at_most(doc.settings(), &from, None, None, at, &|| false, 249) {
+    let refused = match stage_at_most(doc.settings(), &from, None, None, None, at, &|| false, 249) {
         Err(Some(e)) => *e,
         Ok(_) => panic!("250 records went in under a cap of 249"),
         Err(None) => panic!("stopped"),
     };
     assert_eq!(refused.code, "input_too_large");
     assert_eq!(refused.path.as_deref(), Some("parameters.input.table"));
-    let (staging, read) = match stage_at_most(doc.settings(), &from, None, None, at, &|| false, 250)
-    {
-        Ok(s) => s,
-        Err(e) => panic!("{e:?}"),
-    };
+    let (staging, read) =
+        match stage_at_most(doc.settings(), &from, None, None, None, at, &|| false, 250) {
+            Ok(s) => s,
+            Err(e) => panic!("{e:?}"),
+        };
     assert_eq!(staging.objects.len(), 250);
     assert_eq!(read.total, Some(250));
     let (filtered, _) = match stage_at_most(
         doc.settings(),
         &from,
         Some("tur = 'rögar'"),
+        None,
         None,
         at,
         &|| false,

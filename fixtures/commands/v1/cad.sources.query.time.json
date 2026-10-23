@@ -1,0 +1,2551 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.sources.query",
+ "commandVersion": 1,
+ "title": "Kaynağı sorgula: zaman (geçerlilik ve bilinen gün) kaynağa da gider",
+ "note": "Üretici: scripts/fixtures/source_time_cases.py (docs/adr/0595). Kayıtlar zaman.gpkg'den sqlite3'le; kurallar ADR 0210 §4, ADR 0537 ve ADR 0595 §2'den.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Kaynakta zaman",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "an 2021-06-01: P1a, P2, P3, P5, P6",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2021-06-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "09f2b876-d5dd-51e7-8268-261ba9b097de",
+         "key": 1,
+         "attrs": {
+          "ad": "P1a",
+          "bas": "2020-01-01",
+          "bit": "2022-06-01",
+          "kayit": "2020-01-05T09:00:00",
+          "silindi": "2022-06-03T10:00:00"
+         }
+        },
+        {
+         "uid": "48ce0d4f-ae5c-536b-96e4-5c619dec4ed7",
+         "key": 3,
+         "attrs": {
+          "ad": "P2",
+          "bas": "2021-03-01",
+          "bit": "2024-01-01",
+          "kayit": "2025-02-01T08:30:00"
+         }
+        },
+        {
+         "uid": "fecb4700-9e53-5704-83dd-a0049baa97a6",
+         "key": 4,
+         "attrs": {
+          "ad": "P3",
+          "bit": "2023-01-01",
+          "kayit": "2019-05-05T00:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2021-06-02') AND (\"bit\" IS NULL OR \"bit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bit\", 1, 10) >= '2021-05-31')"
+       },
+       "partial": false,
+       "read": 6,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "an 2022-06-01: biten sürümün bitişi dahil değil, yenisinin başlangıcı dahil: P1b, P2, P3, P5, P6",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2022-06-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "55c11fa6-94ee-533d-ac0f-9b967b786bac",
+         "key": 2,
+         "attrs": {
+          "ad": "P1b",
+          "bas": "2022-06-01",
+          "kayit": "2022-06-03T10:00:00"
+         }
+        },
+        {
+         "uid": "48ce0d4f-ae5c-536b-96e4-5c619dec4ed7",
+         "key": 3,
+         "attrs": {
+          "ad": "P2",
+          "bas": "2021-03-01",
+          "bit": "2024-01-01",
+          "kayit": "2025-02-01T08:30:00"
+         }
+        },
+        {
+         "uid": "fecb4700-9e53-5704-83dd-a0049baa97a6",
+         "key": 4,
+         "attrs": {
+          "ad": "P3",
+          "bit": "2023-01-01",
+          "kayit": "2019-05-05T00:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2022-06-02') AND (\"bit\" IS NULL OR \"bit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bit\", 1, 10) >= '2022-05-31')"
+       },
+       "partial": false,
+       "read": 7,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aralık [2022-01-01, 2023-01-01): P1a, P1b, P2, P3, P5, P6",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "from": "2022-01-01",
+       "to": "2023-01-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "09f2b876-d5dd-51e7-8268-261ba9b097de",
+         "key": 1,
+         "attrs": {
+          "ad": "P1a",
+          "bas": "2020-01-01",
+          "bit": "2022-06-01",
+          "kayit": "2020-01-05T09:00:00",
+          "silindi": "2022-06-03T10:00:00"
+         }
+        },
+        {
+         "uid": "55c11fa6-94ee-533d-ac0f-9b967b786bac",
+         "key": 2,
+         "attrs": {
+          "ad": "P1b",
+          "bas": "2022-06-01",
+          "kayit": "2022-06-03T10:00:00"
+         }
+        },
+        {
+         "uid": "48ce0d4f-ae5c-536b-96e4-5c619dec4ed7",
+         "key": 3,
+         "attrs": {
+          "ad": "P2",
+          "bas": "2021-03-01",
+          "bit": "2024-01-01",
+          "kayit": "2025-02-01T08:30:00"
+         }
+        },
+        {
+         "uid": "fecb4700-9e53-5704-83dd-a0049baa97a6",
+         "key": 4,
+         "attrs": {
+          "ad": "P3",
+          "bit": "2023-01-01",
+          "kayit": "2019-05-05T00:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2023-01-02') AND (\"bit\" IS NULL OR \"bit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bit\", 1, 10) >= '2021-12-31')"
+       },
+       "partial": false,
+       "read": 7,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "an 2024-02-29: artık günün tek günlük sürümü: P1b, P4, P5, P6, P7",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2024-02-29",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "55c11fa6-94ee-533d-ac0f-9b967b786bac",
+         "key": 2,
+         "attrs": {
+          "ad": "P1b",
+          "bas": "2022-06-01",
+          "kayit": "2022-06-03T10:00:00"
+         }
+        },
+        {
+         "uid": "fea86c91-0850-5227-a301-31fde62f62f4",
+         "key": 5,
+         "attrs": {
+          "ad": "P4",
+          "bas": "05.05.2023",
+          "kayit": "2023-05-06T12:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "103b0a27-4180-5f99-80ec-ae2184dd218b",
+         "key": 8,
+         "attrs": {
+          "ad": "P7",
+          "bas": "2024-02-29",
+          "bit": "2024-03-01",
+          "kayit": "2024-02-29T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2024-03-01') AND (\"bit\" IS NULL OR \"bit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bit\", 1, 10) >= '2024-02-28')"
+       },
+       "partial": false,
+       "read": 5,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "an 2024-03-01: bitiş anı dahil değil: P1b, P4, P5, P6",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2024-03-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "55c11fa6-94ee-533d-ac0f-9b967b786bac",
+         "key": 2,
+         "attrs": {
+          "ad": "P1b",
+          "bas": "2022-06-01",
+          "kayit": "2022-06-03T10:00:00"
+         }
+        },
+        {
+         "uid": "fea86c91-0850-5227-a301-31fde62f62f4",
+         "key": 5,
+         "attrs": {
+          "ad": "P4",
+          "bas": "05.05.2023",
+          "kayit": "2023-05-06T12:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2024-03-02') AND (\"bit\" IS NULL OR \"bit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bit\", 1, 10) >= '2024-02-29')"
+       },
+       "partial": false,
+       "read": 5,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "an 2019-06-01: başlangıcı boş sürüm başından beri geçerli: P3, P5, P6, P8",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2019-06-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "fecb4700-9e53-5704-83dd-a0049baa97a6",
+         "key": 4,
+         "attrs": {
+          "ad": "P3",
+          "bit": "2023-01-01",
+          "kayit": "2019-05-05T00:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "59742ae6-5364-56d3-94c2-6ad9e15f34a3",
+         "key": 9,
+         "attrs": {
+          "ad": "P8",
+          "bas": "2019-01-01",
+          "bit": "2020-01-01",
+          "kayit": "2019-01-02T00:00:00",
+          "silindi": "2021-01-01T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2019-06-02') AND (\"bit\" IS NULL OR \"bit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bit\", 1, 10) >= '2019-05-31')"
+       },
+       "partial": false,
+       "read": 5,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "01.06.2023'te: ISO olmayan başlangıç kaynakta tutulur, burada okunur: P1b, P2, P4, P5, P6",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2023-06-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "55c11fa6-94ee-533d-ac0f-9b967b786bac",
+         "key": 2,
+         "attrs": {
+          "ad": "P1b",
+          "bas": "2022-06-01",
+          "kayit": "2022-06-03T10:00:00"
+         }
+        },
+        {
+         "uid": "48ce0d4f-ae5c-536b-96e4-5c619dec4ed7",
+         "key": 3,
+         "attrs": {
+          "ad": "P2",
+          "bas": "2021-03-01",
+          "bit": "2024-01-01",
+          "kayit": "2025-02-01T08:30:00"
+         }
+        },
+        {
+         "uid": "fea86c91-0850-5227-a301-31fde62f62f4",
+         "key": 5,
+         "attrs": {
+          "ad": "P4",
+          "bas": "05.05.2023",
+          "kayit": "2023-05-06T12:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2023-06-02') AND (\"bit\" IS NULL OR \"bit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bit\", 1, 10) >= '2023-05-31')"
+       },
+       "partial": false,
+       "read": 5,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "birikimli: başlangıcından beri, bitişi sayılmaz: P1a, P1b, P2, P3, P4, P5, P6, P7, P8",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2025-01-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi",
+        "cumulative": true
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "09f2b876-d5dd-51e7-8268-261ba9b097de",
+         "key": 1,
+         "attrs": {
+          "ad": "P1a",
+          "bas": "2020-01-01",
+          "bit": "2022-06-01",
+          "kayit": "2020-01-05T09:00:00",
+          "silindi": "2022-06-03T10:00:00"
+         }
+        },
+        {
+         "uid": "55c11fa6-94ee-533d-ac0f-9b967b786bac",
+         "key": 2,
+         "attrs": {
+          "ad": "P1b",
+          "bas": "2022-06-01",
+          "kayit": "2022-06-03T10:00:00"
+         }
+        },
+        {
+         "uid": "48ce0d4f-ae5c-536b-96e4-5c619dec4ed7",
+         "key": 3,
+         "attrs": {
+          "ad": "P2",
+          "bas": "2021-03-01",
+          "bit": "2024-01-01",
+          "kayit": "2025-02-01T08:30:00"
+         }
+        },
+        {
+         "uid": "fecb4700-9e53-5704-83dd-a0049baa97a6",
+         "key": 4,
+         "attrs": {
+          "ad": "P3",
+          "bit": "2023-01-01",
+          "kayit": "2019-05-05T00:00:00"
+         }
+        },
+        {
+         "uid": "fea86c91-0850-5227-a301-31fde62f62f4",
+         "key": 5,
+         "attrs": {
+          "ad": "P4",
+          "bas": "05.05.2023",
+          "kayit": "2023-05-06T12:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "103b0a27-4180-5f99-80ec-ae2184dd218b",
+         "key": 8,
+         "attrs": {
+          "ad": "P7",
+          "bas": "2024-02-29",
+          "bit": "2024-03-01",
+          "kayit": "2024-02-29T00:00:00"
+         }
+        },
+        {
+         "uid": "59742ae6-5364-56d3-94c2-6ad9e15f34a3",
+         "key": 9,
+         "attrs": {
+          "ad": "P8",
+          "bas": "2019-01-01",
+          "bit": "2020-01-01",
+          "kayit": "2019-01-02T00:00:00",
+          "silindi": "2021-01-01T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2025-01-02')"
+       },
+       "partial": false,
+       "read": 9,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bilinen gün 2022-06-02, an 2022-06-01: yeni sürüm henüz bilinmiyor: P3, P5, P6",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2022-06-01",
+       "knownAt": "2022-06-02",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "fecb4700-9e53-5704-83dd-a0049baa97a6",
+         "key": 4,
+         "attrs": {
+          "ad": "P3",
+          "bit": "2023-01-01",
+          "kayit": "2019-05-05T00:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2022-06-02') AND (\"bit\" IS NULL OR \"bit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bit\", 1, 10) >= '2022-05-31') AND (\"kayit\" IS NULL OR \"kayit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"kayit\", 1, 10) <= '2022-06-03') AND (\"silindi\" IS NULL OR \"silindi\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"silindi\", 1, 10) >= '2022-06-01')"
+       },
+       "partial": false,
+       "read": 5,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bilinen gün 2024-12-31, an 2022-01-01: geç kaydedilen sürüm bilinmiyor: P3, P5, P6",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2022-01-01",
+       "knownAt": "2024-12-31",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "fecb4700-9e53-5704-83dd-a0049baa97a6",
+         "key": 4,
+         "attrs": {
+          "ad": "P3",
+          "bit": "2023-01-01",
+          "kayit": "2019-05-05T00:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2022-01-02') AND (\"bit\" IS NULL OR \"bit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bit\", 1, 10) >= '2021-12-31') AND (\"kayit\" IS NULL OR \"kayit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"kayit\", 1, 10) <= '2025-01-01') AND (\"silindi\" IS NULL OR \"silindi\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"silindi\", 1, 10) >= '2024-12-30')"
+       },
+       "partial": false,
+       "read": 4,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bilinen gün 2025-03-01, an 2022-01-01: geç kayıt artık biliniyor: P2, P3, P5, P6",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2022-01-01",
+       "knownAt": "2025-03-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "48ce0d4f-ae5c-536b-96e4-5c619dec4ed7",
+         "key": 3,
+         "attrs": {
+          "ad": "P2",
+          "bas": "2021-03-01",
+          "bit": "2024-01-01",
+          "kayit": "2025-02-01T08:30:00"
+         }
+        },
+        {
+         "uid": "fecb4700-9e53-5704-83dd-a0049baa97a6",
+         "key": 4,
+         "attrs": {
+          "ad": "P3",
+          "bit": "2023-01-01",
+          "kayit": "2019-05-05T00:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2022-01-02') AND (\"bit\" IS NULL OR \"bit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bit\", 1, 10) >= '2021-12-31') AND (\"kayit\" IS NULL OR \"kayit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"kayit\", 1, 10) <= '2025-03-02') AND (\"silindi\" IS NULL OR \"silindi\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"silindi\", 1, 10) >= '2025-02-28')"
+       },
+       "partial": false,
+       "read": 5,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız bilinen gün 2020-06-01: P1a, P3, P5, P6, P8",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "knownAt": "2020-06-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "09f2b876-d5dd-51e7-8268-261ba9b097de",
+         "key": 1,
+         "attrs": {
+          "ad": "P1a",
+          "bas": "2020-01-01",
+          "bit": "2022-06-01",
+          "kayit": "2020-01-05T09:00:00",
+          "silindi": "2022-06-03T10:00:00"
+         }
+        },
+        {
+         "uid": "fecb4700-9e53-5704-83dd-a0049baa97a6",
+         "key": 4,
+         "attrs": {
+          "ad": "P3",
+          "bit": "2023-01-01",
+          "kayit": "2019-05-05T00:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "59742ae6-5364-56d3-94c2-6ad9e15f34a3",
+         "key": 9,
+         "attrs": {
+          "ad": "P8",
+          "bas": "2019-01-01",
+          "bit": "2020-01-01",
+          "kayit": "2019-01-02T00:00:00",
+          "silindi": "2021-01-01T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"kayit\" IS NULL OR \"kayit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"kayit\", 1, 10) <= '2020-06-02') AND (\"silindi\" IS NULL OR \"silindi\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"silindi\", 1, 10) >= '2020-05-31')"
+       },
+       "partial": false,
+       "read": 5,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bilinen gün, kayıt anının kendisi dahil: P1b, P3, P5, P6",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "knownAt": "2022-06-03T10:00:00Z",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "55c11fa6-94ee-533d-ac0f-9b967b786bac",
+         "key": 2,
+         "attrs": {
+          "ad": "P1b",
+          "bas": "2022-06-01",
+          "kayit": "2022-06-03T10:00:00"
+         }
+        },
+        {
+         "uid": "fecb4700-9e53-5704-83dd-a0049baa97a6",
+         "key": 4,
+         "attrs": {
+          "ad": "P3",
+          "bit": "2023-01-01",
+          "kayit": "2019-05-05T00:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"kayit\" IS NULL OR \"kayit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"kayit\", 1, 10) <= '2022-06-04') AND (\"silindi\" IS NULL OR \"silindi\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"silindi\", 1, 10) >= '2022-06-02')"
+       },
+       "partial": false,
+       "read": 5,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "an 2024-06-01T10:00Z: bölgesiyle aynı an da: O1, O2, O5, O8",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "olay",
+      "time": {
+       "at": "2024-06-01T10:00:00Z",
+       "fields": {
+        "start": "zaman"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "45ffd5f5-409f-59f3-949d-5fc1e4bf071e",
+         "key": 1,
+         "attrs": {
+          "ad": "O1",
+          "zaman": "2024-06-01T10:00:00Z"
+         }
+        },
+        {
+         "uid": "50bdaea4-85a3-5b03-9f1b-4663b534cd42",
+         "key": 2,
+         "attrs": {
+          "ad": "O2",
+          "zaman": "2024-06-01T13:00:00+03:00"
+         }
+        },
+        {
+         "uid": "eb7b7beb-3dad-5375-97e5-100eacda0b48",
+         "key": 5,
+         "attrs": {
+          "ad": "O5"
+         }
+        },
+        {
+         "uid": "91c3d6e9-88b8-577f-bdbe-c2909c1e9b87",
+         "key": 8,
+         "attrs": {
+          "ad": "O8",
+          "zaman": "yarın"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "zaman"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"zaman\" IS NULL OR \"zaman\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"zaman\", 1, 10) <= '2024-06-02') AND (\"zaman\" IS NULL OR \"zaman\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"zaman\", 1, 10) >= '2024-05-31')"
+       },
+       "partial": false,
+       "read": 9,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "an 2024-06-01: gece yarısı, Türkçe tarih de: O3, O4, O5, O8",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "olay",
+      "time": {
+       "at": "2024-06-01",
+       "fields": {
+        "start": "zaman"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "f9de58bc-656a-5b61-9f3d-11c4152bcf65",
+         "key": 3,
+         "attrs": {
+          "ad": "O3",
+          "zaman": "2024-06-01"
+         }
+        },
+        {
+         "uid": "49caab0d-00ce-5d48-a863-6005e4e8b5cf",
+         "key": 4,
+         "attrs": {
+          "ad": "O4",
+          "zaman": "01.06.2024"
+         }
+        },
+        {
+         "uid": "eb7b7beb-3dad-5375-97e5-100eacda0b48",
+         "key": 5,
+         "attrs": {
+          "ad": "O5"
+         }
+        },
+        {
+         "uid": "91c3d6e9-88b8-577f-bdbe-c2909c1e9b87",
+         "key": 8,
+         "attrs": {
+          "ad": "O8",
+          "zaman": "yarın"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "zaman"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"zaman\" IS NULL OR \"zaman\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"zaman\", 1, 10) <= '2024-06-02') AND (\"zaman\" IS NULL OR \"zaman\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"zaman\", 1, 10) >= '2024-05-31')"
+       },
+       "partial": false,
+       "read": 9,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aralık [2024-06-01, 2024-06-02): bölgeli, okunmayan ve boş: O1, O2, O3, O4, O5, O6, O7, O8",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "olay",
+      "time": {
+       "from": "2024-06-01",
+       "to": "2024-06-02",
+       "fields": {
+        "start": "zaman"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "45ffd5f5-409f-59f3-949d-5fc1e4bf071e",
+         "key": 1,
+         "attrs": {
+          "ad": "O1",
+          "zaman": "2024-06-01T10:00:00Z"
+         }
+        },
+        {
+         "uid": "50bdaea4-85a3-5b03-9f1b-4663b534cd42",
+         "key": 2,
+         "attrs": {
+          "ad": "O2",
+          "zaman": "2024-06-01T13:00:00+03:00"
+         }
+        },
+        {
+         "uid": "f9de58bc-656a-5b61-9f3d-11c4152bcf65",
+         "key": 3,
+         "attrs": {
+          "ad": "O3",
+          "zaman": "2024-06-01"
+         }
+        },
+        {
+         "uid": "49caab0d-00ce-5d48-a863-6005e4e8b5cf",
+         "key": 4,
+         "attrs": {
+          "ad": "O4",
+          "zaman": "01.06.2024"
+         }
+        },
+        {
+         "uid": "eb7b7beb-3dad-5375-97e5-100eacda0b48",
+         "key": 5,
+         "attrs": {
+          "ad": "O5"
+         }
+        },
+        {
+         "uid": "6a721efe-ecc1-5931-ba8c-698332aff758",
+         "key": 6,
+         "attrs": {
+          "ad": "O6",
+          "zaman": "2024-06-01T09:59:59Z"
+         }
+        },
+        {
+         "uid": "bd77808d-9a19-5d8a-ae27-07e5458c5047",
+         "key": 7,
+         "attrs": {
+          "ad": "O7",
+          "zaman": "2024-05-31T23:30:00-05:00"
+         }
+        },
+        {
+         "uid": "91c3d6e9-88b8-577f-bdbe-c2909c1e9b87",
+         "key": 8,
+         "attrs": {
+          "ad": "O8",
+          "zaman": "yarın"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "zaman"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"zaman\" IS NULL OR \"zaman\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"zaman\", 1, 10) <= '2024-06-03') AND (\"zaman\" IS NULL OR \"zaman\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"zaman\", 1, 10) >= '2024-05-31')"
+       },
+       "partial": false,
+       "read": 9,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aralık bölgeli bir anda başlar: O5, O6, O7, O8",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "olay",
+      "time": {
+       "from": "2024-06-01T04:30:00Z",
+       "to": "2024-06-01T10:00:00Z",
+       "fields": {
+        "start": "zaman"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "eb7b7beb-3dad-5375-97e5-100eacda0b48",
+         "key": 5,
+         "attrs": {
+          "ad": "O5"
+         }
+        },
+        {
+         "uid": "6a721efe-ecc1-5931-ba8c-698332aff758",
+         "key": 6,
+         "attrs": {
+          "ad": "O6",
+          "zaman": "2024-06-01T09:59:59Z"
+         }
+        },
+        {
+         "uid": "bd77808d-9a19-5d8a-ae27-07e5458c5047",
+         "key": 7,
+         "attrs": {
+          "ad": "O7",
+          "zaman": "2024-05-31T23:30:00-05:00"
+         }
+        },
+        {
+         "uid": "91c3d6e9-88b8-577f-bdbe-c2909c1e9b87",
+         "key": 8,
+         "attrs": {
+          "ad": "O8",
+          "zaman": "yarın"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "zaman"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"zaman\" IS NULL OR \"zaman\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"zaman\", 1, 10) <= '2024-06-02') AND (\"zaman\" IS NULL OR \"zaman\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"zaman\", 1, 10) >= '2024-05-31')"
+       },
+       "partial": false,
+       "read": 9,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sayım: P1a, P2, P3, P5, P6",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2021-06-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      },
+      "count": true,
+      "limit": 0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2021-06-02') AND (\"bit\" IS NULL OR \"bit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bit\", 1, 10) >= '2021-05-31')"
+       },
+       "partial": false,
+       "read": 6,
+       "stamp": "$any",
+       "revision": "$current",
+       "total": 5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "süzgeçle: P1a, P2, P3, P5, P6",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2021-06-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      },
+      "filter": "ad = 'P2'"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "48ce0d4f-ae5c-536b-96e4-5c619dec4ed7",
+         "key": 3,
+         "attrs": {
+          "ad": "P2",
+          "bas": "2021-03-01",
+          "bit": "2024-01-01",
+          "kayit": "2025-02-01T08:30:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "filter",
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"ad\" = 'P2') AND (\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2021-06-02') AND (\"bit\" IS NULL OR \"bit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bit\", 1, 10) >= '2021-05-31')"
+       },
+       "partial": false,
+       "read": 1,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağlı katmanın kendi zaman ayarı, kaynağın tümü: P2, P3, P5, P6",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:sources/v1/zaman.gpkg",
+       "table": "surum"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-surum",
+      "time": {
+       "start": "bas",
+       "end": "bit",
+       "recordedStart": "kayit",
+       "recordedEnd": "silindi"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.layers.time"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-surum",
+      "scope": "source",
+      "time": {
+       "at": "2022-01-01",
+       "knownAt": "2025-03-01"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "layer": "import-surum",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "48ce0d4f-ae5c-536b-96e4-5c619dec4ed7",
+         "key": 3,
+         "attrs": {
+          "ad": "P2",
+          "bas": "2021-03-01",
+          "bit": "2024-01-01",
+          "kayit": "2025-02-01T08:30:00"
+         }
+        },
+        {
+         "uid": "fecb4700-9e53-5704-83dd-a0049baa97a6",
+         "key": 4,
+         "attrs": {
+          "ad": "P3",
+          "bit": "2023-01-01",
+          "kayit": "2019-05-05T00:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "key": 6,
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "key": 7,
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "bas",
+         "bit",
+         "kayit",
+         "silindi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "key",
+        "pushed": "(\"bas\" IS NULL OR \"bas\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bas\", 1, 10) <= '2022-01-02') AND (\"bit\" IS NULL OR \"bit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"bit\", 1, 10) >= '2021-12-31') AND (\"kayit\" IS NULL OR \"kayit\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"kayit\", 1, 10) <= '2025-03-02') AND (\"silindi\" IS NULL OR \"silindi\" NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*' OR substr(\"silindi\", 1, 10) >= '2025-02-28')"
+       },
+       "partial": false,
+       "read": 5,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağlı katmanın çalışma kopyası aynı kuralla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:sources/v1/zaman.gpkg",
+       "table": "surum"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-surum",
+      "time": {
+       "start": "bas",
+       "end": "bit",
+       "recordedStart": "kayit",
+       "recordedEnd": "silindi"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.layers.time"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-surum",
+      "time": {
+       "at": "2022-01-01",
+       "knownAt": "2025-03-01"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "drawing",
+        "layer": "import-surum",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "48ce0d4f-ae5c-536b-96e4-5c619dec4ed7",
+         "attrs": {
+          "ad": "P2",
+          "bas": "2021-03-01",
+          "bit": "2024-01-01",
+          "kayit": "2025-02-01T08:30:00"
+         }
+        },
+        {
+         "uid": "b42774d7-3c24-5134-a814-d28d70755dfd",
+         "attrs": {
+          "ad": "P6",
+          "bas": "bilinmiyor",
+          "kayit": "2020-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "ec170157-f871-56b2-81bd-30d6b3b09724",
+         "attrs": {
+          "ad": "P5",
+          "kayit": "2018-01-01T00:00:00"
+         }
+        },
+        {
+         "uid": "fecb4700-9e53-5704-83dd-a0049baa97a6",
+         "attrs": {
+          "ad": "P3",
+          "bit": "2023-01-01",
+          "kayit": "2019-05-05T00:00:00"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "time"
+        ],
+        "order": "uid"
+       },
+       "partial": false,
+       "read": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İşlemler'in girdisi kaynaktan zamanla okunur: 5 sürüm, 5 nokta",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "time": {
+         "at": "2021-06-01",
+         "fields": {
+          "start": "bas",
+          "end": "bit",
+          "recordedStart": "kayit",
+          "recordedEnd": "silindi"
+         }
+        }
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "convert.toPoints",
+       "summary": "5 nesneden 5 nokta yazıldı.",
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "outputs": {
+        "count": 5
+       },
+       "inputs": [
+        {
+         "layer": "kaynak-input",
+         "digest": "$any",
+         "revision": "fddbda343573521c6df4a98cec259e29d756d0b6adfa06f5cc2d3b5b216a18da",
+         "table": "zaman.gpkg › surum",
+         "rows": 5,
+         "path": "$fixture:sources/v1/zaman.gpkg"
+        }
+       ],
+       "record": "$any",
+       "revision": "$current",
+       "layers": [
+        "islem-merkezler"
+       ],
+       "sink": "$any",
+       "sinkReport": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.processing.run"
+    }
+   ]
+  },
+  {
+   "name": "ret: İşlemler'in girdisinin anı okunmuyor",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/zaman.gpkg",
+        "table": "surum",
+        "time": {
+         "at": "dün",
+         "fields": {
+          "start": "bas",
+          "end": "bit",
+          "recordedStart": "kayit",
+          "recordedEnd": "silindi"
+         }
+        }
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_moment",
+       "message": "“dün” bir an değil: bir tarih (2024-06-01 ya da 01.06.2024) ya da tarih ve saat (2024-06-01T14:30, bölgesiyle 2024-06-01T14:30+03:00) yazın.",
+       "path": "parameters.input.time.at"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.processing.run"
+    }
+   ]
+  },
+  {
+   "name": "ret: an ve aralık birden",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2021-01-01",
+       "from": "2021-01-01",
+       "to": "2022-01-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_period",
+       "message": "Geçerlilik zamanı ya bir an (at) ya bir aralıktır (from ve to); ikisi birden verilmez.",
+       "path": "time.at"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: bitişsiz aralık",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "from": "2021-01-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_period",
+       "message": "Aralığın başlangıcı (from) ve bitişi (to) birlikte verilir.",
+       "path": "time.to"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: ters aralık",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "from": "2022-01-01",
+       "to": "2021-01-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_period",
+       "message": "Aralığın bitişi başlangıcından sonra olmalı; [from, to) bitişi içermez.",
+       "path": "time.to"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: an değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "dün",
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_moment",
+       "message": "“dün” bir an değil: bir tarih (2024-06-01 ya da 01.06.2024) ya da tarih ve saat (2024-06-01T14:30, bölgesiyle 2024-06-01T14:30+03:00) yazın.",
+       "path": "time.at"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: boş zaman sorusu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "fields": {
+        "start": "bas",
+        "end": "bit",
+        "recordedStart": "kayit",
+        "recordedEnd": "silindi"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_period",
+       "message": "Zaman sorusunda bir an (at), bir aralık (from, to) ya da bilinen gün (knownAt) verin.",
+       "path": "time"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: kayıt zamanı olmadan bilinen gün",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "knownAt": "2022-01-01",
+       "fields": {
+        "start": "bas",
+        "end": "bit"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_recorded",
+       "message": "Zaman alanları sürümlerin kayıt zamanını tutmuyor; bilinen günle sormak için kayıt başlangıcı alanını (recordedStart) verin.",
+       "path": "time.knownAt"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: tablonun zaman alanları yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2022-01-01"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_temporal",
+       "message": "Tablonun zaman ayarı yok; zaman alanlarını (time.fields: start, isteğe bağlı end, recordedStart) verin.",
+       "path": "time.fields"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: başlangıç ve bitiş aynı alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2022-01-01",
+       "fields": {
+        "start": "bas",
+        "end": "bas"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Zaman alanları: başlangıç ve bitiş aynı alan olamaz.",
+       "path": "time.fields"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: bitiş alanı tabloda yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/zaman.gpkg",
+      "table": "surum",
+      "time": {
+       "at": "2022-01-01",
+       "fields": {
+        "start": "bas",
+        "end": "son"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "field_not_found",
+       "message": "“son” sütunu “surum” tablosunda yok.",
+       "path": "time.fields.end"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: zaman ayarı olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:sources/v1/zaman.gpkg",
+       "table": "surum"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-surum",
+      "scope": "source",
+      "time": {
+       "at": "2022-01-01"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_temporal",
+       "message": "Katmanın zaman ayarı yok; zaman alanlarını (time.fields: start, isteğe bağlı end, recordedStart) verin.",
+       "path": "time.fields"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

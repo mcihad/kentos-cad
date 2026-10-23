@@ -3479,6 +3479,8 @@ const ENTRIES: &[Entry] = &[
             "input_too_large",
             "invalid_address",
             "source_unreachable",
+            // docs/adr/0595: an input's time.
+            "invalid_moment",
         ]],
         warnings: &["export_losses", "partial_scope"],
         targets: none,
@@ -3645,6 +3647,11 @@ const ENTRIES: &[Entry] = &[
                 "invalid_extent",
                 "invalid_tolerance",
                 "invalid_cursor",
+                // docs/adr/0595: the question's time.
+                "invalid_period",
+                "invalid_moment",
+                "not_temporal",
+                "not_recorded",
             ],
             &[
                 "invalid_expression",

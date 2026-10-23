@@ -160,8 +160,37 @@ pub(crate) fn stage_inputs(
                 table: &table,
             },
         };
+        // The input's time (docs/adr/0595 §3): a bound layer's own time fields unless it names them.
+        let time = match v.get("time") {
+            None => None,
+            Some(t) => {
+                let mut q: kentos_commands::QueryTime =
+                    serde_json::from_value(t.clone()).map_err(|e| {
+                        Some(refused(
+                            codes::INVALID_PARAMETERS,
+                            format!("“{name}”: zaman (time) okunamadı: {e}."),
+                            format!("{at}.time"),
+                        ))
+                    })?;
+                if q.fields.is_none() {
+                    q.fields = link
+                        .as_ref()
+                        .and_then(|l| copy.layers().get(&l.layer))
+                        .and_then(|n| n.time.clone());
+                }
+                Some(q)
+            }
+        };
         let settings = copy.settings().clone();
-        let (staging, read) = stage(&settings, &from, filter.as_deref(), bbox, &at, stop)?;
+        let (staging, read) = stage(
+            &settings,
+            &from,
+            filter.as_deref(),
+            bbox,
+            time.as_ref(),
+            &at,
+            stop,
+        )?;
         let database = matches!(link.as_ref().map(|l| l.kind), Some(SourceKind::Postgis))
             || path.starts_with("postgres://")
             || path.starts_with("postgresql://");
