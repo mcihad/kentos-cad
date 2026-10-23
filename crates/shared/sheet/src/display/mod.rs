@@ -814,6 +814,12 @@ fn sheet_scope(
         ..Scope::default()
     };
     builtins(book, sheet, inputs, &mut scope);
+    if let Some(info) = &sheet.drawing_info {
+        let title = if info.title.is_empty() { &sheet.name } else { &info.title };
+        for (name, value) in [("pafta_no", info.number.clone()), ("pafta_basligi", title.clone()), ("revizyon", info.revision.clone()), ("pafta_durumu", info.status.clone()), ("alt_kume", info.subset.join(" / "))] {
+            scope.extra.push((crate::expr::fold(name), VarValue::Text(value)));
+        }
+    }
     // Maps first: their bound views decide `@olcek` and what scale bars and north arrows read.
     let mut drawn: Vec<(Item, bool)> = Vec::new();
     for (it, master) in scene.all() {

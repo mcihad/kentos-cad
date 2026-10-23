@@ -2,6 +2,7 @@
 import type { AppliedPageSetup } from "./AppliedPageSetup";
 import type { Atlas } from "./Atlas";
 import type { BaseLayout } from "./BaseLayout";
+import type { DrawingInfo } from "./DrawingInfo";
 import type { ExportDefaults } from "./ExportDefaults";
 import type { Guide } from "./Guide";
 import type { Item } from "./Item";
@@ -14,7 +15,11 @@ import type { Variable } from "./Variable";
 /**
  * One sheet (pafta): its paper, items, guides and how it is exported.
  */
-export type Sheet = { plot?: AppliedPageSetup, id: string, name: string, page: Page,
+export type Sheet = {
+/**
+ * Standard drawing-set identity; absent in older books.
+ */
+drawingInfo?: DrawingInfo, plot?: AppliedPageSetup, id: string, name: string, page: Page,
 /**
  * The master page drawn under this sheet's items.
  */

@@ -338,6 +338,7 @@ impl Designer {
             Message::Printable(on) => self.patch_chosen(json!({ "printable": on })),
 
             Message::PageSetup(m) => self.page_setup_update(m),
+            Message::DrawingSet(m) => self.drawing_set_update(m),
             Message::PlotProfiles(m) => self.plot_profiles_update(m),
             Message::Paper(p) => self.set_paper(Some(p), None),
             Message::Orientation(o) => self.set_paper(None, Some(o)),

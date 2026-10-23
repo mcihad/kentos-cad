@@ -25,6 +25,7 @@ pub mod binding;
 pub mod constraint;
 pub mod designer;
 pub mod export;
+pub mod drawing_set;
 pub mod export_pdf;
 pub mod fonts;
 pub mod gallery;

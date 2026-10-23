@@ -218,6 +218,10 @@ impl SheetBook {
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSheet"))]
 pub struct Sheet {
+    /// Standard drawing-set identity; absent in older books.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing_info: Option<crate::drawing_set::DrawingInfo>,
     #[serde(default,skip_serializing_if="Option::is_none")]
     #[cfg_attr(feature="ts",ts(optional))]
     pub plot: Option<crate::print_setup::AppliedPageSetup>,

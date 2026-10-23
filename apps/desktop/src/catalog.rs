@@ -548,6 +548,7 @@ pub const PORTED: &[&str] = &[
     "tool.reshape",
     // Modele dön (MODEL): the sheet mode's own, from a sheet back to the drawing (docs/adr/0164).
     "sheet.model",
+    "sheet.drawingSet",
     // Şablonla çiz (docs/adr/0176 §3): an object template's layer, colour and tool (templates.rs).
     "template.draw",
     // Şablonlar: the templates' panel in the dock (templates_panel.rs, docs/adr/0176 §4).

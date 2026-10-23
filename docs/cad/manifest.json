@@ -7105,6 +7105,22 @@
    "tests": 0
   },
   {
+   "id": "sheet.drawingSet",
+   "kind": "command",
+   "title": "Pafta seti…",
+   "level": "semantic",
+   "via": [
+    "cad.sheets.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sheets.edit",
+   "mcp": "cad.sheets.edit",
+   "note": "setDrawingInfo/setDrawingSet işlemleri, metadata antet alanları ve canlı drawingSet tablo kaynağı; Python/MCP aynı tipli işlemleri kullanır.",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "sheet.duplicate",
    "kind": "command",
    "title": "Paftayı çoğalt",

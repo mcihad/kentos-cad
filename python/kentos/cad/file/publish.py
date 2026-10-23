@@ -78,7 +78,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
             layers:
             mode:
             name: One PDF's leaf name; .pdf is appended when missing.
-            naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}. Collisions get a stable numeric suffix.
+            naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
             pin: A plan's immutable document pin; changed source refuses publication before any file is exposed.
             sheets: None means every sheet; an explicit list is used in exactly its supplied order.
             request_id: Names this write: sent again with the same call it is answered as

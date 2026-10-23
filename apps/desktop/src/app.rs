@@ -2493,6 +2493,12 @@ impl App {
             return self.start_tool(tool);
         }
         // Modele dön (MODEL), as the web's: the sheet mode's own message (docs/adr/0164).
+        if id == "sheet.drawingSet" {
+            if self.sheets.book().sheets.is_empty() { self.warn("Önce bir pafta oluşturun."); return Task::none(); }
+            let show = if self.sheets.is_active() { Task::none() } else { self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(1))) };
+            let open = self.update(Message::Sheet(kentos_sheet_ui::Message::DrawingSet(kentos_sheet_ui::drawing_set::SetMessage::Open)));
+            return Task::batch([show,open]);
+        }
         if id == "sheet.model" {
             if !self.sheets.is_active() {
                 self.output("Model zaten önde.");

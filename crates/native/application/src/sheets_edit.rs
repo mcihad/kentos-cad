@@ -146,6 +146,7 @@ pub fn sheets_of_with_views(
     book.sheets
         .iter()
         .map(|s| SheetInfo {
+            drawing_info: s.drawing_info.clone(),
             id: s.id.clone(),
             name: s.name.clone(),
             width: f64::from(s.page.size.width) / 1000.0,

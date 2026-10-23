@@ -72,6 +72,7 @@ impl Designer {
             Dialog::Variables(d) => self.variables_view(d),
             Dialog::ViewportClip(d) => self.viewport_clip_view(d),
             Dialog::PageSetup(d) => self.page_setup_view(d),
+            Dialog::DrawingSet(d) => self.drawing_set_view(d),
             Dialog::PlotProfiles(d) => self.plot_profiles_view(d),
             Dialog::Binding(d) => self.binding_view(d),
             Dialog::Import {

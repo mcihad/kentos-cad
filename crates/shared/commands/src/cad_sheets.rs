@@ -90,6 +90,9 @@ pub struct SheetMapInfo {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SheetInfo {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing_info: Option<kentos_contracts::DrawingInfo>,
     pub id: String,
     pub name: String,
     /// The page's width and height, millimetres.

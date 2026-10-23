@@ -24,3 +24,5 @@ mod document_quality;
 mod preview;
 
 mod calibration;
+
+mod drawing_set;

@@ -242,6 +242,7 @@ pub enum Message {
 
     // ── The page ──
     PageSetup(crate::page_setup::SetupMessage),
+    DrawingSet(crate::drawing_set::SetMessage),
     PlotProfiles(crate::plot_profiles::PlotMessage),
     Paper(Paper),
     Orientation(Orientation),

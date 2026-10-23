@@ -852,6 +852,10 @@ fn kind(path: &str, item: &Item) -> Result<()> {
                     range(&format!("{p}.columns[{c}].decimals"), d, 0, 9, "Ondalık")?;
                 }
             }
+            if let TableSource::DrawingSet(index) = &t.source {
+                crate::drawing_set::validate_subset(&index.subset, &p)?;
+                if t.columns.len() != 6 { return Err(err("bad_drawing_index", &p, "Pafta/görünüm dizini altı standart sütun taşır: numara, başlık, revizyon, durum, alt küme, görünüm.")); }
+            }
             if let TableSource::Fixed(f) = &t.source {
                 for (r, row) in f.rows.iter().enumerate() {
                     if row.len() > t.columns.len().max(1) {
@@ -1291,6 +1295,7 @@ fn guides(path: &str, gs: &[Guide]) -> Result<()> {
 
 /// Every rule of the book; the first one broken is the error.
 pub fn validate_book(book: &SheetBook) -> Result<()> {
+    crate::drawing_set::validate_book(book)?;
     crate::print_setup::validate_book(book)?;
     crate::plot_profile::validate_book(book)?;
     if book.schema != BOOK_SCHEMA {

@@ -2495,3 +2495,52 @@ fn sheet25_publish_screens() {
         snap.render(app.view(), &app.theme()).save(out.join(format!("sheet25-ready-{theme}-{text}.png"))).unwrap();
     }
 }
+
+#[test]
+fn sheet26_desktop_drawing_set_fields_and_live_index_have_one_paper_undo() {
+    use kentos_sheet_ui::drawing_set::{SetMessage as E,Field};
+    let mut app=multipage_set_app("light",13);let before=kept(&app).unwrap();
+    for event in [E::Open,E::Edit(Field::Number,"A-001".into()),E::Edit(Field::Title,"Merkez plan".into()),E::Edit(Field::Revision,"B".into()),E::Edit(Field::Status,"Kontrol".into()),E::Edit(Field::Subset,"Mimari / Planlar".into()),E::InsertIndex]{sheet(&mut app,Sheet::DrawingSet(event));}
+    let after=kept(&app).unwrap();let info=after.sheets[0].drawing_info.as_ref().unwrap();
+    assert_eq!(info.number,"A-001");assert_eq!(info.subset,["Mimari","Planlar"]);
+    assert!(after.sheets[0].items.iter().any(|it|matches!(&it.kind,kentos_sheet::ItemKind::Table(t) if matches!(t.source,kentos_sheet::TableSource::DrawingSet(_)))));
+    history_key(&mut app,true);assert_eq!(kept(&app).unwrap(),before);
+    history_key(&mut app,false);assert_eq!(kept(&app).unwrap(),after);
+}
+
+#[test]
+#[ignore = "GPU drawing set editor and live output, run alone"]
+fn sheet26_drawing_set_screens() {
+    use kentos_sheet_ui::drawing_set::{SetMessage as E,Field};
+    crate::drawing_fonts::load();kentos_ui::theme::motion::set_reduced(true);
+    let out=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme,text) in [("light",13),("dark",13),("dark",18)] {
+        let mut app=multipage_set_app(theme,text);
+        let _=app.run("sheet.drawingSet");
+        for event in [E::Edit(Field::Number,"A-001".into()),E::Edit(Field::Title,"Zemin kat planı".into()),E::Edit(Field::Revision,"R02".into()),E::Edit(Field::Status,"Kontrol".into()),E::Edit(Field::Subset,"Mimari / Kat planları".into()),E::Select(2),E::Edit(Field::Number,"A-101".into()),E::Edit(Field::Title,"Kat planı".into()),E::Select(0)]{sheet(&mut app,Sheet::DrawingSet(event));}
+        let mut snap=kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100.,720.)).unwrap();
+        let mut update=|app:&mut App,m:Message|{let _=app.update(m);};
+        snap.settle(&mut app,App::view,&mut update);
+        use kentos_ui::snapshot::Input;
+        snap.input(&mut app,App::view,&mut update,Input::Click(iced::Point::new(900.,if text==18{320.}else{309.})));
+        snap.input(&mut app,App::view,&mut update,Input::Key(iced::keyboard::key::Named::End));
+        snap.input(&mut app,App::view,&mut update,Input::Type("-K".into()));
+        snap.render(app.view(),&app.theme()).save(out.join(format!("sheet26-set-{theme}-{text}.png"))).unwrap();
+        snap.input(&mut app,App::view,&mut update,Input::Click(iced::Point::new(if text==18{850.}else{800.},if text==18{614.}else{580.})));
+        assert_eq!(kept(&app).unwrap().sheets[0].drawing_info.as_ref().unwrap().revision,"R02-K","the real field and insert button must work");
+        assert!(app.sheets.error().is_none(),"{:?}",app.sheets.error());
+        snap.settle(&mut app,App::view,&mut update);
+        snap.render(app.view(),&app.theme()).save(out.join(format!("sheet26-index-{theme}-{text}.png"))).unwrap();
+        if theme=="light" {app.sheet_export_to(kentos_sheet_ui::ExportKind::Pdf,Some(out.join("sheet26-index.pdf")));}
+    }
+}
+
+
+#[test]
+fn sheet26_drawing_set_command_opens_from_model_without_a_hidden_dialog() {
+    let mut app=multipage_set_app("light",13);sheet(&mut app,Sheet::Model);assert!(!app.sheets.is_active());
+    let task=app.run("sheet.drawingSet");drive(&mut app,task);assert!(app.sheets.is_active());
+    sheet(&mut app,Sheet::DrawingSet(kentos_sheet_ui::drawing_set::SetMessage::Edit(kentos_sheet_ui::drawing_set::Field::Number,"A-001".into())));
+    sheet(&mut app,Sheet::DrawingSet(kentos_sheet_ui::drawing_set::SetMessage::Save));
+    assert_eq!(kept(&app).unwrap().sheets[0].drawing_info.as_ref().unwrap().number,"A-001");
+}

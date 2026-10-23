@@ -447,6 +447,26 @@ for (const f of files('kpafta/invalid')) {
  }
 }
 
+// CAD-SHEET-26: the existing generic operation/display bindings consume the independent metadata/index reference.
+{
+ const fx=json('drawing-set.json');
+ for(const c of fx.cases){
+  const before=bookText(c.book,c.name);
+  const answer=engine.applyOps(before,JSON.stringify(c.ops));
+  if(c.code){assert.equal(refused(answer,c.name).code,c.code);count('drawing-set');continue;}
+  const a=ok(answer,c.name);
+  assert.deepStrictEqual(Object.fromEntries(a.book.sheets.map(s=>[s.id,s.drawingInfo??null])),c.metadata,c.name);
+  assert.equal(digest(ok(engine.applyOps(JSON.stringify(a.book),JSON.stringify(a.inverse)),c.name).book,c.name),digest(before,c.name));
+  const drawn=structuredClone(a.book), sheet=drawn.sheets[0];
+  sheet.page={paper:'custom',orientation:'portrait',size:{width:5000000,height:5000000},margins:{left:0,right:0,top:0,bottom:0}};
+  sheet.items.push({id:'drawing-set-smoke-index',name:'Dizin',frame:{left:0,top:0,width:4000000,height:4000000},kind:{type:'table',source:{type:'drawingSet',...c.index},columns:['No','Title','Rev','Status','Subset','View'].map(heading=>({heading}))}});
+  const list=ok(engine.displayList(JSON.stringify(drawn),sheet.id,JSON.stringify({namedViews:fx.namedViews})),c.name);
+  const words=list.prims.filter(p=>p.type==='text'&&p.item==='drawing-set-smoke-index').map(p=>p.text).join('').replace(/\s/g,'');
+  for(const row of c.rows)for(const cell of row)if(cell)assert.ok(words.includes(cell.replace(/\s/g,'')),`${c.name}: missing literal cell ${cell}`);
+  count('drawing-set');
+ }
+}
+
 const info = ok(engine.engineInfo(), 'engineInfo');
 console.log(
   `Pafta çekirdeği WASM ${info.version} (${info.bookSchema}): ` +

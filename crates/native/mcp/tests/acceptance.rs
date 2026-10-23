@@ -1084,3 +1084,21 @@ fn an_agent_plans_and_publishes_a_pinned_sheet_delivery() {
     assert_eq!(before["objects"],after["objects"]);
     std::fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn an_agent_edits_drawing_set_fields_and_queries_the_persisted_standard_identity() {
+    let fx:Value=serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/drawing-set.json")).unwrap();
+    let root=std::env::temp_dir().join(format!("kentos-mcp-sheet26-{}",std::process::id()));std::fs::create_dir_all(&root).unwrap();
+    let source=root.join("source.kcad");std::fs::write(&source,serde_json::to_vec(&fx["model"]).unwrap()).unwrap();
+    let mut server=Server::new();let opened=call(&mut server,"drawing.open",json!({"path":source}));let drawing=opened["drawing"].as_str().unwrap();
+    let mut ops:Vec<Value>=fx["book"]["sheets"].as_array().unwrap().iter().map(|s|json!({"op":"addSheet","sheet":s})).collect();
+    ops.extend(fx["cases"][0]["ops"].as_array().unwrap().clone());
+    let edited=call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":ops}));
+    assert_eq!(edited["output"]["sheets"][0]["drawingInfo"]["number"],"A-101");
+    let kept=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));
+    assert_eq!(kept["output"]["book"]["sheets"][0]["drawingInfo"],fx["cases"][0]["metadata"]["ground"]);
+    let rejected=tool_result(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":[{"op":"setDrawingInfo","id":"section","info":{"number":"A-101"}}]}));
+    assert_eq!(rejected["structuredContent"]["error"]["code"],"duplicate_sheet_number");
+    let after=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));assert_eq!(kept,after);
+    std::fs::remove_dir_all(root).unwrap();
+}

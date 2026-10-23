@@ -690,6 +690,8 @@ pub struct SetVariant {
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperOp"))]
 pub enum Op {
+    SetDrawingInfo(crate::drawing_set::SetDrawingInfo),
+    SetDrawingSet(crate::drawing_set::SetDrawingSet),
     SavePlotProfiles(crate::plot_profile::SavePlotProfiles),
     SavePageSetups(crate::print_setup::SavePageSetups),
     ApplyPageSetup(crate::print_setup::ApplyPageSetup),
@@ -1186,6 +1188,7 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
             crate::template::remap_items(&mut s.items, &map);
             crate::variants::remap(&mut s.variants, &mut s.base_layout, &map);
             s.id = d.new_id.clone();
+            if let Some(info) = &mut s.drawing_info { info.number.clear(); }
             s.name = d.name.clone();
             let at = d.index.map_or(i + 1, |x| (x as usize).min(b.sheets.len()));
             b.sheets.insert(at, s);
@@ -1483,6 +1486,21 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
             })])
         }
         Op::ApplyTemplate(a) => apply_template(b, a),
+        Op::SetDrawingSet(s) => {
+            let mut used = BTreeSet::new();
+            let mut old = Vec::new();
+            for e in &s.entries {
+                if !used.insert(&e.id) { return Err(SheetError::new("duplicate_id", "Aynı pafta toplu bilgide iki kez var; her paftayı bir kez yazın.")); }
+                let sheet = sheet_mut(b, &e.id)?;
+                old.push(crate::drawing_set::SetDrawingInfo { id: e.id.clone(), info: std::mem::replace(&mut sheet.drawing_info, e.info.clone()) });
+            }
+            Ok(vec![Op::SetDrawingSet(crate::drawing_set::SetDrawingSet { entries: old })])
+        }
+        Op::SetDrawingInfo(s) => {
+            let sheet = sheet_mut(b, &s.id)?;
+            let old = std::mem::replace(&mut sheet.drawing_info, s.info.clone());
+            Ok(vec![Op::SetDrawingInfo(crate::drawing_set::SetDrawingInfo { id: s.id.clone(), info: old })])
+        }
         Op::SaveVariables(s) => {
             let list = match &s.sheet {
                 Some(id) => &mut sheet_mut(b, id)?.variables,
@@ -2330,6 +2348,7 @@ pub fn describe(b: &SheetBook, op: &Op) -> String {
         Op::SetAtlas(_) => "Atlas".to_owned(),
         Op::SetExport(_) => "Dışa aktarma ayarları".to_owned(),
         Op::ApplyTemplate(a) => format!("Şablon uygula: {}", a.template.meta.name),
+        Op::SetDrawingInfo(_) | Op::SetDrawingSet(_) => "Pafta seti bilgileri".into(),
         Op::SaveVariables(_) => "Değişkenler".to_owned(),
         Op::AddAssets(_) => "Resim ekle".to_owned(),
         Op::RemoveAssets(_) => "Resim kaldır".to_owned(),

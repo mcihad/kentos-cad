@@ -28,3 +28,5 @@ mod page_setups;
 mod plot_profiles;
 
 mod plot_ink;
+
+mod drawing_set;

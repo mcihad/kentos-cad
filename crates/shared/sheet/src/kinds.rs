@@ -1240,6 +1240,8 @@ pub struct LayerRows {
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperTableSource"))]
 pub enum TableSource {
+    /// Live drawing-set or placed-viewport index, rebuilt from the same book on every output.
+    DrawingSet(crate::drawing_set::DrawingIndex),
     Fixed(FixedRows),
     /// An attribute table: the host gives the layer's objects, the core filters, sorts and writes them.
     Layer(LayerRows),

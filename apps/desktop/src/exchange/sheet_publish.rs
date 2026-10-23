@@ -429,7 +429,7 @@ impl App {
             .into()
         });
         if s.input.mode == SheetPublishMode::Separate {
-            body = body.push(label::caption("Dosya adı şablonu · {index}, {sheet}, {id}"));
+            body = body.push(label::caption("Dosya adı · {index}, {sheet}, {number}, {revision}"));
             let mut field =
                 text_input("{index}-{sheet}", &s.input.naming).style(style::field::input);
             if !busy {

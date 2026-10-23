@@ -22,6 +22,7 @@ pub mod cloud;
 pub mod create;
 pub mod fit;
 pub mod display;
+pub mod drawing_set;
 pub mod error;
 pub mod expr;
 pub mod geodesy;

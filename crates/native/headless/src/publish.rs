@@ -96,7 +96,12 @@ fn names(
         .naming
         .replace("{index}", "")
         .replace("{sheet}", "")
-        .replace("{id}", "");
+        .replace("{id}", "")
+        .replace("{number}", "")
+        .replace("{title}", "")
+        .replace("{revision}", "")
+        .replace("{status}", "")
+        .replace("{subset}", "");
     if rest.contains(['{', '}']) {
         return Err(refuse(
             "invalid_input",
@@ -110,13 +115,35 @@ fn names(
         let sheet = book
             .sheet(id)
             .ok_or_else(|| refuse("unknown_sheet", format!("“{id}” paftası yok."), "sheets"))?;
-        let base = stem(
-            &input
-                .naming
-                .replace("{index}", &format!("{:03}", n + 1))
-                .replace("{sheet}", &sheet.name)
-                .replace("{id}", id),
-        );
+        let info = sheet.drawing_info.clone().unwrap_or_default();
+        let mut rendered = String::new();
+        let mut rest = input.naming.as_str();
+        while let Some((before, tail)) = rest.split_once('{') {
+            rendered.push_str(before);
+            let Some((key, after)) = tail.split_once('}') else {
+                break;
+            };
+            rendered.push_str(&match key {
+                "index" => format!("{:03}", n + 1),
+                "sheet" => sheet.name.clone(),
+                "id" => id.clone(),
+                "number" => info.number.clone(),
+                "title" => {
+                    if info.title.is_empty() {
+                        sheet.name.clone()
+                    } else {
+                        info.title.clone()
+                    }
+                }
+                "revision" => info.revision.clone(),
+                "status" => info.status.clone(),
+                "subset" => info.subset.join("-"),
+                _ => String::new(),
+            });
+            rest = after;
+        }
+        rendered.push_str(rest);
+        let base = stem(&rendered);
         let mut name = format!("{base}.pdf");
         let mut suffix = 2;
         while !used.insert(name.to_lowercase()) {
@@ -399,7 +426,7 @@ fn work(
     }
     stopped(progress)?;
     let ready = !issues.iter().any(|i| i.error);
-    let bytes=serde_json::to_vec_pretty(&serde_json::json!({"format":"kentos.publish/1","source":source,"date":date,"options":{"mode":input.mode,"naming":input.naming,"dpi":input.dpi,"geo":input.geo,"layers":input.layers},"sheets":chosen,"files":files,"issues":issues})).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
+    let bytes=serde_json::to_vec_pretty(&serde_json::json!({"format":"kentos.publish/1","drawingSet":chosen.iter().filter_map(|id| book.sheet(id).map(|s|serde_json::json!({"id":s.id,"name":s.name,"info":s.drawing_info}))).collect::<Vec<_>>(),"source":source,"date":date,"options":{"mode":input.mode,"naming":input.naming,"dpi":input.dpi,"geo":input.geo,"layers":input.layers},"sheets":chosen,"files":files,"issues":issues})).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
     let report = SheetsPublished {
         path: input.path.clone(),
         sheets: chosen,

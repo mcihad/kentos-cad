@@ -251,3 +251,6 @@ pub const CONTRACTS_VERSION: u32 = 1;
 
 mod paper_scale;
 pub use paper_scale::PaperScaleRatio;
+
+mod sheet_info;
+pub use sheet_info::DrawingInfo;

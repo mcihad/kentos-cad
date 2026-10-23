@@ -554835,6 +554835,38 @@
               }
             ]
           },
+          "PaperDrawingInfo": {
+            "additionalProperties": false,
+            "description": "An issued sheet's identity is separate from its mutable tab name and document revision.",
+            "properties": {
+              "number": {
+                "default": "",
+                "type": "string"
+              },
+              "revision": {
+                "default": "",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "description": "A project's own workflow label (Taslak, Kontrol, Yayın...), not a hidden authorization rule.",
+                "type": "string"
+              },
+              "subset": {
+                "default": [],
+                "description": "Hierarchy segments, e.g. [\"Mimari\", \"Kat planları\"]. An empty list is the root.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "title": {
+                "default": "",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
           "PaperEmptyTable": {
             "description": "What a table with no rows shows.",
             "oneOf": [
@@ -557836,6 +557868,17 @@
                 ],
                 "description": "The base layout, kept while a variant is in force."
               },
+              "drawingInfo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperDrawingInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Standard drawing-set identity; absent in older books."
+              },
               "export": {
                 "$ref": "#/$defs/PaperExportDefaults",
                 "default": {
@@ -558199,6 +558242,33 @@
           },
           "PaperTableSource": {
             "oneOf": [
+              {
+                "additionalProperties": false,
+                "description": "Live drawing-set or placed-viewport index, rebuilt from the same book on every output.",
+                "properties": {
+                  "subset": {
+                    "default": [],
+                    "description": "The chosen subset and its descendants; root selects every sheet in book order.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "type": {
+                    "const": "drawingSet",
+                    "type": "string"
+                  },
+                  "views": {
+                    "default": false,
+                    "description": "False: a row per sheet. True: a row per placed model viewport, including master viewports.",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
               {
                 "additionalProperties": false,
                 "properties": {
@@ -560078,6 +560148,38 @@
               }
             ]
           },
+          "PaperDrawingInfo": {
+            "additionalProperties": false,
+            "description": "An issued sheet's identity is separate from its mutable tab name and document revision.",
+            "properties": {
+              "number": {
+                "default": "",
+                "type": "string"
+              },
+              "revision": {
+                "default": "",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "description": "A project's own workflow label (Taslak, Kontrol, Yayın...), not a hidden authorization rule.",
+                "type": "string"
+              },
+              "subset": {
+                "default": [],
+                "description": "Hierarchy segments, e.g. [\"Mimari\", \"Kat planları\"]. An empty list is the root.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "title": {
+                "default": "",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
           "PaperEmptyTable": {
             "description": "What a table with no rows shows.",
             "oneOf": [
@@ -563079,6 +563181,17 @@
                 ],
                 "description": "The base layout, kept while a variant is in force."
               },
+              "drawingInfo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperDrawingInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Standard drawing-set identity; absent in older books."
+              },
               "export": {
                 "$ref": "#/$defs/PaperExportDefaults",
                 "default": {
@@ -563442,6 +563555,33 @@
           },
           "PaperTableSource": {
             "oneOf": [
+              {
+                "additionalProperties": false,
+                "description": "Live drawing-set or placed-viewport index, rebuilt from the same book on every output.",
+                "properties": {
+                  "subset": {
+                    "default": [],
+                    "description": "The chosen subset and its descendants; root selects every sheet in book order.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "type": {
+                    "const": "drawingSet",
+                    "type": "string"
+                  },
+                  "views": {
+                    "default": false,
+                    "description": "False: a row per sheet. True: a row per placed model viewport, including master viewports.",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
               {
                 "additionalProperties": false,
                 "properties": {
@@ -1034305,6 +1034445,38 @@
               }
             ]
           },
+          "PaperDrawingInfo": {
+            "additionalProperties": false,
+            "description": "An issued sheet's identity is separate from its mutable tab name and document revision.",
+            "properties": {
+              "number": {
+                "default": "",
+                "type": "string"
+              },
+              "revision": {
+                "default": "",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "description": "A project's own workflow label (Taslak, Kontrol, Yayın...), not a hidden authorization rule.",
+                "type": "string"
+              },
+              "subset": {
+                "default": [],
+                "description": "Hierarchy segments, e.g. [\"Mimari\", \"Kat planları\"]. An empty list is the root.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "title": {
+                "default": "",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
           "PaperEmptyTable": {
             "description": "What a table with no rows shows.",
             "oneOf": [
@@ -1037316,6 +1037488,17 @@
                 ],
                 "description": "The base layout, kept while a variant is in force."
               },
+              "drawingInfo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperDrawingInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Standard drawing-set identity; absent in older books."
+              },
               "export": {
                 "$ref": "#/$defs/PaperExportDefaults",
                 "default": {
@@ -1037622,6 +1037805,33 @@
           },
           "PaperTableSource": {
             "oneOf": [
+              {
+                "additionalProperties": false,
+                "description": "Live drawing-set or placed-viewport index, rebuilt from the same book on every output.",
+                "properties": {
+                  "subset": {
+                    "default": [],
+                    "description": "The chosen subset and its descendants; root selects every sheet in book order.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "type": {
+                    "const": "drawingSet",
+                    "type": "string"
+                  },
+                  "views": {
+                    "default": false,
+                    "description": "False: a row per sheet. True: a row per placed model viewport, including master viewports.",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
               {
                 "additionalProperties": false,
                 "properties": {
@@ -1038476,9 +1038686,51 @@
       },
       "output": {
         "$defs": {
+          "PaperDrawingInfo": {
+            "additionalProperties": false,
+            "description": "An issued sheet's identity is separate from its mutable tab name and document revision.",
+            "properties": {
+              "number": {
+                "default": "",
+                "type": "string"
+              },
+              "revision": {
+                "default": "",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "description": "A project's own workflow label (Taslak, Kontrol, Yayın...), not a hidden authorization rule.",
+                "type": "string"
+              },
+              "subset": {
+                "default": [],
+                "description": "Hierarchy segments, e.g. [\"Mimari\", \"Kat planları\"]. An empty list is the root.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "title": {
+                "default": "",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
           "SheetInfo": {
             "description": "A sheet of the book as the answer lists it.",
             "properties": {
+              "drawingInfo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperDrawingInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "height": {
                 "format": "double",
                 "type": "number",
@@ -1038613,9 +1038865,51 @@
       },
       "plan": {
         "$defs": {
+          "PaperDrawingInfo": {
+            "additionalProperties": false,
+            "description": "An issued sheet's identity is separate from its mutable tab name and document revision.",
+            "properties": {
+              "number": {
+                "default": "",
+                "type": "string"
+              },
+              "revision": {
+                "default": "",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "description": "A project's own workflow label (Taslak, Kontrol, Yayın...), not a hidden authorization rule.",
+                "type": "string"
+              },
+              "subset": {
+                "default": [],
+                "description": "Hierarchy segments, e.g. [\"Mimari\", \"Kat planları\"]. An empty list is the root.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "title": {
+                "default": "",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
           "SheetInfo": {
             "description": "A sheet of the book as the answer lists it.",
             "properties": {
+              "drawingInfo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperDrawingInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "height": {
                 "format": "double",
                 "type": "number",
@@ -1038750,6 +1039044,9 @@
       },
       "capabilities": {
         "refusals": [
+          "bad_drawing_info",
+          "duplicate_sheet_number",
+          "bad_drawing_index",
           "not_fixed_map",
           "ambiguous_source",
           "invalid_extent",
@@ -1038912,9 +1039209,51 @@
       },
       "output": {
         "$defs": {
+          "PaperDrawingInfo": {
+            "additionalProperties": false,
+            "description": "An issued sheet's identity is separate from its mutable tab name and document revision.",
+            "properties": {
+              "number": {
+                "default": "",
+                "type": "string"
+              },
+              "revision": {
+                "default": "",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "description": "A project's own workflow label (Taslak, Kontrol, Yayın...), not a hidden authorization rule.",
+                "type": "string"
+              },
+              "subset": {
+                "default": [],
+                "description": "Hierarchy segments, e.g. [\"Mimari\", \"Kat planları\"]. An empty list is the root.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "title": {
+                "default": "",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
           "SheetInfo": {
             "description": "A sheet of the book as the answer lists it.",
             "properties": {
+              "drawingInfo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperDrawingInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "height": {
                 "format": "double",
                 "type": "number",
@@ -1039049,9 +1039388,51 @@
       },
       "plan": {
         "$defs": {
+          "PaperDrawingInfo": {
+            "additionalProperties": false,
+            "description": "An issued sheet's identity is separate from its mutable tab name and document revision.",
+            "properties": {
+              "number": {
+                "default": "",
+                "type": "string"
+              },
+              "revision": {
+                "default": "",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "description": "A project's own workflow label (Taslak, Kontrol, Yayın...), not a hidden authorization rule.",
+                "type": "string"
+              },
+              "subset": {
+                "default": [],
+                "description": "Hierarchy segments, e.g. [\"Mimari\", \"Kat planları\"]. An empty list is the root.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "title": {
+                "default": "",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
           "SheetInfo": {
             "description": "A sheet of the book as the answer lists it.",
             "properties": {
+              "drawingInfo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperDrawingInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "height": {
                 "format": "double",
                 "type": "number",
@@ -1040160,6 +1040541,38 @@
               "gaps"
             ],
             "type": "string"
+          },
+          "PaperDrawingInfo": {
+            "additionalProperties": false,
+            "description": "An issued sheet's identity is separate from its mutable tab name and document revision.",
+            "properties": {
+              "number": {
+                "default": "",
+                "type": "string"
+              },
+              "revision": {
+                "default": "",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "description": "A project's own workflow label (Taslak, Kontrol, Yayın...), not a hidden authorization rule.",
+                "type": "string"
+              },
+              "subset": {
+                "default": [],
+                "description": "Hierarchy segments, e.g. [\"Mimari\", \"Kat planları\"]. An empty list is the root.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "title": {
+                "default": "",
+                "type": "string"
+              }
+            },
+            "type": "object"
           },
           "PaperEmptyTable": {
             "description": "What a table with no rows shows.",
@@ -1042395,6 +1042808,55 @@
           },
           "PaperOp": {
             "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "info": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperDrawingInfo"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "None removes metadata and restores legacy variable/title behavior."
+                  },
+                  "op": {
+                    "const": "setDrawingInfo",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "op",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "One atomic metadata batch also supports exchanging two sheet numbers.",
+                "properties": {
+                  "entries": {
+                    "items": {
+                      "$ref": "#/$defs/PaperSetDrawingInfo"
+                    },
+                    "type": "array"
+                  },
+                  "op": {
+                    "const": "setDrawingSet",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "op",
+                  "entries"
+                ],
+                "type": "object"
+              },
               {
                 "additionalProperties": false,
                 "properties": {
@@ -1044638,6 +1045100,29 @@
               }
             ]
           },
+          "PaperSetDrawingInfo": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "info": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperDrawingInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "None removes metadata and restores legacy variable/title behavior."
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
+          },
           "PaperShapeKind": {
             "oneOf": [
               {
@@ -1044772,6 +1045257,17 @@
                   }
                 ],
                 "description": "The base layout, kept while a variant is in force."
+              },
+              "drawingInfo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperDrawingInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Standard drawing-set identity; absent in older books."
               },
               "export": {
                 "$ref": "#/$defs/PaperExportDefaults",
@@ -1045087,6 +1045583,33 @@
           },
           "PaperTableSource": {
             "oneOf": [
+              {
+                "additionalProperties": false,
+                "description": "Live drawing-set or placed-viewport index, rebuilt from the same book on every output.",
+                "properties": {
+                  "subset": {
+                    "default": [],
+                    "description": "The chosen subset and its descendants; root selects every sheet in book order.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "type": {
+                    "const": "drawingSet",
+                    "type": "string"
+                  },
+                  "views": {
+                    "default": false,
+                    "description": "False: a row per sheet. True: a row per placed model viewport, including master viewports.",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
               {
                 "additionalProperties": false,
                 "properties": {
@@ -1045916,9 +1046439,51 @@
       },
       "output": {
         "$defs": {
+          "PaperDrawingInfo": {
+            "additionalProperties": false,
+            "description": "An issued sheet's identity is separate from its mutable tab name and document revision.",
+            "properties": {
+              "number": {
+                "default": "",
+                "type": "string"
+              },
+              "revision": {
+                "default": "",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "description": "A project's own workflow label (Taslak, Kontrol, Yayın...), not a hidden authorization rule.",
+                "type": "string"
+              },
+              "subset": {
+                "default": [],
+                "description": "Hierarchy segments, e.g. [\"Mimari\", \"Kat planları\"]. An empty list is the root.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "title": {
+                "default": "",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
           "SheetInfo": {
             "description": "A sheet of the book as the answer lists it.",
             "properties": {
+              "drawingInfo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperDrawingInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "height": {
                 "format": "double",
                 "type": "number",
@@ -1046053,9 +1046618,51 @@
       },
       "plan": {
         "$defs": {
+          "PaperDrawingInfo": {
+            "additionalProperties": false,
+            "description": "An issued sheet's identity is separate from its mutable tab name and document revision.",
+            "properties": {
+              "number": {
+                "default": "",
+                "type": "string"
+              },
+              "revision": {
+                "default": "",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "description": "A project's own workflow label (Taslak, Kontrol, Yayın...), not a hidden authorization rule.",
+                "type": "string"
+              },
+              "subset": {
+                "default": [],
+                "description": "Hierarchy segments, e.g. [\"Mimari\", \"Kat planları\"]. An empty list is the root.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "title": {
+                "default": "",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
           "SheetInfo": {
             "description": "A sheet of the book as the answer lists it.",
             "properties": {
+              "drawingInfo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PaperDrawingInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "height": {
                 "format": "double",
                 "type": "number",
@@ -1046190,6 +1046797,9 @@
       },
       "capabilities": {
         "refusals": [
+          "bad_drawing_info",
+          "duplicate_sheet_number",
+          "bad_drawing_index",
           "not_fixed_map",
           "ambiguous_source",
           "invalid_extent",
@@ -1092805,7 +1093415,7 @@
           },
           "naming": {
             "default": "{index}-{sheet}",
-            "description": "Separate PDF leaf names: {index} (001...), {sheet}, {id}. Collisions get a stable numeric suffix.",
+            "description": "Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.",
             "type": "string"
           },
           "path": {
@@ -1095770,6 +1096380,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Projenin pafta kitabı çekirdeğin okuyamadığı bir kitap; olduğu gibi kalır."
+    },
+    {
+      "code": "bad_drawing_info",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta seti alanı geçersiz; uzunluk, boşluk ve alt küme düzeylerini denetleyin."
+    },
+    {
+      "code": "duplicate_sheet_number",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta numarası set içinde tekil olmalı; başka bir numara girin."
+    },
+    {
+      "code": "bad_drawing_index",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta/görünüm dizini altı standart sütun taşımalı."
     },
     {
       "code": "unknown_sheet",

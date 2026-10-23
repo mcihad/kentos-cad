@@ -561,6 +561,8 @@ pub fn instantiate(
     }
     crate::variants::remap(&mut sheet.variants, &mut sheet.base_layout, &map);
     sheet.id = ids.sheet.clone();
+    // A template creates a new drawing, never a second issued sheet with the same number.
+    if let Some(info) = &mut sheet.drawing_info { info.number.clear(); }
     if let Some(m) = &mut master {
         let mid = ids.master.clone().ok_or_else(|| {
             SheetError::new(

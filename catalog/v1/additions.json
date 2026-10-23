@@ -2773,6 +2773,18 @@
       "shortcuts": [],
       "category": "Pafta",
       "status": "implemented"
+    },
+    {
+      "id": "sheet.drawingSet",
+      "title": "Pafta seti…",
+      "icon": "table",
+      "description": "Pafta numarası, başlığı, revizyonu, durumu ve alt kümeleri düzenler; canlı pafta veya görünüm dizini ekler.",
+      "aliases": [
+        "PAFTASETI"
+      ],
+      "shortcuts": [],
+      "category": "Pafta",
+      "status": "implemented"
     }
   ],
   "icons": {

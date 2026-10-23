@@ -94,6 +94,7 @@ pub(crate) fn model_of(ctx: &Ctx, it: &Item, notes: &mut Vec<Note>) -> Option<Mo
                 .collect();
             let rows = match &t.source {
                 TableSource::Continued(_) => return None,
+                TableSource::DrawingSet(source) => crate::drawing_set::rows(ctx.book, source, &ctx.inputs.named_views).into_iter().map(RowData::Cells).collect(),
                 TableSource::Fixed(f) => f
                     .rows
                     .iter()

@@ -217,6 +217,7 @@ pub(crate) enum Dialog {
     Variables(crate::variables::VariablesDialog),
     ViewportClip(crate::viewport_clip::ClipDialog),
     PageSetup(Box<crate::page_setup::SetupDialog>),
+    DrawingSet(Box<crate::drawing_set::SetDialog>),
     PlotProfiles(Box<crate::plot_profiles::PlotDialog>),
     /// A template's questions before its sheet is made (Kullan, Yeni pafta); boxed: a template is large.
     Questions(Box<crate::questions::QuestionsDialog>),

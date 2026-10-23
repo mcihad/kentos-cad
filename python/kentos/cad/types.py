@@ -6635,6 +6635,8 @@ class PaperMapView(_Union):
 class PaperOp(_Union):
     """One of:
 
+    - :class:`SetDrawingInfoPaperOp` (``op: setDrawingInfo``)
+    - :class:`SetDrawingSetPaperOp` (``op: setDrawingSet``)
     - :class:`SavePlotProfilesPaperOp` (``op: savePlotProfiles``)
     - :class:`SavePageSetupsPaperOp` (``op: savePageSetups``)
     - :class:`ApplyPageSetupPaperOp` (``op: applyPageSetup``)
@@ -6906,6 +6908,7 @@ class PaperShapeKind(_Union):
 class PaperTableSource(_Union):
     """One of:
 
+    - :class:`DrawingSetPaperTableSource` (``type: drawingSet``)
     - :class:`FixedPaperTableSource` (``type: fixed``)
     - :class:`LayerPaperTableSource` (``type: layer``)
     - :class:`ContinuedPaperTableSource` (``type: continued``)
@@ -33620,6 +33623,39 @@ class PaperCoordColumns(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PaperDrawingInfo(_Model):
+    """An issued sheet's identity is separate from its mutable tab name and document revision.
+    Attributes:
+        status: A project's own workflow label (Taslak, Kontrol, Yayın...), not a hidden authorization rule.
+        subset: Hierarchy segments, e.g. ["Mimari", "Kat planları"]. An empty list is the root.
+    """
+    number: str = ""
+    revision: str = ""
+    status: str = ""
+    subset: list[str] = field(default_factory=list)
+    title: str = ""
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["revision"] = self.revision
+        out["status"] = self.status
+        out["subset"] = list(self.subset)
+        out["title"] = self.title
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperDrawingInfo:
+        return cls(
+            number=data["number"] if "number" in data else "",
+            revision=data["revision"] if "revision" in data else "",
+            status=data["status"] if "status" in data else "",
+            subset=list(data["subset"]) if "subset" in data else list(),
+            title=data["title"] if "title" in data else "",
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PaperExportDefaults(_Model):
     """What an export starts from.
     Attributes:
@@ -34556,11 +34592,36 @@ class PaperScaleRatio(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PaperSetDrawingInfo(_Model):
+    """
+    Attributes:
+        info: None removes metadata and restores legacy variable/title behavior.
+    """
+    id: str
+    info: PaperDrawingInfo | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        if self.info is not UNSET:
+            out["info"] = None if self.info is None else self.info.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperSetDrawingInfo:
+        return cls(
+            id=data["id"],
+            info=UNSET if "info" not in data else None if data["info"] is None else PaperDrawingInfo.from_json(data["info"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PaperSheet(_Model):
     """One sheet (pafta): its paper, items, guides and how it is exported.
     Attributes:
         active_variant: The layout in force on this paper; none: the base layout.
         base_layout: The base layout, kept while a variant is in force.
+        drawing_info: Standard drawing-set identity; absent in older books.
         items: Drawing order: the first is at the bottom.
         master: The master page drawn under this sheet's items.
         origin: The template and revision it was made from.
@@ -34573,6 +34634,7 @@ class PaperSheet(_Model):
     active_variant: str | None | Unset = UNSET
     atlas: PaperAtlas | None | Unset = UNSET
     base_layout: PaperBaseLayout | None | Unset = UNSET
+    drawing_info: PaperDrawingInfo | None | Unset = UNSET
     export: PaperExportDefaults = field(default_factory=(lambda: PaperExportDefaults.from_json({'dpi': 300, 'fileName': '[% @pafta_adi %]', 'format': 'svg'})))
     guides: list[PaperGuide] = field(default_factory=list)
     items: list[PaperItem] = field(default_factory=list)
@@ -34594,6 +34656,8 @@ class PaperSheet(_Model):
             out["atlas"] = None if self.atlas is None else self.atlas.to_json()
         if self.base_layout is not UNSET:
             out["baseLayout"] = None if self.base_layout is None else self.base_layout.to_json()
+        if self.drawing_info is not UNSET:
+            out["drawingInfo"] = None if self.drawing_info is None else self.drawing_info.to_json()
         out["export"] = self.export.to_json()
         out["guides"] = [e0.to_json() for e0 in self.guides]
         out["items"] = [e0.to_json() for e0 in self.items]
@@ -34617,6 +34681,7 @@ class PaperSheet(_Model):
             active_variant=data.get("activeVariant", UNSET),
             atlas=UNSET if "atlas" not in data else None if data["atlas"] is None else PaperAtlas.from_json(data["atlas"]),
             base_layout=UNSET if "baseLayout" not in data else None if data["baseLayout"] is None else PaperBaseLayout.from_json(data["baseLayout"]),
+            drawing_info=UNSET if "drawingInfo" not in data else None if data["drawingInfo"] is None else PaperDrawingInfo.from_json(data["drawingInfo"]),
             export=PaperExportDefaults.from_json(data["export"]) if "export" in data else (lambda: PaperExportDefaults.from_json({'dpi': 300, 'fileName': '[% @pafta_adi %]', 'format': 'svg'}))(),
             guides=[PaperGuide.from_json(e0) for e0 in data["guides"]] if "guides" in data else list(),
             items=[PaperItem.from_json(e0) for e0 in data["items"]] if "items" in data else list(),
@@ -40070,7 +40135,7 @@ class PublishSheets(_Model):
         path: Absolute new or empty delivery folder; existing nonempty folders are refused.
         dpi: None preserves each page's own physical raster setting. Unit: dpi.
         name: One PDF's leaf name; .pdf is appended when missing.
-        naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}. Collisions get a stable numeric suffix.
+        naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
         pin: A plan's immutable document pin; changed source refuses publication before any file is exposed.
         sheets: None means every sheet; an explicit list is used in exactly its supplied order.
     """
@@ -43922,6 +43987,7 @@ class SheetInfo(_Model):
     height: float
     items: int
     maps: list[SheetMapInfo]
+    drawing_info: PaperDrawingInfo | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -43931,6 +43997,8 @@ class SheetInfo(_Model):
         out["height"] = float(self.height)
         out["items"] = self.items
         out["maps"] = [e0.to_json() for e0 in self.maps]
+        if self.drawing_info is not UNSET:
+            out["drawingInfo"] = None if self.drawing_info is None else self.drawing_info.to_json()
         return out
 
     @classmethod
@@ -43942,6 +44010,7 @@ class SheetInfo(_Model):
             height=float(data["height"]),
             items=data["items"],
             maps=[SheetMapInfo.from_json(e0) for e0 in data["maps"]],
+            drawing_info=UNSET if "drawingInfo" not in data else None if data["drawingInfo"] is None else PaperDrawingInfo.from_json(data["drawingInfo"]),
         )
 
 
@@ -61346,6 +61415,49 @@ class AtlasPaperMapView(PaperMapView):
 
 
 @dataclass(kw_only=True, slots=True)
+class SetDrawingInfoPaperOp(PaperOp):
+    """
+    Attributes:
+        info: None removes metadata and restores legacy variable/title behavior.
+    """
+    TAG_VALUE: ClassVar[str] = "setDrawingInfo"
+    id: str
+    info: PaperDrawingInfo | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "setDrawingInfo"}
+        out["id"] = self.id
+        if self.info is not UNSET:
+            out["info"] = None if self.info is None else self.info.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetDrawingInfoPaperOp:
+        return cls(
+            id=data["id"],
+            info=UNSET if "info" not in data else None if data["info"] is None else PaperDrawingInfo.from_json(data["info"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetDrawingSetPaperOp(PaperOp):
+    """One atomic metadata batch also supports exchanging two sheet numbers."""
+    TAG_VALUE: ClassVar[str] = "setDrawingSet"
+    entries: list[PaperSetDrawingInfo]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "setDrawingSet"}
+        out["entries"] = [e0.to_json() for e0 in self.entries]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetDrawingSetPaperOp:
+        return cls(
+            entries=[PaperSetDrawingInfo.from_json(e0) for e0 in data["entries"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SavePlotProfilesPaperOp(PaperOp):
     TAG_VALUE: ClassVar[str] = "savePlotProfiles"
     profiles: list[PaperPlotProfile]
@@ -62984,6 +63096,31 @@ class CadPaperShapeKind(PaperShapeKind):
         return cls(
             reference=PaperSizeUm.from_json(data["reference"]),
             geometry=PaperCadGeometry.from_json(data["geometry"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingSetPaperTableSource(PaperTableSource):
+    """Live drawing-set or placed-viewport index, rebuilt from the same book on every output.
+    Attributes:
+        subset: The chosen subset and its descendants; root selects every sheet in book order.
+        views: False: a row per sheet. True: a row per placed model viewport, including master viewports.
+    """
+    TAG_VALUE: ClassVar[str] = "drawingSet"
+    subset: list[str] = field(default_factory=list)
+    views: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "drawingSet"}
+        out["subset"] = list(self.subset)
+        out["views"] = self.views
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingSetPaperTableSource:
+        return cls(
+            subset=list(data["subset"]) if "subset" in data else list(),
+            views=data["views"] if "views" in data else False,
         )
 
 
@@ -66745,7 +66882,7 @@ _PAPER_MAP_LAYERS: dict[str, type[PaperMapLayers]] = {"all": AllPaperMapLayers, 
 _PAPER_MAP_VIEW: dict[str, type[PaperMapView]] = {"fixed": FixedPaperMapView, "atlas": AtlasPaperMapView}
 
 
-_PAPER_OP: dict[str, type[PaperOp]] = {"savePlotProfiles": SavePlotProfilesPaperOp, "savePageSetups": SavePageSetupsPaperOp, "applyPageSetup": ApplyPageSetupPaperOp, "setSheetPlot": SetSheetPlotPaperOp, "addSheet": AddSheetPaperOp, "removeSheet": RemoveSheetPaperOp, "renameSheet": RenameSheetPaperOp, "moveSheet": MoveSheetPaperOp, "duplicateSheet": DuplicateSheetPaperOp, "replaceSheet": ReplaceSheetPaperOp, "setPage": SetPagePaperOp, "addMaster": AddMasterPaperOp, "removeMaster": RemoveMasterPaperOp, "replaceMaster": ReplaceMasterPaperOp, "setSheetMaster": SetSheetMasterPaperOp, "detachMaster": DetachMasterPaperOp, "addItems": AddItemsPaperOp, "insertItems": InsertItemsPaperOp, "removeItems": RemoveItemsPaperOp, "moveItems": MoveItemsPaperOp, "resizeItem": ResizeItemPaperOp, "rotateItems": RotateItemsPaperOp, "setFrames": SetFramesPaperOp, "setItemProps": SetItemPropsPaperOp, "setViewport": SetViewportPaperOp, "navigateViewport": NavigateViewportPaperOp, "renameItem": RenameItemPaperOp, "reorder": ReorderPaperOp, "setOrder": SetOrderPaperOp, "group": GroupPaperOp, "ungroup": UngroupPaperOp, "setItems": SetItemsPaperOp, "lock": LockPaperOp, "hide": HidePaperOp, "align": AlignPaperOp, "distribute": DistributePaperOp, "matchSize": MatchSizePaperOp, "addGuide": AddGuidePaperOp, "moveGuide": MoveGuidePaperOp, "removeGuide": RemoveGuidePaperOp, "setSnapGrid": SetSnapGridPaperOp, "setAtlas": SetAtlasPaperOp, "setExport": SetExportPaperOp, "applyTemplate": ApplyTemplatePaperOp, "saveVariables": SaveVariablesPaperOp, "addAssets": AddAssetsPaperOp, "removeAssets": RemoveAssetsPaperOp, "addVariant": AddVariantPaperOp, "removeVariant": RemoveVariantPaperOp, "setVariant": SetVariantPaperOp}
+_PAPER_OP: dict[str, type[PaperOp]] = {"setDrawingInfo": SetDrawingInfoPaperOp, "setDrawingSet": SetDrawingSetPaperOp, "savePlotProfiles": SavePlotProfilesPaperOp, "savePageSetups": SavePageSetupsPaperOp, "applyPageSetup": ApplyPageSetupPaperOp, "setSheetPlot": SetSheetPlotPaperOp, "addSheet": AddSheetPaperOp, "removeSheet": RemoveSheetPaperOp, "renameSheet": RenameSheetPaperOp, "moveSheet": MoveSheetPaperOp, "duplicateSheet": DuplicateSheetPaperOp, "replaceSheet": ReplaceSheetPaperOp, "setPage": SetPagePaperOp, "addMaster": AddMasterPaperOp, "removeMaster": RemoveMasterPaperOp, "replaceMaster": ReplaceMasterPaperOp, "setSheetMaster": SetSheetMasterPaperOp, "detachMaster": DetachMasterPaperOp, "addItems": AddItemsPaperOp, "insertItems": InsertItemsPaperOp, "removeItems": RemoveItemsPaperOp, "moveItems": MoveItemsPaperOp, "resizeItem": ResizeItemPaperOp, "rotateItems": RotateItemsPaperOp, "setFrames": SetFramesPaperOp, "setItemProps": SetItemPropsPaperOp, "setViewport": SetViewportPaperOp, "navigateViewport": NavigateViewportPaperOp, "renameItem": RenameItemPaperOp, "reorder": ReorderPaperOp, "setOrder": SetOrderPaperOp, "group": GroupPaperOp, "ungroup": UngroupPaperOp, "setItems": SetItemsPaperOp, "lock": LockPaperOp, "hide": HidePaperOp, "align": AlignPaperOp, "distribute": DistributePaperOp, "matchSize": MatchSizePaperOp, "addGuide": AddGuidePaperOp, "moveGuide": MoveGuidePaperOp, "removeGuide": RemoveGuidePaperOp, "setSnapGrid": SetSnapGridPaperOp, "setAtlas": SetAtlasPaperOp, "setExport": SetExportPaperOp, "applyTemplate": ApplyTemplatePaperOp, "saveVariables": SaveVariablesPaperOp, "addAssets": AddAssetsPaperOp, "removeAssets": RemoveAssetsPaperOp, "addVariant": AddVariantPaperOp, "removeVariant": RemoveVariantPaperOp, "setVariant": SetVariantPaperOp}
 
 
 _PAPER_OVERFLOW: dict[str, type[PaperOverflow]] = {"clip": ClipPaperOverflow, "continueIn": ContinueInPaperOverflow}
@@ -66778,7 +66915,7 @@ _PAPER_SCALE_BAR_LENGTH: dict[str, type[PaperScaleBarLength]] = {"auto": AutoPap
 _PAPER_SHAPE_KIND: dict[str, type[PaperShapeKind]] = {"rect": RectPaperShapeKind, "ellipse": EllipsePaperShapeKind, "triangle": TrianglePaperShapeKind, "polygon": PolygonPaperShapeKind, "cad": CadPaperShapeKind}
 
 
-_PAPER_TABLE_SOURCE: dict[str, type[PaperTableSource]] = {"fixed": FixedPaperTableSource, "layer": LayerPaperTableSource, "continued": ContinuedPaperTableSource}
+_PAPER_TABLE_SOURCE: dict[str, type[PaperTableSource]] = {"drawingSet": DrawingSetPaperTableSource, "fixed": FixedPaperTableSource, "layer": LayerPaperTableSource, "continued": ContinuedPaperTableSource}
 
 
 _PAPER_VIEWPORT_CLIP: dict[str, type[PaperViewportClip]] = {"frame": FramePaperViewportClip, "rectangle": RectanglePaperViewportClip, "polygon": PolygonPaperViewportClip}
@@ -67344,6 +67481,7 @@ __all__ = [
     "DrawingFont",
     "DrawingFontName",
     "DrawingPaperViewportSource",
+    "DrawingSetPaperTableSource",
     "DrawingStandard",
     "DrawingUnit",
     "DrawingUnitName",
@@ -68132,6 +68270,7 @@ __all__ = [
     "PaperCoordSource",
     "PaperDistributeMode",
     "PaperDistributeModeName",
+    "PaperDrawingInfo",
     "PaperEmptyTable",
     "PaperExportDefaults",
     "PaperExportFormat",
@@ -68221,6 +68360,7 @@ __all__ = [
     "PaperScaleRatio",
     "PaperScaleUnit",
     "PaperScaleUnitName",
+    "PaperSetDrawingInfo",
     "PaperShapeKind",
     "PaperSheet",
     "PaperSheetBook",
@@ -68675,6 +68815,8 @@ __all__ = [
     "SetArchOperation",
     "SetAtlasPaperOp",
     "SetCellTableEdit",
+    "SetDrawingInfoPaperOp",
+    "SetDrawingSetPaperOp",
     "SetExportPaperOp",
     "SetFrame",
     "SetFramesPaperOp",

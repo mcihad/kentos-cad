@@ -1036,6 +1036,9 @@ codes! {
     /// The project's sheet book is one the sheet core cannot read.
     BOOK_UNREADABLE = "book_unreadable", Failed, false, "Projenin pafta kitabı çekirdeğin okuyamadığı bir kitap; olduğu gibi kalır.";
     /// A sheet the book does not have.
+    BAD_DRAWING_INFO = "bad_drawing_info", Failed, false, "Pafta seti alanı geçersiz; uzunluk, boşluk ve alt küme düzeylerini denetleyin.";
+    DUPLICATE_SHEET_NUMBER = "duplicate_sheet_number", Failed, false, "Pafta numarası set içinde tekil olmalı; başka bir numara girin.";
+    BAD_DRAWING_INDEX = "bad_drawing_index", Failed, false, "Pafta/görünüm dizini altı standart sütun taşımalı.";
     UNKNOWN_SHEET = "unknown_sheet", Failed, false, "Kitapta bu kimlikte pafta yok.";
     /// An item the book does not have.
     UNKNOWN_ITEM = "unknown_item", Failed, false, "Kitapta bu kimlikte öğe yok.";
