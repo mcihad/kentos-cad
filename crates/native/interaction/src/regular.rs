@@ -96,6 +96,7 @@ impl RegularPolygon {
             label: cx.template_label(),
             symbol: cx.template_symbol(),
             expected_revision: None,
+            rules: None,
         }
     }
 
@@ -112,6 +113,7 @@ impl RegularPolygon {
             label: None,
             symbol: None,
             expected_revision: None,
+            rules: None,
         };
         shapes::regular_ring(&input).ok()
     }
@@ -166,11 +168,17 @@ impl RegularPolygon {
             );
             return;
         };
+        let mut input = input;
+        let rules = points::area_rules(cx, &input.layer_id);
+        input.rules = rules;
         let mut write = |cx: &mut Context<'_>| {
-            let result = shapes::execute_regular(&mut ExecutionContext::new(cx.doc), input.clone());
+            let result = shapes::execute_regular(
+                &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+                input.clone(),
+            );
             points::written(result, cx).map(|out| out.id)
         };
-        if let Some(area) = points::write_area_by(&mut self.d, &ring, None, cx, Some(&mut write)) {
+        if let Some(area) = points::write_area_by(&mut self.d, cx, &mut write) {
             let format = cx.format();
             let line = format!(
                 "{} kenarlı düzgün çokgen eklendi: kenar {}, alan {}",

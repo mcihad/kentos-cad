@@ -144,6 +144,7 @@ impl Rectangle {
             label: cx.template_label(),
             symbol: cx.template_symbol(),
             expected_revision: None,
+            rules: None,
         }
     }
 
@@ -161,6 +162,7 @@ impl Rectangle {
             label: None,
             symbol: None,
             expected_revision: None,
+            rules: None,
         };
         shapes::rectangle_ring(&input).ok().map(|(pts, _)| pts)
     }
@@ -220,25 +222,25 @@ impl Rectangle {
             Corners::Chamfer(distance) => Some(RectangleCorners::Chamfer { distance }),
         };
         let mut input = self.request(a, p, corners, cx);
-        let (pts, bulges) = match shapes::rectangle_ring(&input) {
-            Ok(ring) => ring,
-            Err(refusal) => {
-                cx.say(
-                    Level::Warn,
-                    format!("Köşeler işlenmedi: {}", refusal.message),
-                );
-                input.corners = None;
-                (ring.to_vec(), None)
-            }
-        };
+        if let Err(refusal) = shapes::rectangle_ring(&input) {
+            cx.say(
+                Level::Warn,
+                format!("Köşeler işlenmedi: {}", refusal.message),
+            );
+            input.corners = None;
+        }
         let w = dist(ring[0], ring[1]);
         let h = dist(ring[1], ring[2]);
+        let rules = points::area_rules(cx, &input.layer_id);
+        input.rules = rules;
         let mut write = |cx: &mut Context<'_>| {
-            let result =
-                shapes::execute_rectangle(&mut ExecutionContext::new(cx.doc), input.clone());
+            let result = shapes::execute_rectangle(
+                &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+                input.clone(),
+            );
             points::written(result, cx).map(|out| out.id)
         };
-        if points::write_area_by(&mut self.d, &pts, bulges, cx, Some(&mut write)).is_some() {
+        if points::write_area_by(&mut self.d, cx, &mut write).is_some() {
             let format = cx.format();
             let line = format!(
                 "Dikdörtgen eklendi: {} × {}",

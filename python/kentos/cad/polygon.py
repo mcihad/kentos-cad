@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    AreaRules,
     LineType,
     LineTypeName,
     PolygonCreate,
@@ -60,6 +61,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         label: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        rules: AreaRules | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         wipeout: Wipeout | None | Unset = UNSET,
         request_id: str | None = None,
@@ -92,6 +94,8 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
                 thinnest, at most 100; docs/adr/0139): what the tools give a new
                 object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
+            rules: Çakışma and Topoloji (docs/adr/0162, 0622 §9): what the new area must not overlap and whether it shares
+                corners with its neighbours. Absent: written as given.
             symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
                 instead of its layer's style: an object template's (docs/adr/0176).
                 The id is not looked up: the libraries are the host's. Absent: the
@@ -121,6 +125,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             label=label,
             line_type=line_type,
             line_weight=line_weight,
+            rules=rules,
             symbol=symbol,
             wipeout=wipeout,
         ), request_id=request_id, expected=expected)
@@ -140,6 +145,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         label: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        rules: AreaRules | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         wipeout: Wipeout | None | Unset = UNSET,
     ) -> PolygonPlan:
@@ -157,6 +163,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             label=label,
             line_type=line_type,
             line_weight=line_weight,
+            rules=rules,
             symbol=symbol,
             wipeout=wipeout,
         ))
@@ -176,6 +183,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         label: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        rules: AreaRules | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         wipeout: Wipeout | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -193,6 +201,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             label=label,
             line_type=line_type,
             line_weight=line_weight,
+            rules=rules,
             symbol=symbol,
             wipeout=wipeout,
         ))
@@ -212,6 +221,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         label: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        rules: AreaRules | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         wipeout: Wipeout | None | Unset = UNSET,
         op: str = "execute",
@@ -234,6 +244,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             label=label,
             line_type=line_type,
             line_weight=line_weight,
+            rules=rules,
             symbol=symbol,
             wipeout=wipeout,
         ), op=op, request_id=request_id, expected=expected)
@@ -273,6 +284,7 @@ class _PolygonRegular(LocalCommand[RegularPolygonCreate, PolygonCreated, Polygon
         label: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        rules: AreaRules | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -294,6 +306,7 @@ class _PolygonRegular(LocalCommand[RegularPolygonCreate, PolygonCreated, Polygon
             label:
             line_type:
             line_weight: Unit: paper-mm.
+            rules: Çakışma and Topoloji, as `cad.polygon.create`'s (docs/adr/0622 §9). Absent: written as made.
             symbol:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -317,6 +330,7 @@ class _PolygonRegular(LocalCommand[RegularPolygonCreate, PolygonCreated, Polygon
             label=label,
             line_type=line_type,
             line_weight=line_weight,
+            rules=rules,
             symbol=symbol,
         ), request_id=request_id, expected=expected)
 
@@ -334,6 +348,7 @@ class _PolygonRegular(LocalCommand[RegularPolygonCreate, PolygonCreated, Polygon
         label: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        rules: AreaRules | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> PolygonPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -349,6 +364,7 @@ class _PolygonRegular(LocalCommand[RegularPolygonCreate, PolygonCreated, Polygon
             label=label,
             line_type=line_type,
             line_weight=line_weight,
+            rules=rules,
             symbol=symbol,
         ))
 
@@ -366,6 +382,7 @@ class _PolygonRegular(LocalCommand[RegularPolygonCreate, PolygonCreated, Polygon
         label: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        rules: AreaRules | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -381,6 +398,7 @@ class _PolygonRegular(LocalCommand[RegularPolygonCreate, PolygonCreated, Polygon
             label=label,
             line_type=line_type,
             line_weight=line_weight,
+            rules=rules,
             symbol=symbol,
         ))
 
@@ -398,6 +416,7 @@ class _PolygonRegular(LocalCommand[RegularPolygonCreate, PolygonCreated, Polygon
         label: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        rules: AreaRules | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -418,6 +437,7 @@ class _PolygonRegular(LocalCommand[RegularPolygonCreate, PolygonCreated, Polygon
             label=label,
             line_type=line_type,
             line_weight=line_weight,
+            rules=rules,
             symbol=symbol,
         ), op=op, request_id=request_id, expected=expected)
 

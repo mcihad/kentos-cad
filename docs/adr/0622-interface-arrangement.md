@@ -405,14 +405,51 @@ Bu dilimde düzeltilenler:
   komutu kullanmayan eski `write_area` kalktı. `shape_command_cases.py` KentOS yüklemeden 27 durum üretir; masaüstünde
   `semantic_tool_tests.rs` aracı gerçek fare olaylarıyla sürer: kayıttaki son çağrı `cad.sector.create`'tir, girdi
   hazır halka değil kullanıcının verdiğidir, Python yankısı aynı çağrıyı taşır, sağ tık nesne koymaz.
+- **Revizyon bulutu:** `cad.revcloud.create` eklendi. Çerçeve doğu ve kuzey boyunca bir dikdörtgenin iki köşesi
+  (`rectangle`), bir çokgenin köşeleri (`polygon`; bir nanometre içinde yinelenen köşe ve ilk köşeye dönüş düşer) ya da
+  kapalı bir nesnenin kalıcı kimliğidir (`object`: alan, kapalı çoklu çizgi, daire, kapalı eğri, tam elips; dış
+  çevresi turda 64 kirişle, nesne kalır). Yay boyu `arc` metredir: araç kâğıt milimetresini çizimin ölçeğiyle çevirip
+  verir; komut ne etkin katmanı ne ölçeği okur. Halka saat yönünün tersine çevrilir, her kenar `max(1, round(boy /
+  arc))` eşit kirişe bölünür, her kiriş 0,5 bükümlü dışa yaydır (çekirdeğin `cloud_of`'u). 10 000'den çok yay
+  `too_many_points`, açık nesne `not_closed`, olmayan nesne `entity_not_found` ile reddedilir; sayı, yaylar
+  yapılmadan çekirdeğin `cloud_arcs`'ıyla bulunur. Araç önizlemeyi ve yazılacak halkayı `shapes::revcloud_ring`'den
+  alır, Nesne kipinde tıklanan nesnenin kimliğini verir. `shape_command_cases.py` 34 durum üretir; masaüstünde iki
+  kip gerçek fareyle ve komut satırıyla sürülür. Daire dilimi ve bulutun katman alanı retleri
+  (`invalid_attribute`, `attribute_required`) `cad.polygon.create`'in yolundan gelir ve yetenek testinde gerekçelidir.
+- **Çakışma ve Topoloji komutun girdisi:** oturumun iki anahtarı artık aracın kendi kırpması ve köşe bağlaması değil,
+  komutun `rules`'udur (`AreaRules`: `avoid` kaçınılan katmanlar, `topology`, `points`). `cad.polygon.create` ve
+  `cad.rectangle.create`, `cad.polygon.regular`, `cad.sector.create`, `cad.revcloud.create` aynı yoldan yazar
+  (`polygon::ruled_areas`, `area_rules.rs`): kaçınılan katmanların görünen alanlarıyla örtüşen kısım çıkarılır, kalan
+  tek nesnedir, parçaları ve delikleri olduğu gibi; bütünüyle örtülen `area_covered` ile reddedilir; Topoloji yeni
+  alanı görünen çizgi, yol ve alanlarla 1 µm içinde köşe köşe bağlar, komşular `cad.entities.edit`'in `vertexAdd`
+  denetimiyle aynı adımda yazılır, kilitli komşu köşe almaz. Söylenenler uyarıdır: `area_clipped`, `corners_joined`,
+  `neighbours_locked` (iletileri aracın eskileri, ortak izler değişmeden geçer). Komşular ev sahibinin geometri
+  deposunun görünenleridir; araçlar kendi depolarını verir, başsız sunucu çizimden kurar. Kesilen sınır komşuların
+  üzerindeki köşelerini taşır (ortak köşe korunur). `cad.entities.adjoin` (Bitişik alan) yalnız yeni sınırı alır:
+  yol, kenar başına büküm, komşu katmanlar (yoksa kendi katmanı) ve isteğe bağlı kutu (aracın görünümü); bölgeyi
+  çekirdeğin `Neighbours::fill`'i bulur, kapanmayan yol `no_region`, tek adım “Bitişik alan”. Kapalı alan, Alan
+  olarak çiz, şekil araçları ve Bitişik alan artık komutla yazar; aracın kırpma ve bağlama kodu kalmadı. Topoloji komşulara biçimi değiştirmeyen köşe eklediği için MCP'de bu komutlar
+  yıkıcı sayılmaz. `area_rules_cases.py` dik köşeli alanların birim hücreleriyle, KentOS kodu olmadan 24 + 24 durum
+  üretir; çalıştırıcının `shapes` beklentisi halkanın başladığı köşeden bağımsız köşeleri, net alanı, parçaları ve
+  delikleri karşılaştırır.
+- **Parsel oluştur:** `cad.parcels.create` köşeleri (ve kenar başına bükümü), isteğe bağlı numarayı ve öznitelikleri,
+  görünüşü ve `rules`'u alır; etkin katman ne olursa olsun `parsel` katmanına yazar, katman yoksa yeni projedeki gibi
+  (“Parsel sınırı”) aynı adımda açar ve cevapta `opened` der. Numara verilmezse parsellerin Parsel değerlerinin
+  başındaki en büyük tam sayının bir fazlasıdır (JavaScript'in parseInt'i: “12/A” 12); verilen numara kırpılır, boşsa
+  `invalid_parcel_number`, başka parselde de varsa `parcel_number_taken` uyarısıyla yine verilir. Öznitelikler Ada,
+  Parsel, Mahalle, Nitelik “Arsa”, Tapu alanı (m²), Pafta; verilenler üstüne, Parsel numaradır, boşlar kanonik biçimde
+  yazılmaz; etiket numaradır, tapu alanı tapunundur ve boş kalır. Kilitli parsel katmanı aracın sözüyle reddedilir.
+  Araç köşeleri ve oturumun kurallarını verir, parseli seçer, açılan katmanı söyler; aracın kendi numaralaması, kırpması
+  ve köşe bağlaması (`junctions.rs`, `overlap.rs`'in kırpması) kalktı. `area_rules_cases.py` 21 durum üretir.
 - **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
   de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
   çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu
   varsayılanlar yalnız girdi şemasında aynen tanımlıysa kabul edilir; verilen değerlerin değişmesi gizlenmez. Bu son denetim dosya yazma testi değildir;
   mevcut başsız dosya testlerinin yanında kodun/kataloğun bütünlüğünü sınar.
 
-Bu bölüm `UX-14`'ün bütün tarihsel araç borcunu kapattığı anlamına gelmez. Halka ve denetimin dosya komutları dilimi
-ayrıdır; Revizyon bulutu, Çakışma/Topoloji ve diğer açık araçlar listedeki sıralarıyla kalır.
+Bu bölüm `UX-14`'ün bütün tarihsel araç borcunu kapattığı anlamına gelmez. Halka, Daire dilimi, Revizyon bulutu,
+Çakışma/Topoloji, Bitişik alan ve Parsel oluştur dilimleri kapandı; diğer açık araçlar (yapım yardımcıları, P1 ve P2)
+listedeki sıralarıyla kalır.
 
 ### 9.1 Bu devamın doğrulaması
 

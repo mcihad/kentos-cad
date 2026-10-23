@@ -40,8 +40,8 @@ const MIN_CORNERS: usize = 3;
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &PolygonCreate) -> CommandResult<()> {
-    match check(cx.doc, input) {
-        Ok(warnings) => CommandResult::Completed {
+    match ruled(cx.doc, cx.store, input) {
+        Ok((warnings, _, _)) => CommandResult::Completed {
             output: (),
             warnings,
         },
@@ -52,10 +52,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &PolygonCreate) -> CommandResu
 /// What execute would write now, and the revision to expect for exactly
 /// that; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &PolygonCreate) -> CommandResult<PolygonPlan> {
-    match check(cx.doc, input) {
-        Ok(warnings) => CommandResult::Completed {
+    match ruled(cx.doc, cx.store, input) {
+        Ok((warnings, entity, _)) => CommandResult::Completed {
             output: PolygonPlan {
-                entity: polygon(settled(cx.doc, input.clone()), 0),
+                entity,
                 revision: cx.doc.revision().to_string(),
             },
             warnings,
@@ -93,16 +93,84 @@ fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: PolygonCreate,
 ) -> CommandResult<PolygonCreated> {
-    let warnings = match check(cx.doc, &input) {
-        Ok(warnings) => warnings,
+    match ruled(cx.doc, cx.store, &input) {
+        Ok(ruled) => write_ruled(cx, ruled),
+        Err(stop) => stop.into(),
+    }
+}
+
+/// The checks, then the rules (Çakışma, Topoloji; docs/adr/0622 §9): the warnings, the polygon as the document will
+/// store it (id 0) and the neighbours' corners.
+fn ruled(
+    doc: &Document,
+    store: Option<&kentos_geometry_core::store::Store>,
+    input: &PolygonCreate,
+) -> Result<Ruled, Stop> {
+    let area =
+        crate::area_rules::area_of(&input.pts, input.bulges.as_deref(), input.holes.as_deref());
+    ruled_areas(doc, store, input, vec![area])
+}
+
+/// The warnings, the polygon to store (id 0) and the neighbours' corners.
+pub(crate) type Ruled = (
+    Vec<CommandWarning>,
+    Entity,
+    Vec<kentos_commands::EntityEdit>,
+);
+
+/// [`ruled`] for an area of several parts (Bitişik alan's region, docs/adr/0622 §9): `input` gives its first part's
+/// rings, which the checks read, and its look; `areas` every part, written as one object.
+pub(crate) fn ruled_areas(
+    doc: &Document,
+    store: Option<&kentos_geometry_core::store::Store>,
+    input: &PolygonCreate,
+    areas: Vec<kentos_geometry_core::geom::arrangement::Area>,
+) -> Result<Ruled, Stop> {
+    let mut warnings = check(doc, input)?;
+    crate::area_rules::check(doc, input.rules.as_ref())?;
+    let rules = crate::area_rules::apply(doc, store, areas.clone(), input.rules.as_ref())?;
+    let mut entity = polygon(settled(doc, input.clone()), 0);
+    let mut edits = Vec::new();
+    let areas = match rules {
+        Some(rules) => {
+            warnings.extend(rules.warnings);
+            edits = rules.edits;
+            rules.areas
+        }
+        None => areas,
+    };
+    if let (Entity::Polygon(p), Some((pts, bulges, holes, parts))) =
+        (&mut entity, crate::area_rules::fields(&areas))
+    {
+        p.pts = pts;
+        p.bulges = bulges;
+        p.holes = holes;
+        p.parts = parts;
+    }
+    Ok((warnings, entity, edits))
+}
+
+/// Writes what [`ruled_areas`] made into the open step: the polygon, then the neighbours' corners.
+pub(crate) fn write_ruled(
+    cx: &mut ExecutionContext<'_>,
+    ruled: Ruled,
+) -> CommandResult<PolygonCreated> {
+    let (warnings, entity, edits) = ruled;
+    let (id, uid, _) = match checks::add(cx.doc, entity) {
+        Ok(added) => added,
         Err(stop) => return stop.into(),
     };
-    match checks::add(cx.doc, polygon(settled(cx.doc, input), 0)) {
-        Ok((id, uid, revision)) => CommandResult::Completed {
-            output: PolygonCreated { uid, id, revision },
-            warnings,
+    // Topoloji: the neighbours take the new area's corners in the same step (docs/adr/0162 §4).
+    if let Err(stop) = crate::area_rules::write_neighbours(cx, edits) {
+        return stop.into();
+    }
+    CommandResult::Completed {
+        output: PolygonCreated {
+            uid,
+            id,
+            revision: cx.doc.revision().to_string(),
         },
-        Err(stop) => stop.into(),
+        warnings,
     }
 }
 

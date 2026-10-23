@@ -122,7 +122,9 @@ fn nothing_is_written_when_the_neighbours_cover_the_new_area() {
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert_eq!(
         b.last_text(),
-        Some("Yeni alan komşu alanların içinde kalıyor; alan eklenmedi.")
+        Some(
+            "Yeni alan kaçınılan katmanlardaki alanların içinde kalıyor; yazılacak bir kısmı yok. Başka bir yere çizin ya da Çakışma'yı kapatın."
+        )
     );
 }
 

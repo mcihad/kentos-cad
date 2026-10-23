@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linearref, linetypes, meshes, network, nurbs, openings, parameters, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, sector, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs
+from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linearref, linetypes, meshes, network, nurbs, openings, parameters, parcels, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, revcloud, scenarios, schedules, schema, sector, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.check": addresses.check,
@@ -43,6 +43,7 @@ COMMANDS: dict[str, Any] = {
     "cad.donut.create": donut.create,
     "cad.drawing.audit": drawing.audit,
     "cad.drawing.compare": drawing.compare,
+    "cad.entities.adjoin": entities.adjoin,
     "cad.entities.array": entities.array,
     "cad.entities.boundary": entities.boundary,
     "cad.entities.break": entities.break_,
@@ -128,6 +129,7 @@ COMMANDS: dict[str, Any] = {
     "cad.openings.create": openings.create,
     "cad.openings.edit": openings.edit,
     "cad.parameters.edit": parameters.edit,
+    "cad.parcels.create": parcels.create,
     "cad.point.create": point.create,
     "cad.pointclouds.describe": pointclouds.describe,
     "cad.pointclouds.profile": pointclouds.profile,
@@ -155,6 +157,7 @@ COMMANDS: dict[str, Any] = {
     "cad.records.page": records.page,
     "cad.rectangle.create": rectangle.create,
     "cad.relations.edit": relations.edit,
+    "cad.revcloud.create": revcloud.create,
     "cad.scenarios.edit": scenarios.edit,
     "cad.schedules.create": schedules.create,
     "cad.schedules.edit": schedules.edit,
@@ -263,4 +266,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "assets", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "crs", "curves", "dimensions", "domains", "donut", "drawing", "entities", "fields", "file", "fonts", "forms", "gis", "grids", "hatches", "hatchpatterns", "images", "inserts", "joins", "labels", "layers", "leaders", "library", "line", "linearref", "linetypes", "meshes", "network", "nurbs", "openings", "parameters", "point", "pointclouds", "points", "polygon", "polyline", "processing", "profiles", "project", "ramps", "rasters", "records", "rectangle", "relations", "scenarios", "schedules", "schema", "sector", "settings", "sheets", "snap", "sources", "spaces", "stac", "stairs", "standards", "styles", "subnetworks", "tables", "tags", "templates", "texts", "time", "topology", "ucs", "units", "viewmarks", "views", "walls", "xrefs",)
+NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "assets", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "crs", "curves", "dimensions", "domains", "donut", "drawing", "entities", "fields", "file", "fonts", "forms", "gis", "grids", "hatches", "hatchpatterns", "images", "inserts", "joins", "labels", "layers", "leaders", "library", "line", "linearref", "linetypes", "meshes", "network", "nurbs", "openings", "parameters", "parcels", "point", "pointclouds", "points", "polygon", "polyline", "processing", "profiles", "project", "ramps", "rasters", "records", "rectangle", "relations", "revcloud", "scenarios", "schedules", "schema", "sector", "settings", "sheets", "snap", "sources", "spaces", "stac", "stairs", "standards", "styles", "subnetworks", "tables", "tags", "templates", "texts", "time", "topology", "ucs", "units", "viewmarks", "views", "walls", "xrefs",)

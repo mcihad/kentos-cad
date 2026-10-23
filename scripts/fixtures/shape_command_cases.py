@@ -1,9 +1,11 @@
-"""The shared cases of cad.rectangle.create, cad.polygon.regular (docs/adr/0290) and cad.sector.create (docs/adr/0622 §9).
+"""The shared cases of cad.rectangle.create, cad.polygon.regular (docs/adr/0290), cad.sector.create and
+cad.revcloud.create (docs/adr/0622 §9).
 
     python3 scripts/fixtures/shape_command_cases.py           # writes the files
     python3 scripts/fixtures/shape_command_cases.py --check   # writes nothing; compares
 
-Writes fixtures/commands/v1/cad.rectangle.create.json, cad.polygon.regular.json and cad.sector.create.json. The checks, their order, codes,
+Writes fixtures/commands/v1/cad.rectangle.create.json, cad.polygon.regular.json, cad.sector.create.json and
+cad.revcloud.create.json. The checks, their order, codes,
 paths and messages are written here by hand from the ADR; the polygon's own (layer, revision, line weight) are the
 contract's of cad.polygon.create (docs/adr/0022). The rings follow the shapes' definitions in the order of their
 arithmetic, without KentOS code:
@@ -20,7 +22,12 @@ arithmetic, without KentOS code:
   the last at the edge's direction + 2πk/n;
 - a pie slice: sweep = fmod(a1 − a0, 2π), 2π added when negative; none for a radius not above a nanometre or a sweep
   within a nanoradian of nothing or of a whole turn; its ring the centre, c + r·(cos a0, sin a0) and
-  c + r·(cos(a0 + sweep), sin(a0 + sweep)), the arc's bulge tan(sweep / 4) on the middle edge.
+  c + r·(cos(a0 + sweep), sin(a0 + sweep)), the arc's bulge tan(sweep / 4) on the middle edge;
+- a revision cloud: the rectangle's ring a, (b.x, a.y), b, (a.x, b.y), the corners with repeats within a nanometre
+  dropped (and the last when it repeats the first), an object's outer outline (here an area's corners); turned
+  counter-clockwise when its shoelace area (taken from the first corner, halved) is not positive; each side a→b
+  divided into k = max(1, round(|b − a| / arc)) chords (ECMAScript's Math.round), the points a + ((b − a)·j) / k,
+  every bulge 0.5; more than 10 000 arcs refused before any is made.
 
 Square roots are Python's (correctly rounded, as Rust's); hypot is ECMAScript's, as the core writes it; sin, cos,
 tan and acos are computed to 60 digits by their series and rounded to the nearest double, not by the platform's
@@ -514,10 +521,150 @@ def sector_cases_pathless():
     return []
 
 
+CLOUD_RECT_DEGENERATE = ("Dikdörtgenin bir kenarı sıfır uzunlukta: iki köşe aynı doğu ya da kuzey çizgisinde. "
+                         "Başka bir karşı köşe verin.")
+CLOUD_FLAT = "Bulutun köşeleri bir doğru üzerinde: alanı yok. Başka köşeler verin."
+CLOUD_FEW = "Bulutun en az üç köşesi olmalı."
+CLOUD_OPEN = ("Nesne kapalı değil: bulut alanın, kapalı çoklu çizginin, dairenin, kapalı eğrinin ya da tam elipsin "
+              "çevresine çizilir.")
+CLOUD_MANY = "Bulut 10 000'den çok yay olurdu; daha büyük bir yay boyu verin."
+NO_SUCH = "00000000-0000-4000-8000-000000000000"
+
+
+def js_round(x):
+    f = math.floor(x)
+    return f + 1.0 if x - f >= 0.5 else float(f)
+
+
+def shoelace(ring):
+    ox, oy = ring[0]
+    a, j = 0.0, len(ring) - 1
+    for i in range(len(ring)):
+        a += (ring[j][0] - ox) * (ring[i][1] - oy) - (ring[i][0] - ox) * (ring[j][1] - oy)
+        j = i
+    return a / 2.0
+
+
+def dist(a, b):
+    return hypot(b[0] - a[0], b[1] - a[1])
+
+
+def corners_of(pts):
+    ring = []
+    for p in pts:
+        if not ring or dist(ring[-1], p) > 1e-9:
+            ring.append(p)
+    while len(ring) > 1 and dist(ring[0], ring[-1]) <= 1e-9:
+        ring.pop()
+    return ring
+
+
+def cloud_arcs(ring, arc):
+    n = len(ring)
+    return sum(max(1.0, js_round(dist(ring[i], ring[(i + 1) % n]) / arc)) for i in range(n))
+
+
+def cloud(ring, arc):
+    ccw = list(ring) if shoelace(ring) > 0.0 else list(reversed(ring))
+    pts = []
+    for i in range(len(ccw)):
+        a, b = ccw[i], ccw[(i + 1) % len(ccw)]
+        k = max(1.0, js_round(dist(a, b) / arc))
+        j = 0.0
+        while j < k:
+            pts.append((a[0] + ((b[0] - a[0]) * j) / k, a[1] + ((b[1] - a[1]) * j) / k))
+            j += 1.0
+    return pts, [0.5] * len(pts)
+
+
+def rect_ring(a, b):
+    return [a, (b[0], a[1]), b, (a[0], b[1])]
+
+
+def cloud_in(frame, arc, **extra):
+    return {"layerId": "yapi", "frame": frame, "arc": arc, **extra}
+
+
+def rect_frame(a, b):
+    return {"kind": "rectangle", "a": W(a), "b": W(b)}
+
+
+def poly_frame(pts):
+    return {"kind": "polygon", "pts": [W(p) for p in pts]}
+
+
+def cloud_written(name, frame, ring, arc, **kw):
+    pts, bulges = cloud(ring, float(arc))
+    assert cloud_arcs(ring, float(arc)) == len(pts) <= 10_000
+    extra = {k: v for k, v in kw.items() if k in ("color", "lineWeight", "attrs", "label")}
+    rest = {k: v for k, v in kw.items() if k not in extra}
+    return written(name, cloud_in(frame, arc, **extra), pts, bulges, extra=extra or None, **rest)
+
+
+def revcloud_cases():
+    a, b = at(10, 10), at(30, 20)
+    tri = [at(0, 0), at(40, 0), at(40, 30)]  # the setup's area 9 on Sınır
+    assert [W(p) for p in tri] == SETUP["entities"][1]["pts"]
+    pent = [at(0, 0), at(12, -2), at(16, 9), at(6, 15), at(-3, 7)]
+    out = [
+        cloud_written("Dikdörtgen: 20 × 10 m, 2 m'lik yaylar, otuz yay; adım “Ekle”", rect_frame(a, b), rect_ring(a, b), 2),
+        cloud_written("Dikdörtgen sağ üstten sol alta: halka yine saat yönünün tersine", rect_frame(b, a), rect_ring(b, a), 2),
+        cloud_written("Dikdörtgen saat yönünde verilir: halka çevrilir", rect_frame(at(30, 10), at(10, 20)),
+                      rect_ring(at(30, 10), at(10, 20)), 2),
+        cloud_written("Yay boyu kenarı bölmüyor: 20/3 yedi, 10/3 üç kiriş", rect_frame(a, b), rect_ring(a, b), 3),
+        cloud_written("Yarım yuvarlanır: 10/4 = 2,5 üç kiriş", rect_frame(a, at(30, 20)), rect_ring(a, b), 4),
+        cloud_written("Kenardan uzun yay: her kenar tek yay", rect_frame(a, b), rect_ring(a, b), 100),
+        cloud_written("Üçgenin köşeleri", poly_frame(tri), tri, 5),
+        cloud_written("Saat yönünde köşeler çevrilir", poly_frame(list(reversed(tri))), list(reversed(tri)), 5),
+        cloud_written("Yinelenen köşe ve ilk köşeye dönüş düşer",
+                      poly_frame([tri[0], tri[1], tri[1], tri[2], tri[0]]), tri, 5),
+        cloud_written("Düzensiz beşgen, 1,5 m'lik yaylar", poly_frame(pent), pent, 1.5),
+        cloud_written("Nesne: Sınır'daki alanın çevresine, nesne kalır", {"kind": "object", "uid": "$uidOf:9"}, tri, 10),
+        cloud_written("Renk, kalınlık, öznitelik ve etiket taşınır", rect_frame(a, b), rect_ring(a, b), 2, color="#E5484D",
+                      lineWeight=0.5, attrs={"Tür": "Revizyon"}, label="R1"),
+        cloud_written("Gizli katmana uyarıyla", rect_frame(a, b), rect_ring(a, b), 2,
+                      warnings=[{"code": "layer_hidden", "message": HIDDEN, "path": "layerId"}], layer="gizli"),
+    ]
+    out[-1]["steps"][0]["input"]["layerId"] = "gizli"
+    pts, bulges = cloud(rect_ring(a, b), 2.0)
+    out.append(planned("Plan: bulut olacağı gibi, yuvası 0", cloud_in(rect_frame(a, b), 2), pts, bulges))
+    base = cloud_in(rect_frame(a, b), 2)
+    poly = cloud_in(poly_frame(tri), 5)
+    out += [
+        refused("İlk köşe sonlu değil", base, "not_finite", not_finite_point("İlk köşenin", "x"), "frame.a.x", {"frame.a.x": "NaN"}),
+        refused("Karşı köşe sonlu değil", base, "not_finite", not_finite_point("Karşı köşenin", "y"), "frame.b.y",
+                {"frame.b.y": "Infinity"}),
+        refused("Çokgenin köşesi sonlu değil", poly, "not_finite", not_finite_point("Köşenin", "x"), "frame.pts[1].x",
+                {"frame.pts[1].x": "NaN"}),
+        refused("Yay boyu sonlu değil", base, "not_finite", not_finite_number("Yay boyu"), "arc", {"arc": "Infinity"}),
+        refused("Yay boyu sıfır", cloud_in(rect_frame(a, b), 0), "invalid_distance", "Yay boyu sıfırdan büyük olmalı.", "arc"),
+        refused("Yay boyu eksi", cloud_in(rect_frame(a, b), -2), "invalid_distance", "Yay boyu sıfırdan büyük olmalı.", "arc"),
+        refused("Dikdörtgenin yüksekliği yok", cloud_in(rect_frame(a, at(30, 10)), 2), "degenerate_shape", CLOUD_RECT_DEGENERATE,
+                "frame"),
+        refused("Çokgenin iki köşesi", cloud_in(poly_frame(tri[:2]), 5), "too_few_corners", CLOUD_FEW, "frame.pts"),
+        refused("Yinelenenler düşünce iki köşe kalır", cloud_in(poly_frame([tri[0], tri[1], tri[1], tri[0]]), 5),
+                "too_few_corners", CLOUD_FEW, "frame.pts"),
+        refused("Köşeler bir doğru üzerinde", cloud_in(poly_frame([at(0, 0), at(10, 0), at(20, 0)]), 5), "degenerate_shape",
+                CLOUD_FLAT, "frame.pts"),
+        refused("Olmayan nesne", cloud_in({"kind": "object", "uid": NO_SUCH}, 5), "entity_not_found",
+                f"“{NO_SUCH}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin "
+                "kimliğini verin.", "frame.uid"),
+        refused("Kimlik bozuk", cloud_in({"kind": "object", "uid": "abc"}, 5), "entity_not_found",
+                "“abc” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin "
+                "kimliğini verin.", "frame.uid"),
+        refused("Nokta kapalı değil", cloud_in({"kind": "object", "uid": "$uidOf:4"}, 5), "not_closed", CLOUD_OPEN, "frame.uid"),
+        refused("10 000'den çok yay", cloud_in(rect_frame(a, b), 0.001), "too_many_points", CLOUD_MANY, "arc"),
+    ]
+    assert cloud_arcs(rect_ring(a, b), 0.001) > 10_000
+    out += polygon_refusals(base)
+    return out
+
+
 FILES = [
     ("cad.rectangle.create", "Dikdörtgen oluştur", rectangle_cases),
     ("cad.polygon.regular", "Düzgün çokgen oluştur", regular_cases),
     ("cad.sector.create", "Daire dilimi oluştur", sector_cases),
+    ("cad.revcloud.create", "Revizyon bulutu oluştur", revcloud_cases),
 ]
 
 
@@ -527,7 +674,7 @@ def main() -> int:
     for command, title, cases in FILES:
         doc = {"format": "kentos.command-cases", "version": 1, "command": command, "commandVersion": 1, "title": title,
                "note": "Written by scripts/fixtures/shape_command_cases.py from the shapes' definitions (docs/adr/"
-                       + ("0622 §9" if command == "cad.sector.create" else "0290") + "); do not edit by hand.",
+                       + ("0622 §9" if command in ("cad.sector.create", "cad.revcloud.create") else "0290") + "); do not edit by hand.",
                "setup": SETUP, "cases": cases()}
         assert_no_negative_zero(doc, command)
         text = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"

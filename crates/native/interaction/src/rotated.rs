@@ -61,6 +61,7 @@ impl RotatedRectangle {
             label: cx.template_label(),
             symbol: cx.template_symbol(),
             expected_revision: None,
+            rules: None,
         };
         let Some(ring) = shapes::rectangle_ring(&input).ok().map(|(pts, _)| pts) else {
             cx.say(
@@ -69,12 +70,17 @@ impl RotatedRectangle {
             );
             return;
         };
+        let mut input = input;
+        let rules = points::area_rules(cx, &input.layer_id);
+        input.rules = rules;
         let mut write = |cx: &mut Context<'_>| {
-            let result =
-                shapes::execute_rectangle(&mut ExecutionContext::new(cx.doc), input.clone());
+            let result = shapes::execute_rectangle(
+                &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+                input.clone(),
+            );
             points::written(result, cx).map(|out| out.id)
         };
-        if points::write_area_by(&mut self.d, &ring, None, cx, Some(&mut write)).is_some() {
+        if points::write_area_by(&mut self.d, cx, &mut write).is_some() {
             let format = cx.format();
             let line = format!(
                 "Dikdörtgen eklendi: {} × {}",
@@ -229,6 +235,7 @@ fn preview_ring(a: Vec2, b: Vec2, width: f64) -> Option<Vec<Vec2>> {
         label: None,
         symbol: None,
         expected_revision: None,
+        rules: None,
     };
     shapes::rectangle_ring(&input).ok().map(|(pts, _)| pts)
 }

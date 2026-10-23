@@ -214,6 +214,7 @@ const ENTRIES: &[Entry] = &[
         id: "cad.polygon.create",
         refusals: &[
             &[
+                "area_covered",
                 "too_few_corners",
                 "bulge_count",
                 "not_finite",
@@ -227,13 +228,14 @@ const ENTRIES: &[Entry] = &[
             // The layer's record rules and unique fields (docs/adr/0438 §1, §3).
             &["rule_broken", "not_unique"],
         ],
-        warnings: &["layer_hidden", "layer_locked"],
+        warnings: &["layer_hidden", "layer_locked", "area_clipped", "corners_joined", "neighbours_locked"],
         targets: none,
     },
     Entry {
         id: "cad.rectangle.create",
         refusals: &[
             &[
+                "area_covered",
                 "not_finite",
                 "invalid_distance",
                 "degenerate_shape",
@@ -244,13 +246,14 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             ATTRS,
         ],
-        warnings: &["layer_hidden"],
+        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
         targets: none,
     },
     Entry {
         id: "cad.sector.create",
         refusals: &[
             &[
+                "area_covered",
                 "not_finite",
                 "invalid_distance",
                 "degenerate_shape",
@@ -260,13 +263,72 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             ATTRS,
         ],
-        warnings: &["layer_hidden"],
+        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.parcels.create",
+        refusals: &[
+            &[
+                "invalid_parcel_number",
+                "too_few_corners",
+                "bulge_count",
+                "not_finite",
+                "invalid_line_weight",
+                "area_covered",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["parcel_number_taken", "area_clipped", "corners_joined", "neighbours_locked"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.entities.adjoin",
+        refusals: &[
+            &[
+                "too_few_points",
+                "not_finite",
+                "bulge_count",
+                "no_region",
+                "too_few_corners",
+                "invalid_line_weight",
+                "area_covered",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.revcloud.create",
+        refusals: &[
+            &[
+                "area_covered",
+                "not_finite",
+                "invalid_distance",
+                "degenerate_shape",
+                "too_few_corners",
+                "entity_not_found",
+                "not_closed",
+                "too_many_points",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
         targets: none,
     },
     Entry {
         id: "cad.polygon.regular",
         refusals: &[
             &[
+                "area_covered",
                 "not_finite",
                 "invalid_count",
                 "degenerate_shape",
@@ -276,7 +338,7 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             ATTRS,
         ],
-        warnings: &["layer_hidden"],
+        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
         targets: none,
     },
     Entry {

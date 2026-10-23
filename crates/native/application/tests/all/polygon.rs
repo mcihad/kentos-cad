@@ -47,6 +47,7 @@ fn triangle() -> PolygonCreate {
         expected_revision: None,
         label: None,
         symbol: None,
+        rules: None,
     }
 }
 

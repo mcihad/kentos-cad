@@ -190,7 +190,12 @@ pub(crate) fn written<T>(result: CommandResult<T>, cx: &mut Context<'_>) -> Opti
     match result {
         CommandResult::Completed { output, warnings } => {
             for warning in warnings {
-                cx.say(Level::Warn, warning.message);
+                // What Çakışma and Topoloji did is news, not a warning (docs/adr/0162).
+                let level = match warning.code.as_str() {
+                    codes::AREA_CLIPPED | codes::CORNERS_JOINED => Level::Info,
+                    _ => Level::Warn,
+                };
+                cx.say(level, warning.message);
             }
             Some(output)
         }
@@ -214,106 +219,54 @@ pub(crate) fn wire(p: Vec2) -> kentos_commands::Vec2 {
     kentos_commands::Vec2 { x: p.x, y: p.y }
 }
 
-/// A closed shape a tool built (a rectangle, a regular polygon) written
-/// through the product command `cad.polygon.create` (docs/adr/0032): the
-/// active layer and the current colour explicit in its input (CMD-07).
-/// Whether it was written; the object is noted on the draft for Ctrl+Z.
-pub(crate) fn write_ring(
-    d: &mut Taken,
-    pts: &[Vec2],
-    bulges: Option<Vec<f64>>,
-    cx: &mut Context<'_>,
-) -> bool {
-    use kentos_native_application::{ExecutionContext, polygon};
-    let input = kentos_commands::PolygonCreate {
-        line_type: cx.draft.line_type,
-        wipeout: None,
-        layer_id: cx.doc.layers().active().to_owned(),
-        pts: pts.iter().map(|p| wire(*p)).collect(),
-        bulges,
-        holes: None,
-        color: cx.draft.color_text(),
-        line_weight: cx.draft.line_weight,
-        attrs: cx.template_attrs(None),
-        label: cx.template_label(),
-        symbol: cx.template_symbol(),
-        expected_revision: None,
-    };
-    let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
-    match written(result, cx) {
-        Some(output) => {
-            d.note(output.id, cx);
-            true
-        }
-        None => false,
-    }
-}
-
 /// A shape command's writer: the object it wrote, by its slot.
 pub(crate) type Writer<'w> = &'w mut dyn FnMut(&mut Context<'_>) -> Option<u32>;
 
-/// A new area a tool built by its outline (a rectangle, a regular polygon, a sector), the overlap control first
-/// (docs/adr/0162 §2; the web's `writeArea`): what overlaps the neighbours is cut away and the rest written as one
-/// object; the plain area is written by `writer` when one is given (a shape tool's own command, docs/adr/0290) and
-/// neither the overlap control nor Topoloji changed it.
+/// The session's Çakışma and Topoloji as a command's rules for a new area going on `layer` (docs/adr/0162,
+/// 0622 §9): the layers it must not overlap, whether it shares corners; none when they change nothing.
+pub(crate) fn area_rules(cx: &mut Context<'_>, layer: &str) -> Option<kentos_commands::AreaRules> {
+    let avoid = crate::overlap::overlap_layers(cx, layer);
+    if avoid.is_empty() && cx.draft.overlap == crate::tool::Overlap::Layers {
+        cx.say(
+            Level::Warn,
+            "Seçili katmanlarda önle kipinde seçili katman yok: alan olduğu gibi yazıldı. Katmanları Çakışma hücresinin menüsünden seçin.",
+        );
+    }
+    let rules = kentos_commands::AreaRules {
+        avoid,
+        topology: cx.draft.topology,
+        points: cx.draft.topology && cx.draft.topology_points,
+    };
+    (!rules.is_empty()).then_some(rules)
+}
+
+/// The net area of the object in `slot`: its parts less their holes.
+pub(crate) fn area_of_slot(cx: &Context<'_>, slot: u32) -> f64 {
+    use kentos_geometry_core::geom::region::net_area;
+    use kentos_geometry_core::ops::areas::areas_of_entity;
+    cx.doc
+        .get(kentos_domain::Slot(slot))
+        .map(|e| {
+            areas_of_entity(&kentos_native_application::geometry::shape(e))
+                .iter()
+                .map(net_area)
+                .sum()
+        })
+        .unwrap_or(0.0)
+}
+
+/// A new area a tool built by its outline (a rectangle, a regular polygon, a sector, a cloud), written by its own
+/// command (docs/adr/0290, 0622 §9) with the session's Çakışma and Topoloji in its input ([`area_rules`]): the
+/// command cuts away what overlaps and shares corners with the neighbours in its own step, and says what it did.
+/// The area written, or `None` when the command refused (its reason said).
 pub(crate) fn write_area_by(
     d: &mut Taken,
-    pts: &[Vec2],
-    bulges: Option<Vec<f64>>,
     cx: &mut Context<'_>,
-    mut writer: Option<Writer<'_>>,
+    writer: Writer<'_>,
 ) -> Option<f64> {
-    use crate::junctions;
-    use crate::overlap::{clip_new_area, clipped_geometry, say_clipped, written_area};
-    use kentos_domain::labels;
-    use kentos_geometry_core::geom::arrangement::{Area, Ring};
-    use kentos_geometry_core::geom::bulge::bulge_ring_area;
-    let drawn = Area {
-        outer: Ring {
-            pts: pts.to_vec(),
-            bulges: bulges.clone(),
-        },
-        holes: Vec::new(),
-    };
-    let layer = cx.doc.layers().active().to_owned();
-    let clipped = clip_new_area(cx, &drawn, &layer);
-    if let Some(c) = &clipped {
-        say_clipped(cx, c);
-    }
-    let (areas, area) = match &clipped {
-        Some(c) => (c.areas.clone(), written_area(&c.areas)),
-        None => (vec![drawn], bulge_ring_area(pts, bulges.as_deref()).abs()),
-    };
-    if areas.is_empty() {
-        return None;
-    }
-    let joining = junctions::join(cx, &areas);
-    let plain = clipped.is_none() && joining.is_none();
-    let areas = joining.as_ref().map_or(areas, |j| j.areas.clone());
-    let noted = d.made.len();
-    junctions::with_joined(cx, joining.as_ref(), labels::ADD, |cx| {
-        if let (true, Some(writer)) = (plain, writer.as_mut()) {
-            let id = writer(cx)?;
-            d.note(id, cx);
-            return Some(());
-        }
-        if clipped.is_none() {
-            let ring = &areas[0].outer;
-            return write_ring(d, &ring.pts, ring.bulges.clone(), cx).then_some(());
-        }
-        let out = write_objects(vec![clipped_geometry(&areas)?], None, cx)?;
-        if let Some(&id) = out.ids.first() {
-            d.note(id, cx);
-        }
-        Some(())
-    })?;
-    // An object noted inside the step is noted again at the step's end, when
-    // the drawing's revision is final: Ctrl+Z inside the tool takes it back.
-    if d.made.len() > noted {
-        d.made_at = Some(cx.doc.revision());
-    }
-    junctions::say(joining.as_ref(), cx);
-    Some(area)
+    let id = writer(cx)?;
+    d.note(id, cx);
+    Some(area_of_slot(cx, id))
 }
 
 /// Objects a tool built (an ellipse, a spline, a perpendicular …) written

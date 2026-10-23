@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 94 | 223 | 43 | 45 | 405 |
-| geometry | 12 | 64 | 1 | 3 | 80 |
+| semantic | 98 | 225 | 43 | 45 | 411 |
+| geometry | 8 | 62 | 1 | 3 | 74 |
 | processing | 0 | 130 | 22 | 2 | 154 |
 | none | 0 | 14 | 6 | 2 | 22 |
 | query | 6 | 24 | 2 | 8 | 40 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 814 satırdan 112'i: geometry 77, none 20, processing 3, query 12.
+CBS'ye özgü olmayan 814 satırdan 106'i: geometry 71, none 20, processing 3, query 12.
 
-### Sonucu çağıran hesaplar (geometry) — 77
+### Sonucu çağıran hesaplar (geometry) — 71
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -45,7 +45,6 @@ CBS'ye özgü olmayan 814 satırdan 112'i: geometry 77, none 20, processing 3, q
 | `calc.traverse` | Poligon hesabı… | shared | cad.entities.create `traverse` |  |
 | `cogo.update` | Kayıtlı ölçüleri çizimden yaz | shared | cad.entities.set |  |
 | `crs.points` | Nokta listesi içe aktar… | shared | cad.entities.create |  |
-| `tool.adjoin` | Bitişik alan | shared | cad.entities.create `adjoin` |  |
 | `tool.areaIntersect` | Alan kesiştir | shared | cad.entities.edit `areaIntersect` |  |
 | `tool.areaSplit` | Alan böl | shared | cad.entities.edit `areaSplit` |  |
 | `tool.areaSubtract` | Alan çıkar | shared | cad.entities.edit `areaSubtract` |  |
@@ -68,7 +67,6 @@ CBS'ye özgü olmayan 814 satırdan 112'i: geometry 77, none 20, processing 3, q
 | `tool.labelsToText` | Etiketleri yazıya çevir | shared | cad.entities.create `labels` |  |
 | `tool.medianClose` | Refüj kapat | shared | cad.entities.edit `medianClose` |  |
 | `tool.parallel` | Paralel çizgi | cad | cad.entities.create `parallel` |  |
-| `tool.parcel` | Parsel oluştur | shared | cad.entities.create |  |
 | `tool.partsJoin` | Parçaları birleştir | shared | cad.entities.edit `partsJoin` |  |
 | `tool.partsSplit` | Parçalara ayır | shared | cad.entities.edit `partsSplit` |  |
 | `tool.perpIn` | Dik in | cad | cad.entities.create `perpendicularIn` |  |
@@ -84,10 +82,6 @@ CBS'ye özgü olmayan 814 satırdan 112'i: geometry 77, none 20, processing 3, q
 | `tool.rangeRings` | Menzil halkaları | shared | cad.entities.create `rangeRings` |  |
 | `tool.readable` | Okunur yap | shared | cad.entities.edit `readable` |  |
 | `tool.reshape` | Biçim değiştir | shared | cad.entities.edit `reshape` |  |
-| `tool.revcloud` | Revizyon bulutu | cad | cad.polygon.create |  |
-| `tool.revcloud#Dikdörtgen` | Revizyon bulutu: Dikdörtgen | cad | cad.polygon.create |  |
-| `tool.revcloud#Nesne` | Revizyon bulutu: Nesne | cad | cad.polygon.create |  |
-| `tool.revcloud#Çokgen` | Revizyon bulutu: Çokgen | cad | cad.polygon.create |  |
 | `tool.roadJunctions` | Kavşak temizle | shared | cad.entities.edit `roadJunctions` |  |
 | `tool.setElevation` | Kot ver | shared | cad.entities.edit `elevation` |  |
 | `tool.setElevation#Artır` | Kot ver: Artır | shared | cad.entities.edit `elevation` |  |

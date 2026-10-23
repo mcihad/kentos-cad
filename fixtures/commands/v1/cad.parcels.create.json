@@ -1,0 +1,3143 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.parcels.create",
+  "commandVersion": 1,
+  "title": "Parsel oluştur",
+  "note": "Written by scripts/fixtures/area_rules_cases.py on the unit cells of the plane (docs/adr/0162, 0622 §9); do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "activeLayer": "yapi",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "arsiv",
+        "name": "Arşiv",
+        "type": "group",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "eski",
+            "name": "Eski",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "taslak",
+        "name": "Taslak",
+        "type": "group",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "notlar",
+            "name": "Notlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {
+          "Ada": "101",
+          "Parsel": "7"
+        },
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420000
+          },
+          {
+            "x": 487010,
+            "y": 4420000
+          },
+          {
+            "x": 487010,
+            "y": 4420010
+          },
+          {
+            "x": 487000,
+            "y": 4420010
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+          "Ada": "101",
+          "Parsel": " 12/A"
+        },
+        "pts": [
+          {
+            "x": 487010,
+            "y": 4420000
+          },
+          {
+            "x": 487020,
+            "y": 4420000
+          },
+          {
+            "x": 487020,
+            "y": 4420010
+          },
+          {
+            "x": 487010,
+            "y": 4420010
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 3,
+        "layerId": "yol",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487030,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420020
+          },
+          {
+            "x": 487030,
+            "y": 4420020
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 4,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487050,
+            "y": 4420000
+          },
+          {
+            "x": 487060,
+            "y": 4420000
+          },
+          {
+            "x": 487060,
+            "y": 4420010
+          },
+          {
+            "x": 487050,
+            "y": 4420010
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 5,
+        "layerId": "gizli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420030
+          },
+          {
+            "x": 487020,
+            "y": 4420030
+          },
+          {
+            "x": 487020,
+            "y": 4420040
+          },
+          {
+            "x": 487000,
+            "y": 4420040
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 6,
+        "layerId": "yol",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487012,
+            "y": 4420015
+          },
+          {
+            "x": 487018,
+            "y": 4420015
+          },
+          {
+            "x": 487018,
+            "y": 4420025
+          },
+          {
+            "x": 487012,
+            "y": 4420025
+          }
+        ]
+      },
+      {
+        "kind": "point",
+        "id": 7,
+        "layerId": "parsel",
+        "attrs": {},
+        "p": {
+          "x": 487080,
+          "y": 4420005
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Sıradaki numara: başındaki tam sayıların en büyüğünün bir fazlası (12/A'dan 13)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "13",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487060,
+                    4420020
+                  ],
+                  [
+                    487060,
+                    4420030
+                  ],
+                  [
+                    487070,
+                    4420020
+                  ],
+                  [
+                    487070,
+                    4420030
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "8": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "",
+                  "Parsel": "13",
+                  "Mahalle": "",
+                  "Nitelik": "Arsa",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": ""
+                },
+                "label": "13"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verilen numara",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "number": "101/5"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "101/5",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487060,
+                    4420020
+                  ],
+                  [
+                    487060,
+                    4420030
+                  ],
+                  [
+                    487070,
+                    4420020
+                  ],
+                  [
+                    487070,
+                    4420030
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "8": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "",
+                  "Parsel": "101/5",
+                  "Mahalle": "",
+                  "Nitelik": "Arsa",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": ""
+                },
+                "label": "101/5"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Öznitelikler varsayılanların üstüne, Parsel numaradır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "number": "20",
+            "attrs": {
+              "Ada": "102",
+              "Mahalle": "Merkez",
+              "Parsel": "99"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "20",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487060,
+                    4420020
+                  ],
+                  [
+                    487060,
+                    4420030
+                  ],
+                  [
+                    487070,
+                    4420020
+                  ],
+                  [
+                    487070,
+                    4420030
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "8": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "102",
+                  "Parsel": "20",
+                  "Mahalle": "Merkez",
+                  "Nitelik": "Arsa",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": ""
+                },
+                "label": "20"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başka parselin numarası uyarıyla verilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "number": "7"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "7",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "parcel_number_taken",
+                "message": "“7” numaralı başka bir parsel var; numara yine verildi. Parsel numarasını Öznitelikler'den düzeltebilirsiniz.",
+                "path": "number"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487060,
+                    4420020
+                  ],
+                  [
+                    487060,
+                    4420030
+                  ],
+                  [
+                    487070,
+                    4420020
+                  ],
+                  [
+                    487070,
+                    4420030
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "8": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "",
+                  "Parsel": "7",
+                  "Mahalle": "",
+                  "Nitelik": "Arsa",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": ""
+                },
+                "label": "7"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parsel katmanı yoksa aynı adımda açılır, numara 1",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 7,
+              "number": "1",
+              "opened": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "shapes": {
+              "7": {
+                "corners": [
+                  [
+                    487060,
+                    4420020
+                  ],
+                  [
+                    487060,
+                    4420030
+                  ],
+                  [
+                    487070,
+                    4420020
+                  ],
+                  [
+                    487070,
+                    4420030
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "7": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "",
+                  "Parsel": "1",
+                  "Mahalle": "",
+                  "Nitelik": "Arsa",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": ""
+                },
+                "label": "1"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "nodes": {
+              "parsel": {
+                "name": "Parsel sınırı",
+                "type": "layer",
+                "parent": null
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "activeLayer": "yapi",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli katman",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli katman",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "pafta",
+            "name": "Pafta",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "sinir",
+                "name": "Sınır",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "arsiv",
+            "name": "Arşiv",
+            "type": "group",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "eski",
+                "name": "Eski",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "taslak",
+            "name": "Taslak",
+            "type": "group",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "notlar",
+                "name": "Notlar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "yol",
+            "name": "Yol",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "yol",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487030,
+                "y": 4420000
+              },
+              {
+                "x": 487040,
+                "y": 4420000
+              },
+              {
+                "x": 487040,
+                "y": 4420020
+              },
+              {
+                "x": 487030,
+                "y": 4420020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 4,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487050,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420010
+              },
+              {
+                "x": 487050,
+                "y": 4420010
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 5,
+            "layerId": "gizli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487000,
+                "y": 4420030
+              },
+              {
+                "x": 487020,
+                "y": 4420030
+              },
+              {
+                "x": 487020,
+                "y": 4420040
+              },
+              {
+                "x": 487000,
+                "y": 4420040
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 6,
+            "layerId": "yol",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487012,
+                "y": 4420015
+              },
+              {
+                "x": 487018,
+                "y": 4420015
+              },
+              {
+                "x": 487018,
+                "y": 4420025
+              },
+              {
+                "x": 487012,
+                "y": 4420025
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Çakışma: parsellerle örtüşen kısım çıkarılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487005,
+                "y": 4420005
+              },
+              {
+                "x": 487015,
+                "y": 4420005
+              },
+              {
+                "x": 487015,
+                "y": 4420015
+              },
+              {
+                "x": 487005,
+                "y": 4420015
+              }
+            ],
+            "rules": {
+              "avoid": [
+                "parsel"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "13",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "area_clipped",
+                "message": "Çakışma önlendi: 2 komşu alanla örtüşen kısım çıkarıldı.",
+                "path": "rules.avoid"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487005,
+                    4420010
+                  ],
+                  [
+                    487005,
+                    4420015
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ],
+                  [
+                    487015,
+                    4420010
+                  ],
+                  [
+                    487015,
+                    4420015
+                  ]
+                ],
+                "area": 50,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "8": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "",
+                  "Parsel": "13",
+                  "Mahalle": "",
+                  "Nitelik": "Arsa",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": ""
+                },
+                "label": "13"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Topoloji: komşu parsellere köşe",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487020,
+                "y": 4420002
+              },
+              {
+                "x": 487030,
+                "y": 4420002
+              },
+              {
+                "x": 487030,
+                "y": 4420008
+              },
+              {
+                "x": 487020,
+                "y": 4420008
+              }
+            ],
+            "rules": {
+              "topology": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "13",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "corners_joined",
+                "message": "Topolojik düzenleme: 2 komşu nesneye yeni alanın 4 köşesi eklendi.",
+                "path": "rules.topology"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487020,
+                    4420002
+                  ],
+                  [
+                    487020,
+                    4420008
+                  ],
+                  [
+                    487030,
+                    4420002
+                  ],
+                  [
+                    487030,
+                    4420008
+                  ]
+                ],
+                "area": 60,
+                "parts": 1,
+                "holes": 0
+              },
+              "2": {
+                "corners": [
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ],
+                  [
+                    487020,
+                    4420000
+                  ],
+                  [
+                    487020,
+                    4420002
+                  ],
+                  [
+                    487020,
+                    4420008
+                  ],
+                  [
+                    487020,
+                    4420010
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              },
+              "3": {
+                "corners": [
+                  [
+                    487030,
+                    4420000
+                  ],
+                  [
+                    487030,
+                    4420002
+                  ],
+                  [
+                    487030,
+                    4420008
+                  ],
+                  [
+                    487030,
+                    4420020
+                  ],
+                  [
+                    487040,
+                    4420000
+                  ],
+                  [
+                    487040,
+                    4420020
+                  ]
+                ],
+                "area": 200,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "8": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "",
+                  "Parsel": "13",
+                  "Mahalle": "",
+                  "Nitelik": "Arsa",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": ""
+                },
+                "label": "13"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Renk ve kalınlık",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "color": "#E5484D",
+            "lineWeight": 0.35
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "13",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487060,
+                    4420020
+                  ],
+                  [
+                    487060,
+                    4420030
+                  ],
+                  [
+                    487070,
+                    4420020
+                  ],
+                  [
+                    487070,
+                    4420030
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "8": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "",
+                  "Parsel": "13",
+                  "Mahalle": "",
+                  "Nitelik": "Arsa",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": ""
+                },
+                "label": "13",
+                "color": "#E5484D",
+                "lineWeight": 0.35
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nitelik verilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "attrs": {
+              "Nitelik": "Tarla",
+              "Pafta": "G21-b"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "13",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487060,
+                    4420020
+                  ],
+                  [
+                    487060,
+                    4420030
+                  ],
+                  [
+                    487070,
+                    4420020
+                  ],
+                  [
+                    487070,
+                    4420030
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "8": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "",
+                  "Parsel": "13",
+                  "Mahalle": "",
+                  "Nitelik": "Tarla",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": "G21-b"
+                },
+                "label": "13"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çakışma ve Topoloji birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487005,
+                "y": 4420005
+              },
+              {
+                "x": 487015,
+                "y": 4420005
+              },
+              {
+                "x": 487015,
+                "y": 4420015
+              },
+              {
+                "x": 487005,
+                "y": 4420015
+              }
+            ],
+            "rules": {
+              "avoid": [
+                "parsel"
+              ],
+              "topology": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "13",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "area_clipped",
+                "message": "Çakışma önlendi: 2 komşu alanla örtüşen kısım çıkarıldı.",
+                "path": "rules.avoid"
+              },
+              {
+                "code": "corners_joined",
+                "message": "Topolojik düzenleme: 3 komşu nesneye yeni alanın 3 köşesi eklendi.",
+                "path": "rules.topology"
+              },
+              {
+                "code": "corners_joined",
+                "message": "Topolojik düzenleme: yeni alana komşulardan 1 köşe eklendi.",
+                "path": "rules.topology"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487005,
+                    4420010
+                  ],
+                  [
+                    487005,
+                    4420015
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ],
+                  [
+                    487012,
+                    4420015
+                  ],
+                  [
+                    487015,
+                    4420010
+                  ],
+                  [
+                    487015,
+                    4420015
+                  ]
+                ],
+                "area": 50,
+                "parts": 1,
+                "holes": 0
+              },
+              "1": {
+                "corners": [
+                  [
+                    487000,
+                    4420000
+                  ],
+                  [
+                    487000,
+                    4420010
+                  ],
+                  [
+                    487005,
+                    4420010
+                  ],
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              },
+              "2": {
+                "corners": [
+                  [
+                    487010,
+                    4420000
+                  ],
+                  [
+                    487010,
+                    4420010
+                  ],
+                  [
+                    487015,
+                    4420010
+                  ],
+                  [
+                    487020,
+                    4420000
+                  ],
+                  [
+                    487020,
+                    4420010
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              },
+              "6": {
+                "corners": [
+                  [
+                    487012,
+                    4420015
+                  ],
+                  [
+                    487012,
+                    4420025
+                  ],
+                  [
+                    487015,
+                    4420015
+                  ],
+                  [
+                    487018,
+                    4420015
+                  ],
+                  [
+                    487018,
+                    4420025
+                  ]
+                ],
+                "area": 60,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "8": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "",
+                  "Parsel": "13",
+                  "Mahalle": "",
+                  "Nitelik": "Arsa",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": ""
+                },
+                "label": "13"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Numaranın başı ve sonundaki boşluk kırpılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "number": "  15 "
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "15",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487060,
+                    4420020
+                  ],
+                  [
+                    487060,
+                    4420030
+                  ],
+                  [
+                    487070,
+                    4420020
+                  ],
+                  [
+                    487070,
+                    4420030
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "8": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "",
+                  "Parsel": "15",
+                  "Mahalle": "",
+                  "Nitelik": "Arsa",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": ""
+                },
+                "label": "15"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: yazılmaz, numarası söylenir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entity": "$any",
+              "number": "13",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: katman yoksa açılacağı söylenir, çizim değişmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "activeLayer": "yapi",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli katman",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli katman",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "pafta",
+            "name": "Pafta",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "sinir",
+                "name": "Sınır",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "arsiv",
+            "name": "Arşiv",
+            "type": "group",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "eski",
+                "name": "Eski",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "taslak",
+            "name": "Taslak",
+            "type": "group",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "notlar",
+                "name": "Notlar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "yol",
+            "name": "Yol",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "yol",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487030,
+                "y": 4420000
+              },
+              {
+                "x": 487040,
+                "y": 4420000
+              },
+              {
+                "x": 487040,
+                "y": 4420020
+              },
+              {
+                "x": 487030,
+                "y": 4420020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 4,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487050,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420010
+              },
+              {
+                "x": 487050,
+                "y": 4420010
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 5,
+            "layerId": "gizli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487000,
+                "y": 4420030
+              },
+              {
+                "x": 487020,
+                "y": 4420030
+              },
+              {
+                "x": 487020,
+                "y": 4420040
+              },
+              {
+                "x": 487000,
+                "y": 4420040
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 6,
+            "layerId": "yol",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487012,
+                "y": 4420015
+              },
+              {
+                "x": 487018,
+                "y": 4420015
+              },
+              {
+                "x": 487018,
+                "y": 4420025
+              },
+              {
+                "x": 487012,
+                "y": 4420025
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entity": "$any",
+              "number": "1",
+              "opened": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş numara",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "number": "  "
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_parcel_number",
+              "message": "Parsel numarası boş olamaz. Bir numara verin ya da sıradakini almak için numarayı vermeyin.",
+              "path": "number"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli parsel katmanı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Parsel” katmanı kilitli; Parsel bu katmana yazar. Kilidi Katmanlar panelinden açın."
+            }
+          },
+          "expect": {
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "activeLayer": "yapi",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli katman",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli katman",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "pafta",
+            "name": "Pafta",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "sinir",
+                "name": "Sınır",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "arsiv",
+            "name": "Arşiv",
+            "type": "group",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "eski",
+                "name": "Eski",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "taslak",
+            "name": "Taslak",
+            "type": "group",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "notlar",
+                "name": "Notlar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "parsel",
+            "name": "Parsel",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yol",
+            "name": "Yol",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "parsel",
+            "attrs": {
+              "Ada": "101",
+              "Parsel": "7"
+            },
+            "pts": [
+              {
+                "x": 487000,
+                "y": 4420000
+              },
+              {
+                "x": 487010,
+                "y": 4420000
+              },
+              {
+                "x": 487010,
+                "y": 4420010
+              },
+              {
+                "x": 487000,
+                "y": 4420010
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "parsel",
+            "attrs": {
+              "Ada": "101",
+              "Parsel": " 12/A"
+            },
+            "pts": [
+              {
+                "x": 487010,
+                "y": 4420000
+              },
+              {
+                "x": 487020,
+                "y": 4420000
+              },
+              {
+                "x": 487020,
+                "y": 4420010
+              },
+              {
+                "x": 487010,
+                "y": 4420010
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "yol",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487030,
+                "y": 4420000
+              },
+              {
+                "x": 487040,
+                "y": 4420000
+              },
+              {
+                "x": 487040,
+                "y": 4420020
+              },
+              {
+                "x": 487030,
+                "y": 4420020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 4,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487050,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420010
+              },
+              {
+                "x": 487050,
+                "y": 4420010
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 5,
+            "layerId": "gizli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487000,
+                "y": 4420030
+              },
+              {
+                "x": 487020,
+                "y": 4420030
+              },
+              {
+                "x": 487020,
+                "y": 4420040
+              },
+              {
+                "x": 487000,
+                "y": 4420040
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 6,
+            "layerId": "yol",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487012,
+                "y": 4420015
+              },
+              {
+                "x": 487018,
+                "y": 4420015
+              },
+              {
+                "x": 487018,
+                "y": 4420025
+              },
+              {
+                "x": 487012,
+                "y": 4420025
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 7,
+            "layerId": "parsel",
+            "attrs": {},
+            "p": {
+              "x": 487080,
+              "y": 4420005
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "İki köşe",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_corners",
+              "message": "Kapalı alanın en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin.",
+              "path": "pts"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ]
+          },
+          "nonFinite": {
+            "pts[1].x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "2. köşenin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "pts[1].x"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çakışma: parsellerin içinde kalan alan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487002,
+                "y": 4420002
+              },
+              {
+                "x": 487008,
+                "y": 4420002
+              },
+              {
+                "x": 487008,
+                "y": 4420008
+              },
+              {
+                "x": 487002,
+                "y": 4420008
+              }
+            ],
+            "rules": {
+              "avoid": [
+                "parsel"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "area_covered",
+              "message": "Yeni alan kaçınılan katmanlardaki alanların içinde kalıyor; yazılacak bir kısmı yok. Başka bir yere çizin ya da Çakışma'yı kapatın.",
+              "path": "rules.avoid"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kalınlık 100 mm'den büyük",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "lineWeight": 101
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_line_weight",
+              "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.",
+              "path": "lineWeight"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "expectedRevision": "012"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “012” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaçınılan katman yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "rules": {
+              "avoid": [
+                "yok"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "Kaçınılacak “yok” katmanı çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "rules.avoid[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

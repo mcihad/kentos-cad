@@ -1274,12 +1274,17 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
     (ADR 0622 §9).
   - [x] Daire dilimi: `cad.sector.create` (merkez, yarıçap, iki açı), ortak 27 durum, araç komutla yazar ve önizler,
     gerçek fareyle ve Python yankısıyla sınandı (ADR 0622 §9).
-  - [ ] P0 çizim temelleri: Revizyon bulutu (`cad.revcloud.create`).
-  - [ ] P0 Çakışma ve Topoloji açıkken kapalı alan ailesi ve Bitişik alan: şekil komutlarına `overlap` ve `topology`
-    seçenekleri, `cad.entities.adjoin`.
+  - [x] Revizyon bulutu: `cad.revcloud.create` (dikdörtgenin iki köşesi, çokgenin köşeleri ya da kapalı nesnenin kimliği;
+    yay boyu metre), ortak 34 durum, araç üç kipiyle komutla yazar ve önizler, gerçek fareyle sınandı (ADR 0622 §9).
+  - [x] Çakışma ve Topoloji komutun girdisi: `cad.polygon.create` ve dört şekil komutunun `rules`'u (`avoid` katmanları,
+    `topology`, `points`; `area_covered`, `area_clipped`, `corners_joined`, `neighbours_locked`) ve `cad.entities.adjoin`
+    (Bitişik alan: yol, komşu katmanlar, görünümün kutusu); Kapalı alan, Alan olarak çiz, Dikdörtgen, Döndürülmüş
+    dikdörtgen, Düzgün çokgen, Daire dilimi, Revizyon bulutu ve Bitişik alan komutla yazar; ortak 24 + 24 durum hücre
+    başvurusundan (ADR 0622 §9).
   - [ ] P0 yapım yardımcıları: Dik in ve çık, Paralel çizgi, İki daireye teğet, Dördüncü köşe, Menzil halkaları, Ara nokta,
     Kesişim noktası, Yardımcı çizginin Açıortay ve Paralel'i.
-  - [ ] P0 Parsel oluştur (numara komutta).
+  - [x] Parsel oluştur: `cad.parcels.create` (numara, öznitelikler ve parsel katmanı komutta; `parcel_number_taken`,
+    `invalid_parcel_number`), ortak 21 durum, araç komutla yazar (ADR 0622 §9).
   - [ ] P1 alan işlemleri, delikler, Biçim değiştir, Sürdür, Paralel kaydır; Parçala ve Sadeleştir; Kot ver, Okunur yap, eğri
     boyunca yazı, Koordinat yaz, Km yaz, Etiketleri yazıya çevir, Köşelere nokta; plan yolu, Orta hat, Toplu alan, Hızlı
     ölçü, Katmana kopyala; ölçme hesap pencereleri; Resmi kırp, Yeni sürüm, ağ sonuçlarını yazma.

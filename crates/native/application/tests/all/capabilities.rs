@@ -88,6 +88,91 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
     (
+        "cad.polygon.regular",
+        "area_clipped",
+        "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",
+    ),
+    (
+        "cad.polygon.regular",
+        "area_covered",
+        "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",
+    ),
+    (
+        "cad.polygon.regular",
+        "corners_joined",
+        "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",
+    ),
+    (
+        "cad.polygon.regular",
+        "neighbours_locked",
+        "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",
+    ),
+    (
+        "cad.sector.create",
+        "area_clipped",
+        "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",
+    ),
+    (
+        "cad.sector.create",
+        "area_covered",
+        "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",
+    ),
+    (
+        "cad.sector.create",
+        "corners_joined",
+        "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",
+    ),
+    (
+        "cad.sector.create",
+        "neighbours_locked",
+        "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",
+    ),
+    (
+        "cad.revcloud.create",
+        "area_clipped",
+        "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",
+    ),
+    (
+        "cad.revcloud.create",
+        "area_covered",
+        "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",
+    ),
+    (
+        "cad.revcloud.create",
+        "corners_joined",
+        "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",
+    ),
+    (
+        "cad.revcloud.create",
+        "neighbours_locked",
+        "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",
+    ),
+    (
+        "cad.entities.adjoin",
+        "area_covered",
+        "bölge kaçınılan katmanın alanına bütünüyle düşmez: bölgeyi komşular kapatır; reddin kendisi cad.polygon.create.area-rules.json'da (ADR 0622 §9)",
+    ),
+    (
+        "cad.entities.adjoin",
+        "neighbours_locked",
+        "kilitli komşu Topoloji'nin ortak yolundadır; cad.polygon.create.area-rules.json'da sınanır (ADR 0622 §9)",
+    ),
+    (
+        "cad.entities.adjoin",
+        "too_few_corners",
+        "çekirdeğin bulduğu bölgenin en az üç köşesi vardır; ret cad.polygon.create'in denetimidir (ADR 0622 §9)",
+    ),
+    (
+        "cad.entities.adjoin",
+        "invalid_attribute",
+        "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında (ADR 0199 §2)",
+    ),
+    (
+        "cad.entities.adjoin",
+        "attribute_required",
+        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında (ADR 0199 §2)",
+    ),
+    (
         "cad.processing.batch",
         "crs_mismatch",
         "toplu işin sonucu cad.processing.run'ın yazıcısıyla yazılır (batch_sink.rs → write_sink): sistemi başka dosya orada sınanır (ADR 0549 §1, 0593 §1)",
@@ -130,6 +215,26 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "cad.crs.transform",
         "no_datum_link",
         "projenin WGS 84'e yolu olmayan kendi datumu; kayıttaki sistemlerle kurulamaz, geometri-core'un datum testi (Gap::NoLink) sınar (ADR 0168 §2, 0519 §3)",
+    ),
+    (
+        "cad.sector.create",
+        "invalid_attribute",
+        "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in ve cad.entities.create'in durumlarında; dilim ve bulut cad.polygon.create'in yolundan yazar (ADR 0199 §2, 0622 §9)",
+    ),
+    (
+        "cad.sector.create",
+        "attribute_required",
+        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında; dilim ve bulut onun yolundan yazar (ADR 0199 §2, 0622 §9)",
+    ),
+    (
+        "cad.revcloud.create",
+        "invalid_attribute",
+        "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in ve cad.entities.create'in durumlarında; dilim ve bulut cad.polygon.create'in yolundan yazar (ADR 0199 §2, 0622 §9)",
+    ),
+    (
+        "cad.revcloud.create",
+        "attribute_required",
+        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında; dilim ve bulut onun yolundan yazar (ADR 0199 §2, 0622 §9)",
     ),
     (
         "cad.grids.create",

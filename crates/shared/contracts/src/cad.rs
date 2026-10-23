@@ -27,7 +27,9 @@ pub const CAD_POLYGON_CREATE_VERSION: u32 = 1;
 /// `not_finite`, `bulge_count` (the outer ring, then each hole),
 /// `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
-/// `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
+/// `slots_exhausted`; with `rules`, an avoided layer's `layer_not_found` and `not_a_layer` (path `rules.avoid[i]`)
+/// and `area_covered`. Warning: `layer_hidden` (it is written all the same); with `rules`, `area_clipped`,
+/// `corners_joined`, `neighbours_locked`.
 /// Geometric validity (self-intersection, zero area, a hole outside the
 /// ring) is not checked, as the drawing tools and the file reader do not.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -90,6 +92,11 @@ pub struct PolygonCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
+    /// Çakışma and Topoloji (docs/adr/0162, 0622 §9): what the new area must not overlap and whether it shares
+    /// corners with its neighbours. Absent: written as given.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rules: Option<AreaRules>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
@@ -97,6 +104,43 @@ pub struct PolygonCreate {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// The rules a new area is written by (docs/adr/0162, 0622 §9), the tools' Çakışma and Topoloji made explicit: the
+/// command reads no session state.
+///
+/// - `avoid`: the layers whose shown areas it must not overlap (Çakışma: its own layer, or the chosen ones); what
+///   overlaps them is cut away and the rest written as one object, its parts and holes as they are; one wholly
+///   covered is refused (`area_covered`), one cut warned of (`area_clipped`). Empty: Serbest.
+/// - `topology`: joined with the shown lines, paths and areas it touches corner by corner, within 1 µm: its corners
+///   on their edges go to them, theirs on its edges to it, the neighbours in the same undo step (`corners_joined`);
+///   a locked layer's neighbour takes none (`neighbours_locked`). `points`: points too (Noktalar da).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AreaRules {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub avoid: Vec<String>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub topology: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub points: bool,
+}
+
+impl AreaRules {
+    /// Whether the rules change nothing: no layer to avoid, no corners to share.
+    pub fn is_empty(&self) -> bool {
+        self.avoid.is_empty() && !self.topology
+    }
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 /// A document revision as text: a whole number in decimal, no sign, no

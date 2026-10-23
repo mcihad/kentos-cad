@@ -1,4 +1,5 @@
-//! The drawing tools brought to their own semantic commands (docs/adr/0622 §9, TODOS.md `UX-14`), driven through the
+//! The drawing tools brought to their own semantic commands (docs/adr/0622 §9, TODOS.md `UX-14`: Daire dilimi,
+//! Revizyon bulutu), driven through the
 //! widgets with real mouse events: the tool writes through its command (the journal's last call names it, with the
 //! user's input, not a ready-made ring), a right click places nothing, and the Python echo carries the same call.
 //! Pictures: `semantic_tool_screens` (ignored), `.run/shots/arac-komut-*`.
@@ -97,8 +98,100 @@ fn the_sector_tool_writes_through_its_command() {
     assert_eq!(app.document.as_ref().expect("a drawing").model.len(), before + 1);
 }
 
-/// The tools writing through their commands, as the owner looks at them: the slice drawn, its call in the Python
-/// console (`.run/shots/arac-komut-*`):
+/// The screen point of a world point in the drawing area.
+fn screen(app: &App, w: kentos_render_wgpu::Vec2) -> Point {
+    let b = app.viewport.bounds;
+    let [x, y] = app.viewport.camera.world_to_screen(w);
+    Point::new(b.x + x as f32, b.y + y as f32)
+}
+
+/// Revizyon bulutu, its rectangle: two corners clicked.
+fn draw_cloud(snapshot: &mut Snapshot, app: &mut App) {
+    start(snapshot, app, "tool.revcloud");
+    let (a, b) = (at(app, 0.42, 0.62), at(app, 0.62, 0.78));
+    click(snapshot, app, a);
+    snapshot.input(app, App::view, &mut update, Input::Move(b));
+    click(snapshot, app, b);
+}
+
+/// The middle of a visible, unlocked area's first edge, and the area's persistent id.
+fn an_area_edge(app: &App) -> (Point, String) {
+    use kentos_commands::Entity;
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let layers = doc.layers();
+    let (uid, pts) = doc
+        .entities_with_uids()
+        .find_map(|(uid, e)| match e {
+            Entity::Polygon(p)
+                if layers.is_visible(&p.base.layer_id) && !layers.is_locked(&p.base.layer_id) =>
+            {
+                Some((uid, p.pts.clone()))
+            }
+            _ => None,
+        })
+        .expect("an area");
+    let mid = kentos_render_wgpu::Vec2::new((pts[0].x + pts[1].x) / 2.0, (pts[0].y + pts[1].y) / 2.0);
+    (screen(app, mid), uid.to_string())
+}
+
+#[test]
+fn the_cloud_tool_writes_through_its_command() {
+    let mut snapshot = crate::files_testing::offscreen(Size::new(1440.0, 900.0));
+    let mut app = opened(&mut snapshot, "dark");
+    let before = app.document.as_ref().expect("a drawing").model.len();
+    draw_cloud(&mut snapshot, &mut app);
+    let (command, input) = last_call(&app);
+    assert_eq!(command, "cad.revcloud.create");
+    assert_eq!(input["frame"]["kind"], "rectangle", "{input}");
+    assert!(input["arc"].as_f64().is_some_and(|a| a > 0.0), "{input}");
+    assert_eq!(app.document.as_ref().expect("a drawing").model.len(), before + 1);
+    assert!(
+        app.python.repl.entries().any(|e| e.text.contains("cad.revcloud.create")),
+        "the echo carries the call"
+    );
+    // Nesne: the object's id, not its outline, goes to the command.
+    let (edge, uid) = an_area_edge(&app);
+    // Nesne (N) typed in the command line, as the prompt's option says.
+    update(&mut app, Message::CommandInput("N".into()));
+    update(&mut app, Message::CommandSubmitted);
+    snapshot.settle(&mut app, App::view, &mut update);
+    click(&mut snapshot, &mut app, edge);
+    let (command, input) = last_call(&app);
+    assert_eq!(command, "cad.revcloud.create");
+    assert_eq!(input["frame"], serde_json::json!({ "kind": "object", "uid": uid }), "{input}");
+    assert_eq!(app.document.as_ref().expect("a drawing").model.len(), before + 2);
+}
+
+/// A ring of clicks closed by Enter.
+fn draw_ring(snapshot: &mut Snapshot, app: &mut App, tool: &'static str, ring: &[(f32, f32)]) {
+    start(snapshot, app, tool);
+    for &(fx, fy) in ring {
+        let p = at(app, fx, fy);
+        click(snapshot, app, p);
+    }
+    // Enter in the command line, empty: the tool's confirm.
+    update(app, Message::CommandSubmitted);
+    snapshot.settle(app, App::view, &mut update);
+}
+
+#[test]
+fn the_parcel_and_the_closed_area_write_through_their_commands() {
+    let mut snapshot = crate::files_testing::offscreen(Size::new(1440.0, 900.0));
+    let mut app = opened(&mut snapshot, "dark");
+    let ring = [(0.62, 0.62), (0.72, 0.62), (0.72, 0.75), (0.62, 0.75)];
+    draw_ring(&mut snapshot, &mut app, "tool.parcel", &ring);
+    let (command, input) = last_call(&app);
+    assert_eq!(command, "cad.parcels.create");
+    assert!(input.get("number").is_none(), "the command numbers it: {input}");
+    assert_eq!(input["pts"].as_array().map(Vec::len), Some(4), "{input}");
+    let ring = [(0.75, 0.3), (0.85, 0.3), (0.85, 0.4)];
+    draw_ring(&mut snapshot, &mut app, "tool.polygon", &ring);
+    let (command, _) = last_call(&app);
+    assert_eq!(command, "cad.polygon.create");
+}
+
+/// The tools writing through their commands, as the owner looks at them: the slice and the cloud drawn, the cloud's call in the Python
+/// console (`.run/shots/arac-komut-dilim-bulut*`):
 ///
 /// ```text
 /// cargo test -p kentos-desktop --bin kentos-cad semantic_tool_screens -- --ignored --nocapture
@@ -117,10 +210,11 @@ fn semantic_tool_screens() {
         let _ = app.update(Message::WindowResized(size));
         snapshot.settle(&mut app, App::view, &mut update);
         draw_sector(&mut snapshot, &mut app);
+        draw_cloud(&mut snapshot, &mut app);
         app.show_bottom(crate::bottom::BottomTab::Python);
         app.bottom_dragged(Some(260.0), std::time::Instant::now());
         snapshot.settle(&mut app, App::view, &mut update);
-        let file = out.join(format!("arac-komut-dilim{suffix}.png"));
+        let file = out.join(format!("arac-komut-dilim-bulut{suffix}.png"));
         snapshot
             .render(app.view(), &app.theme())
             .save(&file)

@@ -76,7 +76,7 @@ use kentos_native_application::{
     layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_rules,
     layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
     layers_translate, leaders_edit, line, linearref_define, network_define, nurbs, offset,
-    openings_create, openings_edit, point, points_construct, polygon, polygon_regular, polyline, sector_create,
+    openings_create, openings_edit, point, points_construct, polygon, polygon_regular, polyline, revcloud_create, sector_create, adjoin_cmd, parcels,
     rectangle_create, scenarios_edit, set, settings_set, sheets_edit, sheets_create, sheets_fit, snap_find, spaces_create,
     spaces_edit, spaces_quantities, styles_edit, tables_edit, texts_check, texts_edit, transform,
     ucs_set, units_change, views_edit, walls_create, walls_edit, walls_from_lines, walls_joins,
@@ -1425,6 +1425,70 @@ impl Input for kentos_commands::SectorCreate {
             "lineWeight" => self.line_weight.as_mut(),
             _ => coordinate(&mut self.c, "c", path),
         }
+    }
+}
+
+impl Input for kentos_commands::RevcloudCreate {
+    /// `arc`, `lineWeight`, `frame.a.x` … `frame.b.y`, `frame.pts[i].x`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_commands::RevcloudFrame as F;
+        match (&mut self.frame, path) {
+            (_, "arc") => Some(&mut self.arc),
+            (_, "lineWeight") => self.line_weight.as_mut(),
+            (F::Rectangle { a, .. }, path) if path.starts_with("frame.a") => coordinate(a, "frame.a", path),
+            (F::Rectangle { b, .. }, path) if path.starts_with("frame.b") => coordinate(b, "frame.b", path),
+            (F::Polygon { pts }, path) => {
+                let rest = path.strip_prefix("frame.pts[")?;
+                let (i, axis) = rest.split_once("].")?;
+                let p = pts.get_mut(i.parse::<usize>().ok()?)?;
+                match axis {
+                    "x" => Some(&mut p.x),
+                    "y" => Some(&mut p.y),
+                    _ => None,
+                }
+            }
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_commands::ParcelsCreate {
+    /// `pts[i].x`, `lineWeight`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, axis) = path.strip_prefix("pts[")?.split_once("].")?;
+        let p = self.pts.get_mut(i.parse::<usize>().ok()?)?;
+        match axis {
+            "x" => Some(&mut p.x),
+            "y" => Some(&mut p.y),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_commands::EntitiesAdjoin {
+    /// `pts[i].x`, `bulges[i]`, `within.min.x`, `lineWeight`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        if let Some(rest) = path.strip_prefix("pts[") {
+            let (i, axis) = rest.split_once("].")?;
+            let p = self.pts.get_mut(i.parse::<usize>().ok()?)?;
+            return match axis {
+                "x" => Some(&mut p.x),
+                "y" => Some(&mut p.y),
+                _ => None,
+            };
+        }
+        if let Some(rest) = path.strip_prefix("bulges[") {
+            let i = rest.strip_suffix(']')?.parse::<usize>().ok()?;
+            return self.bulges.as_mut()?.get_mut(i);
+        }
+        let w = self.within.as_mut()?;
+        coordinate(&mut w.min, "within.min", path)
     }
 }
 
@@ -3210,6 +3274,9 @@ fn run_op(
             run!(polygon_regular, kentos_commands::RegularPolygonCreate)
         }
         kentos_commands::CAD_SECTOR_CREATE => run!(sector_create, kentos_commands::SectorCreate),
+        kentos_commands::CAD_REVCLOUD_CREATE => run!(revcloud_create, kentos_commands::RevcloudCreate),
+        kentos_commands::CAD_ENTITIES_ADJOIN => run!(adjoin_cmd, kentos_commands::EntitiesAdjoin),
+        kentos_commands::CAD_PARCELS_CREATE => run!(parcels, kentos_commands::ParcelsCreate),
         kentos_commands::CAD_ENTITIES_VERTEX => {
             run!(entities_vertex, kentos_commands::EntitiesVertex)
         }
@@ -3891,6 +3958,56 @@ fn run_step(
     )
 }
 
+/// An object's rings summed up whatever their starting corner: `corners` every corner of every ring (outer rings,
+/// holes, parts) sorted, `area` the shoelace area of the outer rings less the holes', `parts` and `holes` counted.
+fn shape_summary(entity: &Value) -> Value {
+    fn ring(v: &Value) -> Vec<(f64, f64)> {
+        v.as_array()
+            .map(|pts| {
+                pts.iter()
+                    .filter_map(|p| Some((p["x"].as_f64()?, p["y"].as_f64()?)))
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+    fn area(r: &[(f64, f64)]) -> f64 {
+        let n = r.len();
+        let (ox, oy) = r.first().copied().unwrap_or((0.0, 0.0));
+        (0..n)
+            .map(|i| {
+                let (a, b) = (r[i], r[(i + 1) % n]);
+                (a.0 - ox) * (b.1 - oy) - (b.0 - ox) * (a.1 - oy)
+            })
+            .sum::<f64>()
+            .abs()
+            / 2.0
+    }
+    let mut outers = vec![ring(&entity["pts"])];
+    let mut holes: Vec<Vec<(f64, f64)>> = entity["holes"]
+        .as_array()
+        .map(|h| h.iter().map(|h| ring(&h["pts"])).collect())
+        .unwrap_or_default();
+    for part in entity["parts"].as_array().into_iter().flatten() {
+        outers.push(ring(&part["pts"]));
+        holes.extend(
+            part["holes"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .map(|h| ring(&h["pts"])),
+        );
+    }
+    let net: f64 = outers.iter().map(|r| area(r)).sum::<f64>() - holes.iter().map(|r| area(r)).sum::<f64>();
+    let mut corners: Vec<(f64, f64)> = outers.iter().chain(&holes).flatten().copied().collect();
+    corners.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.total_cmp(&b.1)));
+    json!({
+        "corners": corners.iter().map(|(x, y)| json!([x, y])).collect::<Vec<_>>(),
+        "area": (net * 1e6).round() / 1e6,
+        "parts": outers.len(),
+        "holes": holes.len(),
+    })
+}
+
 /// The document after a step as `expect` says; with `within`, the objects' numbers within it (a transcendental
 /// value the reference computes in another order, docs/adr/0320).
 fn check(
@@ -4215,6 +4332,23 @@ fn check(
                 let got = serde_json::to_value(&doc.settings().linear_events)
                     .map_err(|e| format!("{at}: {e}"))?;
                 expect_same(&got, &fill(want, doc, state, at)?, "olay bağları", at)?;
+            }
+            // An area's shape whatever corner its rings start from (Çakışma and Topoloji's results, docs/adr/0622 §9):
+            // every corner of every ring sorted, the net area, the parts and holes; its edges straight.
+            "shapes" => {
+                for (id, want) in want.as_object().unwrap_or(&empty) {
+                    let slot = id
+                        .parse::<u32>()
+                        .map(Slot)
+                        .map_err(|_| format!("{at}: {id}"))?;
+                    let got = doc
+                        .get(slot)
+                        .map(serde_json::to_value)
+                        .transpose()
+                        .map_err(|e| format!("{at}: {e}"))?
+                        .ok_or_else(|| format!("{at}: {id} yuvasında nesne yok"))?;
+                    expect_same(&shape_summary(&got), want, &format!("nesne {id} biçimi"), at)?;
+                }
             }
             // A misspelt expectation would otherwise pass unchecked.
             other => return Err(format!("{at}: bilinmeyen beklenti “{other}”")),

@@ -380,6 +380,12 @@ pub(crate) static OPS: &[Op] = &[
 /// outline (an area's, a closed polyline's, a circle's, a closed curve's, a
 /// full ellipse's), its curves at `segments` a turn; none for an open object.
 pub fn cloud_around(shape: &crate::entity::Shape, arc: f64, segments: f64) -> Option<Cloud> {
+    cloud_of(&closed_outline(shape, segments)?, arc)
+}
+
+/// A closed object's outer outline as a ring (its curves at `segments` a turn), its last point not repeating the
+/// first; none for an open object or a hatch (docs/adr/0287, 0622 §9).
+pub fn closed_outline(shape: &crate::entity::Shape, segments: f64) -> Option<Vec<Vec2>> {
     use crate::entity::{Shape, entity_outline, is_closed_outline};
     let closed = is_closed_outline(shape) || matches!(shape, Shape::Polyline { closed: true, .. });
     if !closed || matches!(shape, Shape::Hatch { .. }) {
@@ -390,7 +396,15 @@ pub fn cloud_around(shape: &crate::entity::Shape, arc: f64, segments: f64) -> Op
     if ring.len() > 1 && ring.first() == ring.last() {
         ring.pop();
     }
-    cloud_of(&ring, arc)
+    Some(ring)
+}
+
+/// How many arcs [`cloud_of`] makes round `ring`: `max(1, round(side / arc))` a side, before making them.
+pub fn cloud_arcs(ring: &[Vec2], arc: f64) -> f64 {
+    let n = ring.len();
+    (0..n)
+        .map(|i| js_max(1.0, js_round(dist(ring[i], ring[(i + 1) % n]) / arc)))
+        .sum()
 }
 
 #[cfg(test)]

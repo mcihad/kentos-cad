@@ -124,6 +124,7 @@ impl Sector {
             label: cx.template_label(),
             symbol: cx.template_symbol(),
             expected_revision: None,
+            rules: None,
         }
     }
 
@@ -142,6 +143,7 @@ impl Sector {
             label: None,
             symbol: None,
             expected_revision: None,
+            rules: None,
         };
         shapes::sector_ring(&input).ok()
     }
@@ -152,19 +154,22 @@ impl Sector {
         let (Some(c), Some(r), Some(a0)) = (self.centre(), self.radius, self.start) else {
             return;
         };
-        let Some((pts, bulges)) = Self::ring(c, r, a0, end) else {
+        if Self::ring(c, r, a0, end).is_none() {
             cx.say(
                 Level::Warn,
                 "Bitiş doğrultusu başlangıçla aynı; dilim oluşmuyor. Başka bir doğrultu ya da açı verin.",
             );
             return;
-        };
+        }
         let input = Self::request(c, r, a0, end, cx);
+        let mut input = input;
+        let rules = points::area_rules(cx, &input.layer_id);
+        input.rules = rules;
         let mut write = |cx: &mut Context<'_>| {
-            let result = shapes::execute_sector(&mut ExecutionContext::new(cx.doc), input.clone());
+            let result = shapes::execute_sector(&mut ExecutionContext::with_store(cx.doc, cx.spatial.store()), input.clone());
             points::written(result, cx).map(|out| out.id)
         };
-        if points::write_area_by(&mut self.d, &pts, bulges, cx, Some(&mut write)).is_some() {
+        if points::write_area_by(&mut self.d, cx, &mut write).is_some() {
             let f = cx.format();
             let sweep = (end - a0).rem_euclid(TAU);
             cx.say(

@@ -11,16 +11,20 @@
 //! - Yay boyu (U): the arcs' length in paper millimetres at the project's
 //!   plot scale; the shape and the length stay for as long as the app lives.
 //!
-//! The cloud is a closed area of outward arcs written through
-//! `cad.polygon.create`, its own object and undo step (“Ekle”): “Revizyon
-//! bulutu eklendi: 24 yay.” Its corners and arcs are the shared core's
-//! (`cloud_of`).
+//! The cloud is a closed area of outward arcs written by `cad.revcloud.create`
+//! (docs/adr/0622 §9), its own object and undo step (“Ekle”): “Revizyon
+//! bulutu eklendi: 24 yay.” The tool gives the rectangle's corners, the
+//! polygon's or the object's persistent id and the arc in metres (paper
+//! millimetres at the plot scale); the preview is the command's ring
+//! (`shapes::revcloud_ring`). With Çakışma or Topoloji changing the area it is
+//! written as any area is (`points::write_area_by`).
 
+use kentos_commands::{RevcloudCreate, RevcloudFrame};
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
-use kentos_geometry_core::geom::shapes::{cloud_around, cloud_of};
-use kentos_geometry_core::geometry::{dist, signed_area};
+use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
+use kentos_native_application::{ExecutionContext, shapes};
 
 use crate::Vec2;
 use crate::format::{Format, js_number};
@@ -63,14 +67,6 @@ impl RevCloud {
         (m.cloud_arc_mm / 1000.0) * scale
     }
 
-    /// The ring the cloud goes round: the rectangle on two corners, or the corners.
-    fn ring_for(&self, pts: &[Vec2]) -> Vec<Vec2> {
-        match (self.memory().cloud_rect, pts) {
-            (true, [a, b, ..]) => vec![*a, Vec2::new(b.x, a.y), *b, Vec2::new(a.x, b.y)],
-            _ => pts.to_vec(),
-        }
-    }
-
     /// Dikdörtgen (D), Çokgen (Ç) and Yay boyu (U), before the first corner.
     fn option(&mut self, key: &str, cx: &mut Context<'_>) -> bool {
         if !self.d.pts.is_empty() {
@@ -103,22 +99,75 @@ impl RevCloud {
         }
     }
 
-    /// Nesne: the cloud round the closed object under the press, through `cad.polygon.create`.
+    /// The command's input for `frame`, with the drawing's look and the template's attributes.
+    fn request(&self, frame: RevcloudFrame, cx: &Context<'_>) -> RevcloudCreate {
+        RevcloudCreate {
+            layer_id: cx.doc.layers().active().to_owned(),
+            frame,
+            arc: self.arc_length(),
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            line_type: cx.draft.line_type,
+            attrs: cx.template_attrs(None),
+            label: cx.template_label(),
+            symbol: cx.template_symbol(),
+            expected_revision: None,
+            rules: None,
+        }
+    }
+
+    /// The frame of the corners so far: the rectangle on two corners, or the corners.
+    fn frame_of(&self, pts: &[Vec2]) -> RevcloudFrame {
+        match (self.memory().cloud_rect, pts) {
+            (true, [a, b, ..]) => RevcloudFrame::Rectangle {
+                a: points::wire(*a),
+                b: points::wire(*b),
+            },
+            _ => RevcloudFrame::Polygon {
+                pts: pts.iter().copied().map(points::wire).collect(),
+            },
+        }
+    }
+
+    /// The cloud as the command makes it, written by the command unless Çakışma or Topoloji changes it; a refusal
+    /// says the command's reason.
+    fn write(&mut self, input: RevcloudCreate, cx: &mut Context<'_>) {
+        match shapes::revcloud_ring(Some(&*cx.doc), &input) {
+            Ok((pts, _)) => {
+                let arcs = pts.len();
+                let mut input = input;
+                let rules = points::area_rules(cx, &input.layer_id);
+                input.rules = rules;
+                let mut write = |cx: &mut Context<'_>| {
+                    let result = shapes::execute_revcloud(
+                        &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+                        input.clone(),
+                    );
+                    points::written(result, cx).map(|out| out.id)
+                };
+                if points::write_area_by(&mut self.d, cx, &mut write).is_some() {
+                    cx.say(
+                        Level::Success,
+                        format!("Revizyon bulutu eklendi: {arcs} yay."),
+                    );
+                }
+            }
+            Err(error) => cx.say(Level::Warn, error.message),
+        }
+    }
+
+    /// Nesne: the cloud round the closed object under the press, by its persistent id.
     fn around(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.see(cx);
-        let shape = cx
+        let uid = cx
             .spatial
             .pick_edge(p.raw, cx.pick_tolerance(), |s| cx.doc.get(s).is_some())
-            .and_then(|slot| cx.doc.get(slot))
-            .map(|e| crate::spatial::record(e).3);
-        let cloud = shape.and_then(|shape| cloud_around(&shape, self.arc_length(), 64.0));
-        match cloud {
-            Some(cloud) => {
-                let pts = cloud.pts.clone();
-                if points::write_ring(&mut self.d, &pts, Some(cloud.bulges), cx) {
-                    let line = format!("Revizyon bulutu eklendi: {} yay.", pts.len());
-                    cx.say(Level::Success, line);
-                }
+            .and_then(|slot| cx.doc.uid(slot))
+            .map(|uid| uid.to_string());
+        match uid {
+            Some(uid) => {
+                let input = self.request(RevcloudFrame::Object { uid }, cx);
+                self.write(input, cx);
                 self.d.reset();
             }
             None => cx.say(
@@ -128,27 +177,13 @@ impl RevCloud {
         }
     }
 
-    /// Writes the cloud through `cad.polygon.create` (docs/adr/0057); a
+    /// Writes the cloud through `cad.revcloud.create` (docs/adr/0622 §9); a
     /// refused one says only the command's reason. The draft starts over.
     fn finish(&mut self, cx: &mut Context<'_>) {
         self.see(cx);
-        let ring = self.ring_for(&self.d.pts);
-        let cloud = (ring.len() >= 3 && signed_area(&ring).abs() > 1e-9)
-            .then(|| cloud_of(&ring, self.arc_length()))
-            .flatten();
-        match cloud {
-            Some(cloud) => {
-                let pts = cloud.pts.clone();
-                if points::write_ring(&mut self.d, &pts, Some(cloud.bulges), cx) {
-                    let line = format!("Revizyon bulutu eklendi: {} yay.", pts.len());
-                    cx.say(Level::Success, line);
-                }
-            }
-            None if !self.d.pts.is_empty() => cx.say(
-                Level::Warn,
-                "Bulut için alanı olan bir dikdörtgen ya da en az üç köşe gerekir.",
-            ),
-            None => {}
+        if !self.d.pts.is_empty() {
+            let input = self.request(self.frame_of(&self.d.pts), cx);
+            self.write(input, cx);
         }
         self.d.reset();
     }
@@ -279,17 +314,26 @@ impl Tool for RevCloud {
                 ..Preview::default()
             };
         }
-        let ring = self.ring_for(&pts);
-        let cloud = (ring.len() >= 3)
-            .then(|| cloud_of(&ring, self.arc_length()))
-            .flatten();
-        let stroke = match cloud {
-            Some(cloud) => Stroke::solid(
-                bulge_path_outline(&cloud.pts, Some(&cloud.bulges), true, DEFAULT_STEP),
+        let input = RevcloudCreate {
+            layer_id: String::new(),
+            frame: self.frame_of(&pts),
+            arc: self.arc_length(),
+            color: None,
+            line_weight: None,
+            line_type: None,
+            attrs: None,
+            label: None,
+            symbol: None,
+            expected_revision: None,
+            rules: None,
+        };
+        let stroke = match shapes::revcloud_ring(None, &input) {
+            Ok((cloud, bulges)) => Stroke::solid(
+                bulge_path_outline(&cloud, bulges.as_deref(), true, DEFAULT_STEP),
                 true,
             )
             .width(1.5),
-            None => Stroke::dashed(pts, false, [4.0, 3.0]),
+            Err(_) => Stroke::dashed(pts, false, [4.0, 3.0]),
         };
         Preview {
             strokes: vec![stroke],

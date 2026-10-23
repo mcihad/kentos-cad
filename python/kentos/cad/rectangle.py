@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    AreaRules,
     LineType,
     LineTypeName,
     PolygonCreated,
@@ -58,6 +59,7 @@ class _RectangleCreate(LocalCommand[RectangleCreate, PolygonCreated, PolygonPlan
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         rotation: float | None | Unset = UNSET,
+        rules: AreaRules | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -77,12 +79,14 @@ class _RectangleCreate(LocalCommand[RectangleCreate, PolygonCreated, PolygonPlan
             attrs:
             color:
             corners: Sharp when absent.
-            expected_revision: The document revision the input was prepared against, as decimal text.
+            expected_revision:
             label:
             line_type:
             line_weight: Unit: paper-mm.
             rotation: The direction of the sides along the rectangle, radians from east counter-clockwise; 0 when absent.
                 Not read for `edge`. Unit: rad.
+            rules: The document revision the input was prepared against, as decimal text.
+                Çakışma and Topoloji, as `cad.polygon.create`'s (docs/adr/0622 §9). Absent: written as made.
             symbol:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -107,6 +111,7 @@ class _RectangleCreate(LocalCommand[RectangleCreate, PolygonCreated, PolygonPlan
             line_type=line_type,
             line_weight=line_weight,
             rotation=rotation,
+            rules=rules,
             symbol=symbol,
         ), request_id=request_id, expected=expected)
 
@@ -125,6 +130,7 @@ class _RectangleCreate(LocalCommand[RectangleCreate, PolygonCreated, PolygonPlan
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         rotation: float | None | Unset = UNSET,
+        rules: AreaRules | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> PolygonPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -141,6 +147,7 @@ class _RectangleCreate(LocalCommand[RectangleCreate, PolygonCreated, PolygonPlan
             line_type=line_type,
             line_weight=line_weight,
             rotation=rotation,
+            rules=rules,
             symbol=symbol,
         ))
 
@@ -159,6 +166,7 @@ class _RectangleCreate(LocalCommand[RectangleCreate, PolygonCreated, PolygonPlan
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         rotation: float | None | Unset = UNSET,
+        rules: AreaRules | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -175,6 +183,7 @@ class _RectangleCreate(LocalCommand[RectangleCreate, PolygonCreated, PolygonPlan
             line_type=line_type,
             line_weight=line_weight,
             rotation=rotation,
+            rules=rules,
             symbol=symbol,
         ))
 
@@ -193,6 +202,7 @@ class _RectangleCreate(LocalCommand[RectangleCreate, PolygonCreated, PolygonPlan
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         rotation: float | None | Unset = UNSET,
+        rules: AreaRules | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -214,6 +224,7 @@ class _RectangleCreate(LocalCommand[RectangleCreate, PolygonCreated, PolygonPlan
             line_type=line_type,
             line_weight=line_weight,
             rotation=rotation,
+            rules=rules,
             symbol=symbol,
         ), op=op, request_id=request_id, expected=expected)
 

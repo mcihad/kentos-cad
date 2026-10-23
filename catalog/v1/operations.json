@@ -2361,12 +2361,17 @@
       "note": "Merkez, yarıçap ve iki açı komutta; halka çekirdeğin construct::sector'ü. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "revcloud": {
-      "level": "geometry",
+      "level": "semantic",
+      "via": [
+        "cad.revcloud.create"
+      ],
+      "was": "cad.polygon.create",
       "methods": {
-        "Dikdörtgen": "geometry",
-        "Çokgen": "geometry",
-        "Nesne": "geometry"
-      }
+        "Dikdörtgen": "semantic",
+        "Çokgen": "semantic",
+        "Nesne": "semantic"
+      },
+      "note": "Dikdörtgenin iki köşesi, çokgenin köşeleri ya da kapalı nesnenin kimliği ve yay boyu komutta; kirişler çekirdeğin cloud_of'u. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "donut": {
       "level": "semantic",
@@ -2439,8 +2444,12 @@
       "operation": "vertexPoints"
     },
     "adjoin": {
-      "level": "geometry",
-      "operation": "adjoin"
+      "level": "semantic",
+      "via": [
+        "cad.entities.adjoin"
+      ],
+      "was": "cad.entities.create",
+      "note": "Yeni sınırın noktaları, komşu katmanlar, görünümün kutusu ve Çakışma ile Topoloji komuta verilir; bölgeyi komut bulur (ADR 0622 §9)."
     },
     "boundary": {
       "level": "semantic",
@@ -2455,7 +2464,12 @@
       "operation": "polygonize"
     },
     "parcel": {
-      "level": "geometry"
+      "level": "semantic",
+      "via": [
+        "cad.parcels.create"
+      ],
+      "was": "cad.entities.create",
+      "note": "Köşeler ve Çakışma ile Topoloji komuta verilir; numarayı, öznitelikleri ve parsel katmanını komut verir (ADR 0622 §9)."
     },
     "hatch": {
       "level": "semantic",

@@ -8075,6 +8075,99 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_REVCLOUD_CREATE.into(),
+            version: crate::CAD_REVCLOUD_CREATE_VERSION,
+            title: "Revizyon bulutu oluştur".into(),
+            summary: "Verilen katmana kapalı bir revizyon bulutu alan ekler. Çerçeve doğu ve kuzey boyunca bir dikdörtgenin iki \
+                      köşesi (rectangle), bir çokgenin köşeleri (polygon) ya da kapalı bir nesnenin kalıcı kimliğidir (object: alan, \
+                      kapalı çoklu çizgi, daire, kapalı eğri, tam elips; nesne kalır). Halkanın her kenarı yaklaşık arc uzunluğunda \
+                      eşit kirişlere bölünür, her kiriş dışa doğru 0,5 bükümlü bir yaydır; alan cad.polygon.create gibi yazılır. \
+                      10 000'den çok yay too_many_points ile reddedilir. Revizyon bulutu aracı yay boyunu kâğıt milimetresinden \
+                      çizimin ölçeğiyle çevirip aynı girdiyi verir; Python ve ajan aynı bulutu alır; tek geri alma adımı."
+                .into(),
+            aliases: vec!["bulut".into(), "revcloud".into(), "revizyon".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RevcloudCreate>(),
+            output: schema::<crate::PolygonCreated>(),
+            plan: Some(schema::<crate::PolygonPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "20 × 10 m'lik dikdörtgenin çevresinde 2 m'lik yaylar".into(),
+                input: json!({ "layerId": "yapi", "arc": 2.0,
+                               "frame": { "kind": "rectangle", "a": { "x": 423500.0, "y": 4512300.0 },
+                                          "b": { "x": 423520.0, "y": 4512310.0 } } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_ADJOIN.into(),
+            version: crate::CAD_ENTITIES_ADJOIN_VERSION,
+            title: "Bitişik alan".into(),
+            summary: "Yalnız yeni sınır verilir: komşu bir alanın içinden ya da sınırından başka birine giden açık bir yol (pts, \
+                      kenar başına bulges). Yolun neighbours katmanlarının (yoksa layerId'nin) görünen alanlarıyla kapattığı bölge \
+                      yeni alandır; komşuların sınırı onun sınırı olur, parçaları ve delikleri olduğu gibi tek nesne olarak \
+                      cad.polygon.create gibi yazılır, rules ile Çakışma ve Topoloji. within komşuları bir kutuya değenlerle \
+                      sınırlar (aracın görünümü). Kapanmayan yol no_region ile reddedilir. Bitişik alan aracı, Python ve ajan \
+                      aynı girdiye aynı alanı alır; tek geri alma adımı “Bitişik alan”."
+                .into(),
+            aliases: vec!["bitişik".into(), "bitisikalan".into(), "adjoin".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesAdjoin>(),
+            output: schema::<crate::PolygonCreated>(),
+            plan: Some(schema::<crate::PolygonPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki parselin arasını kapatan yol".into(),
+                input: json!({ "layerId": "parsel",
+                               "pts": [ { "x": 423510.0, "y": 4512305.0 }, { "x": 423510.0, "y": 4512330.0 },
+                                        { "x": 423530.0, "y": 4512330.0 }, { "x": 423530.0, "y": 4512305.0 } ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_PARCELS_CREATE.into(),
+            version: crate::CAD_PARCELS_CREATE_VERSION,
+            title: "Parsel oluştur".into(),
+            summary: "Etkin katman ne olursa olsun parsel katmanına (parsel) kapalı bir alan ekler ve numarasını komut verir: number \
+                      verilirse o (başka parselde de varsa parcel_number_taken uyarısıyla), verilmezse parsellerin Parsel değerlerinin \
+                      başındaki en büyük tam sayının bir fazlası. Öznitelikleri Ada, Parsel, Mahalle, Nitelik “Arsa”, Tapu alanı (m²), \
+                      Pafta; attrs onların üstüne, etiketi numara; tapu alanı boş kalır (tapunundur). Çizimde parsel katmanı yoksa \
+                      yeni projedeki gibi aynı adımda açılır. Alan cad.polygon.create gibi, rules ile Çakışma ve Topoloji. Parsel \
+                      oluştur aracı, Python ve ajan aynı girdiye aynı parseli alır; tek geri alma adımı."
+                .into(),
+            aliases: vec!["parsel".into(), "parcel".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ParcelsCreate>(),
+            output: schema::<crate::ParcelCreated>(),
+            plan: Some(schema::<crate::ParcelPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Sıradaki numarayla 20 × 15 m'lik parsel".into(),
+                input: json!({ "pts": [ { "x": 423500.0, "y": 4512300.0 }, { "x": 423520.0, "y": 4512300.0 },
+                                        { "x": 423520.0, "y": 4512315.0 }, { "x": 423500.0, "y": 4512315.0 } ],
+                               "attrs": { "Ada": "101" } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_ENTITIES_VERTEX.into(),
             version: crate::CAD_ENTITIES_VERTEX_VERSION,
             title: "Köşe ve kenar".into(),
@@ -10006,6 +10099,15 @@ mod tests {
                     }
                     crate::CAD_SECTOR_CREATE => {
                         serde_json::from_value::<crate::SectorCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PARCELS_CREATE => {
+                        serde_json::from_value::<crate::ParcelsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_ADJOIN => {
+                        serde_json::from_value::<crate::EntitiesAdjoin>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_REVCLOUD_CREATE => {
+                        serde_json::from_value::<crate::RevcloudCreate>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_VERTEX => {
                         serde_json::from_value::<crate::EntitiesVertex>(e.input.clone()).map(|_| ())

@@ -4,15 +4,16 @@
 //! `ops::fillet::corners_of_ring`), here only; the tools draw their previews from [`rectangle_ring`] and
 //! [`regular_ring`] and write through the commands. The polygon is written as `cad.polygon.create` writes it, its
 //! checks after the shape's own. The shared cases are `fixtures/commands/v1/cad.rectangle.create.json` and
-//! `cad.polygon.regular.json` (`scripts/fixtures/shape_command_cases.py`).
+//! `cad.polygon.regular.json` (`scripts/fixtures/shape_command_cases.py`). `cad.revcloud.create` (docs/adr/0622 §9)
+//! makes a revision cloud round a rectangle, a polygon's corners or a closed object (`cloud_of`).
 
 use kentos_commands::{
     CommandResult, PolygonCreate, PolygonCreated, PolygonPlan, RectangleCorners, RectangleCreate,
-    RectangleFrame, RegularFrame, RegularPolygonCreate, SectorCreate, Vec2 as Wire,
+    RectangleFrame, RegularFrame, RegularPolygonCreate, RevcloudCreate, RevcloudFrame, SectorCreate, Vec2 as Wire,
 };
 use kentos_geometry_core::geom::shapes::{
-    rect_from_corners, rect_from_edge, rect_from_size, rect_side_for_area, regular_polygon,
-    regular_polygon_on_edge,
+    closed_outline, cloud_arcs, cloud_of, rect_from_corners, rect_from_edge, rect_from_size,
+    rect_side_for_area, regular_polygon, regular_polygon_on_edge,
 };
 use kentos_geometry_core::ops::fillet::{CornerOp, CornerResult, corners_of_ring};
 use kentos_geometry_core::vec2::Vec2;
@@ -240,6 +241,7 @@ fn rectangle_polygon(input: &RectangleCreate, (pts, bulges): Ring) -> PolygonCre
         label: input.label.clone(),
         symbol: input.symbol.clone(),
         expected_revision: input.expected_revision.clone(),
+        rules: input.rules.clone(),
     }
 }
 
@@ -257,6 +259,7 @@ fn regular_polygon_input(input: &RegularPolygonCreate, pts: Vec<Vec2>) -> Polygo
         label: input.label.clone(),
         symbol: input.symbol.clone(),
         expected_revision: input.expected_revision.clone(),
+        rules: input.rules.clone(),
     }
 }
 
@@ -373,6 +376,7 @@ fn sector_polygon(input: &SectorCreate, (pts, bulges): Ring) -> PolygonCreate {
         label: input.label.clone(),
         symbol: input.symbol.clone(),
         expected_revision: input.expected_revision.clone(),
+        rules: input.rules.clone(),
     }
 }
 
@@ -401,6 +405,147 @@ pub fn execute_sector(cx: &mut ExecutionContext<'_>, input: SectorCreate) -> Com
         input,
         |cx, input| match sector_ring_in(&input) {
             Ok(ring) => polygon::write(cx, sector_polygon(&input, ring)),
+            Err(stop) => stop.into(),
+        },
+    )
+}
+
+const CLOUD_RECT_DEGENERATE: &str = "Dikdörtgenin bir kenarı sıfır uzunlukta: iki köşe aynı doğu ya da kuzey çizgisinde. Başka bir karşı köşe verin.";
+const CLOUD_FLAT: &str = "Bulutun köşeleri bir doğru üzerinde: alanı yok. Başka köşeler verin.";
+const CLOUD_FEW: &str = "Bulutun en az üç köşesi olmalı.";
+const CLOUD_OPEN: &str = "Nesne kapalı değil: bulut alanın, kapalı çoklu çizginin, dairenin, kapalı eğrinin ya da tam elipsin çevresine çizilir.";
+
+/// The ring a cloud goes round, counter-clockwise or not: the rectangle's, the corners (repeats dropped), the object's
+/// outer outline. `doc` is none for a preview, which has no object.
+fn cloud_frame(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) -> Result<Vec<Vec2>, Stop> {
+    match &input.frame {
+        RevcloudFrame::Rectangle { a, b } => {
+            checks::point(*a, "İlk köşenin", "frame.a")?;
+            checks::point(*b, "Karşı köşenin", "frame.b")?;
+            length(input.arc, "Yay boyu", "arc")?;
+            positive(input.arc, "Yay boyu sıfırdan büyük olmalı.", "arc")?;
+            if (b.x - a.x).abs() <= 1e-9 || (b.y - a.y).abs() <= 1e-9 {
+                return Err(refuse(codes::DEGENERATE_SHAPE, CLOUD_RECT_DEGENERATE, "frame"));
+            }
+            Ok(vec![v(*a), Vec2::new(b.x, a.y), v(*b), Vec2::new(a.x, b.y)])
+        }
+        RevcloudFrame::Polygon { pts } => {
+            for (i, p) in pts.iter().enumerate() {
+                checks::point(*p, "Köşenin", &format!("frame.pts[{i}]"))?;
+            }
+            length(input.arc, "Yay boyu", "arc")?;
+            positive(input.arc, "Yay boyu sıfırdan büyük olmalı.", "arc")?;
+            let mut ring: Vec<Vec2> = Vec::with_capacity(pts.len());
+            for p in pts.iter().copied().map(v) {
+                if ring.last().is_none_or(|q| kentos_geometry_core::geometry::dist(*q, p) > 1e-9) {
+                    ring.push(p);
+                }
+            }
+            while ring.len() > 1 && kentos_geometry_core::geometry::dist(ring[0], ring[ring.len() - 1]) <= 1e-9 {
+                ring.pop();
+            }
+            if ring.len() < 3 {
+                return Err(refuse(codes::TOO_FEW_CORNERS, CLOUD_FEW, "frame.pts"));
+            }
+            if kentos_geometry_core::geometry::signed_area(&ring).abs() <= 1e-9 {
+                return Err(refuse(codes::DEGENERATE_SHAPE, CLOUD_FLAT, "frame.pts"));
+            }
+            Ok(ring)
+        }
+        RevcloudFrame::Object { uid } => {
+            length(input.arc, "Yay boyu", "arc")?;
+            positive(input.arc, "Yay boyu sıfırdan büyük olmalı.", "arc")?;
+            let Some(doc) = doc else {
+                return Err(refuse(codes::ENTITY_NOT_FOUND, "Önizlemede nesne yok.", "frame.uid"));
+            };
+            let entity = kentos_domain::Uuid::parse_str(uid)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|slot| doc.get(slot))
+                .ok_or_else(|| {
+                    Stop::failed(error(
+                        codes::ENTITY_NOT_FOUND,
+                        format!(
+                            "“{uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin."
+                        ),
+                        Some("frame.uid".into()),
+                    ))
+                })?;
+            let shape = crate::geometry_store::record(entity).3;
+            closed_outline(&shape, 64.0)
+                .filter(|ring| ring.len() >= 3)
+                .ok_or_else(|| refuse(codes::NOT_CLOSED, CLOUD_OPEN, "frame.uid"))
+        }
+    }
+}
+
+/// The cloud as the command writes it, or why not.
+fn cloud_ring_in(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) -> Result<Ring, Stop> {
+    let ring = cloud_frame(doc, input)?;
+    if cloud_arcs(&ring, input.arc) > kentos_commands::MOST_CLOUD_ARCS as f64 {
+        return Err(refuse(
+            codes::TOO_MANY_POINTS,
+            "Bulut 10 000'den çok yay olurdu; daha büyük bir yay boyu verin.",
+            "arc",
+        ));
+    }
+    let cloud = cloud_of(&ring, input.arc)
+        .ok_or_else(|| refuse(codes::DEGENERATE_SHAPE, CLOUD_FLAT, "frame"))?;
+    Ok((cloud.pts, Some(cloud.bulges)))
+}
+
+/// The cloud as the command makes it, or the command's refusal: the tool's preview and what it writes. An object's
+/// needs the drawing; with none (a preview) it is refused.
+pub fn revcloud_ring(
+    doc: Option<&kentos_domain::Document>,
+    input: &RevcloudCreate,
+) -> Result<Ring, Box<kentos_commands::CommandError>> {
+    cloud_ring_in(doc, input).map_err(|stop| Box::new(stop.into_error()))
+}
+
+fn revcloud_polygon(input: &RevcloudCreate, (pts, bulges): Ring) -> PolygonCreate {
+    PolygonCreate {
+        layer_id: input.layer_id.clone(),
+        pts: pts.into_iter().map(w).collect(),
+        bulges,
+        holes: None,
+        color: input.color.clone(),
+        line_weight: input.line_weight,
+        line_type: input.line_type,
+        wipeout: None,
+        attrs: input.attrs.clone(),
+        label: input.label.clone(),
+        symbol: input.symbol.clone(),
+        expected_revision: input.expected_revision.clone(),
+        rules: input.rules.clone(),
+    }
+}
+
+/// The cloud's checks, then the polygon's.
+pub fn validate_revcloud(cx: &ExecutionContext<'_>, input: &RevcloudCreate) -> CommandResult<()> {
+    match cloud_ring_in(Some(&*cx.doc), input) {
+        Ok(ring) => polygon::validate(cx, &revcloud_polygon(input, ring)),
+        Err(stop) => stop.into(),
+    }
+}
+
+/// The cloud as it would be written.
+pub fn plan_revcloud(cx: &ExecutionContext<'_>, input: &RevcloudCreate) -> CommandResult<PolygonPlan> {
+    match cloud_ring_in(Some(&*cx.doc), input) {
+        Ok(ring) => polygon::plan(cx, &revcloud_polygon(input, ring)),
+        Err(stop) => stop.into(),
+    }
+}
+
+/// Writes the cloud, one undo step.
+pub fn execute_revcloud(cx: &mut ExecutionContext<'_>, input: RevcloudCreate) -> CommandResult<PolygonCreated> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_REVCLOUD_CREATE,
+        kentos_commands::CAD_REVCLOUD_CREATE_VERSION,
+        input,
+        |cx, input| match cloud_ring_in(Some(&*cx.doc), &input) {
+            Ok(ring) => polygon::write(cx, revcloud_polygon(&input, ring)),
             Err(stop) => stop.into(),
         },
     )

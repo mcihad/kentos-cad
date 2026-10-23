@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linearref, linetypes, meshes, network, nurbs, openings, parameters, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, sector, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linearref, linetypes, meshes, network, nurbs, openings, parameters, parcels, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, revcloud, scenarios, schedules, schema, sector, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -66,6 +66,7 @@ __all__ = [
     "AddressesDefineOperation",
     "AddressesDefineOperationName",
     "AddressesDefined",
+    "AdjoinWindow",
     "AffectReason",
     "AffectReasonName",
     "AffectedFrame",
@@ -138,6 +139,7 @@ __all__ = [
     "AreaOfUse",
     "AreaPart",
     "AreaRectangleFrame",
+    "AreaRules",
     "AreaSource",
     "AreaTrimBoundaries",
     "AreaUnit",
@@ -574,6 +576,7 @@ __all__ = [
     "EmptyResultName",
     "EndSubPlace",
     "EnforceFormsOp",
+    "EntitiesAdjoin",
     "EntitiesArray",
     "EntitiesArrayPlan",
     "EntitiesArrayed",
@@ -1275,6 +1278,7 @@ __all__ = [
     "ObjectEnd",
     "ObjectFieldSource",
     "ObjectPaperPlotColor",
+    "ObjectRevcloudFrame",
     "ObjectUcsTo",
     "ObjectValue",
     "ObjectValueName",
@@ -1496,6 +1500,9 @@ __all__ = [
     "ParametersEdited",
     "ParametersOperation",
     "ParametersOperationName",
+    "ParcelCreated",
+    "ParcelPlan",
+    "ParcelsCreate",
     "ParkedInfo",
     "ParkedPin",
     "PartsDivision",
@@ -1587,6 +1594,7 @@ __all__ = [
     "PolygonPaperShapeKind",
     "PolygonPaperViewportClip",
     "PolygonPlan",
+    "PolygonRevcloudFrame",
     "PolygonSelectMode",
     "PolygonSelectModeName",
     "PolygonSelectRegion",
@@ -1767,6 +1775,7 @@ __all__ = [
     "RectangleCreate",
     "RectangleFrame",
     "RectanglePaperViewportClip",
+    "RectangleRevcloudFrame",
     "RefreshTablesOperation",
     "RegisteredArea",
     "RegistryDatum",
@@ -1849,6 +1858,8 @@ __all__ = [
     "ResourceKindName",
     "RetargetViewMarksOperation",
     "RetireCodeMigrationStep",
+    "RevcloudCreate",
+    "RevcloudFrame",
     "RevisionConflict",
     "RingGeometry",
     "RotateBlockAction",
@@ -2445,6 +2456,7 @@ __all__ = [
     "nurbs",
     "openings",
     "parameters",
+    "parcels",
     "point",
     "pointclouds",
     "points",
@@ -2459,6 +2471,7 @@ __all__ = [
     "rectangle",
     "relations",
     "require",
+    "revcloud",
     "scenarios",
     "schedules",
     "schema",

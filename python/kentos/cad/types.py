@@ -7198,6 +7198,28 @@ class RelationsOp(_Union):
         return _variant(_RELATIONS_OP, "RelationsOp", "kind", data).from_json(data)
 
 
+class RevcloudFrame(_Union):
+    """What a revision cloud goes round (AutoCAD REVCLOUD's Rectangular, Polygonal and Object).
+
+    One of:
+
+    - :class:`RectangleRevcloudFrame` (``kind: rectangle``)
+    - :class:`PolygonRevcloudFrame` (``kind: polygon``)
+    - :class:`ObjectRevcloudFrame` (``kind: object``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RevcloudFrame:
+        return _variant(_REVCLOUD_FRAME, "RevcloudFrame", "kind", data).from_json(data)
+
+
 class ScheduleOperation(_Union):
     """What `cad.schedules.edit` does.
 
@@ -8077,6 +8099,30 @@ class AddressesDefined(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AdjoinWindow(_Model):
+    """A box on the drawing: its south-west and north-east corners.
+    Attributes:
+        min: Unit: length.
+        max: Unit: length.
+    """
+    min: Vec2
+    max: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["min"] = _vec2_out(self.min)
+        out["max"] = _vec2_out(self.max)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AdjoinWindow:
+        return cls(
+            min=Vec2.from_json(data["min"]),
+            max=Vec2.from_json(data["max"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AffectedFrame(_Model):
     """A frame the objects' change affects.
     Attributes:
@@ -8872,6 +8918,41 @@ class AreaPart(_Model):
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
             ms=UNSET if "ms" not in data else None if data["ms"] is None else [None if e0 is None else float(e0) for e0 in data["ms"]],
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AreaRules(_Model):
+    """The rules a new area is written by (docs/adr/0162, 0622 §9), the tools' Çakışma and Topoloji made explicit: the
+    command reads no session state.
+
+    - `avoid`: the layers whose shown areas it must not overlap (Çakışma: its own layer, or the chosen ones); what
+      overlaps them is cut away and the rest written as one object, its parts and holes as they are; one wholly
+      covered is refused (`area_covered`), one cut warned of (`area_clipped`). Empty: Serbest.
+    - `topology`: joined with the shown lines, paths and areas it touches corner by corner, within 1 µm: its corners
+      on their edges go to them, theirs on its edges to it, the neighbours in the same undo step (`corners_joined`);
+      a locked layer's neighbour takes none (`neighbours_locked`). `points`: points too (Noktalar da).
+    """
+    avoid: list[str] | Unset = UNSET
+    points: bool | Unset = UNSET
+    topology: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.avoid is not UNSET:
+            out["avoid"] = list(self.avoid)
+        if self.points is not UNSET:
+            out["points"] = self.points
+        if self.topology is not UNSET:
+            out["topology"] = self.topology
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AreaRules:
+        return cls(
+            avoid=list(data["avoid"]) if "avoid" in data else UNSET,
+            points=data.get("points", UNSET),
+            topology=data.get("topology", UNSET),
         )
 
 
@@ -15984,6 +16065,85 @@ class EmptyInput(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> EmptyInput:
         return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesAdjoin(_Model):
+    """`cad.entities.adjoin`'s input (Bitişik alan): only the new boundary is given, an open path from inside or on a
+    neighbouring area to another; the region it closes with the shown areas of `neighbours` (their boundaries taken
+    as its own) is the new area, written as `cad.polygon.create` writes one, its parts and holes as they are, one undo
+    step “Bitişik alan”. `within` keeps the neighbours to those touching a box (the tool's view); absent, every shown
+    area of the layers.
+
+    Refusals, in this order: `too_few_points` (fewer than two), `not_finite` (a point, a bulge, the box),
+    `bulge_count` (not one a segment), `layer_not_found` and `not_a_layer` (a neighbours' layer), `no_region` (the
+    path closes nothing), then `cad.polygon.create`'s (its layer, revision, line weight, attributes and `rules`).
+    Attributes:
+        pts: The new boundary's points, at least two. Unit: length.
+        bulges: One bulge a segment (DXF's: tan of a quarter of the arc's angle); absent: every segment straight. Unit: 1.
+        line_weight: Unit: paper-mm.
+        neighbours: The layers whose shown areas close the region; empty: `layerId`'s own.
+        rules: Çakışma (beyond the neighbours) and Topoloji, as `cad.polygon.create`'s.
+    """
+    layer_id: str
+    pts: list[Vec2]
+    attrs: dict[str, str] | None | Unset = UNSET
+    bulges: list[float] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    neighbours: list[str] | Unset = UNSET
+    rules: AreaRules | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    within: AdjoinWindow | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.neighbours is not UNSET:
+            out["neighbours"] = list(self.neighbours)
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.within is not UNSET:
+            out["within"] = None if self.within is None else self.within.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesAdjoin:
+        return cls(
+            layer_id=data["layerId"],
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            neighbours=list(data["neighbours"]) if "neighbours" in data else UNSET,
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else AreaRules.from_json(data["rules"]),
+            symbol=data.get("symbol", UNSET),
+            within=UNSET if "within" not in data else None if data["within"] is None else AdjoinWindow.from_json(data["within"]),
+        )
 
 
 @dataclass(kw_only=True, slots=True)
@@ -35749,6 +35909,130 @@ class ParametersEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ParcelCreated(_Model):
+    """`cad.parcels.create`'s output: the parcel written, its number and whether the parcel layer was opened for it.
+    Attributes:
+        id: Its slot in the open document (`Entity.id`). Unit: id.
+    """
+    uid: str
+    id: int
+    number: str
+    opened: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["id"] = self.id
+        out["number"] = self.number
+        out["opened"] = self.opened
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelCreated:
+        return cls(
+            uid=data["uid"],
+            id=data["id"],
+            number=data["number"],
+            opened=data["opened"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelPlan(_Model):
+    """`cad.parcels.create`'s plan: the parcel as it would be stored (id 0), its number and whether the layer would be
+    opened.
+    """
+    entity: Entity
+    number: str
+    opened: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["entity"] = self.entity.to_json()
+        out["number"] = self.number
+        out["opened"] = self.opened
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelPlan:
+        return cls(
+            entity=Entity.from_json(data["entity"]),
+            number=data["number"],
+            opened=data["opened"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsCreate(_Model):
+    """`cad.parcels.create`'s input (Parsel oluştur): a closed area on the `parsel` layer, whatever layer is active,
+    numbered by the command: `number` when given (its spaces trimmed; one another parcel has is warned of,
+    `parcel_number_taken`), else one above the greatest whole number the parcels' Parsel values start with. Its
+    attributes are Ada, Parsel, Mahalle, Nitelik “Arsa”, Tapu alanı (m²) and Pafta, the given ones over them, Parsel
+    the number; its label the number. The deed area stays empty: it is the title deed's, not the drawing's. A drawing
+    without the layer gets it in the parcel's undo step. Written as `cad.polygon.create` writes an area, `rules`
+    included.
+
+    Refusals, in this order: `invalid_parcel_number` (an empty number), `layer_locked` (the parcel layer), then
+    `cad.polygon.create`'s.
+    Attributes:
+        pts: Its corners, at least three. Unit: length.
+        bulges: One bulge an edge, the closing one too; absent: every edge straight. Unit: 1.
+        line_weight: Unit: paper-mm.
+        rules: Çakışma and Topoloji, as `cad.polygon.create`'s.
+    """
+    pts: list[Vec2]
+    attrs: dict[str, str] | None | Unset = UNSET
+    bulges: list[float] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    number: str | None | Unset = UNSET
+    rules: AreaRules | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.number is not UNSET:
+            out["number"] = self.number
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsCreate:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            number=data.get("number", UNSET),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else AreaRules.from_json(data["rules"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ParkedInfo(_Model):
     """Pins parked for one object: its lasting id, the key's value, how many pins.
     Attributes:
@@ -37424,7 +37708,9 @@ class PolygonCreate(_Model):
     `not_finite`, `bulge_count` (the outer ring, then each hole),
     `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
     `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
-    `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
+    `slots_exhausted`; with `rules`, an avoided layer's `layer_not_found` and `not_a_layer` (path `rules.avoid[i]`)
+    and `area_covered`. Warning: `layer_hidden` (it is written all the same); with `rules`, `area_clipped`,
+    `corners_joined`, `neighbours_locked`.
     Geometric validity (self-intersection, zero area, a hole outside the
     ring) is not checked, as the drawing tools and the file reader do not.
     Attributes:
@@ -37446,6 +37732,8 @@ class PolygonCreate(_Model):
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
+        rules: Çakışma and Topoloji (docs/adr/0162, 0622 §9): what the new area must not overlap and whether it shares
+            corners with its neighbours. Absent: written as given.
         symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of its layer's style: an object template's (docs/adr/0176).
             The id is not looked up: the libraries are the host's. Absent: the
@@ -37463,6 +37751,7 @@ class PolygonCreate(_Model):
     label: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    rules: AreaRules | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     wipeout: Wipeout | None | Unset = UNSET
 
@@ -37486,6 +37775,8 @@ class PolygonCreate(_Model):
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.wipeout is not UNSET:
@@ -37505,6 +37796,7 @@ class PolygonCreate(_Model):
             label=data.get("label", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else AreaRules.from_json(data["rules"]),
             symbol=data.get("symbol", UNSET),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
@@ -42978,10 +43270,11 @@ class RectangleCreate(_Model):
     Attributes:
         layer_id: The layer it goes on: a layer's id, not a group's.
         corners: Sharp when absent.
-        expected_revision: The document revision the input was prepared against, as decimal text.
         line_weight: Unit: paper-mm.
         rotation: The direction of the sides along the rectangle, radians from east counter-clockwise; 0 when absent.
             Not read for `edge`. Unit: rad.
+        rules: The document revision the input was prepared against, as decimal text.
+            Çakışma and Topoloji, as `cad.polygon.create`'s (docs/adr/0622 §9). Absent: written as made.
     """
     layer_id: str
     frame: RectangleFrame
@@ -42993,6 +43286,7 @@ class RectangleCreate(_Model):
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     rotation: float | None | Unset = UNSET
+    rules: AreaRules | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -43015,6 +43309,8 @@ class RectangleCreate(_Model):
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.rotation is not UNSET:
             out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -43032,6 +43328,7 @@ class RectangleCreate(_Model):
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else AreaRules.from_json(data["rules"]),
             symbol=data.get("symbol", UNSET),
         )
 
@@ -43071,6 +43368,7 @@ class RegularPolygonCreate(_Model):
     Attributes:
         sides: How many sides, 3–1024. Unit: count.
         line_weight: Unit: paper-mm.
+        rules: Çakışma and Topoloji, as `cad.polygon.create`'s (docs/adr/0622 §9). Absent: written as made.
     """
     layer_id: str
     sides: int
@@ -43081,6 +43379,7 @@ class RegularPolygonCreate(_Model):
     label: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    rules: AreaRules | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -43100,6 +43399,8 @@ class RegularPolygonCreate(_Model):
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -43116,6 +43417,7 @@ class RegularPolygonCreate(_Model):
             label=data.get("label", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else AreaRules.from_json(data["rules"]),
             symbol=data.get("symbol", UNSET),
         )
 
@@ -43326,6 +43628,74 @@ class ReportItem(_Model):
             lines=list(data["lines"]),
             details=[ReportDetail.from_json(e0) for e0 in data["details"]] if "details" in data else UNSET,
             severity=UNSET if "severity" not in data else None if data["severity"] is None else _enum_in(ReportSeverity, data["severity"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RevcloudCreate(_Model):
+    """`cad.revcloud.create`'s input (Revizyon bulutu): the ring of `frame`, counter-clockwise, each side divided into
+    chords of about `arc` (`max(1, round(side / arc))` of them, equal), every chord an outward arc of bulge 0.5; written
+    as `cad.polygon.create` writes an area, one undo step. No active layer, plot scale or remembered tool option is
+    read: the tool turns its paper millimetres into `arc`.
+
+    Refusals, checked in this order: `not_finite` (a corner, `arc`), `invalid_distance` (`arc` not above zero),
+    `degenerate_shape` (a rectangle of no width or height, corners with no area), `too_few_corners` (fewer than three
+    corners), `entity_not_found` (the object), `not_closed` (an open object), `too_many_points` (more than 10 000
+    arcs), then `cad.polygon.create`'s.
+    Attributes:
+        arc: The arcs' chord, in the drawing's length (m), above zero. Unit: length.
+        line_weight: Unit: paper-mm.
+        rules: Çakışma and Topoloji, as `cad.polygon.create`'s (docs/adr/0622 §9). Absent: written as made.
+    """
+    layer_id: str
+    frame: RevcloudFrame
+    arc: float
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    rules: AreaRules | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["frame"] = self.frame.to_json()
+        out["arc"] = float(self.arc)
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RevcloudCreate:
+        return cls(
+            layer_id=data["layerId"],
+            frame=RevcloudFrame.from_json(data["frame"]),
+            arc=float(data["arc"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else AreaRules.from_json(data["rules"]),
+            symbol=data.get("symbol", UNSET),
         )
 
 
@@ -44075,6 +44445,7 @@ class SectorCreate(_Model):
         a0: Where the arc starts: radians counter-clockwise from east (a geometry angle, not a bearing). Unit: rad.
         a1: Where it ends: the slice is swept counter-clockwise from `a0` to `a1`. Unit: rad.
         line_weight: Unit: paper-mm.
+        rules: Çakışma and Topoloji, as `cad.polygon.create`'s (docs/adr/0622 §9). Absent: written as made.
     """
     layer_id: str
     c: Vec2
@@ -44087,6 +44458,7 @@ class SectorCreate(_Model):
     label: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    rules: AreaRules | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -44108,6 +44480,8 @@ class SectorCreate(_Model):
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -44126,6 +44500,7 @@ class SectorCreate(_Model):
             label=data.get("label", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else AreaRules.from_json(data["rules"]),
             symbol=data.get("symbol", UNSET),
         )
 
@@ -65048,6 +65423,73 @@ class RemoveRelationsOp(RelationsOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class RectangleRevcloudFrame(RevcloudFrame):
+    """Two opposite corners of a rectangle whose sides run east and north.
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "rectangle"
+    a: Vec2
+    b: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rectangle"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RectangleRevcloudFrame:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PolygonRevcloudFrame(RevcloudFrame):
+    """A polygon's corners in order, at least three; a corner within a nanometre of the one before it (or the last of
+    the first) is dropped.
+    Attributes:
+        pts: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "polygon"
+    pts: list[Vec2]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "polygon"}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PolygonRevcloudFrame:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ObjectRevcloudFrame(RevcloudFrame):
+    """The outer outline of a closed object (an area, a closed polyline, a circle, a closed curve, a full ellipse) by
+    its persistent id; its curves at 64 chords a turn. The object stays.
+    """
+    TAG_VALUE: ClassVar[str] = "object"
+    uid: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "object"}
+        out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ObjectRevcloudFrame:
+        return cls(
+            uid=data["uid"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CellScheduleOperation(ScheduleOperation):
     """The cell of the data row `row` (the table's own row index: 0 is the heading) and the column `column`: `value`
     written to each of the row's objects. Empty words clear an optional field.
@@ -68140,6 +68582,9 @@ _REGULAR_FRAME: dict[str, type[RegularFrame]] = {"inscribed": InscribedRegularFr
 _RELATIONS_OP: dict[str, type[RelationsOp]] = {"create": CreateRelationsOp, "update": UpdateRelationsOp, "remove": RemoveRelationsOp}
 
 
+_REVCLOUD_FRAME: dict[str, type[RevcloudFrame]] = {"rectangle": RectangleRevcloudFrame, "polygon": PolygonRevcloudFrame, "object": ObjectRevcloudFrame}
+
+
 _SCHEDULE_OPERATION: dict[str, type[ScheduleOperation]] = {"cell": CellScheduleOperation, "set": SetScheduleOperation}
 
 
@@ -68227,6 +68672,7 @@ __all__ = [
     "AddressesDefineOperation",
     "AddressesDefineOperationName",
     "AddressesDefined",
+    "AdjoinWindow",
     "AffectReason",
     "AffectReasonName",
     "AffectedFrame",
@@ -68299,6 +68745,7 @@ __all__ = [
     "AreaOfUse",
     "AreaPart",
     "AreaRectangleFrame",
+    "AreaRules",
     "AreaSource",
     "AreaTrimBoundaries",
     "AreaUnit",
@@ -68719,6 +69166,7 @@ __all__ = [
     "EmptyResultName",
     "EndSubPlace",
     "EnforceFormsOp",
+    "EntitiesAdjoin",
     "EntitiesArray",
     "EntitiesArrayPlan",
     "EntitiesArrayed",
@@ -69400,6 +69848,7 @@ __all__ = [
     "ObjectEnd",
     "ObjectFieldSource",
     "ObjectPaperPlotColor",
+    "ObjectRevcloudFrame",
     "ObjectUcsTo",
     "ObjectValue",
     "ObjectValueName",
@@ -69619,6 +70068,9 @@ __all__ = [
     "ParametersEdited",
     "ParametersOperation",
     "ParametersOperationName",
+    "ParcelCreated",
+    "ParcelPlan",
+    "ParcelsCreate",
     "ParkedInfo",
     "ParkedPin",
     "PartsDivision",
@@ -69710,6 +70162,7 @@ __all__ = [
     "PolygonPaperShapeKind",
     "PolygonPaperViewportClip",
     "PolygonPlan",
+    "PolygonRevcloudFrame",
     "PolygonSelectMode",
     "PolygonSelectModeName",
     "PolygonSelectRegion",
@@ -69886,6 +70339,7 @@ __all__ = [
     "RectangleCreate",
     "RectangleFrame",
     "RectanglePaperViewportClip",
+    "RectangleRevcloudFrame",
     "RefreshTablesOperation",
     "RegisteredArea",
     "RegistryDatum",
@@ -69966,6 +70420,8 @@ __all__ = [
     "ResourceKindName",
     "RetargetViewMarksOperation",
     "RetireCodeMigrationStep",
+    "RevcloudCreate",
+    "RevcloudFrame",
     "RingGeometry",
     "RotateBlockAction",
     "RotateItemsPaperOp",

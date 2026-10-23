@@ -8822,14 +8822,14 @@
    "id": "tool.adjoin",
    "kind": "tool",
    "title": "Bitişik alan",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.entities.adjoin"
    ],
-   "operation": "adjoin",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.adjoin",
+   "mcp": "cad.entities.adjoin",
+   "note": "Yeni sınırın noktaları, komşu katmanlar, görünümün kutusu ve Çakışma ile Topoloji komuta verilir; bölgeyi komut bulur (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 3
@@ -11120,14 +11120,14 @@
    "id": "tool.parcel",
    "kind": "tool",
    "title": "Parsel oluştur",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.parcels.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "python": "kentos.cad.parcels.create",
+   "mcp": "cad.parcels.create",
+   "note": "Köşeler ve Çakışma ile Topoloji komuta verilir; numarayı, öznitelikleri ve parsel katmanını komut verir (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 7
@@ -11598,14 +11598,14 @@
    "id": "tool.revcloud",
    "kind": "tool",
    "title": "Revizyon bulutu",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.polygon.create"
+    "cad.revcloud.create"
    ],
    "operation": null,
-   "python": "kentos.cad.polygon.create",
-   "mcp": "cad.polygon.create",
-   "note": null,
+   "python": "kentos.cad.revcloud.create",
+   "mcp": "cad.revcloud.create",
+   "note": "Dikdörtgenin iki köşesi, çokgenin köşeleri ya da kapalı nesnenin kimliği ve yay boyu komutta; kirişler çekirdeğin cloud_of'u. Araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 2
@@ -11614,13 +11614,13 @@
    "id": "tool.revcloud#Dikdörtgen",
    "kind": "method",
    "title": "Revizyon bulutu: Dikdörtgen",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.polygon.create"
+    "cad.revcloud.create"
    ],
    "operation": null,
-   "python": "kentos.cad.polygon.create",
-   "mcp": "cad.polygon.create",
+   "python": "kentos.cad.revcloud.create",
+   "mcp": "cad.revcloud.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -11630,13 +11630,13 @@
    "id": "tool.revcloud#Nesne",
    "kind": "method",
    "title": "Revizyon bulutu: Nesne",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.polygon.create"
+    "cad.revcloud.create"
    ],
    "operation": null,
-   "python": "kentos.cad.polygon.create",
-   "mcp": "cad.polygon.create",
+   "python": "kentos.cad.revcloud.create",
+   "mcp": "cad.revcloud.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -11646,13 +11646,13 @@
    "id": "tool.revcloud#Çokgen",
    "kind": "method",
    "title": "Revizyon bulutu: Çokgen",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.polygon.create"
+    "cad.revcloud.create"
    ],
    "operation": null,
-   "python": "kentos.cad.polygon.create",
-   "mcp": "cad.polygon.create",
+   "python": "kentos.cad.revcloud.create",
+   "mcp": "cad.revcloud.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",

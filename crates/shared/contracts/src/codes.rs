@@ -114,6 +114,13 @@ codes! {
     SERVICE_LAYER = "service_layer", Failed, false, "Katman bir harita servisinden çizilir; nesne tutmaz.";
     /// A warning: the layer is hidden, by itself or a group above it.
     LAYER_HIDDEN = "layer_hidden", Warning, false, "Katman ya da üstündeki bir grup gizli; yazılan görünmez.";
+    NO_REGION = "no_region", Failed, false, "Yol komşu alanlarla kapalı bir bölge oluşturmuyor.";
+    INVALID_PARCEL_NUMBER = "invalid_parcel_number", Failed, false, "Parsel numarası boş.";
+    PARCEL_NUMBER_TAKEN = "parcel_number_taken", Warning, false, "Verilen parsel numarası başka bir parselde de var; yine verildi.";
+    AREA_COVERED = "area_covered", Failed, false, "Yeni alan kaçınılan katmanların alanlarının içinde kalıyor; yazılacak bir kısmı yok.";
+    AREA_CLIPPED = "area_clipped", Warning, false, "Çakışma: yeni alanın kaçınılan katmanların alanlarıyla örtüşen kısmı çıkarıldı.";
+    CORNERS_JOINED = "corners_joined", Warning, false, "Topoloji: yeni alan komşularıyla köşe köşe bağlandı; komşular aynı adımda değişti.";
+    NEIGHBOURS_LOCKED = "neighbours_locked", Warning, false, "Topoloji: kilitli katmandaki komşulara köşe eklenmedi.";
     /// A renderer the style core's rules refuse (`cad.layers.renderer`, docs/adr/0213 §5).
     INVALID_RENDERER = "invalid_renderer", Failed, false, "İşleyici stil çekirdeğinin kurallarına uymuyor.";
 

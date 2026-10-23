@@ -7,15 +7,15 @@
 //! is `apps/web/src/tools/adjoinTool.ts`; both play
 //! `fixtures/interaction/v1/adjoin.json`.
 
-use kentos_commands::CreateOperation;
+use kentos_commands::{AdjoinWindow, EntitiesAdjoin};
 use kentos_geometry_core::geom::arrangement::Area;
 use kentos_geometry_core::geom::bulge::has_bulges;
 use kentos_geometry_core::ops::adjoin::Neighbours;
 use kentos_geometry_core::ops::areas::areas_of_entity;
 use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, adjoin_cmd};
 
 use crate::Vec2;
-use crate::junctions;
 use crate::log::Level;
 use crate::overlap;
 use crate::points;
@@ -30,7 +30,7 @@ pub const LABEL: &str = "Bitişik alan";
 pub const PREVIEW_EDGES: usize = 2_000;
 
 /// Said when the path closes no region with the neighbours (§3).
-pub const NO_REGION: &str = "Yol komşu alanlarla kapalı bir bölge oluşturmuyor: ilk ve son noktayı komşu alanların içine ya da sınırına koyun.";
+pub const NO_REGION: &str = adjoin_cmd::NO_REGION;
 
 /// The layers whose areas the path closes against: the overlap mode's, the
 /// active layer while it is Serbest or no layer is chosen.
@@ -111,40 +111,44 @@ pub(crate) fn fill(neighbours: &Neighbours, pts: &[Vec2], bulges: &[f64]) -> Vec
     neighbours.fill(pts, has_bulges(Some(bulges)).then_some(bulges))
 }
 
-/// Writes the region as one area (its parts and holes as they are) on the
-/// active layer through `cad.entities.create` (`adjoin`, one undo step
-/// “Bitişik alan”), in the current colour and weight. The overlap control
-/// (§2) cuts what overlaps areas the view does not show; Topoloji joins it
-/// with its neighbours corner by corner (§4), in the same step. Whether it
-/// was written: when not, the reason is said and the path stays.
-pub(crate) fn write(region: Vec<Area>, cx: &mut Context<'_>) -> bool {
-    if region.is_empty() {
-        cx.say(Level::Warn, NO_REGION);
-        return false;
-    }
+/// Writes the region the path closes through `cad.entities.adjoin` (docs/adr/0622 §9): the active layer, the
+/// neighbour layers and the view's box, the current look, the session's Çakışma (beyond the neighbours) and
+/// Topoloji as the command's rules; one undo step “Bitişik alan”. Whether it was written: when not, the command's
+/// reason is said and the path stays.
+pub(crate) fn write(pts: &[Vec2], bulges: &[f64], cx: &mut Context<'_>) -> bool {
     let layer = cx.doc.layers().active().to_owned();
-    let mut areas = region;
-    if let Some(clipped) = overlap::clip_new_areas(cx, &areas, &layer) {
-        overlap::say_clipped(cx, &clipped);
-        if clipped.areas.is_empty() {
-            return false;
-        }
-        areas = clipped.areas;
-    }
-    let (total, parts) = (overlap::written_area(&areas), areas.len());
-    let joining = junctions::join(cx, &areas);
-    let areas = joining.as_ref().map_or(areas, |j| j.areas.clone());
-    let Some(geometry) = overlap::clipped_geometry(&areas) else {
+    let b = cx.view.visible();
+    let rules = points::area_rules(cx, &layer);
+    let input = EntitiesAdjoin {
+        layer_id: layer,
+        pts: points::wire_all(pts),
+        bulges: has_bulges(Some(bulges)).then(|| bulges.to_vec()),
+        neighbours: layers(cx),
+        within: Some(AdjoinWindow {
+            min: points::wire(Vec2::new(b.min_x, b.min_y)),
+            max: points::wire(Vec2::new(b.max_x, b.max_y)),
+        }),
+        color: cx.draft.color_text(),
+        line_weight: cx.draft.line_weight,
+        line_type: cx.draft.line_type,
+        attrs: cx.template_attrs(None),
+        label: cx.template_label(),
+        symbol: cx.template_symbol(),
+        rules,
+        expected_revision: None,
+    };
+    let result = adjoin_cmd::execute(
+        &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+        input,
+    );
+    let Some(out) = points::written(result, cx) else {
         return false;
     };
-    let written = junctions::with_joined(cx, joining.as_ref(), LABEL, |cx| {
-        points::write_objects(vec![geometry], Some(CreateOperation::Adjoin), cx)
-    });
-    if written.is_none() {
-        return false;
-    }
-    junctions::say(joining.as_ref(), cx);
-    let area = cx.format().area(total);
+    let parts = cx
+        .doc
+        .get(kentos_domain::Slot(out.id))
+        .map_or(1, |e| areas_of_entity(&shape(e)).len());
+    let area = cx.format().area(points::area_of_slot(cx, out.id));
     let text = if parts > 1 {
         format!("{LABEL} eklendi: {area} ({parts} parça)")
     } else {

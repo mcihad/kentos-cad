@@ -94,6 +94,15 @@ pub fn execute(
     )
 }
 
+/// [`execute`]'s write inside another command's step (the neighbours' corners of a new area, `area_rules.rs`):
+/// not journalled again.
+pub(crate) fn write_in(
+    cx: &mut ExecutionContext<'_>,
+    input: EntitiesEdit,
+) -> CommandResult<EntitiesEdited> {
+    write_execute(cx, input)
+}
+
 /// [`execute`]'s write; `call::recorded` runs it as one step of the
 /// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
 fn write_execute(

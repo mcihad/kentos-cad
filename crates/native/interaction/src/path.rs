@@ -62,10 +62,8 @@
 //! The web's messages are kept word for word. Every calculation is the
 //! shared core's (`kentos-geometry-core`); none is written here.
 
-use std::collections::BTreeMap;
-
-use kentos_commands::{EntitiesCreate, NewObject, PolygonCreate, PolylineCreate, RingGeometry};
-use kentos_domain::{Slot, labels};
+use kentos_commands::{ParcelsCreate, PolygonCreate, PolylineCreate, RingGeometry};
+use kentos_domain::Slot;
 use kentos_geometry_core::entity::polygon_ring;
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
 use kentos_geometry_core::geom::arrangement::{Area as Region, Ring};
@@ -84,7 +82,7 @@ use kentos_geometry_core::tools::drawing::{
 use kentos_geometry_core::tools::locks::square_corner;
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::{ExecutionContext, create, polygon, polyline};
+use kentos_native_application::{ExecutionContext, parcels, polygon, polyline};
 
 use crate::Vec2;
 use crate::adjoin;
@@ -93,9 +91,7 @@ use crate::faces;
 use crate::format::Format;
 use crate::ground;
 use crate::holes;
-use crate::junctions;
 use crate::log::Level;
-use crate::overlap;
 use crate::points::{self, SAME, wire, wire_all};
 use crate::prompt::{Prompt, upper_tr};
 use crate::reshape_by;
@@ -1016,58 +1012,38 @@ impl Path {
             return;
         };
         let layer = cx.doc.layers().active().to_owned();
-        let clipped = overlap::clip_new_area(cx, &region, &layer);
-        if let Some(c) = &clipped {
-            overlap::say_clipped(cx, c);
-        }
-        let (areas, area) = match &clipped {
-            Some(c) => (c.areas.clone(), overlap::written_area(&c.areas)),
-            None => (vec![region.clone()], net_area(&region)),
+        let ring = |r: &Ring| RingGeometry {
+            pts: wire_all(&r.pts),
+            bulges: r.bulges.clone(),
+            zs: None,
         };
-        if areas.is_empty() {
-            return;
-        }
-        let joining = junctions::join(cx, &areas);
-        let areas = joining.as_ref().map_or(areas, |j| j.areas.clone());
+        let rules = points::area_rules(cx, &layer);
+        let input = PolygonCreate {
+            line_type: cx.draft.line_type,
+            wipeout: None,
+            layer_id: layer,
+            pts: wire_all(&region.outer.pts),
+            bulges: region.outer.bulges.clone(),
+            holes: (!region.holes.is_empty()).then(|| region.holes.iter().map(ring).collect()),
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            attrs: cx.template_attrs(None),
+            expected_revision: None,
+            label: cx.template_label(),
+            symbol: cx.template_symbol(),
+            rules,
+        };
         let group = cx.doc.begin_group(DRAW_AREA_LABEL);
-        let wrote = if clipped.is_some() {
-            overlap::clipped_geometry(&areas)
-                .and_then(|g| points::write_objects(vec![g], None, cx))
-                .is_some()
-        } else {
-            let ring = |r: &Ring| RingGeometry {
-                pts: wire_all(&r.pts),
-                bulges: r.bulges.clone(),
-                zs: None,
-            };
-            let area = &areas[0];
-            let input = PolygonCreate {
-                line_type: cx.draft.line_type,
-                wipeout: None,
-                layer_id: layer,
-                pts: wire_all(&area.outer.pts),
-                bulges: area.outer.bulges.clone(),
-                holes: (!area.holes.is_empty()).then(|| area.holes.iter().map(ring).collect()),
-                color: cx.draft.color_text(),
-                line_weight: cx.draft.line_weight,
-                attrs: cx.template_attrs(None),
-                expected_revision: None,
-                label: cx.template_label(),
-                symbol: cx.template_symbol(),
-            };
-            let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
-            points::written(result, cx).is_some()
-        };
-        if !wrote
-            || !joining
-                .as_ref()
-                .is_none_or(|j| junctions::write_neighbours(j, cx))
-        {
+        let result = polygon::execute(
+            &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+            input,
+        );
+        let Some(out) = points::written(result, cx) else {
             cx.doc.cancel_group(group);
             return;
-        }
+        };
         cx.doc.end_group(group);
-        junctions::say(joining.as_ref(), cx);
+        let area = points::area_of_slot(cx, out.id);
         let text = format!("Alan olarak çizildi: {}.", cx.format().area(area));
         cx.say(Level::Success, text);
     }
@@ -1265,8 +1241,7 @@ impl Path {
         // Bitişik alan: the region the path closes, with the neighbours the
         // preview had; with none (or a refusal), the path stays.
         if self.shape == Shape::Adjoin {
-            let region = adjoin::fill(self.neighbours.get(cx), &self.pts, &self.bulges);
-            if adjoin::write(region, cx) {
+            if adjoin::write(&self.pts, &self.bulges, cx) {
                 self.reset();
             }
             return;
@@ -1364,8 +1339,12 @@ impl Path {
             label: None,
             symbol: None,
             expected_revision: None,
+            rules: None,
         };
-        let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
+        let result = polygon::execute(
+            &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+            input,
+        );
         if points::written(result, cx).is_some() {
             cx.say(Level::Success, "Maske eklendi.");
         }
@@ -1441,52 +1420,29 @@ impl Path {
         bulges: Option<Vec<f64>>,
         cx: &mut Context<'_>,
     ) -> Option<f64> {
-        let drawn = Region {
-            outer: Ring {
-                pts: pts.to_vec(),
-                bulges: bulges.clone(),
-            },
-            holes: Vec::new(),
-        };
         let layer = cx.doc.layers().active().to_owned();
-        let clipped = overlap::clip_new_area(cx, &drawn, &layer);
-        if let Some(c) = &clipped {
-            overlap::say_clipped(cx, c);
-        }
-        let (areas, area) = match &clipped {
-            Some(c) => (c.areas.clone(), overlap::written_area(&c.areas)),
-            None => (vec![drawn], bulge_ring_area(pts, bulges.as_deref()).abs()),
+        let rules = points::area_rules(cx, &layer);
+        let input = PolygonCreate {
+            line_type: cx.draft.line_type,
+            wipeout: None,
+            layer_id: layer,
+            pts: pts.iter().copied().map(wire).collect(),
+            bulges,
+            holes: None,
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            attrs: cx.template_attrs(None),
+            expected_revision: None,
+            label: cx.template_label(),
+            symbol: cx.template_symbol(),
+            rules,
         };
-        if areas.is_empty() {
-            return None;
-        }
-        let joining = junctions::join(cx, &areas);
-        let areas = joining.as_ref().map_or(areas, |j| j.areas.clone());
-        junctions::with_joined(cx, joining.as_ref(), labels::ADD, |cx| {
-            if clipped.is_some() {
-                let geometry = overlap::clipped_geometry(&areas)?;
-                return points::write_objects(vec![geometry], None, cx).map(|_| ());
-            }
-            let ring = &areas[0].outer;
-            let input = PolygonCreate {
-                line_type: cx.draft.line_type,
-                wipeout: None,
-                layer_id: layer,
-                pts: ring.pts.iter().copied().map(wire).collect(),
-                bulges: ring.bulges.clone(),
-                holes: None,
-                color: cx.draft.color_text(),
-                line_weight: cx.draft.line_weight,
-                attrs: cx.template_attrs(None),
-                expected_revision: None,
-                label: cx.template_label(),
-                symbol: cx.template_symbol(),
-            };
-            let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
-            points::written(result, cx).map(|_| ())
-        })?;
-        junctions::say(joining.as_ref(), cx);
-        Some(area)
+        let result = polygon::execute(
+            &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+            input,
+        );
+        let out = points::written(result, cx)?;
+        Some(points::area_of_slot(cx, out.id))
     }
 
     /// Kapat: the polyline closed on its first point by a straight edge, a closed line
@@ -1582,88 +1538,37 @@ impl Path {
     /// Öznitelikler shows it. A locked parcel layer is said in the tool's own
     /// words, since another active layer would not help.
     fn create_parcel(&self, pts: &[Vec2], bulges: Option<Vec<f64>>, cx: &mut Context<'_>) {
-        let layers = cx.doc.layers();
-        if let Some(node) = layers.get(PARCEL_LAYER)
-            && layers.is_locked(PARCEL_LAYER)
-        {
-            let text = format!(
-                "“{}” katmanı kilitli; {PARCEL_LABEL} bu katmana yazar. Kilidi Katmanlar panelinden açın.",
-                node.name
-            );
-            cx.say(Level::Warn, text);
-            return;
-        }
-        // The overlap control (docs/adr/0162 §2) on the parcel layer: the parcel is what is left.
-        let drawn = Region {
-            outer: Ring {
-                pts: pts.to_vec(),
-                bulges: bulges.clone(),
-            },
-            holes: Vec::new(),
-        };
-        let clipped = overlap::clip_new_area(cx, &drawn, PARCEL_LAYER);
-        if let Some(c) = &clipped {
-            overlap::say_clipped(cx, c);
-        }
-        let (areas, area) = match &clipped {
-            Some(c) => (c.areas.clone(), overlap::written_area(&c.areas)),
-            None => (vec![drawn], bulge_ring_area(pts, bulges.as_deref()).abs()),
-        };
-        // Topoloji (§4): the parcel joined with its neighbours corner by corner, in its step.
-        let joining = junctions::join(cx, &areas);
-        let areas = joining.as_ref().map_or(areas, |j| j.areas.clone());
-        let Some(geometry) = overlap::clipped_geometry(&areas) else {
-            return;
-        };
-        let number = next_parcel(cx).to_string();
-        let attrs = [
-            ("Ada", ""),
-            ("Parsel", number.as_str()),
-            ("Mahalle", ""),
-            ("Nitelik", "Arsa"),
-            ("Tapu alanı (m²)", ""),
-            ("Pafta", ""),
-        ];
-        let input = EntitiesCreate {
-            layer_id: PARCEL_LAYER.to_owned(),
-            objects: vec![NewObject {
-                line_type: cx.draft.line_type,
-                geometry,
-                color: cx.draft.color_text(),
-                line_weight: cx.draft.line_weight,
-                attrs: Some(BTreeMap::from(
-                    attrs.map(|(k, v)| (k.to_owned(), v.to_owned())),
-                )),
-                label: Some(number.clone()),
-                label_of: None,
-                label_scale: None,
-                symbol: None,
-                order: None,
-                transparency: None,
-            }],
-            operation: None,
+        let rules = points::area_rules(cx, PARCEL_LAYER);
+        let input = ParcelsCreate {
+            pts: wire_all(pts),
+            bulges,
+            number: None,
+            attrs: None,
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            line_type: cx.draft.line_type,
+            rules,
             expected_revision: None,
         };
-        let written = junctions::with_joined(cx, joining.as_ref(), labels::ADD, |cx| {
-            // A drawing without the parcel layer gets it, in the parcel's own undo step.
-            let opened = crate::standard_layer::open_if_missing(PARCEL_LAYER, "parsel", cx).ok()?;
-            let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
-            let out = points::written(result, cx);
-            match (&out, opened) {
-                (Some(_), Some(opened)) => opened.keep(cx),
-                (None, Some(opened)) => opened.drop(cx),
-                (_, None) => {}
-            }
-            out
-        });
-        let Some(out) = written else {
+        let result = parcels::execute(
+            &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+            input,
+        );
+        let Some(out) = points::written(result, cx) else {
             return;
         };
-        junctions::say(joining.as_ref(), cx);
-        cx.selection
-            .set(out.ids.iter().map(|&id| Slot(id)).collect::<Vec<_>>());
+        if out.opened {
+            let name = crate::standard_layer::name_of(PARCEL_LAYER, cx);
+            cx.say(
+                Level::Info,
+                format!("“{name}” katmanı çizimde yoktu; parsel için açıldı."),
+            );
+        }
+        cx.selection.set(vec![Slot(out.id)]);
+        let area = points::area_of_slot(cx, out.id);
         let text = format!(
-            "Parsel {number} oluşturuldu; geometrik alanı {}. Ada, mahalle ve tapu alanı bilgisini Öznitelikler panelinden girin.",
+            "Parsel {} oluşturuldu; geometrik alanı {}. Ada, mahalle ve tapu alanı bilgisini Öznitelikler panelinden girin.",
+            out.number,
             cx.format().area(area)
         );
         cx.say(Level::Success, text);
@@ -1738,34 +1643,6 @@ impl Path {
             prompt
         }
     }
-}
-
-/// The next parcel number: the highest `Parsel` on the parcel layer, as
-/// JavaScript's `parseInt` reads it (“12/1” is 12, a text without leading
-/// digits 0), plus one (the web's `createParcel`).
-fn next_parcel(cx: &Context<'_>) -> u64 {
-    let doc = &*cx.doc;
-    doc.entities()
-        .filter(|e| e.base().layer_id == PARCEL_LAYER)
-        .filter_map(|e| e.base().attrs.get("Parsel"))
-        .map(|text| js_parse_int(text).unwrap_or(0))
-        .max()
-        .unwrap_or(0)
-        .saturating_add(1)
-}
-
-/// JavaScript's `parseInt(text, 10)` for a whole number that is not negative:
-/// white space at the start skipped, the digits up to the first other
-/// character; none when there is no digit or a minus sign (which counts as 0
-/// in the web's maximum too).
-fn js_parse_int(text: &str) -> Option<u64> {
-    let rest = text.trim_start_matches(|c: char| c.is_whitespace() || c == '\u{feff}');
-    let rest = rest.strip_prefix('+').unwrap_or(rest);
-    let digits: String = rest.chars().take_while(char::is_ascii_digit).collect();
-    if digits.is_empty() {
-        return None;
-    }
-    Some(digits.parse().unwrap_or(u64::MAX))
 }
 
 /// The perimeter of a region as İçine tıkla says it: its outer ring's and its
