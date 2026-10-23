@@ -820,8 +820,12 @@ fn found_in_file(path: &Path, table: &str, at: &str) -> Result<Found, Stop> {
             .and_then(|s| u32::try_from(s.organization_id).ok()),
         _ => None,
     };
-    let uids = file.uids(table).map_err(|e| unreadable(e.0))?;
-    Ok(Found { layer, srid, uids })
+    // A file's lasting ids are looked up for each part of rows read, not held whole (docs/adr/0597).
+    Ok(Found {
+        layer,
+        srid,
+        uids: std::collections::HashMap::new(),
+    })
 }
 
 /// A question asked of a source: a GeoPackage file or a database (docs/adr/0581 §2). `layer`: the bound layer the
@@ -1058,11 +1062,39 @@ fn source(
     let mut problem: Option<String> = None;
     let mut cancelled = false;
     let names = |id: &str| id.to_owned();
+    // A file's lasting ids, asked for each part of rows read (docs/adr/0597).
+    let ids_file = match origin {
+        Origin::File(path) => Some(GeoPackage::open(path, false).map_err(|e| {
+            fail(
+                codes::IMPORT_UNREADABLE,
+                format!("{} GeoPackage olarak okunamadı: {}", path.display(), e.0),
+                at.table,
+            )
+        })?),
+        Origin::Database(_) => None,
+    };
     let mut take = |rows: Vec<gpkg::Row>| -> bool {
         if stop() {
             cancelled = true;
             return false;
         }
+        let part_uids;
+        let uids = match &ids_file {
+            Some(f) => {
+                let fids: Vec<i64> = rows.iter().map(|r| r.fid).collect();
+                match f.uids_of(table, &fids) {
+                    Ok(u) => {
+                        part_uids = u;
+                        &part_uids
+                    }
+                    Err(e) => {
+                        problem = Some(e.0);
+                        return false;
+                    }
+                }
+            }
+            None => &found.uids,
+        };
         // The order's raw values by key, for the cursor of a source's order.
         let raw: std::collections::HashMap<i64, serde_json::Value> = match (&scan_order, order_at) {
             (Some(_), Some(at)) => rows
@@ -1071,7 +1103,7 @@ fn source(
                 .collect(),
             _ => std::collections::HashMap::new(),
         };
-        let t = match gp::table_of_rows(&projected, &rows, &found.uids, &uid_of) {
+        let t = match gp::table_of_rows(&projected, &rows, uids, &uid_of) {
             Ok(t) => t,
             Err(why) => {
                 problem = Some(why);

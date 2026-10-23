@@ -94,23 +94,28 @@ def package_problems(c, package):
     cur = c.cursor()
     cur.execute("SELECT ad, ST_X(geom), ST_Y(geom) FROM paket.olay "
                 "WHERE geom && ST_MakeEnvelope(486995, 4419995, 487595, 4420015, 5256)")
-    want = sorted((ad, round(x, 6), round(y, 6)) for ad, x, y in cur.fetchall())
+    # A point without a name (the order cases' empty ones) sorts as an empty name on both sides.
+    want = sorted((ad or "", round(x, 6), round(y, 6)) for ad, x, y in cur.fetchall())
     src = ogr.Open(str(package / "veri/paket-olay.gpkg"))
-    got = sorted((f.GetField("ad"), round(f.GetGeometryRef().GetX(), 6), round(f.GetGeometryRef().GetY(), 6))
+    got = sorted((f.GetField("ad") or "", round(f.GetGeometryRef().GetX(), 6), round(f.GetGeometryRef().GetY(), 6))
                  for f in src.GetLayerByName("olay"))
     if got != want or not got:
         problems.append(f"paketteki olay kopyası {len(got)} nokta, veritabanının alanında {len(want)}")
     points = len(want)
-    cur.execute("SELECT kimlik, ST_Area(geom) FROM paket.parsel")
-    want = sorted((k, round(a, 6)) for k, a in cur.fetchall())
+    cur.execute("SELECT kimlik, CASE WHEN geom IS NULL OR ST_IsEmpty(geom) THEN NULL ELSE ST_Area(geom) END FROM paket.parsel")
+    # A parcel without geometry or with an empty one (QGIS's file has one) is a record without geometry in KentOS.
+    want = sorted((str(k), -1.0 if a is None else round(a, 6)) for k, a in cur.fetchall())
     src = ogr.Open(str(package / "veri/paket-parsel.gpkg"))
-    got = sorted((f.GetField("kimlik"), round(f.GetGeometryRef().GetLinearGeometry().GetArea(), 6))
+    got = sorted((str(f.GetField("kimlik")),
+                  -1.0 if f.GetGeometryRef() is None else round(f.GetGeometryRef().GetLinearGeometry().GetArea(), 6))
                  for f in src.GetLayerByName("parsel"))
     if [k for k, _ in got] != [k for k, _ in want] or any(abs(a - b) > 1e-3 for (_, a), (_, b) in zip(got, want)):
         problems.append(f"paketteki parsel kopyası {got}, veritabanı {want}")
     for name, rows in (("paket-olay", points), ("paket-parsel", len(want))):
         copy = ogr.Open(str(package / f"veri/{name}.gpkg"))
-        n = copy.ExecuteSQL("SELECT count(*) FROM kentos_uids").GetNextFeature().GetField(0)
+        counted = copy.ExecuteSQL("SELECT count(*) FROM kentos_uids")
+        n = counted.GetNextFeature().GetField(0)
+        copy.ReleaseResultSet(counted)
         if n != rows:
             problems.append(f"{name} kopyasının kalıcı kimlikleri {n}")
     return problems

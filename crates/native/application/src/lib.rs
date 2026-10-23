@@ -71,6 +71,7 @@ pub mod file_import_gpkg;
 pub mod file_import_pdf;
 pub mod provider;
 pub mod fields_write;
+pub mod file_digest;
 pub mod processing_batch;
 pub mod processing_host;
 pub mod processing_run;

@@ -417,9 +417,9 @@ pub fn read_in(
     wanted: Option<&[String]>,
     area: Option<[f64; 4]>,
 ) -> Result<Read, String> {
-    // The file's digest read a piece at a time: a large file is not held whole beside its rows (plan/gis.md CBS-42).
-    let (size, sha256) = std::fs::File::open(path)
-        .and_then(|f| kentos_commands::encoding::sha256_reader_hex(std::io::BufReader::new(f)))
+    // The file's digest read a piece at a time: a large file is not held whole beside its rows (plan/gis.md CBS-42),
+    // and known again while the file is the same (docs/adr/0597).
+    let (size, sha256) = crate::file_digest::sha256(path)
         .map_err(|e| format!("“{}” okunamadı: {e}", path.display()))?;
     let gp = GeoPackage::open(path, false).map_err(|e| e.0)?;
     let layers = gp.layers().map_err(|e| e.0)?;
@@ -448,7 +448,6 @@ pub fn read_in(
                 .map(|s| (s.organization.to_ascii_uppercase(), s.organization_id));
             systems.insert(id, org);
         }
-        let uids = gp.uids(&layer.name).map_err(|e| e.0)?;
         let rows = gp
             .rows(
                 &layer,
@@ -458,6 +457,15 @@ pub fn read_in(
                 },
             )
             .map_err(|e| e.0)?;
+        // A part's rows take only their own lasting ids, not the table's every one (docs/adr/0597).
+        let uids = match area {
+            Some(_) => {
+                let fids: Vec<i64> = rows.iter().map(|r| r.fid).collect();
+                gp.uids_of(&layer.name, &fids)
+            }
+            None => gp.uids(&layer.name),
+        }
+        .map_err(|e| e.0)?;
         let name = layer.name.clone();
         tables.push(table_of_rows(&layer, &rows, &uids, &|fid| {
             row_uid(&name, fid)

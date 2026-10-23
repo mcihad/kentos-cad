@@ -630,3 +630,114 @@ fn charts_on_a_large_layer() {
         1.0,
     );
 }
+
+/// The resident and the highest memory of this process, in MB (Linux's `/proc/self/status`; none elsewhere).
+fn memory() -> (f64, f64) {
+    let text = std::fs::read_to_string("/proc/self/status").unwrap_or_default();
+    let field = |name: &str| {
+        text.lines()
+            .find(|l| l.starts_with(name))
+            .and_then(|l| l.split_whitespace().nth(1))
+            .and_then(|v| v.parse::<f64>().ok())
+            .map_or(0.0, |kb| kb / 1024.0)
+    };
+    (field("VmRSS:"), field("VmHWM:"))
+}
+
+/// `n` timings of `f`, in milliseconds: the median, the 95th percentile and the worst.
+fn spread(n: usize, mut f: impl FnMut(usize)) -> (f64, f64, f64) {
+    let mut all: Vec<f64> = (0..n)
+        .map(|i| {
+            let t = Instant::now();
+            f(i);
+            ms(t.elapsed())
+        })
+        .collect();
+    all.sort_by(f64::total_cmp);
+    let at = |q: f64| all[((all.len() - 1) as f64 * q).round() as usize];
+    (at(0.5), at(0.95), at(1.0))
+}
+
+/// CBS-42's budgets on a million parcels (docs/adr/0597): the store read whole, and the queries a pointer makes in a
+/// warm view at three scales (a parcel 120 px wide, the town on the screen, the whole city on it), each 2000 times
+/// at points spread over the view; the median, the 95th percentile and the worst against the candidate budget of
+/// 30 ms for pick and snap. `KENTOS_PERF_SIDE` sets the side (1000: a million parcels and a thousand roads).
+///
+/// `cargo test --release -p kentos-interaction --test perf budgets_on_a_million_parcels -- --ignored --nocapture`
+#[test]
+#[ignore = "a measurement: run by hand in release"]
+fn budgets_on_a_million_parcels() {
+    let side: usize = std::env::var("KENTOS_PERF_SIDE")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(1000);
+    let t = Instant::now();
+    let doc = drawing(side);
+    let opened = t.elapsed();
+    let (rss, _) = memory();
+    let t = Instant::now();
+    let spatial = Spatial::of(&doc);
+    let loaded = t.elapsed();
+    let (rss2, top) = memory();
+    println!(
+        "\n{} nesne ({side}×{side} parsel ve {side} yol): belge {:.0} ms ({rss:.0} MB), depo {:.0} ms ({:.0} MB daha; tepe {top:.0} MB)",
+        doc.len(),
+        ms(opened),
+        ms(loaded),
+        rss2 - rss
+    );
+    let width = side as f64 * 20.0;
+    let kinds = default_snap_kinds();
+    // A view of `span` metres wide (a 1100 px wide area) centred in the city; points spread over it.
+    for (name, span) in [
+        ("1:1000 (parsel 120 px)", 1100.0 * 0.264_58),
+        ("ilçe ekranda (4 km)", 4000.0),
+        ("bütün şehir ekranda", width),
+    ] {
+        let per_px = span / 1100.0;
+        let (cx, cy) = (E + width / 2.0, N + width / 2.0);
+        let point = |i: usize| {
+            let f = (i as f64 * 0.618_033_988_75).fract() - 0.5;
+            let g = (i as f64 * 0.414_213_562_37).fract() - 0.5;
+            Vec2::new(cx + f * span, cy + g * span * 0.6)
+        };
+        let snap = spread(2000, |i| {
+            std::hint::black_box(spatial.snap(point(i), 11.0 * per_px, kinds, None));
+        });
+        let snap_from = spread(2000, |i| {
+            std::hint::black_box(spatial.snap(point(i), 11.0 * per_px, kinds, Some(point(i + 7))));
+        });
+        let pick = spread(2000, |i| {
+            std::hint::black_box(spatial.pick(point(i), 5.0 * per_px));
+        });
+        let say = |(p50, p95, max): (f64, f64, f64)| {
+            format!(
+                "p50 {p50:.3}, p95 {p95:.3}, en kötü {max:.2} ms{}",
+                if p95 <= 30.0 {
+                    ""
+                } else {
+                    " — BÜTÇEYİ AŞIYOR"
+                }
+            )
+        };
+        println!(
+            "  {name}: kenet {}; son noktadan kenet {}; seçme {}",
+            say(snap),
+            say(snap_from),
+            say(pick)
+        );
+    }
+    let t = Instant::now();
+    let window = spatial.in_rect(
+        Vec2::new(E + width * 0.45, N + width * 0.45),
+        Vec2::new(E + width * 0.55, N + width * 0.55),
+        false,
+    );
+    println!(
+        "  pencereyle seçim (%1 alan): {} nesne {:.1} ms",
+        window.len(),
+        ms(t.elapsed())
+    );
+    let (rss3, top3) = memory();
+    println!("  bellek sonunda {rss3:.0} MB, tepe {top3:.0} MB");
+}

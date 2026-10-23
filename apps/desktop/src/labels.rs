@@ -45,9 +45,11 @@ use kentos_native_style::color::ColorMode;
 /// asked for: the drawing (`drawing`, its changes), the view and the text
 /// edited in place. The store walks every object in view to answer (all of
 /// them in an overview), so a frame whose view and drawing stay (a pointer
-/// move, a button's hover) takes them from here.
+/// move, a button's hover) takes them from here. While the view moves (a pan, the wheel) the last placing is shown as
+/// it is, its labels on their ground, and placed again when the view settles (docs/adr/0597): a large drawing's
+/// overview is not placed every frame.
 #[derive(Default)]
-pub struct Spots(RefCell<Option<(u64, Shown)>>);
+pub struct Spots(RefCell<Option<(u64, u64, Shown)>>);
 
 /// The labels shown, each with how much it grows (docs/adr/0205 §5).
 type Shown = Rc<Vec<(LabelSpot, Grow)>>;
@@ -56,16 +58,31 @@ impl Spots {
     /// The labels last placed (this frame's, once the labels' layer was built):
     /// a mask's shapes (docs/adr/0226 §3).
     pub fn last(&self) -> Option<Shown> {
-        self.0.borrow().as_ref().map(|(_, spots)| spots.clone())
+        self.0.borrow().as_ref().map(|(_, _, spots)| spots.clone())
     }
 
-    fn get(&self, key: u64, ask: impl FnOnce() -> Vec<(LabelSpot, Grow)>) -> Shown {
+    /// The key the kept labels were asked for (a test's).
+    #[cfg(test)]
+    pub(crate) fn key(&self) -> Option<u64> {
+        self.0.borrow().as_ref().map(|(key, _, _)| *key)
+    }
+
+    /// The labels for `key` (the drawing and the view), asked when not known; while `moving`, the last ones asked for
+    /// the same drawing (`content`, the key without the view).
+    fn get(
+        &self,
+        key: u64,
+        content: u64,
+        moving: bool,
+        ask: impl FnOnce() -> Vec<(LabelSpot, Grow)>,
+    ) -> Shown {
         let mut kept = self.0.borrow_mut();
         match kept.as_ref() {
-            Some((known, spots)) if *known == key => spots.clone(),
+            Some((known, _, spots)) if *known == key => spots.clone(),
+            Some((_, same, spots)) if moving && *same == content => spots.clone(),
             _ => {
                 let spots = Rc::new(ask());
-                *kept = Some((key, spots.clone()));
+                *kept = Some((key, content, spots.clone()));
                 spots
             }
         }
@@ -135,6 +152,8 @@ pub struct Engine {
     pub options: kentos_geometry_core::store::placing::PlaceOptions,
     pub pinned: bool,
     pub keep: bool,
+    /// The view is moving (a pan, the wheel): the last placing is kept until it settles (docs/adr/0597).
+    pub moving: bool,
 }
 
 /// The same through Büyüteç's camera (docs/adr/0181 §5): the drawing's
@@ -171,6 +190,7 @@ pub fn lens_layer<'a>(
         size,
         Engine {
             keep: false,
+            moving: false,
             ..engine
         },
         None,
@@ -207,13 +227,9 @@ fn build<'a>(
     engine: Engine,
     shows: Option<&kentos_domain::LayerTree>,
 ) -> Element<'a, Message> {
+    // What the labels are of, the view aside: kept while the view moves (docs/adr/0597).
     let mut key = DefaultHasher::new();
     (
-        camera.center.x.to_bits(),
-        camera.center.y.to_bits(),
-        camera.scale.to_bits(),
-        camera.width.to_bits(),
-        camera.height.to_bits(),
         drawing,
         // Every change, other editors' too (a revision counts only this user's).
         doc.generation(),
@@ -222,7 +238,11 @@ fn build<'a>(
         .hash(&mut key);
     // How the text is sized on screen, the output scale a plot size reads (docs/adr/0205 §5); what the label
     // engine is asked (docs/adr/0212 §4).
-    format!("{size:?}{engine:?}").hash(&mut key);
+    let asked = Engine {
+        moving: false,
+        ..engine
+    };
+    format!("{size:?}{asked:?}").hash(&mut key);
     // The bound layers' sources as the layers last matched them, and the part they hold (docs/adr/0533 §4): a
     // read that changes a label's text or place counts, whatever the change's counter says.
     sources_key(doc).hash(&mut key);
@@ -238,9 +258,18 @@ fn build<'a>(
             (leaf.id.as_str(), tree.is_visible(&leaf.id)).hash(&mut key);
         }
     }
+    let content = key.finish();
+    (
+        camera.center.x.to_bits(),
+        camera.center.y.to_bits(),
+        camera.scale.to_bits(),
+        camera.width.to_bits(),
+        camera.height.to_bits(),
+    )
+        .hash(&mut key);
     let turned = (camera.twist != 0.0).then_some(*camera);
     let camera = &camera.upright();
-    let spots = kept.get(key.finish(), || {
+    let spots = kept.get(key.finish(), content, engine.moving, || {
         let view = camera.visible_bounds();
         let mut spots = spatial.labels_shown_in(
             Vec2::new(view.min_x, view.min_y),
@@ -2521,6 +2550,37 @@ fn slots(spots: &[LabelSpot]) -> Vec<kentos_domain::Slot> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// docs/adr/0597: while the view pans the labels keep their placing (not asked of the store again); once it settles
+    /// they are placed for the view where it stopped.
+    #[test]
+    fn the_labels_wait_for_the_view_to_settle() {
+        let mut app = crate::files_testing::app_with_drawing();
+        let _ = app.view();
+        let first = app.label_spots.key().expect("placed");
+        app.viewport.update(
+            crate::viewport::Event::Panned {
+                by: iced::Vector::new(40.0, 0.0),
+                at: iced::Point::new(300.0, 300.0),
+            },
+            None,
+        );
+        assert!(app.viewport.moving());
+        let _ = app.view();
+        assert_eq!(
+            app.label_spots.key(),
+            Some(first),
+            "placed again while moving"
+        );
+        app.viewport.update(crate::viewport::Event::Settled, None);
+        assert!(!app.viewport.moving());
+        let _ = app.view();
+        assert_ne!(
+            app.label_spots.key(),
+            Some(first),
+            "not placed once settled"
+        );
+    }
 
     /// The desktop's default label styles are the web's `DEFAULT_LABELS`
     /// (apps/web/src/model/labelDefaults.ts), read from its source.

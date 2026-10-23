@@ -296,10 +296,9 @@ pub(crate) fn given(
     }
 }
 
-/// A file's SHA-256, read as it streams.
+/// A file's SHA-256, read as it streams or known again while the file is the same (docs/adr/0597).
 fn file_sha256(path: &str) -> Option<String> {
-    let f = std::fs::File::open(path).ok()?;
-    kentos_commands::encoding::sha256_reader_hex(std::io::BufReader::new(f))
+    kentos_native_application::file_digest::sha256(std::path::Path::new(path))
         .ok()
         .map(|(_, sha)| sha)
 }

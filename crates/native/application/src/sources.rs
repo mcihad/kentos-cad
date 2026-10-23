@@ -180,10 +180,9 @@ pub fn layer_digest(doc: &Document, layer: &str) -> String {
         .collect()
 }
 
-/// The file's SHA-256, read a piece at a time.
+/// The file's SHA-256, read a piece at a time, or known again while the file is the same (docs/adr/0597).
 fn file_sha(path: &Path) -> Result<String, String> {
-    std::fs::File::open(path)
-        .and_then(|f| kentos_commands::encoding::sha256_reader_hex(std::io::BufReader::new(f)))
+    crate::file_digest::sha256(path)
         .map(|(_, sha)| sha)
         .map_err(|e| format!("{} okunamadı: {e}", path.display()))
 }
@@ -297,20 +296,19 @@ fn load(path: &Path, table: &str, area: Option<[f64; 4]>) -> Result<Stored, Stri
         .collect();
     let outside: HashMap<Uuid, i64> = match area {
         None => HashMap::new(),
+        // The rows outside walked once with their ids, the table's ids not held beside them (docs/adr/0597).
         Some(_) => {
-            let ids = file.uids(table).map_err(|e| e.0)?;
-            file.fids(&layer)
-                .map_err(|e| e.0)?
-                .into_iter()
-                .filter(|fid| !raw.contains_key(fid))
-                .map(|fid| {
-                    let uid = ids
-                        .get(&fid)
+            let mut outside = HashMap::new();
+            file.each_uid(&layer, |fid, uid| {
+                if !raw.contains_key(&fid) {
+                    let uid = uid
                         .and_then(|u| Uuid::parse_str(u).ok())
                         .unwrap_or_else(|| gp::row_uid(table, fid));
-                    (uid, fid)
-                })
-                .collect()
+                    outside.insert(uid, fid);
+                }
+            })
+            .map_err(|e| e.0)?;
+            outside
         }
     };
     Ok(Stored {

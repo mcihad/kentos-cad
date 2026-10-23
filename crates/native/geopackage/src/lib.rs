@@ -847,6 +847,70 @@ impl GeoPackage {
         }
     }
 
+    /// Whether the file has KentOS's lasting ids (the `kentos_uids` extension).
+    fn has_uids(&self) -> Result<bool> {
+        let n: i64 = self.conn.query_row(
+            "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'kentos_uids'",
+            [],
+            |r| r.get(0),
+        )?;
+        Ok(n > 0)
+    }
+
+    /// The lasting ids of `fids` only, by fid, looked up through the extension's key a few hundred at a time
+    /// (docs/adr/0597: a part's rows read without the table's every id).
+    pub fn uids_of(&self, table: &str, fids: &[i64]) -> Result<HashMap<i64, String>> {
+        let mut out = HashMap::new();
+        if fids.is_empty() || !self.has_uids()? {
+            return Ok(out);
+        }
+        for chunk in fids.chunks(500) {
+            let marks = vec!["?"; chunk.len()].join(", ");
+            let mut st = self.conn.prepare(&format!(
+                "SELECT fid, uid FROM kentos_uids WHERE table_name = ? AND fid IN ({marks})"
+            ))?;
+            let mut values: Vec<rusqlite::types::Value> = vec![table.to_owned().into()];
+            values.extend(chunk.iter().map(|f| rusqlite::types::Value::from(*f)));
+            let rows = st.query_map(rusqlite::params_from_iter(values), |r| {
+                Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?))
+            })?;
+            for row in rows {
+                let (fid, uid) = row?;
+                out.insert(fid, uid);
+            }
+        }
+        Ok(out)
+    }
+
+    /// Every row's fid and its lasting id (none when it has none), in fid order, handed one at a time: a table's ids
+    /// walked without holding them all (docs/adr/0597).
+    pub fn each_uid(
+        &self,
+        layer: &Layer,
+        mut f: impl FnMut(i64, Option<&str>),
+    ) -> Result<()> {
+        let (fid, table) = (quote(&layer.fid), quote(&layer.name));
+        let ids = self.has_uids()?;
+        let mut st = self.conn.prepare(&if ids {
+            format!(
+                "SELECT t.{fid}, u.uid FROM {table} t LEFT JOIN kentos_uids u ON u.table_name = ?1 AND u.fid = t.{fid} ORDER BY 1"
+            )
+        } else {
+            format!("SELECT {fid}, NULL FROM {table} ORDER BY 1")
+        })?;
+        let mut rows = if ids {
+            st.query([&layer.name])?
+        } else {
+            st.query([])?
+        };
+        while let Some(r) = rows.next()? {
+            let fid: i64 = r.get(0)?;
+            let uid: Option<String> = r.get(1)?;
+            f(fid, uid.as_deref());
+        }
+        Ok(())
+    }
+
     /// KentOS's lasting ids of a table's rows, by fid (the `kentos_uids` extension; none when the file lacks it).
     pub fn uids(&self, table: &str) -> Result<HashMap<i64, String>> {
         let n: i64 = self.conn.query_row(
