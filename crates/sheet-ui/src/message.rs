@@ -156,6 +156,7 @@ pub enum PdfMessage {
     Layers(bool),
     /// Kaydet: where the file goes (the host's file window).
     Save,
+    Preview,
     /// Yazdır: the host's viewer prints it.
     Print,
 }

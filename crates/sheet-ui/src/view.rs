@@ -60,6 +60,13 @@ impl Designer {
             return Some(gallery);
         }
         let inner: Element<'_, Message> = match self.dialog.as_ref()? {
+            Dialog::PrintPreview { image, caption } => Window::new("Baskı önizlemesi")
+                .push(iced::widget::column![
+                    label::caption(caption).style(style::text::muted),
+                    crate::print_preview::view(image)
+                ].spacing(8))
+                .action(button(label::body("Çıktı seçeneklerine dön")).on_press(Message::Print).padding([6,14]).style(style::button::primary))
+                .width(700.0).into(),
             Dialog::SaveTemplate(d) => self.save_template_view(d),
             Dialog::Questions(d) => self.questions_view(d),
             Dialog::Variables(d) => self.variables_view(d),

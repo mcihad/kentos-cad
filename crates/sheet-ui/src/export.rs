@@ -152,6 +152,22 @@ pub struct PdfHost {
 const CSS_PX_PER_MM: f64 = 96.0 / 25.4;
 
 impl Designer {
+    pub fn output_dpi(&self) -> u16 {
+        self.export_dpi
+    }
+    pub fn output_pdf_options(&self) -> kentos_sheet::pdf::PdfOptions {
+        kentos_sheet::pdf::PdfOptions {
+            sheets: self.pdf_sheets(),
+            geo: self.pdf.geo && self.pdf_geo_ready(),
+            layers: self.pdf.layers,
+        }
+    }
+    pub fn show_print_preview(&mut self, width: u32, height: u32, rgba: Vec<u8>, caption: String) {
+        self.dialog = Some(crate::designer::Dialog::PrintPreview {
+            image: crate::print_preview::Page::new(width, height, rgba),
+            caption,
+        });
+    }
     /// The sheets the PDF writes, in the book's order.
     pub fn pdf_sheets(&self) -> Vec<kentos_sheet::model::SheetId> {
         use crate::message::PdfScope;

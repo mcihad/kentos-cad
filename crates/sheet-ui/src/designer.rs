@@ -49,6 +49,7 @@ pub enum Effect {
     AskImportPath,
     /// Write the PDF (`Designer::pdf`) to a file of its own and open it in the system's viewer to print.
     Print,
+    PrintPreview,
     /// Ask which picture file (PNG, JPEG) the chosen picture frames show, then give its
     /// name and bytes back as [`crate::Message::PictureFile`].
     AskPicturePath,
@@ -204,6 +205,7 @@ pub(crate) struct MapCache {
 /// The windows over the mode.
 #[derive(Debug)]
 pub(crate) enum Dialog {
+    PrintPreview { image: crate::print_preview::Page, caption: String },
     Export {
         kind: ExportKind,
         dpi: u16,

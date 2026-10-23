@@ -1621,6 +1621,7 @@ impl App {
                 }
                 // Yazdır: the PDF in the system's viewer (sheet_pdf.rs).
                 Effect::Print => task = self.sheet_print(),
+                Effect::PrintPreview => self.sheet_print_preview(),
                 // Koordinat sistemi seç: the project's settings at its coordinate system.
                 Effect::HostAction(action) if action == "project.crs" => {
                     task = Task::done(Message::Run("crs.set"));
@@ -1660,20 +1661,16 @@ impl App {
         // The file takes the project as it is now (its name, the date, its system), whether or
         // not the sheet mode followed the drawing since (an agent may have changed the book).
         self.sheets.set_context(self.sheet_context());
-        let host = (kind == ExportKind::Pdf).then(|| self.sheet_pdf_host());
-        let painter = painter_of(
-            &self.sheet_maps,
-            self.document.as_ref(),
-            &self.spatial,
-            &self.styles.library,
-            &self.styles.images,
-        );
-        let made = match host {
-            Some(host) => self.sheets.export_pdf(&painter, host),
-            None => self
-                .sheets
-                .export_bytes(kind, &painter)
-                .map(|bytes| (bytes, Vec::new())),
+        let made = match kind {
+            ExportKind::Pdf => self.sheet_native_pdf().map(|p|(p.bytes,p.findings)),
+            ExportKind::Png | ExportKind::Svg => (|| {
+                let doc=self.sheet_output_snapshot()?;
+                let id=self.sheets.open_sheet().ok_or("Önce bir pafta açın.")?.id.clone();
+                let drawing=self.document.as_ref().and_then(|d|d.path.as_ref()).map(|p|p.to_string_lossy().into_owned());
+                let image=kentos_plot::preview::page(&doc,&id,"",&kentos_plot::book::today(),drawing.as_deref(),self.sheets.output_dpi()).map_err(|e|e.message)?;
+                Ok((if kind==ExportKind::Png {image.png} else {image.svg.into_bytes()},Vec::new()))
+            })(),
+            ExportKind::Kpafta => self.sheets.kpafta().map(|text|(text.into_bytes(),Vec::new())),
         };
         // Whole or not at all (docs/adr/0253 §10): a failed write leaves the old file as it was.
         let written = made.and_then(|(bytes, findings)| {

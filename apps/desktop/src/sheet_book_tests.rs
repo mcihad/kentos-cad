@@ -2274,3 +2274,81 @@ fn desktop_pdf_refuses_an_impossible_model_curve_without_a_gray_raster_fallback(
         before
     );
 }
+
+#[test]
+fn sheet23_real_save_and_print_use_the_same_native_pdf() {
+    let mut app = multipage_set_app("light", 13);
+    sheet(&mut app, Sheet::Tab(3));
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let doc = app.sheet_output_snapshot().unwrap();
+    let options = app.sheets.output_pdf_options();
+    let expected = kentos_plot::book::book_pdf_options(
+        &doc,
+        &options.sheets.clone(),
+        "",
+        &kentos_plot::book::today(),
+        None,
+        Some(options),
+    )
+    .unwrap();
+    let path = scratch("sheet23-real-save").join("native.pdf");
+    app.sheet_export_to(kentos_sheet_ui::ExportKind::Pdf, Some(path.clone()));
+    assert_eq!(std::fs::read(path).unwrap(), expected.bytes);
+    let _ = app.sheet_print();
+    let path = crate::sheet_pdf::OPENED
+        .with(|p| p.borrow().last().cloned())
+        .unwrap();
+    assert_eq!(std::fs::read(path).unwrap(), expected.bytes);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+}
+
+#[test]
+#[ignore = "GPU print preview controls, run alone"]
+fn sheet23_print_preview_screens() {
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme, text, w, h) in [
+        ("light", 13, 1440., 900.),
+        ("dark", 13, 1440., 900.),
+        ("dark", 18, 1100., 720.),
+    ] {
+        let mut app = multipage_set_app(theme, text);
+        sheet(&mut app, Sheet::Tab(3));
+        sheet(&mut app, Sheet::Print);
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(w, h)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet23-options-{theme}-{text}.png")))
+            .unwrap();
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Click(iced::Point::new(
+                if text == 18 { 910. } else { 975. },
+                if text == 18 { 550. } else { 605. },
+            )),
+        );
+        snap.settle(&mut app, App::view, &mut update);
+        let shot = snap.render(app.view(), &app.theme());
+        let white = shot
+            .rgba
+            .chunks_exact(4)
+            .filter(|p| p[0] > 248 && p[1] > 248 && p[2] > 248)
+            .count();
+        shot.save(out.join(format!("sheet23-preview-{theme}-{text}.png")))
+            .unwrap();
+        assert!(
+            white > 20_000,
+            "A printed white page must be visible: {white}"
+        );
+        assert!(app.sheets.error().is_none());
+    }
+}

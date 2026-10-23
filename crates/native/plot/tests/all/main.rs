@@ -20,3 +20,5 @@ mod page_setups;
 mod plot_ink;
 
 mod document_quality;
+
+mod preview;

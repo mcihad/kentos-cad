@@ -23,7 +23,7 @@ serde_json = { workspace = true }
 ttf-parser = { workspace = true }
 rustybuzz = "=0.20.1"
 png = { workspace = true }
-resvg = { workspace = true, features = ["text"] }
+resvg = { workspace = true, features = ["text", "raster-images"] }
 
 [dev-dependencies]
 # Inflating the PDF's streams in the tests' own reader (tests/support/files.rs).

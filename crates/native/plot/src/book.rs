@@ -45,7 +45,7 @@ pub struct PlotError {
 }
 
 impl PlotError {
-    fn new(code: &str, message: impl Into<String>) -> Self {
+    pub(crate) fn new(code: &str, message: impl Into<String>) -> Self {
         Self {
             code: code.to_owned(),
             message: message.into(),
@@ -80,7 +80,7 @@ pub(crate) fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInput
     let name = crs_name(settings);
     RenderInputs {
         mode: RenderMode::Export,
-        named_views:settings.named_views.clone(),
+        named_views: settings.named_views.clone(),
         project: ProjectInfo {
             name: doc.name().to_owned(),
             user: user.to_owned(),
@@ -138,10 +138,11 @@ pub(crate) struct MapDrawer<'a> {
     /// The drawing as the maps at a scale draw it (docs/adr/0323 §2): a copy per scale where an annotative
     /// object draws otherwise there.
     annotative: bool,
-    scaled: std::collections::HashMap<(u64,u64), Option<(Document, Spatial)>>,
+    scaled: std::collections::HashMap<(u64, u64), Option<(Document, Spatial)>>,
     notes: Vec<String>,
     errors: Vec<String>,
     drawing: Option<String>,
+    pub(crate) raster_only: bool,
 }
 
 impl<'a> MapDrawer<'a> {
@@ -161,6 +162,7 @@ impl<'a> MapDrawer<'a> {
             notes: Vec::new(),
             errors: Vec::new(),
             drawing: None,
+            raster_only: false,
         }
     }
 
@@ -219,20 +221,25 @@ impl<'a> MapDrawer<'a> {
             _ => self.spatial,
         };
         let labels = crate::labels::map_labels(src.doc, label_spatial, m);
-        let content = match vector_content_profile(
-            src,
-            &m.layers,
-            &m.layer_overrides,
-            m.view.scale,
-            extent,
-            &labels,
-            kentos_sheet::plot_profile::for_sheet(book, sheet)
-                .ok()
-                .flatten(),
-        ) {
+        let vector = if self.raster_only {
+            Err(Vec::new())
+        } else {
+            vector_content_profile(
+                src,
+                &m.layers,
+                &m.layer_overrides,
+                m.view.scale,
+                extent,
+                &labels,
+                kentos_sheet::plot_profile::for_sheet(book, sheet)
+                    .ok()
+                    .flatten(),
+            )
+        };
+        let content = match vector {
             Ok(content) => content,
             Err(unsupported) => {
-                let dpi=book.sheet(sheet).map_or(300,|s|s.export.dpi);
+                let dpi = book.sheet(sheet).map_or(300, |s| s.export.dpi);
                 match crate::raster::map(
                     src,
                     m,
@@ -293,6 +300,51 @@ pub fn book_pdf_at(
     date: &str,
     drawing: Option<&str>,
 ) -> Result<BookPdf, PlotError> {
+    book_pdf_options(doc, sheets, user, date, drawing, None)
+}
+
+/// Every native host uses this preparation and writer; options change selection/presentation only.
+pub fn book_pdf_options(
+    doc: &Document,
+    sheets: &[String],
+    user: &str,
+    date: &str,
+    drawing: Option<&str>,
+    options: Option<kentos_sheet::pdf::PdfOptions>,
+) -> Result<BookPdf, PlotError> {
+    let (book, mut inputs, defaults, notes) = prepare(doc, sheets, user, date, drawing, false)?;
+    let options = options.unwrap_or(defaults);
+    crate::images::svg_assets(
+        &book,
+        &mut inputs,
+        &options,
+        book.sheets
+            .iter()
+            .map(|s| s.export.dpi)
+            .max()
+            .unwrap_or(300),
+    )
+    .map_err(|e| PlotError::new("plot_asset_unreadable", e))?;
+    let bytes = kentos_sheet::pdf::to_pdf(&book, &inputs, &options)
+        .map_err(|e| PlotError::new(&e.code, e.message))?;
+    let findings = kentos_sheet::pdf::findings(&book, &inputs, &options)
+        .map_err(|e| PlotError::new(&e.code, e.message))?;
+    Ok(BookPdf {
+        bytes,
+        sheets: options.sheets,
+        findings,
+        notes,
+    })
+}
+
+pub(crate) fn prepare(
+    doc: &Document,
+    sheets: &[String],
+    user: &str,
+    date: &str,
+    drawing: Option<&str>,
+    raster_only: bool,
+) -> Result<(SheetBook, PdfInputs, PdfOptions, Vec<String>), PlotError> {
     let Some(kept) = doc.sheets() else {
         return Err(PlotError::new(
             "no_sheets",
@@ -333,7 +385,11 @@ pub fn book_pdf_at(
         render.coordinates.extend(data.coordinates);
         render.legends.extend(data.legends);
     }
+    if chosen.is_empty() {
+        return Err(PlotError::new("no_sheets", "Pafta kitabında pafta yok."));
+    }
     let mut drawer = MapDrawer::new(doc, &spatial, &library, None);
+    drawer.raster_only = raster_only;
     drawer.drawing = drawing.map(str::to_owned);
     let mut maps: Vec<PdfMap> = Vec::new();
     for id in &chosen {
@@ -366,7 +422,7 @@ pub fn book_pdf_at(
         })
         .collect();
     let srid = doc.settings().srid;
-    let mut inputs = PdfInputs {
+    let inputs = PdfInputs {
         render,
         fonts: crate::fonts::pdf_fonts(),
         assets,
@@ -380,25 +436,5 @@ pub fn book_pdf_at(
         geo: inputs.crs.is_some(),
         layers: true,
     };
-    crate::images::svg_assets(
-        &book,
-        &mut inputs,
-        &options,
-        book.sheets
-            .iter()
-            .map(|s| s.export.dpi)
-            .max()
-            .unwrap_or(300),
-    )
-    .map_err(|e| PlotError::new("plot_asset_unreadable", e))?;
-    let bytes = kentos_sheet::pdf::to_pdf(&book, &inputs, &options)
-        .map_err(|e| PlotError::new(&e.code, e.message))?;
-    let findings = kentos_sheet::pdf::findings(&book, &inputs, &options)
-        .map_err(|e| PlotError::new(&e.code, e.message))?;
-    Ok(BookPdf {
-        bytes,
-        sheets: chosen,
-        findings,
-        notes,
-    })
+    Ok((book, inputs, options, notes))
 }

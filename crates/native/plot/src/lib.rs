@@ -20,6 +20,7 @@
 
 pub mod atlas;
 pub mod book;
+pub mod preview;
 pub mod fonts;
 mod images;
 pub mod inputs;

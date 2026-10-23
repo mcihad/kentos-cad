@@ -308,6 +308,8 @@ impl Designer {
         } else {
             window.action(printing).action(save)
         };
-        window.width(480.0).into()
+        window.action(button(label::body("Baskı önizlemesi"))
+            .on_press_maybe(ready.then_some(pm(PdfMessage::Preview)))
+            .padding([6, 14]).style(style::button::secondary)).width(620.0).into()
     }
 }

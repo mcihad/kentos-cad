@@ -299,6 +299,15 @@ fn path_d(segs: &[Seg]) -> String {
 
 /// The SVG of a display list.
 pub fn to_svg(list: &DisplayList, options: &SvgOptions) -> String {
+    to_svg_plotted(list, options, None)
+}
+
+/// The same source/printable clips and paper transform as the PDF writer.
+pub fn to_svg_plotted(
+    list: &DisplayList,
+    options: &SvgOptions,
+    plan: Option<&crate::print_setup::Plan>,
+) -> String {
     let (w, h) = (list.size.width, list.size.height);
     let mut out = String::with_capacity(4096 + list.prims.len() * 160);
     out.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -316,6 +325,26 @@ pub fn to_svg(list: &DisplayList, options: &SvgOptions) -> String {
         r#"<rect width="{w}" height="{h}"{}/>"#,
         paint("fill", &list.paper)
     );
+    if let Some(p) = plan {
+        let a = p.clip;
+        let b = p.source;
+        let _ = writeln!(
+            out,
+            r#"<defs><clipPath id="plot-output"><rect x="{}" y="{}" width="{}" height="{}"/></clipPath><clipPath id="plot-source"><rect x="{}" y="{}" width="{}" height="{}"/></clipPath></defs><g clip-path="url(#plot-output)"><g transform="matrix({} 0 0 {} {} {})"><g clip-path="url(#plot-source)">"#,
+            a.left,
+            a.top,
+            a.width,
+            a.height,
+            b.left,
+            b.top,
+            b.width,
+            b.height,
+            p.factor,
+            p.factor,
+            p.translate[0],
+            p.translate[1]
+        );
+    }
     let mut clip = 0usize;
     for p in &list.prims {
         match p {
@@ -481,6 +510,9 @@ pub fn to_svg(list: &DisplayList, options: &SvgOptions) -> String {
                 );
             }
         }
+    }
+    if plan.is_some() {
+        out.push_str("</g></g></g>\n");
     }
     out.push_str("</svg>\n");
     out
