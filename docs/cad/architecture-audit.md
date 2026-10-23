@@ -162,6 +162,29 @@ ayarlarının korunması ve normal model boyu ile kâğıt anotasyonunun ayrı e
 alınması gerektiğini gösteriyor. Rastgele medyan yazı boyu veya tahmini ev ölçüsü
 ile otomatik düzeltme yapılmamalı. Henüz bu iki konu tamamlandı sayılmadı.
 
+## İlk sayısal ev planı deneyi — GUI kabulü henüz yok
+
+Mevcut Python ürün komutlarıyla ayrıca küçük bir bağımsız deney yapıldı. Dış
+kontur 10 × 8 m, dış duvar 250 mm, ortadaki bölme 150 mm; 900/800 mm kapılar ve
+1200 mm pencere eklendi. Saat yönünün tersindeki dış konturda `justify=right`
+ile sağ yüz referans alınarak duvar gövdesi içte bırakıldı. Bölme iki iç yüze
+ulaşır; iki ayrı seed ile mahal üretildi. Dış duvar ve bölme yedi ayrı sıradan
+çizgi olarak taklit edilmedi; iki duvar, üç açıklık, iki mahal kaynağı kullanıldı.
+
+- Bağımsız beklenen oda alanı: `((10 − 2×0.25 − 0.15) / 2) × (8 − 2×0.25)`
+  = **35.0625 m²**. Halkaların alanı, büyük koordinatta önce yerel başlangıca
+  taşınarak Python'da ayrıca hesaplandı ve ürünün metraj sonucuyla karşılaştırıldı.
+- mm, cm, m, inç ve ayak gösterimlerinin her biri `(0,0)` ve `(500000,4400000)`
+  konumunda denendi: **10 varyant geçti**. Alan ve açıklıkların fiziksel eni
+  değişmedi; KCAD baytlarından yeniden açmada aynı kaldı. Uzak koordinattaki
+  fark yaklaşık `9×10⁻¹¹ m²`; bu dar deney bütün geometrinin hassasiyet kanıtı değildir.
+- Bu yalnız komut/kalıcılık deneyi. Tıklamayla kolay çizim, köşe görünüşü, etiket,
+  ölçü, çizelge ve baskı henüz bu deneyle doğrulanmış değildir.
+- Hiza sözcüğünün hangi yüzü referans aldığı önemlidir: “Sol” gövdenin sola
+  taşması diye okunursa yanlış sonuç beklenebilir. Arayüz, referans yüzünü ve
+  gövdenin kalacağı tarafı çizim yönü okuyla göstermeli; mevcut geometri kuralı
+  sessizce ters çevrilmemeli.
+
 ## Kolay ev planı için kabul senaryosu
 
 Örnek yapı, mimari öneri değil yazılım test verisidir: 10 × 8 m dış kontur,
