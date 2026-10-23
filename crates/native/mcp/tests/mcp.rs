@@ -835,6 +835,7 @@ fn stand_in_desktop(path: &std::path::Path) -> std::thread::JoinHandle<()> {
             drawing_font: kentos_commands::DrawingFont::Barlow,
             province: None,
             drawing_unit: None,
+            annotation: None,
         })
         .expect("a drawing");
         let (stream, _) = listener.accept().expect("a connection");

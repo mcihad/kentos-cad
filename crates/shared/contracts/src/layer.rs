@@ -374,6 +374,97 @@ pub enum LayerNodeType {
     Layer,
 }
 
+/// What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,
+/// any kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another
+/// kind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum LayerGeometry {
+    Point,
+    Line,
+    Area,
+    Annotation,
+}
+
+/// The layer types in the order the menus list them.
+pub const LAYER_GEOMETRIES: [LayerGeometry; 4] = [
+    LayerGeometry::Point,
+    LayerGeometry::Line,
+    LayerGeometry::Area,
+    LayerGeometry::Annotation,
+];
+
+impl LayerGeometry {
+    /// Whether an object of `kind` (`Entity::kind`) may be on a layer of this type: a point layer's points; a
+    /// line layer's lines, polylines, arcs, curves, circles and ellipses; an area layer's areas, circles and
+    /// ellipses (closed curves are both); an annotation layer's texts, dimensions, leaders, tables, tags, hatches,
+    /// block inserts, pictures and view marks.
+    pub fn admits(self, kind: &str) -> bool {
+        match self {
+            LayerGeometry::Point => kind == "point",
+            LayerGeometry::Line => matches!(
+                kind,
+                "line" | "polyline" | "arc" | "spline" | "nurbs" | "circle" | "ellipse"
+            ),
+            LayerGeometry::Area => matches!(kind, "polygon" | "circle" | "ellipse"),
+            LayerGeometry::Annotation => matches!(
+                kind,
+                "text" | "dimension" | "leader" | "table" | "tag" | "hatch" | "insert" | "image" | "viewmark"
+            ),
+        }
+    }
+
+    /// Its name in the interface: Nokta, Çizgi, Alan, Açıklama.
+    pub fn label(self) -> &'static str {
+        match self {
+            LayerGeometry::Point => "Nokta",
+            LayerGeometry::Line => "Çizgi",
+            LayerGeometry::Area => "Alan",
+            LayerGeometry::Annotation => "Açıklama",
+        }
+    }
+
+    /// Its name in a sentence: “nokta katmanı”.
+    pub fn layer_words(self) -> &'static str {
+        match self {
+            LayerGeometry::Point => "nokta katmanı",
+            LayerGeometry::Line => "çizgi katmanı",
+            LayerGeometry::Area => "alan katmanı",
+            LayerGeometry::Annotation => "açıklama katmanı",
+        }
+    }
+}
+
+/// An object kind as a sentence says it: “alan”, “çizgi”, “yazı”.
+pub fn kind_words(kind: &str) -> &'static str {
+    match kind {
+        "point" => "nokta",
+        "line" => "çizgi",
+        "polyline" => "çoklu çizgi",
+        "arc" => "yay",
+        "spline" | "nurbs" => "eğri",
+        "circle" => "daire",
+        "ellipse" => "elips",
+        "polygon" => "alan",
+        "text" => "yazı",
+        "dimension" => "ölçü",
+        "leader" => "kılavuz",
+        "table" => "tablo",
+        "tag" => "etiket",
+        "hatch" => "tarama",
+        "insert" => "blok",
+        "image" => "resim",
+        "raster" => "raster",
+        "pointcloud" => "nokta bulutu",
+        "record" => "kayıt",
+        "viewmark" => "görünüm işareti",
+        _ => "nesne",
+    }
+}
+
 /// A node of the layer tree: a group or a layer.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -456,6 +547,11 @@ pub struct LayerNode {
     #[serde(rename = "sourceCrs", default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional, rename = "sourceCrs"))]
     pub source_crs: Option<crate::layer_crs::LayerSourceCrs>,
+    /// What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer
+    /// has it, never a group.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub geometry: Option<LayerGeometry>,
     /// Yazdır: absent, it is printed; `false`, it is drawn on screen but not
     /// on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;
     /// docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.

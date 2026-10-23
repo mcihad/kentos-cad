@@ -235,6 +235,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
     };
     doc.layers = vec![LayerNode {
         source_crs: None,
+        geometry: None,
         table_styles: Vec::new(),
         subtypes: None,
         contingents: Vec::new(),

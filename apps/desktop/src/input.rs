@@ -266,6 +266,11 @@ impl App {
             self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
             return Task::none();
         }
+        // The typed active layer does not hold what the tool draws (layer_types.rs, docs/adr/0622 §5).
+        if let Some(why) = self.layer_misfit(&format!("tool.{id}")) {
+            self.warn(why);
+            return Task::none();
+        }
         self.field = None;
         // Kaydır, Pencere yakınlaştır and the measures run over a running command
         // and give it back as it was (docs/adr/0283): its template's run goes on.

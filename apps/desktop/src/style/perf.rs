@@ -28,6 +28,7 @@ use crate::document::Document;
 fn layer(id: &str, style: LayerStyle) -> LayerNode {
     LayerNode {
         source_crs: None,
+        geometry: None,
         table_styles: Vec::new(),
         subtypes: None,
         contingents: Vec::new(),
@@ -172,6 +173,7 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
         name,
         settings: ProjectSettings {
             map_srid: None,
+            auto_select: None,
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,

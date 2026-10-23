@@ -164,13 +164,12 @@ fn placeable(e: &Entity, doc: &Document) -> bool {
 
 /// The annotative object a click at `p` means (texts have no edges: the store's hits, the most specific first).
 fn pick(p: &Pointer, cx: &Context<'_>) -> Option<Slot> {
-    let kinds = cx.draft.select_kinds;
     cx.spatial
         .hits(p.raw, cx.pick_tolerance())
         .into_iter()
         .find(|s| {
             cx.doc.get(*s).is_some_and(|e| {
-                crate::selectable::entity_allowed(kinds, e) && placeable(e, cx.doc)
+                crate::selectable::entity_selectable(cx, e) && placeable(e, cx.doc)
             })
         })
 }

@@ -87,7 +87,7 @@ impl Section {
 
     fn lead(self) -> &'static str {
         match self {
-            Section::General => "Projenin adı, türü ve çizimdeki yazıların yazı tipi.",
+            Section::General => "Projenin adı, türü, seçimi ve çizimdeki yazıların yazı tipi.",
             Section::Scale => {
                 "Çizim ölçeği ve açıklamaların kâğıttaki yükseklikleri. Yeni yazılar, ölçüler, kılavuzlar ve tablolar ölçeğe göre bu boyda yazılır; değiştirince genel boydaki nesneler de yeni boyuna gelir, elle değiştirilenler kalır."
             }
@@ -232,6 +232,8 @@ pub enum Event {
     ResetHeights,
     Mode(Workspace),
     Font(DrawingFont),
+    /// Otomatik seçim (docs/adr/0622 §5): any shown layer's objects selected, or the active layer's alone.
+    AutoSelect(bool),
     Crs(u32),
     Search(String),
     LengthDecimals(u32),
@@ -438,6 +440,7 @@ impl App {
             Event::ResetHeights => d.annotation = None,
             Event::Mode(w) => d.workspace = Some(w),
             Event::Font(f) => d.drawing_font = Some(f),
+            Event::AutoSelect(on) => d.auto_select = Some(on),
             // A system of the registry takes the definition's place (docs/adr/0168 §1).
             Event::Crs(srid) => {
                 d.srid = srid;
@@ -1057,6 +1060,15 @@ impl App {
                     .push(setting("Proje adı", Some("Dosya adı olarak da kullanılır."), name)),
             ))
             .push(group("Proje türü", project_type(doc.settings().project_type(), s)))
+            // Otomatik seçim (layer_types.rs, docs/adr/0622 §5).
+            .push(group(
+                "Seçim",
+                setting(
+                    "Otomatik seçim",
+                    Some("Açıkken tıklama ve kutu bütün görünen katmanların nesnelerini seçer; kapalıyken yalnız etkin katmanın nesnelerini, CBS'de bir katman düzenlenirken olduğu gibi. CBS projesinde kapalı, CAD projesinde açık başlar."),
+                    kentos_ui::widget::Switch::new(s.settings.auto_select(), |on| event(Event::AutoSelect(on))),
+                ),
+            ))
             .push(group(
                 "Çizim yazı tipi",
                 column![
@@ -1518,6 +1530,7 @@ fn reset_section(section: Section, d: &mut ProjectSettings) {
         Section::General => {
             d.workspace = read("project.workspace");
             d.drawing_font = read("project.drawingFont");
+            d.auto_select = None;
         }
         Section::Scale => {
             d.plot_scale = default("project.plotScale")

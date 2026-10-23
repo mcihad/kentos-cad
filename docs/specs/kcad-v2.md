@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `101`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-102.kcad`) |
+| `version` | tam sayı | `2`'den `102`'ye bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-103.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -378,6 +378,8 @@ parçalar `/` ile; boş, mutlak, `.` ya da boş parçalı, ortasında `..` taş�
 **Şema 100**, şema 99'un kendisi ve oturtma kaydında hedeflerin sisteminin tanımıdır (ADR 0594 §1): `georef`'in `crs`'i (§6.6). Yazıcı `100`'ü **yalnız hedeflerinin sistemi tanımla verilmiş oturtma kaydı varken** yazar. Başka her çizim şema 2–99'dur ve eskisiyle bayt bayt aynıdır. Şema 2–99 yükünde `crs` bilinmeyen alandır (`unknown_field`, `broken/georef-crs-in-schema-99.kcad`); `srid` ile birlikte (`broken/georef-crs-and-srid.kcad`) ya da boş (`broken/georef-crs-empty.kcad`) `bad_value`'dur. Örnek dosya `georef-crs.kcad`.
 
 **Şema 101**, şema 100'ün kendisi ve bölünen ve birleştirilen nesnelerin soy kayıtlarıdır (ADR 0598 §1): ayarların `lineage`'i (§5). Yazıcı `101`'i **yalnız projede soy kaydı varken** yazar. Başka her çizim şema 2–100'dür ve eskisiyle bayt bayt aynıdır. Şema 2–100 yükünde `lineage` bilinmeyen alandır (`unknown_field`, `broken/lineage-in-schema-100.kcad`). Örnek dosya `lineage.kcad`.
+
+**Şema 102**, şema 101'in kendisi, katmanın türü ve projenin otomatik seçimidir (ADR 0622 §5): katman düğümünün `geometry`'si (`point`, `line`, `area` ya da `annotation`: katmanın taşıdığı nesnelerin türü; yoksa her tür) ve ayarların `autoSelect`'i (Otomatik seçim; yoksa CBS projesinde kapalı, öbürlerinde açık). Yazıcı `102`'yi **yalnız türü olan katman ya da otomatik seçimi seçilmiş proje varken** yazar. Başka her çizim şema 2–101'dir ve eskisiyle bayt bayt aynıdır. Şema 2–101 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `broken/layer-geometry-in-schema-101.kcad`); grubun türü ve bilinmeyen tür `bad_value`'dur (`broken/layer-geometry-on-group.kcad`, `broken/layer-geometry-unknown.kcad`), mantıksal olmayan `autoSelect` `wrong_type`'tır (`broken/auto-select-not-boolean.kcad`). Dosya biçimi katmandaki nesnelerin türe uyduğunu denetlemez; uymayan yazmayı belge reddeder (`layer_geometry_mismatch`). Örnek dosya `layer-geometry.kcad`.
 
 **Yeni şema eklemenin kuralı** (ADR 0265 §2): her yeni şema `n` için (1) yazıcı `n`'yi yalnız yeni özellik varken yazar; (2) `n`'de yazılmış geçerli bir örnek, bağımsız Python yazıcısıyla; (3) özelliğin `n − 1`'de yazılmış bozuk örneği (`broken/…-in-schema-<n−1>.kcad`) ve `broken/schema-version-<n+1>.kcad`; (4) önceki örneklerin hepsi okunmaya devam eder; (5) `tools/kcad/kcad.py` aynı kuralı okur; (6) örnek kodekten, tipli sütunlardan, bulutun kaynağından ve Python'un tipli katmanından geçer. Bir şema numarası yeniden kullanılmaz. `kentos-kcad`'in `schemas` testi (1)–(3)'ü zorlar.
 

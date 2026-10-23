@@ -100,11 +100,16 @@ codes! {
     /// A job's document changed while it computed and its result no longer
     /// fits (docs/adr/0253 §9).
     DOCUMENT_CHANGED = "document_changed", Conflict, true, "İş hesaplanırken çizim değişti ve sonuç artık uymuyor; hiçbir şey yazılmadı. İşi yeniden başlatın.";
+    /// A run stopped by its caller (Durdur, a job's cancel): nothing written (`Stop::Cancelled`).
+    CANCELLED = "cancelled", Failed, false, "İş durduruldu; hiçbir şey yazılmadı.";
 
     // ── Layers ──────────────────────────────────────────────────────────
     LAYER_NOT_FOUND = "layer_not_found", Failed, false, "Adı verilen katman çizimde yok.";
     NOT_A_LAYER = "not_a_layer", Failed, false, "Verilen düğüm bir grup; nesne yalnız katmana konur.";
     LAYER_LOCKED = "layer_locked", Failed, false, "Katman ya da üstündeki bir grup kilitli; kilitli katmandaki nesne değişmez, kopyalanmaz.";
+    /// An object of a kind its layer does not hold (docs/adr/0622 §5): a point layer's points, a line layer's
+    /// lines, an area layer's areas, an annotation layer's texts and the like. Every write is held to it.
+    LAYER_GEOMETRY_MISMATCH = "layer_geometry_mismatch", Failed, false, "Katman yalnız kendi türündeki nesneleri tutar (nokta, çizgi, alan ya da açıklama); nesneyi türüne uyan bir katmana yazın ya da katmanın türünü Karışık yapın. Hiçbir şey yazılmadı.";
     /// The layer named is drawn from a map service and holds no objects (docs/adr/0208 §2).
     SERVICE_LAYER = "service_layer", Failed, false, "Katman bir harita servisinden çizilir; nesne tutmaz.";
     /// A warning: the layer is hidden, by itself or a group above it.

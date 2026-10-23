@@ -50,6 +50,12 @@ plotScale: number,
  */
 workspace?: Workspace,
 /**
+ * Otomatik seçim (docs/adr/0622 §5): on, a click and a box select any shown layer's objects (with the list of
+ * the ones under the click); off, only the active layer's, as a GIS edits one layer at a time. Absent: off in a
+ * CBS project, on otherwise ([`ProjectSettings::auto_select`]).
+ */
+autoSelect?: boolean,
+/**
  * Absent in files written before drawing typefaces (read as Barlow).
  */
 drawingFont?: DrawingFont,

@@ -186,13 +186,94 @@ AutoCAD'in bağlamsal sekmeleri de böyledir. Kullanıcı tercihi `drafting.cont
 kapatılırsa sekme yalnız gösterilir, öne gelmez. Sekme seçimin ve çizimin değişiklik sayılarıyla önbellekte tutulur; büyük
 seçimde her karede yeniden taranmaz.
 
-## 5. CBS'de katman türü ve seçim (sırada)
+## 5. CBS'de katman türü ve otomatik seçim
 
-- Katmanın geometri türü olur: Nokta, Çizgi, Alan, Açıklama ya da Karışık.
-- Türlü katmana başka türden nesne yazan komut `layer_geometry_mismatch` ile reddedilir.
-  Kural komuttadır, Python ve MCP de uyar. Şeritte uymayan çizim araçları kapalıdır.
-- Proje ayarı "Otomatik seçim": açıkken bugünkü seçim, kapalıyken yalnız etkin katman seçilir.
-  CBS'de kapalı, CAD'de açık başlar.
+### Katman türü
+
+Katmanın türü (`LayerNode.geometry`, `.kcad` şema 102) neyi tuttuğunu söyler; QGIS'in ve ArcGIS'in katmanı gibi tek
+türden nesne alır. Tür yoksa katman Karışık'tır, her türü alır; CAD katmanları böyledir. Grubun türü olmaz.
+
+| Tür | Aldığı nesneler |
+|---|---|
+| Nokta | nokta |
+| Çizgi | çizgi, çoklu çizgi, yay, eğri (NURBS dahil), daire, elips |
+| Alan | alan, daire, elips |
+| Açıklama | yazı, ölçü, kılavuz, tablo, etiket, tarama, blok, resim, görünüm işareti |
+
+Kapalı eğri (daire, elips) hem çizgi hem alan katmanına uyar. Yardımcı çizgi ve ışın hiçbir türlü katmana girmez.
+
+Kural çizimin kendi denetimindedir (`kentos_domain::integrity`). Nesneyi yeni yazan, katmanını değiştiren ya da türünü
+değiştiren her yazma denetlenir: komut, araç, Python, MCP, yapıştırma ya da içe aktarma. Uymayan yazma
+`layer_geometry_mismatch` ile reddedilir ve hiçbir şey yazılmaz. İleti katmanı ve türü söyler: "“Yol” bir çizgi katmanı;
+alan bu katmana yazılmaz".
+
+`cad.layers.edit`'e eklenenler:
+
+- `geometry` işlemi katmanın türünü verir; `mixed` türü kaldırır. Adımı "Katman türü"dür ve geri alınır. Katmanda türe
+  uymayan nesne varsa reddedilir; ileti türleri sayar ("“Yol” katmanında 1 çizgi, 1 blok var; alan katmanı olamaz").
+  Gruba ve servis katmanına tür verilmez.
+- `add`'in `geometry`'si yeni katmanın türüdür; grup tür almaz.
+- Kopyasını oluştur türü korur.
+
+Masaüstü (`layer_types.rs`):
+
+- Katman ağacında türlü katmanın satırında türünün işareti katmanın renginde durur, QGIS'in sembolü gibi. Karışık
+  katmanın satırında renk karesi kalır.
+- Katmanın sağ tıkında Katman türü ▸ beş seçenek sunar. Uymayan seçim reddedilir ve nedeni söylenir.
+- CBS projesinde Katmanlar panelinin Yeni katman düğmesi ve Veri › Yeni katman ▾ türü sorar. Komutlar
+  `layer.newPoint`, `layer.newLine`, `layer.newArea`, `layer.newAnnotation`; Karışık katman `layer.new`'dur.
+- Etkin katman türlüyken başka türden nesne yazan çizim araçları kapalıdır. İpuçları ve başlatılmaları nedenini söyler ve
+  uyan katmanı adıyla önerir. Aracın ne yazdığı bir tablodadır (`tool_makes`). Kendi katmanına yazan araçlar tabloda
+  yoktur (Parsel oluştur, Etiketleri yazıya çevir); onların yazmasını çizimin denetimi tutar.
+
+### Otomatik seçim
+
+Projenin ayarıdır (`ProjectSettings.autoSelect`, `.kcad` şema 102).
+
+- Açıkken tıklama ve kutu bütün görünen katmanların nesnelerini seçer.
+- Kapalıyken yalnız etkin katmanın nesnelerini seçer; CBS'de bir katman düzenlenirken olduğu gibi.
+- Verilmemişse CBS projesinde kapalı, öbürlerinde açıktır. Türü henüz sorulmamış proje eskisi gibi seçer.
+
+Kapalıyken seçim süzgecinin tuttuğu bütün adımlar yalnız etkin katmanın nesnelerini alır (`selectable::only_layer`):
+
+- tıklama ve üzerine gelme;
+- pencere ve kesişen kutu, Çokgenle, Çitle ve Daireyle seç;
+- Tümünü seç ve Ters çevir;
+- komutların nesne seçen adımları.
+
+Seçim sorgusunun (`cad.entities.select`) `layers`'ı etkin katmandır. Dışarıda kalanlar söylenir ("başka katmandaki 12
+nesne dışarıda kaldı"). Başka katmanın nesnesine tıklamak hiçbir şey seçmez; ileti nedenini ve ne yapılacağını söyler.
+
+Nesneden katman okuyan adımlar seçim değildir; bütün görünen katmanlardan alır:
+
+- Katmanı etkin yap, gizle, yalıt ve kilitle;
+- Katmanı eşle'nin hedefi;
+- araçların kenar seçen adımları (Buda'nın sınırları gibi).
+
+Ayar `edit.autoSelect` ("Otomatik seçim") ile açılıp kapanır ve `cad.settings.set`'in `autoSelect`'iyle yazılır. Çizimi
+kaydedilmemiş yapar ama geri alma adımı değildir. Yeri:
+
+- CBS'de Harita › Seçim;
+- CAD'de Değiştir › Seçim ▾;
+- durum çubuğunda "Oto. seçim" hücresi;
+- Proje ayarları › Genel › Seçim.
+
+Ortak izlerde konusu seçim olmayan dört CBS sahnesi (`layer-by-object.kcad`, `feature-table.kcad`, `temporal.kcad`,
+`line-parts.kcad`) ayarı açık yazar. Kuralın kendi izi `auto-select.json`'dur.
+
+### Doğrulama
+
+- `cad.layers.edit`'in 75 ve `cad.settings.set`'in 50 ortak durumu, katman türünün 12 ve otomatik seçimin 1 yeni durumuyla:
+  `layer_tree_command_cases.py`, `settings_set_command_cases.py`. Hepsi masaüstünün komutlarıyla geçer.
+- `.kcad` şema 102: `fixtures/kcad/v2/layer-geometry.kcad`. Bozuk örnekler: şema 101'de tür, grupta tür, bilinmeyen tür,
+  `autoSelect` boolean değil. Bağımsız Python yazıcısı ve okuyucusu da bunları denetler.
+- Rust testleri:
+  - `kentos-native-application`'ın `layer_types`'ı: türlü katmana komutla yazma ve katmanı değiştirme reddi; uyan türler;
+    türün verilmesi ve geri alınması.
+  - Masaüstünün `layer_types` testi: aracın kapanması ve nedeni.
+- Python: `python/tests/test_layer_types.py`.
+- İz: `auto-select.json` üç çeşitte geçer.
+- Resimler: `layer_type_scenes.rs` (`.run/shots/arac-katman-turu-*`, `arac-oto-secim-*`).
 
 ## 6. Sağ tık
 

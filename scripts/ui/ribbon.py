@@ -65,6 +65,10 @@ EXPORT = M("Dışa aktar", [
     ("Coğrafi veri", ["file.export.shp", "file.export.geojson", "file.export.kml", "file.export.gpx",
                       "file.export.gpkg", "file.export.fgb", "file.export.gml", "file.export.csv"]),
     ("Noktalar", ["file.export.ncn", "file.export.xyz"])], size='large')
+# A CBS layer holds one kind of object (docs/adr/0622 §5): Yeni katman ▾ asks which; Karışık is any kind.
+NEW_LAYER = M("Yeni katman", [("", ["layer.new"]),
+    ("Türüyle", ["layer.newPoint", "layer.newLine", "layer.newArea", "layer.newAnnotation"])])
+
 ADD_DATA = M("Veri ekle", [
     ("Vektör", ["file.import.gpkg", "file.import.shp", "file.import.geojson", "file.import.kml",
                 "file.import.csv", "file.import.fgb", "file.import.gml"]),
@@ -204,7 +208,8 @@ CAD = [
         P("Pano", "paste", [L("edit.paste"), S("edit.cut"), S("edit.copy")],
           overflow=["edit.pasteOriginal", "tool.copyBase", "edit.pasteBlock"]),
         P("Seçim", "select", [SP("select"), S("edit.selectAll"), select_filter(True)],
-          overflow=["edit.deselect", "edit.invertSelection", "edit.previousSelection", "edit.cycleSelection"]),
+          overflow=["edit.deselect", "edit.invertSelection", "edit.previousSelection", "edit.cycleSelection",
+            "edit.autoSelect"]),
         P("Dönüştür", "move", [L("tool.move"), L("tool.copy"), L("tool.rotate"), S("tool.scale"), S("tool.mirror"),
             S("tool.stretch"), S("tool.align")], overflow=["tool.alignDistribute", "tool.copyBase"]),
         P("Dizi", "array", [SP("array", "large"), S("tool.arrayEdit")]),
@@ -263,7 +268,8 @@ GIS = [
         P("Katman ekle", "layerAdd", [ADD_DATA, BASEMAPS, S("service.add"), S("service.feed"), S("source.postgis")],
           overflow=["service.info", "service.connections", "raster.stac", "raster.mosaic", "raster.gpkgRead"]),
         P("Seçim", "select", [SP("select", "large"), S("processing.run.selection.byExpression"),
-            S("processing.run.selection.byLocation"), S("edit.selectAll"), S("edit.deselect"), select_filter(False)],
+            S("processing.run.selection.byLocation"), S("edit.selectAll"), S("edit.deselect"), S("edit.autoSelect"),
+            select_filter(False)],
           overflow=["edit.invertSelection", "edit.previousSelection", "edit.cycleSelection"]),
         P("Sorgu", "identify", [L("tool.identify"), S("tool.measure"), S("tool.area"), S("crs.query"),
             S("tool.measureAngle"), S("address.search")], overflow=["tool.stationOffset"]),
@@ -293,7 +299,7 @@ GIS = [
             "tool.holeAdd", "tool.holeRemove", "tool.holeFill", "tool.toArea", "tool.toPolyline"]),
     ]),
     T("data", "Veri", [
-        P("Katman", "layerAdd", [S("layer.new"), S("layer.newGroup"), S("layer.fields"), S("style.layerStyle"),
+        P("Katman", "layerAdd", [NEW_LAYER, S("layer.newGroup"), S("layer.fields"), S("style.layerStyle"),
             S("layer.filter"), S("layer.crs")],
           overflow=["layer.filterFromSelection", "layer.filterClear", "layer.reproject", "layer.showAll",
             "layer.info", "file.import.maplibre", "file.export.maplibre"]),

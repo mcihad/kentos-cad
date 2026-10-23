@@ -181,6 +181,13 @@
       "mcp": "cad.entities.select",
       "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275)."
     },
+    "edit.autoSelect": {
+      "level": "semantic",
+      "via": [
+        "cad.settings.set"
+      ],
+      "note": "autoSelect; projenin ayarı (ADR 0622 §5), seçim sorgusunda katmanlar etkin katmandır."
+    },
     "edit.copy": {
       "level": "semantic",
       "via": [
@@ -412,6 +419,38 @@
         "cad.layers.edit"
       ],
       "operation": "add"
+    },
+    "layer.newPoint": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.edit"
+      ],
+      "operation": "add",
+      "note": "geometry: point (ADR 0622 §5)."
+    },
+    "layer.newLine": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.edit"
+      ],
+      "operation": "add",
+      "note": "geometry: line (ADR 0622 §5)."
+    },
+    "layer.newArea": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.edit"
+      ],
+      "operation": "add",
+      "note": "geometry: area (ADR 0622 §5)."
+    },
+    "layer.newAnnotation": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.edit"
+      ],
+      "operation": "add",
+      "note": "geometry: annotation (ADR 0622 §5)."
     },
     "layer.newGroup": {
       "level": "semantic",

@@ -10,6 +10,7 @@
   "angleUnit": "grad",
   "plotScale": 500,
   "workspace": "gis",
+  "autoSelect": true,
   "drawingFont": "barlow"
  },
  "origin": {

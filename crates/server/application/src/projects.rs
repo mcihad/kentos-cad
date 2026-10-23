@@ -934,6 +934,7 @@ mod tests {
     ) -> LayerNode {
         LayerNode {
             source_crs: None,
+            geometry: None,
             table_styles: Vec::new(),
             subtypes: None,
             contingents: Vec::new(),

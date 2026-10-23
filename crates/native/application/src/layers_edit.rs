@@ -8,7 +8,8 @@
 //!
 //! Everything is the drawing's own rule (`kentos_domain`): `add_layer_at`,
 //! `set_layer_style`, `move_layer`, `remove_layer` (docs/adr/0072),
-//! `set_layer_fields` (docs/adr/0199 §3), `layer_purge` (docs/adr/0177 §5);
+//! `set_layer_fields` (docs/adr/0199 §3), `layer_purge` (docs/adr/0177 §5),
+//! `set_layer_geometry` (a layer's type, docs/adr/0622 §5);
 //! a copy's objects are written by `cad.entities.create`, a merge's moved by
 //! `cad.entities.set`, in the same step. The checks are in the contract's
 //! order (`kentos_commands::LayersEdit`).
@@ -36,6 +37,7 @@ pub const LAYER_STYLE: &str = "Katman stili";
 pub const DUPLICATE: &str = "Katmanı kopyala";
 pub const MERGE: &str = "Katmanları birleştir";
 pub const PURGE: &str = "Kullanılmayanları temizle";
+pub const LAYER_GEOMETRY: &str = "Katman türü";
 
 /// A new layer's name, and a group's, when none is given.
 pub const NEW_LAYER: &str = "Yeni katman";
@@ -83,7 +85,7 @@ fn check_input(input: &LayersEdit) -> Result<(), Stop> {
     let op = input.operation;
     let needs_layer = matches!(
         op,
-        Op::Style | Op::Move | Op::Remove | Op::Duplicate | Op::Merge | Op::Fields
+        Op::Style | Op::Move | Op::Remove | Op::Duplicate | Op::Merge | Op::Fields | Op::Geometry
     );
     if needs_layer && input.layer.is_none() {
         return Err(fail(
@@ -107,6 +109,13 @@ fn check_input(input: &LayersEdit) -> Result<(), Stop> {
             "Katmanın adı boş olamaz; bir ad yazın ya da adı vermeyin.".into(),
             "name",
         ));
+    }
+    if op == Op::Geometry && input.geometry.is_none() {
+        return Err(Stop::failed(error(
+            codes::NOTHING_TO_SET,
+            "Katmanın türünü verin (geometry): point, line, area, annotation ya da mixed.".into(),
+            None,
+        )));
     }
     if op == Op::Style
         && input.color.is_none()
@@ -261,6 +270,36 @@ fn check_doc(doc: &Document, input: &LayersEdit) -> Result<(), Stop> {
         }
         Op::Fields => {
             holding_layer(doc, layer, "layer")?;
+        }
+        Op::Geometry => {
+            let n = holding_layer(doc, layer, "layer")?;
+            if let Some(g) = input.geometry.and_then(|c| c.geometry()) {
+                let mut misfits: Vec<(&'static str, usize)> = Vec::new();
+                for slot in objects_on(doc, layer) {
+                    let Some(e) = doc.get(slot) else { continue };
+                    if g.admits(e.kind()) {
+                        continue;
+                    }
+                    let word = kentos_commands::kind_words(e.kind());
+                    match misfits.iter_mut().find(|(w, _)| *w == word) {
+                        Some((_, k)) => *k += 1,
+                        None => misfits.push((word, 1)),
+                    }
+                }
+                if !misfits.is_empty() {
+                    let said: Vec<String> = misfits.iter().map(|(w, k)| format!("{k} {w}")).collect();
+                    return Err(fail(
+                        codes::LAYER_GEOMETRY_MISMATCH,
+                        format!(
+                            "“{}” katmanında {} var; {} olamaz. Bu nesneleri önce türlerine uyan bir katmana taşıyın ya da katmanı Karışık bırakın.",
+                            n.name,
+                            said.join(", "),
+                            g.layer_words()
+                        ),
+                        "geometry",
+                    ));
+                }
+            }
         }
         Op::Purge => {
             for (i, id) in input.layers.iter().flatten().enumerate() {
@@ -487,6 +526,13 @@ fn write(doc: &mut Document, input: LayersEdit) -> CommandResult<LayersEdited> {
             }
         }
         Op::Purge => purge(doc, input.layers.as_deref(), input.blocks.as_deref()),
+        Op::Geometry => {
+            let next = input.geometry.and_then(|c| c.geometry());
+            match doc.set_layer_geometry(&layer, next, LAYER_GEOMETRY) {
+                Ok(changed) => completed(done(doc, Some(layer), changed), Vec::new()),
+                Err(r) => refused(codes::LAYER_GEOMETRY_MISMATCH, r.0, "geometry"),
+            }
+        }
     }
 }
 
@@ -514,6 +560,8 @@ fn add(doc: &mut Document, input: LayersEdit) -> CommandResult<LayersEdited> {
         visible: input.visible.unwrap_or(true),
         locked: input.locked.unwrap_or(false),
         style,
+        // What it holds (docs/adr/0622 §5); a group takes none.
+        geometry: input.geometry.and_then(|c| c.geometry()),
         ..match kind {
             LayerNodeType::Layer => NewLayer::layer(name),
             LayerNodeType::Group => NewLayer::group(name),
@@ -549,6 +597,7 @@ fn duplicate(doc: &mut Document, id: &str, name: Option<&str>) -> CommandResult<
     let mut new = NewLayer::layer(name);
     new.visible = source.visible;
     new.style = source.style.clone();
+    new.geometry = source.geometry;
     let layer = match doc.add_layer(new, Some(id), false) {
         Ok(layer) => layer,
         Err(r) => {

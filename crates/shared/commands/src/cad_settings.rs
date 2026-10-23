@@ -95,6 +95,11 @@ pub struct SettingsSet {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub map_srid: Option<u32>,
+    /// Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only
+    /// the active layer's. No object changes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub auto_select: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_unit: Option<DrawingUnit>,

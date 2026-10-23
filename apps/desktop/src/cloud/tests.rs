@@ -1855,7 +1855,7 @@ fn an_editor_may_not_change_the_layer_tree_of_a_database_project() {
     project.access.permissions = vec![ProjectPermission::Read, ProjectPermission::FeatureWrite];
     open(&mut app, project);
     assert!(!app.available("layer.new") && !app.available("layer.newGroup"));
-    assert_eq!(app.why_disabled("layer.new"), Some(TREE_LOCKED));
+    assert_eq!(app.why_disabled("layer.new").as_deref(), Some(TREE_LOCKED));
     let nodes = |app: &App| {
         let doc = app.document.as_ref().expect("open");
         (

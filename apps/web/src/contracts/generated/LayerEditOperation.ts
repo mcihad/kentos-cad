@@ -3,4 +3,4 @@
 /**
  * What `cad.layers.edit` does; it names the undo step.
  */
-export type LayerEditOperation = "add" | "style" | "move" | "remove" | "duplicate" | "merge" | "fields" | "purge";
+export type LayerEditOperation = "add" | "style" | "move" | "remove" | "duplicate" | "merge" | "fields" | "purge" | "geometry";

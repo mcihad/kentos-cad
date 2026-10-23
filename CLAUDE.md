@@ -52,6 +52,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   - `drafting.pythonEcho` açıkken her ürün komutu ve elle yapılan her seçim Python konsoluna "Komut" satırı olarak,
     çalıştırılabilir kodla yazılır (`python/echo.rs`, `python_call::python_echo`). Seçimin SDK karşılığı
     `Document.select` ve `Document.selection`'dır.
+  - Katman türü (`LayerNode.geometry`: nokta, çizgi, alan, açıklama; yoksa Karışık; `.kcad` şema 102): türlü katmana
+    başka türden yazma çizimin denetiminde `layer_geometry_mismatch` ile reddedilir. `cad.layers.edit`'in `geometry`'si
+    türü verir. Ağaçta türün işareti katmanın rengindedir; uymayan çizim araçları kapalıdır (`layer_types.rs`).
+  - Otomatik seçim (`ProjectSettings.autoSelect`, `edit.autoSelect`, `cad.settings.set`'in `autoSelect`'i): kapalıyken
+    seçen her adım yalnız etkin katmanın nesnelerini alır (`selectable::only_layer`). CBS'de kapalı, öbür projelerde açık
+    başlar.
 - **Veritabanı bağlantıları (sahibin isteği, 23 Ekim 2026; [ADR 0623](docs/adr/0623-database-connections.md)).**
   - PostgreSQL bağlantısı QGIS'teki gibi bir pencereyle tanımlanır: ad, sunucu, bağlantı noktası, veritabanı,
     kullanıcı, isteğe bağlı kayıtlı parola, SSL, Bağlantıyı dene. Adres yazılmaz.

@@ -58,6 +58,48 @@ pub enum LayerEditOperation {
     /// The empty layers, the groups left empty and the definitions nothing
     /// places (“Kullanılmayanları temizle”, docs/adr/0177 §5).
     Purge,
+    /// A layer's type (“Katman türü”, docs/adr/0622 §5): what it holds, or `mixed`.
+    Geometry,
+}
+
+/// A layer's type as `cad.layers.edit` gives it (docs/adr/0622 §5): one of the four, or `mixed`, any kind (no type).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum LayerGeometryChoice {
+    Point,
+    Line,
+    Area,
+    Annotation,
+    Mixed,
+}
+
+impl LayerGeometryChoice {
+    /// The type it gives; none for `mixed`.
+    pub fn geometry(self) -> Option<kentos_contracts::LayerGeometry> {
+        use kentos_contracts::LayerGeometry as G;
+        match self {
+            LayerGeometryChoice::Point => Some(G::Point),
+            LayerGeometryChoice::Line => Some(G::Line),
+            LayerGeometryChoice::Area => Some(G::Area),
+            LayerGeometryChoice::Annotation => Some(G::Annotation),
+            LayerGeometryChoice::Mixed => None,
+        }
+    }
+
+    /// The choice that gives `geometry` (none: `mixed`).
+    pub fn of(geometry: Option<kentos_contracts::LayerGeometry>) -> Self {
+        use kentos_contracts::LayerGeometry as G;
+        match geometry {
+            Some(G::Point) => LayerGeometryChoice::Point,
+            Some(G::Line) => LayerGeometryChoice::Line,
+            Some(G::Area) => LayerGeometryChoice::Area,
+            Some(G::Annotation) => LayerGeometryChoice::Annotation,
+            None => LayerGeometryChoice::Mixed,
+        }
+    }
 }
 
 /// A field renamed on a layer's objects (`cad.layers.edit`'s `fields`): the
@@ -100,7 +142,11 @@ pub struct FieldRename {
 ///   its objects, all at once);
 /// - `purge`: `layers` (the layers and groups to take, by id; absent: every
 ///   one found), `blocks` (the definitions, by id; absent: every one
-///   found); what something staying uses stays and is counted in `kept`.
+///   found); what something staying uses stays and is counted in `kept`;
+/// - `geometry`: `layer`, `geometry` (`point`, `line`, `area`, `annotation`, or
+///   `mixed`: no type); refused with `layer_geometry_mismatch` when an object on
+///   the layer is of a kind the type does not hold. Add's `geometry` gives the new
+///   layer its type (a group takes none); a copy keeps its layer's.
 ///
 /// Refusals (`CommandError.code`), checked in this order: `no_layer`
 /// (style, move, remove, duplicate, merge and fields without `layer`),
@@ -190,6 +236,10 @@ pub struct LayersEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub fields: Option<Vec<LayerField>>,
+    /// add, geometry: what the layer holds (docs/adr/0622 §5); `mixed`: any kind.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub geometry: Option<LayerGeometryChoice>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub renames: Option<Vec<FieldRename>>,
@@ -220,6 +270,7 @@ impl LayersEdit {
             locked: None,
             activate: None,
             fields: None,
+            geometry: None,
             renames: None,
             expected_revision: None,
         }

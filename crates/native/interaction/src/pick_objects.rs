@@ -75,11 +75,12 @@ impl PickObjects {
 
     /// Whether the field takes this object.
     fn takes(&self, slot: Slot, cx: &Context<'_>) -> bool {
-        // The selection filter's kinds too, as every selecting step (docs/adr/0278).
+        // The selection filter's kinds and Otomatik seçim's layer too, as every selecting step (docs/adr/0278,
+        // 0622 §5).
         let filtered = cx
             .doc
             .get(slot)
-            .is_some_and(|e| crate::selectable::entity_allowed(cx.draft.select_kinds, e));
+            .is_some_and(|e| crate::selectable::entity_selectable(cx, e));
         filtered
             && self.kinds.as_ref().is_none_or(|kinds| {
                 cx.doc

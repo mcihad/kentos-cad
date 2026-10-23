@@ -72,6 +72,8 @@ pub struct NewLayer {
     /// The system a layer's objects came from (docs/adr/0583 §1): an import's file or a bound table says it;
     /// a group keeps none.
     pub source_crs: Option<kentos_contracts::LayerSourceCrs>,
+    /// What a layer holds (docs/adr/0622 §5); a group keeps none.
+    pub geometry: Option<kentos_contracts::LayerGeometry>,
 }
 
 impl NewLayer {
@@ -98,6 +100,7 @@ impl NewLayer {
             compose: None,
             filter: None,
             source_crs: None,
+            geometry: None,
         }
     }
 
@@ -638,6 +641,13 @@ impl LayerTree {
     }
 
     /// A layer's composition, as an undo or a redo puts it (docs/adr/0226 §3, §4).
+    /// A layer's type, as an undo or a redo puts it (docs/adr/0622 §5).
+    pub(crate) fn replace_geometry(&mut self, id: &str, geometry: Option<kentos_contracts::LayerGeometry>) {
+        if let Some(node) = self.node_mut(id) {
+            node.geometry = geometry;
+        }
+    }
+
     /// A layer's source system record, as an undo or a redo puts it (docs/adr/0583 §1).
     pub(crate) fn replace_source_crs(
         &mut self,
@@ -723,6 +733,7 @@ impl LayerTree {
                 .source_crs
                 .clone()
                 .filter(|_| new.kind == LayerNodeType::Layer),
+            geometry: new.geometry.filter(|_| new.kind == LayerNodeType::Layer),
             table_styles: Vec::new(),
             subtypes: None,
             contingents: Vec::new(),

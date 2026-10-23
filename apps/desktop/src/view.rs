@@ -1211,9 +1211,16 @@ impl App {
                 let color = palette
                     .resolve(&node.style.color)
                     .map_or_else(|| hex_color(&node.style.color), rgba_color);
-                row.icon(MenuButton::new(swatch(color), move || {
-                    self.layer_colors(node)
-                }))
+                // A typed layer's glyph in its colour, as QGIS draws its symbol (docs/adr/0622 §5); a layer of
+                // any kind its colour's square.
+                let face: Element<'_, Message> = match node.geometry {
+                    Some(g) => kentos_ui::icon::icon(crate::layer_types::glyph(Some(g)))
+                        .size(14.0)
+                        .color(color)
+                        .into(),
+                    None => swatch(color),
+                };
+                row.icon(MenuButton::new(face, move || self.layer_colors(node)))
             }
         }
     }
@@ -2028,7 +2035,7 @@ pub(crate) fn checklist_of(
 }
 
 /// The status bar's drafting aids, as the web's (`StatusBar.ts`).
-pub(crate) const STATUS_AIDS: [(&str, &str); 10] = [
+pub(crate) const STATUS_AIDS: [(&str, &str); 11] = [
     ("draft.snap", "Kenet"),
     ("draft.grid", "Izgara"),
     ("draft.ortho", "Orto"),
@@ -2038,6 +2045,8 @@ pub(crate) const STATUS_AIDS: [(&str, &str); 10] = [
     ("draft.topology", "Topoloji"),
     ("draft.overlap", "Çakışma"),
     ("edit.selectFilter", "Süzgeç"),
+    // Otomatik seçim (docs/adr/0622 §5): off, a click selects the active layer's objects alone.
+    ("edit.autoSelect", "Oto. seçim"),
     ("view.lineWeights", "Kalınlık"),
 ];
 

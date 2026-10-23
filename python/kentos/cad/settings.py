@@ -70,6 +70,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         arch: ArchSettings | None | Unset = UNSET,
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
+        auto_select: bool | None | Unset = UNSET,
         coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
@@ -109,6 +110,8 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             arch:
             area_decimals: Unit: count.
             area_unit:
+            auto_select: Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only
+                the active layer's. No object changes.
             coordinate_epoch: Unit: year.
             drawing_font:
             drawing_unit:
@@ -140,6 +143,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             arch=arch,
             area_decimals=area_decimals,
             area_unit=area_unit,
+            auto_select=auto_select,
             coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
@@ -164,6 +168,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         arch: ArchSettings | None | Unset = UNSET,
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
+        auto_select: bool | None | Unset = UNSET,
         coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
@@ -186,6 +191,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             arch=arch,
             area_decimals=area_decimals,
             area_unit=area_unit,
+            auto_select=auto_select,
             coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
@@ -210,6 +216,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         arch: ArchSettings | None | Unset = UNSET,
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
+        auto_select: bool | None | Unset = UNSET,
         coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
@@ -232,6 +239,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             arch=arch,
             area_decimals=area_decimals,
             area_unit=area_unit,
+            auto_select=auto_select,
             coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
@@ -256,6 +264,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         arch: ArchSettings | None | Unset = UNSET,
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
+        auto_select: bool | None | Unset = UNSET,
         coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
@@ -283,6 +292,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             arch=arch,
             area_decimals=area_decimals,
             area_unit=area_unit,
+            auto_select=auto_select,
             coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,

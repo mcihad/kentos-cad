@@ -9635,6 +9635,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -9778,6 +9788,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -13712,6 +13733,13 @@
               },
               "areaUnit": {
                 "$ref": "#/$defs/AreaUnit"
+              },
+              "autoSelect": {
+                "description": "Otomatik seçim (docs/adr/0622 §5): on, a click and a box select any shown layer's objects (with the list of\nthe ones under the click); off, only the active layer's, as a GIS edits one layer at a time. Absent: off in a\nCBS project, on otherwise ([`ProjectSettings::auto_select`]).",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
               },
               "connections": {
                 "description": "The project's service connections without their secrets (docs/adr/0208 §2).",
@@ -24979,6 +25007,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -25122,6 +25160,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -27074,6 +27123,13 @@
               },
               "areaUnit": {
                 "$ref": "#/$defs/AreaUnit"
+              },
+              "autoSelect": {
+                "description": "Otomatik seçim (docs/adr/0622 §5): on, a click and a box select any shown layer's objects (with the list of\nthe ones under the click); off, only the active layer's, as a GIS edits one layer at a time. Absent: off in a\nCBS project, on otherwise ([`ProjectSettings::auto_select`]).",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
               },
               "connections": {
                 "description": "The project's service connections without their secrets (docs/adr/0208 §2).",
@@ -38949,6 +39005,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -39092,6 +39158,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -43064,6 +43141,13 @@
               },
               "areaUnit": {
                 "$ref": "#/$defs/AreaUnit"
+              },
+              "autoSelect": {
+                "description": "Otomatik seçim (docs/adr/0622 §5): on, a click and a box select any shown layer's objects (with the list of\nthe ones under the click); off, only the active layer's, as a GIS edits one layer at a time. Absent: off in a\nCBS project, on otherwise ([`ProjectSettings::auto_select`]).",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
               },
               "connections": {
                 "description": "The project's service connections without their secrets (docs/adr/0208 §2).",
@@ -238561,6 +238645,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -238704,6 +238798,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -252270,6 +252375,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -252413,6 +252528,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -266105,6 +266231,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -266248,6 +266384,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -948824,6 +948971,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -948967,6 +949124,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -957691,6 +957859,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -957834,6 +958012,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -960545,6 +960734,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -960688,6 +960887,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -963648,6 +963858,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -963791,6 +964011,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -966199,6 +966430,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -966342,6 +966583,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -968809,6 +969061,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -968952,6 +969214,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -971435,6 +971708,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -971578,6 +971861,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -974027,6 +974321,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -974170,6 +974474,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -976617,6 +976932,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -976760,6 +977085,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -979983,6 +980319,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -980126,6 +980472,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -983411,6 +983768,16 @@
             },
             "type": "object"
           },
+          "LayerGeometry": {
+            "description": "What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,\nany kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another\nkind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation"
+            ],
+            "type": "string"
+          },
           "LayerLabels": {
             "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
             "properties": {
@@ -983554,6 +983921,17 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerGeometry"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer\nhas it, never a group."
               },
               "id": {
                 "type": "string"
@@ -984747,6 +985125,11 @@
                 "const": "purge",
                 "description": "The empty layers, the groups left empty and the definitions nothing\nplaces (“Kullanılmayanları temizle”, docs/adr/0177 §5).",
                 "type": "string"
+              },
+              {
+                "const": "geometry",
+                "description": "A layer's type (“Katman türü”, docs/adr/0622 §5): what it holds, or `mixed`.",
+                "type": "string"
               }
             ]
           },
@@ -984912,6 +985295,17 @@
               }
             ]
           },
+          "LayerGeometryChoice": {
+            "description": "A layer's type as `cad.layers.edit` gives it (docs/adr/0622 §5): one of the four, or `mixed`, any kind (no type).",
+            "enum": [
+              "point",
+              "line",
+              "area",
+              "annotation",
+              "mixed"
+            ],
+            "type": "string"
+          },
           "LayerNodeType": {
             "enum": [
               "group",
@@ -984985,7 +985379,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.layers.edit` v1: one change of the layer tree as one undo\nstep named after it.\n\n- `add`: `kind` (absent: a layer), `name` (absent: “Yeni katman” or “Yeni\n  grup”, made one of its kind as “Yeni katman 2”), `parent` (a group it\n  goes into, or a layer whose group it goes into; absent: the top),\n  `index` (its place among the group's nodes, first on top; absent or\n  past the end: last), `color`, `lineType`, `lineWeight` (absent: `fg`,\n  continuous, 0.18 mm), `visible` (absent: true), `locked` (absent:\n  false), `activate` (a new layer becomes the active one in the same step;\n  a group never does);\n- `style`: `layer`, and any of `color`, `lineType`, `lineWeight`; a locked\n  node takes it too (a look, as `cad.layers.renderer`'s);\n- `move`: `layer`, `parent` (a group; absent: the top), `index` (as add's);\n- `remove`: `layer`; the objects on it (on every layer under a group) go\n  in the same step;\n- `duplicate`: `layer`, `name` (absent: “<ad> kopyası”, made one of its\n  kind); the copy goes last into the layer's group with its style,\n  visibility and fields, unlocked, and copies of its objects;\n- `merge`: `layer` (the target), `layers` (the sources; the target among\n  them and repeats are passed over); the sources' objects go to the\n  target and the sources are removed. A source that is the active layer\n  gives that to the target first, outside the step (a tree change, as\n  the eye);\n- `fields`: `layer`, `fields` (absent: none), `renames` (keys moved on\n  its objects, all at once);\n- `purge`: `layers` (the layers and groups to take, by id; absent: every\n  one found), `blocks` (the definitions, by id; absent: every one\n  found); what something staying uses stays and is counted in `kept`.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer`\n(style, move, remove, duplicate, merge and fields without `layer`),\n`no_layers` (merge without a source), `empty_name` (add and duplicate\nwith a name that is empty or only white space), `nothing_to_set` (style\nwithout a colour, line type or line weight), `invalid_color` (not\n`#rrggbb` nor `fg`, `fg-dim`, `ink`, `paper`), `invalid_line_weight`\n(not from 0 to 100 mm), `invalid_fields` (`fields_problem`); then\n`invalid_revision`, `revision_conflict` (status `conflict`); then, for the\nnode: `layer_not_found` (`layer`, `parent`, `layers[i]`), `not_a_group`\n(move's `parent` a layer), `move_into_itself` (move's `parent` the node or\nunder it), `not_a_layer` (duplicate, merge's target and sources, fields: a\ngroup), `service_layer` (duplicate, merge's target and sources, fields: a\nlayer drawn from a map service), `layer_locked` (move: the node or the\ngroup it goes into locked, by itself or a group above; duplicate, merge's\ntarget and sources: locked), `unknown_block` (purge's `blocks[i]`),\n`layer_refused` (what the drawing refuses: remove's last, active or\nlocked node, docs/adr/0072; fields' renames giving an object two\nattributes of one name). A change that changes nothing (the same style,\nthe same place, the same fields, nothing to purge) writes nothing and\nanswers `changed` false.",
+        "description": "Input of `cad.layers.edit` v1: one change of the layer tree as one undo\nstep named after it.\n\n- `add`: `kind` (absent: a layer), `name` (absent: “Yeni katman” or “Yeni\n  grup”, made one of its kind as “Yeni katman 2”), `parent` (a group it\n  goes into, or a layer whose group it goes into; absent: the top),\n  `index` (its place among the group's nodes, first on top; absent or\n  past the end: last), `color`, `lineType`, `lineWeight` (absent: `fg`,\n  continuous, 0.18 mm), `visible` (absent: true), `locked` (absent:\n  false), `activate` (a new layer becomes the active one in the same step;\n  a group never does);\n- `style`: `layer`, and any of `color`, `lineType`, `lineWeight`; a locked\n  node takes it too (a look, as `cad.layers.renderer`'s);\n- `move`: `layer`, `parent` (a group; absent: the top), `index` (as add's);\n- `remove`: `layer`; the objects on it (on every layer under a group) go\n  in the same step;\n- `duplicate`: `layer`, `name` (absent: “<ad> kopyası”, made one of its\n  kind); the copy goes last into the layer's group with its style,\n  visibility and fields, unlocked, and copies of its objects;\n- `merge`: `layer` (the target), `layers` (the sources; the target among\n  them and repeats are passed over); the sources' objects go to the\n  target and the sources are removed. A source that is the active layer\n  gives that to the target first, outside the step (a tree change, as\n  the eye);\n- `fields`: `layer`, `fields` (absent: none), `renames` (keys moved on\n  its objects, all at once);\n- `purge`: `layers` (the layers and groups to take, by id; absent: every\n  one found), `blocks` (the definitions, by id; absent: every one\n  found); what something staying uses stays and is counted in `kept`;\n- `geometry`: `layer`, `geometry` (`point`, `line`, `area`, `annotation`, or\n  `mixed`: no type); refused with `layer_geometry_mismatch` when an object on\n  the layer is of a kind the type does not hold. Add's `geometry` gives the new\n  layer its type (a group takes none); a copy keeps its layer's.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer`\n(style, move, remove, duplicate, merge and fields without `layer`),\n`no_layers` (merge without a source), `empty_name` (add and duplicate\nwith a name that is empty or only white space), `nothing_to_set` (style\nwithout a colour, line type or line weight), `invalid_color` (not\n`#rrggbb` nor `fg`, `fg-dim`, `ink`, `paper`), `invalid_line_weight`\n(not from 0 to 100 mm), `invalid_fields` (`fields_problem`); then\n`invalid_revision`, `revision_conflict` (status `conflict`); then, for the\nnode: `layer_not_found` (`layer`, `parent`, `layers[i]`), `not_a_group`\n(move's `parent` a layer), `move_into_itself` (move's `parent` the node or\nunder it), `not_a_layer` (duplicate, merge's target and sources, fields: a\ngroup), `service_layer` (duplicate, merge's target and sources, fields: a\nlayer drawn from a map service), `layer_locked` (move: the node or the\ngroup it goes into locked, by itself or a group above; duplicate, merge's\ntarget and sources: locked), `unknown_block` (purge's `blocks[i]`),\n`layer_refused` (what the drawing refuses: remove's last, active or\nlocked node, docs/adr/0072; fields' renames giving an object two\nattributes of one name). A change that changes nothing (the same style,\nthe same place, the same fields, nothing to purge) writes nothing and\nanswers `changed` false.",
         "properties": {
           "activate": {
             "type": [
@@ -985026,6 +985420,17 @@
               "array",
               "null"
             ]
+          },
+          "geometry": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerGeometryChoice"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "add, geometry: what the layer holds (docs/adr/0622 §5); `mixed`: any kind."
           },
           "index": {
             "format": "uint32",
@@ -994187,6 +994592,13 @@
               {
                 "type": "null"
               }
+            ]
+          },
+          "autoSelect": {
+            "description": "Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only\nthe active layer's. No object changes.",
+            "type": [
+              "boolean",
+              "null"
             ]
           },
           "coordinateEpoch": {
@@ -1097197,6 +1097609,12 @@
       "meaning": "İş hesaplanırken çizim değişti ve sonuç artık uymuyor; hiçbir şey yazılmadı. İşi yeniden başlatın."
     },
     {
+      "code": "cancelled",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İş durduruldu; hiçbir şey yazılmadı."
+    },
+    {
       "code": "layer_not_found",
       "kind": "failed",
       "retryable": false,
@@ -1097213,6 +1097631,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Katman ya da üstündeki bir grup kilitli; kilitli katmandaki nesne değişmez, kopyalanmaz."
+    },
+    {
+      "code": "layer_geometry_mismatch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katman yalnız kendi türündeki nesneleri tutar (nokta, çizgi, alan ya da açıklama); nesneyi türüne uyan bir katmana yazın ya da katmanın türünü Karışık yapın. Hiçbir şey yazılmadı."
     },
     {
       "code": "service_layer",
@@ -1102153,6 +1102577,7 @@
     "plan_changed",
     "request_reused",
     "integrity_failed",
+    "layer_geometry_mismatch",
     "document_changed",
     "already_committed",
     "unknown_job",

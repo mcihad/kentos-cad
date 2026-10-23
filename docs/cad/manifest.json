@@ -2278,6 +2278,22 @@
    "tests": 0
   },
   {
+   "id": "edit.autoSelect",
+   "kind": "command",
+   "title": "Otomatik seçim",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "autoSelect; projenin ayarı (ADR 0622 §5), seçim sorgusunda katmanlar etkin katmandır.",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "edit.bringToFront",
    "kind": "command",
    "title": "Öne getir",
@@ -3895,6 +3911,38 @@
    "tests": 2
   },
   {
+   "id": "layer.newAnnotation",
+   "kind": "command",
+   "title": "Yeni açıklama katmanı",
+   "level": "semantic",
+   "via": [
+    "cad.layers.edit"
+   ],
+   "operation": "add",
+   "python": "kentos.cad.layers.edit",
+   "mcp": "cad.layers.edit",
+   "note": "geometry: annotation (ADR 0622 §5).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "layer.newArea",
+   "kind": "command",
+   "title": "Yeni alan katmanı",
+   "level": "semantic",
+   "via": [
+    "cad.layers.edit"
+   ],
+   "operation": "add",
+   "python": "kentos.cad.layers.edit",
+   "mcp": "cad.layers.edit",
+   "note": "geometry: area (ADR 0622 §5).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "layer.newGroup",
    "kind": "command",
    "title": "Yeni grup",
@@ -3909,6 +3957,38 @@
    "scope": "gis",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "layer.newLine",
+   "kind": "command",
+   "title": "Yeni çizgi katmanı",
+   "level": "semantic",
+   "via": [
+    "cad.layers.edit"
+   ],
+   "operation": "add",
+   "python": "kentos.cad.layers.edit",
+   "mcp": "cad.layers.edit",
+   "note": "geometry: line (ADR 0622 §5).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "layer.newPoint",
+   "kind": "command",
+   "title": "Yeni nokta katmanı",
+   "level": "semantic",
+   "via": [
+    "cad.layers.edit"
+   ],
+   "operation": "add",
+   "python": "kentos.cad.layers.edit",
+   "mcp": "cad.layers.edit",
+   "note": "geometry: point (ADR 0622 §5).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "layer.purge",

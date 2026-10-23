@@ -86,6 +86,14 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   (`veritabani-baglantilari.json`), Kaynaklar › Veritabanları'nda ağaç olarak gezilir; PostGIS'e bağlan adres
   istemez. Web PostgreSQL'e doğrudan bağlanamaz: web dönerse bağlı PostGIS katmanı `kentosd` üzerinden ve sunucuda
   saklanan bağlantılarla düşünülmeli.
+- Katman türü ve otomatik seçim (ADR 0622 §5): katmanın `geometry`'si ve projenin `autoSelect`'i `.kcad` şema 102'de.
+  Web dönünce şunlar gerekir:
+  - web'in belgesi kuralı (`layer_geometry_mismatch`) yazmalarda denetlemeli;
+  - `tools/selectable.ts`, `autoSelect` kapalıyken seçim sorgusunu etkin katmanla sınırlamalı;
+  - katman ağacı türün işaretini göstermeli, Katman türü ▸ ve Yeni katman ▾ eklenmeli;
+  - uymayan çizim araçları kapanmalı;
+  - içe aktarılan CBS katmanlarının türü dosyadan gelmeli (GeoPackage'ın, Shapefile'ın ve GeoJSON'un geometri türü). Bu,
+    masaüstünde de sonraki iştir.
 - Arayüz düzeni sağ tık (ADR 0622 §6): masaüstünde sağ tık her zaman o anki işin menüsünü açar. Kısa tıkın Enter olması
   `drafting.rightClickEnter` tercihine bağlıdır ve kapalı başlar; tutamaçla taşırken nokta imlecin yerine bırakılmaz. Web'in
   `ViewportController.onRightUp`'ı aynı kurala getirilmeli; ortak izler `rightClick`'i Enter olarak oynatır.

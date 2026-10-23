@@ -27,6 +27,7 @@ use crate::document::Document;
 fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
     LayerNode {
         source_crs: None,
+        geometry: None,
         table_styles: Vec::new(),
         subtypes: None,
         contingents: Vec::new(),
@@ -132,6 +133,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
         name: "parcalar".into(),
         settings: ProjectSettings {
             map_srid: None,
+            auto_select: None,
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,

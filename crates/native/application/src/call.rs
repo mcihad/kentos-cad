@@ -166,17 +166,27 @@ where
             if report.outermost {
                 let faults = doc.faults(report);
                 if !faults.is_empty() {
+                    // A fault of its own (a layer's type) answers with its code; the others with the integrity's.
+                    let code = faults
+                        .iter()
+                        .find_map(|f| f.code)
+                        .unwrap_or(codes::INTEGRITY_FAILED);
                     return Err(Box::new(CommandResult::Failed {
                         error: CommandError {
-                            code: codes::INTEGRITY_FAILED.into(),
-                            message: format!(
-                                "Yazma çizimi tutarsız bırakırdı; hiçbir şey yazılmadı: {}",
-                                faults
-                                    .iter()
-                                    .map(|f| f.message.as_str())
-                                    .collect::<Vec<_>>()
-                                    .join(" ")
-                            ),
+                            code: code.into(),
+                            message: {
+                                // One sentence a fault, said once however many objects it is about.
+                                let mut said: Vec<&str> = Vec::new();
+                                for f in &faults {
+                                    if !said.contains(&f.message.as_str()) {
+                                        said.push(&f.message);
+                                    }
+                                }
+                                format!(
+                                    "Yazma çizimi tutarsız bırakırdı; hiçbir şey yazılmadı: {}",
+                                    said.join(" ")
+                                )
+                            },
                             uids: faults.iter().map(|f| f.uid.to_string()).collect(),
                             ..CommandError::default()
                         },

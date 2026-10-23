@@ -280,7 +280,7 @@ def drawing():
         "version": 1,
         "name": "Nesne ekleri",
         "settings": {"srid": 5255, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 500,
-                     "workspace": "gis", "drawingFont": "barlow"},
+                     "workspace": "gis", "autoSelect": True, "drawingFont": "barlow"},
         "origin": {"x": E, "y": N},
         "layers": [layer("foto", "Fotoğraflar", style("#E5484D", point={"symbol": "ring", "size": 6}),
                          card={"title": "{Ad}", "fields": ["Tarih", "Yön", "Kamera"]}),

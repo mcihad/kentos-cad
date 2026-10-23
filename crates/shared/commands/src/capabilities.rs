@@ -59,6 +59,8 @@ pub const PROTOCOL_CODES: &[&str] = &[
     "plan_changed",
     "request_reused",
     "integrity_failed",
+    // Every write is held to its layers' types (docs/adr/0622 §5).
+    "layer_geometry_mismatch",
     "document_changed",
     "already_committed",
     "unknown_job",

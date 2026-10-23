@@ -59,6 +59,7 @@ pub struct NewProject {
 pub fn default_settings(srid: u32) -> ProjectSettings {
     ProjectSettings {
         map_srid: None,
+        auto_select: None,
         leader_styles: Vec::new(),
         wall_styles: Vec::new(),
         arch: None,
@@ -273,6 +274,7 @@ fn label(placement: LabelPlacement, size: f64) -> LabelStyle {
 fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
     LayerNode {
         source_crs: None,
+        geometry: None,
         table_styles: Vec::new(),
         subtypes: None,
         contingents: Vec::new(),

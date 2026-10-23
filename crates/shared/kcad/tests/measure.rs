@@ -72,6 +72,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         name: "Ölçüm".into(),
         settings: ProjectSettings {
             map_srid: None,
+            auto_select: None,
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,
@@ -124,6 +125,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         home_view: None,
         layers: vec![LayerNode {
             source_crs: None,
+            geometry: None,
             table_styles: Vec::new(),
             subtypes: None,
             contingents: Vec::new(),

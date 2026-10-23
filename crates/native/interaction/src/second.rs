@@ -219,6 +219,7 @@ mod tests {
     fn settings(srid: u32, second: Option<u32>) -> ProjectSettings {
         ProjectSettings {
             map_srid: None,
+            auto_select: None,
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,

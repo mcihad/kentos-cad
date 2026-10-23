@@ -1,7 +1,10 @@
 """Independent representation, freeze/style and locked camera acceptance through typed Python."""
 import json,tempfile,subprocess,unittest
 from pathlib import Path
+import shutil
 import kentos.cad as cad
+# Poppler's pdftotext wherever PATH has it (Homebrew's on macOS, /usr/bin on Linux).
+PDFTOTEXT=shutil.which('pdftotext') or '/opt/homebrew/bin/pdftotext'
 CASES=json.loads((Path(__file__).resolve().parents[2]/'fixtures/sheet/v1/viewport-annotations.json').read_text())['cases']
 class SheetAnnotations(unittest.TestCase):
     def test_twenty_representations_preserve_geometry_camera_history_and_pdf_visibility(self):
@@ -20,7 +23,7 @@ class SheetAnnotations(unittest.TestCase):
                 self.assertIn(50.,result.annotation_scales)
                 with tempfile.TemporaryDirectory() as folder:
                     path=Path(folder)/'annotation.pdf';doc.export_pdf(path)
-                    text=subprocess.check_output(['/opt/homebrew/bin/pdftotext',str(path),'-'],text=True)
+                    text=subprocess.check_output([PDFTOTEXT,str(path),'-'],text=True)
                     self.assertEqual('ANNO' in text,c['expected']['visible'])
                 self.assertEqual(doc.entity(uid).entity.to_json(),original)
                 reopened=cad.Document.from_bytes(doc.to_bytes());self.assertEqual(cad.sheets.set(reopened,details=True).book.to_json(),result.book.to_json())

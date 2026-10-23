@@ -303,6 +303,7 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
     });
     LayerNode {
         source_crs: None,
+        geometry: None,
         table_styles: Vec::new(),
         subtypes: None,
         contingents: Vec::new(),
@@ -366,6 +367,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
         ids.push("son".to_owned());
         layers.push(LayerNode {
             source_crs: None,
+            geometry: None,
             table_styles: Vec::new(),
             subtypes: None,
             contingents: Vec::new(),
@@ -487,6 +489,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
         name: rng.text(),
         settings: ProjectSettings {
             map_srid: None,
+            auto_select: None,
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,

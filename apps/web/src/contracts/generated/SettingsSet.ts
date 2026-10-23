@@ -61,7 +61,12 @@ export type SettingsSet = { name?: string, projectType?: Workspace, srid?: numbe
 /**
  * The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes.
  */
-mapSrid?: number, drawingUnit?: DrawingUnit, 
+mapSrid?: number, 
+/**
+ * Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only
+ * the active layer's. No object changes.
+ */
+autoSelect?: boolean, drawingUnit?: DrawingUnit, 
 /**
  * How lengths are written (docs/adr/0262 §2): decimal, or architectural,
  * engineering and fractional feet and inches in an inch or foot drawing.

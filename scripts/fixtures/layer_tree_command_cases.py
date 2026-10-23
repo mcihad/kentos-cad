@@ -1,6 +1,7 @@
 """Writes the shared cases of the layer tree's three commands (docs/adr/0248 §1–§3, 0311 §1–§3):
 
-- fixtures/commands/v1/cad.layers.edit.json   (`cad.layers.edit` v1: add, style, move, remove, duplicate, merge, fields, purge)
+- fixtures/commands/v1/cad.layers.edit.json   (`cad.layers.edit` v1: add, style, move, remove, duplicate, merge, fields, purge,
+  geometry)
 - fixtures/commands/v1/cad.layers.set.json    (`cad.layers.set` v1: rename, visible, locked, active, isolate, unisolate,
   showAll, plot, frozen, thawAll)
 - fixtures/commands/v1/cad.layers.states.json (`cad.layers.states` v1: save, update, rename, remove, apply, export, import)
@@ -569,6 +570,52 @@ def edit_cases():
                                unchanged(t))]})
     out.append(refused("Temizle: çizimde olmayan blok", {"operation": "purge", "blocks": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6dffff"]}, "unknown_block",
                        "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6dffff” kimlikli blok tanımı çizimde yok.", "blocks[0]", t))
+
+    # geometry: a layer's type (docs/adr/0622 §5)
+    LAYER_TYPE = "Katman türü"
+    point_layer = changed(t, "bos", geometry="point")
+    out.append({"name": "Katman türü: boş katman nokta katmanı olur; adımı “Katman türü”; geri alınır",
+                "steps": [step("execute", {"operation": "geometry", "layer": "bos", "geometry": "point"}, edited("bos"),
+                               {"layers": point_layer, "ids": IDS, "canUndo": True, "dirty": True, "revision": "changed"}),
+                          step("undo", returns=LAYER_TYPE, expect={"layers": t, "canRedo": True}),
+                          step("redo", returns=LAYER_TYPE, expect={"layers": point_layer})]})
+    area_layer = changed(t, "parsel", geometry="area")
+    out.append({"name": "Katman türü: alanları olan katman alan katmanı olur",
+                "steps": [step("execute", {"operation": "geometry", "layer": "parsel", "geometry": "area"}, edited("parsel"),
+                               {"layers": area_layer, "ids": IDS, "canUndo": True})]})
+    out.append({"name": "Katman türü: mixed türü kaldırır; aynı tür bir şey yazmaz",
+                "setup": setup(area_layer),
+                "steps": [step("execute", {"operation": "geometry", "layer": "parsel", "geometry": "area"}, edited("parsel", False), unchanged(area_layer)),
+                          step("execute", {"operation": "geometry", "layer": "parsel", "geometry": "mixed"}, edited("parsel"),
+                               {"layers": t, "canUndo": True}),
+                          step("undo", returns=LAYER_TYPE, expect={"layers": area_layer})]})
+    out.append({"name": "Katman türü: kilitli katman da alır (nesneleri değişmez)",
+                "steps": [step("execute", {"operation": "geometry", "layer": "bina", "geometry": "area"}, edited("bina"),
+                               {"layers": changed(t, "bina", geometry="area")})]})
+    out.append(refused("Katman türü: alanları olan katman çizgi katmanı olamaz", {"operation": "geometry", "layer": "parsel", "geometry": "line"},
+                       "layer_geometry_mismatch",
+                       "“Parsel” katmanında 2 alan var; çizgi katmanı olamaz. Bu nesneleri önce türlerine uyan bir katmana taşıyın ya da katmanı Karışık bırakın.",
+                       "geometry", t))
+    out.append(refused("Katman türü: türleri sayılır (çizgi ve blok olan katman alan olamaz)", {"operation": "geometry", "layer": "yol", "geometry": "area"},
+                       "layer_geometry_mismatch",
+                       "“Yol” katmanında 1 çizgi, 1 blok var; alan katmanı olamaz. Bu nesneleri önce türlerine uyan bir katmana taşıyın ya da katmanı Karışık bırakın.",
+                       "geometry", t))
+    out.append(refused("Katman türü: grup", {"operation": "geometry", "layer": "kadastro", "geometry": "area"}, "not_a_layer",
+                       "“Kadastro” bir katman grubu; bu işlem yalnız katmanın olur. Grubun bir katmanını verin.", "layer", t))
+    out.append(refused("Katman türü: servis katmanı", {"operation": "geometry", "layer": "altlik", "geometry": "area"}, "service_layer",
+                       "“OpenStreetMap” servisten çizilir ve nesne tutmaz; bu işlem nesneleri olan katmanın olur.", "layer", t))
+    out.append(refused("Katman türü: tür verilmedi", {"operation": "geometry", "layer": "bos"}, "nothing_to_set",
+                       "Katmanın türünü verin (geometry): point, line, area, annotation ya da mixed.", None, t))
+    out.append(refused("Katman türü: katman verilmedi", {"operation": "geometry", "geometry": "point"}, "no_layer",
+                       "İşlemin katmanını ya da grubunu kimliğiyle verin (layer).", "layer", t))
+    typed_new = node("$layer", "Ağaçlar", style=DEFAULT, geometry="point")
+    out.append({"name": "Ekle: türüyle (nokta katmanı)",
+                "steps": [step("execute", {"operation": "add", "name": "Ağaçlar", "geometry": "point"}, edited("$layer"),
+                               {"layers": inserted(t, typed_new, None)}),
+                          step("undo", returns="Katman ekle", expect={"layers": t})]})
+    out.append({"name": "Ekle: grubun türü olmaz; mixed türsüz katmandır",
+                "steps": [step("execute", {"operation": "add", "kind": "group", "name": "Altyapı", "geometry": "line"}, edited("$layer"),
+                               {"layers": inserted(t, node("$layer", "Altyapı", "group", style=DEFAULT), None)})]})
 
     # validate, revision
     out.append({"name": "Doğrula: yazmaz", "steps": [step("validate", {"operation": "remove", "layer": "yol"}, VALID, unchanged(t))]})

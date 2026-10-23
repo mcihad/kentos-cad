@@ -197,6 +197,9 @@ mod layer_snap;
 mod layer_states;
 mod layer_translate;
 mod layer_tree;
+mod layer_types;
+#[cfg(test)]
+mod layer_type_scenes;
 mod layering;
 mod layout;
 mod layout_plan;

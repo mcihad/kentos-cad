@@ -157,6 +157,87 @@
       ]
     },
     {
+      "name": "Otomatik seçim: kapatılır ve açılır; proje ayarıdır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "autoSelect": false
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "autoSelect"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "autoSelect": false
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "autoSelect": false
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "autoSelect": false
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "autoSelect": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "autoSelect"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "autoSelect": true
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Basamaklar ve birimler",
       "steps": [
         {

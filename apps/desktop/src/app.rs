@@ -2767,6 +2767,8 @@ impl App {
             "edit.previousSelection" => self.previous_selection(),
             "edit.cycleSelection" => self.cycle_selection(),
             "edit.selectFilter" => self.toggle_select_filter(),
+            // Otomatik seçim (layer_types.rs, docs/adr/0622 §5).
+            "edit.autoSelect" => self.toggle_auto_select(),
             "edit.selectFilterAll" => self.select_all_kinds(true),
             "edit.selectFilterNone" => self.select_all_kinds(false),
             id if id.starts_with("edit.selectFilter.") => {
@@ -2976,6 +2978,12 @@ impl App {
             "hatchPatterns.manage" => self.open_hatch_patterns(),
             // Edits, not undo steps (layering.rs).
             "layer.new" => self.new_layer(),
+            // A typed layer (layer_types.rs, docs/adr/0622 §5).
+            id if crate::layer_types::NEW_TYPED.iter().any(|(c, _)| *c == id) => {
+                if let Some((_, g)) = crate::layer_types::NEW_TYPED.iter().find(|(c, _)| *c == id) {
+                    self.new_typed_layer(*g);
+                }
+            }
             "layer.newGroup" => self.new_group(),
             // The blocks (blocks_panel.rs, docs/adr/0144).
             "block.panel" => self.show_blocks_panel(),
@@ -3130,6 +3138,7 @@ impl App {
             "draft.topologyPoints" => self.draft.topology_points,
             "draft.overlap" => self.draft.overlap != kentos_interaction::Overlap::Allow,
             "edit.selectFilter" => self.draft.select_kinds.is_some(),
+            "edit.autoSelect" => self.auto_select_on(),
             id if id.starts_with("edit.selectFilter.") => {
                 self.select_kind_checked(&id["edit.selectFilter.".len()..])
             }
@@ -3235,6 +3244,12 @@ impl App {
             "server.check" => !self.server_checking,
             id if id.starts_with("cloud.") => self.cloud_available(id),
             "layer.new" | "layer.newGroup" => self.tree_locked().is_none(),
+            id if crate::layer_types::NEW_TYPED.iter().any(|(c, _)| *c == id) => {
+                self.tree_locked().is_none()
+            }
+            "edit.autoSelect" => doc.is_some(),
+            // A drawing tool that writes another kind than the typed active layer holds (docs/adr/0622 §5).
+            id if self.layer_misfit(id).is_some() => false,
             "block.purge" | "block.export" => doc.is_some_and(|d| !d.blocks().is_empty()),
             "block.import" | "layer.impact" => doc.is_some(),
             "block.attributes" => doc.is_some_and(|d| {
@@ -3266,18 +3281,23 @@ impl App {
 
     /// Why a command is off, when it says (the web's `whyDisabled`): its tip
     /// shows it.
-    pub fn why_disabled(&self, id: &str) -> Option<&'static str> {
+    pub fn why_disabled(&self, id: &str) -> Option<String> {
         match id {
-            "layer.new" | "layer.newGroup" => self.tree_locked(),
+            "layer.new" | "layer.newGroup" => self.tree_locked().map(str::to_owned),
+            id if crate::layer_types::NEW_TYPED.iter().any(|(c, _)| *c == id) => {
+                self.tree_locked().map(str::to_owned)
+            }
             id if id.starts_with("workspace.") && !self.available(id) => Some(
-                "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride dönüştürmeyle olacak.",
+                "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride dönüştürmeyle olacak."
+                    .to_owned(),
             ),
             "scenario.show" | "scenario.base" | "scenario.compare" | "scenario.apply"
                 if !self.has_scenarios() =>
             {
-                Some("Projede senaryo yok; önce Senaryo oluştur ile bir senaryo yapın.")
+                Some("Projede senaryo yok; önce Senaryo oluştur ile bir senaryo yapın.".to_owned())
             }
-            _ => None,
+            // The typed active layer does not hold what the tool draws (docs/adr/0622 §5).
+            id => self.layer_misfit(id),
         }
     }
 

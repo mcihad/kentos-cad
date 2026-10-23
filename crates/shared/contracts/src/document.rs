@@ -196,6 +196,12 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub workspace: Option<Workspace>,
+    /// Otomatik seçim (docs/adr/0622 §5): on, a click and a box select any shown layer's objects (with the list of
+    /// the ones under the click); off, only the active layer's, as a GIS edits one layer at a time. Absent: off in a
+    /// CBS project, on otherwise ([`ProjectSettings::auto_select`]).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub auto_select: Option<bool>,
     /// Absent in files written before drawing typefaces (read as Barlow).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -694,6 +700,13 @@ impl ProjectSettings {
     /// former Hibrit mode's (docs/adr/0165 §1).
     pub fn project_type(&self) -> Option<Workspace> {
         self.workspace.filter(|w| *w != Workspace::LegacyHybrid)
+    }
+
+    /// Whether any shown layer's objects are selected, or only the active layer's (docs/adr/0622 §5): the project's
+    /// choice, else off in a CBS project and on otherwise (a project not yet asked its type selects as it did).
+    pub fn auto_select(&self) -> bool {
+        self.auto_select
+            .unwrap_or(self.project_type() != Some(Workspace::Gis))
     }
 
     /// The refraction coefficient k of trigonometric heights: the project's,

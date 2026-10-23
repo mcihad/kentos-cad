@@ -129,6 +129,11 @@ def cases():
     out.append({"name": "Ad ve tür: proje ayarıdır, geri alma adımı değildir",
                 "steps": [step("execute", {"name": "  Mimari proje ", "projectType": "cad"}, done(["name", "projectType"]),
                                {**FLAGS, "name": "Mimari proje", "settings": {"workspace": "cad"}})]})
+    # Otomatik seçim (docs/adr/0622 §5): the project's choice, written even when it is the type's own; no object changes.
+    out.append({"name": "Otomatik seçim: kapatılır ve açılır; proje ayarıdır",
+                "steps": [step("execute", {"autoSelect": False}, done(["autoSelect"]), {**FLAGS, "settings": {"autoSelect": False}}),
+                          step("execute", {"autoSelect": False}, done([]), {"settings": {"autoSelect": False}}),
+                          step("execute", {"autoSelect": True}, done(["autoSelect"]), {"settings": {"autoSelect": True}})]})
     out.append({"name": "Basamaklar ve birimler",
                 "steps": [step("execute", {"lengthDecimals": 2, "areaDecimals": 4, "areaUnit": "donum", "angleUnit": "deg", "drawingFont": "arimo"},
                                done(["lengthDecimals", "areaDecimals", "areaUnit", "angleUnit", "drawingFont"]),

@@ -23,6 +23,8 @@ from .types import (  # noqa: F401
     LayerEditOperationName,
     LayerField,
     LayerFilter,
+    LayerGeometryChoice,
+    LayerGeometryChoiceName,
     LayerLabels,
     LayerMask,
     LayerNodeType,
@@ -539,6 +541,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         fields: Sequence[LayerField] | None | Unset = UNSET,
+        geometry: LayerGeometryChoice | LayerGeometryChoiceName | None | Unset = UNSET,
         index: int | None | Unset = UNSET,
         kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
@@ -585,6 +588,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             color:
             expected_revision: The document revision the input was prepared against, as decimal text.
             fields: The layer's fields (docs/adr/0199 §1).
+            geometry: add, geometry: what the layer holds (docs/adr/0622 §5); `mixed`: any kind.
             index: Unit: index.
             kind: Add's kind of node; absent: a layer.
             layer: The node it acts on; merge's target.
@@ -617,6 +621,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             color=color,
             expected_revision=expected_revision,
             fields=_opt(fields, lambda x: list(x)),
+            geometry=geometry,
             index=index,
             kind=kind,
             layer=layer,
@@ -642,6 +647,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         fields: Sequence[LayerField] | None | Unset = UNSET,
+        geometry: LayerGeometryChoice | LayerGeometryChoiceName | None | Unset = UNSET,
         index: int | None | Unset = UNSET,
         kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
@@ -665,6 +671,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             color=color,
             expected_revision=expected_revision,
             fields=_opt(fields, lambda x: list(x)),
+            geometry=geometry,
             index=index,
             kind=kind,
             layer=layer,
@@ -690,6 +697,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         fields: Sequence[LayerField] | None | Unset = UNSET,
+        geometry: LayerGeometryChoice | LayerGeometryChoiceName | None | Unset = UNSET,
         index: int | None | Unset = UNSET,
         kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
@@ -713,6 +721,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             color=color,
             expected_revision=expected_revision,
             fields=_opt(fields, lambda x: list(x)),
+            geometry=geometry,
             index=index,
             kind=kind,
             layer=layer,
@@ -738,6 +747,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         fields: Sequence[LayerField] | None | Unset = UNSET,
+        geometry: LayerGeometryChoice | LayerGeometryChoiceName | None | Unset = UNSET,
         index: int | None | Unset = UNSET,
         kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
@@ -766,6 +776,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             color=color,
             expected_revision=expected_revision,
             fields=_opt(fields, lambda x: list(x)),
+            geometry=geometry,
             index=index,
             kind=kind,
             layer=layer,

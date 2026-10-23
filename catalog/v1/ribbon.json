@@ -1155,7 +1155,8 @@
        "edit.deselect",
        "edit.invertSelection",
        "edit.previousSelection",
-       "edit.cycleSelection"
+       "edit.cycleSelection",
+       "edit.autoSelect"
       ]
      },
      {
@@ -2269,6 +2270,10 @@
         "size": "small"
        },
        {
+        "command": "edit.autoSelect",
+        "size": "small"
+       },
+       {
         "menu": "Seçim süzgeci",
         "size": "small",
         "blocks": [
@@ -2626,8 +2631,25 @@
       "icon": "layerAdd",
       "items": [
        {
-        "command": "layer.new",
-        "size": "small"
+        "menu": "Yeni katman",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "layer.new"
+          ]
+         },
+         {
+          "label": "Türüyle",
+          "items": [
+           "layer.newPoint",
+           "layer.newLine",
+           "layer.newArea",
+           "layer.newAnnotation"
+          ]
+         }
+        ]
        },
        {
         "command": "layer.newGroup",

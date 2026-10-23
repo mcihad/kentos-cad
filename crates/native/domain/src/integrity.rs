@@ -7,7 +7,9 @@
 //! - an insert of a block the drawing does not define;
 //! - a linked text whose object is gone;
 //! - an associative hatch, or a dimension's live reference, to an object
-//!   that is gone; or such a reference left to an object the step removed.
+//!   that is gone; or such a reference left to an object the step removed;
+//! - an object of a kind its layer does not hold (a layer's type, docs/adr/0622 §5):
+//!   one the step put on the layer, or whose kind it changed.
 //!
 //! Only what the step brought counts: an object the step did not move to
 //! its layer, block or link is not refused for a fault it already had (a
@@ -26,6 +28,8 @@ pub struct Fault {
     pub uid: Uuid,
     /// Turkish, for people: what and how to fix it.
     pub message: String,
+    /// Its code when it has its own (`layer_geometry_mismatch`); none: the integrity's.
+    pub code: Option<&'static str>,
 }
 
 impl Document {
@@ -47,6 +51,7 @@ impl Document {
                     out.push(Fault {
                         uid: change.uid,
                         message: "Bu projede Veri girişi rolündesiniz: yalnız kayıtların özniteliklerini formla değiştirebilirsiniz; nesne eklenmez, silinmez, şekli ve görünüşü değişmez.".into(),
+                        code: None,
                     });
                 }
             }
@@ -74,6 +79,7 @@ impl Document {
                     out.push(Fault {
                         uid: change.uid,
                         message: "Silinen nesneye hâlâ bir yazı, tarama ya da ölçü bağlı.".into(),
+                        code: None,
                     });
                 }
                 continue;
@@ -81,11 +87,30 @@ impl Document {
             let before = change.before.as_deref();
             let base = after.base();
             let moved = before.is_none_or(|b| b.base().layer_id != base.layer_id);
+            // The layer's type (docs/adr/0622 §5): an object the step put on it, or whose kind it changed.
+            let retyped = before.is_none_or(|b| b.kind() != after.kind());
+            if (moved || retyped)
+                && let Some(node) = self.layers.get(&base.layer_id)
+                && let Some(holds) = node.geometry
+                && !holds.admits(after.kind())
+            {
+                out.push(Fault {
+                    uid: change.uid,
+                    message: format!(
+                        "“{}” bir {}; {} bu katmana yazılmaz. Nesneyi türüne uyan bir katmana yazın ya da katmanın türünü Karışık yapın.",
+                        node.name,
+                        holds.layer_words(),
+                        kentos_contracts::kind_words(after.kind())
+                    ),
+                    code: Some(kentos_contracts::codes::LAYER_GEOMETRY_MISMATCH),
+                });
+            }
             if moved {
                 match self.layers.get(&base.layer_id) {
                     None => out.push(Fault {
                         uid: change.uid,
                         message: format!("Nesne çizimde olmayan “{}” katmanında.", base.layer_id),
+                        code: None,
                     }),
                     Some(node) if node.kind == LayerNodeType::Group => out.push(Fault {
                         uid: change.uid,
@@ -93,6 +118,7 @@ impl Document {
                             "Nesne “{}” grubuna konmuş; nesne yalnız katmana konur.",
                             node.name
                         ),
+                        code: None,
                     }),
                     Some(_) => {}
                 }
@@ -104,6 +130,7 @@ impl Document {
                         out.push(Fault {
                             uid: change.uid,
                             message: "Yerleştirmenin bloğu çizimde tanımlı değil.".into(),
+                            code: None,
                         });
                     }
                 }
@@ -117,6 +144,7 @@ impl Document {
                         out.push(Fault {
                             uid: change.uid,
                             message: "Bağlı yazının nesnesi çizimde yok.".into(),
+                            code: None,
                         });
                     }
                 }
@@ -131,6 +159,7 @@ impl Document {
                                 uid: change.uid,
                                 message: "İlişkili taramanın sınır nesnelerinden biri çizimde yok."
                                     .into(),
+                                code: None,
                             });
                         }
                     }
@@ -145,6 +174,7 @@ impl Document {
                             out.push(Fault {
                                 uid: change.uid,
                                 message: "İlişkili ölçünün bağlı olduğu nesne çizimde yok.".into(),
+                                code: None,
                             });
                         }
                     }
