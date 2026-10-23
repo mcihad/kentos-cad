@@ -194,20 +194,31 @@ seçimde her karede yeniden taranmaz.
 - Proje ayarı "Otomatik seçim": açıkken bugünkü seçim, kapalıyken yalnız etkin katman seçilir.
   CBS'de kapalı, CAD'de açık başlar.
 
-## 6. Sağ tık (sırada)
+## 6. Sağ tık
 
-Sağ tık AutoCAD'in varsayılanı gibi her zaman o anki işin menüsünü açar ve hiçbir zaman imlecin
-yerine nokta koymaz:
+Sahibin bildirdiği hata şuydu: tutamakla nokta taşırken sağ tık noktayı imlecin yerine bırakıyor ve taşımayı yapıyordu;
+başka işlerde ise sağ tık işi iptal ediyordu. Kökü şu: hızlı sağ tık, onay alan her durumda Enter sayılıyordu. Seçim aracının
+sıcak tutamağı da Enter'ı onay sayar ve tutamağı imlecin son yerine koyar.
 
-- Komut yokken: genel menü.
-- Seçim varken: düzenleme menüsü.
-- Komut sürerken: Onayla, İptal, komutun seçenekleri, tek seferlik kenet.
-- Sıcak tutamakta: tutamaç menüsü (Esnet, Taşı, Döndür, Ölçekle, Aynala, Taban noktası, Kopya,
-  Çıkış).
-- Shift ile: kenet menüsü.
+Karar AutoCAD'in varsayılanıdır: sağ tık her zaman o anki işin menüsünü açar ve hiçbir zaman nokta koymaz, onaylamaz ya da iptal
+etmez (`drawing_menus.rs`).
 
-Hızlı sağ tıkın Enter olması (AutoCAD'in zamana duyarlı sağ tıkı) bir kullanıcı tercihi olarak
-kalır ve kapalı başlar.
+| Durum | Menü |
+|---|---|
+| Tutamaçla taşıma | Tutamaç menüsü: tutamaç kipleri istemin seçenekleriyle (Taşı, Döndür, Ölçekle, Aynala, Taban noktası, Kopya), Bırak (Esc), tek seferlik kenet. Onayla yoktur; tutamaç bir noktaya kadar yerinde kalır |
+| Komut sürerken | Onayla / bitir, İptal, komutun seçenekleri, Nokta hesapla, tek seferlik kenet, Kilit, çizim yardımcıları |
+| Seçim varken | Yinele, Taşı, Kopyala, Döndür, Ölçekle, Aynala, Sil, pano, Öne getir, Arkaya gönder, Benzerini seç, Seçimi kaldır, Seçime yakınlaştır, Koordinat listesi, Eylemler |
+| Seçim yokken | Yinele, Geri al, Yinele (redo), Yapıştır, Tümünü göster, Pencere yakınlaştır, Kaydır, Önceki görünüm, Tümünü seç, Önceki seçim, Koordinat listesi |
+| Bir tutamağın üstünde | Tutamağın kendi işleri (ADR 0279), ardından seçim menüsü |
+| Shift ile | Tek seferlik kenet menüsü |
+
+Tercih `drafting.rightClickEnter` ("Hızlı sağ tık Enter", Uygulama ayarları › Görünüm) kapalı başlar. Açıkken AutoCAD'in zamana
+duyarlı sağ tıkı gibi çalışır: kısa basış onay alan komutu onaylar (Enter), 300 ms basılı tutmak menüyü açar. Tutamaçla
+taşırken bu tercih de noktayı bırakmaz; tutamaç menüsü açılır.
+
+Ortak etkileşim izlerinde (`fixtures/interaction/v1`) `rightClick` adımı web'in kısa sağ tıkıdır, yani Enter. Masaüstünün iz
+oynatıcısı bu yüzden izleri tercih açıkmış gibi oynatır (`traces/player.rs`). Varsayılan davranışı birim testleri sınar:
+`a_right_click_opens_the_menu_of_what_is_going_on` ve `a_right_click_never_drops_a_moved_grip_at_the_pointer`.
 
 ## 7. Python çıktısı (sırada)
 

@@ -426,3 +426,63 @@ fn open_rasters(app: &mut App) {
         24.0,
     );
 }
+
+/// The right button as AutoCAD's (docs/adr/0622 §6): the menu with nothing
+/// selected, with a selection, while a line is drawn and while a grip is
+/// moved (never dropped where the pointer is): `duzen-sagtik2-*`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn right_click_menus() {
+    use kentos_domain::Slot;
+    use kentos_interaction::grip_menu::GripAction;
+
+    let out = out();
+    for (size, theme, suffix) in frames() {
+        for (word, setup) in [
+            ("bos", 0u8),
+            ("secili", 1),
+            ("komut", 2),
+            ("tutamac", 3),
+        ] {
+            let name = format!("duzen-sagtik2-{word}{suffix}");
+            if !wanted(&name) {
+                continue;
+            }
+            let mut app = booted(theme, true);
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            snapshot.settle(&mut app, App::view, &mut update);
+            let area = app.viewport.bounds;
+            let mut at = Point::new(area.x + area.width * 0.45, area.y + area.height * 0.35);
+            match setup {
+                1 => {
+                    app.selection.set([Slot(4)]);
+                    app.follow_selection_tab();
+                }
+                2 => {
+                    let _ = app.update(Message::Run("tool.line"));
+                    snapshot.input(&mut app, App::view, &mut update, Input::Click(at));
+                    at = Point::new(at.x + 120.0, at.y + 60.0);
+                    snapshot.input(&mut app, App::view, &mut update, Input::Move(at));
+                }
+                3 => {
+                    let parcel = Slot(4);
+                    app.selection.set([parcel]);
+                    let doc = app.document.as_ref().expect("open");
+                    app.spatial.sync(&doc.model);
+                    let first = app.spatial.grips(&[parcel])[0].points[0];
+                    let [x, y] = app.viewport.camera.world_to_screen(first);
+                    let local = Point::new(x as f32, y as f32);
+                    let _ = app.update(Message::Viewport(crate::viewport::Event::RightPressed(local)));
+                    let _ = app.update(Message::Viewport(crate::viewport::Event::RightClick(local)));
+                    let _ = app.update(Message::DrawingMenu(crate::drawing_menus::Event::Grip(GripAction::Stretch)));
+                    at = Point::new(area.x + local.x + 90.0, area.y + local.y - 50.0);
+                    snapshot.input(&mut app, App::view, &mut update, Input::Move(at));
+                }
+                _ => {}
+            }
+            snapshot.settle(&mut app, App::view, &mut update);
+            snapshot.input(&mut app, App::view, &mut update, Input::RightClick(at));
+            save(&mut snapshot, &app, &out, &name);
+        }
+    }
+}

@@ -229,6 +229,21 @@
       "apply": "live"
     },
     {
+      "key": "drafting.rightClickEnter",
+      "type": "boolean",
+      "default": false,
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Hızlı sağ tık Enter",
+      "description": "Açıkken sağ tuşa kısaca basmak çalışan komutu onaylar (Enter), basılı tutmak menüyü açar. Kapalıyken sağ tık her zaman o anki işin menüsünü açar. Tutamaçla taşırken sağ tık hiçbir zaman noktayı imlecin yerine bırakmaz.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "drafting.contextualTabs",
       "type": "boolean",
       "default": true,

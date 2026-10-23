@@ -1,12 +1,19 @@
-//! The right button over the drawing (the web's `ui/shell/viewportMenus.ts`
-//! and `ViewportController.onRightDown` / `onRightUp`):
+//! The right button over the drawing, as AutoCAD's by default (the owner's
+//! word, 23 October 2026; docs/adr/0622 §6): it opens the menu of what is
+//! going on and never places a point where the pointer is:
 //!
-//! - a quick right click is Enter for a running command that takes a
-//!   confirm; with no command, or one that takes none (Kaydır, Pencere
-//!   yakınlaştır), it opens the idle menu;
-//! - held for 300 ms, it opens the command menu while a command runs, the
-//!   idle menu otherwise;
+//! - a grip being moved: the grip's menu (its modes, Taban noktası,
+//!   Referans, Kopya, Bırak), never the grip dropped at the pointer;
+//! - a command running: the command's menu (Onayla, İptal, its options,
+//!   Nokta hesapla, the one-shot snaps, the locks, the aids);
+//! - nothing running: the idle menu, with the selection's edits when
+//!   something is selected;
 //! - Shift and the right button open the one-shot snap menu at once.
+//!
+//! With `drafting.rightClickEnter` on (AutoCAD's time-sensitive right
+//! click), a quick click is Enter for a running command that takes a
+//! confirm and the menu waits for the button held 300 ms; a grip being
+//! moved still opens its menu.
 //!
 //! A one-shot snap makes the next left click snap to its kind only, even
 //! with running snaps off (F3). A left press or another command drops it;
@@ -91,13 +98,18 @@ fn snap_icon(kind: SnapKind) -> Icon {
 /// Which menu is open over the drawing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
-    /// No command, or a quick click with one that takes no confirm.
+    /// No command running.
     Idle,
-    /// Held while a command runs.
+    /// A command running.
     Command,
+    /// A grip being moved, no command running (docs/adr/0622 §6).
+    Grip,
     /// Shift and the right button.
     Snap,
 }
+
+/// The user's choice that a quick right click is Enter (AutoCAD's time-sensitive right click).
+pub const RIGHT_CLICK_ENTER: &str = "drafting.rightClickEnter";
 
 /// An open menu and where (logical pixels from the drawing area's top-left).
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -164,38 +176,45 @@ impl App {
     }
 
     /// The right button has been held (the drawing area times it, viewport.rs):
-    /// the command menu while a command runs, the idle menu otherwise.
+    /// the menu of what is going on.
     pub(crate) fn right_held(&mut self, at: Point) {
         if self.drawing_menu.is_some() {
             return;
         }
-        let kind = if self.session.is_running() {
-            Kind::Command
-        } else {
-            Kind::Idle
-        };
-        let grip = self.grip_under(kind, at);
-        self.drawing_menu = Some(Open { kind, at, grip });
+        self.open_drawing_menu(at);
     }
 
-    /// The right button came up sooner than the hold.
+    /// The right button came up sooner than the hold: the menu of what is
+    /// going on; Enter only when the user chose it so, never for a grip
+    /// (docs/adr/0622 §6).
     pub(crate) fn right_clicked(&mut self, at: Point) {
         if self.drawing_menu.is_some() {
             return;
         }
         self.field = None;
         self.line_focused = false;
-        // Enter for a running command that takes a confirm; the idle menu otherwise.
-        if self.session.confirms() {
+        if self.settings.bool(RIGHT_CLICK_ENTER)
+            && self.session.confirms()
+            && !self.session.grip_active()
+        {
             self.with_tool(|s, cx| s.confirm(cx));
-        } else {
-            let grip = self.grip_under(Kind::Idle, at);
-            self.drawing_menu = Some(Open {
-                kind: Kind::Idle,
-                at,
-                grip,
-            });
+            return;
         }
+        self.open_drawing_menu(at);
+    }
+
+    /// The menu of what is going on, at `at`: a grip's while one is moved,
+    /// the command's while one runs, the idle menu otherwise.
+    fn open_drawing_menu(&mut self, at: Point) {
+        let kind = if self.session.grip_active() {
+            Kind::Grip
+        } else if self.session.is_running() {
+            Kind::Command
+        } else {
+            Kind::Idle
+        };
+        let grip = self.grip_under(kind, at);
+        self.drawing_menu = Some(Open { kind, at, grip });
     }
 
     pub(crate) fn drawing_menu_event(&mut self, event: Event) -> Task<Message> {
@@ -265,6 +284,7 @@ impl App {
                 self.snap_menu(Menu::new().header("Tek seferlik kenet (sonraki tık)"))
             }
             Some(Kind::Command) => self.command_menu(),
+            Some(Kind::Grip) => self.grip_mode_menu(),
             Some(Kind::Idle) | None => self.idle_menu(),
         }
     }
@@ -316,25 +336,51 @@ impl App {
                 .item(format!("Yinele: {title}"), Message::Run("tool.repeat"))
                 .shortcut("Enter");
         }
-        let menu = [
-            "-",
-            "view.zoomExtents",
-            "view.zoomSelection",
-            "tool.pan",
-            "-",
-            "edit.selectAll",
-            "edit.deselect",
-            "-",
-            "tool.move",
-            "tool.copy",
-            "edit.copy",
-            "edit.paste",
-            "tool.erase",
-            "-",
-            "view.coords",
-        ]
-        .into_iter()
-        .fold(menu, |menu, id| match id {
+        // AutoCAD's edit menu with a selection, its default menu without one (docs/adr/0622 §6).
+        let items: &[&'static str] = if self.selection.is_empty() {
+            &[
+                "-",
+                "edit.undo",
+                "edit.redo",
+                "-",
+                "edit.paste",
+                "edit.pasteOriginal",
+                "-",
+                "view.zoomExtents",
+                "tool.zoomWindow",
+                "tool.pan",
+                "view.previous",
+                "-",
+                "edit.selectAll",
+                "edit.previousSelection",
+                "-",
+                "view.coords",
+            ]
+        } else {
+            &[
+                "-",
+                "tool.move",
+                "tool.copy",
+                "tool.rotate",
+                "tool.scale",
+                "tool.mirror",
+                "tool.erase",
+                "-",
+                "edit.copy",
+                "edit.cut",
+                "edit.paste",
+                "-",
+                "edit.bringToFront",
+                "edit.sendToBack",
+                "-",
+                "tool.selectSimilar",
+                "edit.deselect",
+                "view.zoomSelection",
+                "-",
+                "view.coords",
+            ]
+        };
+        let menu = items.iter().fold(menu, |menu, id| match *id {
             "-" => menu.separator(),
             id => self.command_item(menu, id),
         });
@@ -398,7 +444,36 @@ impl App {
         Some(menu)
     }
 
-    /// A command running, the button held (the web's `commandItems`).
+    /// A grip being moved (docs/adr/0622 §6; AutoCAD's grip menu): its
+    /// modes and their options as the prompt offers them, then Bırak (the
+    /// grip goes back, Esc) and the one-shot snaps; never the grip dropped
+    /// at the pointer.
+    fn grip_mode_menu(&self) -> Menu<Message> {
+        let prompt = self.prompt();
+        let mut menu = Menu::new().header(prompt.title().unwrap_or_else(|| "Tutamaç".to_owned()));
+        for option in prompt
+            .options
+            .iter()
+            .filter(|o| o.key != "Enter" && o.key != "Esc")
+        {
+            let label = match &option.value {
+                Some(value) => format!("{}: {value}", option.label),
+                None => option.label.to_owned(),
+            };
+            menu = menu
+                .item(label, Message::PromptOption(option.key))
+                .shortcut(option.key);
+        }
+        menu.separator()
+            .item("Bırak", Message::Run("tool.cancel"))
+            .icon(Icon::Close)
+            .shortcut("Esc")
+            .separator()
+            .submenu("Tek seferlik kenet", self.snap_menu(Menu::new()))
+            .icon(crate::icons::from_web(Some("snap")))
+    }
+
+    /// A command running (the web's `commandItems`).
     fn command_menu(&self) -> Menu<Message> {
         let prompt = self.prompt();
         let mut menu = Menu::new()
@@ -551,7 +626,7 @@ mod tests {
     }
 
     #[test]
-    fn a_quick_right_click_is_enter_in_a_command_and_the_idle_menu_without_one() {
+    fn a_right_click_opens_the_menu_of_what_is_going_on() {
         let mut app = app_with_drawing();
         let at = Point::new(300.0, 200.0);
         view(&mut app, viewport::Event::RightPressed(at));
@@ -559,8 +634,19 @@ mod tests {
         assert_eq!(app.drawing_menu.map(|m| m.kind), Some(Kind::Idle));
         let _ = app.update(Message::DrawingMenu(Event::Closed));
         assert!(app.drawing_menu.is_none());
-        // A command that takes a confirm: Enter, no menu.
+        // A command running: its menu, the command goes on (docs/adr/0622 §6).
         let _ = app.update(Message::Run("tool.line"));
+        view(&mut app, viewport::Event::RightPressed(at));
+        view(&mut app, viewport::Event::RightClick(at));
+        assert_eq!(app.drawing_menu.map(|m| m.kind), Some(Kind::Command));
+        assert!(app.session.is_running(), "a right click is no Enter");
+        let menu = format!("{:?}", app.drawing_menu_items());
+        assert!(menu.contains("Onayla / bitir") && menu.contains("İptal"), "{menu}");
+        let _ = app.update(Message::DrawingMenu(Event::Closed));
+        // AutoCAD's time-sensitive right click, chosen: a quick click is Enter.
+        let _ = app
+            .settings
+            .choose(&[(super::RIGHT_CLICK_ENTER, serde_json::Value::Bool(true))]);
         view(&mut app, viewport::Event::RightPressed(at));
         view(&mut app, viewport::Event::RightClick(at));
         assert!(app.drawing_menu.is_none());
@@ -568,6 +654,57 @@ mod tests {
             !app.session.is_running(),
             "Enter with no point leaves the line tool"
         );
+    }
+
+    /// A grip being moved (the owner's report, 23 October 2026): a right
+    /// click opens the grip's menu and the grip stays where it was until a
+    /// point is given; never dropped where the pointer is, even with the
+    /// quick right click as Enter.
+    #[test]
+    fn a_right_click_never_drops_a_moved_grip_at_the_pointer() {
+        use kentos_domain::Slot;
+        use kentos_interaction::grip_menu::GripAction;
+
+        fn corner(app: &App) -> Option<(f64, f64)> {
+            match app.document.as_ref().and_then(|d| d.model.get(Slot(4))) {
+                Some(kentos_commands::Entity::Polygon(p)) => p.pts.first().map(|v| (v.x, v.y)),
+                _ => None,
+            }
+        }
+        for quick_enter in [false, true] {
+            let mut app = app_with_drawing();
+            let _ = app
+                .settings
+                .choose(&[(super::RIGHT_CLICK_ENTER, serde_json::Value::Bool(quick_enter))]);
+            let parcel = Slot(4);
+            app.selection.set([parcel]);
+            let doc = app.document.as_ref().expect("open");
+            app.spatial.sync(&doc.model);
+            let first = app.spatial.grips(&[parcel])[0].points[0];
+            let [x, y] = app.viewport.camera.world_to_screen(first);
+            let on_grip = Point::new(x as f32, y as f32);
+            let before = corner(&app);
+            // Esnet from the grip's menu: the grip turns hot and follows the pointer.
+            view(&mut app, viewport::Event::RightPressed(on_grip));
+            view(&mut app, viewport::Event::RightClick(on_grip));
+            let _ = app.update(Message::DrawingMenu(Event::Grip(GripAction::Stretch)));
+            assert!(app.session.grip_active(), "the grip is hot");
+            let elsewhere = Point::new(on_grip.x + 60.0, on_grip.y + 40.0);
+            view(&mut app, viewport::Event::Moved(elsewhere));
+            view(&mut app, viewport::Event::RightPressed(elsewhere));
+            view(&mut app, viewport::Event::RightClick(elsewhere));
+            assert_eq!(app.drawing_menu.map(|m| m.kind), Some(Kind::Grip), "{quick_enter}");
+            assert_eq!(corner(&app), before, "the grip is not dropped at the pointer");
+            assert!(app.session.grip_active(), "the grip is still hot");
+            // Its menu: the modes and Bırak, not Onayla.
+            let menu = format!("{:?}", app.drawing_menu_items());
+            assert!(menu.contains("Bırak") && !menu.contains("Onayla"), "{menu}");
+            // Bırak: the grip goes back, nothing written.
+            let _ = app.update(Message::DrawingMenu(Event::Closed));
+            let _ = app.update(Message::Run("tool.cancel"));
+            assert!(!app.session.grip_active());
+            assert_eq!(corner(&app), before);
+        }
     }
 
     /// A quick right click on a grip of the selected parcel opens the idle

@@ -24,7 +24,7 @@ use crate::settings::schema;
 use crate::settings_sections::Section;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 56] = [
+pub const KEYS: [&str; 57] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
@@ -35,6 +35,7 @@ pub const KEYS: [&str; 56] = [
     "drafting.hoverInfo",
     "drafting.autocadAliases",
     "drafting.contextualTabs",
+    "drafting.rightClickEnter",
     "drafting.formOnCreate",
     "drafting.snap",
     "snap.endpoint",

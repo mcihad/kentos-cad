@@ -80,6 +80,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   seçimin türüne göre bağlamsal sekmeler). Web'in şeridi dönüşte bu dosyadan kurulmalı; `fixtures/shell/v1/ribbon.json`'un
   `tabs`'ı yeni sekmeleri tutar. Görünüm'deki tema, yazı tipi ve zemin kartları web'de de şeritten Uygulama ayarları'na
   gider. Özellikler panelinin çizim ölçeği durum çubuğuna geçer.
+- Arayüz düzeni sağ tık (ADR 0622 §6): masaüstünde sağ tık her zaman o anki işin menüsünü açar. Kısa tıkın Enter olması
+  `drafting.rightClickEnter` tercihine bağlıdır ve kapalı başlar; tutamaçla taşırken nokta imlecin yerine bırakılmaz. Web'in
+  `ViewportController.onRightUp`'ı aynı kurala getirilmeli; ortak izler `rightClick`'i Enter olarak oynatır.
 - Arayüz düzeni (ADR 0622, dal `ux/arayuz-duzeni`): proje türü projeyle başlar ve değişmez. Web'in durum çubuğundaki tür hücresi ve Görünüm › Proje türü menüsü yalnız türü sorulmamış projede seçim yapmalı. Yeni proje sihirbazında metrelik CAD çizimi plan ölçekleriyle (`PLAN_SCALES`, varsayılan 1:1000), santimetre 1:50 ile başlar. Özet "Yazılar" satırını söyler ve sayfa yazı ile ölçü yüksekliklerini alır (`model/newProjectWizard.ts`, ortak `fixtures/project/v1/wizard.json`). Şeridin ölçek listesi birimle gelir (`fixtures/shell/v1/ribbon.json`'un `unit`'i). CAD'in durum çubuğu çizim ölçeğini gösterir.
 
 - CAD-SHEET-06 (ADR 0591): ortak ops şeması ve asset/inversePictures sözleşmesi hazır. Web yeniden açılınca pafta komut işleyicisi baytların birleştirme/tam değiştirme ve ters bayt politikasını izlemeli; harita yazısı ve zengin stil çıktı eşdeğerliği kendi çıktı yolunda sınanmalı. Native CPU/SVG rasterizer web'e taşınmış sayılmaz.

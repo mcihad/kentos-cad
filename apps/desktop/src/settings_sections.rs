@@ -113,6 +113,7 @@ impl Section {
                 "drafting.hoverInfo",
                 "drafting.autocadAliases",
                 "drafting.contextualTabs",
+                "drafting.rightClickEnter",
                 "drafting.formOnCreate",
                 "appearance.startScreen",
             ],
