@@ -39,8 +39,8 @@ use crate::catalog::{Item, Panel as RibbonPanel, catalog};
 use crate::document::Document;
 
 use menus::{
-    LayerLine, TemplateLine, color_menu, kinds_column, layer_menu, line_type_menu, scale_menu,
-    template_menu, weight_menu,
+    LayerLine, TemplateLine, color_menu, kinds_column, layer_menu, line_type_menu, template_menu,
+    weight_menu,
 };
 
 /// The colours new objects can take (the web's `DRAW_COLORS`). `ink` is CAD
@@ -366,10 +366,10 @@ impl App {
         out
     }
 
-    /// Özellikler: the colour, line type and weight for new objects, and the
-    /// plot scale beside them.
+    /// Özellikler: the colour, line type and weight for new objects (the
+    /// drawing scale is the status bar's, docs/adr/0622 §2).
     fn properties_group(&self, panel: &RibbonPanel) -> Option<Group<'static, Message>> {
-        let doc = self.document.as_ref()?;
+        self.document.as_ref()?;
         let color = self.draft.color;
         let color_swatch = color.map(|value| self.drawing_color(value.as_str()));
         let swatches: Vec<Color> = DRAW_COLORS
@@ -377,18 +377,13 @@ impl App {
             .map(|(_, value)| self.drawing_color(value))
             .collect();
         let (line_type, weight) = (self.draft.line_type, self.draft.line_weight);
-        let scale = doc.settings().plot_scale;
-        let unit = doc.settings().unit();
-        let cad = self.work_mode() == kentos_commands::Workspace::Cad;
         let s = typography::scaled;
         let fields_width = move |level: Level| match level {
             0 => s(188.0),
             1 => s(162.0),
             _ => s(136.0),
         };
-        let scale_width = move |level: Level| if level >= 2 { s(112.0) } else { s(134.0) };
-        let widths = [0, 1, 2]
-            .map(|level: Level| fields_width(level) + scale_width(level) + 6.0 + STACK_PAD * 4.0);
+        let widths = [0, 1, 2].map(|level: Level| fields_width(level) + STACK_PAD * 2.0);
         let menus = {
             let swatches = swatches.clone();
             move || {
@@ -396,7 +391,6 @@ impl App {
                     color_menu(color.as_ref().map(DraftColor::as_str), &swatches),
                     line_type_menu(line_type),
                     weight_menu(weight),
-                    scale_menu(scale, cad, unit),
                 )
             }
         };
@@ -432,23 +426,13 @@ impl App {
                 .tip(kentos_ui::widget::Tip::new("Çizgi kalınlığı").body(
                     "Yeni nesnelerin çizim kalınlığı; “Katmana göre” katmanınkini kullanır.",
                 ));
-            let m = view_menus.clone();
-            let scales = Choice::new(kentos_project::wizard::scale_text(scale), move || m().3)
-                .label("Ölçek")
-                .label_icon(glyph("plotScale"))
-                .width(scale_width(level))
-                .tip(kentos_ui::widget::Tip::new("Çizim ölçeği").body(
-                    "Projenin çizim ölçeği: yazı boyları ve semboller buna göre çizilir. Proje ayarıdır; proje dosyasıyla saklanır.",
-                ));
-            row![
-                container(column![colors, types, weights].spacing(3)).padding([0.0, STACK_PAD]),
-                container(column![scales].spacing(3)).padding([0.0, STACK_PAD]),
-            ]
-            .spacing(6)
-            .into()
+            // The drawing scale is the status bar's (docs/adr/0622 §2): the panel keeps the new objects' look.
+            container(column![colors, types, weights].spacing(3))
+                .padding([0.0, STACK_PAD])
+                .into()
         };
         let folded = move || {
-            let (colors, types, weights, scales) = menus();
+            let (colors, types, weights) = menus();
             Menu::new()
                 .header("Yeni nesnelerin özellikleri")
                 .submenu(format!("Renk: {}", color_text(color)), colors)
@@ -457,8 +441,6 @@ impl App {
                     format!("Çizgi kalınlığı: {}", weight_value_text(weight)),
                     weights,
                 )
-                .separator()
-                .submenu(format!("Çizim ölçeği: 1:{scale}"), scales)
         };
         Some(Group::new(panel.label).stepped(widths, view, folded))
     }

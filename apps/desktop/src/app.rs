@@ -685,7 +685,6 @@ pub enum Message {
     /// Başlangıç (start.rs).
     Start(crate::start::Event),
     /// The interface's look from the Görünüm tab (appearance.rs).
-    Appearance(crate::appearance::Event),
     /// The server's answer to `server.check` (view_commands.rs).
     ServerChecked(Result<kentos_commands::Health, String>),
     /// A layer ticked or unticked on the Çakışma cell's menu (docs/adr/0162 §1).
@@ -723,6 +722,12 @@ pub struct App {
     /// The contextual Seçim tab is the one shown, while something is
     /// selected; an empty selection gives the ribbon back to `tab` (the web's).
     pub ribbon_context: bool,
+    /// The contextual tab the selection opens, kept by the selection's and
+    /// the drawing's change counts (docs/adr/0622 §4): the view asks it often.
+    pub(crate) selection_tab_cache: std::cell::Cell<Option<crate::modes::SelectionTab>>,
+    /// The selection's change count the ribbon last followed: a new
+    /// selection brings its tab to the front, none takes it away.
+    pub(crate) ribbon_follows: u64,
     pub ribbon_collapsed: bool,
     pub mode: Mode,
     pub accent: Accent,
@@ -1217,6 +1222,8 @@ impl App {
                 .or(catalog().tabs().next())
                 .map_or("home", |tab| tab.id),
             ribbon_context: false,
+            selection_tab_cache: std::cell::Cell::new(None),
+            ribbon_follows: 0,
             ribbon_collapsed: false,
             mode: Mode::Dark,
             accent: Accent::default(),
@@ -1692,6 +1699,8 @@ impl App {
         ]);
         self.follow_layout(Instant::now());
         self.follow_navigation(Instant::now());
+        // A new selection brings its contextual tab to the front (modes.rs, docs/adr/0622 §4).
+        self.follow_selection_tab();
         // İstatistik and Grafik keep the layer they read (charts/).
         self.follow_charts();
         // Bilgi's card goes with its tool and its object (info_card.rs).
@@ -2192,7 +2201,6 @@ impl App {
             Message::Project(event) => return self.project_event(*event),
             Message::AppMenu(event) => return self.app_menu_event(event),
             Message::Start(event) => return self.start_event(event),
-            Message::Appearance(event) => return self.appearance_event(event),
             Message::Viewport(event) => return self.pointer(event),
             Message::OtherViewport(event) => return self.other_viewport(event),
             Message::Split(event) => return self.split_event(event),
@@ -2418,7 +2426,7 @@ impl App {
 
     /// The theme chosen from a command: a preference, kept.
     fn choose_theme(&mut self, mode: Mode) {
-        let _ = self.appearance_event(crate::appearance::Event::Theme(mode));
+        self.set_theme(mode);
     }
 
     /// Puts a drawing on screen: the one there before is left (its cloud
@@ -2588,6 +2596,13 @@ impl App {
             "view.theme.toggle" => self.choose_theme(self.mode.toggled()),
             id if id.starts_with("workspace.") => self.choose_mode(id),
             "tools.options" => self.open_settings(),
+            // Yeni pafta and Şablondan pafta (docs/adr/0622 §3): the sheet mode's own, from the ribbon.
+            "sheet.new" => return self.sheet_message(kentos_sheet_ui::Message::NewSheet),
+            "sheet.fromTemplate" => {
+                return self.sheet_message(kentos_sheet_ui::Message::Gallery(
+                    kentos_sheet_ui::gallery::GalleryMessage::Open,
+                ));
+            }
             // Koordinat oku: a tool that reads the clicked point into the log (docs/adr/0140).
             "crs.query" => return self.start_tool(kentos_interaction::coordinate::ID),
             "draft.ortho" => self.toggle_session("drafting.ortho", "Orto"),

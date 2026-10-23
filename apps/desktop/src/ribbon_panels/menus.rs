@@ -117,24 +117,6 @@ pub(super) fn weight_menu(current: Option<f64>) -> Menu<Message> {
     )
 }
 
-/// Ölçek (docs/adr/0205 §4): the project's type's scales and the current
-/// one when it is none of them, then Ölçek yaz….
-pub(super) fn scale_menu(current: f64, cad: bool, unit: kentos_commands::DrawingUnit) -> Menu<Message> {
-    kentos_project::wizard::project_scales(cad, unit, current)
-        .into_iter()
-        .fold(Menu::new(), |menu, scale| {
-            menu.radio(
-                kentos_project::wizard::scale_text(scale),
-                current == scale,
-                Message::RibbonPanel(Event::Scale(scale)),
-            )
-        })
-        .separator()
-        .item(
-            "Ölçek yaz…",
-            Message::PlotScale(crate::annotation_scale::Event::Open),
-        )
-}
 
 /// The kinds' column: up to three lines, else two and “n tür daha”, a line
 /// before it (the web's `.rsel__kinds`).

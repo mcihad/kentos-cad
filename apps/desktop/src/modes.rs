@@ -32,6 +32,10 @@ pub(crate) fn mode_icon(mode: Workspace) -> Icon {
     }))
 }
 
+/// The contextual tab a selection opened, by what it was worked out from: the
+/// selection's change count, the drawing's and the project type (docs/adr/0622 §4).
+pub(crate) type SelectionTab = (u64, u64, u64, Option<&'static str>);
+
 impl App {
     /// The type the interface shows: the drawing's, CBS without one.
     pub(crate) fn work_mode(&self) -> Workspace {
@@ -49,12 +53,65 @@ impl App {
         catalog().contextual_in(self.work_mode())
     }
 
-    /// The tab shown: the contextual Seçim while it is open and something is
-    /// selected, else the chosen tab ([`App::regular_tab`]).
+    /// The contextual tab the selection opens (docs/adr/0622 §4): its
+    /// objects' kind's (Çizgi, Alan, Raster …), Seçim for a mixed selection;
+    /// none without a selection. Kept until the selection or the drawing changes.
+    pub(crate) fn selection_tab(&self) -> Option<&'static Tab> {
+        let doc = self.document.as_ref()?;
+        if self.selection.is_empty() {
+            return None;
+        }
+        let key = (
+            self.selection.version(),
+            doc.model.generation(),
+            self.work_mode() as u64,
+        );
+        let id = match self.selection_tab_cache.get() {
+            Some((v, g, m, id)) if (v, g, m) == key => id,
+            _ => {
+                let mut kinds: Vec<&'static str> = Vec::new();
+                for slot in self.selection.ids() {
+                    if let Some(e) = doc.model.get(*slot) {
+                        let kind = e.kind();
+                        if !kinds.contains(&kind) {
+                            kinds.push(kind);
+                        }
+                    }
+                }
+                let id = catalog()
+                    .contextual_for(self.work_mode(), &kinds)
+                    .map(|t| t.id);
+                self.selection_tab_cache
+                    .set(Some((key.0, key.1, key.2, id)));
+                id
+            }
+        };
+        let id = id?;
+        self.contextual_tabs().find(|t| t.id == id)
+    }
+
+    /// After a message: a selection made or changed brings its tab to the
+    /// front (AutoCAD's contextual tabs; docs/adr/0622 §4), one cleared
+    /// takes it away and the chosen tab shows again.
+    pub(crate) fn follow_selection_tab(&mut self) {
+        let version = self.selection.version();
+        if version == self.ribbon_follows {
+            return;
+        }
+        self.ribbon_follows = version;
+        let follow = self.settings.effective("drafting.contextualTabs") != serde_json::Value::Bool(false);
+        if self.selection.is_empty() {
+            self.ribbon_context = false;
+        } else if follow {
+            self.ribbon_context = true;
+        }
+    }
+
+    /// The tab shown: the selection's contextual tab while it is open and
+    /// something is selected, else the chosen tab ([`App::regular_tab`]).
     pub(crate) fn shown_tab(&self) -> &'static str {
         if self.ribbon_context
-            && !self.selection.is_empty()
-            && let Some(tab) = self.contextual_tabs().next()
+            && let Some(tab) = self.selection_tab()
         {
             return tab.id;
         }

@@ -66,6 +66,14 @@
     "label": "Giriş"
    },
    {
+    "id": "plan",
+    "label": "Plan"
+   },
+   {
+    "id": "survey",
+    "label": "Ölçme"
+   },
+   {
     "id": "insert",
     "label": "Ekle"
    },
@@ -76,6 +84,10 @@
    {
     "id": "modify",
     "label": "Değiştir"
+   },
+   {
+    "id": "arch",
+    "label": "Mimari"
    },
    {
     "id": "view",
@@ -93,6 +105,86 @@
     "id": "selection",
     "label": "Seçim",
     "contextual": true
+   },
+   {
+    "id": "ctx.point",
+    "label": "Nokta",
+    "contextual": true
+   },
+   {
+    "id": "ctx.line",
+    "label": "Çizgi",
+    "contextual": true
+   },
+   {
+    "id": "ctx.area",
+    "label": "Alan",
+    "contextual": true
+   },
+   {
+    "id": "ctx.text",
+    "label": "Yazı",
+    "contextual": true
+   },
+   {
+    "id": "ctx.dimension",
+    "label": "Ölçü",
+    "contextual": true
+   },
+   {
+    "id": "ctx.leader",
+    "label": "Kılavuz",
+    "contextual": true
+   },
+   {
+    "id": "ctx.hatch",
+    "label": "Tarama",
+    "contextual": true
+   },
+   {
+    "id": "ctx.block",
+    "label": "Blok",
+    "contextual": true
+   },
+   {
+    "id": "ctx.table",
+    "label": "Tablo",
+    "contextual": true
+   },
+   {
+    "id": "ctx.image",
+    "label": "Resim",
+    "contextual": true
+   },
+   {
+    "id": "ctx.raster",
+    "label": "Raster",
+    "contextual": true
+   },
+   {
+    "id": "ctx.pointcloud",
+    "label": "Nokta bulutu",
+    "contextual": true
+   },
+   {
+    "id": "ctx.wall",
+    "label": "Duvar",
+    "contextual": true
+   },
+   {
+    "id": "ctx.opening",
+    "label": "Açıklık",
+    "contextual": true
+   },
+   {
+    "id": "ctx.space",
+    "label": "Mahal",
+    "contextual": true
+   },
+   {
+    "id": "ctx.arch",
+    "label": "Mimari nesne",
+    "contextual": true
    }
   ],
   "gis": [
@@ -101,28 +193,20 @@
     "label": "Dosya"
    },
    {
-    "id": "home",
-    "label": "Giriş"
-   },
-   {
     "id": "map",
     "label": "Harita"
-   },
-   {
-    "id": "data",
-    "label": "Veri"
    },
    {
     "id": "edit",
     "label": "Düzenle"
    },
    {
-    "id": "analysis",
-    "label": "Analiz"
+    "id": "data",
+    "label": "Veri"
    },
    {
-    "id": "raster",
-    "label": "Raster"
+    "id": "analysis",
+    "label": "Analiz"
    },
    {
     "id": "survey",
@@ -139,6 +223,66 @@
    {
     "id": "selection",
     "label": "Seçim",
+    "contextual": true
+   },
+   {
+    "id": "ctx.point",
+    "label": "Nokta",
+    "contextual": true
+   },
+   {
+    "id": "ctx.line",
+    "label": "Çizgi",
+    "contextual": true
+   },
+   {
+    "id": "ctx.area",
+    "label": "Alan",
+    "contextual": true
+   },
+   {
+    "id": "ctx.text",
+    "label": "Yazı",
+    "contextual": true
+   },
+   {
+    "id": "ctx.dimension",
+    "label": "Ölçü",
+    "contextual": true
+   },
+   {
+    "id": "ctx.leader",
+    "label": "Kılavuz",
+    "contextual": true
+   },
+   {
+    "id": "ctx.hatch",
+    "label": "Tarama",
+    "contextual": true
+   },
+   {
+    "id": "ctx.block",
+    "label": "Blok",
+    "contextual": true
+   },
+   {
+    "id": "ctx.table",
+    "label": "Tablo",
+    "contextual": true
+   },
+   {
+    "id": "ctx.image",
+    "label": "Resim",
+    "contextual": true
+   },
+   {
+    "id": "ctx.raster",
+    "label": "Raster",
+    "contextual": true
+   },
+   {
+    "id": "ctx.pointcloud",
+    "label": "Nokta bulutu",
     "contextual": true
    }
   ]

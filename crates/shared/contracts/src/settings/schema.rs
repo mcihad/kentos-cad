@@ -165,6 +165,14 @@ fn settings() -> Vec<SettingDescriptor> {
                 "AutoCAD takma adları",
                 "Komut satırına AutoCAD'in İngilizce komut adları ve kısaltmaları da yazılabilir (RECTANG, LA, JOG, DT…). KentOS'un kendi adları ve tek harf kısayolları her zaman önce gelir: KentOS'ta başka bir işi olan ad (T, S, P, CP, POLYGON…) eklenmez.",
             ),
+        // On by default (docs/adr/0622 §4): a selection brings its kind's ribbon tab to the front,
+        // as AutoCAD's contextual tabs do; the desktop only while the web waits (ADR 0228).
+        boolean("drafting.contextualTabs", true)
+            .hosts(&[Desktop])
+            .text(
+                "Seçimde bağlamsal sekme",
+                "Bir nesne seçilince şeritte türünün sekmesi (Çizgi, Alan, Raster, Nokta bulutu…) öne gelir; seçim kalkınca önceki sekmeye dönülür. Kapalıyken sekme yalnız gösterilir.",
+            ),
         // On by default (docs/adr/0403 §4): a drawing tool's new object on a layer with a
         // published form opens its form; the desktop only while the web waits (ADR 0228).
         boolean("drafting.formOnCreate", true)

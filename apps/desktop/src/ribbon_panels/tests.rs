@@ -11,12 +11,17 @@ use crate::catalog::catalog;
 use crate::files_testing::app_with_drawing;
 
 fn panel(tab: &str, label: &str) -> &'static RibbonPanel {
+    panel_in(Workspace::Gis, tab, label)
+}
+
+/// A panel of a project type's ribbon (docs/adr/0622 §3: each type its own).
+fn panel_in(mode: Workspace, tab: &str, label: &str) -> &'static RibbonPanel {
     catalog()
-        .tabs_in(Workspace::Gis)
-        .chain(catalog().contextual_in(Workspace::Gis))
+        .tabs_in(mode)
+        .chain(catalog().contextual_in(mode))
         .find(|t| t.id == tab)
         .and_then(|t| t.panels.iter().find(|p| p.label == label))
-        .unwrap_or_else(|| panic!("{tab} › {label}"))
+        .unwrap_or_else(|| panic!("{mode:?}: {tab} › {label}"))
 }
 
 /// The newest object's colour.
@@ -35,10 +40,12 @@ fn typed(app: &mut App, text: &str) {
 #[test]
 fn giris_has_the_webs_katmanlar_sablonlar_and_ozellikler_which_step_down_to_one_button() {
     let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
-    let app = app_with_drawing();
-    for label in ["Katmanlar", "Şablonlar", "Özellikler"] {
+    let mut app = app_with_drawing();
+    crate::files_testing::make_cad(&mut app);
+    // CAD's Giriş has Katmanlar and Özellikler, Ekle Şablonlar (docs/adr/0622 §3).
+    for (tab, label) in [("home", "Katmanlar"), ("insert", "Şablonlar"), ("home", "Özellikler")] {
         let group = app
-            .ribbon_group("home", panel("home", label))
+            .ribbon_group(tab, panel_in(Workspace::Cad, tab, label))
             .unwrap_or_else(|| panic!("{label} on the desktop"));
         let w = group.widths();
         // The fields shorten and the buttons lose their labels before the panel folds.
@@ -188,28 +195,49 @@ fn line_type_weight_and_scale_are_the_webs_fields() {
 }
 
 #[test]
-fn the_seçim_tab_shows_with_a_selection_and_gives_the_ribbon_back_when_it_empties() {
+fn a_selection_brings_its_kinds_tab_and_gives_the_ribbon_back_when_it_empties() {
     let mut app = app_with_drawing();
     app.tab = "edit";
     assert_eq!(app.shown_tab(), "edit");
-    // Nothing selected: the contextual tab is not there to open.
+    // Nothing selected: no contextual tab to open.
     let _ = app.update(Message::RibbonTab("selection"));
     assert_eq!(app.shown_tab(), "edit");
+    // A point and a parcel: of two kinds, Seçim, in front by itself (docs/adr/0622 §4).
     app.selection.set(vec![Slot(1), Slot(4)]);
-    let _ = app.update(Message::RibbonTab("selection"));
+    let _ = app.update(Message::RibbonPanel(Event::Color(None)));
     assert_eq!(app.shown_tab(), "selection");
     // The summary: how many, of which kinds, the most first.
     assert_eq!(app.selection_kinds().len(), 2);
-    // Another tab keeps the selection; Seçim again, then the selection goes.
+    // Another tab keeps the selection; its tab again, then the selection goes.
     let _ = app.update(Message::RibbonTab("map"));
     assert_eq!(app.shown_tab(), "map");
     let _ = app.update(Message::RibbonTab("selection"));
+    assert_eq!(app.shown_tab(), "selection");
     let _ = app.update(Message::Run("edit.deselect"));
     assert_eq!(app.shown_tab(), "map", "back to the tab before it");
-    // A new selection does not open it by itself (the web's).
-    app.selection.set(vec![Slot(1)]);
+    // One kind: its own tab. The parcel's Alan, the line and the polyline's Çizgi, the point's Nokta.
+    for (slots, tab) in [
+        (vec![Slot(4)], "ctx.area"),
+        (vec![Slot(2), Slot(3)], "ctx.line"),
+        (vec![Slot(1)], "ctx.point"),
+        (vec![Slot(11)], "ctx.text"),
+        (vec![Slot(13)], "ctx.hatch"),
+    ] {
+        app.selection.set(slots);
+        let _ = app.update(Message::RibbonPanel(Event::Color(None)));
+        assert_eq!(app.shown_tab(), tab);
+    }
+    // With the preference off its tab shows but stays behind (Uygulama ayarları).
+    let _ = app.update(Message::Run("edit.deselect"));
+    let _ = app
+        .settings
+        .choose(&[("drafting.contextualTabs", serde_json::Value::Bool(false))]);
+    app.selection.set(vec![Slot(4)]);
     let _ = app.update(Message::RibbonPanel(Event::Color(None)));
     assert_eq!(app.shown_tab(), "map");
+    assert_eq!(app.selection_tab().map(|t| t.id), Some("ctx.area"));
+    let _ = app.update(Message::RibbonTab("ctx.area"));
+    assert_eq!(app.shown_tab(), "ctx.area");
 }
 
 #[test]

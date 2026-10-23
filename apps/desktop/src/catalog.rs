@@ -24,6 +24,12 @@ const INVENTORY: &str = include_str!("../../../docs/inventory/web.json");
 /// titles, icons and ribbon places, beside the frozen inventory's.
 const ADDITIONS: &str = include_str!("../../../catalog/v1/additions.json");
 
+/// The desktop's ribbon (docs/adr/0622 §3–§4): each project type's tabs and
+/// the tabs a selection's kinds open. Its split buttons by key take the
+/// inventory's (a tool's methods, a family's tools); the web's frozen ribbon
+/// and the additions' places are not read for the desktop any more.
+const RIBBON: &str = include_str!("../../../catalog/v1/ribbon.json");
+
 /// Web command ids the desktop runs. Keep in the order they were ported.
 pub const PORTED: &[&str] = &[
     "file.open",
@@ -755,6 +761,10 @@ pub const PORTED: &[&str] = &[
     "attachment.add",
     "attachment.addLink",
     "file.import.photos",
+    // Yeni pafta and Şablondan pafta from the ribbon's Çıktı (docs/adr/0622 §3): the sheet mode's own
+    // new sheet and template gallery, as the tabs under the drawing open them (sheets.rs).
+    "sheet.new",
+    "sheet.fromTemplate",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the
@@ -796,88 +806,6 @@ fn desktop_commands() -> Vec<Command> {
         pending_note: None,
         category: "Araçlar",
     }]
-}
-
-/// Puts the desktop's own commands in the ribbon: Python konsolu after
-/// Komut satırına git, in the Komut panel (a CAD project's Yönet, a CBS
-/// project's Analiz; docs/adr/0165 §6).
-fn place_desktop_commands(tabs: &mut [Tab]) {
-    let komut = tabs
-        .iter_mut()
-        .filter(|tab| !tab.contextual)
-        .flat_map(|tab| tab.panels.iter_mut())
-        .filter(|panel| {
-            panel.items.iter().any(|item| {
-                matches!(
-                    item,
-                    Item::Command {
-                        id: "commandline.focus",
-                        ..
-                    }
-                )
-            })
-        });
-    for panel in komut {
-        panel.items.push(Item::Command {
-            id: PYTHON_CONSOLE,
-            size: Size::Large,
-        });
-    }
-    // A project keeps its type (docs/adr/0622 §1): no ribbon switches it.
-    for panel in tabs.iter_mut().flat_map(|tab| tab.panels.iter_mut()) {
-        panel
-            .items
-            .retain(|item| !matches!(item, Item::Menu { label: "Proje türü", .. }));
-    }
-    // Seçim süzgeci ▾ holds the kinds the desktop added after the web's (docs/adr/0339 §6: Duvar; 0341 §5: Açıklık;
-    // 0342 §5: Mahal).
-    for item in tabs
-        .iter_mut()
-        .flat_map(|tab| tab.panels.iter_mut())
-        .flat_map(|panel| panel.items.iter_mut())
-    {
-        // CAD exchange commands added after the frozen inventory remain reachable from ribbon menus.
-        if let Item::Menu { label: "İçe aktar", blocks, ids, .. } = item
-            && !ids.contains(&"file.import.dwg")
-        {
-            for (_, commands) in blocks.iter_mut() {
-                if let Some(at) = commands.iter().position(|id| *id == "file.import.dxf") {
-                    commands.insert(at, "file.import.dwg");
-                    break;
-                }
-            }
-            *ids = blocks.iter().flat_map(|(_, commands)| commands.iter().copied()).collect();
-        }
-        if let Item::Menu {
-            label: "Seçim süzgeci",
-            blocks,
-            ..
-        } = item
-            && let Some((_, kinds)) = blocks
-                .iter_mut()
-                .find(|(title, _)| *title == "Seçilebilir türler")
-        {
-            // And Açıklık and Mahal (docs/adr/0341 §5, 0342 §5).
-            for kind in [
-                "edit.selectFilter.wall",
-                "edit.selectFilter.opening",
-                "edit.selectFilter.space",
-                // Aks, Kolon, Merdiven, Rampa (docs/adr/0343 §5).
-                "edit.selectFilter.grid",
-                "edit.selectFilter.column",
-                "edit.selectFilter.stair",
-                "edit.selectFilter.ramp",
-                // Etiket (docs/adr/0344 §5).
-                "edit.selectFilter.tag",
-                // Görünüm işareti (docs/adr/0345 §5).
-                "edit.selectFilter.viewmark",
-            ] {
-                if !kinds.contains(&kind) {
-                    kinds.push(kind);
-                }
-            }
-        }
-    }
 }
 
 /// Where a command stands, from the desktop's point of view.
@@ -1001,6 +929,10 @@ pub struct Tab {
     /// Shown only in a context (the web's Seçim tab, while something is
     /// selected; `contextual_in`), left out of `tabs` and `tabs_in`.
     pub contextual: bool,
+    /// A contextual tab's object kinds (`point`, `polygon` …): it opens when
+    /// every selected object is of one of them; `*` for any selection no
+    /// other tab takes (docs/adr/0622 §4).
+    pub kinds: &'static [&'static str],
     pub panels: Vec<Panel>,
 }
 
@@ -1194,6 +1126,23 @@ impl Catalog {
             .filter(|tab| tab.contextual)
     }
 
+    /// The contextual tab a selection of these kinds opens (docs/adr/0622 §4):
+    /// the first whose kinds hold every one of them, else the one for any
+    /// selection (`*`); none without kinds.
+    pub fn contextual_for(
+        &self,
+        mode: kentos_commands::Workspace,
+        kinds: &[&str],
+    ) -> Option<&Tab> {
+        if kinds.is_empty() {
+            return None;
+        }
+        let fits = |tab: &&Tab| kinds.iter().all(|k| tab.kinds.contains(k));
+        self.contextual_in(mode)
+            .find(fits)
+            .or_else(|| self.contextual_in(mode).find(|tab| tab.kinds.contains(&"*")))
+    }
+
     /// Quick access bar (Kaydet, Geri al, Yinele).
     pub fn quick(&self) -> &[&'static str] {
         &self.quick
@@ -1207,7 +1156,7 @@ impl Catalog {
     /// Reads the embedded inventory and its additions. The strings live as
     /// long as the program (the catalog is built once), which the command
     /// line's borrowed suggestions need.
-    fn load(text: &str, additions: &str) -> Result<Self, String> {
+    fn load(text: &str, additions: &str, ribbon: &str) -> Result<Self, String> {
         let mut raw: RawInventory =
             serde_json::from_str(text).map_err(|e| format!("web envanteri okunamadı: {e}"))?;
         let added: kentos_commands::CatalogAdditions = serde_json::from_str(additions)
@@ -1295,36 +1244,85 @@ impl Catalog {
                 }
             })
             .collect();
-        let mut tabs: Vec<Tab> = raw.layout.ribbon.into_iter().map(tab).collect();
-        place_desktop_commands(&mut tabs);
-        // The ribbon a project not asked its type shows is CBS's.
-        place_additions("gis", &mut tabs, &added.tabs, &added.ribbon);
-        place_methods(&mut tabs, &methods);
-        let mode_tabs = raw
+        // The inventory's split buttons by key: the desktop's ribbon names them (docs/adr/0622 §3).
+        let mut splits: HashMap<String, RawItem> = HashMap::new();
+        for raw_tab in raw
             .layout
-            .ribbon_by_mode
-            .into_iter()
-            .filter_map(|(name, tabs)| {
-                let mode = serde_json::from_value(serde_json::Value::String(name.clone())).ok()?;
-                let mut tabs: Vec<Tab> = tabs.into_iter().map(tab).collect();
-                place_desktop_commands(&mut tabs);
-                place_additions(&name, &mut tabs, &added.tabs, &added.ribbon);
-                place_methods(&mut tabs, &methods);
-                Some((mode, tabs))
-            })
-            .collect();
-        fn tab(tab: RawTab) -> Tab {
+            .ribbon
+            .iter()
+            .chain(raw.layout.ribbon_by_mode.values().flatten())
+        {
+            for raw_item in raw_tab.panels.iter().flat_map(|p| p.items.iter()) {
+                if let RawItem::Split { key, .. } = raw_item
+                    && !key.is_empty()
+                {
+                    splits.entry(key.clone()).or_insert_with(|| raw_item.clone());
+                }
+            }
+        }
+        let ribbon: RawRibbon =
+            serde_json::from_str(ribbon).map_err(|e| format!("şerit okunamadı: {e}"))?;
+        if ribbon.format != "kentos.ribbon" || ribbon.version != 1 {
+            return Err(format!(
+                "şeridin biçimi tanınmadı: {} sürüm {}",
+                ribbon.format, ribbon.version
+            ));
+        }
+        let mut mode_tabs: Vec<(kentos_commands::Workspace, Vec<Tab>)> = Vec::new();
+        for (name, raw_tabs) in ribbon.tabs {
+            let Ok(mode) = serde_json::from_value(serde_json::Value::String(name.clone())) else {
+                continue;
+            };
+            let mut tabs: Vec<Tab> = raw_tabs
+                .into_iter()
+                .map(|t| tab(t.id, t.label, false, Vec::new(), t.panels, &splits))
+                .collect();
+            for c in ribbon
+                .contextual
+                .iter()
+                .filter(|c| c.modes.is_empty() || c.modes.contains(&name))
+            {
+                tabs.push(tab(
+                    c.id.clone(),
+                    c.label.clone(),
+                    true,
+                    c.kinds.clone(),
+                    c.panels.clone(),
+                    &splits,
+                ));
+            }
+            place_methods(&mut tabs, &methods);
+            mode_tabs.push((mode, tabs));
+        }
+        // The ribbon a project not asked its type shows is CBS's.
+        let tabs = mode_tabs
+            .iter()
+            .find(|(m, _)| *m == kentos_commands::Workspace::Gis)
+            .map(|(_, tabs)| tabs.clone())
+            .unwrap_or_default();
+        fn tab(
+            id: String,
+            label: String,
+            contextual: bool,
+            kinds: Vec<String>,
+            panels: Vec<RawPanel>,
+            splits: &HashMap<String, RawItem>,
+        ) -> Tab {
             Tab {
-                id: leak(tab.id),
-                label: leak(tab.label),
-                contextual: tab.contextual.is_some(),
-                panels: tab
-                    .panels
+                id: leak(id),
+                label: leak(label),
+                contextual,
+                kinds: leak_list(kinds),
+                panels: panels
                     .into_iter()
                     .map(|panel| Panel {
                         label: leak(panel.label),
                         icon: icons::from_web(panel.icon.as_deref()),
-                        items: panel.items.into_iter().map(item).collect(),
+                        items: panel
+                            .items
+                            .into_iter()
+                            .map(|raw| item(resolve(raw, splits)))
+                            .collect(),
                         overflow: panel.overflow.into_iter().map(leak).collect(),
                         keep: panel.keep,
                         launcher: panel.launcher.map(|l| Launcher {
@@ -1387,7 +1385,7 @@ impl Catalog {
 pub fn catalog() -> &'static Catalog {
     static CATALOG: OnceLock<Catalog> = OnceLock::new();
     CATALOG.get_or_init(|| {
-        Catalog::load(INVENTORY, ADDITIONS).unwrap_or_else(|error| {
+        Catalog::load(INVENTORY, ADDITIONS, RIBBON).unwrap_or_else(|error| {
             // The embedded file is checked by a test; a broken build still opens.
             eprintln!("{error}");
             Catalog::default()
@@ -1471,73 +1469,22 @@ fn added_command(c: &kentos_commands::AddedCommand) -> Command {
     }
 }
 
-/// Puts the additions' ribbon places of a project type (`cad`, `gis`) in its tabs: a new panel after
-/// the one it names (else last), or buttons at the end of a panel the tab has.
-fn place_additions(
-    mode: &str,
-    tabs: &mut Vec<Tab>,
-    added: &[kentos_commands::AddedTab],
-    places: &[kentos_commands::RibbonAddition],
-) {
-    // The file's own tabs first, empty, after the tab named (docs/adr/0339 §6).
-    for t in added.iter().filter(|t| t.modes.iter().any(|m| m == mode)) {
-        let at = t
-            .after
-            .as_deref()
-            .and_then(|a| tabs.iter().position(|x| x.id == a))
-            .map_or(tabs.len(), |i| i + 1);
-        tabs.insert(
-            at,
-            Tab {
-                id: leak(t.id.clone()),
-                label: leak(t.label.clone()),
-                contextual: false,
-                panels: Vec::new(),
+/// A split button named by its key, made the inventory's with this size
+/// (docs/adr/0622 §3); any other item as it is.
+fn resolve(raw: RawItem, splits: &HashMap<String, RawItem>) -> RawItem {
+    match raw {
+        RawItem::SplitRef { split, size } => match splits.get(&split) {
+            Some(RawItem::Split { split: entries, key, .. }) => RawItem::Split {
+                split: entries.clone(),
+                key: key.clone(),
+                size,
             },
-        );
-    }
-    let size = |size: &str| match size {
-        "large" => Size::Large,
-        "lead" => Size::Lead,
-        _ => Size::Small,
-    };
-    for r in places.iter().filter(|r| r.modes.iter().any(|m| m == mode)) {
-        let Some(tab) = tabs.iter_mut().find(|t| t.id == r.tab) else {
-            continue;
-        };
-        let items = r.items.iter().map(|i| Item::Command {
-            id: leak(i.command.clone()),
-            size: size(&i.size),
-        });
-        match (&r.label, &r.into) {
-            (Some(label), _) => {
-                let at = r
-                    .after
-                    .as_deref()
-                    .and_then(|a| tab.panels.iter().position(|p| p.label == a))
-                    .map_or(tab.panels.len(), |i| i + 1);
-                tab.panels.insert(
-                    at,
-                    Panel {
-                        label: leak(label.clone()),
-                        icon: icons::from_web(r.icon.as_deref()),
-                        items: items.collect(),
-                        overflow: r.overflow.iter().map(|c| leak(c.clone())).collect(),
-                        keep: false,
-                        launcher: None,
-                    },
-                );
-            }
-            (None, Some(into)) => {
-                if let Some(panel) = tab.panels.iter_mut().find(|p| p.label == into.as_str()) {
-                    panel.items.extend(items);
-                    panel
-                        .overflow
-                        .extend(r.overflow.iter().map(|c| leak(c.clone())));
-                }
-            }
-            (None, None) => {}
-        }
+            // A key the inventory lacks: a test keeps every key known; a broken build still opens.
+            _ => RawItem::Builtin {
+                builtin: String::new(),
+            },
+        },
+        other => other,
     }
 }
 
@@ -1597,6 +1544,8 @@ fn item(raw: RawItem) -> Item {
             }
         }
         RawItem::Builtin { builtin } => Item::Builtin(leak(builtin)),
+        // Resolved before (`resolve`).
+        RawItem::SplitRef { .. } => Item::Builtin(""),
     }
 }
 
@@ -1714,13 +1663,44 @@ struct RawMenu {
 
 #[derive(Deserialize)]
 struct RawTab {
+    #[allow(dead_code)]
+    id: String,
+    #[allow(dead_code)]
+    label: String,
+    panels: Vec<RawPanel>,
+}
+
+/// The desktop's ribbon file (`catalog/v1/ribbon.json`, docs/adr/0622 §3).
+#[derive(Deserialize)]
+struct RawRibbon {
+    format: String,
+    version: u32,
+    /// Each project type's tabs, by its id (`cad`, `gis`).
+    tabs: std::collections::BTreeMap<String, Vec<RawRibbonTab>>,
+    /// The tabs a selection opens, by the kinds of its objects (docs/adr/0622 §4).
+    #[serde(default)]
+    contextual: Vec<RawContextual>,
+}
+
+#[derive(Deserialize)]
+struct RawRibbonTab {
     id: String,
     label: String,
-    contextual: Option<String>,
     panels: Vec<RawPanel>,
 }
 
 #[derive(Deserialize)]
+struct RawContextual {
+    id: String,
+    label: String,
+    kinds: Vec<String>,
+    /// The project types that have it; none: every type.
+    #[serde(default)]
+    modes: Vec<String>,
+    panels: Vec<RawPanel>,
+}
+
+#[derive(Deserialize, Clone)]
 struct RawPanel {
     label: String,
     #[serde(default)]
@@ -1734,18 +1714,23 @@ struct RawPanel {
     launcher: Option<RawLauncher>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 struct RawLauncher {
     title: String,
     tab: Option<String>,
     command: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(untagged)]
 enum RawItem {
     Command {
         command: String,
+        size: String,
+    },
+    /// The inventory's split button with this key (docs/adr/0622 §3).
+    SplitRef {
+        split: String,
         size: String,
     },
     Split {
@@ -1767,7 +1752,7 @@ enum RawItem {
     },
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 struct RawSplit {
     command: String,
     label: String,
@@ -1783,7 +1768,7 @@ struct RawSplit {
     icon: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 struct RawBlock {
     /// Its title; '' for an untitled block.
     #[serde(default)]
@@ -1791,7 +1776,7 @@ struct RawBlock {
     items: Vec<RawEntry>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(untagged)]
 enum RawEntry {
     Command(String),
@@ -1862,7 +1847,7 @@ mod tests {
 
     #[test]
     fn the_embedded_inventory_reads_and_every_ribbon_command_is_known() {
-        let catalog = Catalog::load(INVENTORY, ADDITIONS).expect("the web inventory parses");
+        let catalog = Catalog::load(INVENTORY, ADDITIONS, RIBBON).expect("the web inventory parses");
         assert!(
             catalog.commands().len() > 100,
             "the web has more commands than this"
@@ -1894,7 +1879,7 @@ mod tests {
     /// the circle tool, then 2N), a family's tools their titles (docs/adr/0032).
     #[test]
     fn split_entries_keep_their_methods() {
-        let catalog = Catalog::load(INVENTORY, ADDITIONS).expect("the web inventory parses");
+        let catalog = Catalog::load(INVENTORY, ADDITIONS, RIBBON).expect("the web inventory parses");
         // Whichever project type's ribbon shows them (CBS has no Dikdörtgen).
         let splits: Vec<&Vec<Entry>> = catalog
             .every_tab()
@@ -1993,7 +1978,7 @@ mod tests {
     /// çizgi's) is still known.
     #[test]
     fn every_added_method_is_an_option_its_tool_takes() {
-        let catalog = Catalog::load(INVENTORY, ADDITIONS).expect("the catalog loads");
+        let catalog = Catalog::load(INVENTORY, ADDITIONS, RIBBON).expect("the catalog loads");
         assert!(catalog.added_methods().len() >= 20);
         for m in catalog.added_methods() {
             let Some(option) = m.option else { continue };
@@ -2073,7 +2058,7 @@ mod tests {
                 "{name}: every element is drawn"
             );
         }
-        let catalog = Catalog::load(INVENTORY, ADDITIONS).expect("the catalog loads");
+        let catalog = Catalog::load(INVENTORY, ADDITIONS, RIBBON).expect("the catalog loads");
         for c in &added.commands {
             let got = catalog
                 .get(&c.id)
@@ -2084,51 +2069,128 @@ mod tests {
                 c.status == kentos_commands::AddedStatus::Implemented
             );
         }
-        // Adres: after Altlık in CBS's Harita, last in CAD's Ekle; Adres ara in both types' Paneller.
+        // Adres (docs/adr/0622 §3): Adres ara in CBS's Harita › Sorgu and CAD's Ekle › Adres, the
+        // address data in CBS's Analiz › Adres.
         use kentos_commands::Workspace;
-        let labels = |mode: Workspace, tab: &str| -> Vec<&str> {
+        let holds = |mode: Workspace, tab: &str, panel: &str, id: &str| {
             catalog
                 .tabs_in(mode)
                 .find(|t| t.id == tab)
-                .map(|t| t.panels.iter().map(|p| p.label).collect())
-                .unwrap_or_default()
+                .and_then(|t| t.panels.iter().find(|p| p.label == panel))
+                .is_some_and(|p| {
+                    p.items
+                        .iter()
+                        .any(|i| matches!(i, Item::Command { id: c, .. } if *c == id))
+                })
         };
-        let map = labels(Workspace::Gis, "map");
-        let at = map
-            .iter()
-            .position(|l| *l == "Adres")
-            .expect("CBS › Harita › Adres");
-        assert_eq!(map[at - 1], "Altlık");
-        assert_eq!(labels(Workspace::Cad, "insert").last(), Some(&"Adres"));
-        for mode in [Workspace::Cad, Workspace::Gis] {
-            let view = catalog
-                .tabs_in(mode)
-                .find(|t| t.id == "view")
-                .expect("Görünüm");
-            let paneller = view
-                .panels
-                .iter()
-                .find(|p| p.label == "Paneller")
-                .expect("Paneller");
-            assert!(paneller.items.iter().any(|i| matches!(
-                i,
-                Item::Command {
-                    id: "address.search",
-                    ..
+        assert!(holds(Workspace::Gis, "map", "Sorgu", "address.search"));
+        assert!(holds(Workspace::Cad, "insert", "Adres", "address.search"));
+        assert!(holds(Workspace::Gis, "analysis", "Adres", "address.data"));
+        // A project not asked its type shows CBS's ribbon.
+        assert!(catalog.tabs().any(|t| t.id == "map"));
+    }
+
+    /// The desktop's ribbon (docs/adr/0622 §3) loses nothing the web's ribbon and the additions placed
+    /// that the desktop runs: each such command is on a tab, a contextual tab, a split, a menu or a ▾
+    /// list. İşlemler's tools stay in the toolbox (and their contextual tabs); the type switches are
+    /// gone with the switching (§1); what does not run here is left out.
+    #[test]
+    fn the_ribbon_keeps_every_command_the_old_one_placed() {
+        use std::collections::BTreeSet;
+        let raw: serde_json::Value = serde_json::from_str(INVENTORY).expect("the inventory parses");
+        let added: serde_json::Value = serde_json::from_str(ADDITIONS).expect("the additions parse");
+        let mut old: BTreeSet<String> = BTreeSet::new();
+        fn walk(items: &serde_json::Value, out: &mut BTreeSet<String>) {
+            for item in items.as_array().into_iter().flatten() {
+                if let Some(id) = item.as_str() {
+                    out.insert(id.to_owned());
+                } else if let Some(id) = item["command"].as_str() {
+                    out.insert(id.to_owned());
+                } else if let Some(entries) = item["split"].as_array() {
+                    for e in entries {
+                        out.extend(e["command"].as_str().map(str::to_owned));
+                    }
+                } else if let Some(blocks) = item["blocks"].as_array() {
+                    for b in blocks {
+                        walk(&b["items"], out);
+                    }
+                } else if item["items"].is_array() {
+                    walk(&item["items"], out);
                 }
-            )));
+            }
         }
-        // A project not asked its type shows CBS's ribbon, the additions too.
-        assert!(
-            catalog
-                .tabs()
-                .any(|t| t.id == "map" && t.panels.iter().any(|p| p.label == "Adres"))
-        );
+        for tabs in raw["layout"]["ribbonByMode"].as_object().expect("the modes").values() {
+            for tab in tabs.as_array().into_iter().flatten() {
+                for panel in tab["panels"].as_array().into_iter().flatten() {
+                    walk(&panel["items"], &mut old);
+                    walk(&panel["overflow"], &mut old);
+                }
+            }
+        }
+        for place in added["ribbon"].as_array().into_iter().flatten() {
+            walk(&place["items"], &mut old);
+            walk(&place["overflow"], &mut old);
+        }
+        let catalog = Catalog::load(INVENTORY, ADDITIONS, RIBBON).expect("the catalog loads");
+        let mut now: BTreeSet<&str> = BTreeSet::new();
+        for tab in catalog
+            .mode_tabs
+            .iter()
+            .flat_map(|(_, tabs)| tabs.iter())
+        {
+            for panel in &tab.panels {
+                now.extend(panel.overflow.iter().copied());
+                if let Some(Launcher {
+                    target: LauncherTarget::Command(id),
+                    ..
+                }) = &panel.launcher
+                {
+                    now.insert(id);
+                }
+                for item in &panel.items {
+                    match item {
+                        Item::Command { id, .. } => {
+                            now.insert(id);
+                        }
+                        Item::Split { entries, .. } => now.extend(entries.iter().map(|e| e.id)),
+                        Item::Menu { ids, .. } => now.extend(ids.iter().copied()),
+                        Item::Builtin(_) => {}
+                    }
+                }
+            }
+        }
+        // The drafting aids are the status bar's lamps; Yardım's commands its ? menu and Komut ara.
+        now.extend(crate::view::STATUS_AIDS.iter().map(|(id, _)| *id));
+        now.extend(catalog.menu("help").iter().flatten().copied());
+        now.insert("view.commandSearch");
+        let lost: Vec<&String> = old
+            .iter()
+            .filter(|id| !now.contains(id.as_str()))
+            .filter(|id| !id.starts_with("processing.run.") && !id.starts_with("workspace."))
+            .filter(|id| catalog.get(id).is_some_and(|c| c.standing == Standing::Ported))
+            .collect();
+        assert!(lost.is_empty(), "the ribbon lost {lost:?}");
+        // And every İşlemler tool the old ribbon placed is a tool the toolbox lists.
+        let app = crate::files_testing::app_with_drawing();
+        let tools: BTreeSet<String> = app
+            .processing
+            .registry
+            .tools()
+            .iter()
+            .map(|t| t.id.to_string())
+            .collect();
+        let gone: Vec<&String> = old
+            .iter()
+            .filter_map(|id| id.strip_prefix("processing.run.").map(|t| (id, t)))
+            .filter(|(id, t)| !tools.contains(*t) && catalog.get(id).is_some_and(|c| c.standing == Standing::Ported))
+            .map(|(id, _)| id)
+            .collect();
+        assert!(gone.is_empty(), "not in the toolbox: {gone:?}");
     }
 
     #[test]
     fn every_ported_command_is_a_web_command() {
-        let catalog = Catalog::load(INVENTORY, ADDITIONS).expect("the web inventory parses");
+        let catalog = Catalog::load(INVENTORY, ADDITIONS, RIBBON).expect("the web inventory parses");
         for id in PORTED {
             assert!(
                 catalog.get(id).is_some(),
@@ -2142,7 +2204,7 @@ mod tests {
     /// (the text field's own), each also a shortcut of its command.
     #[test]
     fn chords_that_work_in_text_fields_come_from_the_web() {
-        let catalog = Catalog::load(INVENTORY, ADDITIONS).expect("the web inventory parses");
+        let catalog = Catalog::load(INVENTORY, ADDITIONS, RIBBON).expect("the web inventory parses");
         let in_input: Vec<&str> = catalog
             .commands()
             .iter()

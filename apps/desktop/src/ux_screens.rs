@@ -269,3 +269,160 @@ fn scale_and_type() {
         }
     }
 }
+
+/// Each tab's panels' widths at their four levels (labels … icons), for
+/// fitting the ribbon to 1440 and 1100 pixels (docs/adr/0622 §3).
+#[test]
+#[ignore = "a measure for the arrangement, run by hand"]
+fn ribbon_widths() {
+    let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
+    kentos_ui::theme::typography::set(kentos_ui::theme::typography::Typography::DEFAULT);
+    kentos_ui::theme::typography::load();
+    for (cad, kind) in [(true, "CAD"), (false, "CBS")] {
+        let app = booted("dark", cad);
+        let tabs: Vec<&'static crate::catalog::Tab> = app
+            .ribbon_tabs()
+            .chain(app.contextual_tabs())
+            .collect();
+        for tab in tabs {
+            let groups: Vec<_> = tab
+                .panels
+                .iter()
+                .filter_map(|p| app.ribbon_group(tab.id, p).map(|g| (p.label, g)))
+                .collect();
+            let widths: Vec<[f32; 4]> = groups.iter().map(|(_, g)| g.widths()).collect();
+            let total = |level: usize| widths.iter().map(|w| w[level]).sum::<f32>();
+            let keep: Vec<bool> = groups.iter().map(|(_, g)| g.keeps()).collect();
+            let (l1440, _) = kentos_ui::widget::ribbon::fit(&widths, &keep, 1440.0);
+            let (l1100, over) = kentos_ui::widget::ribbon::fit(&widths, &keep, 1100.0);
+            println!(
+                "{kind} {:<14} L0 {:>5.0} L1 {:>5.0} L2 {:>5.0} L3 {:>5.0} | 1440 {:?} | 1100 {:?}{}",
+                tab.id,
+                total(0),
+                total(1),
+                total(2),
+                total(3),
+                l1440,
+                l1100,
+                if over { " TAŞAR" } else { "" }
+            );
+            for ((label, _), w) in groups.iter().zip(&widths) {
+                println!("      {label:<22} {:>5.0} {:>5.0} {:>5.0} {:>5.0}", w[0], w[1], w[2], w[3]);
+            }
+        }
+    }
+}
+
+/// The tab a selection opens, by its objects' kind (docs/adr/0622 §4): a
+/// line, an area, a point, a text, a mixed selection, a raster and a point
+/// cloud selected, the tab in front: `duzen-baglam-<tür>-*`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn contextual_tabs() {
+    use crate::tools_scenes::{Objects, open};
+
+    let out = out();
+    for (size, theme, suffix) in frames() {
+        for (cad, kind) in [(true, "cad"), (false, "cbs")] {
+            let scene = |app: &mut App| {
+                let mut o = Objects::new();
+                o.path(
+                    "parsel",
+                    &[[0.0, 0.0], [40.0, 0.0], [44.0, 32.0], [2.0, 30.0]],
+                    true,
+                );
+                o.path("yol", &[[-20.0, -10.0], [30.0, -12.0], [70.0, 5.0]], false);
+                o.point("cizim", [50.0, 20.0], Some(101.5));
+                o.text("cizim", [8.0, 12.0], "101/7", 2.5, 0.0);
+                open(app, o);
+                if cad {
+                    make_cad(app);
+                }
+            };
+            for (word, picked) in [
+                ("alan", vec![1u32]),
+                ("cizgi", vec![2]),
+                ("nokta", vec![3]),
+                ("yazi", vec![4]),
+                ("karisik", vec![1, 2, 3]),
+            ] {
+                let name = format!("duzen-baglam-{kind}-{word}{suffix}");
+                if !wanted(&name) {
+                    continue;
+                }
+                let mut app = booted(theme, cad);
+                scene(&mut app);
+                select_ids(&mut app, &picked);
+                let mut snapshot = Snapshot::new(size).expect("a renderer");
+                snapshot.settle(&mut app, App::view, &mut update);
+                save(&mut snapshot, &app, &out, &name);
+            }
+            let name = format!("duzen-baglam-{kind}-raster{suffix}");
+            if wanted(&name) {
+                let mut app = booted(theme, cad);
+                open_rasters(&mut app);
+                if cad {
+                    make_cad(&mut app);
+                }
+                select_kind(&mut app, "raster");
+                let mut snapshot = Snapshot::new(size).expect("a renderer");
+                snapshot.settle(&mut app, App::view, &mut update);
+                save(&mut snapshot, &app, &out, &name);
+            }
+            let name = format!("duzen-baglam-{kind}-bulut{suffix}");
+            if wanted(&name) {
+                let mut app = booted(theme, cad);
+                crate::cloud_scenes::opened(&mut app, [-40.0, -40.0, 260.0, 220.0]);
+                if cad {
+                    make_cad(&mut app);
+                }
+                select_kind(&mut app, "pointcloud");
+                let mut snapshot = Snapshot::new(size).expect("a renderer");
+                snapshot.settle(&mut app, App::view, &mut update);
+                save(&mut snapshot, &app, &out, &name);
+            }
+        }
+    }
+}
+
+/// Objects selected by their ids in the drawing (a scene's own numbers), as clicks select them; the tab follows.
+fn select_ids(app: &mut App, ids: &[u32]) {
+    app.selection
+        .set(ids.iter().map(|id| kentos_domain::Slot(*id)));
+    app.follow_selection_tab();
+}
+
+/// The drawing's first object of a kind selected; the tab follows.
+fn select_kind(app: &mut App, kind: &str) {
+    let slot = app.document.as_ref().and_then(|doc| {
+        doc.model
+            .entities()
+            .find(|e| e.kind() == kind)
+            .map(|e| kentos_domain::Slot(e.base().id))
+    });
+    if let Some(slot) = slot {
+        app.selection.set(vec![slot]);
+    }
+    app.follow_selection_tab();
+}
+
+/// The rasters' shared drawing (fixtures/interaction/v1/rasters.kcad) beside its files, fitted.
+fn open_rasters(app: &mut App) {
+    const DRAWING: &str = include_str!("../../../fixtures/interaction/v1/rasters.kcad");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/interaction/v1/rasters.kcad");
+    let doc = crate::document::Document::new(snapshot, Some(path)).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let (x0, y0) = (487_200.0, 4_420_600.0);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: x0 - 360.0,
+            min_y: y0 - 540.0,
+            max_x: x0 + 800.0,
+            max_y: y0 + 20.0,
+        },
+        24.0,
+    );
+}

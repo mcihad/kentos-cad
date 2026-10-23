@@ -228,17 +228,15 @@ impl App {
             tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
             ribbon = ribbon.tab(tab.label, tab.id == shown, Message::RibbonTab(tab.id));
         }
-        // Seçim, with the count, while something is selected (the web's contextual tab).
-        if !self.selection.is_empty() {
-            for tab in self.contextual_tabs() {
-                tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
-                ribbon = ribbon.contextual_tab(
-                    tab.label,
-                    self.selection.len().to_string(),
-                    tab.id == shown,
-                    Message::RibbonTab(tab.id),
-                );
-            }
+        // The selection's tab, by its objects' kind, with the count (docs/adr/0622 §4).
+        if let Some(tab) = self.selection_tab() {
+            tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
+            ribbon = ribbon.contextual_tab(
+                tab.label,
+                self.selection.len().to_string(),
+                tab.id == shown,
+                Message::RibbonTab(tab.id),
+            );
         }
         if self.sheets.is_active() {
             tab_tips.push(None);
@@ -2026,7 +2024,7 @@ pub(crate) fn checklist_of(
 }
 
 /// The status bar's drafting aids, as the web's (`StatusBar.ts`).
-const STATUS_AIDS: [(&str, &str); 10] = [
+pub(crate) const STATUS_AIDS: [(&str, &str); 10] = [
     ("draft.snap", "Kenet"),
     ("draft.grid", "Izgara"),
     ("draft.ortho", "Orto"),

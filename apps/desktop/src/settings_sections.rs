@@ -112,6 +112,7 @@ impl Section {
                 "drafting.commandBar",
                 "drafting.hoverInfo",
                 "drafting.autocadAliases",
+                "drafting.contextualTabs",
                 "drafting.formOnCreate",
                 "appearance.startScreen",
             ],

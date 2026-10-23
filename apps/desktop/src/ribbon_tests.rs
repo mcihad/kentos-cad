@@ -16,15 +16,10 @@ fn groups(app: &App, tab: &'static str) -> Vec<Group<'static, Message>> {
     let Some(spec) = app.ribbon_tabs().find(|t| t.id == tab) else {
         return Vec::new();
     };
-    let mut groups: Vec<Group<'static, Message>> = spec
-        .panels
+    spec.panels
         .iter()
         .filter_map(|panel| app.ribbon_group(tab, panel))
-        .collect();
-    if tab == "view" {
-        groups.extend(app.appearance_groups());
-    }
-    groups
+        .collect()
 }
 
 fn fitted(app: &App, tab: &'static str, width: f32) -> (Vec<u8>, bool) {
@@ -41,14 +36,24 @@ fn every_tab_fits_1100_pixels_without_scrolling() {
     // The interface's own typefaces, as the app has them (main.rs): alone, without them, the
     // words are measured in a fallback face some 8 % narrower than in the whole run.
     typography::load();
-    let mut app = app_with_drawing();
-    // In every project type: each has its own ribbon (modes.rs).
+    // In every project type: each has its own ribbon (modes.rs), and keeps it (docs/adr/0622 §1).
     for mode in ["workspace.cad", "workspace.gis"] {
+        let mut app = app_with_drawing();
         let _ = app.update(Message::Run(mode));
-        let tabs: Vec<&'static str> = app.ribbon_tabs().map(|t| t.id).collect();
+        let tabs: Vec<&'static str> = app
+            .ribbon_tabs()
+            .chain(app.contextual_tabs())
+            .map(|t| t.id)
+            .collect();
         for tab in tabs {
             let (levels, overflow) = fitted(&app, tab, 1100.0);
             assert!(!overflow, "{mode} {tab}: does not fit 1100 px ({levels:?})");
+            // At 1440 every button keeps its name: no panel down to icons (docs/adr/0622 §3).
+            let (levels, _) = fitted(&app, tab, 1440.0);
+            assert!(
+                levels.iter().all(|&l| l <= 1),
+                "{mode} {tab}: icons only at 1440 px ({levels:?})"
+            );
             // Wide windows show every panel as designed. CBS's Veri, with Alt türler and Değer
             // bileşimleri (docs/adr/0422, 0423), is 3474 px in the interface's typefaces; its
             // Harita, twelve panels with Adres (docs/adr/0229 §13), 3292 px; Veri with the bound layers'
@@ -68,7 +73,9 @@ fn every_tab_fits_1100_pixels_without_scrolling() {
 fn panels_step_down_from_the_right_and_giris_keeps_its_drawing_tools() {
     let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
     typography::set(Typography::DEFAULT);
-    let app = app_with_drawing();
+    let mut app = app_with_drawing();
+    // CAD's Giriş (docs/adr/0622 §3): Çizim and Değiştir kept.
+    crate::files_testing::make_cad(&mut app);
     let groups = groups(&app, "home");
     assert!(groups.len() > 2);
     let widths: Vec<[f32; 4]> = groups.iter().map(Group::widths).collect();
@@ -93,20 +100,30 @@ fn panels_step_down_from_the_right_and_giris_keeps_its_drawing_tools() {
 }
 
 #[test]
-fn the_view_tab_carries_the_interface_groups_and_drops_the_webs_engine() {
+fn the_view_tab_leaves_the_look_to_the_settings_and_drops_the_webs_engine() {
     let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
     let app = app_with_drawing();
     let tab = catalog().tabs().find(|t| t.id == "view").expect("Görünüm");
-    let web = tab
+    // Its own panels only: the theme's tiles, the typefaces and the ground are Uygulama ayarları'
+    // (docs/adr/0622 §3); the theme's commands stay in Görünüş ▸ Tema.
+    let shown = tab
         .panels
         .iter()
         .filter_map(|p| app.ribbon_group("view", p))
         .count();
-    assert_eq!(
-        groups(&app, "view").len(),
-        web + 5,
-        "Tema, Çizim zemini, Yazı tipi, Eş aralıklı, Yazı boyutu"
-    );
+    assert_eq!(groups(&app, "view").len(), shown);
+    let menus: Vec<&str> = tab
+        .panels
+        .iter()
+        .flat_map(|p| p.items.iter())
+        .filter_map(|i| match i {
+            crate::catalog::Item::Menu { label, .. } => Some(*label),
+            _ => None,
+        })
+        .collect();
+    assert!(menus.contains(&"Tema"), "{menus:?}");
+    assert!(!menus.contains(&"Çizim motoru"), "the web's engine: {menus:?}");
+    assert!(!menus.contains(&"Proje türü"), "a project keeps its type: {menus:?}");
 }
 
 /// The interface in the web's other typefaces for the owner (TODOS.md

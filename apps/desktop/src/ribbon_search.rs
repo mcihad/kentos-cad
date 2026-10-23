@@ -356,7 +356,7 @@ mod tests {
             .iter()
             .position(|r| r.title == "Ölçülerim…")
             .expect("found");
-        assert!(rows[at].detail.contains("Modeller"), "{}", rows[at].detail);
+        assert!(rows[at].detail.contains("İşlemler"), "{}", rows[at].detail);
         let _ = app.update(Message::RibbonSearchReveal(at));
         assert_eq!(app.ribbon_flash_model.as_deref(), Some("user.olculer"));
         let _ = app.update(Message::RibbonSearch("ölçülerim".into()));

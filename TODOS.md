@@ -76,6 +76,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - CAD-SHEET-29 (ADR 0619): Sabit kaynak revizyonu, resim sürümleri ve PDF/PNG/SVG provenance; eski denetimi yeniden kullanma engeli web dönüşünde bağlanacak.
 - CAD-SHEET-30 (ADR 0620): Ortak PDF üretimi otomasyonda doğrulandı; web dönüşünde tarayıcı fiziksel print diyalogu ortak çıktı dosyasına bağlanacak.
 - CAD içe aktarma fiziksel ölçeği (ADR 0621): Kaynak birimini bütün projelerde uygulama, bilinen uzunluk referansı ve gerçek model kapsamı ortak çekirdekte; web dönüşünde birim/kalibrasyon penceresi ve yakınlaşma bu sözleşmeye bağlanacak. DWG CAD Ekle/İçe aktar grubunda doğrudan, Dosya ve CBS Veri/Dosya alışverişi gruplarının İçe aktar menülerinde; web dönüşünde aynı giriş eklenecek.
+- Arayüz düzeni şeridi (ADR 0622 §3–§4): masaüstünün şeridi `catalog/v1/ribbon.json`'dadır (CAD ve CBS'nin sekmeleri,
+  seçimin türüne göre bağlamsal sekmeler). Web'in şeridi dönüşte bu dosyadan kurulmalı; `fixtures/shell/v1/ribbon.json`'un
+  `tabs`'ı yeni sekmeleri tutar. Görünüm'deki tema, yazı tipi ve zemin kartları web'de de şeritten Uygulama ayarları'na
+  gider. Özellikler panelinin çizim ölçeği durum çubuğuna geçer.
 - Arayüz düzeni (ADR 0622, dal `ux/arayuz-duzeni`): proje türü projeyle başlar ve değişmez. Web'in durum çubuğundaki tür hücresi ve Görünüm › Proje türü menüsü yalnız türü sorulmamış projede seçim yapmalı. Yeni proje sihirbazında metrelik CAD çizimi plan ölçekleriyle (`PLAN_SCALES`, varsayılan 1:1000), santimetre 1:50 ile başlar. Özet "Yazılar" satırını söyler ve sayfa yazı ile ölçü yüksekliklerini alır (`model/newProjectWizard.ts`, ortak `fixtures/project/v1/wizard.json`). Şeridin ölçek listesi birimle gelir (`fixtures/shell/v1/ribbon.json`'un `unit`'i). CAD'in durum çubuğu çizim ölçeğini gösterir.
 
 - CAD-SHEET-06 (ADR 0591): ortak ops şeması ve asset/inversePictures sözleşmesi hazır. Web yeniden açılınca pafta komut işleyicisi baytların birleştirme/tam değiştirme ve ters bayt politikasını izlemeli; harita yazısı ve zengin stil çıktı eşdeğerliği kendi çıktı yolunda sınanmalı. Native CPU/SVG rasterizer web'e taşınmış sayılmaz.

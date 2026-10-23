@@ -27,13 +27,25 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
     - bağımsız Python başvuruları;
     - ortak fixture'lar ve etkileşim izleri (masaüstünde oynatılır);
     - WASM bağlayıcıları yalnız derlenir, yeni işleve bağlayıcı yazılmaz.
-  - Yeni komutların arayüz kaydı (ad, ikon, açıklama, kısayol, şeritteki yer) web'in envanteri yerine `catalog/v1/additions.json`'dadır
-    (ilk tüketicisi `GIS-40`).
+  - Yeni komutların arayüz kaydı (ad, ikon, açıklama, kısayol) web'in envanteri yerine `catalog/v1/additions.json`'dadır
+    (ilk tüketicisi `GIS-40`); şeritteki yeri masaüstünün şerididir: `catalog/v1/ribbon.json` (`scripts/ui/ribbon.py`, ADR 0622).
   - Kod, ileride mobil (önce görüntüleme) ve web eklenecekmiş gibi modüler kalır:
     - hesap `crates/shared`'te;
     - arayüzden bağımsız uygulama katmanı `crates/native`'te (Iced, wgpu ve pencere bilmez; `pnpm arch:deps` zorlar);
     - çizim hattı `crates/render/wgpu`'da;
     - Iced yalnız `crates/ui`'da ve kabuklarda. Masaüstü kabuğu incedir: sunum olmayan iş `crates/native`'e ya da `crates/shared`'e yazılır.
+- **Arayüz düzeni (sahibin isteği, 23 Ekim 2026; [ADR 0622](docs/adr/0622-interface-arrangement.md), dal `ux/arayuz-duzeni`).**
+  - Proje türü projeyle başlar, değişmez. CAD ile CBS arasında uygulama içinde geçiş yoktur; ileride dönüştürme olacak.
+  - Metrelik CAD çizimi plandır (1:1000 ile başlar). Sihirbaz yazı yüksekliklerini çizimdeki boylarıyla söyler. CAD'in durum
+    çubuğunda çizim ölçeği vardır.
+  - Masaüstünün şeridi kendi dosyasındadır (`catalog/v1/ribbon.json`), web'in donmuş şeridini okumaz:
+    - CAD sekmeleri: Dosya, Giriş, Plan, Ölçme, Ekle, Açıklama, Değiştir, Mimari, Görünüm, Yönet, Çıktı.
+    - CBS sekmeleri: Dosya, Harita, Düzenle, Veri, Analiz, Ölçme, Görünüm, Çıktı.
+    - Her düğme 1440 px'te yazılıdır. Bir komut ana sekmelerde bir kez geçer.
+    - İşlem araçları ana sekmelerde değil, araç kutusunda ve bağlamsal sekmelerdedir.
+  - Seçim türüne göre bağlamsal sekme açılır ve öne gelir (`drafting.contextualTabs`): Nokta, Çizgi, Alan, Yazı, Ölçü,
+    Kılavuz, Tarama, Blok, Tablo, Resim, Raster, Nokta bulutu, Duvar, Açıklık, Mahal, Mimari nesne. Karışık seçimde Seçim
+    sekmesi açılır.
 - Web bağımsız TypeScript/DOM uygulamasıdır; desktop'ın web export'u değildir.
   Yalnız hesaplama/codec kütüphaneleri dar WASM bağlayıcılarıyla kullanılır.
   Web'in belge, komut, etkileşim, settings ve render orkestrasyonu TS'te kalır.
@@ -1628,6 +1640,8 @@ node apps/web/scripts/e2e/sheet-cloud.mjs   # şablon kitaplığı gerçek kento
 cargo test -p kentos-sheet-ui --test screens -- --ignored   # masaüstünün pafta tasarımcısı resimleri, .run/shots/sheet-desktop/
 cargo test -p kentos-sheet-ui --test screens adr_0206 -- --ignored --nocapture   # haritanın ölçek düğmeleri ve koordinat listesinin kaynağı, .run/shots/sheet-desktop/*-0206-* (web'inkiler: node apps/web/scripts/e2e/sheet-shots.mjs --only harita-olcek-dugmeleri,koordinat-listesi-kaynak; ADR 0206)
 .run/py/bin/python scripts/python/live.py   # SDK ve MCP sunucusu gerçek kentosd ile, geçici veritabanında (önce: cargo build -p kentos-api --bin kentosd --example e2e_database; cargo build -p kentos-mcp)
+python3 scripts/ui/ribbon.py --check   # masaüstünün şeridi (catalog/v1/ribbon.json) üretecinden güncel mi; --check'siz yazar (ADR 0622 §3)
+KENTOS_SHOTS_ONLY=serit,baglam,olcek cargo test -p kentos-desktop ux_screens -- --ignored --nocapture   # arayüz düzeninin resimleri: her sekme, seçime göre sekmeler, ölçek ve tür, .run/shots/duzen-* (ADR 0622); ux_screens::ribbon_widths panellerin genişliklerini yazar
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}
 pnpm inventory:check     # envanter güncel değilse düşer
 pnpm db:setup            # yalnız yerel geliştirme DB/rolleri, migration, seed

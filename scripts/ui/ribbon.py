@@ -1,0 +1,551 @@
+#!/usr/bin/env python3
+"""The desktop's ribbon (docs/adr/0622 §3–§4): each project type's tabs and the
+tabs a selection opens by its objects' kinds, written to catalog/v1/ribbon.json.
+
+The ribbon is kept here as a short Python table and written as JSON for the
+desktop to embed (apps/desktop/src/catalog.rs). A split button by key
+({"split": "circle"}) takes the inventory's split with that key, its methods
+too. Commands are the catalog's ids; İşlemler's tools appear only in the
+contextual tabs, the toolbox has every one.
+
+    python3 scripts/ui/ribbon.py          # writes catalog/v1/ribbon.json
+    python3 scripts/ui/ribbon.py --check  # fails when the file is not current
+"""
+import json, sys
+from pathlib import Path
+
+def C(i, size='small'): return {"command": i, "size": size}
+def L(i): return C(i, 'large')
+def S(i): return C(i, 'small')
+def SP(key, size='small'): return {"split": key, "size": size}
+def M(label, blocks, size='small', checklist=False):
+    m = {"menu": label, "size": size, "blocks": [{"label": t, "items": ids} for t, ids in blocks]}
+    if checklist: m["checklist"] = True
+    return m
+def B(name): return {"builtin": name}
+def P(label, icon, items, overflow=(), launcher=None, keep=False):
+    p = {"label": label, "icon": icon, "items": items}
+    if overflow: p["overflow"] = list(overflow)
+    if launcher: p["launcher"] = launcher
+    if keep: p["keep"] = True
+    return p
+def T(i, label, panels): return {"id": i, "label": label, "panels": panels}
+def toTab(tab, title): return {"tab": tab, "title": title}
+def toCmd(cmd, title): return {"command": cmd, "title": title}
+
+SELECT_KINDS = ["edit.selectFilter.point", "edit.selectFilter.line", "edit.selectFilter.polyline",
+    "edit.selectFilter.polygon", "edit.selectFilter.circle", "edit.selectFilter.arc", "edit.selectFilter.ellipse",
+    "edit.selectFilter.spline", "edit.selectFilter.xline", "edit.selectFilter.ray", "edit.selectFilter.text",
+    "edit.selectFilter.dimension", "edit.selectFilter.hatch", "edit.selectFilter.insert", "edit.selectFilter.leader",
+    "edit.selectFilter.table", "edit.selectFilter.image"]
+ARCH_KINDS = ["edit.selectFilter.wall", "edit.selectFilter.opening", "edit.selectFilter.space",
+    "edit.selectFilter.grid", "edit.selectFilter.column", "edit.selectFilter.stair", "edit.selectFilter.ramp",
+    "edit.selectFilter.tag", "edit.selectFilter.viewmark"]
+def select_filter(cad):
+    # The status bar's Süzgeç lists every kind in both types; the drop-down is the same list.
+    kinds = SELECT_KINDS + ARCH_KINDS
+    return M("Seçim süzgeci", [("", ["edit.selectFilter"]), ("Seçilebilir türler", kinds),
+        ("", ["edit.selectFilterAll", "edit.selectFilterNone"])], checklist=True)
+
+BASEMAPS = M("Altlık", [
+    ("OpenStreetMap", ["basemap.osmStandard", "basemap.osmTopo", "basemap.osmHot", "basemap.cyclosm"]),
+    ("Vektör altlıklar", ["basemap.ofmLiberty", "basemap.ofmBright", "basemap.ofmPositron"]),
+    ("Uydu ve hava fotoğrafı", ["basemap.esriImagery"]),
+    ("Türkiye", ["basemap.hgmHarita", "basemap.hgmOrtofoto"]),
+    ("Google Haritalar", ["basemap.googleRoadmap", "basemap.googleSatellite", "basemap.googleTerrain", "basemap.googleHybrid"]),
+    ("Anahtarlı servisler", ["basemap.maptilerStreets", "basemap.maptilerSatellite"]),
+    ("", ["basemap.remove"])], size='large')
+
+IMPORT_CAD = M("İçe aktar", [
+    ("Çizim", ["file.import.dwg", "file.import.dxf", "file.import.ncz", "file.import.pdf"]),
+    ("Coğrafi veri", ["file.import.shp", "file.import.geojson", "file.import.kml", "file.import.gpkg", "file.import.csv"]),
+    ("Noktalar", ["file.import.ncn", "file.import.gnss", "file.import.photos"])], size='large')
+EXPORT = M("Dışa aktar", [
+    ("Çizim", ["file.export.dwg", "file.export.dxf"]),
+    ("Coğrafi veri", ["file.export.shp", "file.export.geojson", "file.export.kml", "file.export.gpx",
+                      "file.export.gpkg", "file.export.fgb", "file.export.gml", "file.export.csv"]),
+    ("Noktalar", ["file.export.ncn", "file.export.xyz"])], size='large')
+ADD_DATA = M("Veri ekle", [
+    ("Vektör", ["file.import.gpkg", "file.import.shp", "file.import.geojson", "file.import.kml",
+                "file.import.csv", "file.import.fgb", "file.import.gml"]),
+    ("Raster ve bulut", ["raster.add", "mesh.add", "pointcloud.add"]),
+    ("Çizim", ["file.import.dwg", "file.import.dxf", "file.import.ncz", "file.import.pdf"]),
+    ("Noktalar", ["file.import.ncn", "file.import.gnss", "file.import.photos"])], size='large')
+
+LAYER_OVERFLOW = ["tool.layerOff", "tool.layerIsolate", "layer.unisolate", "tool.layerLock", "tool.layerFreeze",
+    "layer.thawAll", "tool.layerMakeActive", "tool.layerMatch", "tool.copyToLayer", "layer.merge", "layer.states",
+    "layer.stateSave", "layer.translate", "layer.purge", "layer.list"]
+
+def file_tab(cad):
+    exchange = [IMPORT_CAD, EXPORT, S("file.takeFrom"), S("file.saveSelection")] if cad else \
+               [EXPORT, S("file.takeFrom"), S("file.saveSelection")]
+    return T("file", "Dosya", [
+        P("Proje", "fileNew", [L("file.new"), L("file.open"), S("file.start")]),
+        P("Kaydet", "save", [L("file.save"), S("file.saveAs"), S("file.package")]),
+        P("Çizimler", "docTabOpen", [S("file.openTab"), S("file.nextTab"), S("file.closeTab")]),
+        P("Bulut", "cloud", [L("cloud.open"), L("cloud.upload"), S("cloud.share"), S("cloud.history"), S("cloud.conflicts")],
+          overflow=["cloud.uploadFile", "cloud.openNewest", "cloud.rename", "cloud.delete", "server.check"]),
+        P("Alışveriş", "import", exchange),
+        P("Ayarlar", "folder", [L("file.settings"), L("tools.options")]),
+    ])
+
+def survey_tab(cad):
+    query = [P("Sorgu", "measure", [S("tool.measure"), S("tool.area"), S("crs.query"), S("tool.measureAngle"),
+        S("tool.identify"), S("tool.stationOffset")])] if cad else []
+    return T("survey", "Ölçme", query + [
+    P("Saha", "fieldBook", [L("calc.fieldbook"), S("file.import.gnss"), S("field.send")]),
+    P("Poligon ve alım", "surveyTraverse", [L("calc.traverse"), L("calc.polar"), L("calc.stakeout")]),
+    P("Kestirme ve dengeleme", "surveyNetwork", [S("calc.forward"), S("calc.resection"), S("calc.network"), S("calc.levelNetwork")]),
+    P("Noktalar", "point", [L("point.editor"), S("crs.points"), S("cogo.check"), S("cogo.update")]),
+    P("Oturtma", "vectorFit", [S("transform.fit"), S("transform.edgematch"), S("crs.transform")]),
+    ])
+
+def view_tab(cad):
+    panels = [
+        P("Görünümler", "namedViews", [L("view.namedViews"), S("view.split"), S("view.splitLink"), S("view.swipe"),
+          S("tool.viewTwist"), S("view.northUp")]),
+        P("Koordinatlar", "ucsWorld", [S("ucs.world"), S("ucs.previous"), S("tool.ucsObject")],
+          overflow=["tool.ucsTwoPoints", "tool.ucsOrigin", "tool.ucsRotate", "tool.ucsNamed", "view.twistUcs"]),
+        P("Görünüş", "colorModeColor", [
+            M("Tema", [("", ["view.theme.dark", "view.theme.light"])]),
+            M("Renk kipi", [("", ["view.colorMode.color", "view.colorMode.mono", "view.colorMode.gray"])]),
+            M("Yazıların boyu", [("", ["view.annotationSize.legible", "view.annotationSize.true", "view.annotationSize.screen"])]),
+            M("Sembol boyutu", [("", ["view.symbols.plot", "view.symbols.screen"])]),
+            S("view.fills"), S("view.areaEdges"), S("view.transparency")],
+          overflow=["view.lineWeights"],
+          launcher=toCmd("tools.options", "Uygulama ayarları: görünüm")),
+        P("Paneller", "panelRight", [S("view.rightPanel"), S("view.bottomPanel"), S("view.coords"),
+          S("view.overview"), S("view.magnifier"), S("view.fullscreen")],
+          overflow=["view.keyTips"]),
+    ]
+    if cad:
+        panels.insert(0, P("Gezinme", "zoomExtents", [L("view.zoomExtents"), S("tool.zoomWindow"), S("view.zoomSelection"),
+            S("tool.pan"), S("view.previous"), S("view.next")], overflow=["view.zoomIn", "view.zoomOut", "view.extentCheck"]))
+    return T("view", "Görünüm", panels)
+
+def output_tab(cad):
+    panels = [
+        P("Pafta", "sheet", [L("sheet.new"), S("sheet.fromTemplate"), S("sheet.drawingSet")]),
+        P("Yayınla", "print", [L("file.publish.sheets"), S("file.preflight.sheets"), S("file.export.atlas")]),
+    ]
+    if not cad:
+        panels.append(P("Lejant", "legend", [L("style.legend")]))
+    return T("output", "Çıktı", panels)
+
+# ── CAD ──────────────────────────────────────────────────────────────────
+CAD = [
+    file_tab(True),
+    T("home", "Giriş", [
+        P("Çizim", "line", [L("tool.line"), L("tool.polyline"), SP("circle", "large"), SP("arc", "large"),
+            SP("rectangle"), S("tool.polygon"), S("tool.point"), S("tool.ellipse"), S("tool.spline")],
+          overflow=["tool.nurbs", "tool.xline", "tool.ray", "tool.parallel", "tool.perpIn", "tool.perpOut", "tool.donut",
+            "tool.revcloud", "tool.wipeout", "tool.sector", "tool.rangeRings", "tool.tangentLine", "tool.fourthCorner",
+            "tool.divide", "tool.pointsBetween", "tool.intersectPoint", "tool.vertexPoints", "tool.adjoin"], keep=True),
+        P("Değiştir", "move", [S("tool.move"), S("tool.rotate"), SP("trim"), S("tool.copy"), S("tool.mirror"),
+            SP("corner"), S("tool.offset"), S("tool.scale"), S("tool.erase")],
+          overflow=["tool.extend", "tool.stretch", "tool.array", "tool.explode", "tool.break", "tool.join",
+            "tool.lengthen", "tool.align", "tool.alignDistribute", "tool.reverse", "tool.matchProperties",
+            "tool.vertex", "tool.reshape"],
+          launcher=toTab("modify", "Tüm araçlar: Değiştir sekmesi"), keep=True),
+        P("Açıklama", "text", [L("tool.text"), SP("dimension", "lead"), S("tool.leader"), S("tool.hatch"), S("table.insert")],
+          launcher=toTab("annotate", "Tüm araçlar: Açıklama sekmesi")),
+        P("Katmanlar", "layers", [B("layers")], overflow=LAYER_OVERFLOW,
+          launcher=toCmd("style.layerStyle", "Katman stili…")),
+        P("Özellikler", "styles", [B("properties")],
+          launcher=toCmd("file.settings", "Proje ayarları: birimler, hassasiyet ve çizim ölçeği")),
+    ]),
+    T("plan", "Plan", [
+        P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),
+        P("Ada ve parsel", "parcel", [L("tool.parcel"), L("tool.boundary"), S("tool.polygonize"), S("tool.adjoin"),
+            S("tool.topology")]),
+        P("Alan işlemleri", "areaUnion", [S("tool.areaUnion"), S("tool.areaSubtract"), S("tool.areaIntersect"),
+            S("tool.areaSplit"), S("tool.partsJoin"), S("tool.partsSplit")],
+          overflow=["tool.holeAdd", "tool.holeRemove", "tool.holeFill", "tool.toArea", "tool.toPolyline", "tool.edgeShift"]),
+        P("Plan yazıları", "coordinateLabel", [S("tool.coordinateLabel"), S("tool.coordinateVertices"),
+            S("tool.stationLabels"), S("map.edgeLengths"), S("tool.spot"), S("tool.vertexPoints")]),
+        P("Topoloji", "topologyCheck", [S("topology.check"), S("topology.rules"), S("draft.topology")]),
+    ]),
+    survey_tab(True),
+    T("insert", "Ekle", [
+        P("Blok", "blockInsert", [L("tool.blockInsert"), S("tool.blockDefine"), S("block.panel"), S("block.library"),
+            S("block.edit")],
+          overflow=["block.insertFile", "block.attributes", "block.sync", "block.freeze", "block.card", "block.schedule",
+            "block.writeFile", "block.redefineFromFile", "block.import", "block.export", "block.purge"]),
+        P("Şablonlar", "templates", [B("templates")], launcher=toCmd("template.panel", "Şablonlar paneli")),
+        P("Dış başvuru", "xrefAttach", [L("xref.attach"), S("xref.manager"), S("tool.xclip")]),
+        P("Resim ve raster", "imageInsert", [S("tool.imageInsert"), S("raster.add"), S("pointcloud.add")],
+          overflow=["tool.imageClip", "raster.georef", "raster.mosaic", "raster.gpkgRead", "raster.stac"]),
+        P("Harita", "basemap", [BASEMAPS, S("service.add"), S("service.feed")],
+          overflow=["service.info", "service.connections"]),
+        P("Ekler", "attachment", [S("attachment.add"), S("attachment.addLink"), S("file.import.photos")],
+          overflow=["layer.info"]),
+        P("Adres", "addressSearch", [S("address.search"), S("address.reverse")],
+          overflow=["address.data", "address.providers"]),
+    ]),
+    T("annotate", "Açıklama", [
+        P("Yazı", "text", [L("tool.text"), S("tool.mtext"), SP("textAlong"), S("tool.placeTextFile"),
+            S("text.findReplace"), S("style.textStyles")],
+          overflow=["text.fieldInsert", "text.fieldsUpdate", "text.number", "text.combine", "text.split", "text.check",
+            "text.fonts", "tool.labelsToText", "tool.readable"]),
+        P("Ölçü", "dimension", [SP("dimension", "lead"), S("tool.dimContinue"), S("tool.dimBaseline"),
+            S("tool.quickDimension"), S("style.dimensionStyles")],
+          overflow=["tool.centerMark", "tool.dimCenterLine", "tool.dimElevation", "tool.dimensionReassociate",
+            "dimension.space", "dimension.break", "dimension.unbreak"]),
+        P("Kılavuz", "leader", [L("tool.leader"), S("leader.styles")],
+          overflow=["leader.addArm", "leader.removeArm", "leader.align", "leader.collect", "leader.blocks"]),
+        P("Tablo", "table", [L("table.insert"), S("table.edit"), S("table.update")],
+          overflow=["table.link", "table.blockSchedule"]),
+        P("Tarama", "hatch", [L("tool.hatch"), S("tool.hatchSelected"), S("tool.hatchEdit")]),
+        P("İşaretleme", "revcloud", [S("tool.revcloud"), S("tool.wipeout")]),
+        P("Ölçek", "annotationMake", [S("annotation.make"), S("tool.annotativePlace")],
+          overflow=["annotation.reset", "annotation.unmake"]),
+    ]),
+    T("modify", "Değiştir", [
+        P("Pano", "paste", [L("edit.paste"), S("edit.cut"), S("edit.copy")],
+          overflow=["edit.pasteOriginal", "tool.copyBase", "edit.pasteBlock"]),
+        P("Seçim", "select", [SP("select"), S("edit.selectAll"), select_filter(True)],
+          overflow=["edit.deselect", "edit.invertSelection", "edit.previousSelection", "edit.cycleSelection"]),
+        P("Dönüştür", "move", [L("tool.move"), L("tool.copy"), L("tool.rotate"), S("tool.scale"), S("tool.mirror"),
+            S("tool.stretch"), S("tool.align")], overflow=["tool.alignDistribute", "tool.copyBase"]),
+        P("Dizi", "array", [SP("array", "large"), S("tool.arrayEdit")]),
+        P("Kenar", "offset", [L("tool.offset"), SP("trim", "large"), SP("extend"), S("tool.break"), SP("split"),
+            S("tool.lengthen")], overflow=["tool.edgeShift", "tool.continue", "tool.reshape"]),
+        P("Köşe", "fillet", [SP("corner", "large"), S("tool.vertex"), S("tool.curveEdit")]),
+        P("Nesne", "join", [S("tool.join"), S("tool.explode"), S("tool.reverse"), S("tool.readable"),
+            S("tool.matchProperties"), S("tool.simplify")]),
+        P("Kot ve sıra", "setElevation", [SP("setElevation"), S("edit.bringToFront"), S("edit.sendToBack")],
+          overflow=["tool.drawOrderAbove", "tool.drawOrderUnder", "edit.textsToFront", "edit.hatchesToBack"]),
+    ]),
+    T("arch", "Mimari", [
+        P("Duvar", "wall", [L("tool.wall"), S("tool.wallFromLines"), S("tool.wallJoins"), S("arch.wallStyles")],
+          overflow=["tool.wallSplit", "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip",
+            "tool.wallRestyle", "arch.wallJoinCheck"]),
+        P("Açıklık", "door", [L("tool.door"), L("tool.window"), S("tool.opening")],
+          overflow=["tool.openingFlip", "tool.openingMove", "tool.openingNumber"]),
+        P("Mahal", "space", [L("tool.space"), S("arch.quantities")],
+          overflow=["tool.spaceSplit", "arch.spaceMerge", "tool.spaceFloor", "tool.spaceCeiling"]),
+        P("Taşıyıcı", "archGrid", [S("tool.grid"), S("tool.column"), S("tool.gridNumber")]),
+        P("Merdiven", "stair", [S("tool.stair"), S("tool.ramp")]),
+        P("Görünüm", "viewSection", [S("tool.viewSection"), S("tool.viewElevation"), S("tool.viewDetail")],
+          overflow=["arch.viewRefs", "arch.sheetSet"]),
+        P("Etiket ve çizelge", "tag", [S("tool.tag"), S("tool.tagAll"), S("tool.scheduleOpenings"),
+            S("tool.scheduleSpaces")], overflow=["arch.tagsCheck"]),
+        P("Proje", "archSettings", [S("arch.settings"), S("arch.template"),
+            M("Evre", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed"])])]),
+    ]),
+    view_tab(True),
+    T("manage", "Yönet", [
+        P("Stiller", "styles", [L("style.manager"), S("style.layerStyle"), S("lineTypes.manage"),
+            S("hatchPatterns.manage"), S("style.legend")],
+          overflow=["style.svgEditor", "style.assign", "style.clearSymbol"]),
+        P("Standart", "standardsCheck", [S("standards.check"), S("standards.apply"), S("layer.impact")]),
+        P("Temizlik", "cleanup", [S("tool.cleanup"), S("tool.audit"), S("layer.purge")]),
+        P("Veri", "featureTable", [S("data.featureTable"), S("layer.fields"), S("data.statistics"),
+            S("data.compare"), S("data.search")],
+          overflow=["data.chart", "data.forms", "data.formEdit", "data.relations", "data.joinViews",
+            "data.formAudit", "data.unmark", "data.sources"]),
+        P("Otomasyon", "terminal", [L("python.console"), S("commandline.focus"), S("processing.toolbox"),
+            S("processing.newModel")]),
+        P("Kısıtlar", "constraint", [L("tool.constraint"), S("constraint.show"), S("constraint.parameters")],
+          overflow=["constraint.relaxNext"]),
+        P("GIS", "exportGis", [S("file.export.gis"), S("gis.derivation")]),
+    ]),
+    output_tab(True),
+]
+
+# ── CBS ──────────────────────────────────────────────────────────────────
+GIS = [
+    file_tab(False),
+    T("map", "Harita", [
+        P("Gezinme", "zoomExtents", [L("view.zoomExtents"), S("tool.pan"), S("tool.zoomWindow"),
+            S("view.zoomSelection"), S("view.previous"), S("view.next")],
+          overflow=["view.zoomIn", "view.zoomOut", "view.extentCheck"]),
+        P("Katman ekle", "layerAdd", [ADD_DATA, BASEMAPS, S("service.add"), S("service.feed"), S("source.postgis")],
+          overflow=["service.info", "service.connections", "raster.stac", "raster.mosaic", "raster.gpkgRead"]),
+        P("Seçim", "select", [SP("select", "large"), S("processing.run.selection.byExpression"),
+            S("processing.run.selection.byLocation"), S("edit.selectAll"), S("edit.deselect"), select_filter(False)],
+          overflow=["edit.invertSelection", "edit.previousSelection", "edit.cycleSelection"]),
+        P("Sorgu", "identify", [L("tool.identify"), S("tool.measure"), S("tool.area"), S("crs.query"),
+            S("tool.measureAngle"), S("address.search")], overflow=["tool.stationOffset"]),
+        P("Etiket", "layerLabels", [L("layer.labels"), S("tool.labelMove"), S("tool.labelPin"), S("tool.labelHide")],
+          overflow=["tool.labelRotate", "view.pinnedLabels", "view.unplacedLabels", "tool.labelsToText"]),
+        P("Koordinat sistemi", "crs", [S("crs.set"), S("crs.transform"), S("view.mapCrs")],
+          launcher=toCmd("crs.set", "Proje ayarları: koordinat sistemi")),
+    ]),
+    T("edit", "Düzenle", [
+        P("Oluştur", "line", [L("tool.point"), L("tool.polyline"), L("tool.polygon"), S("tool.line"), SP("circle"),
+            SP("rectangle"), S("tool.adjoin"), S("tool.parcel"), S("tool.text")],
+          overflow=["tool.arc", "tool.ellipse", "tool.spline", "tool.vertexPoints", "tool.divide", "tool.pointsBetween",
+            "tool.intersectPoint", "tool.centerline", "tool.planRoad", "tool.roadJunctions", "tool.medianClose",
+            "tool.sector", "tool.rangeRings", "tool.fourthCorner"], keep=True),
+        P("Şablonlar", "templates", [B("templates")], launcher=toCmd("template.panel", "Şablonlar paneli")),
+        P("Katmanlar", "layers", [B("layers")], overflow=LAYER_OVERFLOW,
+          launcher=toCmd("style.layerStyle", "Katman stili…")),
+        P("Değiştir", "move", [S("tool.move"), S("tool.rotate"), SP("trim"), S("tool.vertex"), S("tool.reshape"),
+            S("tool.break"), S("tool.offset"), S("tool.join"), S("tool.erase")],
+          overflow=["tool.copy", "tool.scale", "tool.mirror", "tool.stretch", "tool.extend", "tool.explode",
+            "tool.reverse", "tool.lengthen", "tool.continue", "tool.edgeShift", "tool.align", "tool.alignDistribute",
+            "tool.simplify", "tool.matchProperties", "tool.setElevation", "tool.curveEdit", "tool.constraint",
+            "edit.bringToFront", "edit.sendToBack", "edit.paste", "edit.cut", "edit.copy", "edit.pasteOriginal"],
+          keep=True),
+        P("Alan işlemleri", "areaUnion", [S("tool.areaUnion"), S("tool.areaSplit"), S("tool.areaSubtract")],
+          overflow=["tool.areaIntersect", "tool.boundary", "tool.polygonize", "tool.partsJoin", "tool.partsSplit",
+            "tool.holeAdd", "tool.holeRemove", "tool.holeFill", "tool.toArea", "tool.toPolyline"]),
+    ]),
+    T("data", "Veri", [
+        P("Katman", "layerAdd", [S("layer.new"), S("layer.newGroup"), S("layer.fields"), S("style.layerStyle"),
+            S("layer.filter"), S("layer.crs")],
+          overflow=["layer.filterFromSelection", "layer.filterClear", "layer.reproject", "layer.showAll",
+            "layer.info", "file.import.maplibre", "file.export.maplibre"]),
+        P("Tablo", "featureTable", [L("data.featureTable"), S("data.statistics"), S("data.chart")],
+          overflow=["chart.bar", "chart.pie", "chart.histogram", "chart.box", "chart.scatter", "chart.line"]),
+        P("Form", "forms", [S("data.forms"), S("data.formEdit"), S("data.relations")],
+          overflow=["data.joinViews", "data.formAudit", "data.tableStyles", "data.subtypes", "data.contingents",
+            "data.layerRules", "data.domains", "data.duplicate"]),
+        P("Kaynak", "sourceLinked", [S("data.sources"), S("source.link"), S("source.write"), S("source.read"),
+            S("source.status")],
+          overflow=["source.reconcile", "source.relink", "source.unlink", "source.writeTogether", "raster.gpkgWrite"]),
+        P("Topoloji", "topologyCheck", [S("draft.topology"), S("topology.check"), S("topology.rules"),
+            M("Çakışma", [("", ["draft.overlap.allow", "draft.overlap.layer", "draft.overlap.layers"])])],
+          overflow=["draft.topologyPoints", "tool.topology"]),
+        P("Ekler", "attachment", [S("attachment.add"), S("attachment.addLink"), S("layer.info")]),
+        P("Standart", "standardsCheck", [S("profile.window"), S("standards.check"), S("standards.apply")],
+          overflow=["lineTypes.manage", "hatchPatterns.manage", "layer.impact"]),
+        P("Stil", "styles", [L("style.manager"), S("data.search"), S("data.unmark")],
+          overflow=["style.svgEditor", "style.assign", "style.clearSymbol"]),
+    ]),
+    T("analysis", "Analiz", [
+        P("İşlemler", "processing", [L("processing.toolbox"), S("processing.newModel"), S("processing.history")]),
+        P("Ağ analizi", "networks", [S("network.manage"), S("tool.netRoute"), S("tool.netServiceArea"),
+            S("tool.netTrace")], overflow=["network.subnetworks", "linearRef.eventLinks"]),
+        P("Arazi", "contours", [S("tool.spot"), S("pointcloud.region"), S("pointcloud.profile")],
+          overflow=["mesh.query"]),
+        P("Zaman ve senaryo", "timeSlider", [S("time.slider"), S("time.layer"), S("scenario.create"),
+            S("scenario.compare"), S("data.compare")],
+          overflow=["tool.timeVersion", "tool.timeEnd", "time.compare", "scenario.show", "scenario.base",
+            "scenario.apply"]),
+        P("Adres", "addressSearch", [S("address.reverse"), S("address.data")], overflow=["address.providers"]),
+        P("Otomasyon", "terminal", [L("python.console"), S("commandline.focus")]),
+    ]),
+    survey_tab(False),
+    view_tab(False),
+    output_tab(False),
+]
+
+# ── Contextual tabs: the selection's family (docs/adr/0622 §4) ──────────
+def pr(i): return "processing.run." + i
+SEL = P("Seçim", "select", [S("view.zoomSelection"), S("edit.deselect"), S("edit.invertSelection")],
+    overflow=["tool.selectSimilar", "edit.previousSelection", "file.saveSelection"])
+
+def edit_panel(extra=()):
+    return P("Düzenle", "move", [L("tool.move"), S("tool.copy"), S("tool.rotate"), S("tool.scale"), S("tool.mirror"),
+        S("tool.erase")] + list(extra))
+
+CONTEXTUAL = [
+    {"id": "selection", "label": "Seçim", "kinds": ["*"], "panels": [
+        P("Seçim", "select", [B("selection")]),
+        P("Dönüştür", "move", [L("tool.move"), L("tool.copy"), L("tool.rotate"), S("tool.scale"), S("tool.mirror"),
+            S("tool.stretch"), S("tool.align")], overflow=["tool.alignDistribute"]),
+        P("Nesne", "join", [S("tool.erase"), S("tool.explode"), S("tool.join"), S("tool.matchProperties"),
+            S("tool.copyToLayer"), S("tool.setElevation")]),
+        P("Çizim sırası", "bringToFront", [S("edit.bringToFront"), S("edit.sendToBack")]),
+        P("Sembol", "symbolAssign", [S("style.assign"), S("style.clearSymbol")]),
+        P("Seçilenler", "select", [S("tool.selectSimilar"), S("file.saveSelection"), S("layer.filterFromSelection")]),
+    ]},
+    {"id": "ctx.point", "label": "Nokta", "kinds": ["point"], "panels": [
+        SEL,
+        edit_panel([S("tool.setElevation"), S("tool.matchProperties")]),
+        P("Nokta", "point", [L("point.editor"), S("tool.coordinateLabel"), S("field.send"), S("tool.copyToLayer")]),
+        P("İşlemler", "processing", [
+            M("Üret", [("", [pr("generate.delaunay"), pr("generate.voronoi"), pr("generate.bounding"),
+                pr("generate.concaveHull"), pr("convert.pointsToPath")])], size='large'),
+            M("İnterpolasyon", [("", [pr("interpolation.idw"), pr("interpolation.naturalNeighbor"),
+                pr("interpolation.spline"), pr("interpolation.kriging"), pr("interpolation.tin"),
+                pr("density.kernel")])], size='large'),
+            M("İstatistik", [("Merkez ve dağılım", [pr("stats.meanCenter"), pr("stats.medianCenter"),
+                pr("stats.standardDistance"), pr("stats.directionalDistribution")]),
+                ("Desen ve küme", [pr("stats.nearestNeighbor"), pr("stats.moransI"), pr("stats.hotSpot"),
+                pr("stats.localMoran"), pr("stats.dbscan"), pr("stats.dbscanSweep"), pr("stats.kMeans")])],
+              size='large'),
+            M("Yakınlık", [("", [pr("proximity.nearest"), pr("proximity.matrix"), pr("proximity.hub"),
+                pr("proximity.shortestLine"), pr("attributes.fromEnclosing")])], size='large'),
+        ]),
+    ]},
+    {"id": "ctx.line", "label": "Çizgi", "kinds": ["line", "polyline", "arc", "spline", "nurbs", "xline", "ray"],
+     "panels": [
+        SEL,
+        edit_panel([S("tool.stretch")]),
+        P("Kenar", "offset", [L("tool.offset"), SP("trim"), SP("extend"), S("tool.break"), SP("split"),
+            S("tool.lengthen"), S("tool.join"), S("tool.reverse")],
+          overflow=["tool.continue", "tool.reshape", "tool.edgeShift"]),
+        P("Köşe", "fillet", [SP("corner"), S("tool.vertex"), S("tool.curveEdit"), S("tool.simplify"),
+            S("tool.setElevation")]),
+        P("Dönüştür", "conversion", [S("tool.toArea"), S("tool.vertexPoints"), S("tool.divide"),
+            S("tool.stationLabels"), SP("textAlong")]),
+        P("İşlemler", "processing", [
+            M("Geometri", [("", [pr("geometry.buffer"), pr("geometry.simplify"), pr("geometry.clip"),
+                pr("geometry.intersection"), pr("geometry.difference"), pr("geometry.union"),
+                pr("geometry.validity"), pr("geometry.repair")])], size='large'),
+            M("Dönüştür", [("", [pr("convert.linesToPolygons"), pr("convert.substring"), pr("convert.densify"),
+                pr("convert.vertices"), pr("convert.toPoints"), pr("sample.alongLines"),
+                pr("generalize.smooth"), pr("density.line")])], size='large'),
+            M("Doğrusal referans", [("", [pr("linearRef.createRoutes"), pr("linearRef.calibrateRoutes"),
+                pr("linearRef.routeEvents"), pr("linearRef.locateAlong"), pr("linearRef.overlayEvents"),
+                pr("linearRef.extractMeasures"), pr("linearRef.eventDrift")])], size='large'),
+        ]),
+    ]},
+    {"id": "ctx.area", "label": "Alan", "kinds": ["polygon", "circle", "ellipse"], "panels": [
+        SEL,
+        edit_panel([S("tool.stretch")]),
+        P("Kenar ve köşe", "offset", [S("tool.offset"), S("tool.edgeShift"), S("tool.reshape"), S("tool.vertex"),
+            SP("corner"), S("tool.setElevation")]),
+        P("Alan", "areaUnion", [L("tool.areaUnion"), S("tool.areaSubtract"), S("tool.areaIntersect"),
+            S("tool.areaSplit"), S("tool.partsJoin"), S("tool.partsSplit")],
+          overflow=["tool.holeAdd", "tool.holeRemove", "tool.holeFill", "tool.toPolyline"]),
+        P("Yaz ve tara", "coordinateLabel", [S("tool.coordinateVertices"), S("map.edgeLengths"),
+            S("tool.hatchSelected")], overflow=["processing.model.builtin.parcelSheet"]),
+        P("İşlemler", "processing", [
+            M("Geometri", [("", [pr("geometry.buffer"), pr("geometry.clip"), pr("geometry.intersection"),
+                pr("geometry.difference"), pr("geometry.union"), pr("geometry.symDifference"),
+                pr("geometry.dissolve"), pr("geometry.simplify"), pr("geometry.validity"), pr("geometry.repair")])],
+              size='large'),
+            M("Üret", [("", [pr("generate.bounding"), pr("generate.pole"), pr("sample.grid"), pr("sample.regular"),
+                pr("sample.random"), pr("sample.subdivide"), pr("convert.toPoints"), pr("convert.vertices"),
+                pr("convert.polygonsToLines")])], size='large'),
+            M("Genelleştir", [("", [pr("generalize.smooth"), pr("generalize.orthogonalize"),
+                pr("generalize.building"), pr("generalize.aggregate"), pr("generalize.dropParts"),
+                pr("generalize.eliminate"), pr("generalize.coverageSimplify")])], size='large'),
+            M("Sorgu", [("", [pr("attributes.fromInside"), pr("attributes.fromEnclosing"), pr("proximity.neighbors"),
+                pr("proximity.nearest"), pr("statistics.summary"), pr("raster.zonalStatistics"),
+                pr("raster.clipByMask"), pr("raster.rasterize")])], size='large'),
+        ]),
+    ]},
+    {"id": "ctx.text", "label": "Yazı", "kinds": ["text"], "panels": [
+        SEL,
+        edit_panel(),
+        P("Yazı", "text", [S("text.findReplace"), S("tool.readable"), S("text.combine"), S("text.split"),
+            S("text.number"), S("style.textStyles")],
+          overflow=["text.fieldInsert", "text.fieldsUpdate", "text.check", "text.fonts"]),
+        P("Eğri boyunca", "textAlong", [SP("textAlong")]),
+        P("Ölçek", "annotationMake", [S("annotation.make"), S("annotation.unmake"), S("tool.annotativePlace")]),
+    ]},
+    {"id": "ctx.dimension", "label": "Ölçü", "kinds": ["dimension"], "panels": [
+        SEL,
+        edit_panel(),
+        P("Ölçü", "dimension", [S("dimension.space"), S("dimension.break"), S("dimension.unbreak"),
+            S("tool.dimensionReassociate"), S("style.dimensionStyles")]),
+        P("Ölçek", "annotationMake", [S("annotation.make"), S("annotation.unmake"), S("tool.annotativePlace")]),
+    ]},
+    {"id": "ctx.leader", "label": "Kılavuz", "kinds": ["leader"], "panels": [
+        SEL,
+        edit_panel(),
+        P("Kılavuz", "leader", [S("leader.addArm"), S("leader.removeArm"), S("leader.align"), S("leader.collect"),
+            S("leader.blocks"), S("leader.styles")]),
+        P("Ölçek", "annotationMake", [S("annotation.make"), S("annotation.unmake"), S("tool.annotativePlace")]),
+    ]},
+    {"id": "ctx.hatch", "label": "Tarama", "kinds": ["hatch"], "panels": [
+        SEL,
+        edit_panel(),
+        P("Tarama", "hatch", [L("tool.hatchEdit"), S("edit.hatchesToBack"), S("hatchPatterns.manage")]),
+    ]},
+    {"id": "ctx.block", "label": "Blok", "kinds": ["insert"], "panels": [
+        SEL,
+        edit_panel(),
+        P("Blok", "blockInsert", [L("block.edit"), S("tool.explode"), S("block.attributes"), S("block.sync"),
+            S("block.freeze"), S("block.card"), S("tool.xclip"), S("block.panel")]),
+        P("Çizim sırası", "bringToFront", [S("edit.bringToFront"), S("edit.sendToBack")]),
+    ]},
+    {"id": "ctx.table", "label": "Tablo", "kinds": ["table"], "panels": [
+        SEL,
+        edit_panel(),
+        P("Tablo", "table", [L("table.edit"), S("table.update"), S("table.link"), S("table.blockSchedule")]),
+    ]},
+    {"id": "ctx.image", "label": "Resim", "kinds": ["image"], "panels": [
+        SEL,
+        edit_panel(),
+        P("Resim", "imageInsert", [L("tool.imageClip"), S("edit.sendToBack"), S("edit.bringToFront")]),
+    ]},
+    {"id": "ctx.raster", "label": "Raster", "kinds": ["raster"], "panels": [
+        SEL,
+        P("Raster", "rasterAdd", [L("raster.style"), S("raster.georef"), S(pr("raster.cog")), S("raster.gpkgWrite"),
+            S("raster.mosaic")]),
+        P("Yüzey", "aspect", [
+            M("Yüzey analizi", [("", [pr("surface.slope"), pr("surface.aspect"), pr("surface.hillshade"),
+                pr("surface.colorRelief"), pr("surface.contours"), pr("surface.curvature"), pr("surface.ruggedness"),
+                pr("surface.insolation")])], size='large'),
+            M("Hidroloji", [("", [pr("hydrology.fill"), pr("hydrology.flowDirection"), pr("hydrology.flowAccumulation"),
+                pr("hydrology.wetness"), pr("hydrology.pourPoint"), pr("hydrology.watershed"), pr("hydrology.basins"),
+                pr("hydrology.streams")])], size='large'),
+            M("Uzaklık ve maliyet", [("", [pr("distance.euclidean"), pr("distance.cost"), pr("distance.path"),
+                pr("distance.corridor")])], size='large'),
+        ]),
+        P("Raster işlemleri", "clipRaster", [
+            M("Hesap", [("", [pr("raster.calculator"), pr("raster.reclassify"), pr("raster.clipByMask"),
+                pr("raster.mosaic"), pr("raster.resample")])], size='large'),
+            M("İstatistik", [("", [pr("raster.zonalStatistics"), pr("raster.histogram"), pr("raster.cellStatistics"),
+                pr("raster.focalStatistics")])], size='large'),
+            M("Vektöre", [("", [pr("raster.toPolygons"), pr("raster.toLines"), pr("raster.toPoints"),
+                pr("scan.captureLine"), pr("scan.closeArea"), pr("scan.contourElevations")])], size='large'),
+        ]),
+        P("Uygulamalar", "weightedOverlay", [
+            M("Uygunluk", [("", [pr("suitability.weightedOverlay"), pr("suitability.weightedSum"),
+                pr("suitability.fuzzyMembership"), pr("suitability.fuzzyOverlay"), pr("suitability.pairwise"),
+                pr("suitability.roc")])], size='large'),
+            M("Uzaktan algılama", [("", [pr("remote.index"), pr("remote.supervised"), pr("remote.unsupervised"),
+                pr("remote.accuracy"), pr("remote.change"), pr("remote.pansharpen"), pr("remote.composite"),
+                pr("remote.split")])], size='large'),
+            M("Çok boyutlu", [("", [pr("multidim.profile"), pr("multidim.series"), pr("multidim.meshCalculator"),
+                "mesh.query"])], size='large'),
+        ]),
+    ]},
+    {"id": "ctx.pointcloud", "label": "Nokta bulutu", "kinds": ["pointcloud"], "panels": [
+        SEL,
+        P("Nokta bulutu", "pointCloudAdd", [L("pointcloud.style"), S("pointcloud.query"), S("pointcloud.profile"),
+            S("pointcloud.region"), S("pointcloud.vpcSave")]),
+        P("İşlemler", "processing", [L(pr("pointcloud.ground")), S(pr("pointcloud.thin")), S(pr("pointcloud.classify")),
+            S(pr("pointcloud.clip")), S(pr("pointcloud.merge")), S(pr("pointcloud.tile")), S(pr("pointcloud.rasterize")),
+            S(pr("pointcloud.boundary")), S(pr("pointcloud.areaStats"))]),
+    ]},
+    {"id": "ctx.wall", "label": "Duvar", "kinds": ["wall"], "modes": ["cad"], "panels": [
+        SEL,
+        edit_panel(),
+        P("Duvar", "wall", [L("tool.wallJoins"), S("tool.wallSplit"), S("tool.wallJoin"), S("tool.wallExtend"),
+            S("tool.wallTrim"), S("tool.wallFlip"), S("tool.wallRestyle"), S("arch.wallJoinCheck")]),
+        P("Açıklık", "door", [S("tool.door"), S("tool.window"), S("tool.opening"), S("tool.tag")]),
+    ]},
+    {"id": "ctx.opening", "label": "Açıklık", "kinds": ["opening"], "modes": ["cad"], "panels": [
+        SEL,
+        P("Düzenle", "move", [S("tool.copy"), S("tool.erase")]),
+        P("Açıklık", "door", [L("tool.openingMove"), S("tool.openingFlip"), S("tool.openingNumber"), S("tool.tag"),
+            S("tool.scheduleOpenings")]),
+    ]},
+    {"id": "ctx.space", "label": "Mahal", "kinds": ["space"], "modes": ["cad"], "panels": [
+        SEL,
+        P("Düzenle", "move", [S("tool.move"), S("tool.erase")]),
+        P("Mahal", "space", [L("arch.quantities"), S("tool.spaceSplit"), S("arch.spaceMerge"), S("tool.spaceFloor"),
+            S("tool.spaceCeiling"), S("tool.tag"), S("tool.scheduleSpaces")]),
+    ]},
+    {"id": "ctx.arch", "label": "Mimari nesne", "kinds": ["grid", "column", "stair", "ramp", "tag", "viewmark"],
+     "modes": ["cad"], "panels": [
+        SEL,
+        edit_panel(),
+        P("Mimari", "archGrid", [S("tool.gridNumber"), S("arch.tagsCheck"), S("arch.viewRefs")]),
+    ]},
+]
+
+doc = {
+    "format": "kentos.ribbon",
+    "version": 1,
+    "note": "Masaüstünün şeridi (ADR 0622 §3–§4): her proje türünün sekmeleri ve seçimin türüne göre açılan bağlamsal sekmeler. Bölünmüş düğme {\"split\": \"anahtar\"} envanterdeki aynı anahtarlı düğmeyi yöntemleriyle alır.",
+    "tabs": {"cad": CAD, "gis": GIS},
+    "contextual": CONTEXTUAL,
+}
+OUT = Path(__file__).resolve().parents[2] / "catalog" / "v1" / "ribbon.json"
+text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
+if "--check" in sys.argv[1:]:
+    if OUT.read_text(encoding="utf-8") != text:
+        sys.exit("catalog/v1/ribbon.json is not current: python3 scripts/ui/ribbon.py")
+    print("catalog/v1/ribbon.json is current")
+else:
+    OUT.write_text(text, encoding="utf-8")
+    print("written", OUT)

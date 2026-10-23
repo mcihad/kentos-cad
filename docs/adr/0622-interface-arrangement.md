@@ -81,32 +81,110 @@ Karar:
 Ortak durumlar `fixtures/project/v1/wizard.json`'dadır: "Yazılar" satırı ve "CAD, yerel, m"
 durumu. Şeridin ölçek listesi birimiyle birlikte `fixtures/shell/v1/ribbon.json`'dan okunur.
 
-## 3. Şerit (sırada)
+## 3. Şerit
 
-Masaüstünün şeridi web'in donmuş envanterinden değil, masaüstüne ait bir tanımdan okunacak:
-`catalog/v1/ribbon.json`, CAD ve CBS için ayrı sekmeler. İlkeler:
+Masaüstünün şeridi web'in donmuş envanterinden değil, kendi dosyasından okunur: `catalog/v1/ribbon.json`
+(`kentos.ribbon` 1). Dosyayı `scripts/ui/ribbon.py` yazar; `--check` dosyanın güncel olduğunu denetler.
 
-- Bir komut ana sekmelerde bir kez yer alır. Kopyaları kalkar; bağlamsal sekmelerde tekrar
-  edebilir.
-- Düğmeler yazılıdır. Büyük düğme ikon ve ad gösterir; küçük düğme ikon ve ad yan yana
-  gösterir. Yalnız ikona dar pencerede inilir.
-- İşlem araçları (`processing.run.*`) ana sekmelerde yer almaz: araç kutusundadır (sağ dok,
-  İşlemler) ve ilgili bağlamsal sekmelerde gelir.
-- CAD'in sekmeleri Netcad ve AutoCAD'den: Dosya, Giriş, Plan (imar planı: yol, ada ve parsel,
-  alan işlemleri, plan yazıları), Ekle, Açıklama, Değiştir, Mimari, Görünüm, Yönet, Çıktı.
-- CBS'nin sekmeleri ArcGIS Pro ve QGIS'ten: Dosya, Harita, Düzenle, Veri, Analiz, Ölçme,
-  Görünüm, Çıktı. Bugünkü Raster sekmesi kalkar; araçları Raster bağlamsal sekmesine gider.
+Dosyanın yapısı:
 
-## 4. Seçime göre bağlamsal sekme (sırada)
+- `tabs`: her proje türünün sekmeleri.
+- Sekmede paneller, panelde öğeler. Öğe bir komut, bölünmüş düğme, menü ya da `builtin` (Katmanlar, Özellikler, Şablonlar)
+  olabilir; panelde ayrıca `overflow` (panel adının ▾ listesi) ve `launcher` bulunabilir.
+- Bölünmüş düğme `{"split": "circle"}` biçiminde yazılır ve envanterdeki aynı anahtarlı düğmeyi yöntemleriyle alır. Yöntem
+  ekleri (ADR 0287) yine eklenir.
+- Komutların adı, ikonu ve açıklaması envanterden ve `additions.json`'dan gelir. `additions.json`'un `ribbon` yerleri web'in
+  dönüşü için durur; masaüstü onları okumaz.
 
-Seçimin türü bir aileyse şeritte o ailenin sekmesi açılır ve öne gelir (AutoCAD'in Tarama
-Düzenleyicisi gibi):
+İlkeler:
 
-- Aileler: Nokta, Çizgi, Alan, Yazı, Ölçü, Kılavuz, Tarama, Blok, Tablo, Resim, Raster, Nokta
-  bulutu ve CAD'de mimari nesneler.
-- Karışık seçimde genel "Seçim" sekmesi açılır.
-- Seçim kalkınca önceki sekmeye dönülür.
-- Sekme yalnız o türe yapılabilecek işleri taşır, işlem araçları dahil.
+- **Bir komut ana sekmelerde bir kez geçer.** İstisna: Giriş en sık işleri taşır, uzman sekmeler (Değiştir, Açıklama) tam
+  takımı (AutoCAD'in Giriş ile Açıklama ilişkisi).
+- **Düğmeler yazılıdır.** Büyük düğmede ikon ve ad, küçük düğmede ikon ve ad yan yanadır.
+  - Her sekme 1440 px'te panellerini en çok bir adım indirerek gösterir. İndirilen panelde de düğmeler yazılıdır: büyük
+    düğmeler küçülür, yalnız ikona inilmez. Test: `ribbon_tests::every_tab_fits_1100_pixels_without_scrolling`.
+  - Seyrek araçlar panelin ▾ listesindedir.
+- **İşlem araçları** (`processing.run.*`) ana sekmelerde yer almaz. Araç kutusunda (sağ dok, İşlemler) ve seçimin bağlamsal
+  sekmelerinde bulunurlar.
+  - İstisnalar: CBS'nin Seçim panelindeki İfadeyle seç ve Konuma göre seç. Bunlar seçimin kendisidir (ArcGIS Pro'nun Seçim
+    grubu).
+- Tema, vurgu, yazı tipi, yazı boyutu ve çizim zemini kartları şeritten kalktı; Uygulama ayarları › Görünüm'dedir. Görünüş
+  panelinde Tema ▾ kalır.
+- Özellikler panelindeki çizim ölçeği durum çubuğuna geçti (§2).
+- Hiçbir şey kaybolmaz. `catalog::tests::the_ribbon_keeps_every_command_the_old_one_placed` testi web'in şeridinin ve eklerin
+  yerleştirdiği, masaüstünde çalışan her komutun yeni şeritte bir yerde olduğunu denetler: sekme, bağlamsal sekme, bölünmüş
+  düğme, menü, ▾ listesi, durum çubuğunun lambaları ya da ? menüsü. Aynı test işlem araçlarının araç kutusunda olduğunu da
+  denetler.
+
+**CAD** (Netcad'in Giriş, Düzenle, Detaylar ve Planet ile Netmap düzeni ve AutoCAD'in Home'u):
+
+| Sekme | Paneller |
+|---|---|
+| Dosya | Proje, Kaydet, Çizimler, Bulut, Alışveriş (İçe aktar ▾, Dışa aktar ▾), Ayarlar |
+| Giriş | Çizim, Değiştir, Açıklama, Katmanlar, Özellikler |
+| Plan | Yol, Ada ve parsel, Alan işlemleri, Plan yazıları, Topoloji |
+| Ölçme | Sorgu, Saha, Poligon ve alım, Kestirme ve dengeleme, Noktalar, Oturtma |
+| Ekle | Blok, Şablonlar, Dış başvuru, Resim ve raster, Harita, Ekler, Adres |
+| Açıklama | Yazı, Ölçü, Kılavuz, Tablo, Tarama, İşaretleme, Ölçek |
+| Değiştir | Pano, Seçim, Dönüştür, Dizi, Kenar, Köşe, Nesne, Kot ve sıra |
+| Mimari | Duvar, Açıklık, Mahal, Taşıyıcı, Merdiven, Görünüm, Etiket ve çizelge, Proje |
+| Görünüm | Gezinme, Görünümler, Koordinatlar, Görünüş, Paneller |
+| Yönet | Stiller, Standart, Temizlik, Veri, Otomasyon, Kısıtlar, GIS |
+| Çıktı | Pafta, Yayınla |
+
+**CBS** (ArcGIS Pro ve QGIS düzeni):
+
+| Sekme | Paneller |
+|---|---|
+| Dosya | Proje, Kaydet, Çizimler, Bulut, Alışveriş, Ayarlar |
+| Harita | Gezinme, Katman ekle (Veri ekle ▾, Altlık ▾), Seçim, Sorgu, Etiket, Koordinat sistemi |
+| Düzenle | Oluştur, Şablonlar, Katmanlar, Değiştir, Alan işlemleri |
+| Veri | Katman, Tablo, Form, Kaynak, Topoloji, Ekler, Standart, Stil |
+| Analiz | İşlemler, Ağ analizi, Arazi, Zaman ve senaryo, Adres, Otomasyon |
+| Ölçme | Saha, Poligon ve alım, Kestirme ve dengeleme, Noktalar, Oturtma |
+| Görünüm | Görünümler, Koordinatlar, Görünüş, Paneller |
+| Çıktı | Pafta, Yayınla, Lejant |
+
+CBS'nin eski Raster sekmesi kalktı; araçları Raster bağlamsal sekmesindedir.
+
+`sheet.new` (Yeni pafta) ve `sheet.fromTemplate` (Şablondan pafta) masaüstünde çalışır oldu. İkisi pafta kipinin kendi yeni
+pafta ve şablon galerisi iletilerini gönderir.
+
+## 4. Seçime göre bağlamsal sekme
+
+Seçimin nesnelerinin türleri tek bir sekmenin `kinds`'ına sığıyorsa o sekme açılır (`Catalog::contextual_for`). Sığmıyorsa
+`*` sekmesi, yani karışık seçimin "Seçim" sekmesi açılır. Sekmenin başlığı türün adı ve sayıdır: "Çizgi 1", "Alan 3".
+
+| Sekme | Türler |
+|---|---|
+| Nokta | point |
+| Çizgi | line, polyline, arc, spline, nurbs, xline, ray |
+| Alan | polygon, circle, ellipse |
+| Yazı | text |
+| Ölçü | dimension |
+| Kılavuz | leader |
+| Tarama | hatch |
+| Blok | insert |
+| Tablo | table |
+| Resim | image |
+| Raster | raster |
+| Nokta bulutu | pointcloud |
+| Duvar (CAD) | wall |
+| Açıklık (CAD) | opening |
+| Mahal (CAD) | space |
+| Mimari nesne (CAD) | grid, column, stair, ramp, tag, viewmark |
+
+Sekmeler yalnız o türe yapılabilecek işleri ve işlem araçlarını taşır. Örnekler:
+
+- Alan: Geometri ▾, Üret ▾, Genelleştir ▾, Sorgu ▾.
+- Raster: Yüzey analizi, Hidroloji, Uzaklık ve maliyet, Hesap, İstatistik, Vektöre, Uygunluk, Uzaktan algılama, Çok
+  boyutlu.
+- Nokta bulutu: Zemin süzgeci, Seyrelt, Sınıfla, Kırp, Birleştir, Karola, Rasterleştir, Sınır çıkar.
+
+Seçim yapılınca ya da değişince sekmesi öne gelir; seçim kalkınca önceki sekmeye dönülür (`follow_selection_tab`).
+AutoCAD'in bağlamsal sekmeleri de böyledir. Kullanıcı tercihi `drafting.contextualTabs` (Uygulama ayarları › Görünüm)
+kapatılırsa sekme yalnız gösterilir, öne gelmez. Sekme seçimin ve çizimin değişiklik sayılarıyla önbellekte tutulur; büyük
+seçimde her karede yeniden taranmaz.
 
 ## 5. CBS'de katman türü ve seçim (sırada)
 

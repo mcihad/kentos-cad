@@ -229,6 +229,21 @@
       "apply": "live"
     },
     {
+      "key": "drafting.contextualTabs",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Seçimde bağlamsal sekme",
+      "description": "Bir nesne seçilince şeritte türünün sekmesi (Çizgi, Alan, Raster, Nokta bulutu…) öne gelir; seçim kalkınca önceki sekmeye dönülür. Kapalıyken sekme yalnız gösterilir.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "drafting.formOnCreate",
       "type": "boolean",
       "default": true,
