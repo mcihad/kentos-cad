@@ -237,6 +237,7 @@ pub(super) struct Features {
     pub(super) xref_paths: bool,
     pub(super) join_views: bool,
     pub(super) linear_events: bool,
+    pub(super) lineage: bool,
     /// Schema 98: a layer's source system and the map's system (docs/adr/0583).
     pub(super) source_crs: bool,
     /// Schema 99: a topology exception's geometry digest (docs/adr/0589).
@@ -411,6 +412,7 @@ impl Features {
             xref_paths: schema >= crate::SCHEMA_WITH_XREF_PATHS,
             join_views: schema >= crate::SCHEMA_WITH_JOIN_VIEWS,
             linear_events: schema >= crate::SCHEMA_WITH_LINEAR_EVENTS,
+            lineage: schema >= crate::SCHEMA_WITH_LINEAGE,
             source_crs: schema >= crate::SCHEMA_WITH_SOURCE_CRS,
             exception_digests: schema >= crate::SCHEMA_WITH_EXCEPTION_DIGESTS,
             georef_crs: schema >= crate::SCHEMA_WITH_GEOREF_CRS,

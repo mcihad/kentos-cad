@@ -256,11 +256,13 @@ birer birer çalıştırın.
 
 ## C — Güvenilir veri üretimi, topoloji ve CAD/GIS ortaklığı
 
-- [ ] **CBS-11 — Mevcut çizim araçlarına provider düzenleme/commit oturumu bağla — P0**
+- [x] **CBS-11 — Mevcut çizim araçlarına provider düzenleme/commit oturumu bağla — P0**
 
   *Kısmen (17 Ekim 2026; [ADR 0503](../docs/adr/0503-bound-layers.md)): bütün çizim araçları bağlı katmanda çalışır; yerel geri alma, kaynağa yazma (`cad.sources.sync` write, tek SQLite işlemi) ve kaynaktan yeniden okuma ayrı durumlar; başkasının değiştirdiği dosya ezilmez (`source_changed`), katmandaki yazılmamış iş sorulmadan atılmaz (`pending_changes`). Kalan: aynı kaynaktaki katmanların birlikte commit'i, nesne nesne üç yollu birleştirme (CBS-37), PostGIS işlemi.*
 
   *Kısmen (22 Ekim 2026; [ADR 0584](../docs/adr/0584-commit-together-and-z-m-on-write.md)): aynı PostGIS veritabanındaki bağlı katmanlar `with`'le tek işlemde yazılır (tablolar adlarının sırasıyla kilitlenir, her biri tabanına karşı denetlenir, biri reddederse hiçbiri yazılmaz; `TableProvider::edit_many`); iki kaynağa birden tek işlem kurulmaz (`transaction_split`). Yazmadan önce Z ve M sütunun bayraklarına göre denetlenir: yasaklayana kotlu, isteyene kotsuz, hiçbirine kısmen kotlu nesne yazılmaz (`geometry_mismatch`). Masaüstünde Kaynağa birlikte yaz aynı kaynağın değişen katmanlarını da toplar. Kalan: PostGIS'te çoktan çoğa eşleme tablosu, bölmede soy bağı, sunucuda onaylanmış değişikliğin geri alınması.*
+
+  *Tamam (23 Ekim 2026; [ADR 0598](../docs/adr/0598-lineage-and-undoing-a-written-step.md)): PostGIS'te çoktan çoğa bağlantı tablosu ADR 0590'da. Bölme ve birleştirme soy kaydını aynı geri alma adımında yazar (projenin `lineage`'i, `.kcad` şema 101: nesne, ataları, `split` ya da `merge`, adımın adı); geri alma kaydı parçalarla geri alır. Bağlı katmanın yazması yazdığı satırların soyunu aynı işlemde `kentos_lineage` tablosuna yazar (GeoPackage ve PostGIS). Kaynağa yazılmış adımın geri alınması çizimindir; sonraki yazma satır satır denetlenir, arada değişen satır `source_changed` ile reddedilir; masaüstü geri almada söyler. Kalan (sonraya): soyun paftada ve Öznitelikler'de gösterilmesi, kaynağın soy satırlarının okunması.*
 
   **Mevcut:** CAD araçları, transaction/undo ve PR'nin yeni nesnede form açması güçlü bir temel. Harici kaynağa yazma, yerel undo ile veritabanında kalıcı commit'in farkını görünür kılmalı [K07/P25-A].
 

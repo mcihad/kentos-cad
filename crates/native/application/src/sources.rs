@@ -673,6 +673,8 @@ struct Diff {
     mismatch: Option<(Uuid, String)>,
     /// Attributes neither a column nor a field of the layer.
     lost: BTreeSet<String>,
+    /// The written rows' parents by lasting id (docs/adr/0598 §3), the drawing's records of each.
+    lineage: Vec<(String, Vec<gpkg::LineageRow>)>,
 }
 
 impl Diff {
@@ -944,6 +946,7 @@ fn diff_skipping(
         SAME
     };
     let mut seen = HashSet::new();
+    let mut written: Vec<Uuid> = Vec::new();
     for (uid, e) in doc.by_layer_with_uids(layer) {
         for k in e.base().attrs.keys() {
             if !columns.iter().any(|c| c.name.eq_ignore_ascii_case(k)) && !skipped(k) {
@@ -998,8 +1001,14 @@ fn diff_skipping(
         }
         match s.rows.get(&uid) {
             // Moved out of a part's area (docs/adr/0510): its row is written, not a new one.
-            None if s.outside.contains_key(&uid) => d.update.push((s.outside[&uid], row)),
-            None => d.insert.push((uid.to_string(), row)),
+            None if s.outside.contains_key(&uid) => {
+                d.update.push((s.outside[&uid], row));
+                written.push(uid);
+            }
+            None => {
+                d.insert.push((uid.to_string(), row));
+                written.push(uid);
+            }
             Some((fid, g, values)) => {
                 seen.insert(uid);
                 let same = same_geometry(row.geometry.as_ref(), g.as_ref(), tol)
@@ -1012,6 +1021,7 @@ fn diff_skipping(
                     });
                 if !same {
                     d.update.push((*fid, row));
+                    written.push(uid);
                 }
             }
         }
@@ -1020,11 +1030,46 @@ fn diff_skipping(
         .rows
         .iter()
         .filter(|(u, _)| !seen.contains(u))
-        .map(|(_, (fid, ..))| *fid)
+        .map(|(u, (fid, ..))| {
+            written.push(*u);
+            *fid
+        })
         .collect();
+    d.lineage = lineage_rows(doc, &written);
     d.delete.sort_unstable();
     d.update.sort_by_key(|(fid, _)| *fid);
     d
+}
+
+/// What the written rows came from (docs/adr/0598 §3): each written uid with the drawing's records of it as a child,
+/// its source rows replaced by them (none: its rows go). Nothing when neither the drawing nor a written row has any.
+fn lineage_rows(doc: &Document, written: &[Uuid]) -> Vec<(String, Vec<gpkg::LineageRow>)> {
+    let records = doc.lineage();
+    if written.is_empty() {
+        return Vec::new();
+    }
+    let mut by_child: HashMap<String, Vec<gpkg::LineageRow>> = HashMap::new();
+    for r in records {
+        let rows = by_child.entry(r.child.to_string()).or_default();
+        for p in &r.parents {
+            let row = gpkg::LineageRow {
+                parent: p.to_string(),
+                operation: r.operation.name().to_owned(),
+                step: r.step.clone(),
+            };
+            if !rows.contains(&row) {
+                rows.push(row);
+            }
+        }
+    }
+    written
+        .iter()
+        .map(|u| {
+            let child = u.to_string();
+            let rows = by_child.remove(&child).unwrap_or_default();
+            (child, rows)
+        })
+        .collect()
 }
 
 fn link_of<'a>(doc: &'a Document, id: &str) -> Option<&'a SourceLink> {
@@ -1750,6 +1795,49 @@ fn state_of(doc: &Document, link: &SourceLink, ties: &[relations::Tie]) -> Sourc
         state.added + state.modified + state.removed,
     );
     state
+}
+
+/// The bound layers whose source holds what `report`'s step wrote (docs/adr/0598 §4): every object the step changed in
+/// a bound layer is, before its undo, as the layer's base holds it (or absent from both), and the undo would make one
+/// differ. Undo is the drawing's; the next write puts the undo in the source, checked against the rows it changes.
+/// Reads no table: the bases are the project's.
+pub fn undoing_written(doc: &Document, report: &kentos_domain::StepReport) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for link in &doc.settings().sources {
+        let mine: Vec<&kentos_domain::ObjectChange> = report
+            .objects
+            .iter()
+            .filter(|o| {
+                o.after
+                    .as_deref()
+                    .or(o.before.as_deref())
+                    .is_some_and(|e| e.base().layer_id == link.layer)
+            })
+            .collect();
+        if mine.is_empty() {
+            continue;
+        }
+        let Some(bases) = base::of(doc, link) else {
+            continue;
+        };
+        let held = |e: Option<&kentos_commands::Entity>, uid: &Uuid| match (e, bases.get(uid)) {
+            (Some(e), Some(b)) => base::hash_of(e) == b.layer,
+            (None, None) => true,
+            (None, Some(b)) => b.layer == base::ABSENT,
+            (Some(_), None) => false,
+        };
+        let written = mine.iter().all(|o| held(o.after.as_deref(), &o.uid));
+        let differs = mine.iter().any(|o| !held(o.before.as_deref(), &o.uid));
+        if written && differs {
+            let name = doc
+                .layers()
+                .get(&link.layer)
+                .map(|n| n.name.clone())
+                .unwrap_or_else(|| link.layer.clone());
+            out.push(name);
+        }
+    }
+    out
 }
 
 /// The state of one bound layer, as `cad.sources.describe` gives it (the same function, so the rule that says what

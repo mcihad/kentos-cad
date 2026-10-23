@@ -10897,6 +10897,52 @@
             ],
             "type": "object"
           },
+          "LineageOperation": {
+            "description": "How the object came from its parents.",
+            "oneOf": [
+              {
+                "const": "split",
+                "description": "A piece of one object split (Böl, Kır, Parçalara ayır).",
+                "type": "string"
+              },
+              {
+                "const": "merge",
+                "description": "The object the others were merged into (Birleştir, Parçaları birleştir).",
+                "type": "string"
+              }
+            ]
+          },
+          "LineageRecord": {
+            "additionalProperties": false,
+            "description": "One object's parents in one step.",
+            "properties": {
+              "child": {
+                "$ref": "#/$defs/EntityId",
+                "description": "The object made or kept by the step."
+              },
+              "operation": {
+                "$ref": "#/$defs/LineageOperation"
+              },
+              "parents": {
+                "description": "The objects it came from, in the step's order; never itself.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "step": {
+                "description": "The undo step's name (“Böl”, “Birleştir”); 1–200 characters.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "child",
+              "parents",
+              "operation",
+              "step"
+            ],
+            "type": "object"
+          },
           "LocalDefinition": {
             "description": "A local system: its base and the plane transform from it to the base.",
             "properties": {
@@ -13813,6 +13859,13 @@
                 "description": "The project's line types with patterns (docs/adr/0313 §1).",
                 "items": {
                   "$ref": "#/$defs/LineTypeDef"
+                },
+                "type": "array"
+              },
+              "lineage": {
+                "description": "What the split and merged objects came from (docs/adr/0598), in the order the steps made them; kept in the undo\nhistory (`Op::Lineage`).",
+                "items": {
+                  "$ref": "#/$defs/LineageRecord"
                 },
                 "type": "array"
               },
@@ -25742,6 +25795,52 @@
             ],
             "type": "object"
           },
+          "LineageOperation": {
+            "description": "How the object came from its parents.",
+            "oneOf": [
+              {
+                "const": "split",
+                "description": "A piece of one object split (Böl, Kır, Parçalara ayır).",
+                "type": "string"
+              },
+              {
+                "const": "merge",
+                "description": "The object the others were merged into (Birleştir, Parçaları birleştir).",
+                "type": "string"
+              }
+            ]
+          },
+          "LineageRecord": {
+            "additionalProperties": false,
+            "description": "One object's parents in one step.",
+            "properties": {
+              "child": {
+                "$ref": "#/$defs/EntityId",
+                "description": "The object made or kept by the step."
+              },
+              "operation": {
+                "$ref": "#/$defs/LineageOperation"
+              },
+              "parents": {
+                "description": "The objects it came from, in the step's order; never itself.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "step": {
+                "description": "The undo step's name (“Böl”, “Birleştir”); 1–200 characters.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "child",
+              "parents",
+              "operation",
+              "step"
+            ],
+            "type": "object"
+          },
           "LocalDefinition": {
             "description": "A local system: its base and the plane transform from it to the base.",
             "properties": {
@@ -27122,6 +27221,13 @@
                 "description": "The project's line types with patterns (docs/adr/0313 §1).",
                 "items": {
                   "$ref": "#/$defs/LineTypeDef"
+                },
+                "type": "array"
+              },
+              "lineage": {
+                "description": "What the split and merged objects came from (docs/adr/0598), in the order the steps made them; kept in the undo\nhistory (`Op::Lineage`).",
+                "items": {
+                  "$ref": "#/$defs/LineageRecord"
                 },
                 "type": "array"
               },
@@ -40105,6 +40211,52 @@
             ],
             "type": "object"
           },
+          "LineageOperation": {
+            "description": "How the object came from its parents.",
+            "oneOf": [
+              {
+                "const": "split",
+                "description": "A piece of one object split (Böl, Kır, Parçalara ayır).",
+                "type": "string"
+              },
+              {
+                "const": "merge",
+                "description": "The object the others were merged into (Birleştir, Parçaları birleştir).",
+                "type": "string"
+              }
+            ]
+          },
+          "LineageRecord": {
+            "additionalProperties": false,
+            "description": "One object's parents in one step.",
+            "properties": {
+              "child": {
+                "$ref": "#/$defs/EntityId",
+                "description": "The object made or kept by the step."
+              },
+              "operation": {
+                "$ref": "#/$defs/LineageOperation"
+              },
+              "parents": {
+                "description": "The objects it came from, in the step's order; never itself.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "step": {
+                "description": "The undo step's name (“Böl”, “Birleştir”); 1–200 characters.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "child",
+              "parents",
+              "operation",
+              "step"
+            ],
+            "type": "object"
+          },
           "LocalDefinition": {
             "description": "A local system: its base and the plane transform from it to the base.",
             "properties": {
@@ -43059,6 +43211,13 @@
                 "description": "The project's line types with patterns (docs/adr/0313 §1).",
                 "items": {
                   "$ref": "#/$defs/LineTypeDef"
+                },
+                "type": "array"
+              },
+              "lineage": {
+                "description": "What the split and merged objects came from (docs/adr/0598), in the order the steps made them; kept in the undo\nhistory (`Op::Lineage`).",
+                "items": {
+                  "$ref": "#/$defs/LineageRecord"
                 },
                 "type": "array"
               },

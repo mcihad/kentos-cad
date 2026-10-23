@@ -363,6 +363,11 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::EventLink>>", optional))]
     pub linear_events: Vec<crate::EventLink>,
+    /// What the split and merged objects came from (docs/adr/0598), in the order the steps made them; kept in the undo
+    /// history (`Op::Lineage`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::LineageRecord>>", optional))]
+    pub lineage: Vec<crate::LineageRecord>,
     /// How lengths are written (docs/adr/0262 §2): none, decimal; the others
     /// only in an inch or foot drawing.
     #[serde(default, skip_serializing_if = "Option::is_none")]

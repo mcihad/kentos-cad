@@ -481,6 +481,7 @@ pub(super) fn write(
                     update,
                     insert: std::mem::take(&mut it.diff.insert),
                     delete: std::mem::take(&mut it.diff.delete),
+                    lineage: std::mem::take(&mut it.diff.lineage),
                 }
             })
             .collect();

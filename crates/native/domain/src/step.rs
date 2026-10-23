@@ -530,6 +530,11 @@ impl Document {
 }
 
 /// What `ops` changed, an object once (its first before, its last after).
+/// What `ops` changed, as a step's report says it.
+pub(crate) fn report_of(ops: &[Op]) -> StepReport {
+    report_of_ops(ops)
+}
+
 fn report_of_ops(ops: &[Op]) -> StepReport {
     let mut report = StepReport::default();
     let mut at: HashMap<Uuid, usize> = HashMap::new();
@@ -623,7 +628,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
                     if !report.parts.contains(&part) { report.parts.push(part); }
                 }
             }
-            Op::Units { .. } | Op::Domains { .. } => {
+            Op::Units { .. } | Op::Domains { .. } | Op::Lineage { .. } => {
                 if !report.parts.contains(&ProjectPart::Settings) {
                     report.parts.push(ProjectPart::Settings);
                 }

@@ -912,3 +912,103 @@ fn pins_of_an_object_that_left_the_part_are_parked_and_given_back() {
     assert_eq!(pins_of(&d, "Çağlayan"), json!([{ "at": { "x": 1.0, "y": 2.0 } }]));
     let _ = std::fs::remove_file(&tmp);
 }
+
+/// Two halves of `uid`'s bounding box, as polygons.
+fn halves(d: &Document, uid: &str) -> (Value, Value) {
+    let (_, e) = d
+        .by_layer_with_uids(&link_of(d).layer)
+        .find(|(u, _)| u.to_string() == uid)
+        .expect("object");
+    let v = serde_json::to_value(e).expect("json");
+    let pts = v["pts"].as_array().expect("pts");
+    let xs: Vec<f64> = pts.iter().map(|p| p["x"].as_f64().expect("x")).collect();
+    let ys: Vec<f64> = pts.iter().map(|p| p["y"].as_f64().expect("y")).collect();
+    let (x0, x1) = (xs.iter().copied().fold(f64::MAX, f64::min), xs.iter().copied().fold(f64::MIN, f64::max));
+    let (y0, y1) = (ys.iter().copied().fold(f64::MAX, f64::min), ys.iter().copied().fold(f64::MIN, f64::max));
+    let xm = (x0 + x1) / 2.0;
+    let rect = |a: f64, b: f64| {
+        json!({ "kind": "polygon", "pts": [{ "x": a, "y": y0 }, { "x": b, "y": y0 }, { "x": b, "y": y1 }, { "x": a, "y": y1 }] })
+    };
+    (rect(x0, xm), rect(xm, x1))
+}
+
+fn lineage_in(path: &std::path::Path) -> Vec<(String, String, String, String)> {
+    kentos_geopackage::GeoPackage::open(path, false)
+        .expect("open")
+        .lineage_of("parsel")
+        .expect("lineage")
+}
+
+// docs/adr/0598: a parcel split in a bound layer writes its new piece, the piece's lasting id and its parent in the
+// one SQLite transaction; undo takes the record back with the piece and the next write takes the rows out; a merge's
+// object names the parcels merged into it. With KENTOS_WRITE_GPKG the written copy is kept as
+// fixtures/geopackage/v1/kentos-soy.gpkg, which scripts/fixtures/lineage_cases.py reads with sqlite3.
+#[test]
+fn a_split_parcel_writes_its_parent_beside_its_rows() {
+    let tmp = std::env::temp_dir().join(format!("kentos-lineage-{}.gpkg", std::process::id()));
+    std::fs::copy(dir().join("qgis.gpkg"), &tmp).expect("copied");
+    let path = tmp.display().to_string();
+    let mut d = doc();
+    ok(&run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": path, "table": "parsel" } }),
+    ));
+    let layer = link_of(&d).layer;
+    let uids: Vec<String> = d.by_layer_with_uids(&layer).map(|(u, _)| u.to_string()).collect();
+    let write = json!({ "layer": layer, "direction": "write" });
+    let (a, b) = halves(&d, &uids[0]);
+    let split = ok(&run(
+        &mut d,
+        "cad.entities.edit",
+        CallOp::Execute,
+        json!({ "operation": "areaSplit", "changes": [
+            { "kind": "replace", "uid": uids[0], "geometry": a, "keepData": true },
+            { "kind": "add", "from": uids[0], "geometry": b, "keepData": true } ] }),
+    ))
+    .clone();
+    let piece = split["created"][0].as_str().expect("piece").to_owned();
+    assert_eq!(
+        serde_json::to_value(d.lineage()).expect("json"),
+        json!([{ "child": piece, "parents": [uids[0]], "operation": "split", "step": "Alan böl" }])
+    );
+    ok(&run(&mut d, "cad.sources.sync", CallOp::Execute, write.clone()));
+    assert_eq!(
+        lineage_in(&tmp),
+        vec![(piece.clone(), uids[0].clone(), "split".into(), "Alan böl".into())]
+    );
+    // Undo is the drawing's: the record goes with the piece; the next write takes the piece's row and its parent out.
+    assert_eq!(d.undo().as_deref(), Some("Alan böl"));
+    assert!(d.lineage().is_empty());
+    ok(&run(&mut d, "cad.sources.sync", CallOp::Execute, write.clone()));
+    assert!(lineage_in(&tmp).is_empty(), "{:?}", lineage_in(&tmp));
+    assert_eq!(d.redo().as_deref(), Some("Alan böl"));
+    ok(&run(&mut d, "cad.sources.sync", CallOp::Execute, write.clone()));
+    assert_eq!(lineage_in(&tmp).len(), 1);
+    // A merge of the piece and another parcel: the new object names both, in the step's order.
+    let (whole, _) = halves(&d, &uids[1]);
+    let merged = ok(&run(
+        &mut d,
+        "cad.entities.edit",
+        CallOp::Execute,
+        json!({ "operation": "areaUnion", "changes": [
+            { "kind": "remove", "uid": piece }, { "kind": "remove", "uid": uids[1] },
+            { "kind": "add", "from": piece, "geometry": whole, "keepData": true } ] }),
+    ))
+    .clone();
+    let union = merged["created"][0].as_str().expect("union").to_owned();
+    ok(&run(&mut d, "cad.sources.sync", CallOp::Execute, write));
+    let mut want = vec![
+        (union.clone(), piece.clone(), "merge".to_owned(), "Alan birleştir".to_owned()),
+        (union, uids[1].clone(), "merge".into(), "Alan birleştir".into()),
+    ];
+    // The piece is gone from the table; its own parent stays: it was split, then merged away.
+    want.push((piece, uids[0].clone(), "split".into(), "Alan böl".into()));
+    want.sort();
+    assert_eq!(lineage_in(&tmp), want);
+    if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
+        std::fs::copy(&tmp, dir().join("kentos-soy.gpkg")).expect("kept");
+    }
+    let _ = std::fs::remove_file(&tmp);
+}

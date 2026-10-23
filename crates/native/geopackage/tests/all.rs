@@ -381,6 +381,7 @@ fn a_table_is_edited_in_place_and_its_index_follows() {
             },
         )],
         delete: vec![1],
+        lineage: Vec::new(),
     };
     let fids = gp.edit(&parsel, &edits).expect("edited");
     assert_eq!(fids, vec![4]);

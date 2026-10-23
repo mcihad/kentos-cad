@@ -2409,6 +2409,20 @@ LineTypesOperationName = Literal["load", "add", "remove", "scale", "export"]
 """The names of :class:`LineTypesOperation`, for a plain string."""
 
 
+class LineageOperation(_StrEnum):
+    """How the object came from its parents.
+
+    - ``split``: A piece of one object split (Böl, Kır, Parçalara ayır).
+    - ``merge``: The object the others were merged into (Birleştir, Parçaları birleştir).
+    """
+    SPLIT = "split"
+    MERGE = "merge"
+
+
+LineageOperationName = Literal["split", "merge"]
+"""The names of :class:`LineageOperation`, for a plain string."""
+
+
 class LinearRefDefineOperation(_StrEnum):
     """What `cad.linearref.define` does.
 
@@ -28907,6 +28921,37 @@ class LineTypesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LineageRecord(_Model):
+    """One object's parents in one step.
+    Attributes:
+        child: The object made or kept by the step.
+        parents: The objects it came from, in the step's order; never itself.
+        step: The undo step's name (“Böl”, “Birleştir”); 1–200 characters.
+    """
+    child: str
+    parents: list[str]
+    operation: LineageOperation | LineageOperationName
+    step: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["child"] = self.child
+        out["parents"] = list(self.parents)
+        out["operation"] = _enum_out(self.operation)
+        out["step"] = self.step
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LineageRecord:
+        return cls(
+            child=data["child"],
+            parents=list(data["parents"]),
+            operation=_enum_in(LineageOperation, data["operation"]),
+            step=data["step"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LinearRefDefine(_Model):
     """Input of `cad.linearref.define` v1.
 
@@ -36799,6 +36844,8 @@ class ProjectSettings(_Model):
         line_type_scale: The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
             absent: 1. Unit: 1.
         line_types: The project's line types with patterns (docs/adr/0313 §1).
+        lineage: What the split and merged objects came from (docs/adr/0598), in the order the steps made them; kept in the undo
+            history (`Op::Lineage`).
         linear_events: The project's links of event layers to their routes (docs/adr/0569), in the list's order.
         map_srid: The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:
             the project's own. Changing it changes no coordinate. Unit: epsg.
@@ -36854,6 +36901,7 @@ class ProjectSettings(_Model):
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_types: list[LineTypeDef] | Unset = UNSET
+    lineage: list[LineageRecord] | Unset = UNSET
     linear_events: list[EventLink] | Unset = UNSET
     map_srid: int | None | Unset = UNSET
     named_ucs: list[NamedUcs] | Unset = UNSET
@@ -36921,6 +36969,8 @@ class ProjectSettings(_Model):
             out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_types is not UNSET:
             out["lineTypes"] = [e0.to_json() for e0 in self.line_types]
+        if self.lineage is not UNSET:
+            out["lineage"] = [e0.to_json() for e0 in self.lineage]
         if self.linear_events is not UNSET:
             out["linearEvents"] = [e0.to_json() for e0 in self.linear_events]
         if self.map_srid is not UNSET:
@@ -36988,6 +37038,7 @@ class ProjectSettings(_Model):
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_types=[LineTypeDef.from_json(e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
+            lineage=[LineageRecord.from_json(e0) for e0 in data["lineage"]] if "lineage" in data else UNSET,
             linear_events=[EventLink.from_json(e0) for e0 in data["linearEvents"]] if "linearEvents" in data else UNSET,
             map_srid=data.get("mapSrid", UNSET),
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
@@ -62208,6 +62259,9 @@ __all__ = [
     "LineTypesEdited",
     "LineTypesOperation",
     "LineTypesOperationName",
+    "LineageOperation",
+    "LineageOperationName",
+    "LineageRecord",
     "LinearBlockParameter",
     "LinearDimensionMeasure",
     "LinearRefDefine",

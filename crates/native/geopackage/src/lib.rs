@@ -314,14 +314,28 @@ pub struct NewRow {
     pub values: Vec<Value>,
 }
 
-/// The edits of a table: columns to add, rows to update by fid, rows to insert with their lasting ids, fids to delete.
+/// One parent of a written row (docs/adr/0598 §3): the parent's lasting id, `split` or `merge`, the step's name.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LineageRow {
+    pub parent: String,
+    pub operation: String,
+    pub step: String,
+}
+
+/// The edits of a table: columns to add, rows to update by fid, rows to insert with their lasting ids, fids to delete;
+/// and the parents of the rows written, by lasting id: what the table's `kentos_lineage` rows of each become (none
+/// left: its rows go).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Edits {
     pub add_columns: Vec<Column>,
     pub update: Vec<(i64, NewRow)>,
     pub insert: Vec<(String, NewRow)>,
     pub delete: Vec<i64>,
+    pub lineage: Vec<(String, Vec<LineageRow>)>,
 }
+
+/// The extension of KentOS's lineage rows (docs/adr/0598 §3).
+pub const LINEAGE_EXTENSION: &str = "kentos_lineage";
 
 /// A GeoPackage file open.
 pub struct GeoPackage {
@@ -1139,6 +1153,7 @@ fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Resu
                 gone.execute(params![layer.name, fid])?;
             }
         }
+        write_lineage(tx, &layer.name, &edits.lineage)?;
         // The contents' time: what changed is said where other programs look (a table left as it is keeps its time).
         let changed = !edits.add_columns.is_empty()
             || !edits.update.is_empty()
@@ -1151,6 +1166,68 @@ fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Resu
             )?;
         }
         Ok(fids)
+}
+
+/// The written rows' parents (docs/adr/0598 §3): each row's `kentos_lineage` rows replaced by the drawing's, the table
+/// made (and the extension named) only when a row has a parent; a file without it and no parent stays as it is.
+fn write_lineage(
+    tx: &rusqlite::Transaction<'_>,
+    table: &str,
+    rows: &[(String, Vec<LineageRow>)],
+) -> Result<()> {
+    if rows.is_empty() {
+        return Ok(());
+    }
+    let has = tx.query_row(
+        "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'kentos_lineage'",
+        [],
+        |r| r.get::<_, i64>(0),
+    )? > 0;
+    let any = rows.iter().any(|(_, r)| !r.is_empty());
+    if !has && !any {
+        return Ok(());
+    }
+    if !has {
+        tx.execute_batch(
+            "CREATE TABLE kentos_lineage (table_name TEXT NOT NULL, child TEXT NOT NULL, parent TEXT NOT NULL,
+             operation TEXT NOT NULL, step TEXT NOT NULL, PRIMARY KEY (table_name, child, parent, operation, step));",
+        )?;
+        tx.execute(
+            "INSERT OR IGNORE INTO gpkg_extensions VALUES ('kentos_lineage', NULL, ?1, 'https://kentos.app/geopackage/lineage (docs/adr/0598)', 'read-write')",
+            [LINEAGE_EXTENSION],
+        )?;
+    }
+    let mut gone = tx.prepare_cached("DELETE FROM kentos_lineage WHERE table_name = ?1 AND child = ?2")?;
+    let mut put = tx.prepare_cached("INSERT OR IGNORE INTO kentos_lineage VALUES (?1, ?2, ?3, ?4, ?5)")?;
+    for (child, parents) in rows {
+        gone.execute(params![table, child])?;
+        for p in parents {
+            put.execute(params![table, child, p.parent, p.operation, p.step])?;
+        }
+    }
+    Ok(())
+}
+
+/// The lineage rows of `table`, as (child, parent, operation, step) in that order (docs/adr/0598 §3); none when the
+/// file has no `kentos_lineage`.
+impl GeoPackage {
+    pub fn lineage_of(&self, table: &str) -> Result<Vec<(String, String, String, String)>> {
+        let has = self.conn.query_row(
+            "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'kentos_lineage'",
+            [],
+            |r| r.get::<_, i64>(0),
+        )? > 0;
+        if !has {
+            return Ok(Vec::new());
+        }
+        let mut st = self.conn.prepare(
+            "SELECT child, parent, operation, step FROM kentos_lineage WHERE table_name = ?1 ORDER BY 1, 2, 3, 4",
+        )?;
+        let rows = st
+            .query_map([table], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
 }
 
 /// The spatial index of a table's geometry column (§F.3): GeoPackage 1.3's triggers in a file of its own, the file's

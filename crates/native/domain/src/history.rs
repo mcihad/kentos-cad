@@ -223,6 +223,12 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::FieldDomain>,
         after: Vec<kentos_contracts::FieldDomain>,
     },
+    /// What the split and merged objects came from (docs/adr/0598 §2), before and after: a setting, written in the
+    /// step whose split or merge made the records, so undo takes them back with the objects.
+    Lineage {
+        before: Arc<Vec<kentos_contracts::LineageRecord>>,
+        after: Arc<Vec<kentos_contracts::LineageRecord>>,
+    },
     /// The constraints and the parameter table (docs/adr/0334), before and after; written in the step with the
     /// objects a solve moved, so undo gives both back.
     Constraints {
@@ -408,6 +414,10 @@ impl Op {
                 after: *before,
             },
             Op::Domains { before, after } => Op::Domains {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::Lineage { before, after } => Op::Lineage {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -692,6 +702,13 @@ impl Document {
         Some((copy, label))
     }
 
+    /// What the step `undo` would revert changed, without reverting it (docs/adr/0598 §4): its objects as they are
+    /// now (`after`) and as undo would leave them (`before`). None: no step to undo.
+    pub fn undo_report(&self) -> Option<crate::StepReport> {
+        let step = self.history.undo.back()?;
+        Some(crate::step::report_of(&step.ops))
+    }
+
     pub fn can_redo(&self) -> bool {
         !self.history.redo.is_empty()
     }
@@ -950,6 +967,7 @@ impl Document {
                 | Op::ImportMetadata { .. }
                 | Op::Units { .. }
                 | Op::Domains { .. }
+                | Op::Lineage { .. }
                 | Op::Constraints { .. } => false,
             })
         };
@@ -1157,6 +1175,10 @@ impl Document {
             }
             Op::Domains { after, .. } => {
                 self.settings.domains = after.clone();
+                return;
+            }
+            Op::Lineage { after, .. } => {
+                self.settings.lineage = (**after).clone();
                 return;
             }
             Op::Constraints { after, .. } => {

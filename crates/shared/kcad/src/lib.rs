@@ -574,11 +574,14 @@ pub const SCHEMA_WITH_EXCEPTION_DIGESTS: u32 = 99;
 /// Schema 100 (docs/adr/0594 §1): a georeference record's `crs`, the targets' system as a definition when it is no
 /// EPSG code, written only when a record has one.
 pub const SCHEMA_WITH_GEOREF_CRS: u32 = 100;
+/// Schema 101 (docs/adr/0598 §1): the settings' `lineage`, what the split and merged objects came from (their JSON),
+/// written only when the project has a record.
+pub const SCHEMA_WITH_LINEAGE: u32 = 101;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 99] = [
+pub const SCHEMAS: [u32; 100] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -678,6 +681,7 @@ pub const SCHEMAS: [u32; 99] = [
     SCHEMA_WITH_SOURCE_CRS,
     SCHEMA_WITH_EXCEPTION_DIGESTS,
     SCHEMA_WITH_GEOREF_CRS,
+    SCHEMA_WITH_LINEAGE,
 ];
 
 /// The file a drawing is saved as.

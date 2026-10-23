@@ -28,6 +28,7 @@ import time
 from pathlib import Path
 
 import psycopg2
+import uuid
 from osgeo import gdal
 
 gdal.UseExceptions()
@@ -119,6 +120,31 @@ def package_problems(c, package):
         if n != rows:
             problems.append(f"{name} kopyasının kalıcı kimlikleri {n}")
     return problems
+
+
+def lineage_problems(c):
+    """The lineage the split test left (docs/adr/0598 §3): one row, its child and its parent rows of soy.parsel, both
+    named by soy.kentos_uids, the operation split."""
+    cur = c.cursor()
+    cur.execute("SELECT table_name, child::text, parent::text, operation, step FROM soy.kentos_lineage")
+    rows = cur.fetchall()
+    cur.execute("SELECT p.fid, u.uid::text FROM soy.parsel p LEFT JOIN soy.kentos_uids u "
+                "ON u.table_name = 'soy.parsel' AND u.pk = p.fid")
+    # A row KentOS did not write has the id ADR 0505 gives it: UUID v5 of the database, the table and the key.
+    space = uuid.UUID(bytes=bytes([0x6b, 0x1e, 0x4f, 0x0a, 0x93, 0x27, 0x4c, 0x51, 0x8d, 0x36, 0x2f, 0x7a, 0x10, 0xc4,
+                                   0x5e, 0x92]))
+    named = {u or str(uuid.uuid5(space, f"pg:postgres/soy.parsel:{fid}")) for fid, u in cur.fetchall()}
+    out = []
+    if len(rows) != 1:
+        out.append(f"soy.kentos_lineage: {len(rows)} satır, 1 bekleniyor")
+    for table, child, parent, operation, step in rows:
+        if table != "soy.parsel" or operation != "split" or step != "Alan böl":
+            out.append(f"soy.kentos_lineage: beklenmeyen satır {table} {operation} {step}")
+        if child not in named:
+            out.append(f"soy.kentos_lineage: {child} tablonun bir satırı değil")
+        if parent not in named:
+            out.append(f"soy.kentos_lineage: ata {parent} tablonun bir satırı değil")
+    return out
 
 
 def check(c, seen, before):
@@ -310,6 +336,13 @@ def main():
                                      layers=[table],
                                      layerCreationOptions=["SCHEMA=paket", "FID=fid", "GEOMETRY_NAME=geom"],
                                      preserveFID=True))
+        # The lineage of a split parcel (docs/adr/0598 §3): QGIS's parcels in the schema soy, written by the lineage test.
+        c.cursor().execute("CREATE SCHEMA soy")
+        gdal.VectorTranslate(pg, str(ROOT / "fixtures/geopackage/v1/qgis.gpkg"),
+                             options=gdal.VectorTranslateOptions(
+                                 layers=["parsel"],
+                                 layerCreationOptions=["SCHEMA=soy", "FID=fid", "GEOMETRY_NAME=geom"],
+                                 preserveFID=True))
         c.cursor().execute("CREATE VIEW sorgu.nokta_v AS SELECT fid, ad, tur, geom FROM sorgu.nokta WHERE fid <= 50")
         c.cursor().execute("CREATE VIEW sorgu.anahtarsiz AS SELECT ad, geom FROM sorgu.nokta")
         # The tables written together and the Z and M columns (docs/adr/0584).
@@ -402,7 +435,7 @@ def main():
             subprocess.run(["cargo", "test", "-q", "-p", "kentos-desktop", "exchange::postgis_tests::screens", "--",
                             "--ignored", "--nocapture"], cwd=ROOT, env=env, check=True)
         seen = json.loads(out.read_text("utf-8"))
-        problems = check(c, seen, before) + package_problems(c, package)
+        problems = check(c, seen, before) + package_problems(c, package) + lineage_problems(c)
         if problems:
             print("; ".join(problems), file=sys.stderr)
             return 1

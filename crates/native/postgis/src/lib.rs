@@ -1013,6 +1013,7 @@ async fn edit_in(
             sqlx::query(sqlx::AssertSqlSafe(gone.as_str())).bind(&full).bind(*fid).execute(&mut *tx).await.map_err(refused)?;
         }
     }
+    lineage_in(&mut *tx, &schema, &full, &edits.lineage).await?;
     let s = shape(&mut *tx, table).await?;
     let (_, after) = rows(&mut *tx, &s, area).await?;
     Ok(Edited {
@@ -1020,6 +1021,61 @@ async fn edit_in(
         before,
         after,
     })
+}
+
+/// The written rows' parents (docs/adr/0598 §3), in the edit's transaction: each row's rows of the schema's
+/// `kentos_lineage` replaced by the drawing's; the table made only when a row has a parent.
+async fn lineage_in(
+    tx: &mut PgConnection,
+    schema: &str,
+    table: &str,
+    rows: &[(String, Vec<gpkg::LineageRow>)],
+) -> Result<(), ProviderError> {
+    if rows.is_empty() || schema.is_empty() {
+        return Ok(());
+    }
+    let side = format!("{}.kentos_lineage", quote(schema));
+    let has: bool = sqlx::query_scalar("SELECT to_regclass($1) IS NOT NULL")
+        .bind(&side)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(refused)?;
+    let any = rows.iter().any(|(_, r)| !r.is_empty());
+    if !has && !any {
+        return Ok(());
+    }
+    if !has {
+        tx.execute(sqlx::AssertSqlSafe(format!(
+            "CREATE TABLE {side} (table_name text NOT NULL, child uuid NOT NULL, parent uuid NOT NULL, operation text NOT NULL,
+             step text NOT NULL, PRIMARY KEY (table_name, child, parent, operation, step))"
+        )))
+        .await
+        .map_err(|e| refused(format!("soy kayıtlarının tablosu ({side}) açılamadı: {e}")))?;
+    }
+    let gone = format!("DELETE FROM {side} WHERE table_name = $1 AND child = CAST($2 AS uuid)");
+    let put = format!(
+        "INSERT INTO {side} VALUES ($1, CAST($2 AS uuid), CAST($3 AS uuid), $4, $5) ON CONFLICT DO NOTHING"
+    );
+    for (child, parents) in rows {
+        sqlx::query(sqlx::AssertSqlSafe(gone.as_str()))
+            .bind(table)
+            .bind(child)
+            .execute(&mut *tx)
+            .await
+            .map_err(refused)?;
+        for p in parents {
+            sqlx::query(sqlx::AssertSqlSafe(put.as_str()))
+                .bind(table)
+                .bind(child)
+                .bind(&p.parent)
+                .bind(&p.operation)
+                .bind(&p.step)
+                .execute(&mut *tx)
+                .await
+                .map_err(refused)?;
+        }
+    }
+    Ok(())
 }
 
 impl TableProvider for PostGis {
@@ -1030,7 +1086,7 @@ impl TableProvider for PostGis {
                 "SELECT n.nspname::text, c.relname::text FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
                  WHERE c.relkind IN ('r', 'p', 'v', 'm') AND n.nspname NOT IN ('pg_catalog', 'information_schema', 'topology', 'tiger')
                    AND n.nspname NOT LIKE 'pg_toast%'
-                   AND c.relname NOT IN ('spatial_ref_sys', 'kentos_uids', 'geometry_columns', 'geography_columns')
+                   AND c.relname NOT IN ('spatial_ref_sys', 'kentos_uids', 'kentos_lineage', 'geometry_columns', 'geography_columns')
                  ORDER BY n.nspname, c.relname",
             )
             .fetch_all(&mut conn)

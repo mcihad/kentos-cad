@@ -18,6 +18,7 @@ import type { LayerState } from "./LayerState";
 import type { LeaderStyleDef } from "./LeaderStyleDef";
 import type { LengthStyle } from "./LengthStyle";
 import type { LineTypeDef } from "./LineTypeDef";
+import type { LineageRecord } from "./LineageRecord";
 import type { NamedUcs } from "./NamedUcs";
 import type { NamedView } from "./NamedView";
 import type { NetworkDef } from "./NetworkDef";
@@ -191,6 +192,11 @@ joinViews?: Array<JoinView>,
  * The project's links of event layers to their routes (docs/adr/0569), in the list's order.
  */
 linearEvents?: Array<EventLink>, 
+/**
+ * What the split and merged objects came from (docs/adr/0598), in the order the steps made them; kept in the undo
+ * history (`Op::Lineage`).
+ */
+lineage?: Array<LineageRecord>, 
 /**
  * How lengths are written (docs/adr/0262 §2): none, decimal; the others
  * only in an inch or foot drawing.

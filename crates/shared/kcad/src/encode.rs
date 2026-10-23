@@ -396,6 +396,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.relations.is_empty())
             + usize::from(!s.join_views.is_empty())
             + usize::from(!s.linear_events.is_empty())
+            + usize::from(!s.lineage.is_empty())
             + usize::from(s.map_srid.is_some())
             + usize::from(!s.sources.is_empty())
             + usize::from(!s.source_bases.is_empty())
@@ -453,6 +454,18 @@ impl<'d> Encoder<'d> {
         if let Some(h) = &s.heights {
             self.key("heights");
             self.at(Seg::Name("heights"), |e| e.heights(s, h))?;
+        }
+        // Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, written whole and checked.
+        if !s.lineage.is_empty() {
+            self.key("lineage");
+            self.at(Seg::Name("lineage"), |e| {
+                if let Some(problem) = kentos_contracts::lineage_problem(&s.lineage) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.lineage)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
         }
         // Schema 98 (docs/adr/0583 §3): the map's system (between the 7-letter keys).
         if let Some(srid) = s.map_srid {
@@ -1878,6 +1891,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 .is_some_and(kentos_contracts::LayerTime::recorded)
                 || recorded(&n.children)
         })
+    }
+    // Schema 101 (docs/adr/0598 §1): what the split and merged objects came from.
+    if !doc.settings.lineage.is_empty() {
+        return crate::SCHEMA_WITH_LINEAGE;
     }
     // Schema 100 (docs/adr/0594 §1): a georeference record's targets' system as a definition.
     if doc.entities.iter().any(

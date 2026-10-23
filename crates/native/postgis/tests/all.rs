@@ -1572,3 +1572,131 @@ fn a_database_table_goes_into_the_package() {
         ("source_changed", Some("databases"))
     );
 }
+
+/// Two halves of `uid`'s bounding box in `layer`, as polygons.
+fn halves(d: &Document, layer: &str, uid: &str) -> (Value, Value) {
+    let (_, e) = d
+        .by_layer_with_uids(layer)
+        .find(|(u, _)| u.to_string() == uid)
+        .expect("object");
+    let v = serde_json::to_value(e).expect("json");
+    let pts = v["pts"].as_array().expect("pts");
+    let xs: Vec<f64> = pts.iter().map(|p| p["x"].as_f64().expect("x")).collect();
+    let ys: Vec<f64> = pts.iter().map(|p| p["y"].as_f64().expect("y")).collect();
+    let (x0, x1) = (
+        xs.iter().copied().fold(f64::MAX, f64::min),
+        xs.iter().copied().fold(f64::MIN, f64::max),
+    );
+    let (y0, y1) = (
+        ys.iter().copied().fold(f64::MAX, f64::min),
+        ys.iter().copied().fold(f64::MIN, f64::max),
+    );
+    let xm = (x0 + x1) / 2.0;
+    let rect = |a: f64, b: f64| json!({ "kind": "polygon", "pts": [{ "x": a, "y": y0 }, { "x": b, "y": y0 }, { "x": b, "y": y1 }, { "x": a, "y": y1 }] });
+    (rect(x0, xm), rect(xm, x1))
+}
+
+/// The schema soy's lineage rows, (child, parent, operation) in that order.
+fn lineage_in(url: &str) -> Vec<(String, String, String)> {
+    let out = std::process::Command::new("psql")
+        .arg(url)
+        .args(["-At", "-F", "|", "-c"])
+        .arg("SELECT child, parent, operation FROM soy.kentos_lineage ORDER BY 1, 2, 3")
+        .output()
+        .expect("psql");
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .filter_map(|l| {
+            let mut p = l.split('|');
+            Some((
+                p.next()?.to_owned(),
+                p.next()?.to_owned(),
+                p.next()?.to_owned(),
+            ))
+        })
+        .collect()
+}
+
+// docs/adr/0598 §3, §4: a parcel split in a bound PostGIS table writes its piece, the piece's lasting id and its parent
+// in the one transaction; undo is the drawing's and the next write takes the piece and its parent out, as a write
+// checked against the rows it changes: someone else's change of the kept parcel in between refuses it whole.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_split_parcel_writes_its_parent_in_the_database() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    let mut d = doc();
+    let (layer, first) = bind(&mut d, &url, "soy.parsel");
+    let (a, b) = halves(&d, &layer, &first);
+    let split = ok(&run(
+        &mut d,
+        "cad.entities.edit",
+        CallOp::Execute,
+        json!({ "operation": "areaSplit", "changes": [
+            { "kind": "replace", "uid": first, "geometry": a, "keepData": true },
+            { "kind": "add", "from": first, "geometry": b, "keepData": true } ] }),
+    ))
+    .clone();
+    let piece = split["created"][0].as_str().expect("piece").to_owned();
+    let write = json!({ "layer": layer, "direction": "write" });
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        write.clone(),
+    ));
+    let one = vec![(piece.clone(), first.clone(), "split".to_owned())];
+    assert_eq!(lineage_in(&url), one);
+    // Undone and written: the piece and its parent leave; done again and written: they come back.
+    assert_eq!(d.undo().as_deref(), Some("Alan böl"));
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        write.clone(),
+    ));
+    assert!(lineage_in(&url).is_empty());
+    assert_eq!(d.redo().as_deref(), Some("Alan böl"));
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        write.clone(),
+    ));
+    assert_eq!(lineage_in(&url), one);
+    // Someone else renames the kept parcel; the undone split's write keeps their name and takes the piece out.
+    let mut other = doc();
+    let (other_layer, _) = bind(&mut other, &url, "soy.parsel");
+    ok(&run(
+        &mut other,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [first], "attrs": { "ada": "baskasi" }, "operation": "attributes" }),
+    ));
+    ok(&run(
+        &mut other,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": other_layer, "direction": "write" }),
+    ));
+    // The undone split's write changes that row too: refused whole, the piece, its parent and their name stay.
+    assert_eq!(d.undo().as_deref(), Some("Alan böl"));
+    let refused = run(&mut d, "cad.sources.sync", CallOp::Execute, write);
+    assert_eq!(refused["status"], "conflict", "{refused}");
+    assert_eq!(refused["error"]["code"], "source_changed", "{refused}");
+    assert_eq!(refused["error"]["uids"], json!([first]), "{refused}");
+    assert_eq!(lineage_in(&url), one);
+    let mut seen = doc();
+    let (seen_layer, _) = bind(&mut seen, &url, "soy.parsel");
+    let ada = seen
+        .by_layer_with_uids(&seen_layer)
+        .find(|(u, _)| u.to_string() == first)
+        .and_then(|(_, e)| e.base().attrs.get("ada").cloned());
+    assert_eq!(ada.as_deref(), Some("baskasi"), "their name stays");
+    assert!(
+        seen.by_layer_with_uids(&seen_layer)
+            .any(|(u, _)| u.to_string() == piece)
+    );
+}

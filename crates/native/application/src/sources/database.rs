@@ -233,6 +233,7 @@ pub(super) fn write(
                 update,
                 insert: std::mem::take(&mut d.insert),
                 delete: std::mem::take(&mut d.delete),
+                lineage: std::mem::take(&mut d.lineage),
             },
         ));
     }
