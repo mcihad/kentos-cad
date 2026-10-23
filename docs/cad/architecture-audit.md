@@ -162,6 +162,46 @@ ayarlarının korunması ve normal model boyu ile kâğıt anotasyonunun ayrı e
 alınması gerektiğini gösteriyor. Rastgele medyan yazı boyu veya tahmini ev ölçüsü
 ile otomatik düzeltme yapılmamalı. Henüz bu iki konu tamamlandı sayılmadı.
 
+### Dosya ve yeni anotasyon varsayılanları için teknik iş paketi
+
+Aşağıdaki tasarım önerisi henüz uygulanmadı. Bugünkü içe alma görünümünü bozarak
+ölçü desteğini varmış gibi göstermemek için geometri, stil ve ilişki ayrı kabul edilir.
+
+1. **Doğrudan açılışta aktif kaynak ayarları:**
+   [TEXTSIZE](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-Core/files/GUID-DD548317-95BA-4AEA-B54D-0D917F10D3C1.htm)
+   ile sabit yüksekliği olan yazı stilinin önceliği korunmalı. Kaynaktaki aktif
+   yazı/ölçü stili, fiziksel model boylarıyla yeni nesne üretimine taşınmalı.
+   Mevcut projeye sıradan içe alma, hedef projenin varsayılanlarını kendiliğinden
+   değiştirmemeli. `Standard` adının ayrılmış olması kaynak değerlerin atılmasına
+   yol açmamalı; ad ve stil kimliği eşlemesi açık olmalı.
+2. **Ölçü görünüş boyu ile ölçülen uzunluk ayrımı:**
+   [DIMSCALE](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-Core/files/GUID-AEA309F0-B831-4432-8085-FB6CD49CDC78.htm)
+   ölçülen uzunluğu değiştirmez. Sıfır değer körlemesine sıfır boy veya doğrudan
+   1:1 demek değildir; annotative stil/viewport bağlamı da incelenmeli. Kaynağın
+   model yüksekliği, mevcut kâğıt yüksekliği alanına tahminle doldurulmamalı.
+3. **Yabancı temel ölçülerin düzenlenebilir geometriye alınması:**
+   `formats/src/dxf/dimension.rs::foreign` şu anda özel koordinat/yay uzunluğu/
+   kırıklı yarıçap yollarını ele alıyor; diğerlerinde blok görünümüne dönüyor.
+   [Doğrusal/döndürülmüş DXF ölçüsü](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-DXF/files/GUID-F0004556-493C-48D5-8619-61D6ADF05C04.htm)
+   için 13/14 WCS tanım noktaları, 50 dönüşü ve 52 eğik uzatma açısı gibi alanlar
+   ayırt edilmeli. [Ortak ölçü gruplarındaki](https://help.autodesk.com/cloudhelp/2023/ENU/AutoCAD-DXF/files/GUID-EDD54EAC-A339-4EBA-AEA6-EC8066505E2B.htm)
+   11 OCS metin noktası WCS noktası gibi okunmamalı.
+   Desteklenmeyen eğiklik/düzlem/özel ok/görünüşte mevcut açık kayıp yolu korunmalı.
+4. **İlişkilerin ayrıca alınması:**
+   [DXF DIMASSOC nesnesi](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-DXF/files/GUID-C0B96256-A911-4B4D-85E6-EB4AF2C91E27.htm)
+   ölçü ve geometrinin handle/alt nesne/snap ilişkisini taşır. Salt DIMENSION
+   noktalarını okuyup `refs` boş bırakmak düzenlenebilir geometri sağlayabilir,
+   fakat ilişkili ölçü desteği sayılmaz. Handle→kalıcı kimlik çözümü, kesişim,
+   xref ve model–pafta ilişkileri için ayrı destek/kayıp raporu gerekir.
+5. **Kalıcılık ve yüzeyler:** aktif varsayılanların tipli sözleşmesi, KCAD
+   kaydet/aç, undo sınırı, dışa verme ve Python/MCP okuma/yazması birlikte
+   tanımlanmalı. Yalnız pencere belleğine yazılmış bir varsayılan yeterli değildir.
+6. **Bağımsız kabul:** kaynak mm/cm/m/inç/ayak, sıfır/pozitif DIMSCALE,
+   sabit/değişken metin stili, nesneye özel override, döndürülmüş görünüm,
+   büyük koordinat ve dış yazılımda değiştirilmiş dosya ayrı örneklerdir.
+   Kaynak blok görünümüyle karşılaştırma, ölçü değeri ve düzenleme sonrası bağ
+   ayrı ayrı ölçülmeli; stil kaybını örten gevşek tolerans kullanılmamalı.
+
 ## İlk sayısal ev planı deneyi — GUI kabulü henüz yok
 
 Mevcut Python ürün komutlarıyla ayrıca küçük bir bağımsız deney yapıldı. Dış
@@ -178,6 +218,9 @@ ulaşır; iki ayrı seed ile mahal üretildi. Dış duvar ve bölme yedi ayrı s
   konumunda denendi: **10 varyant geçti**. Alan ve açıklıkların fiziksel eni
   değişmedi; KCAD baytlarından yeniden açmada aynı kaldı. Uzak koordinattaki
   fark yaklaşık `9×10⁻¹¹ m²`; bu dar deney bütün geometrinin hassasiyet kanıtı değildir.
+- Dış duvar 250 → 300 mm düzenlendiğinde oda alanları bağımsız beklenen
+  **34.225 m²** değerine geldi, açıklık enleri kaldı; geri al 35.0625 m² alanı
+  geri getirdi. Bu adım da aynı 10 varyantta geçti.
 - Bu yalnız komut/kalıcılık deneyi. Tıklamayla kolay çizim, köşe görünüşü, etiket,
   ölçü, çizelge ve baskı henüz bu deneyle doğrulanmış değildir.
 - Hiza sözcüğünün hangi yüzü referans aldığı önemlidir: “Sol” gövdenin sola
