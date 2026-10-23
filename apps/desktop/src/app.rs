@@ -487,6 +487,8 @@ pub enum Message {
     TemplatesPanel(crate::templates_panel::Event),
     /// Kaynaklar panel (sources/, docs/adr/0199 §7).
     Sources(crate::sources::Event),
+    /// Veritabanı bağlantıları: the connection window, the password question, QGIS's file (db_connections.rs).
+    Db(crate::db_connections::Event),
     /// Şablon düzenleyici (template_editor.rs).
     TemplateEditor(crate::template_editor::Event),
     /// Blok öznitelikleri's window (block_attributes.rs).
@@ -780,6 +782,17 @@ pub struct App {
     pub(crate) templates_panel: crate::templates_panel::PanelState,
     /// Kaynaklar (sources/, docs/adr/0199 §7): its folders, what is open and read.
     pub(crate) sources: crate::sources::SourcesPanel,
+    /// The connection window while it is open (db_connections.rs, docs/adr/0623).
+    pub(crate) db_editor: Option<crate::db_connections::Editor>,
+    /// The password question while a server waits for one.
+    pub(crate) db_password: Option<crate::db_connections::PasswordAsk>,
+    /// Sil's question for a connection, by its name.
+    pub(crate) db_removing: Option<String>,
+    /// The database connections this window lists: the device's (`kentos_postgis::connections::store`), whose saved
+    /// passwords the bound layers' commands find; a test's app keeps its own in memory.
+    pub(crate) db_store: &'static kentos_postgis::connections::ConnectionStore,
+    /// The connection PostGIS'e bağlan listed last, chosen when it opens again.
+    pub(crate) postgis_last: Option<String>,
     pub(crate) recent_templates: Vec<String>,
     /// Şablon düzenleyici while it is open (template_editor.rs).
     pub(crate) template_editor: Option<crate::template_editor::Editor>,
@@ -1198,7 +1211,11 @@ impl App {
     /// what tests, snapshots and the trace player start from, never touching
     /// the user's files. `main` opens the real settings ([`App::start`]).
     pub fn boot(path: Option<PathBuf>) -> (Self, Task<Message>) {
-        Self::start(path, Settings::memory())
+        // The database connections too stay in memory (docs/adr/0623), each app its own.
+        kentos_postgis::connections::keep_in_memory();
+        let (mut app, task) = Self::start(path, Settings::memory());
+        app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
+        (app, task)
     }
 
     /// The shell with these settings, opening `path` at once when given (`kentos-cad cizim.kcad`).
@@ -1251,6 +1268,11 @@ impl App {
             blocks_panel: crate::blocks_panel::PanelState::default(),
             templates_panel: crate::templates_panel::PanelState::default(),
             sources: crate::sources::SourcesPanel::default(),
+            db_editor: None,
+            db_password: None,
+            db_removing: None,
+            db_store: kentos_postgis::connections::store(),
+            postgis_last: None,
             recent_templates: Vec::new(),
             template_editor: None,
             block_attributes: None,
@@ -1974,6 +1996,7 @@ impl App {
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::TemplatesPanel(event) => return self.templates_panel_event(event),
             Message::Sources(event) => return self.sources_event(event),
+            Message::Db(event) => return self.db_event(event),
             Message::TemplateEditor(event) => return self.template_editor_event(event),
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::AttributeValues(event) => self.attribute_values_event(event),

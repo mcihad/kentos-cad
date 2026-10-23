@@ -68,7 +68,7 @@ pub(super) mod package;
 #[cfg(test)]
 mod package_tests;
 pub(crate) mod photo_import;
-mod postgis;
+pub(crate) mod postgis;
 #[cfg(test)]
 mod postgis_tests;
 pub(crate) mod server_work;

@@ -355,6 +355,7 @@ mod snap_menu;
 #[cfg(test)]
 mod snap_tests;
 mod snapshot;
+mod db_connections;
 mod sources;
 mod split_revision;
 #[cfg(test)]

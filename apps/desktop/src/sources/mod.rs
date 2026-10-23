@@ -9,7 +9,15 @@
 //! project's snapshot, a file project's newest revision) and lists its
 //! layers, and a layer's Katman olarak ekle takes it with its objects into
 //! the open drawing as one undo step (drawing_exchange.rs
-//! `take_layer_into`). What is opened is read again when it is opened again.
+//! `take_layer_into`). Veritabanları lists the device's PostgreSQL
+//! connections (docs/adr/0623, as QGIS's Browser lists its own): a
+//! connection opens into its schemas and their tables, views and
+//! materialized views, read from the database's catalogue off the UI thread
+//! (`kentos_postgis::probe::browse`); a table's Katman olarak ekle binds it
+//! as a bound layer through `cad.sources.edit`, after asking to carry it into
+//! the project's system when it is in another. A server asking for a password
+//! KentOS does not know opens the password question (db_connections.rs).
+//! What is opened is read again when it is opened again.
 //! Folders are read and drawings decoded off the UI thread; an answer for a
 //! row closed since is dropped.
 
@@ -29,6 +37,7 @@ use kentos_commands::{
     CatalogSort, CatalogView, DocumentSnapshotV2, ProjectStorage, ProjectSummary,
 };
 use kentos_interaction::sources::{Listing, SourceEntry, SourceFile, SourceKind, listing};
+use kentos_postgis::probe::{self, Catalog, Diagnosis, Problem};
 use serde::{Deserialize, Serialize};
 
 use crate::app::{App, Message, Panel};
@@ -41,9 +50,27 @@ pub(crate) const LISTS: [(CatalogView, &str, &str); 2] = [
 ];
 /// Projects a list shows at most.
 pub(crate) const LIMIT: u32 = 200;
-/// The two sections' keys; they start open.
+/// The sections' keys; they start open.
 pub(crate) const FOLDERS: &str = "klasorler";
+pub(crate) const DATABASES: &str = "veritabanlari";
 pub(crate) const KENTOS: &str = "kentos";
+
+/// A connection's catalogue as the panel knows it.
+#[derive(Debug, Clone)]
+pub(crate) enum Browse {
+    Reading,
+    Ready(Arc<Catalog>),
+    Failed(Diagnosis),
+}
+
+/// Katman olarak ekle on a table in another system, waiting for its answer.
+#[derive(Debug, Clone)]
+pub(crate) struct ReprojectAsk {
+    pub(crate) connection: String,
+    pub(crate) table: String,
+    pub(crate) area: bool,
+    pub(crate) srid: u32,
+}
 
 /// What is known of something read when it is opened.
 #[derive(Debug, Clone)]
@@ -73,6 +100,10 @@ pub struct SourcesPanel {
     pub(crate) lists: HashMap<&'static str, Read<Projects>>,
     /// Downloaded drawings by project id.
     pub(crate) drawings: HashMap<String, Read<Arc<ProjectDrawing>>>,
+    /// The connections' catalogues by connection name.
+    pub(crate) catalogs: HashMap<String, Browse>,
+    /// The question of a table in another system.
+    pub(crate) reproject: Option<ReprojectAsk>,
     /// Requests under way by row key, stopped when dropped (the row closed).
     requests: HashMap<String, iced::task::Handle>,
     /// The row chosen last (a click), by key.
@@ -83,10 +114,16 @@ impl Default for SourcesPanel {
     fn default() -> Self {
         Self {
             folders: SourceFolders::memory(),
-            open: BTreeSet::from([FOLDERS.to_owned(), KENTOS.to_owned()]),
+            open: BTreeSet::from([
+                FOLDERS.to_owned(),
+                DATABASES.to_owned(),
+                KENTOS.to_owned(),
+            ]),
             listings: HashMap::new(),
             lists: HashMap::new(),
             drawings: HashMap::new(),
+            catalogs: HashMap::new(),
+            reproject: None,
             requests: HashMap::new(),
             focused: None,
         }
@@ -116,6 +153,16 @@ pub enum Event {
     FileRead(SourceKind, Result<Vec<Picked>, String>),
     /// Katman olarak ekle on a project's layer: its id and the layer's path.
     AddLayer(String, String),
+    /// A connection's catalogue read, or why not; `ask`: a password the server wants is asked for.
+    Browsed(String, Result<Arc<Catalog>, Diagnosis>, bool),
+    /// Yenile on a connection: its catalogue read again.
+    Refresh(String),
+    /// The password question for a connection's row.
+    AskPassword(String),
+    /// Katman olarak ekle on a connection's table: the connection, `schema.name`, only the view's area.
+    AddTable(String, String, bool),
+    /// The question of a table in another system answered: carried into the project's system, or not bound.
+    Reproject(bool),
 }
 
 pub(crate) fn msg(event: Event) -> Message {
@@ -299,6 +346,44 @@ impl App {
                 let first = parts.drain(..).next();
                 return self.exchange_event(ExchangeEvent::Picked(kind, first.map(Ok)));
             }
+            Event::Browsed(name, result, ask) => {
+                if !self.sources.open.contains(&connection_key(&name)) {
+                    return Task::none();
+                }
+                let browse = match result {
+                    Ok(catalog) => Browse::Ready(catalog),
+                    Err(d) => {
+                        if ask && matches!(d.problem, Problem::PasswordNeeded | Problem::Password) {
+                            self.ask_db_password(
+                                &name,
+                                d.message.clone(),
+                                crate::db_connections::Retry::Browse(name.clone()),
+                            );
+                        }
+                        Browse::Failed(d)
+                    }
+                };
+                self.sources.catalogs.insert(name, browse);
+            }
+            Event::Refresh(name) => {
+                self.sources.open.insert(connection_key(&name));
+                return self.browse_connection(&name);
+            }
+            Event::AskPassword(name) => {
+                let reason = match self.sources.catalogs.get(&name) {
+                    Some(Browse::Failed(d)) => d.message.clone(),
+                    _ => "Sunucu parola istiyor.".to_owned(),
+                };
+                self.ask_db_password(&name, reason, crate::db_connections::Retry::Browse(name.clone()));
+            }
+            Event::AddTable(name, table, area) => return self.add_database_table(name, table, area),
+            Event::Reproject(yes) => {
+                if let Some(ask) = self.sources.reproject.take()
+                    && yes
+                {
+                    return self.bind_from_sources(&ask.connection, &ask.table, true, ask.area);
+                }
+            }
             Event::AddLayer(id, path) => {
                 let Some(Read::Ready(drawing)) = self.sources.drawings.get(&id).cloned() else {
                     return Task::none();
@@ -324,10 +409,15 @@ impl App {
                 s.lists.retain(|v, _| *v != view);
             } else if let Some(id) = key.strip_prefix("p:") {
                 s.drawings.remove(id);
+            } else if let Some(name) = key.strip_prefix("c:") {
+                s.catalogs.remove(name);
             }
             return Task::none();
         }
         s.open.insert(key.clone());
+        if let Some(name) = key.strip_prefix("c:") {
+            return self.browse_connection(name);
+        }
         if let Some(path) = key.strip_prefix("d:") {
             return self.list_folder(PathBuf::from(path));
         }
@@ -336,6 +426,97 @@ impl App {
         }
         if let Some(id) = key.strip_prefix("p:") {
             return self.download(id.to_owned());
+        }
+        Task::none()
+    }
+
+    /// A connection's catalogue read off the UI thread; an answer for a row closed since is dropped.
+    pub(crate) fn browse_connection(&mut self, name: &str) -> Task<Message> {
+        let Some(c) = self.db_store.get(name) else {
+            return Task::none();
+        };
+        self.sources.catalogs.insert(name.to_owned(), Browse::Reading);
+        let back = name.to_owned();
+        off_thread(
+            move || probe::browse(&c, None).map(Arc::new),
+            move |r| Event::Browsed(back, r, true),
+        )
+    }
+
+    /// Kaynaklar shown with the connection named `name` open (a connection just saved).
+    pub(crate) fn browse_connection_in_sources(&mut self, name: &str) -> Task<Message> {
+        self.show_sources();
+        self.sources.open_databases();
+        self.sources.open.insert(connection_key(name));
+        self.sources.focused = Some(connection_key(name));
+        self.browse_connection(name)
+    }
+
+    /// Katman olarak ekle on a connection's table: refused with why when it cannot be bound, the system's question
+    /// when it is in another one, bound otherwise.
+    fn add_database_table(&mut self, name: String, table: String, area: bool) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O) ya da yeni proje oluşturun.");
+            return Task::none();
+        };
+        let project = doc.settings().srid;
+        let Some(Browse::Ready(catalog)) = self.sources.catalogs.get(&name) else {
+            return Task::none();
+        };
+        let Some(r) = catalog.relations.iter().find(|r| r.table() == table) else {
+            return Task::none();
+        };
+        if let Some(why) = r.why_not() {
+            self.warn(format!("“{table}” bağlı katman olarak eklenemez: {why}"));
+            return Task::none();
+        }
+        if let Some(srid) = r.srid.filter(|&s| s != project) {
+            self.sources.reproject = Some(ReprojectAsk {
+                connection: name,
+                table,
+                area,
+                srid,
+            });
+            return Task::none();
+        }
+        self.bind_from_sources(&name, &table, false, area)
+    }
+
+    fn bind_from_sources(&mut self, name: &str, table: &str, reproject: bool, area: bool) -> Task<Message> {
+        let Some(c) = self.db_store.get(name) else {
+            return Task::none();
+        };
+        let geometry = match self.sources.catalogs.get(name) {
+            Some(Browse::Ready(catalog)) => catalog
+                .relations
+                .iter()
+                .find(|r| r.table() == table)
+                .is_some_and(|r| r.geometry.is_some()),
+            _ => true,
+        };
+        let area = area.then(|| {
+            let b = self.viewport.camera.visible_bounds();
+            [b.min_x, b.min_y, b.max_x, b.max_y]
+        });
+        match self.bind_database(&c.address(), &[(table.to_owned(), geometry)], reproject, area) {
+            Ok(done) => {
+                self.zoom_to(&done.slots);
+                self.announce(
+                    if done.warnings.is_empty() {
+                        kentos_interaction::Level::Success
+                    } else {
+                        kentos_interaction::Level::Warn
+                    },
+                    format!(
+                        "“{table}” ({}) bağlı katman oldu, {} nesne. Değişiklikleri Kaynağa yaz ile veritabanına yazın.",
+                        c.name, done.objects
+                    ),
+                );
+                for w in done.warnings {
+                    self.say(kentos_interaction::Level::Warn, w);
+                }
+            }
+            Err(why) => self.error(why),
         }
         Task::none()
     }
@@ -436,6 +617,20 @@ impl App {
 }
 
 impl SourcesPanel {
+    /// Veritabanları open (connections were added).
+    pub(crate) fn open_databases(&mut self) {
+        self.open.insert(DATABASES.to_owned());
+    }
+
+    /// What was read of a connection gone or renamed.
+    pub(crate) fn forget_connection(&mut self, name: &str) {
+        self.catalogs.remove(name);
+        self.open.remove(&connection_key(name));
+        if self.reproject.as_ref().is_some_and(|r| r.connection == name) {
+            self.reproject = None;
+        }
+    }
+
     /// A project a list holds, by id.
     pub(crate) fn project(&self, id: &str) -> Option<&ProjectSummary> {
         self.lists.values().find_map(|r| match r {
@@ -456,6 +651,11 @@ pub(crate) fn list_key(view: &str) -> String {
 
 pub(crate) fn project_key(id: &str) -> String {
     format!("p:{id}")
+}
+
+/// A connection's row by its name.
+pub(crate) fn connection_key(name: &str) -> String {
+    format!("c:{name}")
 }
 
 /// A folder's name as the panel shows it (the path's last part).

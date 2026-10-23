@@ -1577,7 +1577,7 @@
       "id": "source.postgis",
       "title": "PostGIS'e bağlan…",
       "icon": "sourceDatabase",
-      "description": "Bir PostGIS veritabanının tablolarını listeler ve seçilenleri bağlı katman olarak açar: değişiklikler Kaynağa yaz ile tek işlemde veritabanına yazılır. Parola adrese yazılmaz; PGPASSWORD ya da ~/.pgpass'tan okunur.",
+      "description": "Kayıtlı bir veritabanı bağlantısının tablolarını şemalarıyla listeler ve seçilenleri bağlı katman olarak açar: değişiklikler Kaynağa yaz ile tek işlemde veritabanına yazılır. Bağlantı adıyla seçilir; sunucu, veritabanı, kullanıcı ve parola bir kez tanımlanır (Yeni…), parola istenirse bu bilgisayarda saklanır ve çizime hiç yazılmaz.",
       "aliases": [
         "POSTGISBAGLA",
         "PGBAGLA"

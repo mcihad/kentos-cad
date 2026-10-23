@@ -46,6 +46,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   - Seçim türüne göre bağlamsal sekme açılır ve öne gelir (`drafting.contextualTabs`): Nokta, Çizgi, Alan, Yazı, Ölçü,
     Kılavuz, Tarama, Blok, Tablo, Resim, Raster, Nokta bulutu, Duvar, Açıklık, Mahal, Mimari nesne. Karışık seçimde Seçim
     sekmesi açılır.
+  - Sağ tık AutoCAD'deki gibi o anki işin menüsünü açar ve hiç nokta koymaz; tutamaçla taşırken tutamaç menüsü açılır.
+    Kısa sağ tıkın Enter olması `drafting.rightClickEnter` tercihidir, kapalı başlar. Ortak izler sağ tıkı Enter olarak
+    oynatır.
+- **Veritabanı bağlantıları (sahibin isteği, 23 Ekim 2026; [ADR 0623](docs/adr/0623-database-connections.md)).**
+  - PostgreSQL bağlantısı QGIS'teki gibi bir pencereyle tanımlanır: ad, sunucu, bağlantı noktası, veritabanı,
+    kullanıcı, isteğe bağlı kayıtlı parola, SSL, Bağlantıyı dene. Adres yazılmaz.
+  - Bağlantılar cihazdadır (`veritabani-baglantilari.json`, 0600, `kentos_postgis::connections`). Parola sırası: oturum,
+    cihaz, `PGPASSWORD`, `~/.pgpass`. Çizim parola taşımaz.
+  - Kaynaklar › Veritabanları bağlantı › şema › tablo ağacıdır; tablolar katalogdan tahmini satırla okunur
+    (`kentos_postgis::probe`), hatalar düz Türkçe söylenir.
+  - QGIS'ten alma ve QGIS'e verme yoktur; ekip paylaşımı KentOS'un kendi bağlantı dosyasıyladır.
 - Web bağımsız TypeScript/DOM uygulamasıdır; desktop'ın web export'u değildir.
   Yalnız hesaplama/codec kütüphaneleri dar WASM bağlayıcılarıyla kullanılır.
   Web'in belge, komut, etkileşim, settings ve render orkestrasyonu TS'te kalır.
@@ -1640,6 +1651,9 @@ node apps/web/scripts/e2e/sheet-cloud.mjs   # şablon kitaplığı gerçek kento
 cargo test -p kentos-sheet-ui --test screens -- --ignored   # masaüstünün pafta tasarımcısı resimleri, .run/shots/sheet-desktop/
 cargo test -p kentos-sheet-ui --test screens adr_0206 -- --ignored --nocapture   # haritanın ölçek düğmeleri ve koordinat listesinin kaynağı, .run/shots/sheet-desktop/*-0206-* (web'inkiler: node apps/web/scripts/e2e/sheet-shots.mjs --only harita-olcek-dugmeleri,koordinat-listesi-kaynak; ADR 0206)
 .run/py/bin/python scripts/python/live.py   # SDK ve MCP sunucusu gerçek kentosd ile, geçici veritabanında (önce: cargo build -p kentos-api --bin kentosd --example e2e_database; cargo build -p kentos-mcp)
+cargo test -p kentos-postgis --lib   # veritabanı bağlantılarının kuralları: adres, ayrıştırma, cihaz dosyası, parola sırası, dışa ve içe aktarma, hataların sözleri, katalog (ADR 0623)
+KENTOS_PG_URL=postgresql://postgres@127.0.0.1:PORT/postgres PGPASSWORD=… cargo test -p kentos-postgis --test all -- --ignored a_connection_is_tried a_password_typed   # gerçek veritabanında deneme, katalog ve oturum parolası (postgis_cases.py'nin geçici sunucusu ya da kendi docker'ınız; ADR 0623)
+KENTOS_SHOTS_ONLY=baglanti,postgis KENTOS_PG_URL=… PGPASSWORD=… cargo test -p kentos-desktop exchange::postgis_tests::screens -- --ignored --nocapture   # bağlantı penceresi, PostGIS'e bağlan ve Kaynaklar › Veritabanları, .run/shots/baglanti-*, postgis-* (ADR 0623)
 python3 scripts/ui/ribbon.py --check   # masaüstünün şeridi (catalog/v1/ribbon.json) üretecinden güncel mi; --check'siz yazar (ADR 0622 §3)
 KENTOS_SHOTS_ONLY=serit,baglam,olcek cargo test -p kentos-desktop ux_screens -- --ignored --nocapture   # arayüz düzeninin resimleri: her sekme, seçime göre sekmeler, ölçek ve tür, .run/shots/duzen-* (ADR 0622); ux_screens::ribbon_widths panellerin genişliklerini yazar
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}

@@ -3009,6 +3009,7 @@ dependencies = [
  "kentos-headless",
  "kentos-native-application",
  "kentos-processing",
+ "serde",
  "serde_json",
  "sqlx",
  "tokio",

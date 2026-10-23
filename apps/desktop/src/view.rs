@@ -157,6 +157,10 @@ impl App {
         }
         // İfade oluşturucu over the window whose field opened it (expression/).
         layers.extend(self.builder_view());
+        // The connection window, the password question and Sil's question over the window that asked for them
+        // (db_connections.rs), and Kaynaklar's question of a table in another system.
+        layers.extend(self.sources_reproject_view());
+        layers.extend(self.db_view());
         // A save's panel and an open's window (saving.rs, opening.rs), over everything else.
         layers.extend(self.saving_view());
         // A large import's panel: the objects as they go in, and Durdur (exchange/drawing_import.rs).

@@ -1700,3 +1700,142 @@ fn a_split_parcel_writes_its_parent_in_the_database() {
             .any(|(u, _)| u.to_string() == piece)
     );
 }
+
+/// The throwaway database's connection as the window would hold it (docs/adr/0623): KENTOS_PG_URL's fields, no
+/// password in it (PGPASSWORD), the device's connections in memory.
+fn window_connection(url: &str) -> kentos_postgis::connections::DbConnection {
+    kentos_postgis::connections::keep_in_memory();
+    kentos_postgis::register();
+    let mut parsed = kentos_postgis::connections::parse(url).expect("KENTOS_PG_URL reads");
+    parsed.connection.name = "Geçici".into();
+    parsed.connection
+}
+
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_connection_is_tried_and_its_tables_listed_from_the_catalogue() {
+    use kentos_postgis::probe::{self, Problem};
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    let c = window_connection(&url);
+    // Bağlantıyı dene: the server and its PostGIS.
+    let facts = probe::probe(&c, None).expect("reached");
+    assert!(facts.version.starts_with("PostgreSQL "), "{facts:?}");
+    assert!(facts.postgis.is_some(), "{facts:?}");
+    assert_eq!(facts.database, c.database);
+    assert!(facts.line().contains("PostGIS"), "{}", facts.line());
+    // The catalogue: the parcels with their geometry, system and key, without counting their rows.
+    let catalog = probe::browse(&c, None).expect("listed");
+    let parsel = catalog
+        .relations
+        .iter()
+        .find(|r| r.schema == "kadastro" && r.name == "parsel")
+        .expect("kadastro.parsel listed");
+    assert!(parsel.geometry.as_deref().is_some_and(|g| g.contains("POLYGON")), "{parsel:?}");
+    assert!(parsel.srid.is_some());
+    assert_eq!(parsel.key.as_deref(), Some("fid"));
+    assert!(parsel.why_not().is_none());
+    assert!(parsel.readable && parsel.writable);
+    assert_eq!(catalog.facts.tables, catalog.relations.len());
+    // What the catalogue says can be bound, the provider binds; what it says cannot, the provider refuses.
+    let bindable = catalog.relations.iter().filter(|r| r.why_not().is_none()).take(6);
+    let not = catalog.relations.iter().filter(|r| r.why_not().is_some()).take(3);
+    for r in bindable.chain(not) {
+        let mut doc = doc();
+        let answer = run(
+            &mut doc,
+            "cad.sources.edit",
+            CallOp::Execute,
+            json!({ "edit": { "kind": "link", "path": c.address(), "table": r.table(), "reproject": true } }),
+        );
+        assert_eq!(
+            answer["status"] == "completed",
+            r.why_not().is_none(),
+            "{}: {answer}",
+            r.table()
+        );
+    }
+    // Failures said for people, with what to do.
+    let wrong = probe::probe(&c, Some("yanlış-parola")).unwrap_err();
+    assert_eq!(wrong.problem, Problem::Password, "{wrong:?}");
+    let none = kentos_postgis::connections::DbConnection {
+        database: "boyle_bir_veritabani_yok".into(),
+        ..c.clone()
+    };
+    assert_eq!(probe::probe(&none, None).unwrap_err().problem, Problem::Database);
+    let closed = kentos_postgis::connections::DbConnection {
+        port: 1,
+        ..c.clone()
+    };
+    assert_eq!(probe::probe(&closed, None).unwrap_err().problem, Problem::Refused);
+    let nowhere = kentos_postgis::connections::DbConnection {
+        host: "boyle-bir-sunucu-yok.invalid".into(),
+        ..c.clone()
+    };
+    assert_eq!(probe::probe(&nowhere, None).unwrap_err().problem, Problem::Host);
+    // The throwaway server offers no TLS: Zorunlu says so.
+    let tls = kentos_postgis::connections::DbConnection {
+        ssl: kentos_postgis::connections::SslMode::Require,
+        ..c.clone()
+    };
+    if let Err(d) = probe::probe(&tls, None) {
+        assert_eq!(d.problem, Problem::Tls, "{d:?}");
+    }
+}
+
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_password_typed_for_the_session_reaches_the_bound_layer() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    let Ok(password) = std::env::var("PGPASSWORD") else {
+        return;
+    };
+    let mut c = window_connection(&url);
+    // Another user of the database, its password nowhere but the session (PGPASSWORD is the owner's).
+    c.user = "kentos_oturum".into();
+    let owner = window_connection(&url);
+    let admin = kentos_postgis::probe::browse(&owner, Some(&password));
+    assert!(admin.is_ok(), "{admin:?}");
+    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().expect("runtime");
+    runtime.block_on(async {
+        use sqlx::{Connection, Executor};
+        use std::str::FromStr;
+        let options = sqlx::postgres::PgConnectOptions::from_str(&url).expect("url").password(&password);
+        let mut conn = sqlx::postgres::PgConnection::connect_with(&options).await.expect("owner");
+        for sql in [
+            "DROP OWNED BY kentos_oturum",
+            "DROP ROLE IF EXISTS kentos_oturum",
+        ] {
+            let _ = conn.execute(sql).await;
+        }
+        for sql in [
+            "CREATE ROLE kentos_oturum LOGIN PASSWORD 'oturum-sifresi'",
+            "GRANT USAGE ON SCHEMA kadastro TO kentos_oturum",
+            "GRANT SELECT ON kadastro.parsel TO kentos_oturum",
+        ] {
+            conn.execute(sql).await.expect(sql);
+        }
+    });
+    assert_eq!(
+        kentos_postgis::probe::probe(&c, None).unwrap_err().problem,
+        kentos_postgis::probe::Problem::Password,
+        "PGPASSWORD is the owner's"
+    );
+    kentos_postgis::connections::remember(&c, "oturum-sifresi".into());
+    let facts = kentos_postgis::probe::probe(&c, None).expect("the session's password");
+    assert_eq!(facts.user, "kentos_oturum");
+    // The bound layer's command reaches the database with it too: the drawing keeps no password.
+    let mut doc = doc();
+    let bound = run(
+        &mut doc,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": c.address(), "table": "kadastro.parsel", "reproject": true } }),
+    );
+    assert_eq!(bound["status"], "completed", "{bound}");
+    assert!(!serde_json::to_string(&doc.to_snapshot_v2()).unwrap().contains("oturum-sifresi"));
+    kentos_postgis::connections::forget(&c);
+}

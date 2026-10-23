@@ -72,6 +72,19 @@ fn rows(app: &App) -> Vec<String> {
                 ..
             } => format!("{}{label} · {count} nesne", "  ".repeat(depth)),
             Line::Note { label, depth, .. } => format!("{}({label})", "  ".repeat(depth)),
+            Line::Database {
+                connection, open, ..
+            } => format!("  {} {}", if open { "▾" } else { "▸" }, connection.name),
+            Line::Schema {
+                label, open, depth, ..
+            } => format!(
+                "{}{} {label}",
+                "  ".repeat(depth),
+                if open { "▾" } else { "▸" }
+            ),
+            Line::Table {
+                relation, depth, ..
+            } => format!("{}{}", "  ".repeat(depth), relation.name),
         })
         .collect()
 }
@@ -109,7 +122,7 @@ fn a_folder_shows_its_folders_and_the_files_it_adds_and_reads_again_when_opened_
     add(&mut app, &dir);
     let name = super::folder_name(&dir);
     assert_eq!(
-        rows(&app)[..7],
+        rows(&app)[..10],
         [
             "▾ Klasörler".to_owned(),
             format!("  ▾ {name}"),
@@ -117,6 +130,10 @@ fn a_folder_shows_its_folders_and_the_files_it_adds_and_reads_again_when_opened_
             "    noktalar.ncn · Koordinat listesi".to_owned(),
             "    parsel.shp · Shapefile".to_owned(),
             "    yol.dxf · DXF".to_owned(),
+            // No connection yet: the database section offers one (docs/adr/0623).
+            "▾ Veritabanları".to_owned(),
+            "  (Bağlantı yok. Bir PostgreSQL veritabanı ekleyin.)".to_owned(),
+            "  (Size verilen bir bağlantı dosyasını içe aktarın…)".to_owned(),
             "▾ KentOS".to_owned(),
         ]
     );

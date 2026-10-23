@@ -80,6 +80,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   seçimin türüne göre bağlamsal sekmeler). Web'in şeridi dönüşte bu dosyadan kurulmalı; `fixtures/shell/v1/ribbon.json`'un
   `tabs`'ı yeni sekmeleri tutar. Görünüm'deki tema, yazı tipi ve zemin kartları web'de de şeritten Uygulama ayarları'na
   gider. Özellikler panelinin çizim ölçeği durum çubuğuna geçer.
+- Veritabanı bağlantıları (ADR 0623): masaüstünde PostgreSQL bağlantıları pencereyle tanımlanır, cihazda saklanır
+  (`veritabani-baglantilari.json`), Kaynaklar › Veritabanları'nda ağaç olarak gezilir; PostGIS'e bağlan adres
+  istemez. Web PostgreSQL'e doğrudan bağlanamaz: web dönerse bağlı PostGIS katmanı `kentosd` üzerinden ve sunucuda
+  saklanan bağlantılarla düşünülmeli.
 - Arayüz düzeni sağ tık (ADR 0622 §6): masaüstünde sağ tık her zaman o anki işin menüsünü açar. Kısa tıkın Enter olması
   `drafting.rightClickEnter` tercihine bağlıdır ve kapalı başlar; tutamaçla taşırken nokta imlecin yerine bırakılmaz. Web'in
   `ViewportController.onRightUp`'ı aynı kurala getirilmeli; ortak izler `rightClick`'i Enter olarak oynatır.

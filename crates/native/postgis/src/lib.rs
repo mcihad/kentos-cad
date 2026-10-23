@@ -3,7 +3,9 @@
 //! (`kentos_geopackage`'s layer, rows and values; geometries as ISO WKB), its revision the SHA-256 of its rows in key
 //! order. An edit runs in one transaction: the table locked against writers, its revision checked again, the columns
 //! added, the rows updated, inserted and deleted, the lasting ids of inserted rows kept in the schema's `kentos_uids`.
-//! Passwords never come from the project: the address carries none; the environment's `PGPASSWORD` or `~/.pgpass`.
+//! Passwords never come from the project: the address carries none. A database's password is the one typed for this
+//! session or saved on the device for its server, port, database and user (`connections`, docs/adr/0623), else the
+//! environment's `PGPASSWORD` or `~/.pgpass`.
 //!
 //! Tables with a single integer primary key are listed; a feature table is one in `geometry_columns`.
 
@@ -20,8 +22,10 @@ use kentos_native_application::provider::{
 use sqlx::postgres::{PgConnectOptions, PgConnection, PgRow};
 use sqlx::{Connection, Executor, Row};
 
+pub mod connections;
 mod create;
 mod junctions;
+pub mod probe;
 
 /// How long a connection may take before the database counts as unreachable.
 const CONNECT: Duration = Duration::from_secs(15);
@@ -73,15 +77,38 @@ fn qualified(table: &str) -> (String, String, String) {
 
 async fn connect(address: &str) -> Result<PgConnection, ProviderError> {
     let mut options = PgConnectOptions::from_str(address).map_err(unreachable)?;
-    if let Ok(pw) = std::env::var("PGPASSWORD") {
+    let key = connections::Key {
+        host: options.get_host().to_ascii_lowercase(),
+        port: options.get_port(),
+        database: options.get_database().unwrap_or_default().to_owned(),
+        user: options.get_username().to_owned(),
+    };
+    // The session's or the device's password for this database and user, else PGPASSWORD (else ~/.pgpass, which
+    // sqlx read with the address).
+    let known = connections::password_for(&key)
+        .or_else(|| std::env::var("PGPASSWORD").ok().filter(|p| !p.is_empty()));
+    let given = known.is_some();
+    if let Some(pw) = known {
         options = options.password(&pw);
     }
-    tokio::time::timeout(CONNECT, PgConnection::connect_with(&options))
-        .await
-        .map_err(|_| {
-            ProviderError::Unreachable(format!("{} saniyede bağlanılamadı", CONNECT.as_secs()))
-        })?
-        .map_err(unreachable)
+    let at = probe::Endpoint {
+        host: options.get_host(),
+        port: options.get_port(),
+        database: options.get_database().unwrap_or_default(),
+        user: options.get_username(),
+    };
+    match tokio::time::timeout(CONNECT, PgConnection::connect_with(&options)).await {
+        Err(_) => Err(ProviderError::Unreachable(format!(
+            "{}:{} {} saniyede yanıt vermedi: sunucu kapalı, adres yanlış ya da ağ engelli olabilir",
+            at.host,
+            at.port,
+            CONNECT.as_secs()
+        ))),
+        Ok(Err(e)) => Err(ProviderError::Unreachable(
+            probe::diagnose(&e, &at, given).message,
+        )),
+        Ok(Ok(c)) => Ok(c),
+    }
 }
 
 /// A column's kind from its PostgreSQL type (`format_type`): exact numbers (`numeric`) and times as text, so nothing
