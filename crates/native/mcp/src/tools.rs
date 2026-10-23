@@ -792,7 +792,15 @@ fn command_tool(c: &Value) -> Value {
             // A processing tool writes what it computes (docs/adr/0508).
             | "cad.processing.run"
             | "cad.processing.batch"
+            // The drawing order of what is there shifts, as a set changes it (docs/adr/0260 §3, 0310). A layer's
+            // filter is its view and takes nothing away (docs/adr/0211): not here.
+            | "cad.entities.order"
     );
+    // It writes nothing: the catalog says it only reads the drawing (`effect: query`), it writes no file of its own
+    // (the destructive ones above, the file commands but the print check) (docs/adr/0622 §8).
+    let read_only = c["effect"] == "query"
+        && !destructive
+        && (!id.starts_with("file.") || id == "file.preflight.sheets");
     let description = format!(
         "{}\n\nSonuç protokolün cevabıdır (docs/adr/0253): status completed (output, warnings) ya da failed, \
          needs_input, conflict (error: code, message, path, uids, retryable); yanında summary (eklenen, değişen, \
@@ -809,9 +817,7 @@ fn command_tool(c: &Value) -> Value {
         "title": c["title"],
         "description": description,
         "inputSchema": schema,
-        // They write nothing: the points, the curves, the snaps and the selections are their answers (docs/adr/0270,
-        // 0289, 0272, 0275).
-        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate" | "cad.sources.describe" | "cad.records.page" | "cad.crs.transform" | "cad.stac.search" | "cad.labels.report" | "cad.profiles.check" | "cad.profiles.list" | "cad.subnetworks.find"), destructive),
+        "annotations": annotations(read_only, destructive),
     })
 }
 

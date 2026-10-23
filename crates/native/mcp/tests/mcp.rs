@@ -46,6 +46,42 @@ fn square() -> Value {
     ])
 }
 
+/// A command the catalog says only reads (`effect: query`) is read-only to a client, a file command that writes a file
+/// is not, and no command that changes the drawing is (docs/adr/0622 §8).
+#[test]
+fn the_read_only_hint_follows_the_catalogs_effect() {
+    let mut server = Server::new();
+    let listed = ask(&mut server, 1, "tools/list", json!({}));
+    let tools = listed["result"]["tools"].as_array().expect("tools");
+    let catalog = serde_json::to_value(kentos_commands::catalog()).expect("the catalog");
+    let mut reads = 0;
+    for c in catalog["commands"].as_array().expect("commands") {
+        let id = c["id"].as_str().expect("an id");
+        let Some(tool) = tools.iter().find(|t| t["name"] == id) else {
+            continue;
+        };
+        // A file command writes its file, but the print check; a query that writes a file of its own is destructive.
+        let writes_file = (id.starts_with("file.") && id != "file.preflight.sheets")
+            || tool["annotations"]["destructiveHint"] == true;
+        let read_only = c["effect"] == "query" && !writes_file;
+        assert_eq!(tool["annotations"]["readOnlyHint"], read_only, "{id}");
+        if read_only {
+            reads += 1;
+            assert_eq!(tool["annotations"]["destructiveHint"], false, "{id}");
+        }
+    }
+    // The audit's 41 commands without the hint are among them (cad.topology.check, cad.texts.check …).
+    assert!(reads >= 50, "{reads}");
+    for id in ["cad.topology.check", "cad.texts.check", "cad.sources.query", "cad.time.query"] {
+        let tool = tools.iter().find(|t| t["name"] == id).expect("the command");
+        assert_eq!(tool["annotations"]["readOnlyHint"], true, "{id}");
+    }
+    for id in ["file.export.dxf", "file.package", "cad.layers.edit", "cad.profiles.import", "cad.rasters.gpkgwrite"] {
+        let tool = tools.iter().find(|t| t["name"] == id).expect("the command");
+        assert_eq!(tool["annotations"]["readOnlyHint"], false, "{id}");
+    }
+}
+
 #[test]
 fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_reads_back() {
     let mut server = Server::new();

@@ -58,6 +58,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   - Otomatik seçim (`ProjectSettings.autoSelect`, `edit.autoSelect`, `cad.settings.set`'in `autoSelect`'i): kapalıyken
     seçen her adım yalnız etkin katmanın nesnelerini alır (`selectable::only_layer`). CBS'de kapalı, öbür projelerde açık
     başlar.
+  - Araçların Python ve MCP denetimi (§8): CAD manifesti kapsamı masaüstünün şeridinden okur, İşlemler araçlarını
+    `cad.processing.run` ile sayar; MCP'nin `readOnlyHint`'i kataloğun `effect`'inden gelir. Anlamsal komutu olmayan
+    araçların sıralı listesi TODOS.md `UX-14`'tedir.
 - **Veritabanı bağlantıları (sahibin isteği, 23 Ekim 2026; [ADR 0623](docs/adr/0623-database-connections.md)).**
   - PostgreSQL bağlantısı QGIS'teki gibi bir pencereyle tanımlanır: ad, sunucu, bağlantı noktası, veritabanı,
     kullanıcı, isteğe bağlı kayıtlı parola, SSL, Bağlantıyı dene. Adres yazılmaz.

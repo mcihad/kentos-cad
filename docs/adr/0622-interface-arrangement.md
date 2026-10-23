@@ -328,3 +328,41 @@ Komut geçmişinin Python kodu da (`python_call_in`, `python_script`) gevşetilm
 altında yazar. Daha önce gevşetme kayboluyordu.
 
 Her aracın Python ve MCP karşılığının denetimi ayrı bir iştir (§8).
+
+## 8. Araçların Python ve MCP karşılığı
+
+Şeridin bütün yerleri (CAD ve CBS sekmeleri, bağlamsal sekmeler, menüler, taşmalar, başlatıcılar) tek tek denetlendi:
+1953 yer, 742 tekil öğe (komut, araç ya da aracın yöntemi).
+
+Sonuç:
+
+- Ölü düğme yok. Şeridin kullandığı her komutun katalogda ve masaüstünde işleyicisi var.
+- Girdisi Python'a çevrilemeyen komut yok: `python_call` her girdiyi `execute_input(doc, input_type.from_json(...))`
+  olarak yazar. Gevşetilmiş çağrı §7'den beri `with doc.relaxed():` altındadır.
+- İşlemler'in araçları (`processing.run.*`) Python ve MCP'den `cad.processing.run` ve `.batch` ile çalışır (ADR 0508,
+  0529). Manifestteki "çalıştırılamaz" notu bayattı; düzeltildi.
+- Asıl boşluk, sonucu arayüzün hesaplayıp hazır geometri olarak yazdırdığı araçlardır (`geometry` düzeyi, 79 öğe). Ürün
+  komutu hiç olmayan 20 öğe daha vardır (`none` düzeyi). Python ya da ajan bunların sonucunu aynı komutla üretemez,
+  geometriyi kendisi hesaplamak zorundadır. Sıralı liste TODOS.md `UX-14`'tedir; canlı liste `docs/cad/manifest.md`'dir.
+
+Bu dilimde düzeltilenler:
+
+- **Manifestin kapsamı:** `scripts/cad/manifest.py` kapsamı artık masaüstünün şeridinden
+  (`catalog/v1/ribbon.json`) okur; donmuş web envanterinin şeridini kullanmaz. Bölünmüş düğmeler envanterdeki
+  anahtarlarından çözülür. Envanterde bulunmayan anahtar sorun sayılır.
+- **Sorguların ve İşlemler araçlarının karşılığı:** Manifest bunların Python ve MCP karşılığını da yazar. Komutu olan
+  sorgu ya da İşlemler aracı artık boşluk sayılmaz.
+- **Dosya komutlarının adı:** Python'da `kentos.cad.file.export.dxf` gibi yazılır; içe aktarma `file.import_`
+  altındadır.
+- **Bayat kayıtlar:**
+  - `file.export.dxf` anlamsaldır. Pencerenin komuttan geçmesi ayrı bir iştir.
+  - `processing.newModel` bir penceredir (`host`).
+  - `levels.processing`'in tanımı güncellendi.
+- **MCP'nin salt okunur işareti:** `readOnlyHint` artık katalogdan gelir. Katalog `effect: query` diyorsa, komut yıkıcı
+  değilse ve kendi dosyasını yazmıyorsa (dosya komutları baskı denetimi dışında yazar) işaret verilir. Eskiden 14 komutluk
+  elle bir liste vardı; işaretsiz kalan 41 sorgu artık işaretli. Test: `the_read_only_hint_follows_the_catalogs_effect`.
+- **MCP'nin yıkıcı işareti:** Var olan nesnelerin sırasını değiştiren `cad.entities.order` eklendi. Yıkıcı sayılmayanlar:
+  - `cad.layers.filter`, katmanın görünümüdür ve hiçbir şey silmez (ADR 0211);
+  - `cad.templates.apply` ve `cad.profiles.apply` yalnız eksiği ekler.
+
+İçe aktarmaların yıkıcı işareti olduğu gibi kaldı. DXF ve DWG'nin eklemeli sayılması testlerle bilerek seçilmiştir.

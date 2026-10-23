@@ -4,7 +4,7 @@
   "levels": {
     "semantic": "Ürün komutu kullanıcının verdiğini alır, sonucu kendisi hesaplar: Python ve MCP aynı işi yeniden hesaplamadan yapar.",
     "geometry": "Ürün komutu var ama sonucun geometrisini çağıran hesaplar: arayüz hesaplayıp yazdırır.",
-    "processing": "İşlemler aracı: yalnız uygulamanın çalıştırıcısından.",
+    "processing": "İşlemler aracı: uygulamanın çalıştırıcısıyla; Python ve MCP'den cad.processing.run ile (ADR 0508), kendi anlamsal komutu yok.",
     "none": "Belgeyi ya da projeyi değiştirir ama ürün komutu yok: arayüz doğrudan yazar.",
     "query": "Yalnız okur ya da ölçer.",
     "session": "Görünüm, seçim, çizim yardımcısı ya da aracın adımı: oturumun durumu.",
@@ -43,7 +43,10 @@
     {
       "match": "processing.*",
       "level": "processing",
-      "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz."
+      "via": [
+        "cad.processing.run"
+      ],
+      "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529)."
     },
     {
       "match": "sheet.zoom*",
@@ -270,8 +273,11 @@
       "level": "none"
     },
     "file.export.dxf": {
-      "level": "none",
-      "note": "Dışa aktarma komutu yok (cad.files.*)."
+      "level": "semantic",
+      "via": [
+        "file.export.dxf"
+      ],
+      "note": "Dışa aktar › DXF penceresi aynı yazıcıyı doğrudan kullanır, komut kaydına düşmez; komuttan geçmesi ayrı iş (ADR 0622 §8)."
     },
     "file.export.geojson": {
       "level": "none"
@@ -1157,6 +1163,10 @@
         "cad.entities.order"
       ],
       "note": "Taramalar seçilir, sonra arkaya (ADR 0310)."
+    },
+    "processing.newModel": {
+      "level": "host",
+      "note": "Model tasarımcısı penceresi; modeller cihazda (islemler.json), çalıştırması cad.processing.run'ın model: kimliğiyle."
     },
     "processing.run.address.geocode": {
       "level": "processing",

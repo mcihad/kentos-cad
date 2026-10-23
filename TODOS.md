@@ -1265,6 +1265,22 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
   - **İşlemler:** 28 Eylül'de bitti: kullanıcının modelleri web'deki gibi komut sayılır: İşlemler sekmesinin Modeller panelinde düğme, komut satırında adıyla, Komut ara'da yeriyle (araç kutusunda zaten vardı, ADR 0116).
   - **Görünüş:** 28 Eylül: arayüz yazı tiplerinin yedisi de masaüstünde (Source Sans 3 Adobe'nin değiştirilmemiş dosyaları; Noto Sans, Roboto web'in dosyalarından, `scripts/fonts/ui_fonts.py`; Sistem yazı tipi), web'in kimlikleriyle. 28 Eylül: iki platformun görünüş anahtarları birleşti (sahibin kararı: seçeneklerin birleşimi, varsayılan yazı tipi Plus Jakarta Sans; [ADR 0126](docs/adr/0126-shared-appearance-settings.md)): `appearance.theme` (dört tema), `accent` (on hazır renk ya da `#rrggbb`), `uiFont`, `monoFont`, `textSize` (piksel); eski anahtarlar okunurken çevrilir, ayar dosyası görünüşü taşır (parity-audit A1, A6). 28 Eylül: masaüstünün Uygulama ayarları → Görünüm'ü web'inki gibi: dört tema kartı, vurgu örnekleri ve özel renk, yazı tipi kartları, yazı boyutunun beş adımı ve piksel alanı ([ADR 0128](docs/adr/0128-desktop-appearance-pickers.md)). Kalan (web): gece ve yüksek karşıtlık temaları, masaüstünün altı vurgusu ve özel renk, eş aralıklı yazı seçimi, dört tema kartı ve piksel adımlayıcısı.
   - İki platformda da bekleyenler (`pending`) bu listeye girmez. Web'in klasik arayüzü 2 Ekim'de kaldırıldı; iki platformda yalnız şerit var (sahibin kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)).
+- [ ] `UX-14` Şeritteki her aracın kendi anlamsal komutu olsun; Python ve MCP aynı işi geometriyi kendileri hesaplamadan
+  yapsın ([ADR 0622 §8](docs/adr/0622-interface-arrangement.md), canlı liste `docs/cad/manifest.md`'nin “CAD tarafı”).
+  23 Ekim'deki denetimde (şeridin 742 tekil öğesi) ölü düğme ya da Python'a çevrilemeyen girdi yok; boşluklar şunlar:
+  - [ ] P0 çizim temelleri: Daire dilimi, Halka, Revizyon bulutu (`cad.sector.create`, `cad.donut.create`,
+    `cad.revcloud.create`).
+  - [ ] P0 Çakışma ve Topoloji açıkken kapalı alan ailesi ve Bitişik alan: şekil komutlarına `overlap` ve `topology`
+    seçenekleri, `cad.entities.adjoin`.
+  - [ ] P0 yapım yardımcıları: Dik in ve çık, Paralel çizgi, İki daireye teğet, Dördüncü köşe, Menzil halkaları, Ara nokta,
+    Kesişim noktası, Yardımcı çizginin Açıortay ve Paralel'i.
+  - [ ] P0 Parsel oluştur (numara komutta).
+  - [ ] P1 alan işlemleri, delikler, Biçim değiştir, Sürdür, Paralel kaydır; Parçala ve Sadeleştir; Kot ver, Okunur yap, eğri
+    boyunca yazı, Koordinat yaz, Km yaz, Etiketleri yazıya çevir, Köşelere nokta; plan yolu, Orta hat, Toplu alan, Hızlı
+    ölçü, Katmana kopyala; ölçme hesap pencereleri; Resmi kırp, Yeni sürüm, ağ sonuçlarını yazma.
+  - [ ] P2 ürün komutu olmayanlar: dosya alışverişinin kalanı (GeoJSON, GPX, KML, NCN dışa; GNSS, NCN, NCZ, fotoğraf içe),
+    Seçilenleri kaydet, Başka çizimden al, Veri karşılaştır, Topoloji kuralları.
+  - [ ] Komut geçmişinin Python denetimi (`scripts/python/history_calls.py`) dosya yazan 18 masaüstü komutunu da kapsasın.
 
 Kabul izi: `polygon başlat → tıkla → 12 yaz → alan açıldı ve "12" göründü → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç`. Buna focus başka metin kutusundayken, yüksek DPI'da, Türkçe klavyede ve IME açıkken varyantlar eklenir. Bu iz Web e2e ile native interaction fixture'ının ortak referansıdır. — **25 Eylül:** iz `fixtures/interaction/v1/polygon-accept.json` (biçim `fixtures/interaction/README.md`). Web gerçek tarayıcıda US klavye, Türkçe Q ve 2× ekran varyantlarında geçiyor (`pnpm e2e:interaction`). Odak başka alandayken yazma `polygon-keys`'te. IME varyantı açık. Masaüstü aynı dosyayı değiştirmeden, pencere açmadan üç varyantta geçiyor (`cargo test -p kentos-desktop traces`, ADR 0021).
 

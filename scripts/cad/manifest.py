@@ -6,7 +6,8 @@ catalog/v1/additions.json's commands) gets one row: what it does as a product op
 it can be done. The level of an item comes from catalog/v1/operations.json (hand-kept: an explicit entry, else the
 first matching rule); everything else is read from the sources:
 
-- the scope (cad, gis, shared; none: on no ribbon) from the two project types' ribbons, with the additions' places;
+- the scope (cad, gis, shared; none: on no ribbon) from the desktop's ribbon, catalog/v1/ribbon.json (each type's
+  tabs and the contextual tabs of its modes; a split button by key is the inventory's split of that key, docs/adr/0622);
 - the desktop column from the inventory's (apps/desktop/ported.json) and apps/desktop/equivalents.json;
 - the product command a tool writes through from the inventory (`productCommand`), an operation of
   `cad.entities.create` / `.edit` from the mapping, checked against the contract's enums;
@@ -33,6 +34,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 INVENTORY = ROOT / "docs/inventory/web.json"
 ADDITIONS = ROOT / "catalog/v1/additions.json"
+RIBBON = ROOT / "catalog/v1/ribbon.json"
 OPERATIONS = ROOT / "catalog/v1/operations.json"
 CATALOG = ROOT / "apps/web/src/contracts/generated/commandCatalog.json"
 EQUIVALENTS = ROOT / "apps/desktop/equivalents.json"
@@ -61,7 +63,27 @@ def enum_names(path: Path, enum: str) -> set[str]:
     return {camel(n) for n in names}
 
 
-def ribbon_commands(tabs: list) -> set[str]:
+def inventory_splits(layout: object) -> dict[str, set[str]]:
+    """The inventory's split buttons by key: the commands of their entries (a tool and its methods are one command)."""
+    found: dict[str, set[str]] = {}
+
+    def walk(x: object) -> None:
+        if isinstance(x, dict):
+            if isinstance(x.get("split"), list) and isinstance(x.get("key"), str):
+                found.setdefault(x["key"], set()).update(e["command"] for e in x["split"] if "command" in e)
+            for v in x.values():
+                walk(v)
+        elif isinstance(x, list):
+            for i in x:
+                walk(i)
+
+    walk(layout)
+    return found
+
+
+def ribbon_commands(tabs: object, splits: dict[str, set[str]] | None = None) -> set[str]:
+    """Every command a ribbon's panels name: buttons, menus' blocks, overflows, launchers and split buttons (an
+    inline split's entries, or a split by key as `splits` gives it)."""
     found: set[str] = set()
 
     def walk(x: object) -> None:
@@ -69,6 +91,8 @@ def ribbon_commands(tabs: list) -> set[str]:
             for k, v in x.items():
                 if k == "command" and isinstance(v, str):
                     found.add(v)
+                elif k == "split" and isinstance(v, str):
+                    found.update((splits or {}).get(v, set()))
                 elif k in ("items", "overflow") and isinstance(v, list):
                     for i in v:
                         if isinstance(i, str):
@@ -82,6 +106,34 @@ def ribbon_commands(tabs: list) -> set[str]:
                 walk(i)
 
     walk(tabs)
+    return found
+
+
+def python_name(command: str) -> str:
+    """A product command's call in the Python SDK: `cad.*` and `file.*` are `kentos.cad`'s (`file.import.*` under
+    `import_`, a keyword); the server's are a Connection's."""
+    if command.startswith("cad."):
+        return "kentos.cad." + command.removeprefix("cad.")
+    if command.startswith("file."):
+        return "kentos.cad." + command.replace("file.import.", "file.import_.", 1)
+    return f"Connection: {command}"
+
+
+def split_keys(ribbon: object) -> set[str]:
+    """The keys of the split buttons a ribbon names by key."""
+    found: set[str] = set()
+
+    def walk(x: object) -> None:
+        if isinstance(x, dict):
+            if isinstance(x.get("split"), str):
+                found.add(x["split"])
+            for v in x.values():
+                walk(v)
+        elif isinstance(x, list):
+            for i in x:
+                walk(i)
+
+    walk(ribbon)
     return found
 
 
@@ -105,14 +157,21 @@ def build() -> tuple[dict, str, list[str]]:
         "cad.layers.states": enum_names(LAYER_TREE_RS, "LayerStatesOperation"),
     }
 
-    rb = inv["layout"]["ribbonByMode"]
-    cad, gis = ribbon_commands(rb["cad"]), ribbon_commands(rb["gis"])
-    for place in add.get("ribbon", []):
-        ids = {i["command"] for i in place["items"]} | set(place.get("overflow", []))
-        if "cad" in place["modes"]:
+    # The desktop's ribbon (docs/adr/0622 §3–§4): the frozen web inventory gives only its split buttons' entries.
+    ribbon = json.loads(RIBBON.read_text(encoding="utf-8"))
+    splits = inventory_splits(inv["layout"])
+    cad = ribbon_commands(ribbon["tabs"]["cad"], splits)
+    gis = ribbon_commands(ribbon["tabs"]["gis"], splits)
+    for tab in ribbon["contextual"]:
+        ids = ribbon_commands(tab["panels"], splits)
+        modes = tab.get("modes") or ["cad", "gis"]
+        if "cad" in modes:
             cad |= ids
-        if "gis" in place["modes"]:
+        if "gis" in modes:
             gis |= ids
+    unresolved = sorted(k for k in split_keys(ribbon) if k not in splits)
+    for key in unresolved:
+        problems.append(f"şerit: “{key}” bölünmüş düğmesi envanterde yok")
 
     def scope(command: str) -> str:
         a, b = command in cad, command in gis
@@ -129,9 +188,10 @@ def build() -> tuple[dict, str, list[str]]:
     def surfaces(entry: dict, via: list[str]) -> tuple[str | None, str | None]:
         python = entry.get("python")
         mcp = entry.get("mcp")
-        if entry["level"] in ("semantic", "geometry") and via and all(v in catalog for v in via):
+        # A query reads through its command too, and an İşlemler tool runs through cad.processing.run (docs/adr/0508).
+        if entry["level"] in ("semantic", "geometry", "query", "processing") and via and all(v in catalog for v in via):
             names = [v for v in via]
-            python = python or ", ".join(f"kentos.cad.{v.replace('cad.', '', 1)}" if v.startswith("cad.") else f"Connection: {v}" for v in names)
+            python = python or ", ".join(python_name(v) for v in names)
             mcp = mcp or ", ".join(names if all(v in local or v.startswith("project.") for v in names) else [])
         return python or None, mcp or None
 
@@ -235,6 +295,7 @@ def build() -> tuple[dict, str, list[str]]:
         "sources": {
             "inventory": str(INVENTORY.relative_to(ROOT)),
             "additions": str(ADDITIONS.relative_to(ROOT)),
+            "ribbon": str(RIBBON.relative_to(ROOT)),
             "operations": str(OPERATIONS.relative_to(ROOT)),
             "catalog": str(CATALOG.relative_to(ROOT)),
             "equivalents": str(EQUIVALENTS.relative_to(ROOT)),
@@ -249,9 +310,10 @@ def gap(r: dict) -> bool:
     """A CAD-side item a script or an agent cannot do as the interface does."""
     if r["scope"] == "gis":
         return False
-    if r["level"] in ("geometry", "none", "processing"):
+    if r["level"] in ("geometry", "none"):
         return True
-    return r["level"] == "query" and not r["python"]
+    # An İşlemler tool and a query are gaps only without a command a script can call.
+    return r["level"] in ("query", "processing") and not r["python"]
 
 
 def markdown(rows: list[dict], levels: dict) -> str:
