@@ -446,6 +446,8 @@ AutoCAD'de geometrik kısıtlar 2D nesne ilişkilerini, ölçüsel kısıtlar is
 
 ## 14. CAD-ARCH — 2D mimari üretim araçları — P1/P2
 
+23 Ekim 2026 yeniden kabulü: kullanıcı mimari araçların zayıf kaldığını bildirdi. Önceki işaretler, bu oturumda kolay ev planı üretimi veya standart uygunluğu kanıtı değildir. Referans karşılaştırması ve uçtan uca gerçek GUI kabulü [Mimari CAD incelemesi](../docs/cad/architecture-audit.md) üzerinden izlenir. Doğrulanmamış işler kapatılmaz.
+
 Architecture toolset'te duvarlar katmanlı bileşenler taşıyabilir; kapı/pencere duvara bağlanır, duvar açıklığına uyum sağlar ve bağlı öğe taşınan duvarı izler. KentOS için aşağıdaki **2D ürün tasarımı**, bu iş akışından çıkarılan gereksinimlerin mevcut CAD kaynak modeline uyarlanmasıdır. [Autodesk mimari iş akışı](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-Architecture/files/GUID-508C88DB-2CB7-4D0C-A60D-8D4CCC7CC5A6.htm), [Autodesk Walls](https://help.autodesk.com/cloudhelp/2025/ENU/AutoCAD-Architecture/files/GUID-E7595DBB-BB79-4006-ADE5-17E4BD676110.htm)
 
 ### 14.1 Mimari nesne modeli ve duvar
