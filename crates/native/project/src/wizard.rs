@@ -5,7 +5,7 @@
 //! records its answers for a few drafts (fixtures/project/v1/wizard.json)
 //! and the test below gives the same here.
 
-use kentos_contracts::{DrawingFont, DrawingUnit, Workspace};
+use kentos_contracts::{AnnotationHeights, AnnotationKind, DrawingFont, DrawingUnit, Workspace};
 
 use crate::crs::{LOCAL_SRID, System, system, systems, turef_zone_for};
 use crate::new_project::{NEW_PROJECT_NAME, NewProject, js_number};
@@ -82,11 +82,53 @@ pub struct Draft {
     pub font: DrawingFont,
     /// The app's default system for new projects (Uygulama ayarları → Yeni projeler).
     pub fallback_srid: u32,
+    /// The annotation heights on paper the user typed (mm); none: the kinds' own
+    /// (docs/adr/0205 §1, 0622 §2).
+    #[serde(default)]
+    pub annotation: Option<AnnotationHeights>,
 }
 
 /// Map scales for a CBS project, drawing scales for a CAD one (1:N).
 pub const GIS_SCALES: [f64; 7] = [500.0, 1000.0, 2000.0, 5000.0, 10_000.0, 25_000.0, 50_000.0];
 pub const CAD_SCALES: [f64; 10] = [1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0];
+/// A plan's scales (docs/adr/0622 §2): a CAD drawing in metres is a plan, from a site's
+/// 1:100 to a zoning plan's 1:1000 and 1:5000.
+pub const PLAN_SCALES: [f64; 8] = [
+    100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0, 10_000.0, 25_000.0,
+];
+
+/// A CAD drawing's scales in its unit (docs/adr/0622 §2): a plan's in metres, the drawing
+/// scales in any other.
+pub fn cad_scales(unit: DrawingUnit) -> &'static [f64] {
+    match unit {
+        DrawingUnit::M => &PLAN_SCALES,
+        DrawingUnit::Mm | DrawingUnit::Cm | DrawingUnit::In | DrawingUnit::Ft => &CAD_SCALES,
+    }
+}
+
+/// The scale a CAD drawing in this unit starts at (docs/adr/0622 §2): a part 1:1, a room
+/// 1:50, a plan in metres 1:1000; feet and inches 1:1.
+pub fn cad_default_scale(unit: DrawingUnit) -> f64 {
+    match unit {
+        DrawingUnit::Mm | DrawingUnit::In | DrawingUnit::Ft => 1.0,
+        DrawingUnit::Cm => 50.0,
+        DrawingUnit::M => 1000.0,
+    }
+}
+
+/// An annotation `mm` high on paper at `1:scale` as the drawing measures it in its unit:
+/// `2,5 m`, `5 cm`, `2,5 mm` (docs/adr/0622 §2).
+pub fn drawn_height_text(mm: f64, scale: f64, unit: DrawingUnit) -> String {
+    let metres = kentos_contracts::paper_height(mm, scale);
+    let (value, mark) = match unit {
+        DrawingUnit::Mm => (metres * 1000.0, "mm"),
+        DrawingUnit::Cm => (metres * 100.0, "cm"),
+        DrawingUnit::M => (metres, "m"),
+        DrawingUnit::In => (metres / 0.0254, "in"),
+        DrawingUnit::Ft => (metres / 0.3048, "ft"),
+    };
+    format!("{} {mark}", tr_number(value))
+}
 
 /// A unit a local project is drawn in, with what it is for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -151,9 +193,9 @@ pub fn scale_text(n: f64) -> String {
 /// The plot scales a project's Ölçek offers (docs/adr/0205 §4): its type's
 /// (a CAD project's drawing scales, else the map scales), with the current
 /// one in its place when it is none of them. The web's `projectScales`.
-pub fn project_scales(cad: bool, current: f64) -> Vec<f64> {
+pub fn project_scales(cad: bool, unit: DrawingUnit, current: f64) -> Vec<f64> {
     let mut out: Vec<f64> = if cad {
-        CAD_SCALES.to_vec()
+        cad_scales(unit).to_vec()
     } else {
         GIS_SCALES.to_vec()
     };
@@ -224,6 +266,7 @@ impl Draft {
             } else {
                 5256
             },
+            annotation: None,
         }
     }
 
@@ -255,18 +298,54 @@ impl Draft {
         }
     }
 
-    /// The scales offered for the draft.
+    /// The scales offered for the draft: a map's, or a drawing's in its unit
+    /// (a CAD project on real coordinates is a plan in metres; docs/adr/0622 §2).
     pub fn scales(&self) -> &'static [f64] {
         match self.kind {
-            Kind::Cad => &CAD_SCALES,
+            Kind::Cad => cad_scales(self.unit()),
             Kind::Gis => &GIS_SCALES,
         }
     }
 
-    /// The project's scale: the one chosen, else 1:1 for a local drawing and 1:1000 for any other.
+    /// The project's scale: the one chosen, else its unit's for a local drawing (a
+    /// plan in metres 1:1000, docs/adr/0622 §2) and 1:1000 for any other.
     pub fn scale(&self) -> f64 {
-        self.plot_scale
-            .unwrap_or(if self.is_local() { 1.0 } else { 1000.0 })
+        self.plot_scale.unwrap_or(if self.is_local() {
+            cad_default_scale(self.unit)
+        } else {
+            1000.0
+        })
+    }
+
+    /// A kind of annotation's height on paper, mm: the one typed, else its own.
+    pub fn annotation_mm(&self, kind: AnnotationKind) -> f64 {
+        self.annotation
+            .as_ref()
+            .map_or_else(|| kind.default_mm(), |a| a.mm(kind))
+    }
+
+    /// What the texts and dimensions are on paper and in the drawing at the
+    /// scale, as the summary and the page say it: `kâğıtta 2,5 mm, çizimde 2,5 m`.
+    pub fn heights_text(&self) -> String {
+        let text = self.annotation_mm(AnnotationKind::Text);
+        let dimension = self.annotation_mm(AnnotationKind::Dimension);
+        let scale = self.scale();
+        let unit = self.unit();
+        if text == dimension {
+            format!(
+                "yazı ve ölçü kâğıtta {} mm, çizimde {}",
+                tr_number(text),
+                drawn_height_text(text, scale, unit)
+            )
+        } else {
+            format!(
+                "yazı kâğıtta {} mm, çizimde {}; ölçü kâğıtta {} mm, çizimde {}",
+                tr_number(text),
+                drawn_height_text(text, scale, unit),
+                tr_number(dimension),
+                drawn_height_text(dimension, scale, unit)
+            )
+        }
     }
 
     /// The project's unit: a local drawing's own, metres for any other.
@@ -362,6 +441,8 @@ impl Draft {
             lines.push(("İl", p.name.clone()));
         }
         lines.push(("Ölçek", scale_text(self.scale())));
+        // What the scale makes of the texts and dimensions (docs/adr/0622 §2).
+        lines.push(("Yazılar", self.heights_text()));
         lines.push(("Katmanlar", layers(self.kind).to_owned()));
         lines.push((
             "Açılış",
@@ -401,6 +482,7 @@ impl Draft {
             drawing_font: self.font,
             province: if local { None } else { self.province },
             drawing_unit: local.then_some(self.unit),
+            annotation: self.annotation.clone().and_then(AnnotationHeights::sanitized),
         }
     }
 }
@@ -461,6 +543,9 @@ mod tests {
                 drawing_unit: o
                     .get("drawingUnit")
                     .map(|u| serde_json::from_value(u.clone()).expect("a unit")),
+                annotation: o
+                    .get("annotation")
+                    .map(|a| serde_json::from_value(a.clone()).expect("heights")),
             };
             assert_eq!(d.options(), want, "{name}");
         }

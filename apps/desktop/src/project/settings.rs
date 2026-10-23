@@ -394,6 +394,15 @@ impl App {
         if let Event::Custom(e) = e {
             return self.custom_crs_event(e);
         }
+        // A project keeps the type it has (docs/adr/0622 §1): only one not asked its type yet takes one here.
+        if let Event::Mode(_) = e
+            && self
+                .document
+                .as_ref()
+                .is_some_and(|d| d.settings().project_type().is_some())
+        {
+            return Task::none();
+        }
         // The grids a datum choice may name and the user's notation, before the window is borrowed.
         let grids = self.choice_grids();
         let notation = self.draft.geographic;
@@ -875,6 +884,7 @@ impl App {
                 s.settings.plot_scale,
                 s.settings.annotation.as_ref(),
                 crate::catalog::effective_mode(s.settings.workspace).id == Workspace::Cad,
+                s.settings.unit(),
                 &s.scale_typed,
                 kentos_interaction::Format::of(&s.settings),
                 |v| event(Event::Scale(v)),
@@ -1046,19 +1056,7 @@ impl App {
                     .spacing(10)
                     .push(setting("Proje adı", Some("Dosya adı olarak da kullanılır."), name)),
             ))
-            .push(group(
-                "Proje türü",
-                column![
-                    label::caption("CAD ya da CBS: sahnesi, eksen ve açı düzeni ve şeridi türe göredir; veri değişmez. Şeritte olmayan komutlar komut satırından yine çalışır."),
-                    modes(
-                        crate::catalog::effective_mode(s.settings.workspace).id,
-                        true,
-                        false,
-                        |w| event(Event::Mode(w)),
-                    ),
-                ]
-                .spacing(8),
-            ))
+            .push(group("Proje türü", project_type(doc.settings().project_type(), s)))
             .push(group(
                 "Çizim yazı tipi",
                 column![
@@ -1312,6 +1310,42 @@ fn second_group<'a>(s: &'a State) -> Element<'a, Message> {
         "İkinci koordinat sistemi",
         setting("İkinci sistem", Some(what), value),
     )
+}
+
+/// The project's type: said, never switched, once the project has one
+/// (docs/adr/0622 §1); a project not asked its type yet chooses it here once.
+fn project_type<'a>(saved: Option<Workspace>, s: &'a State) -> Element<'a, Message> {
+    match saved {
+        Some(kind) => {
+            let mode = crate::catalog::effective_mode(Some(kind));
+            column![
+                row![
+                    kentos_ui::icon::icon(crate::modes::mode_icon(kind))
+                        .size(16.0)
+                        .tone(kentos_ui::icon::Tone::Accent),
+                    text(format!("{} · {}", mode.label, mode.title))
+                        .font(typography::ui_strong())
+                        .size(typography::body()),
+                ]
+                .spacing(8)
+                .align_y(iced::Center),
+                label::caption("Proje türü projeyle başlar ve değişmez: sahnesi, eksen ve açı düzeni ve şeridi türe göredir. CAD ile CBS arasında geçiş ileride projeyi dönüştürerek olacak."),
+            ]
+            .spacing(6)
+            .into()
+        }
+        None => column![
+            label::caption("Projenin türü henüz seçilmedi; CBS gösteriliyor. Tür bir kez seçilir ve sonra değişmez."),
+            modes(
+                crate::catalog::effective_mode(s.settings.workspace).id,
+                true,
+                false,
+                |w| event(Event::Mode(w)),
+            ),
+        ]
+        .spacing(8)
+        .into(),
+    }
 }
 
 fn units<'a>(s: &'a State) -> Element<'a, Message> {

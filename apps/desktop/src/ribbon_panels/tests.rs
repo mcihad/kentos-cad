@@ -348,7 +348,14 @@ fn ozellikler_offers_the_webs_values() {
             c["cad"].as_bool().unwrap_or(false),
             c["current"].as_f64().unwrap_or(0.0),
         );
-        let offered: Vec<serde_json::Value> = kentos_project::wizard::project_scales(cad, current)
+        // A CAD drawing in metres is a plan with its own scales (docs/adr/0622 §2); the
+        // web's cases are drawings in millimetres.
+        let unit = c
+            .get("unit")
+            .map_or(kentos_commands::DrawingUnit::Mm, |u| {
+                serde_json::from_value(u.clone()).expect("a unit")
+            });
+        let offered: Vec<serde_json::Value> = kentos_project::wizard::project_scales(cad, unit, current)
             .into_iter()
             .map(|s| {
                 serde_json::json!({

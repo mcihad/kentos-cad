@@ -38,6 +38,7 @@ pub fn drawing(bytes: &[u8], path: &Path) -> Result<DocumentSnapshotV2, String> 
             drawing_font: DrawingFont::Barlow,
             province: None,
             drawing_unit: Some(DrawingUnit::M),
+            annotation: None,
         })?;
     let mut doc = Document::from_snapshot(snapshot)?;
     let input: kentos_commands::ImportDxf =

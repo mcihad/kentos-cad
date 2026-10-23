@@ -410,6 +410,8 @@ mod transparent_tests;
 mod map_crs_tests;
 #[cfg(test)]
 mod ui_screens;
+#[cfg(test)]
+mod ux_screens;
 mod usage;
 mod vertices;
 mod view;

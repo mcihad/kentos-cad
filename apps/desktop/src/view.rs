@@ -1475,6 +1475,21 @@ impl App {
         }
         if let Some(doc) = &self.document {
             let settings = doc.settings();
+            // A CAD project's drawing scale (AutoCAD's annotation scale; docs/adr/0622 §2): the
+            // scale its texts and dimensions are drawn at, chosen from its unit's scales or typed.
+            if self.work_mode() == kentos_commands::Workspace::Cad {
+                let scale = settings.plot_scale;
+                let unit = settings.unit();
+                bar = bar.separator().push(
+                    Readout::new(row![
+                        label::muted("Ölçek"),
+                        label::strong(kentos_project::wizard::scale_text(scale)),
+                    ]
+                    .spacing(4)
+                    .align_y(iced::Center))
+                    .menu(move || crate::annotation_scale::plot_scale_menu(scale, unit)),
+                );
+            }
             if fit < 3 {
                 // The scale selector (screen_scale.rs, docs/adr/0165 §5): chosen from its menu or typed.
                 let cell: Element<'_, Message> = match self.scale_field_view() {

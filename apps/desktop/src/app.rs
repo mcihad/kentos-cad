@@ -452,6 +452,9 @@ pub enum Message {
     BottomReset,
     /// Geçmişi temizle (the bottom panel's tab row).
     HistoryCleared,
+    /// The status bar's type of a project not asked its type yet, pressed:
+    /// the question (docs/adr/0622 §1).
+    AskProjectType,
     /// A frame of the status bar's message fading, or the moment it goes (message_log.rs).
     LogFrame,
     /// The bottom panel's log list scrolled: whether new lines follow to its end.
@@ -1888,6 +1891,7 @@ impl App {
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),
             Message::HistoryCleared => self.clear_history(),
+            Message::AskProjectType => self.ask_project_type(),
             Message::LogFrame => self.log_frame(Instant::now()),
             Message::LogScrolled(viewport) => self.log_scrolled(viewport),
             Message::LayoutSave => self.layout.write(Instant::now(), false),
@@ -3212,6 +3216,10 @@ impl App {
                     .iter()
                     .any(|&s| d.get(s).is_some_and(|e| e.base().symbol.is_some()))
             }),
+            // A project keeps its type (docs/adr/0622 §1): only one not asked its type yet takes one.
+            id if id.starts_with("workspace.") => {
+                doc.is_some_and(|d| d.settings().project_type().is_none())
+            }
             _ => true,
         }
     }
@@ -3221,6 +3229,9 @@ impl App {
     pub fn why_disabled(&self, id: &str) -> Option<&'static str> {
         match id {
             "layer.new" | "layer.newGroup" => self.tree_locked(),
+            id if id.starts_with("workspace.") && !self.available(id) => Some(
+                "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride dönüştürmeyle olacak.",
+            ),
             "scenario.show" | "scenario.base" | "scenario.compare" | "scenario.apply"
                 if !self.has_scenarios() =>
             {

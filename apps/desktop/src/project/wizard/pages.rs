@@ -672,6 +672,7 @@ pub(super) fn details(s: &State, current: Option<Note>) -> Element<'_, Message> 
             },
             chips,
         ),
+        section("Yazı yükseklikleri", heights(d)),
         section(
             "Çizim yazı tipi",
             container(font).width(typography::from_default(260.0)),
@@ -712,6 +713,51 @@ pub(super) fn details(s: &State, current: Option<Note>) -> Element<'_, Message> 
         ),
         parts,
     )
+}
+
+/// The texts' and dimensions' heights on paper, each with its size in the
+/// drawing at the chosen scale and unit (docs/adr/0622 §2): a 1:1000 plan in
+/// metres writes a 2,5 mm text 2,5 m high.
+fn heights(d: &kentos_project::wizard::Draft) -> Element<'_, Message> {
+    use kentos_commands::AnnotationKind;
+    let scale = d.scale();
+    let unit = d.unit();
+    let field = |kind: AnnotationKind, name: &'static str| -> Element<'_, Message> {
+        let mm = d.annotation_mm(kind);
+        row![
+            container(label::body(name)).width(typography::from_default(64.0)),
+            kentos_ui::widget::NumberInput::new(mm, move |v| event(Event::Height(kind, v)))
+                .range(0.1..=100.0)
+                .step(0.5)
+                .decimals(2)
+                .width(typography::from_default(110.0)),
+            label::body("mm kâğıtta"),
+            label::caption(format!(
+                "= {} çizimde",
+                kentos_project::wizard::drawn_height_text(mm, scale, unit)
+            ))
+            .style(style::text::muted),
+        ]
+        .spacing(8)
+        .align_y(Center)
+        .into()
+    };
+    column![
+        row![
+            field(AnnotationKind::Text, "Yazı"),
+            space::horizontal().width(24),
+            field(AnnotationKind::Dimension, "Ölçü"),
+        ]
+        .align_y(Center)
+        .wrap()
+        .vertical_spacing(6),
+        label::caption(
+            "Yazılar ve ölçüler kâğıtta bu boyda çıkar; çizimdeki boyları ölçekle çarpılır. Proje ayarları › Ölçek ve yazılar'dan sonra da değişir."
+        )
+        .style(style::text::muted),
+    ]
+    .spacing(6)
+    .into()
 }
 
 /// A scale's chip (the web's `.wiz__chip`): a pill on the field's ground,

@@ -191,6 +191,7 @@ impl NewRequest {
             // The wizard falls back on the app's default system; a script has
             // none, so a system is asked, never guessed.
             fallback_srid: LOCAL_SRID,
+            annotation: None,
         };
         if !local && draft.srid.or_else(|| draft.suggested_srid()).is_none() {
             return Err(invalid(
@@ -234,6 +235,7 @@ mod tests {
             name: "Daire".into(),
             font: DrawingFont::Barlow,
             fallback_srid: 5256,
+            annotation: None,
         };
         assert_eq!(p, d.options());
         assert_eq!(

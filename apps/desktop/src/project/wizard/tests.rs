@@ -253,7 +253,16 @@ fn a_scale_typed_after_one_to_is_the_projects() {
         (5000.0, "")
     );
     send(&mut app, Event::Type(Workspace::Cad));
+    // A local CAD drawing in metres is a plan: 1:1000; in millimetres a part: 1:1 (docs/adr/0622 §2).
+    assert_eq!(state(&app).draft.unit, DrawingUnit::M);
+    assert_eq!(state(&app).draft.scale(), 1000.0);
+    send(&mut app, Event::Unit(DrawingUnit::Mm));
     assert_eq!(state(&app).draft.scale(), 1.0);
+    // A plan's scale the drawing scales do not list goes back to the unit's own.
+    send(&mut app, Event::Unit(DrawingUnit::M));
+    send(&mut app, Event::Scale(5000.0));
+    send(&mut app, Event::Unit(DrawingUnit::Cm));
+    assert_eq!(state(&app).draft.scale(), 50.0);
 }
 
 /// Pictures of the wizard for the owner, dark and light, at 1440 × 900 and

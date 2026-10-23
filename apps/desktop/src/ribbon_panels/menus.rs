@@ -119,8 +119,8 @@ pub(super) fn weight_menu(current: Option<f64>) -> Menu<Message> {
 
 /// Ölçek (docs/adr/0205 §4): the project's type's scales and the current
 /// one when it is none of them, then Ölçek yaz….
-pub(super) fn scale_menu(current: f64, cad: bool) -> Menu<Message> {
-    kentos_project::wizard::project_scales(cad, current)
+pub(super) fn scale_menu(current: f64, cad: bool, unit: kentos_commands::DrawingUnit) -> Menu<Message> {
+    kentos_project::wizard::project_scales(cad, unit, current)
         .into_iter()
         .fold(Menu::new(), |menu, scale| {
             menu.radio(

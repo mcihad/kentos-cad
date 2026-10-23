@@ -34,6 +34,7 @@ fn drawing(unit: DrawingUnit, class_unit: DrawingUnit) -> Document {
         drawing_font: DrawingFont::Barlow,
         province: None,
         drawing_unit: Some(unit),
+        annotation: None,
     })
     .expect("a new project");
     let layer = snapshot.active_layer.clone();

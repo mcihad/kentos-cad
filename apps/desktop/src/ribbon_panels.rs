@@ -378,6 +378,7 @@ impl App {
             .collect();
         let (line_type, weight) = (self.draft.line_type, self.draft.line_weight);
         let scale = doc.settings().plot_scale;
+        let unit = doc.settings().unit();
         let cad = self.work_mode() == kentos_commands::Workspace::Cad;
         let s = typography::scaled;
         let fields_width = move |level: Level| match level {
@@ -395,7 +396,7 @@ impl App {
                     color_menu(color.as_ref().map(DraftColor::as_str), &swatches),
                     line_type_menu(line_type),
                     weight_menu(weight),
-                    scale_menu(scale, cad),
+                    scale_menu(scale, cad, unit),
                 )
             }
         };

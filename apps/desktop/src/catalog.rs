@@ -823,6 +823,12 @@ fn place_desktop_commands(tabs: &mut [Tab]) {
             size: Size::Large,
         });
     }
+    // A project keeps its type (docs/adr/0622 §1): no ribbon switches it.
+    for panel in tabs.iter_mut().flat_map(|tab| tab.panels.iter_mut()) {
+        panel
+            .items
+            .retain(|item| !matches!(item, Item::Menu { label: "Proje türü", .. }));
+    }
     // Seçim süzgeci ▾ holds the kinds the desktop added after the web's (docs/adr/0339 §6: Duvar; 0341 §5: Açıklık;
     // 0342 §5: Mahal).
     for item in tabs

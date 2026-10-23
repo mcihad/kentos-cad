@@ -18,7 +18,7 @@ pub(crate) mod settings;
 mod survey;
 mod unit_change;
 mod variables;
-mod wizard;
+pub(crate) mod wizard;
 
 use iced::widget::{Column, Row, button, column, container, row, text};
 use iced::{Center, Element, Fill, Task};
