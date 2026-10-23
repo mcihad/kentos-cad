@@ -2829,6 +2829,8 @@ dependencies = [
  "kentos-plot",
  "kentos-processing",
  "kentos-project",
+ "kentos-sheet",
+ "miniz_oxide 0.9.1",
  "serde",
  "serde_json",
 ]

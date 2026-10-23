@@ -2761,6 +2761,18 @@
       "shortcuts": [],
       "category": "Pafta",
       "status": "implemented"
+    },
+    {
+      "id": "file.publish.sheets",
+      "title": "Paftaları toplu yayınla…",
+      "icon": "exportAtlas",
+      "description": "Seçilen paftaları sıralayarak tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Dosya adları önceden denetlenir; kaynak sorunları pafta bazında gösterilir. İlerleme ve Durdur aynı komut işini yönetir; kısmi teslim görünür olmaz.",
+      "aliases": [
+        "PAFTAYAYINLA"
+      ],
+      "shortcuts": [],
+      "category": "Pafta",
+      "status": "implemented"
     }
   ],
   "icons": {

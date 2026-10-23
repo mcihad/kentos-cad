@@ -1533,6 +1533,7 @@ impl App {
             } else {
                 Subscription::none()
             },
+            if self.sheet_publish_running(){Subscription::run(crate::exchange::sheet_publish::ticks)}else{Subscription::none()},
             // Toplu çalıştır: a running batch job is looked at every tick (processing/batch.rs).
             if self.processing.batch_running() {
                 Subscription::run(crate::processing::batch::ticks)

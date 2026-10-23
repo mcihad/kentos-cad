@@ -753,6 +753,7 @@ fn command_tool(c: &Value) -> Value {
             | "file.export.dxf"
             | "file.export.dwg"
             | "file.export.pdf"
+            | "file.publish.sheets"
             | "file.export.block"
             | "file.export.gpkg"
             | "file.export.shp"

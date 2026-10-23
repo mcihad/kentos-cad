@@ -2134,6 +2134,13 @@
         "cad.sheets.create"
       ],
       "note": "Pafta tasarımcısı, Python ve AI aynı oluşturma/sığdırma çekirdeğini kullanır (ADR 0592)."
+    },
+    "file.publish.sheets": {
+      "level": "semantic",
+      "via": [
+        "file.publish.sheets"
+      ],
+      "note": "Seçim, sıra, adlandırma, kaynak raporu ve atomik teslim aynı dosya komutundadır; masaüstü aynı iptal edilebilir protokol işini kullanır."
     }
   },
   "tools": {

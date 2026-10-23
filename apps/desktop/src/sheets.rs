@@ -1627,6 +1627,7 @@ impl App {
                     task = Task::done(Message::Run("crs.set"));
                 }
                 // Atlas: the atlas's window (docs/adr/0534), the preview and the PDF with a page for each object.
+                Effect::HostAction(action) if action=="sheet.publish"=>{task=Task::done(Message::Run("file.publish.sheets"));}
                 Effect::HostAction(action) if action == "sheet.atlas" => {
                     task = Task::done(Message::Run("file.export.atlas"));
                 }
@@ -1667,7 +1668,7 @@ impl App {
                 let doc=self.sheet_output_snapshot()?;
                 let id=self.sheets.open_sheet().ok_or("Önce bir pafta açın.")?.id.clone();
                 let drawing=self.document.as_ref().and_then(|d|d.path.as_ref()).map(|p|p.to_string_lossy().into_owned());
-                let image=kentos_plot::preview::page(&doc,&id,"",&kentos_plot::book::today(),drawing.as_deref(),self.sheets.output_dpi()).map_err(|e|e.message)?;
+                let image=kentos_plot::preview::page(&doc,&id,&kentos_plot::book::current_user(),&kentos_plot::book::today(),drawing.as_deref(),self.sheets.output_dpi()).map_err(|e|e.message)?;
                 Ok((if kind==ExportKind::Png {image.png} else {image.svg.into_bytes()},Vec::new()))
             })(),
             ExportKind::Kpafta => self.sheets.kpafta().map(|text|(text.into_bytes(),Vec::new())),

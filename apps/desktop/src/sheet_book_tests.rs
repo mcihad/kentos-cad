@@ -2285,7 +2285,7 @@ fn sheet23_real_save_and_print_use_the_same_native_pdf() {
     let expected = kentos_plot::book::book_pdf_options(
         &doc,
         &options.sheets.clone(),
-        "",
+        &kentos_plot::book::current_user(),
         &kentos_plot::book::today(),
         None,
         Some(options),
@@ -2333,7 +2333,7 @@ fn sheet23_print_preview_screens() {
             &mut update,
             kentos_ui::snapshot::Input::Click(iced::Point::new(
                 if text == 18 { 910. } else { 975. },
-                if text == 18 { 550. } else { 605. },
+                if text == 18 { 570. } else { 626. },
             )),
         );
         snap.settle(&mut app, App::view, &mut update);
@@ -2424,5 +2424,74 @@ fn sheet24_calibration_screens() {
                 Some(out.join("sheet24-calibration.pdf")),
             );
         }
+    }
+}
+
+
+fn wait_sheet_publication(app: &mut App) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    while app.sheet_publish_running() {
+        let _ = app.sheet_publish_event(crate::exchange::sheet_publish::Event::Tick);
+        assert!(std::time::Instant::now() < deadline, "publication did not finish");
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+}
+
+#[test]
+fn sheet25_desktop_plans_then_publishes_the_selected_order_without_editing_the_source() {
+    use crate::exchange::{Window, sheet_publish::Event as E};
+    let mut app = multipage_set_app("light", 13);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let path = scratch("sheet25-desktop").join("delivery");
+    let _ = app.sheet_publish_open();
+    for e in [E::Path(path.display().to_string()), E::All(false), E::Selected(2,true), E::Selected(5,true), E::Move(5,-1), E::Move(4,-1), E::Move(3,-1), E::Separate(true), E::Plan] {
+        let _ = app.sheet_publish_event(e);
+    }
+    wait_sheet_publication(&mut app);
+    let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("publisher closed") };
+    assert!(s.report.as_ref().is_some_and(|r| r.ready), "{} {:?}", s.status, s.report);
+    assert!(!path.exists(), "a plan must never write files");
+    let report = s.report.clone().unwrap();
+    let _ = app.sheet_publish_event(E::Publish);
+    wait_sheet_publication(&mut app);
+    let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("publisher closed") };
+    assert!(path.join("yayin.json").exists(), "{}", s.status);
+    assert_eq!(s.report.as_ref().unwrap().sheets, report.sheets);
+    assert_eq!(report.files.len(), 2);
+    let expected_words = ["DETAIL", "PLAN"];
+    for (f, word) in report.files.iter().zip(expected_words) {
+        let output = std::process::Command::new("pdftotext").arg(path.join(&f.name)).arg("-").output().unwrap();
+        assert!(output.status.success());
+        let words = String::from_utf8(output.stdout).unwrap();
+        assert!(words.contains(word), "{} {words}", f.name);
+    }
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+}
+
+#[test]
+#[ignore = "GPU publication controls and asynchronous job, run alone"]
+fn sheet25_publish_screens() {
+    use crate::exchange::{Window, sheet_publish::Event as E};
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme, text) in [("light",13),("dark",13),("dark",18)] {
+        let mut app = multipage_set_app(theme, text);
+        let path = scratch(&format!("sheet25-{theme}-{text}")).join("delivery");
+        let _ = app.sheet_publish_open();
+        for e in [E::Path(path.display().to_string()), E::All(true), E::Separate(true)] { let _ = app.sheet_publish_event(e); }
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100.,720.)).unwrap();
+        let mut update = |app: &mut App, m: Message| { let _ = app.update(m); };
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme()).save(out.join(format!("sheet25-options-{theme}-{text}.png"))).unwrap();
+        snap.input(&mut app, App::view, &mut update,
+            kentos_ui::snapshot::Input::Click(iced::Point::new(if text == 18 { 862. } else { 758. }, if text == 18 { 595. } else { 574. })));
+        assert!(app.sheet_publish_running(), "Denetle button must start the job");
+        wait_sheet_publication(&mut app);
+        let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("publisher closed") };
+        assert!(s.report.as_ref().is_some_and(|r| r.ready), "{}", s.status);
+        assert!(!path.exists());
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme()).save(out.join(format!("sheet25-ready-{theme}-{text}.png"))).unwrap();
     }
 }

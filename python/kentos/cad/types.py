@@ -4224,6 +4224,15 @@ ServiceKindName = Literal["wms", "wmts", "xyz", "ogcTiles", "arcgis", "google", 
 """The names of :class:`ServiceKind`, for a plain string."""
 
 
+class SheetPublishMode(_StrEnum):
+    SINGLE = "single"
+    SEPARATE = "separate"
+
+
+SheetPublishModeName = Literal["single", "separate"]
+"""The names of :class:`SheetPublishMode`, for a plain string."""
+
+
 class ShpEncoding(_StrEnum):
     """The .dbf's text code page.
 
@@ -40055,6 +40064,63 @@ class ProjectVariable(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PublishSheets(_Model):
+    """
+    Attributes:
+        path: Absolute new or empty delivery folder; existing nonempty folders are refused.
+        dpi: None preserves each page's own physical raster setting. Unit: dpi.
+        name: One PDF's leaf name; .pdf is appended when missing.
+        naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}. Collisions get a stable numeric suffix.
+        pin: A plan's immutable document pin; changed source refuses publication before any file is exposed.
+        sheets: None means every sheet; an explicit list is used in exactly its supplied order.
+    """
+    path: str
+    dpi: int | None | Unset = UNSET
+    drawing: str | None | Unset = UNSET
+    geo: bool = True
+    layers: bool = True
+    mode: SheetPublishMode | SheetPublishModeName = SheetPublishMode.SINGLE
+    name: str | None | Unset = UNSET
+    naming: str = "{index}-{sheet}"
+    pin: SheetPublishPin | None | Unset = UNSET
+    sheets: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.dpi is not UNSET:
+            out["dpi"] = self.dpi
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        out["geo"] = self.geo
+        out["layers"] = self.layers
+        out["mode"] = _enum_out(self.mode)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        out["naming"] = self.naming
+        if self.pin is not UNSET:
+            out["pin"] = None if self.pin is None else self.pin.to_json()
+        if self.sheets is not UNSET:
+            out["sheets"] = None if self.sheets is None else list(self.sheets)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PublishSheets:
+        return cls(
+            path=data["path"],
+            dpi=data.get("dpi", UNSET),
+            drawing=data.get("drawing", UNSET),
+            geo=data["geo"] if "geo" in data else True,
+            layers=data["layers"] if "layers" in data else True,
+            mode=_enum_in(SheetPublishMode, data["mode"]) if "mode" in data else SheetPublishMode.SINGLE,
+            name=data.get("name", UNSET),
+            naming=data["naming"] if "naming" in data else "{index}-{sheet}",
+            pin=UNSET if "pin" not in data else None if data["pin"] is None else SheetPublishPin.from_json(data["pin"]),
+            sheets=UNSET if "sheets" not in data else None if data["sheets"] is None else list(data["sheets"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class QmlExported(_Model):
     """What `file.export.qml` wrote (or with `plan` would write).
     Attributes:
@@ -43953,6 +44019,82 @@ class SheetPicture(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetPublishIssue(_Model):
+    sheet: str
+    code: str
+    message: str
+    fix: str
+    error: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sheet"] = self.sheet
+        out["code"] = self.code
+        out["message"] = self.message
+        out["fix"] = self.fix
+        out["error"] = self.error
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetPublishIssue:
+        return cls(
+            sheet=data["sheet"],
+            code=data["code"],
+            message=data["message"],
+            fix=data["fix"],
+            error=data["error"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetPublishPin(_Model):
+    revision: str
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["revision"] = self.revision
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetPublishPin:
+        return cls(
+            revision=data["revision"],
+            sha256=data["sha256"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetPublishedFile(_Model):
+    """
+    Attributes:
+        bytes: Unit: bytes.
+    """
+    name: str
+    sheets: list[str]
+    bytes: int
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["sheets"] = list(self.sheets)
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetPublishedFile:
+        return cls(
+            name=data["name"],
+            sheets=list(data["sheets"]),
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetSeries(_Model):
     """A series of the set.
     Attributes:
@@ -44146,6 +44288,43 @@ class SheetsFit(_Model):
             margin_pct=data["marginPct"] if "marginPct" in data else 5,
             standard_scales=data["standardScales"] if "standardScales" in data else False,
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetsPublished(_Model):
+    path: str
+    sheets: list[str]
+    files: list[SheetPublishedFile]
+    issues: list[SheetPublishIssue]
+    source: SheetPublishPin
+    ready: bool
+    manifest: str
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["sheets"] = list(self.sheets)
+        out["files"] = [e0.to_json() for e0 in self.files]
+        out["issues"] = [e0.to_json() for e0 in self.issues]
+        out["source"] = self.source.to_json()
+        out["ready"] = self.ready
+        out["manifest"] = self.manifest
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetsPublished:
+        return cls(
+            path=data["path"],
+            sheets=list(data["sheets"]),
+            files=[SheetPublishedFile.from_json(e0) for e0 in data["files"]],
+            issues=[SheetPublishIssue.from_json(e0) for e0 in data["issues"]],
+            source=SheetPublishPin.from_json(data["source"]),
+            ready=data["ready"],
+            manifest=data["manifest"],
+            sha256=data["sha256"],
         )
 
 
@@ -68276,6 +68455,7 @@ __all__ = [
     "PropertiesOperation",
     "PropertiesOperationName",
     "PublishFormsOp",
+    "PublishSheets",
     "QmlExported",
     "QmlImported",
     "QuantityTotals",
@@ -68523,12 +68703,18 @@ __all__ = [
     "SheetMapInfo",
     "SheetModelScope",
     "SheetPicture",
+    "SheetPublishIssue",
+    "SheetPublishMode",
+    "SheetPublishModeName",
+    "SheetPublishPin",
+    "SheetPublishedFile",
     "SheetSeries",
     "SheetTemplateSource",
     "SheetsCreate",
     "SheetsEdit",
     "SheetsEdited",
     "SheetsFit",
+    "SheetsPublished",
     "SheetsSet",
     "SheetsSetResult",
     "ShowHeaderPaperEmptyTable",

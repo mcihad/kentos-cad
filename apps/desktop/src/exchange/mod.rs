@@ -22,6 +22,7 @@ mod area_queries;
 mod area_tests;
 pub mod apply;
 mod atlas_export;
+pub(crate) mod sheet_publish;
 #[cfg(test)]
 mod atlas_tests;
 pub(crate) mod coord_export;
@@ -149,6 +150,7 @@ pub enum Window {
     /// CSV dışa aktar and içe aktar (docs/adr/0522).
     /// Atlası PDF yap (docs/adr/0534); boxed: the plan it holds.
     AtlasExport(Box<atlas_export::State>),
+    SheetPublish(Box<sheet_publish::State>),
     CsvExport(csv_exchange::ExportState),
     CsvImport(csv_exchange::ImportState),
     /// FlatGeobuf dışa aktar and içe aktar (docs/adr/0544).
@@ -204,6 +206,7 @@ pub enum Event {
     Xyz(xyz_exchange::Event),
     Area(area_queries::Event),
     Atlas(atlas_export::Event),
+    SheetPublish(sheet_publish::Event),
     GisExport(gis_export::Event),
     GisCheck(gis_check::Event),
     /// An export written: the file's name, or why not; `None` when the save
@@ -213,8 +216,9 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 41] = [
+pub const COMMANDS: [&str; 42] = [
     "file.export.atlas",
+    "file.publish.sheets",
     "file.import.dxf",
     "file.import.dwg",
     "file.import.ncz",
@@ -311,6 +315,7 @@ impl App {
             "mesh.query" => self.mesh_query_open(),
             "file.import.fgb" => self.fgb_import_pick(),
             "file.export.atlas" => self.atlas_export_open(),
+            "file.publish.sheets"=>self.sheet_publish_open(),
             "file.export.gis" => self.gis_export_open(),
             "gis.derivation" => self.gis_check_open(),
             "field.send" => self.field_send_selection(),
@@ -517,6 +522,7 @@ impl App {
             Event::Xyz(e) => self.xyz_event(e),
             Event::Area(e) => self.area_event(e),
             Event::Atlas(e) => self.atlas_export_event(e),
+            Event::SheetPublish(e)=>self.sheet_publish_event(e),
             Event::GisExport(e) => self.gis_export_event(e),
             Event::GisCheck(e) => self.gis_check_event(e),
             Event::Written(outcome) => self.export_written(outcome),
@@ -529,6 +535,7 @@ impl App {
 
     /// Closes the window; a read still running is asked to stop, and dropped when it answers.
     pub(crate) fn close_exchange(&mut self) {
+        if self.sheet_publish_stop_for_close(){return;}
         if let Some(Window::DrawingImport(s)) = &self.exchange {
             s.stop_reading();
         }
@@ -562,6 +569,7 @@ impl App {
             Some(Window::ShpExport(s)) => self.shp_export_view(s),
             Some(Window::CsvExport(s)) => self.csv_export_view(s),
             Some(Window::AtlasExport(s)) => self.atlas_export_view(s),
+            Some(Window::SheetPublish(s))=>self.sheet_publish_view(s),
             Some(Window::CsvImport(s)) => self.csv_import_view(s),
             Some(Window::ServerWork(s)) => self.server_work_view(s),
             Some(Window::FgbExport(s)) => self.fgb_export_view(s),

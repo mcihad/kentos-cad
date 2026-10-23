@@ -194,7 +194,7 @@ fn file_name(input: &PackageProject, doc: &Document) -> Result<String, Refused> 
 }
 
 /// The folder: absolute, its parent there, itself not there or an empty folder.
-fn target(path: &str) -> Result<PathBuf, Refused> {
+pub(crate) fn target(path: &str) -> Result<PathBuf, Refused> {
     let p = Path::new(path);
     if path.trim().is_empty() || !p.is_absolute() {
         return Err(refuse(

@@ -506,6 +506,10 @@ class CommandCases(unittest.TestCase):
         for path in FILES:
             fixture = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual((fixture["format"], fixture["version"]), ("kentos.command-cases", 1))
+            if fixture.get("host")=="headless-file":
+                from publish_cases import run_fixture
+                cases += run_fixture(fixture)
+                continue
             wrapper = cad.command(fixture["command"])
             self.assertEqual(wrapper.version, fixture["commandVersion"])
             for case in fixture["cases"]:

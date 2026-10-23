@@ -116,7 +116,7 @@ impl App {
         kentos_plot::book::book_pdf_options(
             &doc,
             &options.sheets.clone(),
-            "",
+            &kentos_plot::book::current_user(),
             &kentos_plot::book::today(),
             drawing.as_deref(),
             Some(options),
@@ -141,7 +141,7 @@ impl App {
             let image = kentos_plot::preview::page(
                 &doc,
                 &id,
-                "",
+                &kentos_plot::book::current_user(),
                 &kentos_plot::book::today(),
                 drawing.as_deref(),
                 96,

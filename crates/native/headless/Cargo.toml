@@ -21,7 +21,11 @@ kentos-kcad = { path = "../../shared/kcad" }
 kentos-formats = { path = "../../shared/formats" }
 kentos-dwg = { path = "../dwg" }
 kentos-plot = { path = "../plot" }
+kentos-sheet = { path = "../../shared/sheet", default-features = false }
 kentos-processing = { path = "../processing" }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[dev-dependencies]
+miniz_oxide = { workspace = true }

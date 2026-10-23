@@ -591,6 +591,7 @@ impl Designer {
                 return vec![self.ask_path(ExportKind::Pdf)];
             }
             PdfMessage::Preview => return vec![Effect::PrintPreview],
+            PdfMessage::Publish=>{self.dialog=None;return vec![Effect::HostAction("sheet.publish".into())];}
             PdfMessage::Print => {
                 self.dialog = None;
                 return vec![Effect::Print];

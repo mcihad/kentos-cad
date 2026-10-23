@@ -236,6 +236,7 @@ impl Designer {
                 .width(Fill),
             );
         }
+        body=body.push(button(label::body("Toplu yayınla…")).on_press(pm(PdfMessage::Publish)).padding([6,12]).style(style::button::secondary));
         let going = self.pdf_sheets();
         if going.is_empty() {
             body = body.push(label::caption(texts::NONE_CHOSEN).style(style::text::muted));

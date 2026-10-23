@@ -941,7 +941,7 @@ type AtlasMade = (
 );
 
 /// A refusal as the protocol answers it: a conflict for a code of that kind (`pin_mismatch`, `source_changed`).
-fn refused_result(error: CommandError) -> CommandResult<Value> {
+pub(crate) fn refused_result(error: CommandError) -> CommandResult<Value> {
     let conflict = codes::info(&error.code).is_some_and(|c| c.kind == codes::CodeKind::Conflict);
     if conflict {
         CommandResult::Conflict { error }
@@ -962,6 +962,13 @@ fn run_typed(
     op: CallOp,
     input: Value,
 ) -> Result<(CommandResult<Value>, Option<FileEffect>), String> {
+    run_typed_with_progress(doc,command,op,input,None)
+}
+fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,progress:Option<&kentos_native_application::jobs::Progress>)->Result<(CommandResult<Value>,Option<FileEffect>),String>{
+    if command==kentos_commands::FILE_PUBLISH_SHEETS {
+        let typed:kentos_commands::PublishSheets=serde_json::from_value(input).map_err(|e|e.to_string())?;
+        return Ok(crate::publish::run(doc,&typed,op,progress));
+    }
     macro_rules! go {
         ($input:ty, $make:ident) => {{
             let typed: $input = serde_json::from_value(input).map_err(|e| {
@@ -1482,6 +1489,7 @@ fn run_typed(
 fn version_of(command: &str) -> u32 {
     match command {
         kentos_commands::FILE_EXPORT_DWG => kentos_commands::FILE_EXPORT_DWG_VERSION,
+        kentos_commands::FILE_PUBLISH_SHEETS=>kentos_commands::FILE_PUBLISH_SHEETS_VERSION,
         FILE_EXPORT_PDF => FILE_EXPORT_PDF_VERSION,
         FILE_EXPORT_BLOCK => FILE_EXPORT_BLOCK_VERSION,
         FILE_EXPORT_GPKG => FILE_EXPORT_GPKG_VERSION,
@@ -1558,6 +1566,7 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
         kentos_commands::FILE_EXPORT_QML => serde_json::from_value::<kentos_commands::ExportQml>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        kentos_commands::FILE_PUBLISH_SHEETS=>serde_json::from_value::<kentos_commands::PublishSheets>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
         FILE_PACKAGE => serde_json::from_value::<PackageProject>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
@@ -1639,7 +1648,7 @@ pub fn job_work(
 ) -> kentos_native_application::jobs::JobOutcome
 + Send
 + 'static {
-    move |copy, _progress| {
+    move |copy, progress| {
         use kentos_native_application::jobs::{Effect, JobOutcome};
         let command = envelope.command.clone();
         let version = version_of(&command);
@@ -1670,7 +1679,7 @@ pub fn job_work(
                 };
             }
         };
-        match run_typed(&copy, &command, CallOp::Execute, input.clone()) {
+        match run_typed_with_progress(&copy, &command, envelope.op, input.clone(),Some(progress)) {
             Ok((result, effect)) => {
                 let mut answer = CallAnswer::of(result);
                 call::complete(&mut answer, &input);

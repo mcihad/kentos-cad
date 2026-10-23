@@ -4282,6 +4282,12 @@ fn run_folder(dir: &std::path::Path, least: usize) -> (Vec<String>, usize, Vec<S
             fixture["command"].as_str().unwrap_or(""),
             fixture["commandVersion"].as_u64().unwrap_or(0),
         );
+        if fixture["host"]=="headless-file" {
+            assert!(kentos_commands::FILE_COMMANDS.iter().any(|(id,v)|(*id,u64::from(*v))==command),"{file}: a file fixture must name an actual file command");
+            assert!(fixture["cases"].as_array().unwrap().len()>=least);
+            // These cases run in kentos-headless/tests/headless/sheet_publish.rs, with real filesystem effects.
+            continue;
+        }
         assert!(
             DESKTOP_COMMANDS
                 .iter()

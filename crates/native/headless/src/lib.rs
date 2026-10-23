@@ -35,6 +35,7 @@ pub mod file_commands;
 pub mod files;
 pub mod gis_export;
 pub mod package;
+pub mod publish;
 mod query;
 pub mod rpc;
 mod session;

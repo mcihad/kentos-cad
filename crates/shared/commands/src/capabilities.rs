@@ -4277,6 +4277,11 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id:"file.publish.sheets",
+        refusals:&[&["invalid_file_path","file_exists","no_sheets","unknown_sheet","book_unreadable","file_unwritable","pin_mismatch","publish_blocked"]],
+        warnings:&[],targets:none,
+    },
+    Entry {
         id: "file.export.pdf",
         refusals: &[&[
             "invalid_file_path",

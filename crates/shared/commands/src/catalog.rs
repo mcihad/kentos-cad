@@ -8910,6 +8910,15 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        CommandDescriptor {
+            id:crate::FILE_PUBLISH_SHEETS.into(),version:crate::FILE_PUBLISH_SHEETS_VERSION,
+            title:"Paftaları toplu yayınla".into(),
+            summary:"Seçilen paftaları açık sırasıyla tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Ayrı dosyalarda {index}, {sheet}, {id} ad şablonu; çakışan adlara sabit sayısal ek. Her pafta kendi dpi ayarını korur; açık dpi bütün yayın için geçerlidir. plan dosya yazmadan çıktı adlarını, kaynak pinini ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini ve kaynak sürümünü taşır; çizimin geri alması teslim dosyalarını kaldırmaz.".into(),
+            aliases:vec!["PAFTAYAYINLA".into()],effect:CommandEffect::Query,
+            hosts:vec![CommandHost::Desktop],headless:true,requires:vec![CommandRequirement::Document],permissions:vec![],undo:CommandUndo::None,cost:CommandCost::Job,
+            input:schema::<crate::PublishSheets>(),output:schema::<crate::SheetsPublished>(),plan:Some(schema::<crate::SheetsPublished>()),capabilities:None,
+            examples:vec![CommandExample{title:"Paftaların tamamı, ayrı PDF dosyaları".into(),input:json!({"path":"/tmp/pafta-teslimi","mode":"separate","naming":"{index}-{sheet}"}),output:None}],
+        },
     ]
 }
 
@@ -9840,6 +9849,9 @@ mod tests {
                     }
                     crate::FILE_EXPORT_PDF => {
                         serde_json::from_value::<crate::ExportPdf>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_PUBLISH_SHEETS => {
+                        serde_json::from_value::<crate::PublishSheets>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SNAP_FIND => {
                         serde_json::from_value::<crate::SnapFind>(e.input.clone()).map(|_| ())

@@ -157,6 +157,7 @@ pub enum PdfMessage {
     /// Kaydet: where the file goes (the host's file window).
     Save,
     Preview,
+    Publish,
     /// Yazdır: the host's viewer prints it.
     Print,
 }

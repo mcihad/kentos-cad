@@ -1050,3 +1050,37 @@ fn an_agent_creates_the_calibration_template_and_measures_real_pdf_marks() {
     }
     std::fs::remove_dir_all(folder).unwrap();
 }
+
+
+#[test]
+fn an_agent_plans_and_publishes_a_pinned_sheet_delivery() {
+    let root = std::env::temp_dir().join(format!("kentos-mcp-sheet25-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).unwrap();
+    let target = root.join("delivery");
+    let mut server = Server::new();
+    let fx: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/file.publish.sheets.json")).unwrap();
+    let source = root.join("source.kcad");
+    std::fs::write(&source, serde_json::to_vec(&fx["setup"]).unwrap()).unwrap();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    let ops: Vec<Value> = fx["book"]["sheets"].as_array().unwrap().iter().map(|s|json!({"op":"addSheet","sheet":s})).collect();
+    call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":ops}));
+    let before = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    let plan = call(&mut server, "file.publish.sheets", json!({"drawing":drawing,"path":target,"mode":"separate","op":"plan"}));
+    assert_eq!(plan["status"],"completed", "{plan}");
+    assert_eq!(plan["output"]["ready"],true,"{plan}");
+    assert!(!target.exists());
+    let issued = call(&mut server, "file.publish.sheets", json!({"drawing":drawing,"path":target,"mode":"separate","pin":plan["output"]["source"]}));
+    assert_eq!(issued["status"],"completed","{issued}");
+    let manifest: Value = serde_json::from_slice(&std::fs::read(target.join("yayin.json")).unwrap()).unwrap();
+    assert_eq!(manifest["source"],plan["output"]["source"]);
+    for f in issued["output"]["files"].as_array().unwrap() {
+        let bytes = std::fs::read(target.join(f["name"].as_str().unwrap())).unwrap();
+        assert_eq!(kentos_commands::encoding::sha256_hex(&bytes),f["sha256"]);
+        assert_eq!(files::pdf_pages(&bytes).len(),1);
+    }
+    let after = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(before["objects"],after["objects"]);
+    std::fs::remove_dir_all(root).unwrap();
+}

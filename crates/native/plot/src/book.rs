@@ -33,6 +33,8 @@ pub struct BookPdf {
     pub sheets: Vec<String>,
     /// The shared core's preflight findings.
     pub findings: Vec<Finding>,
+    /// Findings retain page ownership, including a shared master item on several pages.
+    pub sheet_findings: Vec<(String, Finding)>,
     /// Rasterization choices, target resolution and explicit resource limits.
     pub notes: Vec<String>,
 }
@@ -312,7 +314,21 @@ pub fn book_pdf_options(
     drawing: Option<&str>,
     options: Option<kentos_sheet::pdf::PdfOptions>,
 ) -> Result<BookPdf, PlotError> {
-    let (book, mut inputs, defaults, notes) = prepare(doc, sheets, user, date, drawing, false)?;
+    book_pdf_controlled(doc, sheets, user, date, drawing, options, None)
+}
+
+/// A cancellable batch uses the same scene and writer; progress advances at page boundaries.
+pub fn book_pdf_controlled(
+    doc: &Document,
+    sheets: &[String],
+    user: &str,
+    date: &str,
+    drawing: Option<&str>,
+    options: Option<kentos_sheet::pdf::PdfOptions>,
+    progress: Option<&kentos_native_application::jobs::Progress>,
+) -> Result<BookPdf, PlotError> {
+    let (book, mut inputs, defaults, notes) =
+        prepare(doc, sheets, user, date, drawing, false, progress)?;
     let options = options.unwrap_or(defaults);
     crate::images::svg_assets(
         &book,
@@ -325,14 +341,47 @@ pub fn book_pdf_options(
             .unwrap_or(300),
     )
     .map_err(|e| PlotError::new("plot_asset_unreadable", e))?;
+    check_stop(progress)?;
     let bytes = kentos_sheet::pdf::to_pdf(&book, &inputs, &options)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
-    let findings = kentos_sheet::pdf::findings(&book, &inputs, &options)
+    check_stop(progress)?;
+    let mut findings = kentos_sheet::pdf::findings(&book, &inputs, &options)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
+    let mut sheet_findings = Vec::new();
+    for id in &options.sheets {
+        let page = kentos_sheet::pdf::PdfOptions {
+            sheets: vec![id.clone()],
+            ..options.clone()
+        };
+        let mut own = kentos_sheet::pdf::findings(&book, &inputs, &page)
+            .map_err(|e| PlotError::new(&e.code, e.message))?;
+        for finding in kentos_sheet::preflight::preflight(&book, id, &inputs.render)
+            .map_err(|e| PlotError::new(&e.code, e.message))?
+        {
+            if finding.code != "svg_not_in_pdf"
+                && !own.iter().any(|f| {
+                    f.code == finding.code
+                        && f.item == finding.item
+                        && f.severity == finding.severity
+                })
+            {
+                own.push(finding);
+            }
+        }
+        for finding in own {
+            if !findings.iter().any(|f| {
+                f.code == finding.code && f.item == finding.item && f.severity == finding.severity
+            }) {
+                findings.push(finding.clone());
+            }
+            sheet_findings.push((id.clone(), finding));
+        }
+    }
     Ok(BookPdf {
         bytes,
         sheets: options.sheets,
         findings,
+        sheet_findings,
         notes,
     })
 }
@@ -344,7 +393,9 @@ pub(crate) fn prepare(
     date: &str,
     drawing: Option<&str>,
     raster_only: bool,
+    progress: Option<&kentos_native_application::jobs::Progress>,
 ) -> Result<(SheetBook, PdfInputs, PdfOptions, Vec<String>), PlotError> {
+    check_stop(progress)?;
     let Some(kept) = doc.sheets() else {
         return Err(PlotError::new(
             "no_sheets",
@@ -363,6 +414,7 @@ pub(crate) fn prepare(
     let library = library_of(doc);
     let mut render = base_inputs(doc, user, date);
     for id in &chosen {
+        check_stop(progress)?;
         let findings = kentos_sheet::preflight::preflight(&book, id, &render)
             .map_err(|e| PlotError::new(&e.code, e.message))?;
         if let Some(f) = findings.iter().find(|f| {
@@ -376,6 +428,7 @@ pub(crate) fn prepare(
     }
     // Each sheet's tables, coordinate lists and legends, from the ground its maps cover.
     for id in &chosen {
+        check_stop(progress)?;
         let Some(sheet) = book.sheet(id) else {
             continue;
         };
@@ -392,7 +445,11 @@ pub(crate) fn prepare(
     drawer.raster_only = raster_only;
     drawer.drawing = drawing.map(str::to_owned);
     let mut maps: Vec<PdfMap> = Vec::new();
-    for id in &chosen {
+    for (page, id) in chosen.iter().enumerate() {
+        check_stop(progress)?;
+        if let Some(p) = progress {
+            p.set(page as u64, chosen.len() as u64);
+        }
         let list = display::display_list(&book, id, &render)
             .map_err(|e| PlotError::new(&e.code, e.message))?;
         for p in &list.prims {
@@ -412,6 +469,10 @@ pub(crate) fn prepare(
             }
         }
     }
+    if let Some(p) = progress {
+        p.set(chosen.len() as u64, chosen.len() as u64);
+    }
+    check_stop(progress)?;
     let notes = drawer.finish()?;
     let assets = pictures
         .into_iter()
@@ -437,4 +498,21 @@ pub(crate) fn prepare(
         layers: true,
     };
     Ok((book, inputs, options, notes))
+}
+
+fn check_stop(
+    progress: Option<&kentos_native_application::jobs::Progress>,
+) -> Result<(), PlotError> {
+    if progress.is_some_and(|p| p.stopped()) {
+        Err(PlotError::new("cancelled", "Pafta çıktısı iptal edildi."))
+    } else {
+        Ok(())
+    }
+}
+
+/// Native host default for an unsigned/local print job; callers may supply an explicit author.
+pub fn current_user() -> String {
+    std::env::var("USER")
+        .or_else(|_| std::env::var("USERNAME"))
+        .unwrap_or_default()
 }

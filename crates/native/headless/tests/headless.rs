@@ -2824,3 +2824,6 @@ fn gis_files_are_taken_in_by_their_commands() {
 
 #[path = "headless/sheet_transactions.rs"]
 mod sheet_transactions;
+
+#[path = "headless/sheet_publish.rs"]
+mod sheet_publish;

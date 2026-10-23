@@ -29,11 +29,11 @@ pub fn page(
         return Err(PlotError::new("bad_dpi", "Çözünürlük 36–1200 dpi olmalı."));
     }
     let (book, inputs, _, _) =
-        crate::book::prepare(doc, &[sheet.into()], user, date, drawing, true)?;
+        crate::book::prepare(doc, &[sheet.into()], user, date, drawing, true, None)?;
     let list = display::display_list(&book, sheet, &inputs.render)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
     let mut options = SvgOptions {
-        placeholders: false,
+        placeholders: true,
         ..Default::default()
     };
     for map in inputs.maps {

@@ -1092718,6 +1092718,398 @@
           }
         }
       ]
+    },
+    {
+      "id": "file.publish.sheets",
+      "version": 1,
+      "title": "Paftaları toplu yayınla",
+      "summary": "Seçilen paftaları açık sırasıyla tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Ayrı dosyalarda {index}, {sheet}, {id} ad şablonu; çakışan adlara sabit sayısal ek. Her pafta kendi dpi ayarını korur; açık dpi bütün yayın için geçerlidir. plan dosya yazmadan çıktı adlarını, kaynak pinini ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini ve kaynak sürümünü taşır; çizimin geri alması teslim dosyalarını kaldırmaz.",
+      "aliases": [
+        "PAFTAYAYINLA"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "job",
+      "input": {
+        "$defs": {
+          "SheetPublishMode": {
+            "enum": [
+              "single",
+              "separate"
+            ],
+            "type": "string"
+          },
+          "SheetPublishPin": {
+            "additionalProperties": false,
+            "properties": {
+              "revision": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "revision",
+              "sha256"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "dpi": {
+            "description": "None preserves each page's own physical raster setting.",
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "dpi"
+          },
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "geo": {
+            "default": true,
+            "type": "boolean"
+          },
+          "layers": {
+            "default": true,
+            "type": "boolean"
+          },
+          "mode": {
+            "$ref": "#/$defs/SheetPublishMode",
+            "default": "single"
+          },
+          "name": {
+            "description": "One PDF's leaf name; .pdf is appended when missing.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "naming": {
+            "default": "{index}-{sheet}",
+            "description": "Separate PDF leaf names: {index} (001...), {sheet}, {id}. Collisions get a stable numeric suffix.",
+            "type": "string"
+          },
+          "path": {
+            "description": "Absolute new or empty delivery folder; existing nonempty folders are refused.",
+            "type": "string"
+          },
+          "pin": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetPublishPin"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A plan's immutable document pin; changed source refuses publication before any file is exposed."
+          },
+          "sheets": {
+            "description": "None means every sheet; an explicit list is used in exactly its supplied order.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "PublishSheets",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "SheetPublishIssue": {
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "error": {
+                "type": "boolean"
+              },
+              "fix": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "sheet": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sheet",
+              "code",
+              "message",
+              "fix",
+              "error"
+            ],
+            "type": "object"
+          },
+          "SheetPublishPin": {
+            "additionalProperties": false,
+            "properties": {
+              "revision": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "revision",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "SheetPublishedFile": {
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              },
+              "sheets": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "sheets",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/$defs/SheetPublishedFile"
+            },
+            "type": "array"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/$defs/SheetPublishIssue"
+            },
+            "type": "array"
+          },
+          "manifest": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "sheets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/$defs/SheetPublishPin"
+          }
+        },
+        "required": [
+          "path",
+          "sheets",
+          "files",
+          "issues",
+          "source",
+          "ready",
+          "manifest",
+          "sha256"
+        ],
+        "title": "SheetsPublished",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "SheetPublishIssue": {
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "error": {
+                "type": "boolean"
+              },
+              "fix": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "sheet": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sheet",
+              "code",
+              "message",
+              "fix",
+              "error"
+            ],
+            "type": "object"
+          },
+          "SheetPublishPin": {
+            "additionalProperties": false,
+            "properties": {
+              "revision": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "revision",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "SheetPublishedFile": {
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              },
+              "sheets": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "sheets",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/$defs/SheetPublishedFile"
+            },
+            "type": "array"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/$defs/SheetPublishIssue"
+            },
+            "type": "array"
+          },
+          "manifest": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "sheets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/$defs/SheetPublishPin"
+          }
+        },
+        "required": [
+          "path",
+          "sheets",
+          "files",
+          "issues",
+          "source",
+          "ready",
+          "manifest",
+          "sha256"
+        ],
+        "title": "SheetsPublished",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "no_sheets",
+          "unknown_sheet",
+          "book_unreadable",
+          "file_unwritable",
+          "pin_mismatch",
+          "publish_blocked"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Paftaların tamamı, ayrı PDF dosyaları",
+          "input": {
+            "mode": "separate",
+            "naming": "{index}-{sheet}",
+            "path": "/tmp/pafta-teslimi"
+          }
+        }
+      ]
     }
   ],
   "codes": [
@@ -1096482,6 +1096874,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir."
+    },
+    {
+      "code": "publish_blocked",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta seti eksik kaynak veya ön denetim hatası nedeniyle yayınlanmadı; pafta bazlı plan raporunu düzeltip yeniden deneyin."
     },
     {
       "code": "pdf_unwritable",
