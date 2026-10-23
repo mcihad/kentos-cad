@@ -2785,6 +2785,18 @@
       "shortcuts": [],
       "category": "Pafta",
       "status": "implemented"
+    },
+    {
+      "id": "file.preflight.sheets",
+      "title": "Baskı öncesi tam denetim…",
+      "icon": "check",
+      "description": "Pafta ve yerel kaynaklarını dosya yazmadan ortak PDF hattında denetler; eksik kaynak, kopuk açıklama, kilitsiz ölçek ve düşük çözünürlüğü listeler.",
+      "aliases": [
+        "PAFTADENETLE"
+      ],
+      "shortcuts": [],
+      "category": "Pafta",
+      "status": "implemented"
     }
   ],
   "icons": {

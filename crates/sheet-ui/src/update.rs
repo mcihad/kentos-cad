@@ -400,6 +400,7 @@ impl Designer {
                     return vec![self.ask_path(kind)];
                 }
             }
+            Message::NativePreflight=>return vec![Effect::HostAction("sheet.preflight".into())],
             Message::Print => self.open_pdf(true),
             Message::Atlas => return vec![Effect::HostAction("sheet.atlas".to_owned())],
             Message::Pdf(m) => return self.pdf_update(m),

@@ -4277,6 +4277,7 @@ const ENTRIES: &[Entry] = &[
         warnings: &["objects_left_out"],
         targets: none,
     },
+    Entry { id:"file.preflight.sheets",refusals:&[&["no_sheets","unknown_sheet","book_unreadable","invalid_input","cancelled"]],warnings:&[],targets:none },
     Entry {
         id:"file.publish.sheets",
         refusals:&[&["invalid_file_path","file_exists","no_sheets","unknown_sheet","book_unreadable","file_unwritable","pin_mismatch","publish_blocked","package_incomplete","integrity_failed"]],

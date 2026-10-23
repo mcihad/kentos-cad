@@ -1627,6 +1627,7 @@ impl App {
                     task = Task::done(Message::Run("crs.set"));
                 }
                 // Atlas: the atlas's window (docs/adr/0534), the preview and the PDF with a page for each object.
+                Effect::HostAction(action) if action=="sheet.preflight"=>{task=Task::done(Message::Run("file.preflight.sheets"));}
                 Effect::HostAction(action) if action=="sheet.publish"=>{task=Task::done(Message::Run("file.publish.sheets"));}
                 Effect::HostAction(action) if action == "sheet.atlas" => {
                     task = Task::done(Message::Run("file.export.atlas"));

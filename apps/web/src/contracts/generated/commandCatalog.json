@@ -1093330,6 +1093330,229 @@
       ]
     },
     {
+      "id": "file.preflight.sheets",
+      "version": 1,
+      "title": "Baskı öncesi tam denetim",
+      "summary": "Dosya yazmadan pafta yerleşimini, fontları, kaynakları, açıklama ilişkilerini, görünüm kilidini ve nihai fiziksel resim çözünürlüğünü denetler. Yerel kaynaklar gerçek PDF hattında okunur; desteklenmeyen görünür içerik açık hata olarak bildirilir. Plan/execute aynı salt okuma raporudur; iptal edilebilir.",
+      "aliases": [
+        "PAFTADENETLE"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "job",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "dpi": {
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "dpi"
+          },
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sheets": {
+            "description": "None inspects all pages; a supplied list must be nonempty and unique.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "PreflightSheets",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "SheetPublishIssue": {
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "error": {
+                "type": "boolean"
+              },
+              "fix": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "sheet": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sheet",
+              "code",
+              "message",
+              "fix",
+              "error"
+            ],
+            "type": "object"
+          },
+          "SheetPublishPin": {
+            "additionalProperties": false,
+            "properties": {
+              "revision": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "revision",
+              "sha256"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "issues": {
+            "items": {
+              "$ref": "#/$defs/SheetPublishIssue"
+            },
+            "type": "array"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "sheets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/$defs/SheetPublishPin"
+          }
+        },
+        "required": [
+          "source",
+          "sheets",
+          "issues",
+          "ready"
+        ],
+        "title": "SheetsPreflighted",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "SheetPublishIssue": {
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "error": {
+                "type": "boolean"
+              },
+              "fix": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "sheet": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sheet",
+              "code",
+              "message",
+              "fix",
+              "error"
+            ],
+            "type": "object"
+          },
+          "SheetPublishPin": {
+            "additionalProperties": false,
+            "properties": {
+              "revision": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "revision",
+              "sha256"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "issues": {
+            "items": {
+              "$ref": "#/$defs/SheetPublishIssue"
+            },
+            "type": "array"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "sheets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/$defs/SheetPublishPin"
+          }
+        },
+        "required": [
+          "source",
+          "sheets",
+          "issues",
+          "ready"
+        ],
+        "title": "SheetsPreflighted",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_sheets",
+          "unknown_sheet",
+          "book_unreadable",
+          "invalid_input",
+          "cancelled"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kitabın tamamını denetle",
+          "input": {}
+        }
+      ]
+    },
+    {
       "id": "file.publish.sheets",
       "version": 1,
       "title": "Paftaları toplu yayınla",

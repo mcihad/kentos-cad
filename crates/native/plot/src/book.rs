@@ -77,7 +77,7 @@ pub fn library_of(doc: &Document) -> StyleLibrary {
 
 /// What every sheet is drawn with besides its own data: the project, its system, the date and
 /// the user the title block writes (`date` as `2026-10-13`).
-pub(crate) fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInputs {
+pub fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInputs {
     let settings = doc.settings();
     let name = crs_name(settings);
     RenderInputs {
@@ -355,8 +355,7 @@ pub fn book_pdf_controlled(
         };
         let mut own = kentos_sheet::pdf::findings(&book, &inputs, &page)
             .map_err(|e| PlotError::new(&e.code, e.message))?;
-        for finding in kentos_sheet::preflight::preflight(&book, id, &inputs.render)
-            .map_err(|e| PlotError::new(&e.code, e.message))?
+        for finding in crate::preflight::inspect(doc, &book, id, &inputs.render, drawing)?
         {
             if finding.code != "svg_not_in_pdf"
                 && !own.iter().any(|f| {
@@ -368,6 +367,7 @@ pub fn book_pdf_controlled(
                 own.push(finding);
             }
         }
+        own.extend(crate::preflight::raster_resolution(&book,&inputs,id)?);
         for finding in own {
             if !findings.iter().any(|f| {
                 f.code == finding.code && f.item == finding.item && f.severity == finding.severity
@@ -415,12 +415,11 @@ pub(crate) fn prepare(
     let mut render = base_inputs(doc, user, date);
     for id in &chosen {
         check_stop(progress)?;
-        let findings = kentos_sheet::preflight::preflight(&book, id, &render)
-            .map_err(|e| PlotError::new(&e.code, e.message))?;
+        let findings = crate::preflight::inspect(doc, &book, id, &render, drawing)?;
         if let Some(f) = findings.iter().find(|f| {
             matches!(
                 f.code.as_str(),
-                "missing_named_view" | "bad_scale" | "bad_value"
+                "missing_named_view" | "bad_scale" | "bad_value" | "plot_provider_unsupported"
             )
         }) {
             return Err(PlotError::new(&f.code, &f.message));

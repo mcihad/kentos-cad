@@ -37436,6 +37436,36 @@ class PolylinePlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PreflightSheets(_Model):
+    """
+    Attributes:
+        dpi: Unit: dpi.
+        sheets: None inspects all pages; a supplied list must be nonempty and unique.
+    """
+    dpi: int | None | Unset = UNSET
+    drawing: str | None | Unset = UNSET
+    sheets: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.dpi is not UNSET:
+            out["dpi"] = self.dpi
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.sheets is not UNSET:
+            out["sheets"] = None if self.sheets is None else list(self.sheets)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PreflightSheets:
+        return cls(
+            dpi=data.get("dpi", UNSET),
+            drawing=data.get("drawing", UNSET),
+            sheets=UNSET if "sheets" not in data else None if data["sheets"] is None else list(data["sheets"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProcessingBatch(_Model):
     """Input of `cad.processing.batch` v1: one tool (or model, `model:…`) run over a table of rows of parameter values,
     through the same descriptor and executor as `cad.processing.run`: each row is the run `tool` with `parameters`
@@ -44432,6 +44462,31 @@ class SheetsFit(_Model):
             margin_pct=data["marginPct"] if "marginPct" in data else 5,
             standard_scales=data["standardScales"] if "standardScales" in data else False,
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetsPreflighted(_Model):
+    source: SheetPublishPin
+    sheets: list[str]
+    issues: list[SheetPublishIssue]
+    ready: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source.to_json()
+        out["sheets"] = list(self.sheets)
+        out["issues"] = [e0.to_json() for e0 in self.issues]
+        out["ready"] = self.ready
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetsPreflighted:
+        return cls(
+            source=SheetPublishPin.from_json(data["source"]),
+            sheets=list(data["sheets"]),
+            issues=[SheetPublishIssue.from_json(e0) for e0 in data["issues"]],
+            ready=data["ready"],
         )
 
 
@@ -68593,6 +68648,7 @@ __all__ = [
     "PolylinePaperCadGeometry",
     "PolylinePlan",
     "PredefinedPaperAtlasScale",
+    "PreflightSheets",
     "ProcessingBatch",
     "ProcessingBatched",
     "ProcessingRan",
@@ -68943,6 +68999,7 @@ __all__ = [
     "SheetsEdit",
     "SheetsEdited",
     "SheetsFit",
+    "SheetsPreflighted",
     "SheetsPublished",
     "SheetsSet",
     "SheetsSetResult",

@@ -44,7 +44,11 @@ pub fn page(
             });
         }
     }
-    for a in inputs.assets {
+    for mut a in inputs.assets {
+        if !a.data.starts_with(b"\x89PNG") && !a.data.starts_with(&[0xff, 0xd8]) {
+            a.data = crate::svg_source::prepare(&a.data)
+                .map_err(|e| PlotError::new("plot_asset_unreadable", e))?;
+        }
         let mime = if a.data.starts_with(&[0xff, 0xd8]) {
             "image/jpeg"
         } else if a.data.starts_with(b"\x89PNG") {
@@ -106,7 +110,12 @@ pub fn page(
         db.load_font_data(bytes.to_vec());
     }
     let opts = resvg::usvg::Options {
+        font_family: "Barlow".into(),
         fontdb: std::sync::Arc::new(db),
+        image_href_resolver: resvg::usvg::ImageHrefResolver {
+            resolve_string: Box::new(|_, _| None),
+            ..Default::default()
+        },
         ..Default::default()
     };
     let tree = resvg::usvg::Tree::from_data(svg.as_bytes(), &opts)

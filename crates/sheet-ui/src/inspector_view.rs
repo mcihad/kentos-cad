@@ -1480,10 +1480,13 @@ impl Designer {
     }
 
     fn preflight_tab(&self) -> Element<'_, Message> {
+        column![container(button(label::body("Baskı öncesi tam denetim…")).on_press(Message::NativePreflight).padding([6,10]).style(style::button::secondary)).padding([8,12]),self.layout_preflight_tab()].spacing(8).into()
+    }
+    fn layout_preflight_tab(&self) -> Element<'_, Message> {
         if self.findings.is_empty() {
             return container(
-                EmptyState::new(Icon::Success, "Ön denetim temiz")
-                    .description("Sayfa dışında kalan, örtülen ya da bağı kopuk öğe, sığmayan yazı, eksik resim yok."),
+                EmptyState::new(Icon::Success, "Yerleşim denetimi temiz")
+                    .description("Yerel kaynakları ve gerçek baskı hattını yukarıdaki tam denetimle kontrol edin."),
             )
             .padding(16)
             .into();

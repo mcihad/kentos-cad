@@ -61,12 +61,12 @@ fn a_book_s_sheets_print_their_maps_at_scale() {
     let doc = drawing(&scenario);
     let made = book_pdf(&doc, &[], "kabul", "2026-10-13").expect("a PDF");
     assert_eq!(made.sheets, ["kat-plani", "vaziyet"]);
-    // Native output now keeps the complete preflight, including this existing informational limitation.
-    assert_eq!(made.findings.len(), 1, "{:?}", made.findings);
-    assert_eq!(made.findings[0].code, "no_kerning");
-    assert_eq!(made.findings[0].severity, kentos_sheet::preflight::Severity::Info);
-    assert_eq!(made.sheet_findings.iter().map(|(id, f)| (id.as_str(),f.code.as_str())).collect::<Vec<_>>(),
-        [("kat-plani","no_kerning"),("vaziyet","no_kerning")]);
+    // Both fixture viewports are intentionally unlocked; native preflight now names them per page.
+    let mut actual=made.findings.iter().map(|f|(f.code.as_str(),f.item.as_deref())).collect::<Vec<_>>();actual.sort();
+    assert_eq!(actual,[("no_kerning",None),("viewport_scale_unlocked",Some("kat-plani-harita")),("viewport_scale_unlocked",Some("vaziyet-harita"))]);
+    assert!(made.findings.iter().all(|f|f.severity==if f.code=="no_kerning"{kentos_sheet::preflight::Severity::Info}else{kentos_sheet::preflight::Severity::Warning}));
+    let mut owners=made.sheet_findings.iter().map(|(id,f)|(id.as_str(),f.code.as_str())).collect::<Vec<_>>();owners.sort();
+    assert_eq!(owners,[("kat-plani","no_kerning"),("kat-plani","viewport_scale_unlocked"),("vaziyet","no_kerning"),("vaziyet","viewport_scale_unlocked")]);
     let want = &step(&scenario, |s| s["export"] == "pdf")["expect"]["pdf"];
     let problems = pdf_problems(&made.bytes, want);
     assert!(problems.is_empty(), "{problems:#?}");

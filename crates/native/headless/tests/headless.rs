@@ -2830,3 +2830,6 @@ mod sheet_publish;
 
 #[path = "headless/sheet_delivery.rs"]
 mod sheet_delivery;
+
+#[path = "headless/sheet_preflight.rs"]
+mod sheet_preflight;

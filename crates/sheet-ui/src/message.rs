@@ -251,6 +251,7 @@ pub enum Message {
     GridSpacing(f64),
 
     // ── Preflight ──
+    NativePreflight,
     /// A finding's fix: the finding's and the fix's place in their lists.
     Fix(usize, usize),
     Reveal(ItemId),

@@ -102,6 +102,70 @@ impl Prepared {
                 issues.push(issue(format!("“{}” harita servisi çevrimdışı kaynak olarak taşınamadı; önce yerel veri/altlık üretin.",layer.name)));
             }
         }
+        // A complete source package includes unused embedded assets too; their external hrefs cannot be left behind.
+        if let Some(kept) = doc.sheets() {
+            for a in book
+                .assets
+                .iter()
+                .filter(|a| a.kind == kentos_sheet::model::AssetKind::Svg)
+            {
+                match kept.pictures.iter().find(|p| p.sha256 == a.sha256) {
+                    Some(p) => {
+                        if let Err(why) = kentos_plot::validate_svg_source(&p.bytes) {
+                            issues.push(issue(format!(
+                                "“{}” SVG kaynağı taşınamıyor: {why}",
+                                a.name
+                            )));
+                        }
+                    }
+                    None => issues.push(issue(format!(
+                        "“{}” SVG kaynağının gömülü baytları yok.",
+                        a.name
+                    ))),
+                }
+            }
+        }
+        fn style_svg(v: &serde_json::Value, issues: &mut Vec<SheetPublishIssue>) {
+            match v {
+                serde_json::Value::String(s) => {
+                    let text = s.trim_start_matches('\u{feff}').trim_start();
+                    let bytes = if text.starts_with("<svg") || text.starts_with("<?xml") {
+                        Some(text.as_bytes().to_vec())
+                    } else if text.starts_with("data:image/svg+xml") {
+                        match kentos_plot::decode_svg_source_url(text) {
+                            Some(b) => Some(b),
+                            None => {
+                                issues.push(issue("Kitaplıktaki SVG veri adresi okunamadı; geçerli base64 kullanın.".into()));
+                                None
+                            }
+                        }
+                    } else {
+                        None
+                    };
+                    if let Some(bytes) = bytes
+                        && let Err(why) = kentos_plot::validate_svg_source(&bytes)
+                    {
+                        issues.push(issue(format!(
+                            "Kitaplıktaki SVG kaynağı taşınamıyor: {why}"
+                        )));
+                    }
+                }
+                serde_json::Value::Array(a) => {
+                    for v in a {
+                        style_svg(v, issues)
+                    }
+                }
+                serde_json::Value::Object(o) => {
+                    for v in o.values() {
+                        style_svg(v, issues)
+                    }
+                }
+                _ => {}
+            }
+        }
+        for item in &doc.styles().items {
+            style_svg(item, &mut issues);
+        }
         let mut files = base
             .output
             .files

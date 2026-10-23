@@ -965,6 +965,10 @@ fn run_typed(
     run_typed_with_progress(doc,command,op,input,None)
 }
 fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,progress:Option<&kentos_native_application::jobs::Progress>)->Result<(CommandResult<Value>,Option<FileEffect>),String>{
+    if command==kentos_commands::FILE_PREFLIGHT_SHEETS {
+        let typed:kentos_commands::PreflightSheets=serde_json::from_value(input).map_err(|e|e.to_string())?;
+        return Ok((crate::sheet_preflight::run(doc,&typed,op,progress)?,None));
+    }
     if command==kentos_commands::FILE_PUBLISH_SHEETS {
         let typed:kentos_commands::PublishSheets=serde_json::from_value(input).map_err(|e|e.to_string())?;
         return Ok(crate::publish::run(doc,&typed,op,progress));
@@ -1490,6 +1494,7 @@ fn version_of(command: &str) -> u32 {
     match command {
         kentos_commands::FILE_EXPORT_DWG => kentos_commands::FILE_EXPORT_DWG_VERSION,
         kentos_commands::FILE_PUBLISH_SHEETS=>kentos_commands::FILE_PUBLISH_SHEETS_VERSION,
+        kentos_commands::FILE_PREFLIGHT_SHEETS=>kentos_commands::FILE_PREFLIGHT_SHEETS_VERSION,
         FILE_EXPORT_PDF => FILE_EXPORT_PDF_VERSION,
         FILE_EXPORT_BLOCK => FILE_EXPORT_BLOCK_VERSION,
         FILE_EXPORT_GPKG => FILE_EXPORT_GPKG_VERSION,
@@ -1566,6 +1571,7 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
         kentos_commands::FILE_EXPORT_QML => serde_json::from_value::<kentos_commands::ExportQml>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        kentos_commands::FILE_PREFLIGHT_SHEETS=>serde_json::from_value::<kentos_commands::PreflightSheets>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
         kentos_commands::FILE_PUBLISH_SHEETS=>serde_json::from_value::<kentos_commands::PublishSheets>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
         FILE_PACKAGE => serde_json::from_value::<PackageProject>(input.clone())
             .map_err(text)

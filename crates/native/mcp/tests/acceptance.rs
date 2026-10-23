@@ -1116,3 +1116,13 @@ fn sheet_package_agent_delivers_real_fonts_and_refuses_a_changed_recorded_delive
     let font=files.iter().find(|f|f["kind"]=="font").unwrap()["path"].as_str().unwrap();std::fs::write(root.join("delivery").join(font),b"changed").unwrap();
     let refused=tool_result(&mut server,"file.publish.sheets",input);assert_eq!(refused["isError"],true);assert_eq!(refused["structuredContent"]["error"]["code"],"integrity_failed");std::fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn sheet_preflight_agent_reads_native_source_errors_without_an_output_path(){
+    let fx:Value=serde_json::from_str(include_str!("../../../../fixtures/commands/v1/file.preflight.sheets.json")).unwrap();
+    let root=std::env::temp_dir().join(format!("kentos-mcp-preflight-{}",std::process::id()));let _=std::fs::remove_dir_all(&root);std::fs::create_dir_all(&root).unwrap();
+    let mut model=fx["model"].clone();model["entities"].as_array_mut().unwrap().push(json!({"kind":"image","id":20,"layerId":"cizim","attrs":{},"file":root.join("missing.png"),"p":{"x":0,"y":0},"width":1,"height":1,"rotation":0}));let source=root.join("source.kcad");std::fs::write(&source,serde_json::to_vec(&model).unwrap()).unwrap();
+    let mut server=Server::new();let opened=call(&mut server,"drawing.open",json!({"path":source}));let drawing=opened["drawing"].as_str().unwrap();
+    let ops=fx["book"]["sheets"].as_array().unwrap().iter().map(|s|json!({"op":"addSheet","sheet":s})).collect::<Vec<_>>();call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":ops}));
+    let result=call(&mut server,"file.preflight.sheets",json!({"drawing":drawing}));assert_eq!(result["status"],"completed","{result}");assert_eq!(result["output"]["ready"],false);assert!(result["output"]["issues"].as_array().unwrap().iter().any(|i|i["code"]=="missing_reference"&&i["error"]==true));assert_eq!(std::fs::read_dir(&root).unwrap().count(),1);std::fs::remove_dir_all(root).unwrap();
+}

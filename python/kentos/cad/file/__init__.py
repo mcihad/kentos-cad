@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
 from . import export
 from . import import_
+from . import preflight
 from . import publish
 
 
@@ -168,4 +169,4 @@ package = _FilePackage()
 """Paketle (``file.package``)."""
 
 
-__all__ = ["export", "import_", "package", "publish"]
+__all__ = ["export", "import_", "package", "preflight", "publish"]

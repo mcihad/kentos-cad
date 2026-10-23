@@ -176,6 +176,12 @@ pub(crate) fn built_layers_profile(
         if only.is_some_and(|l| !l.contains(&node.id)) {
             continue;
         }
+        if node.service.is_some() {
+            return Err(format!(
+                "“{}” harita servisi henüz baskıya aktarılamıyor; eksik içerikle çıktı üretilmeyecek.",
+                node.name
+            ));
+        }
         // Only what the view shows (docs/adr/0534 §4): an object its layer's filter or the time leaves out is on
         // no map and no paper, and a layer with none of them has no content group in the file.
         let objects: Vec<&kentos_contracts::Entity> = in_order(
@@ -195,6 +201,22 @@ pub(crate) fn built_layers_profile(
                 })
                 .collect(),
         );
+        if objects.iter().any(|e| {
+            matches!(
+                e,
+                kentos_contracts::Entity::Raster(_) | kentos_contracts::Entity::PointCloud(_)
+            ) && src.store.get(f64::from(e.base().id)).is_none_or(|v| {
+                v.bounds.max_x >= extent[0]
+                    && v.bounds.min_x <= extent[2]
+                    && v.bounds.max_y >= extent[1]
+                    && v.bounds.min_y <= extent[3]
+            })
+        }) {
+            return Err(format!(
+                "“{}” katmanında henüz baskıya aktarılamayan raster/nokta bulutu var; eksik içerikle çıktı üretilmeyecek.",
+                node.name
+            ));
+        }
         if objects.is_empty() {
             if labels.iter().any(|l| l.layer == node.id) {
                 built.push((node.id.clone(), node.name.clone(), Default::default()));

@@ -58,3 +58,5 @@ Beklenenlerin iki kaynağı vardır; her ailenin satırı hangisi olduğunu söy
 KENTOS_WRITE_SHEET=1 cargo test -p kentos-sheet
 git diff fixtures/sheet/v1   # farkı okuyun; bilinçli değilse kaydetmeyin
 ```
+
+`native-preflight.json` / `commands/v1/file.preflight.sheets.json`: bağımsız fiziksel PPI, görünürlük, kaynak, font ve açıklama olguları; `scripts/fixtures/sheet_preflight_cases.py --check`. Native dosya koşucusu ve tipli Python aynı matrisi kullanır.

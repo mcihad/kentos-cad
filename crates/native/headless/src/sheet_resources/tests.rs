@@ -61,3 +61,56 @@ fn sheet_package_cancelled_copy_cleans_child_and_shares_the_stop_flag() {
     assert_eq!(fs::read_dir(root.join("stage")).unwrap().count(), 0);
     fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn sheet_package_unprinted_svg_dependencies_are_not_silently_left_out() {
+    let fx: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/delivery.json"
+    ))
+    .unwrap();
+    let svg=b"<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10'><image href='external.png'/></svg>";
+    for library in [false, true] {
+        let root = std::env::temp_dir().join(format!(
+            "kentos-package-unused-svg-{}-{library}",
+            std::process::id()
+        ));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).unwrap();
+        let mut doc =
+            Document::from_snapshot(serde_json::from_value(fx["model"].clone()).unwrap()).unwrap();
+        let mut book: SheetBook = serde_json::from_value(fx["book"].clone()).unwrap();
+        if library {
+            let mut styles = doc.styles().clone();
+            styles
+                .items
+                .push(json!({"id":"unused","svg":std::str::from_utf8(svg).unwrap()}));
+            doc.set_styles(styles);
+        } else {
+            book.assets.push(kentos_sheet::model::AssetMeta {
+                sha256: sha256_hex(svg),
+                name: "Kullanılmayan SVG".into(),
+                kind: kentos_sheet::model::AssetKind::Svg,
+                width: 10,
+                height: 10,
+                bytes: svg.len() as u32,
+                dpi: None,
+            });
+        }
+        doc.set_sheets(
+            kentos_sheet::project::project_sheets(&book, |_| Some(svg.to_vec())).unwrap(),
+        )
+        .unwrap();
+        let input: PublishSheets =
+            serde_json::from_value(json!({"path":root.join("delivery"),"resources":true})).unwrap();
+        let p = Prepared::plan(&doc, &input, &book, &["ground".into()]).unwrap();
+        assert!(
+            p.issues
+                .iter()
+                .any(|i| i.code == "package_incomplete" && i.error && i.message.contains("SVG")),
+            "{:?}",
+            p.issues
+        );
+        assert!(!root.join("delivery").exists());
+        fs::remove_dir_all(root).unwrap();
+    }
+}

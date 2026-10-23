@@ -233,6 +233,7 @@ COMMANDS: dict[str, Any] = {
     "file.import.shp": file.import_.shp,
     "file.import.sld": file.import_.sld,
     "file.package": file.package,
+    "file.preflight.sheets": file.preflight.sheets,
     "file.publish.sheets": file.publish.sheets,
     "project.access.revoke": project.access.revoke,
     "project.archive": project.archive,

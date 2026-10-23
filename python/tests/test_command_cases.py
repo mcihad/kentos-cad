@@ -507,7 +507,12 @@ class CommandCases(unittest.TestCase):
             fixture = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual((fixture["format"], fixture["version"]), ("kentos.command-cases", 1))
             if fixture.get("host")=="headless-file":
-                from publish_cases import run_fixture
+                if fixture['command']=='file.publish.sheets':
+                    from publish_cases import run_fixture
+                elif fixture['command']=='file.preflight.sheets':
+                    from preflight_cases import run_fixture
+                else:
+                    self.fail(f"Dosya komutunun bağımsız Python koşucusu yok: {fixture['command']}")
                 cases += run_fixture(fixture)
                 continue
             wrapper = cad.command(fixture["command"])

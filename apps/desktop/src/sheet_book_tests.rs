@@ -2569,3 +2569,28 @@ fn sheet_package_publish_screens(){
         snap.input(&mut app,App::view,&mut update,kentos_ui::snapshot::Input::Click(iced::Point::new(if text==18{862.}else{758.},if text==18{612.}else{589.})));assert!(app.sheet_publish_running(),"real Denetle button must start the job");wait_sheet_publication(&mut app);let Some(Window::SheetPublish(s))=&app.exchange else{panic!("window")};assert!(s.report.as_ref().unwrap().ready,"{}",s.status);assert!(s.report.as_ref().unwrap().resources.is_some());snap.settle(&mut app,App::view,&mut update);snap.render(app.view(),&app.theme()).save(out.join(format!("sheet27-package-ready-{theme}-{text}.png"))).unwrap();
     }
 }
+
+fn sheet_preflight_app(theme:&str,text:u32)->App {
+    let mut app=multipage_set_app(theme,text);
+    let image:kentos_commands::Entity=serde_json::from_value(serde_json::json!({"kind":"image","id":20,"layerId":"cizim","attrs":{},"file":"/missing-preflight/source.png","p":{"x":0,"y":0},"width":1,"height":1,"rotation":0})).unwrap();
+    app.document.as_mut().unwrap().model.add(image).unwrap();app
+}
+#[test]
+fn sheet_preflight_desktop_uses_the_native_query_and_cannot_publish_its_report(){
+    use crate::exchange::{Window,sheet_publish::Event as E};
+    let mut app=sheet_preflight_app("light",13);let before=app.document.as_ref().unwrap().model.to_snapshot_v2();let task=app.update(Message::Sheet(kentos_sheet_ui::Message::NativePreflight));drive(&mut app,task);wait_sheet_publication(&mut app);
+    let Some(Window::SheetPublish(s))=&app.exchange else{panic!("preflight window")};assert!(s.check_only);let report=s.report.as_ref().unwrap();assert!(!report.ready);assert!(report.issues.iter().any(|i|i.code=="missing_reference"&&i.error));assert!(report.files.is_empty());assert_eq!(before.entities,app.document.as_ref().unwrap().model.to_snapshot_v2().entities);
+    let _=app.sheet_publish_event(E::Publish);assert!(!app.sheet_publish_running());
+}
+#[test]
+#[ignore="GPU native preflight report, run alone"]
+fn sheet_preflight_native_screens(){
+    use crate::exchange::Window;
+    crate::drawing_fonts::load();kentos_ui::theme::motion::set_reduced(true);let out=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for(theme,text)in[("light",13),("dark",13),("dark",18)]{
+        let mut app=sheet_preflight_app(theme,text);let task=app.run("file.preflight.sheets");drive(&mut app,task);wait_sheet_publication(&mut app);let Some(Window::SheetPublish(s))=&app.exchange else{panic!("preflight")};assert!(s.check_only);assert!(s.report.as_ref().is_some_and(|r|r.issues.iter().any(|i|i.code=="missing_reference")));
+        let mut snap=kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100.,720.)).unwrap();let mut update=|app:&mut App,m:Message|{let _=app.update(m);};snap.settle(&mut app,App::view,&mut update);
+        snap.input(&mut app,App::view,&mut update,kentos_ui::snapshot::Input::Click(iced::Point::new(if text==18{960.}else{840.},if text==18{685.}else{675.})));assert!(app.sheet_publish_running(),"real Denetle button starts the read-only native check");wait_sheet_publication(&mut app);snap.settle(&mut app,App::view,&mut update);
+        snap.render(app.view(),&app.theme()).save(out.join(format!("sheet28-preflight-{theme}-{text}.png"))).unwrap();
+    }
+}

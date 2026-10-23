@@ -216,9 +216,10 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 42] = [
+pub const COMMANDS: [&str; 43] = [
     "file.export.atlas",
     "file.publish.sheets",
+    "file.preflight.sheets",
     "file.import.dxf",
     "file.import.dwg",
     "file.import.ncz",
@@ -316,6 +317,7 @@ impl App {
             "file.import.fgb" => self.fgb_import_pick(),
             "file.export.atlas" => self.atlas_export_open(),
             "file.publish.sheets"=>self.sheet_publish_open(),
+            "file.preflight.sheets"=>self.sheet_preflight_open(),
             "file.export.gis" => self.gis_export_open(),
             "gis.derivation" => self.gis_check_open(),
             "field.send" => self.field_send_selection(),

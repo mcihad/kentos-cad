@@ -8911,6 +8911,10 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id:crate::FILE_PREFLIGHT_SHEETS.into(),version:crate::FILE_PREFLIGHT_SHEETS_VERSION,
+            title:"Baskı öncesi tam denetim".into(),summary:"Dosya yazmadan pafta yerleşimini, fontları, kaynakları, açıklama ilişkilerini, görünüm kilidini ve nihai fiziksel resim çözünürlüğünü denetler. Yerel kaynaklar gerçek PDF hattında okunur; desteklenmeyen görünür içerik açık hata olarak bildirilir. Plan/execute aynı salt okuma raporudur; iptal edilebilir.".into(),aliases:vec!["PAFTADENETLE".into()],effect:CommandEffect::Query,hosts:vec![CommandHost::Desktop],headless:true,requires:vec![CommandRequirement::Document],permissions:vec![],undo:CommandUndo::None,cost:CommandCost::Job,input:schema::<crate::PreflightSheets>(),output:schema::<crate::SheetsPreflighted>(),plan:Some(schema::<crate::SheetsPreflighted>()),capabilities:None,examples:vec![CommandExample{title:"Kitabın tamamını denetle".into(),input:json!({}),output:None}],
+        },
+        CommandDescriptor {
             id:crate::FILE_PUBLISH_SHEETS.into(),version:crate::FILE_PUBLISH_SHEETS_VERSION,
             title:"Paftaları toplu yayınla".into(),
             summary:"Seçilen paftaları açık sırasıyla tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Ayrı dosyalarda {index}, {sheet}, {id} ad şablonu; çakışan adlara sabit sayısal ek. Her pafta kendi dpi ayarını korur; açık dpi bütün yayın için geçerlidir. plan dosya yazmadan çıktı adlarını, kaynak pinini ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini ve kaynak sürümünü taşır; çizimin geri alması teslim dosyalarını kaldırmaz.".into(),
@@ -9850,6 +9854,7 @@ mod tests {
                     crate::FILE_EXPORT_PDF => {
                         serde_json::from_value::<crate::ExportPdf>(e.input.clone()).map(|_| ())
                     }
+                    crate::FILE_PREFLIGHT_SHEETS => serde_json::from_value::<crate::PreflightSheets>(e.input.clone()).map(|_| ()),
                     crate::FILE_PUBLISH_SHEETS => {
                         serde_json::from_value::<crate::PublishSheets>(e.input.clone()).map(|_| ())
                     }

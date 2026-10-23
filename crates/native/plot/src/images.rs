@@ -97,6 +97,12 @@ impl ImageSource for Images<'_> {
         }
         let read = match image {
             AtlasImage::Svg { svg, .. } => {
+                if let Err(why) = crate::svg_source::vector_compatible(svg) {
+                    self.missing
+                        .borrow_mut()
+                        .insert(format!("{}: {why}", image.key()));
+                    return None;
+                }
                 kentos_native_style::svg::picture(svg, &|t, f, w, i| self.text(t, f, w, i))
             }
             AtlasImage::Raster { url, .. } => {
@@ -237,15 +243,20 @@ pub(crate) fn svg_assets(
         db.load_font_data(face.to_vec());
     }
     let options = resvg::usvg::Options {
+        font_family: "Barlow".into(),
         fontdb: Arc::new(db),
+        image_href_resolver: resvg::usvg::ImageHrefResolver {
+            resolve_string: Box::new(|_, _| None),
+            ..Default::default()
+        },
         ..Default::default()
     };
     for size in sizes {
         let Some(asset) = inputs.assets.iter_mut().find(|a| a.sha256 == size.sha256) else {
             return Err(format!("{} SVG resminin baytları yok.", size.sha256));
         };
-        let tree =
-            resvg::usvg::Tree::from_data(&asset.data, &options).map_err(|e| e.to_string())?;
+        let svg = crate::svg_source::prepare(&asset.data)?;
+        let tree = resvg::usvg::Tree::from_data(&svg, &options).map_err(|e| e.to_string())?;
         let mut pixmap = resvg::tiny_skia::Pixmap::new(size.width, size.height)
             .ok_or("SVG resmi için bellek ayrılamadı.")?;
         let s = tree.size();
@@ -268,4 +279,34 @@ pub(crate) fn svg_assets(
         asset.raster = Some(crate::raster::png(&rgba, size.width, size.height)?);
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod preflight_tests {
+    use super::*;
+    #[test]
+    fn sheet_preflight_cpu_symbols_report_omitted_svg_content() {
+        let fx: serde_json::Value =
+            serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/delivery.json"))
+                .unwrap();
+        let doc =
+            Document::from_snapshot(serde_json::from_value(fx["model"].clone()).unwrap()).unwrap();
+        for body in [
+            "<image href='gone.png'/>",
+            "<defs><linearGradient id='p'/></defs><rect width='10' height='10' fill='url(#p)'/>",
+            "<style>rect{fill:red}</style><rect width='10' height='10'/>",
+        ] {
+            let images = Images::new(&doc, None);
+            let source = AtlasImage::Svg {
+                key: "symbol".into(),
+                svg: format!(
+                    "<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10'>{body}</svg>"
+                ),
+                width: 10.,
+                height: 10.,
+            };
+            assert!(images.picture(&source).is_none());
+            assert!(!images.missing.borrow().is_empty());
+        }
+    }
 }

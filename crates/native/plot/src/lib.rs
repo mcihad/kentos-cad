@@ -21,6 +21,8 @@
 pub mod atlas;
 pub mod book;
 pub mod preview;
+pub mod preflight;
+mod svg_source;
 pub mod fonts;
 mod images;
 pub mod inputs;
@@ -31,3 +33,9 @@ mod raster;
 mod plot_ink;
 pub use raster::{MapImage, render_image as render_map_image,render_image_profile as render_map_image_profile};
 pub mod vectors;
+
+/// Strict portability check for embedded SVG source, including nested image references.
+pub fn validate_svg_source(data:&[u8])->Result<(),String>{svg_source::validate(data)}
+
+/// Embedded SVG data shared with the delivery graph; no file/network access.
+pub fn decode_svg_source_url(url:&str)->Option<Vec<u8>>{kentos_native_style::bitmap::data_url(url).and_then(|(mime,b)|(mime=="image/svg+xml").then_some(b))}

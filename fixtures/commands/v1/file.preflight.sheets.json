@@ -1,0 +1,1471 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "file.preflight.sheets",
+  "commandVersion": 1,
+  "host": "headless-file",
+  "title": "Native physical print preflight",
+  "reference": "Independent Python physical inches formula and explicit resource/visibility policy.",
+  "model": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Paftalar",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 0,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "drawingFont": "barlow",
+      "drawingUnit": "mm"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "resources",
+        "name": "Kaynaklar",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0,
+          "y": 0
+        },
+        "b": {
+          "x": 5,
+          "y": 0
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "book": {
+    "schema": "kentos.sheet/1",
+    "sheets": [
+      {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "ground",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "ground-harita",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          },
+          {
+            "id": "ground-title",
+            "name": "Başlık",
+            "frame": {
+              "left": 30000,
+              "top": 260000,
+              "width": 200000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "[% @pafta_adi %]",
+              "style": {
+                "size": 3500
+              }
+            }
+          },
+          {
+            "id": "ground-marker",
+            "name": "Sıra kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 245000,
+              "width": 10000,
+              "height": 1000
+            },
+            "kind": {
+              "type": "line",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1000000,
+                  0
+                ]
+              ],
+              "stroke": {
+                "width": 250,
+                "color": "#aa22cc"
+              }
+            }
+          }
+        ],
+        "name": "Kat planı",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      }
+    ],
+    "masters": [],
+    "assets": [],
+    "variables": []
+  },
+  "cases": [
+    {
+      "name": "locked-visible-map",
+      "expect": [],
+      "absent": [
+        "viewport_scale_unlocked",
+        "plot_provider_unsupported"
+      ]
+    },
+    {
+      "name": "unlocked-map",
+      "patch": {
+        "viewLocked": false
+      },
+      "expect": [
+        "viewport_scale_unlocked"
+      ]
+    },
+    {
+      "name": "item-lock-also-protects-scale",
+      "patch": {
+        "viewLocked": false
+      },
+      "item": {
+        "locked": true
+      },
+      "expect": [],
+      "absent": [
+        "viewport_scale_unlocked"
+      ]
+    },
+    {
+      "name": "hidden-map-not-a-warning",
+      "patch": {
+        "viewLocked": false
+      },
+      "item": {
+        "hidden": true
+      },
+      "expect": [],
+      "absent": [
+        "viewport_scale_unlocked"
+      ]
+    },
+    {
+      "name": "unprinted-map-not-a-warning",
+      "patch": {
+        "viewLocked": false
+      },
+      "item": {
+        "printable": false
+      },
+      "expect": [],
+      "absent": [
+        "viewport_scale_unlocked"
+      ]
+    },
+    {
+      "name": "image-mm-149ppi-scale50-factor1",
+      "unit": "mm",
+      "scale": 50,
+      "factor": 1,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 1.3637583892617449,
+        "height": 1.0228187919463088,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [
+        "low_resolution"
+      ],
+      "absent": [],
+      "ppi": 149
+    },
+    {
+      "name": "image-mm-150ppi-scale50-factor1",
+      "unit": "mm",
+      "scale": 50,
+      "factor": 1,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 1.3546666666666667,
+        "height": 1.016,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [],
+      "absent": [
+        "low_resolution"
+      ],
+      "ppi": 150
+    },
+    {
+      "name": "image-mm-151ppi-scale50-factor1",
+      "unit": "mm",
+      "scale": 50,
+      "factor": 1,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 1.3456953642384106,
+        "height": 1.0092715231788079,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [],
+      "absent": [
+        "low_resolution"
+      ],
+      "ppi": 151
+    },
+    {
+      "name": "image-mm-74.5ppi-scale100-factor2",
+      "unit": "mm",
+      "scale": 100,
+      "factor": 2,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 2.7275167785234897,
+        "height": 2.0456375838926175,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [
+        "low_resolution"
+      ],
+      "absent": [],
+      "ppi": 74.5
+    },
+    {
+      "name": "image-mm-300ppi-scale25-factor0.5",
+      "unit": "mm",
+      "scale": 25,
+      "factor": 0.5,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 0.6773333333333333,
+        "height": 0.508,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [],
+      "absent": [
+        "low_resolution"
+      ],
+      "ppi": 300
+    },
+    {
+      "name": "image-cm-149ppi-scale50-factor1",
+      "unit": "cm",
+      "scale": 50,
+      "factor": 1,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 1.3637583892617449,
+        "height": 1.0228187919463088,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [
+        "low_resolution"
+      ],
+      "absent": [],
+      "ppi": 149
+    },
+    {
+      "name": "image-cm-150ppi-scale50-factor1",
+      "unit": "cm",
+      "scale": 50,
+      "factor": 1,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 1.3546666666666667,
+        "height": 1.016,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [],
+      "absent": [
+        "low_resolution"
+      ],
+      "ppi": 150
+    },
+    {
+      "name": "image-cm-151ppi-scale50-factor1",
+      "unit": "cm",
+      "scale": 50,
+      "factor": 1,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 1.3456953642384106,
+        "height": 1.0092715231788079,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [],
+      "absent": [
+        "low_resolution"
+      ],
+      "ppi": 151
+    },
+    {
+      "name": "image-cm-74.5ppi-scale100-factor2",
+      "unit": "cm",
+      "scale": 100,
+      "factor": 2,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 2.7275167785234897,
+        "height": 2.0456375838926175,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [
+        "low_resolution"
+      ],
+      "absent": [],
+      "ppi": 74.5
+    },
+    {
+      "name": "image-cm-300ppi-scale25-factor0.5",
+      "unit": "cm",
+      "scale": 25,
+      "factor": 0.5,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 0.6773333333333333,
+        "height": 0.508,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [],
+      "absent": [
+        "low_resolution"
+      ],
+      "ppi": 300
+    },
+    {
+      "name": "image-m-149ppi-scale50-factor1",
+      "unit": "m",
+      "scale": 50,
+      "factor": 1,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 1.3637583892617449,
+        "height": 1.0228187919463088,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [
+        "low_resolution"
+      ],
+      "absent": [],
+      "ppi": 149
+    },
+    {
+      "name": "image-m-150ppi-scale50-factor1",
+      "unit": "m",
+      "scale": 50,
+      "factor": 1,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 1.3546666666666667,
+        "height": 1.016,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [],
+      "absent": [
+        "low_resolution"
+      ],
+      "ppi": 150
+    },
+    {
+      "name": "image-m-151ppi-scale50-factor1",
+      "unit": "m",
+      "scale": 50,
+      "factor": 1,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 1.3456953642384106,
+        "height": 1.0092715231788079,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [],
+      "absent": [
+        "low_resolution"
+      ],
+      "ppi": 151
+    },
+    {
+      "name": "image-m-74.5ppi-scale100-factor2",
+      "unit": "m",
+      "scale": 100,
+      "factor": 2,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 2.7275167785234897,
+        "height": 2.0456375838926175,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [
+        "low_resolution"
+      ],
+      "absent": [],
+      "ppi": 74.5
+    },
+    {
+      "name": "image-m-300ppi-scale25-factor0.5",
+      "unit": "m",
+      "scale": 25,
+      "factor": 0.5,
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/logo.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 0.6773333333333333,
+        "height": 0.508,
+        "rotation": 0
+      },
+      "files": [
+        {
+          "fixture": "interaction/v1/logo.png",
+          "to": "logo.png"
+        }
+      ],
+      "expect": [],
+      "absent": [
+        "low_resolution"
+      ],
+      "ppi": 300
+    },
+    {
+      "name": "missing-visible-image",
+      "entity": {
+        "kind": "image",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "file": "$work/gone.png",
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 1,
+        "height": 1,
+        "rotation": 0
+      },
+      "expect": [
+        "missing_reference"
+      ]
+    },
+    {
+      "name": "raster-visible-refused",
+      "entity": {
+        "kind": "raster",
+        "id": 100,
+        "layerId": "resources",
+        "attrs": {},
+        "affine": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          -1
+        ],
+        "width": 4,
+        "height": 4,
+        "bands": 3,
+        "sample": "u8",
+        "srid": 0,
+        "style": {
+          "render": "rgb",
+          "bands": [
+            1,
+            2,
+            3
+          ]
+        },
+        "file": "rgb.png"
+      },
+      "files": [
+        {
+          "to": "rgb.png",
+          "fixture": "raster/v1/files/rgb.png"
+        },
+        {
+          "to": "rgb.pgw",
+          "fixture": "raster/v1/files/rgb.pgw"
+        },
+        {
+          "to": "rgb.png.aux.xml",
+          "text": "<PAMDataset/>"
+        }
+      ],
+      "resourceLayerVisible": true,
+      "expect": [
+        "plot_provider_unsupported"
+      ]
+    },
+    {
+      "name": "raster-hidden-omission-is-intentional",
+      "entity": {
+        "kind": "raster",
+        "id": 100,
+        "layerId": "resources",
+        "attrs": {},
+        "affine": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          -1
+        ],
+        "width": 4,
+        "height": 4,
+        "bands": 3,
+        "sample": "u8",
+        "srid": 0,
+        "style": {
+          "render": "rgb",
+          "bands": [
+            1,
+            2,
+            3
+          ]
+        },
+        "file": "rgb.png"
+      },
+      "files": [
+        {
+          "to": "rgb.png",
+          "fixture": "raster/v1/files/rgb.png"
+        },
+        {
+          "to": "rgb.pgw",
+          "fixture": "raster/v1/files/rgb.pgw"
+        },
+        {
+          "to": "rgb.png.aux.xml",
+          "text": "<PAMDataset/>"
+        }
+      ],
+      "expect": [],
+      "absent": [
+        "plot_provider_unsupported"
+      ]
+    },
+    {
+      "name": "raster-outside-viewport-not-printed",
+      "entity": {
+        "kind": "raster",
+        "id": 100,
+        "layerId": "resources",
+        "attrs": {},
+        "affine": [
+          1000,
+          1,
+          0,
+          1000,
+          0,
+          -1
+        ],
+        "width": 4,
+        "height": 4,
+        "bands": 3,
+        "sample": "u8",
+        "srid": 0,
+        "style": {
+          "render": "rgb",
+          "bands": [
+            1,
+            2,
+            3
+          ]
+        },
+        "file": "rgb.png"
+      },
+      "files": [
+        {
+          "to": "rgb.png",
+          "fixture": "raster/v1/files/rgb.png"
+        },
+        {
+          "to": "rgb.pgw",
+          "fixture": "raster/v1/files/rgb.pgw"
+        },
+        {
+          "to": "rgb.png.aux.xml",
+          "text": "<PAMDataset/>"
+        }
+      ],
+      "resourceLayerVisible": true,
+      "expect": [],
+      "absent": [
+        "plot_provider_unsupported"
+      ]
+    },
+    {
+      "name": "cloud-visible-refused",
+      "entity": {
+        "kind": "pointcloud",
+        "id": 100,
+        "layerId": "resources",
+        "attrs": {},
+        "sources": [
+          {
+            "file": "cloud.las",
+            "format": "las",
+            "count": 40,
+            "bounds": [
+              600000.04,
+              4400000.42,
+              20.02,
+              600009.92,
+              4400009.48,
+              36.35
+            ]
+          }
+        ],
+        "bounds": [
+          600000.04,
+          4400000.42,
+          20.02,
+          600009.92,
+          4400009.48,
+          36.35
+        ],
+        "count": 40,
+        "srid": 0,
+        "style": {
+          "render": "rgb",
+          "size": 3
+        }
+      },
+      "files": [
+        {
+          "to": "cloud.las",
+          "fixture": "pointcloud/v1/files/tile-a.las"
+        }
+      ],
+      "resourceLayerVisible": true,
+      "expect": [
+        "plot_provider_unsupported"
+      ],
+      "center": {
+        "x": 600004.98,
+        "y": 4400004.95
+      }
+    },
+    {
+      "name": "cloud-hidden-omission-is-intentional",
+      "entity": {
+        "kind": "pointcloud",
+        "id": 100,
+        "layerId": "resources",
+        "attrs": {},
+        "sources": [
+          {
+            "file": "cloud.las",
+            "format": "las",
+            "count": 40,
+            "bounds": [
+              600000.04,
+              4400000.42,
+              20.02,
+              600009.92,
+              4400009.48,
+              36.35
+            ]
+          }
+        ],
+        "bounds": [
+          600000.04,
+          4400000.42,
+          20.02,
+          600009.92,
+          4400009.48,
+          36.35
+        ],
+        "count": 40,
+        "srid": 0,
+        "style": {
+          "render": "rgb",
+          "size": 3
+        }
+      },
+      "files": [
+        {
+          "to": "cloud.las",
+          "fixture": "pointcloud/v1/files/tile-a.las"
+        }
+      ],
+      "expect": [],
+      "absent": [
+        "plot_provider_unsupported"
+      ],
+      "center": {
+        "x": 600004.98,
+        "y": 4400004.95
+      }
+    },
+    {
+      "name": "cloud-outside-viewport-not-printed",
+      "entity": {
+        "kind": "pointcloud",
+        "id": 100,
+        "layerId": "resources",
+        "attrs": {},
+        "sources": [
+          {
+            "file": "cloud.las",
+            "format": "las",
+            "count": 40,
+            "bounds": [
+              600000.04,
+              4400000.42,
+              20.02,
+              600009.92,
+              4400009.48,
+              36.35
+            ]
+          }
+        ],
+        "bounds": [
+          600000.04,
+          4400000.42,
+          20.02,
+          600009.92,
+          4400009.48,
+          36.35
+        ],
+        "count": 40,
+        "srid": 0,
+        "style": {
+          "render": "rgb",
+          "size": 3
+        }
+      },
+      "files": [
+        {
+          "to": "cloud.las",
+          "fixture": "pointcloud/v1/files/tile-a.las"
+        }
+      ],
+      "resourceLayerVisible": true,
+      "expect": [],
+      "absent": [
+        "plot_provider_unsupported"
+      ]
+    },
+    {
+      "name": "visible-map-service-refused",
+      "service": true,
+      "resourceLayerVisible": true,
+      "expect": [
+        "plot_provider_unsupported"
+      ]
+    },
+    {
+      "name": "hidden-map-service-not-printed",
+      "service": true,
+      "expect": [],
+      "absent": [
+        "plot_provider_unsupported"
+      ]
+    },
+    {
+      "name": "off-page-paper-item",
+      "extraItem": {
+        "id": "off",
+        "name": "Kâğıt dışında",
+        "frame": {
+          "left": 500000,
+          "top": 10000,
+          "width": 10000,
+          "height": 10000
+        },
+        "kind": {
+          "type": "text",
+          "content": "Taşma",
+          "style": {
+            "size": 3500
+          }
+        }
+      },
+      "expect": [
+        "off_page"
+      ]
+    },
+    {
+      "name": "paper-text-does-not-fit",
+      "extraItem": {
+        "id": "small",
+        "name": "Dar yazı",
+        "frame": {
+          "left": 10000,
+          "top": 10000,
+          "width": 1000,
+          "height": 1000
+        },
+        "kind": {
+          "type": "text",
+          "content": "Bu yazı bu kutuya sığamaz",
+          "style": {
+            "size": 9000
+          }
+        }
+      },
+      "expect": [
+        "text_overflow"
+      ]
+    },
+    {
+      "name": "paper-image-stretched-tall",
+      "png": true,
+      "assetMeta": {
+        "name": "Logo",
+        "sha256": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27",
+        "kind": "png",
+        "width": 160,
+        "height": 120,
+        "bytes": 1430
+      },
+      "pictureFrame": {
+        "left": 10000,
+        "top": 10000,
+        "width": 10000,
+        "height": 200000
+      },
+      "fit": "stretch",
+      "factor": 1,
+      "expect": [
+        "low_resolution"
+      ],
+      "absent": []
+    },
+    {
+      "name": "paper-image-stretched-wide",
+      "png": true,
+      "assetMeta": {
+        "name": "Logo",
+        "sha256": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27",
+        "kind": "png",
+        "width": 160,
+        "height": 120,
+        "bytes": 1430
+      },
+      "pictureFrame": {
+        "left": 10000,
+        "top": 10000,
+        "width": 300000,
+        "height": 10000
+      },
+      "fit": "stretch",
+      "factor": 1,
+      "expect": [
+        "low_resolution"
+      ],
+      "absent": []
+    },
+    {
+      "name": "paper-image-contained",
+      "png": true,
+      "assetMeta": {
+        "name": "Logo",
+        "sha256": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27",
+        "kind": "png",
+        "width": 160,
+        "height": 120,
+        "bytes": 1430
+      },
+      "pictureFrame": {
+        "left": 10000,
+        "top": 10000,
+        "width": 10000,
+        "height": 200000
+      },
+      "fit": "contain",
+      "factor": 1,
+      "expect": [],
+      "absent": [
+        "low_resolution"
+      ]
+    },
+    {
+      "name": "paper-image-covered",
+      "png": true,
+      "assetMeta": {
+        "name": "Logo",
+        "sha256": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27",
+        "kind": "png",
+        "width": 160,
+        "height": 120,
+        "bytes": 1430
+      },
+      "pictureFrame": {
+        "left": 10000,
+        "top": 10000,
+        "width": 10000,
+        "height": 200000
+      },
+      "fit": "cover",
+      "factor": 1,
+      "expect": [
+        "low_resolution"
+      ],
+      "absent": []
+    },
+    {
+      "name": "paper-image-original-low",
+      "png": true,
+      "assetMeta": {
+        "name": "Logo",
+        "sha256": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27",
+        "kind": "png",
+        "width": 160,
+        "height": 120,
+        "bytes": 1430,
+        "dpi": 96
+      },
+      "pictureFrame": {
+        "left": 10000,
+        "top": 10000,
+        "width": 10000,
+        "height": 10000
+      },
+      "fit": "original",
+      "factor": 1,
+      "expect": [
+        "low_resolution"
+      ],
+      "absent": []
+    },
+    {
+      "name": "paper-image-original-high",
+      "png": true,
+      "assetMeta": {
+        "name": "Logo",
+        "sha256": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27",
+        "kind": "png",
+        "width": 160,
+        "height": 120,
+        "bytes": 1430,
+        "dpi": 320
+      },
+      "pictureFrame": {
+        "left": 10000,
+        "top": 10000,
+        "width": 10000,
+        "height": 10000
+      },
+      "fit": "original",
+      "factor": 1,
+      "expect": [],
+      "absent": [
+        "low_resolution"
+      ]
+    },
+    {
+      "name": "paper-image-original-enlarged",
+      "png": true,
+      "assetMeta": {
+        "name": "Logo",
+        "sha256": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27",
+        "kind": "png",
+        "width": 160,
+        "height": 120,
+        "bytes": 1430,
+        "dpi": 320
+      },
+      "pictureFrame": {
+        "left": 10000,
+        "top": 10000,
+        "width": 10000,
+        "height": 10000
+      },
+      "fit": "original",
+      "factor": 3,
+      "expect": [
+        "low_resolution"
+      ],
+      "absent": []
+    },
+    {
+      "name": "missing-model-annotation-link",
+      "entity": {
+        "kind": "text",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "text": "Son değer",
+        "height": 0.1,
+        "rotation": 0,
+        "labelOf": "00000000-0000-5000-8000-000000000099",
+        "labelScale": 50
+      },
+      "expect": [
+        "broken_annotation"
+      ]
+    },
+    {
+      "name": "substituted-model-font",
+      "fontMissing": true,
+      "entity": {
+        "kind": "text",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "text": "Özgün",
+        "height": 0.1,
+        "rotation": 0,
+        "textStyle": "font-style"
+      },
+      "expect": [
+        "missing_font"
+      ]
+    },
+    {
+      "name": "missing-paper-font",
+      "extraItem": {
+        "id": "font",
+        "name": "Özgün font",
+        "frame": {
+          "left": 10000,
+          "top": 10000,
+          "width": 100000,
+          "height": 10000
+        },
+        "kind": {
+          "type": "text",
+          "content": "Türkçe ğüş",
+          "style": {
+            "size": 3500,
+            "font": "missing-office-font"
+          }
+        }
+      },
+      "expect": [
+        "missing_font"
+      ]
+    },
+    {
+      "name": "svg-external-image",
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><image href=\"gone.png\" width=\"10\" height=\"10\"/></svg>",
+      "svgMeta": {
+        "name": "SVG",
+        "sha256": "49fe8390c4f1c1510a7ae9fb877500038aec65a4f131e46e68a65cdaf998df85",
+        "kind": "svg",
+        "width": 10,
+        "height": 10,
+        "bytes": 116
+      },
+      "expect": [
+        "plot_asset_unreadable"
+      ],
+      "absent": []
+    },
+    {
+      "name": "svg-external-css",
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><rect width=\"10\" height=\"10\" fill=\"url(gone.svg#paint)\"/></svg>",
+      "svgMeta": {
+        "name": "SVG",
+        "sha256": "e04de0d7b6db6533f68c2a66c3c39fc4b70c16a02fcdfdfedf4317e5f3729d9b",
+        "kind": "svg",
+        "width": 10,
+        "height": 10,
+        "bytes": 126
+      },
+      "expect": [
+        "plot_asset_unreadable"
+      ],
+      "absent": []
+    },
+    {
+      "name": "svg-internal-use",
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><defs><rect id=\"r\" width=\"10\" height=\"10\" fill=\"red\"/></defs><use href=\"#r\"/></svg>",
+      "svgMeta": {
+        "name": "SVG",
+        "sha256": "6ebb4cfa0a8e291e779426e9368c48aeba10cef5b61dd9dd07983ceda8043c5d",
+        "kind": "svg",
+        "width": 10,
+        "height": 10,
+        "bytes": 146
+      },
+      "expect": [],
+      "absent": [
+        "plot_asset_unreadable"
+      ]
+    },
+    {
+      "name": "svg-embedded-image",
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><image href=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAAB4CAIAAAD6wG44AAAFXUlEQVR42u2czW8TRxjGX1srtVUlGtJrlUNP/AGcQYWKVlCo2gsckE2iQFGFInt3bYsWAiVtjIPzYWhpSohdEP8AFILzYZLCv9JrA0hA4AQHU3dZkrAf78zOjJ9Hc4iS7Oad/c3z7LuzSVJ927YTZK7SuAQADGksq/PR4fE5XA5jdMPZ6wecwlUx28EpEDYcMC6G2YCJXuJyIKIhRDQEB0NwMAQHQ+iiIUS0bJU+zrz9ycq/1xHReqvYmwlCfWyVmXTa62AMQWNzur51wPIT4WBJcrdmwh5S6M0QUfXhdThY9RGBrndlsDg4/WYXjcE2nBh023K2ZmIUgIjWQfGhIKKFDLsnywLY7smiyVJOuY+yjGfL92SnHl/DRofRQY2NDtyJ330PRt/LMoa2ZNkBD23JcnTRcIqJKY2INjyl4WA4GIKDIQ0cjN/oUFsvYzsYFubQ9NPG8Q/72c+JiEY+w8Hd12ER3iaJGDPPGox0Z5418DZJOV1dawx+0M9ynphc0EWb2TwjooWP2bV6TDaza3X8VqXSqj+vD7w/EPlYFiJ4TBKrxvM6EfWHwdw+hAsHHCxDf76oH3lvIOB38oKAgyXp2ovXt+TseqQ7X2WngC5aPulZEd0yIrpLhYjuHsAgDAdDcDCkKmB00YhoCBENKabE3ibVH+TwxkncSNjBV+/niGj2QW5wxxRMZtQ9eOZ+zkf6KBjLiWgJf3nno+tBjj9LZB/SI/rK3/mNbZ0/tnMSbtM1ov/YGK0P/3fALLCLTgkZQeh6l4KgMrptSHpMml7Jh11x0yt5PORo8Jh0eTkf+djfV/Lff4asVriLjkPXsz7QCTN00fwRfXnZZsoAG0mrVkT/es/mjZfflu0TuyYQs0rsRbPT7Swa2DF5B19s2eLW4KV7NhEN7YaVk3DwxZYtlK53DSllEdXqEfL/omtS0HZUa9mK9KjtiddatjolBeiiQ+6V1FqO/MCptZxkd4hqLcc38cRL2nwnK8pe9OSSk+BNZWrJyX8+nsiP3mjiU0sOESVVFfNedLJ0OxdavifeOfHJJSeRwjj3oicWHUUW5sSiI7NnCT7xiUVHcm08j0nVBUe18BlfdNw9wlMx2sTl1Ma2F60gXc/VF9iLxpl4dcERXR7P/4u+sOCq/CBfXXCJqLCnyn5mlomLKy+gNovosXml0fpgFL9gu4jsE2+vFcYKGXayNKLbocLSnoibOFeFEXeyvE12RTe6bVXm3ZhPF6InXpl34xcZa6Oj3NQSbUfnm+7JL6MkocyJn2+6RBStzlhdtO50PajC9ZyJTLzcdCOUGn0vutwskCkqNwvB0yzZiYcqNdZOlmEavVsI0oyM3i2oUGrAaiM0Wam+bdvbH3062Gck6VN7L6z7+Z/nChpVG1YD3x403MFekG8vcDXptqtdt2CWF/7aaPWf1VDfPzL3xn1uZE71bsNXcJx7sDYRvRHU3k96A55heN/YuTtFvZby8L6xaAce+eaQHoCDmzU4ae10Jjzm7H+ALQMS2HeUeaR/ulMkorNfRXFzWh2oncF1KsMwn71djPXCXxendrOnz9wuEtG5/SGsbJnH1XjSw38ViWgkGGbLVKjGkz79GnMlsXsw421VXG36Yy4FfV1oklO7ytOnbpWI6JcDFYERbYAVdCf9460SEY1+XWEDbN5ziAGkf7hZIqKyB7MFqOaRPnmzFAJwV0E1gLSPlwWuupPenJQFqNqRDoXJAl31ScdBYwGSgqQZzQbASpAWF58AnAxpaTdEAFarJ2JXGgDMFgADMATAEABDAAwBMATAEAADMATAEABDCuj/lw2Pmk9wOeBgCIAhlfQKS1bmCc4j6pMAAAAASUVORK5CYII=\" width=\"10\" height=\"10\"/></svg>",
+      "svgMeta": {
+        "name": "SVG",
+        "sha256": "0bdd85399c933260a34b326208dba6e6b001cb924c6f92994e049fdc4b6669ce",
+        "kind": "svg",
+        "width": 10,
+        "height": 10,
+        "bytes": 2038
+      },
+      "expect": [],
+      "absent": [
+        "plot_asset_unreadable"
+      ]
+    },
+    {
+      "name": "empty-selection",
+      "input": {
+        "sheets": []
+      },
+      "code": "no_sheets",
+      "expect": []
+    },
+    {
+      "name": "unknown-page",
+      "input": {
+        "sheets": [
+          "gone"
+        ]
+      },
+      "code": "unknown_sheet",
+      "expect": []
+    },
+    {
+      "name": "repeated-page",
+      "input": {
+        "sheets": [
+          "ground",
+          "ground"
+        ]
+      },
+      "code": "invalid_input",
+      "expect": []
+    },
+    {
+      "name": "dpi-too-low",
+      "input": {
+        "dpi": 35
+      },
+      "code": "invalid_input",
+      "expect": []
+    },
+    {
+      "name": "dpi-too-high",
+      "input": {
+        "dpi": 1201
+      },
+      "code": "invalid_input",
+      "expect": []
+    },
+    {
+      "name": "no-book",
+      "noBook": true,
+      "code": "no_sheets",
+      "expect": []
+    }
+  ]
+}

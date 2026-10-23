@@ -24,6 +24,7 @@ pub struct State {
     pub id: u64,
     pub rows: Vec<Row>,
     pub input: PublishSheets,
+    pub check_only: bool,
     pub report: Option<SheetsPublished>,
     job: Option<Job>,
     captured: Option<kentos_domain::Document>,
@@ -159,6 +160,7 @@ impl App {
             id,
             rows,
             input,
+            check_only: false,
             report: None,
             job: None,
             captured: None,
@@ -170,6 +172,16 @@ impl App {
         })));
         self.dialog = Some(crate::app::Dialog::Exchange);
         Task::none()
+    }
+    pub(crate) fn sheet_preflight_open(&mut self) -> Task<Message> {
+        let _ = self.sheet_publish_open();
+        if let Some(Window::SheetPublish(s)) = &mut self.exchange {
+            if s.running() {
+                return Task::none();
+            }
+            s.check_only = true;
+        }
+        self.sheet_publish_event(Event::Plan)
     }
     pub(crate) fn sheet_publish_event(&mut self, e: Event) -> Task<Message> {
         if matches!(e, Event::Close) {
@@ -264,6 +276,9 @@ impl App {
                 } else {
                     CallOp::Execute
                 };
+                if s.check_only && matches!(op, CallOp::Execute) {
+                    return Task::none();
+                }
                 if matches!(op, CallOp::Execute) {
                     let Some(report) = &s.report else {
                         return Task::none();
@@ -273,7 +288,21 @@ impl App {
                     }
                     input.pin = Some(report.source.clone());
                 }
-                let value = match serde_json::to_value(&input) {
+                let command = if s.check_only {
+                    kentos_commands::FILE_PREFLIGHT_SHEETS
+                } else {
+                    FILE_PUBLISH_SHEETS
+                };
+                let encoded = if s.check_only {
+                    serde_json::to_value(kentos_commands::PreflightSheets {
+                        drawing: input.drawing.clone(),
+                        sheets: input.sheets.clone(),
+                        dpi: input.dpi,
+                    })
+                } else {
+                    serde_json::to_value(&input)
+                };
+                let value = match encoded {
                     Ok(v) => v,
                     Err(e) => {
                         s.status = e.to_string();
@@ -281,7 +310,7 @@ impl App {
                     }
                 };
                 let envelope = CallEnvelope {
-                    command: FILE_PUBLISH_SHEETS.into(),
+                    command: command.into(),
                     version: Some(1),
                     op,
                     request_id: None,
@@ -301,7 +330,7 @@ impl App {
                 .into();
                 s.job = Some(Job::start_with(
                     "sheet-publish".into(),
-                    FILE_PUBLISH_SHEETS.into(),
+                    command.into(),
                     None,
                     &doc.model,
                     kentos_headless::file_commands::job_work(envelope),
@@ -332,9 +361,32 @@ impl App {
                     s.captured = None;
                     match answer.result {
                         CommandResult::Completed { output, .. } => {
-                            match serde_json::from_value::<SheetsPublished>(output) {
+                            let parsed = if s.check_only {
+                                serde_json::from_value::<kentos_commands::SheetsPreflighted>(output)
+                                    .map(|r| SheetsPublished {
+                                        resources: None,
+                                        path: String::new(),
+                                        sheets: r.sheets,
+                                        files: vec![],
+                                        issues: r.issues,
+                                        source: r.source,
+                                        ready: r.ready,
+                                        manifest: String::new(),
+                                        sha256: String::new(),
+                                    })
+                            } else {
+                                serde_json::from_value::<SheetsPublished>(output)
+                            };
+                            match parsed {
                                 Ok(report) => {
-                                    s.status = if matches!(s.op, CallOp::Execute) {
+                                    s.status = if s.check_only {
+                                        format!(
+                                            "{} pafta denetlendi · {} hata, {} uyarı/not.",
+                                            report.sheets.len(),
+                                            report.issues.iter().filter(|i| i.error).count(),
+                                            report.issues.iter().filter(|i| !i.error).count()
+                                        )
+                                    } else if matches!(s.op, CallOp::Execute) {
                                         format!(
                                             "{} pafta, {} PDF yayınlandı: {}",
                                             report.sheets.len(),
@@ -408,7 +460,11 @@ impl App {
             );
         }
         let mut body = column![
-            label::body("Seçili paftalar aşağıdaki sırayla yayınlanır."),
+            label::body(if s.check_only {
+                "Seçili paftalar ve yerel kaynakları dosya yazmadan denetlenir."
+            } else {
+                "Seçili paftalar aşağıdaki sırayla yayınlanır."
+            }),
             row![
                 button(label::caption("Hepsini seç"))
                     .on_press_maybe((!busy).then_some(event(Event::All(true))))
@@ -422,65 +478,68 @@ impl App {
                 .height(150)
         ]
         .spacing(10);
-        body = body.push(if busy {
-            Element::from(
-                Switch::<Message>::disabled(s.input.mode == SheetPublishMode::Separate)
-                    .label("Her pafta ayrı PDF"),
-            )
-        } else {
-            Switch::new(s.input.mode == SheetPublishMode::Separate, |v| {
-                event(Event::Separate(v))
-            })
-            .label("Her pafta ayrı PDF")
-            .into()
-        });
-        body = body.push(if busy {
-            Element::from(
-                Switch::<Message>::disabled(s.input.resources).label("Çizimi ve kaynaklarını ekle"),
-            )
-        } else {
-            Element::from(
-                Switch::new(s.input.resources, |v| event(Event::Resources(v)))
-                    .label("Çizimi ve kaynaklarını ekle"),
-            )
-        });
-        if s.input.mode == SheetPublishMode::Separate {
-            body = body.push(label::caption(
-                "Dosya adı · {index}, {sheet}, {number}, {revision}",
-            ));
-            let mut field =
-                text_input("{index}-{sheet}", &s.input.naming).style(style::field::input);
-            if !busy {
-                field = field.on_input(|v| event(Event::Naming(v)));
+        if !s.check_only {
+            body = body.push(if busy {
+                Element::from(
+                    Switch::<Message>::disabled(s.input.mode == SheetPublishMode::Separate)
+                        .label("Her pafta ayrı PDF"),
+                )
+            } else {
+                Switch::new(s.input.mode == SheetPublishMode::Separate, |v| {
+                    event(Event::Separate(v))
+                })
+                .label("Her pafta ayrı PDF")
+                .into()
+            });
+            body = body.push(if busy {
+                Element::from(
+                    Switch::<Message>::disabled(s.input.resources)
+                        .label("Çizimi ve kaynaklarını ekle"),
+                )
+            } else {
+                Element::from(
+                    Switch::new(s.input.resources, |v| event(Event::Resources(v)))
+                        .label("Çizimi ve kaynaklarını ekle"),
+                )
+            });
+            if s.input.mode == SheetPublishMode::Separate {
+                body = body.push(label::caption(
+                    "Dosya adı · {index}, {sheet}, {number}, {revision}",
+                ));
+                let mut field =
+                    text_input("{index}-{sheet}", &s.input.naming).style(style::field::input);
+                if !busy {
+                    field = field.on_input(|v| event(Event::Naming(v)));
+                }
+                body = body.push(field);
+            } else {
+                body = body.push(label::caption("Tek PDF'in dosya adı"));
+                let mut field = text_input("paftalar", s.input.name.as_deref().unwrap_or(""))
+                    .style(style::field::input);
+                if !busy {
+                    field = field.on_input(|v| event(Event::Name(v)));
+                }
+                body = body.push(field);
             }
-            body = body.push(field);
-        } else {
-            body = body.push(label::caption("Tek PDF'in dosya adı"));
-            let mut field = text_input("paftalar", s.input.name.as_deref().unwrap_or(""))
+            let mut path = text_input("Yeni veya boş teslim klasörünün tam yolu", &s.input.path)
                 .style(style::field::input);
             if !busy {
-                field = field.on_input(|v| event(Event::Name(v)));
+                path = path.on_input(|v| event(Event::Path(v)));
             }
-            body = body.push(field);
+            body = body
+                .push(label::caption(
+                    "Teslim klasörü · dolu bir klasörün üzerine yazılmaz",
+                ))
+                .push(
+                    row![
+                        path,
+                        button(label::body("Seç…"))
+                            .on_press_maybe((!busy).then_some(event(Event::Pick)))
+                            .style(style::button::secondary)
+                    ]
+                    .spacing(6),
+                );
         }
-        let mut path = text_input("Yeni veya boş teslim klasörünün tam yolu", &s.input.path)
-            .style(style::field::input);
-        if !busy {
-            path = path.on_input(|v| event(Event::Path(v)));
-        }
-        body = body
-            .push(label::caption(
-                "Teslim klasörü · dolu bir klasörün üzerine yazılmaz",
-            ))
-            .push(
-                row![
-                    path,
-                    button(label::body("Seç…"))
-                        .on_press_maybe((!busy).then_some(event(Event::Pick)))
-                        .style(style::button::secondary)
-                ]
-                .spacing(6),
-            );
         if busy {
             body = body.push(progress_bar(0.0..=1.0, s.progress));
         }
@@ -499,43 +558,60 @@ impl App {
             for f in &report.files {
                 results = results.push(label::caption(&f.name));
             }
-            for i in &report.issues {
-                results = results.push(label::caption(format!(
-                    "{} · {} {}",
+            for i in report
+                .issues
+                .iter()
+                .filter(|i| i.error)
+                .chain(report.issues.iter().filter(|i| !i.error))
+            {
+                let message = format!(
+                    "{} · {} · {} {}",
+                    if i.error { "Hata" } else { "Uyarı/not" },
                     s.rows
                         .iter()
                         .find(|r| r.id == i.sheet)
                         .map_or("Pafta seti", |r| r.name.as_str()),
                     i.message,
                     i.fix
-                )));
+                );
+                results = results.push(if i.error {
+                    label::body(message).style(style::text::danger)
+                } else {
+                    label::caption(message)
+                });
             }
             body = body.push(results);
         }
         let ready =
             !busy && matches!(s.op, CallOp::Plan) && s.report.as_ref().is_some_and(|r| r.ready);
-        let window = Dialog::new("Paftaları toplu yayınla")
-            .scroll(body)
-            .width(640.)
-            .max_height(640.)
-            .aside(
-                button(label::body(if busy { "Durdur" } else { "Kapat" }))
-                    .on_press(event(if busy { Event::Stop } else { Event::Close }))
-                    .padding([6, 14])
-                    .style(style::button::secondary),
-            )
-            .action(
-                button(label::body("Denetle"))
-                    .on_press_maybe((!busy).then_some(event(Event::Plan)))
-                    .padding([6, 14])
-                    .style(style::button::secondary),
-            )
-            .action(
+        let mut window = Dialog::new(if s.check_only {
+            "Baskı öncesi tam denetim"
+        } else {
+            "Paftaları toplu yayınla"
+        })
+        .scroll(body)
+        .width(640.)
+        .max_height(640.)
+        .aside(
+            button(label::body(if busy { "Durdur" } else { "Kapat" }))
+                .on_press(event(if busy { Event::Stop } else { Event::Close }))
+                .padding([6, 14])
+                .style(style::button::secondary),
+        )
+        .action(
+            button(label::body("Denetle"))
+                .on_press_maybe((!busy).then_some(event(Event::Plan)))
+                .padding([6, 14])
+                .style(style::button::secondary),
+        );
+        if !s.check_only {
+            window = window.action(
                 button(label::body("Yayınla"))
                     .on_press_maybe(ready.then_some(event(Event::Publish)))
                     .padding([6, 16])
                     .style(style::button::primary),
             );
+        }
         kentos_ui::widget::overlay::modal(window, event(Event::Close))
     }
 }
