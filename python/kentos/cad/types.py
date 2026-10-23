@@ -42271,6 +42271,9 @@ class SourceTable(_Model):
     Attributes:
         data: `features` or `attributes`.
         rows: Unit: count.
+        extent: The box the source declares for the table, in the table's system: min x, min y, max x, max y (docs/adr/0599
+            §2). A GeoPackage's `gpkg_contents`, PostGIS's `ST_EstimatedExtent`; declared, not counted, and none when
+            the source declares none. Unit: system.
         geometry: The geometry column's type, none for an attribute table.
         relations: The relations of the file this table is a side of (GeoPackage related tables, docs/adr/0532 §2), each with
             whether KentOS reads and writes its representation.
@@ -42281,6 +42284,7 @@ class SourceTable(_Model):
     rows: int
     columns: list[SourceColumn]
     capabilities: SourceCapabilities
+    extent: list[float] | None | Unset = UNSET
     geometry: str | None | Unset = UNSET
     relations: list[SourceRelation] | Unset = UNSET
     srid: int | None | Unset = UNSET
@@ -42292,6 +42296,8 @@ class SourceTable(_Model):
         out["rows"] = self.rows
         out["columns"] = [e0.to_json() for e0 in self.columns]
         out["capabilities"] = self.capabilities.to_json()
+        if self.extent is not UNSET:
+            out["extent"] = None if self.extent is None else [float(e0) for e0 in self.extent]
         if self.geometry is not UNSET:
             out["geometry"] = self.geometry
         if self.relations is not UNSET:
@@ -42308,6 +42314,7 @@ class SourceTable(_Model):
             rows=data["rows"],
             columns=[SourceColumn.from_json(e0) for e0 in data["columns"]],
             capabilities=SourceCapabilities.from_json(data["capabilities"]),
+            extent=UNSET if "extent" not in data else None if data["extent"] is None else [float(e0) for e0 in data["extent"]],
             geometry=data.get("geometry", UNSET),
             relations=[SourceRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
             srid=data.get("srid", UNSET),

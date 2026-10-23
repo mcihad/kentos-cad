@@ -6,7 +6,9 @@
 //! the natural order; a file's kind by its extension, case aside; a Shapefile
 //! as its .shp with the files of the same name and the extensions .shx, .dbf,
 //! .prj and .cpg as its parts, which are not shown on their own. The panel is
-//! the desktop's `sources`.
+//! the desktop's `sources`. The source browser (docs/adr/0599) adds GeoPackage,
+//! FlatGeobuf, GML, raster and point cloud files, the panel's search and its
+//! recent and favourite sources, held to the same cases.
 
 use kentos_geometry_core::ops::point_editor::natural_order;
 
@@ -21,6 +23,14 @@ pub enum SourceKind {
     Coords,
     /// KML or KMZ (docs/adr/0222).
     Kml,
+    /// A GeoPackage, its tables shown under it (docs/adr/0599 §2).
+    GeoPackage,
+    FlatGeobuf,
+    Gml,
+    /// GeoTIFF, TIFF or a VRT mosaic (docs/adr/0204, 0517).
+    Raster,
+    /// LAS or LAZ, COPC too (docs/adr/0207).
+    PointCloud,
 }
 
 impl SourceKind {
@@ -34,6 +44,11 @@ impl SourceKind {
             SourceKind::Gnss => "GNSS (GPX, NMEA)",
             SourceKind::Coords => "Koordinat listesi",
             SourceKind::Kml => "KML/KMZ",
+            SourceKind::GeoPackage => "GeoPackage",
+            SourceKind::FlatGeobuf => "FlatGeobuf",
+            SourceKind::Gml => "GML",
+            SourceKind::Raster => "Raster (GeoTIFF, VRT)",
+            SourceKind::PointCloud => "Nokta bulutu (LAS, LAZ)",
         }
     }
 
@@ -47,6 +62,11 @@ impl SourceKind {
             SourceKind::Gnss => "gnss",
             SourceKind::Coords => "coords",
             SourceKind::Kml => "kml",
+            SourceKind::GeoPackage => "geopackage",
+            SourceKind::FlatGeobuf => "flatgeobuf",
+            SourceKind::Gml => "gml",
+            SourceKind::Raster => "raster",
+            SourceKind::PointCloud => "pointcloud",
         }
     }
 
@@ -60,10 +80,15 @@ impl SourceKind {
             SourceKind::Gnss => "importGnss",
             SourceKind::Coords => "importNcn",
             SourceKind::Kml => "importKml",
+            SourceKind::GeoPackage => "importGpkg",
+            SourceKind::FlatGeobuf => "importFgb",
+            SourceKind::Gml => "importGml",
+            SourceKind::Raster => "rasterAdd",
+            SourceKind::PointCloud => "pointCloudAdd",
         }
     }
 
-    pub const ALL: [SourceKind; 7] = [
+    pub const ALL: [SourceKind; 12] = [
         SourceKind::GeoJson,
         SourceKind::Shapefile,
         SourceKind::Dxf,
@@ -71,6 +96,11 @@ impl SourceKind {
         SourceKind::Gnss,
         SourceKind::Coords,
         SourceKind::Kml,
+        SourceKind::GeoPackage,
+        SourceKind::FlatGeobuf,
+        SourceKind::Gml,
+        SourceKind::Raster,
+        SourceKind::PointCloud,
     ];
 }
 
@@ -118,6 +148,11 @@ pub fn source_kind(name: &str) -> Option<SourceKind> {
         "gpx" | "nmea" | "nma" => SourceKind::Gnss,
         "ncn" | "txt" | "csv" | "xyz" | "dat" | "asc" => SourceKind::Coords,
         "kml" | "kmz" => SourceKind::Kml,
+        "gpkg" => SourceKind::GeoPackage,
+        "fgb" => SourceKind::FlatGeobuf,
+        "gml" => SourceKind::Gml,
+        "tif" | "tiff" | "vrt" => SourceKind::Raster,
+        "las" | "laz" => SourceKind::PointCloud,
         _ => return None,
     })
 }
@@ -167,4 +202,93 @@ pub fn listing(entries: &[SourceEntry]) -> Listing {
         files.push(SourceFile { name, kind, parts });
     }
     Listing { folders, files }
+}
+
+// ── Search (docs/adr/0599 §5) ─────────────────────────────────────────
+
+/// A letter as the panel's search takes it: Turkish case (I is ı's, İ is i's), then dotless ı as i, as the panel's
+/// words are English ones too (MULTIPOLYGON, EPSG).
+fn search_fold(c: char) -> char {
+    match kentos_geometry_core::text::edit::fold(c) {
+        'ı' => 'i',
+        f => f,
+    }
+}
+
+fn folded(text: &str) -> String {
+    text.chars().map(search_fold).collect()
+}
+
+/// A query as its folded words; none for an empty one.
+pub fn search_words(query: &str) -> Vec<String> {
+    query.split_whitespace().map(folded).collect()
+}
+
+/// Whether a row with these fields answers the query's words: each word is somewhere in one of them.
+pub fn search_matches(words: &[String], fields: &[&str]) -> bool {
+    if words.is_empty() {
+        return true;
+    }
+    let fields: Vec<String> = fields.iter().map(|f| folded(f)).collect();
+    words
+        .iter()
+        .all(|w| fields.iter().any(|f| f.contains(w.as_str())))
+}
+
+/// Which rows of a tree (in their order, with their depths) show for the query: those that match, and the rows above
+/// them.
+pub fn search_shown(depths: &[usize], matched: &[bool]) -> Vec<bool> {
+    let mut keep = matched.to_vec();
+    for (i, &m) in matched.iter().enumerate() {
+        if !m {
+            continue;
+        }
+        let mut depth = depths[i];
+        for j in (0..i).rev() {
+            if depth == 0 {
+                break;
+            }
+            if depths[j] < depth {
+                keep[j] = true;
+                depth = depths[j];
+            }
+        }
+    }
+    keep
+}
+
+// ── Recent and favourite sources (docs/adr/0599 §6) ───────────────────
+
+/// The recent sources kept at most.
+pub const RECENT_MOST: usize = 12;
+/// The favourite sources kept at most.
+pub const FAVOURITES_MOST: usize = 50;
+
+/// The recent list after `used`: it goes first, once, at most [`RECENT_MOST`].
+pub fn recent_with<T: Clone + PartialEq>(recent: &[T], used: &T) -> Vec<T> {
+    let mut out = vec![used.clone()];
+    out.extend(recent.iter().filter(|r| *r != used).cloned());
+    out.truncate(RECENT_MOST);
+    out
+}
+
+/// The favourites after starring `source` (it leaves when it is there, else joins the end), and whether it was
+/// refused (the list is full).
+pub fn starred<T: Clone + PartialEq>(favourites: &[T], source: &T) -> (Vec<T>, bool) {
+    if favourites.contains(source) {
+        return (
+            favourites
+                .iter()
+                .filter(|f| *f != source)
+                .cloned()
+                .collect(),
+            false,
+        );
+    }
+    if favourites.len() >= FAVOURITES_MOST {
+        return (favourites.to_vec(), true);
+    }
+    let mut out = favourites.to_vec();
+    out.push(source.clone());
+    (out, false)
 }

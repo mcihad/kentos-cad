@@ -55,7 +55,8 @@ def tables_of(name):
     """The file's feature and attribute tables as cad.sources.describe says them."""
     c = sqlite3.connect(f"file:{DIR / name}?mode=ro", uri=True)
     out = []
-    for table, data, srs in c.execute("SELECT table_name, data_type, srs_id FROM gpkg_contents ORDER BY rowid"):
+    for table, data, srs, *box in c.execute("SELECT table_name, data_type, srs_id, min_x, min_y, max_x, max_y "
+                                            "FROM gpkg_contents ORDER BY rowid"):
         if data not in ("features", "attributes"):
             continue
         g = c.execute("SELECT column_name, geometry_type_name, z, m FROM gpkg_geometry_columns WHERE table_name = ?",
@@ -81,6 +82,9 @@ def tables_of(name):
             t["geometry"] = g[1]
         if srid is not None:
             t["srid"] = srid
+        # The box the file declares (docs/adr/0599 §2), as it stands in gpkg_contents; none unless all four are there.
+        if all(v is not None for v in box):
+            t["extent"] = [float(v) for v in box]
         t["columns"] = columns
         t["capabilities"] = {"read": True, "insert": True, "update": True, "delete": True, "transaction": True,
                              "z": bool(g and g[2]), "m": bool(g and g[3]), "curves": True}

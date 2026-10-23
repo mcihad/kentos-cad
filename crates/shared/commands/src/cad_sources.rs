@@ -72,6 +72,13 @@ pub struct SourceTable {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
+    /// The box the source declares for the table, in the table's system: min x, min y, max x, max y (docs/adr/0599
+    /// §2). A GeoPackage's `gpkg_contents`, PostGIS's `ST_EstimatedExtent`; declared, not counted, and none when
+    /// the source declares none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub extent: Option<[f64; 4]>,
     pub columns: Vec<SourceColumn>,
     pub capabilities: SourceCapabilities,
     /// The relations of the file this table is a side of (GeoPackage related tables, docs/adr/0532 §2), each with

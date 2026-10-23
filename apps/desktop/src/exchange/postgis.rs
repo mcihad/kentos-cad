@@ -34,6 +34,8 @@ pub struct State {
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// Kaynaklar's table (docs/adr/0599 §3): the window with the database's tables as listed, the table chosen.
+    Open(String, Vec<SourceTable>, String),
     Address(String),
     List,
     Listed(Result<Vec<SourceTable>, String>),
@@ -45,7 +47,7 @@ pub enum Event {
 }
 
 /// An empty drawing for the listing: describing a database reads no drawing.
-fn listing_document() -> Result<kentos_domain::Document, String> {
+pub(crate) fn listing_document() -> Result<kentos_domain::Document, String> {
     let empty = r#"{"format":"kentos.document","version":1,"name":"PostGIS","settings":{"srid":0,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000},
         "origin":{"x":0,"y":0},"activeLayer":"0","layers":[{"id":"0","name":"0","type":"layer","visible":true,
         "locked":false,"expanded":true,"style":{"color":"fg","lineType":"continuous","lineWeight":0.25},"children":[]}],
@@ -95,10 +97,21 @@ impl App {
     }
 
     pub(super) fn postgis_event(&mut self, e: Event) -> Task<Message> {
+        if let Event::Open(address, tables, table) = e {
+            let chosen = tables.iter().map(|t| t.name == table).collect();
+            self.open_window(Window::Postgis(State {
+                address,
+                tables,
+                chosen,
+                ..State::default()
+            }));
+            return Task::none();
+        }
         let Some(Window::Postgis(s)) = &mut self.exchange else {
             return Task::none();
         };
         match e {
+            Event::Open(..) => {}
             Event::Address(a) => {
                 s.address = a;
                 s.status = None;

@@ -106,6 +106,8 @@ pub struct Window {
     pub layer: Option<String>,
     /// A changed layer's service as it was (its fields kept when Bağlan is not pressed).
     pub before: Option<ServiceLayer>,
+    /// Kaynaklar's service layer (docs/adr/0599 §4): picked once Bağlan reads the service.
+    pub pending_pick: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -168,6 +170,7 @@ impl Window {
             attribution: String::new(),
             layer: None,
             before: None,
+            pending_pick: None,
         }
     }
 
@@ -274,6 +277,40 @@ impl App {
         self.dialog = Some(Dialog::ServiceAdd);
     }
 
+    /// Kaynaklar's saved service or one of its layers (docs/adr/0599 §4): the window with the service, read already
+    /// (`read`) or read now, the layer picked once read.
+    pub(crate) fn open_saved_service(
+        &mut self,
+        kind: ServiceKind,
+        url: String,
+        connection: Option<String>,
+        item: Option<String>,
+        read: Option<Connecting>,
+    ) -> Task<Message> {
+        if self.document.is_none() {
+            self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
+            return Task::none();
+        }
+        let mut w = Window::new();
+        w.kind = KINDS.iter().position(|k| k.0 == Some(kind)).unwrap_or(1);
+        w.url = url;
+        w.connection = connection;
+        w.pending_pick = item;
+        let task = match read {
+            Some(c) => {
+                took_read(&mut w, c);
+                None
+            }
+            None => Some(()),
+        };
+        self.service_window = Some(w);
+        self.dialog = Some(Dialog::ServiceAdd);
+        match task {
+            Some(()) => self.service_connect(),
+            None => Task::none(),
+        }
+    }
+
     pub(crate) fn service_window_event(&mut self, event: Event) -> Task<Message> {
         let Some(w) = &mut self.service_window else {
             return Task::none();
@@ -333,33 +370,7 @@ impl App {
             Event::Connected(answer) => {
                 w.busy = false;
                 match answer {
-                    Ok(c) => {
-                        let offer = c.offer().cloned();
-                        w.connecting = Some(*c);
-                        if let Some(o) = offer {
-                            w.said = Some((
-                                Kind::Ok,
-                                format!(
-                                    "{}: {} katman.",
-                                    if o.title.is_empty() {
-                                        "Servis okundu".to_owned()
-                                    } else {
-                                        o.title.clone()
-                                    },
-                                    o.pickable,
-                                ),
-                            ));
-                            if !w.named || w.name.is_empty() {
-                                w.name = o.title.clone();
-                            }
-                            // One to pick: picked.
-                            let pickable: Vec<&Item> =
-                                o.items.iter().filter(|i| i.pickable).collect();
-                            if pickable.len() == 1 {
-                                w.picked = vec![pickable[0].id.clone()];
-                            }
-                        }
-                    }
+                    Ok(c) => took_read(w, *c),
                     Err(why) => w.said = Some((Kind::Error, why)),
                 }
             }
@@ -551,6 +562,15 @@ impl App {
                         format!("“{name}” servis katmanı eklendi.")
                     },
                 );
+                // Kaynaklar keeps the service among its saved ones (docs/adr/0599 §4).
+                if layer.is_none() && !service.url.trim().is_empty() {
+                    self.sources.folders.add_service(crate::sources::SavedService {
+                        kind: service.kind,
+                        url: service.url.clone(),
+                        name: name.clone(),
+                        connection: service.connection.clone(),
+                    });
+                }
                 if let Some(id) = &service.connection
                     && let Some(doc) = &self.document
                     && let Some(c) = doc
@@ -985,6 +1005,47 @@ impl App {
             _ => {}
         }
         opts.into()
+    }
+}
+
+/// What Bağlan read, in the window: the service's offer said, its name taken, its one layer picked, or Kaynaklar's
+/// layer (docs/adr/0599 §4) picked and named.
+fn took_read(w: &mut Window, c: Connecting) {
+    let offer = c.offer().cloned();
+    w.connecting = Some(c);
+    if let Some(o) = offer {
+        w.said = Some((
+            Kind::Ok,
+            format!(
+                "{}: {} katman.",
+                if o.title.is_empty() {
+                    "Servis okundu".to_owned()
+                } else {
+                    o.title.clone()
+                },
+                o.pickable,
+            ),
+        ));
+        if !w.named || w.name.is_empty() {
+            w.name = o.title.clone();
+        }
+        // One to pick: picked.
+        let pickable: Vec<&Item> = o.items.iter().filter(|i| i.pickable).collect();
+        if pickable.len() == 1 {
+            w.picked = vec![pickable[0].id.clone()];
+        }
+    }
+
+    if let Some(id) = w.pending_pick.take()
+        && let Some(item) = w
+            .offer()
+            .and_then(|o| o.items.iter().find(|i| i.pickable && i.id == id))
+            .cloned()
+    {
+        w.picked = vec![item.id];
+        if !w.named && !item.title.is_empty() {
+            w.name = item.title;
+        }
     }
 }
 

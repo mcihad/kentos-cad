@@ -175,7 +175,7 @@ def cases():
         step(b, done(a), SAME),
         step({"path": "$tmp:toplu-yazilan.gpkg"},
              done({"revision": ANY, "tables": [
-                 {"name": t, "data": "features", "rows": n, "geometry": "POINT", "srid": 5256, "columns": ANY,
+                 {"name": t, "data": "features", "rows": n, "geometry": "POINT", "srid": 5256, "extent": ANY, "columns": ANY,
                   "capabilities": ANY} for t, n in [("Alçak", len(low)), ("Yüksek", len(high))]]}),
              command="cad.sources.describe")))
     # 3. The batch's own source input, read once; the rows differ in where the point goes and in their layer.

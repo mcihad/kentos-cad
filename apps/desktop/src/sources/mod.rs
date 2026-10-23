@@ -12,6 +12,14 @@
 //! `take_layer_into`). What is opened is read again when it is opened again.
 //! Folders are read and drawings decoded off the UI thread; an answer for a
 //! row closed since is dropped.
+//!
+//! The source browser (docs/adr/0599): a GeoPackage opens into its tables (`cad.sources.describe`), a table into its
+//! declared box and five sample rows (`cad.sources.query`), with Bağlı katman olarak aç, Kopya olarak al, Katmana git
+//! for a bound one and Kapsamı göster; Veritabanları lists PostGIS addresses and their tables by schema; Servisler the
+//! ready basemaps and the services added before, opened into their layers; the search box keeps the rows that match
+//! and their ancestors (`kentos_interaction::sources::search_*`); Son kullanılanlar and Sık kullanılanlar are kept
+//! with the folders (`kaynak-klasorleri.json` version 2); a row dragged onto the drawing, or a file dropped on the
+//! window, is added as its Katman olarak ekle adds it.
 
 mod view;
 
@@ -19,6 +27,7 @@ mod view;
 mod tests;
 
 use std::collections::{BTreeSet, HashMap};
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -26,9 +35,15 @@ use iced::Task;
 use iced::futures::channel::mpsc;
 use kentos_cloud::CatalogQuery;
 use kentos_commands::{
-    CatalogSort, CatalogView, DocumentSnapshotV2, ProjectStorage, ProjectSummary,
+    CatalogSort, CatalogView, CommandResult, DocumentSnapshotV2, ProjectStorage, ProjectSummary,
+    ServiceKind, SourceTable, SourcesQueried, SourcesQuery,
 };
-use kentos_interaction::sources::{Listing, SourceEntry, SourceFile, SourceKind, listing};
+use kentos_interaction::Level;
+use kentos_interaction::sources::{
+    Listing, SourceEntry, SourceFile, SourceKind, listing, recent_with, source_kind, starred,
+};
+use kentos_native_application::ExecutionContext;
+use kentos_services::connect::Connecting;
 use serde::{Deserialize, Serialize};
 
 use crate::app::{App, Message, Panel};
@@ -44,6 +59,156 @@ pub(crate) const LIMIT: u32 = 200;
 /// The two sections' keys; they start open.
 pub(crate) const FOLDERS: &str = "klasorler";
 pub(crate) const KENTOS: &str = "kentos";
+/// The browser's sections and groups (docs/adr/0599); they start open but Hazır altlıklar.
+pub(crate) const RECENT: &str = "son";
+pub(crate) const FAVOURITES: &str = "sik";
+pub(crate) const DATABASES: &str = "veritabanlari";
+pub(crate) const SERVICES: &str = "servisler";
+pub(crate) const PRESETS: &str = "hazir";
+pub(crate) const SAVED: &str = "kayitli";
+/// The sample rows a table's preview reads, and the columns each shows.
+pub(crate) const SAMPLE_ROWS: u32 = 5;
+pub(crate) const SAMPLE_COLUMNS: usize = 4;
+
+/// Where a table is (docs/adr/0599 §2, §3).
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub(crate) enum Origin {
+    File(PathBuf),
+    Database(String),
+}
+
+impl Origin {
+    /// Its path as the commands take it: the file's path, or the database's address.
+    pub(crate) fn path(&self) -> String {
+        match self {
+            Origin::File(p) => p.display().to_string(),
+            Origin::Database(a) => a.clone(),
+        }
+    }
+
+    /// A kept source for one of its tables.
+    pub(crate) fn kept(&self, table: &str) -> Kept {
+        match self {
+            Origin::File(path) => Kept::Table {
+                path: path.clone(),
+                table: table.to_owned(),
+            },
+            Origin::Database(address) => Kept::Database {
+                address: address.clone(),
+                table: table.to_owned(),
+            },
+        }
+    }
+}
+
+/// A service the device keeps for Servisler (docs/adr/0599 §4): its kind, address, name and the project's
+/// connection it was added with.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SavedService {
+    pub kind: ServiceKind,
+    pub url: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub connection: Option<String>,
+}
+
+/// A recent or favourite source (docs/adr/0599 §6), by what it is.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum Kept {
+    File {
+        path: PathBuf,
+    },
+    Table {
+        path: PathBuf,
+        table: String,
+    },
+    Database {
+        address: String,
+        table: String,
+    },
+    Service {
+        service: SavedService,
+    },
+    ServiceLayer {
+        service: SavedService,
+        item: String,
+        title: String,
+    },
+    Basemap {
+        command: String,
+        name: String,
+    },
+}
+
+impl Kept {
+    /// Its name as the row says it.
+    pub(crate) fn label(&self) -> String {
+        match self {
+            Kept::File { path } => folder_name(path),
+            Kept::Table { table, .. } | Kept::Database { table, .. } => table.clone(),
+            Kept::Service { service } => service.name.clone(),
+            Kept::ServiceLayer { title, .. } => title.clone(),
+            Kept::Basemap { name, .. } => name.clone(),
+        }
+    }
+
+    /// What it is and where, after the name.
+    pub(crate) fn meta(&self) -> String {
+        match self {
+            Kept::File { path } => source_kind(&folder_name(path))
+                .map_or_else(|| "Dosya".to_owned(), |k| k.label().to_owned()),
+            Kept::Table { path, .. } => folder_name(path),
+            Kept::Database { address, .. } => database_name(address),
+            Kept::Service { service } => service.kind.label().to_owned(),
+            Kept::ServiceLayer { service, .. } => service.name.clone(),
+            Kept::Basemap { .. } => "Hazır altlık".to_owned(),
+        }
+    }
+
+    /// Its icon.
+    pub(crate) fn glyph(&self) -> &'static str {
+        match self {
+            Kept::File { path } => source_kind(&folder_name(path)).map_or("fileOpen", |k| k.icon()),
+            Kept::Table { .. } => "table",
+            Kept::Database { .. } => "sourceDatabase",
+            Kept::Service { .. } | Kept::ServiceLayer { .. } => "serviceAdd",
+            Kept::Basemap { .. } => "basemap",
+        }
+    }
+
+    /// Whether its file is not where it was (docs/adr/0599 §6): a database and a service say so when opened.
+    pub(crate) fn missing(&self) -> bool {
+        match self {
+            Kept::File { path } | Kept::Table { path, .. } => !path.exists(),
+            _ => false,
+        }
+    }
+
+    /// The words the search looks in.
+    pub(crate) fn fields(&self) -> Vec<String> {
+        let mut out = vec![self.label(), self.meta()];
+        match self {
+            Kept::File { path } | Kept::Table { path, .. } => out.push(path.display().to_string()),
+            Kept::Service { service } | Kept::ServiceLayer { service, .. } => {
+                out.push(service.url.clone())
+            }
+            _ => {}
+        }
+        out
+    }
+}
+
+/// A row being dragged (docs/adr/0599 §8): its key, what a press without a drop does, what a drop on the drawing adds,
+/// and where the pointer is.
+#[derive(Debug, Clone)]
+pub(crate) struct Drag {
+    pub(crate) key: String,
+    click: Option<Message>,
+    add: Message,
+    at: Option<iced::Point>,
+}
 
 /// What is known of something read when it is opened.
 #[derive(Debug, Clone)]
@@ -77,18 +242,44 @@ pub struct SourcesPanel {
     requests: HashMap<String, iced::task::Handle>,
     /// The row chosen last (a click), by key.
     pub(crate) focused: Option<String>,
+    /// A GeoPackage's tables by its path, a database's by its address (docs/adr/0599 §2, §3).
+    pub(crate) tables: HashMap<Origin, Read<Vec<SourceTable>>>,
+    /// A table's sample rows by its row's key.
+    pub(crate) samples: HashMap<String, Read<Vec<String>>>,
+    /// A saved service's offer by its row's key (docs/adr/0599 §4).
+    pub(crate) services: HashMap<String, Read<Box<Connecting>>>,
+    /// The search box's words (docs/adr/0599 §5).
+    pub(crate) search: String,
+    /// Veritabanı ekle's address while it is typed.
+    pub(crate) database_draft: Option<String>,
+    pub(crate) drag: Option<Drag>,
+    /// Kapsamı göster's frame over the drawing (docs/adr/0599 §9): the drawing's session, the box in the project's
+    /// system and the table's name.
+    pub(crate) extent_mark: Option<(u64, [f64; 4], String)>,
 }
 
 impl Default for SourcesPanel {
     fn default() -> Self {
         Self {
             folders: SourceFolders::memory(),
-            open: BTreeSet::from([FOLDERS.to_owned(), KENTOS.to_owned()]),
+            open: BTreeSet::from(
+                [
+                    FOLDERS, KENTOS, RECENT, FAVOURITES, DATABASES, SERVICES, SAVED,
+                ]
+                .map(str::to_owned),
+            ),
             listings: HashMap::new(),
             lists: HashMap::new(),
             drawings: HashMap::new(),
             requests: HashMap::new(),
             focused: None,
+            tables: HashMap::new(),
+            samples: HashMap::new(),
+            services: HashMap::new(),
+            search: String::new(),
+            database_draft: None,
+            drag: None,
+            extent_mark: None,
         }
     }
 }
@@ -116,6 +307,40 @@ pub enum Event {
     FileRead(SourceKind, Result<Vec<Picked>, String>),
     /// Katman olarak ekle on a project's layer: its id and the layer's path.
     AddLayer(String, String),
+    /// The search box (docs/adr/0599 §5).
+    Search(String),
+    /// A GeoPackage's or a database's tables, or why not.
+    Tables(Origin, Result<Vec<SourceTable>, String>),
+    /// A table's sample rows by its row's key, or why not.
+    Sample(String, Result<Vec<String>, String>),
+    /// A saved service read, by its row's key.
+    ServiceRead(String, Result<Box<Connecting>, String>),
+    /// Veritabanı ekle: the address's box, its words, Ekle and Vazgeç.
+    DatabaseAdd,
+    DatabaseDraft(String),
+    DatabaseKeep,
+    DatabaseCancel,
+    /// Listeden kaldır on a database or a saved service.
+    DatabaseRemove(String),
+    ServiceRemove(usize),
+    /// Add a source by what it is (a recent or favourite row, a drop); it becomes the newest recent one.
+    Use(Kept),
+    /// A table's Bağlı katman olarak aç (`true`) or Kopya olarak al.
+    OpenTable(Origin, String, bool),
+    /// Katmana git: the bound layer chosen in Katmanlar and shown.
+    GoToLayer(String),
+    /// Kapsamı göster: a table's system and declared box, and its name.
+    ShowExtent(Option<u32>, [f64; 4], String),
+    /// Sık kullanılanlara ekle or çıkar.
+    Star(Kept),
+    /// A draggable row pressed: its key, what a click does, what a drop on the drawing adds.
+    Press(String, Option<Box<Message>>, Box<Message>),
+    /// The pointer while a row is dragged.
+    DragAt(iced::Point),
+    /// The button let go while a row is dragged.
+    DragEnd,
+    /// A file dropped on the window from the system's file manager (docs/adr/0599 §8).
+    Dropped(PathBuf),
 }
 
 pub(crate) fn msg(event: Event) -> Message {
@@ -274,6 +499,13 @@ impl App {
                     self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
                     return Task::none();
                 }
+                let path = folder.join(&file.name);
+                self.sources
+                    .folders
+                    .used(&Kept::File { path: path.clone() });
+                if let Some(open) = opener(file.kind, &path) {
+                    return self.update(open);
+                }
                 let kind = file.kind;
                 return off_thread(
                     move || read_parts(&folder, &file),
@@ -295,6 +527,12 @@ impl App {
                     SourceKind::Gnss => Kind::Gnss,
                     SourceKind::Coords => Kind::Coords,
                     SourceKind::Kml => Kind::Kml,
+                    // Opened with their path (`opener`), never read here.
+                    SourceKind::GeoPackage
+                    | SourceKind::FlatGeobuf
+                    | SourceKind::Gml
+                    | SourceKind::Raster
+                    | SourceKind::PointCloud => return Task::none(),
                 };
                 let first = parts.drain(..).next();
                 return self.exchange_event(ExchangeEvent::Picked(kind, first.map(Ok)));
@@ -309,8 +547,403 @@ impl App {
                     .map_or_else(String::new, |p| p.name.clone());
                 self.take_layer_into(&drawing.drawing, &path, &from);
             }
+            Event::Search(words) => self.sources.search = words,
+            Event::Tables(origin, result) => {
+                let key = tables_key(&origin);
+                if !self.sources.open.contains(&key) {
+                    return Task::none();
+                }
+                self.sources.requests.remove(&key);
+                self.sources.tables.insert(
+                    origin,
+                    match result {
+                        Ok(t) => Read::Ready(t),
+                        Err(why) => Read::Failed(format!("Tablolar okunamadı: {why}")),
+                    },
+                );
+            }
+            Event::Sample(key, result) => {
+                if !self.sources.open.contains(&key) {
+                    return Task::none();
+                }
+                self.sources.requests.remove(&key);
+                self.sources.samples.insert(
+                    key,
+                    match result {
+                        Ok(rows) => Read::Ready(rows),
+                        Err(why) => Read::Failed(format!("Örnek satırlar okunamadı: {why}")),
+                    },
+                );
+            }
+            Event::ServiceRead(key, result) => {
+                if !self.sources.open.contains(&key) {
+                    return Task::none();
+                }
+                self.sources.requests.remove(&key);
+                self.sources.services.insert(
+                    key,
+                    match result {
+                        Ok(c) => Read::Ready(c),
+                        Err(why) => Read::Failed(format!("Servis okunamadı: {why}")),
+                    },
+                );
+            }
+            Event::DatabaseAdd => {
+                self.sources.open.insert(DATABASES.to_owned());
+                self.sources.database_draft = Some(String::new());
+            }
+            Event::DatabaseDraft(words) => self.sources.database_draft = Some(words),
+            Event::DatabaseCancel => self.sources.database_draft = None,
+            Event::DatabaseKeep => {
+                let address = self
+                    .sources
+                    .database_draft
+                    .as_deref()
+                    .unwrap_or_default()
+                    .trim()
+                    .to_owned();
+                if let Some(why) = address_problem(&address) {
+                    self.warn(why);
+                    return Task::none();
+                }
+                self.sources.database_draft = None;
+                if self.sources.folders.add_database(&address) {
+                    self.output(format!("Kaynaklar: “{address}” veritabanı eklendi."));
+                }
+                let origin = Origin::Database(address);
+                self.sources.open.insert(tables_key(&origin));
+                return self.read_tables(origin);
+            }
+            Event::DatabaseRemove(address) => {
+                let origin = Origin::Database(address.clone());
+                self.sources.open.remove(&tables_key(&origin));
+                self.sources.tables.remove(&origin);
+                if self.sources.folders.remove_database(&address) {
+                    self.output(format!("Kaynaklar: “{address}” listeden kaldırıldı."));
+                }
+            }
+            Event::ServiceRemove(at) => {
+                if let Some(gone) = self.sources.folders.remove_service(at) {
+                    let key = service_key(&gone);
+                    self.sources.open.remove(&key);
+                    self.sources.services.remove(&key);
+                    self.output(format!("Kaynaklar: “{}” listeden kaldırıldı.", gone.name));
+                }
+            }
+            Event::Use(kept) => return self.use_source(kept),
+            Event::OpenTable(origin, table, bind) => {
+                if self.document.is_none() {
+                    self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
+                    return Task::none();
+                }
+                self.sources.folders.used(&origin.kept(&table));
+                return self.open_table(origin, table, bind);
+            }
+            Event::GoToLayer(id) => {
+                if !self.right_panel_shown() {
+                    self.toggle_right_panel();
+                }
+                self.docks
+                    .update(kentos_ui::widget::docking::Event::Selected(Panel::Layers));
+                self.selected_layer = Some(id.clone());
+                self.zoom_to_layer(&id);
+            }
+            Event::ShowExtent(srid, extent, name) => self.show_extent(srid, extent, name),
+            Event::Star(kept) => {
+                let name = kept.label();
+                if self.sources.folders.is_favourite(&kept) {
+                    self.sources.folders.star(&kept);
+                    self.output(format!(
+                        "Kaynaklar: “{name}” sık kullanılanlardan çıkarıldı."
+                    ));
+                } else if self.sources.folders.star(&kept) {
+                    self.output(format!("Kaynaklar: “{name}” sık kullanılanlara eklendi."));
+                } else {
+                    self.warn(format!(
+                        "Sık kullanılanlar dolu (en çok {}); “{name}” eklenmedi. Önce birini çıkarın.",
+                        kentos_interaction::sources::FAVOURITES_MOST
+                    ));
+                }
+            }
+            Event::Press(key, click, add) => {
+                self.sources.focused = Some(key.clone());
+                self.sources.drag = Some(Drag {
+                    key,
+                    click: click.map(|c| *c),
+                    add: *add,
+                    at: None,
+                });
+            }
+            Event::DragAt(at) => {
+                if let Some(d) = &mut self.sources.drag {
+                    d.at = Some(at);
+                }
+            }
+            Event::DragEnd => {
+                let Some(d) = self.sources.drag.take() else {
+                    return Task::none();
+                };
+                // Let go over the drawing: added there; else a click on the row.
+                if d.at.is_some_and(|at| self.viewport.bounds.contains(at)) {
+                    return self.update(d.add);
+                }
+                if let Some(click) = d.click {
+                    return self.update(click);
+                }
+            }
+            Event::Dropped(path) => {
+                if self.document.is_none() {
+                    self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
+                    return Task::none();
+                }
+                return self.use_source(Kept::File { path });
+            }
         }
         Task::none()
+    }
+
+    /// Adds a recent or favourite source, a dropped file, by what it is (docs/adr/0599 §6, §8); it becomes the newest
+    /// recent source. A file no longer where it was is said, nothing made.
+    fn use_source(&mut self, kept: Kept) -> Task<Message> {
+        if self.document.is_none() {
+            self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
+            return Task::none();
+        }
+        if kept.missing() {
+            self.warn(format!(
+                "“{}” bulunamadı ({}). Dosya taşınmış ya da silinmiş olabilir.",
+                kept.label(),
+                kept.meta()
+            ));
+            return Task::none();
+        }
+        match &kept {
+            Kept::File { path } => {
+                let name = folder_name(path);
+                let Some(kind) = source_kind(&name) else {
+                    self.warn(format!(
+                        "Kaynaklar “{name}” dosyasını tanımıyor. Eklenebilen dosyalar: GeoPackage, GeoJSON, Shapefile, \
+                         DXF, NCZ, KML/KMZ, GPX, NMEA, FlatGeobuf, GML, GeoTIFF, VRT, LAS, LAZ ve koordinat listeleri."
+                    ));
+                    return Task::none();
+                };
+                self.sources.folders.used(&kept);
+                if let Some(open) = opener(kind, path) {
+                    return self.update(open);
+                }
+                let folder = path.parent().map(Path::to_path_buf).unwrap_or_default();
+                let file = read_folder(&folder)
+                    .ok()
+                    .and_then(|l| l.files.into_iter().find(|f| f.name == name))
+                    .unwrap_or(SourceFile {
+                        name,
+                        kind,
+                        parts: vec![folder_name(path)],
+                    });
+                off_thread(
+                    move || read_parts(&folder, &file),
+                    move |parts| Event::FileRead(kind, parts),
+                )
+            }
+            Kept::Table { path, table } => {
+                self.sources.folders.used(&kept);
+                self.update(crate::exchange::open_gpkg(
+                    path.clone(),
+                    Some(table.clone()),
+                    true,
+                ))
+            }
+            Kept::Database { address, table } => {
+                self.sources.folders.used(&kept);
+                self.open_table(Origin::Database(address.clone()), table.clone(), true)
+            }
+            Kept::Service { service } => {
+                self.sources.folders.used(&kept);
+                let read = self.read_service(service);
+                let s = service.clone();
+                self.open_saved_service(s.kind, s.url, s.connection, None, read)
+            }
+            Kept::ServiceLayer { service, item, .. } => {
+                self.sources.folders.used(&kept);
+                let read = self.read_service(service);
+                let s = service.clone();
+                self.open_saved_service(s.kind, s.url, s.connection, Some(item.clone()), read)
+            }
+            Kept::Basemap { command, .. } => {
+                self.sources.folders.used(&kept);
+                let command = command.clone();
+                self.basemap_command(&command)
+            }
+        }
+    }
+
+    /// A saved service's offer as the panel read it, for its window.
+    fn read_service(&self, service: &SavedService) -> Option<Connecting> {
+        match self.sources.services.get(&service_key(service)) {
+            Some(Read::Ready(c)) => Some((**c).clone()),
+            _ => None,
+        }
+    }
+
+    /// Bağlı katman olarak aç or Kopya olarak al on a table: the file's window with the table alone chosen; a
+    /// database's PostGIS'e bağlan with its tables as read (read now when they are not).
+    fn open_table(&mut self, origin: Origin, table: String, bind: bool) -> Task<Message> {
+        match origin {
+            Origin::File(path) => self.update(crate::exchange::open_gpkg(path, Some(table), bind)),
+            Origin::Database(address) => {
+                let read = match self.sources.tables.get(&Origin::Database(address.clone())) {
+                    Some(Read::Ready(tables)) => Some(tables.clone()),
+                    _ => None,
+                };
+                if let Some(tables) = read {
+                    return self.update(crate::exchange::open_postgis(address, tables, table));
+                }
+                iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
+                    let answer = match crate::exchange::list_tables(address.clone()) {
+                        Ok(tables) => crate::exchange::open_postgis(address, tables, table),
+                        Err(why) => msg(Event::Tables(Origin::Database(address), Err(why))),
+                    };
+                    let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(
+                        &mut out, answer,
+                    ));
+                })
+            }
+        }
+    }
+
+    /// Kapsamı göster (docs/adr/0599 §9): the table's declared box in the project's system, shown and framed.
+    fn show_extent(&mut self, srid: Option<u32>, extent: [f64; 4], name: String) {
+        let Some(doc) = &self.document else {
+            self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
+            return;
+        };
+        let session = doc.session;
+        match kentos_native_application::sources::extent_in_project(doc.settings(), srid, extent) {
+            Ok(b) => {
+                self.navigating(|app| {
+                    app.zoom_to_bounds(&kentos_commands::Bounds {
+                        min_x: b[0],
+                        min_y: b[1],
+                        max_x: b[2],
+                        max_y: b[3],
+                    })
+                });
+                self.sources.extent_mark = Some((session, b, name.clone()));
+                self.say(
+                    Level::Info,
+                    format!(
+                        "“{name}” tablosunun kapsamı gösterildi. İşareti kaldır çerçeveyi siler."
+                    ),
+                );
+            }
+            Err(why) => self.warn(format!("“{name}” tablosunun kapsamı gösterilemez: {why}.")),
+        }
+    }
+
+    #[cfg(test)]
+    /// The layer a table is bound to in the open drawing (docs/adr/0599 §7): by its file's path or database's
+    /// address and its name.
+    pub(crate) fn bound_layer_of(&self, path: &str, table: &str) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        doc.settings()
+            .sources
+            .iter()
+            .find(|l| l.table == table && (l.path == path || Path::new(&l.path) == Path::new(path)))
+            .map(|l| l.layer.clone())
+    }
+
+    /// Kapsamı göster's frame for the drawing as it is.
+    pub(crate) fn extent_mark(&self) -> Option<([f64; 4], String)> {
+        let doc = self.document.as_ref()?;
+        self.sources
+            .extent_mark
+            .as_ref()
+            .filter(|(session, ..)| *session == doc.session)
+            .map(|(_, b, name)| (*b, name.clone()))
+    }
+
+    fn read_tables(&mut self, origin: Origin) -> Task<Message> {
+        self.sources.tables.insert(origin.clone(), Read::Reading);
+        let key = tables_key(&origin);
+        let back = origin.clone();
+        let (task, handle) = off_thread(
+            move || crate::exchange::list_tables(origin.path()),
+            move |r| Event::Tables(back, r),
+        )
+        .abortable();
+        self.sources.requests.insert(key, handle.abort_on_drop());
+        task
+    }
+
+    fn read_sample(&mut self, key: String) -> Task<Message> {
+        let Some((origin, table)) = table_of_key(&key) else {
+            return Task::none();
+        };
+        let columns: Vec<String> = match self.sources.tables.get(&origin) {
+            Some(Read::Ready(tables)) => tables
+                .iter()
+                .find(|t| t.name == table)
+                .map(|t| {
+                    t.columns
+                        .iter()
+                        .take(SAMPLE_COLUMNS)
+                        .map(|c| c.name.clone())
+                        .collect()
+                })
+                .unwrap_or_default(),
+            _ => Vec::new(),
+        };
+        let settings = self.document.as_ref().map(|d| d.settings().clone());
+        self.sources.samples.insert(key.clone(), Read::Reading);
+        let back = key.clone();
+        let (task, handle) = off_thread(
+            move || sample_rows(&origin, &table, columns, settings),
+            move |r| Event::Sample(back, r),
+        )
+        .abortable();
+        self.sources.requests.insert(key, handle.abort_on_drop());
+        task
+    }
+
+    fn read_saved_service(&mut self, key: String) -> Task<Message> {
+        let Some(service) = self
+            .sources
+            .folders
+            .services()
+            .iter()
+            .find(|s| service_key(s) == key)
+            .cloned()
+        else {
+            return Task::none();
+        };
+        let conn = service.connection.as_ref().and_then(|id| {
+            let c = self
+                .document
+                .as_ref()?
+                .model
+                .settings()
+                .connections
+                .iter()
+                .find(|c| &c.id == id)?
+                .clone();
+            let secret = crate::services::secrets::secrets().get(&c.origin, &c.id);
+            Some((c, secret))
+        });
+        self.sources.services.insert(key.clone(), Read::Reading);
+        let back = key.clone();
+        let (task, handle) = off_thread(
+            move || {
+                crate::services::window::connect_now(
+                    service.kind,
+                    &service.url,
+                    conn.as_ref().map(|(c, s)| (c, s.as_ref())),
+                )
+            },
+            move |r| Event::ServiceRead(back, r),
+        )
+        .abortable();
+        self.sources.requests.insert(key, handle.abort_on_drop());
+        task
     }
 
     /// A row opened (its things read) or closed (what was read forgotten).
@@ -324,6 +957,12 @@ impl App {
                 s.lists.retain(|v, _| *v != view);
             } else if let Some(id) = key.strip_prefix("p:") {
                 s.drawings.remove(id);
+            } else if let Some(origin) = origin_of_key(&key) {
+                s.tables.remove(&origin);
+            } else if key.starts_with("t:") {
+                s.samples.remove(&key);
+            } else if key.starts_with("s:") {
+                s.services.remove(&key);
             }
             return Task::none();
         }
@@ -336,6 +975,15 @@ impl App {
         }
         if let Some(id) = key.strip_prefix("p:") {
             return self.download(id.to_owned());
+        }
+        if let Some(origin) = origin_of_key(&key) {
+            return self.read_tables(origin);
+        }
+        if key.starts_with("t:") {
+            return self.read_sample(key);
+        }
+        if key.starts_with("s:") {
+            return self.read_saved_service(key);
         }
         Task::none()
     }
@@ -458,6 +1106,178 @@ pub(crate) fn project_key(id: &str) -> String {
     format!("p:{id}")
 }
 
+/// A database's short name for a row's meta: the database in its address (`…/belediye` → `belediye`).
+pub(crate) fn database_name(address: &str) -> String {
+    let rest = address.split_once("://").map_or(address, |(_, r)| r);
+    let rest = rest.split('?').next().unwrap_or(rest);
+    match rest.split_once('/') {
+        Some((_, db)) if !db.is_empty() => db.to_owned(),
+        _ => address.to_owned(),
+    }
+}
+
+/// A database's server for a row's meta: `kullanıcı@sunucu:port` of its address.
+pub(crate) fn database_host(address: &str) -> String {
+    let rest = address.split_once("://").map_or(address, |(_, r)| r);
+    rest.split(['/', '?']).next().unwrap_or(rest).to_owned()
+}
+
+/// A GeoPackage's row (`g:`) or a database's (`b:`), opened into its tables.
+pub(crate) fn tables_key(origin: &Origin) -> String {
+    match origin {
+        Origin::File(p) => format!("g:{}", p.display()),
+        Origin::Database(a) => format!("b:{a}"),
+    }
+}
+
+fn origin_of_key(key: &str) -> Option<Origin> {
+    if let Some(p) = key.strip_prefix("g:") {
+        return Some(Origin::File(PathBuf::from(p)));
+    }
+    key.strip_prefix("b:")
+        .map(|a| Origin::Database(a.to_owned()))
+}
+
+/// A table's row, opened into its preview.
+pub(crate) fn table_key(origin: &Origin, table: &str) -> String {
+    format!("t:{}\0{table}", tables_key(origin))
+}
+
+fn table_of_key(key: &str) -> Option<(Origin, String)> {
+    let (origin, table) = key.strip_prefix("t:")?.rsplit_once('\0')?;
+    Some((origin_of_key(origin)?, table.to_owned()))
+}
+
+/// A saved service's row, opened into its layers.
+pub(crate) fn service_key(s: &SavedService) -> String {
+    format!(
+        "s:{}\0{}\0{}",
+        s.kind.name(),
+        s.url,
+        s.connection.as_deref().unwrap_or_default()
+    )
+}
+
+/// The window a file of these kinds opens with (docs/adr/0599 §1); none for those whose files the panel reads.
+fn opener(kind: SourceKind, path: &Path) -> Option<Message> {
+    let path = path.to_path_buf();
+    Some(match kind {
+        SourceKind::GeoPackage => crate::exchange::open_gpkg(path, None, false),
+        SourceKind::FlatGeobuf => crate::exchange::open_fgb(path),
+        SourceKind::Gml => crate::exchange::open_gml(path),
+        SourceKind::Raster => crate::rasters::add::open_file(path),
+        SourceKind::PointCloud => crate::pointclouds::add::open_file(path),
+        _ => return None,
+    })
+}
+
+/// Why a database's address cannot be added (docs/adr/0599 §3): not a PostgreSQL address, or one with a password
+/// in it (the password comes from PGPASSWORD or ~/.pgpass, docs/adr/0505).
+pub(crate) fn address_problem(address: &str) -> Option<String> {
+    let rest = address
+        .strip_prefix("postgresql://")
+        .or_else(|| address.strip_prefix("postgres://"));
+    let Some(rest) = rest.filter(|r| !r.is_empty()) else {
+        return Some(
+            "Adres postgresql:// ile başlamalı: postgresql://kullanıcı@sunucu:5432/veritabanı."
+                .to_owned(),
+        );
+    };
+    let authority = rest.split(['/', '?']).next().unwrap_or_default();
+    if authority
+        .rsplit_once('@')
+        .is_some_and(|(user, _)| user.contains(':'))
+        || address.contains("password=")
+    {
+        return Some(
+            "Adreste parola olmamalı; parola PGPASSWORD ortam değişkeninden ya da ~/.pgpass dosyasından gelir."
+                .to_owned(),
+        );
+    }
+    None
+}
+
+/// A table's first rows through `cad.sources.query` (docs/adr/0599 §2), each as “sütun: değer” words, in a drawing of
+/// its own with the project's settings (the query reads no drawing).
+fn sample_rows(
+    origin: &Origin,
+    table: &str,
+    columns: Vec<String>,
+    settings: Option<kentos_commands::ProjectSettings>,
+) -> Result<Vec<String>, String> {
+    let mut doc = crate::exchange::listing_document()?;
+    if let Some(settings) = settings {
+        doc.set_settings(settings);
+    }
+    let input = SourcesQuery {
+        path: Some(origin.path()),
+        table: Some(table.to_owned()),
+        fields: Some(columns.clone()),
+        geometry: Some(false),
+        limit: Some(SAMPLE_ROWS),
+        ..SourcesQuery::default()
+    };
+    match kentos_native_application::sources_query::execute(
+        &mut ExecutionContext::new(&mut doc),
+        input,
+    ) {
+        CommandResult::Completed {
+            output: SourcesQueried { rows, .. },
+            ..
+        } => Ok(rows
+            .iter()
+            .map(|r| {
+                let mut words = String::new();
+                for c in &columns {
+                    if !words.is_empty() {
+                        words.push_str(" · ");
+                    }
+                    let _ = write!(words, "{c}: {}", r.attrs.get(c).map_or("—", String::as_str));
+                }
+                if words.is_empty() {
+                    words = format!("#{}", r.key.unwrap_or_default());
+                }
+                words
+            })
+            .collect()),
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => Err(error.message),
+        _ => Err("okunamadı".into()),
+    }
+}
+
+/// While a row is dragged (docs/adr/0599 §8): the pointer and the button let go, wherever they are.
+pub(crate) fn dragging(
+    event: iced::Event,
+    _status: iced::event::Status,
+    _window: iced::window::Id,
+) -> Option<Message> {
+    match event {
+        iced::Event::Mouse(iced::mouse::Event::CursorMoved { position }) => {
+            Some(msg(Event::DragAt(position)))
+        }
+        iced::Event::Mouse(iced::mouse::Event::ButtonReleased(iced::mouse::Button::Left)) => {
+            Some(msg(Event::DragEnd))
+        }
+        _ => None,
+    }
+}
+
+/// A file dropped on the window from the system's file manager (docs/adr/0599 §8).
+pub(crate) fn dropped(
+    event: iced::Event,
+    _status: iced::event::Status,
+    _window: iced::window::Id,
+) -> Option<Message> {
+    match event {
+        iced::Event::Window(iced::window::Event::FileDropped(path)) => {
+            Some(msg(Event::Dropped(path)))
+        }
+        _ => None,
+    }
+}
+
 /// A folder's name as the panel shows it (the path's last part).
 pub(crate) fn folder_name(path: &Path) -> String {
     path.file_name().map_or_else(
@@ -470,20 +1290,35 @@ pub(crate) fn folder_name(path: &Path) -> String {
 
 const FORMAT: &str = "kentos.source-folders";
 const FILE: &str = "kaynak-klasorleri.json";
+/// The list's version: 2 adds the databases, the services and the recent and favourite sources (docs/adr/0599);
+/// version 1 (the folders alone) is read.
+const VERSION: u32 = 2;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 struct Stored {
     format: String,
     version: u32,
     folders: Vec<PathBuf>,
+    #[serde(default)]
+    databases: Vec<String>,
+    #[serde(default)]
+    services: Vec<SavedService>,
+    #[serde(default)]
+    recent: Vec<Kept>,
+    #[serde(default)]
+    favourites: Vec<Kept>,
 }
 
-/// The folders added, oldest first, and where the list is kept (the
-/// device's: beside the recent files); in memory only without a folder.
+/// The folders added, oldest first, the databases and services added, the recent and favourite sources, and where
+/// the list is kept (the device's: beside the recent files); in memory only without a folder.
 #[derive(Debug, Default)]
 pub struct SourceFolders {
     file: Option<PathBuf>,
     list: Vec<PathBuf>,
+    databases: Vec<String>,
+    services: Vec<SavedService>,
+    recent: Vec<Kept>,
+    favourites: Vec<Kept>,
 }
 
 impl SourceFolders {
@@ -493,20 +1328,39 @@ impl SourceFolders {
 
     /// The list kept in `folder`; an unreadable file is an empty list.
     pub fn open(folder: &Path) -> Self {
-        let list = std::fs::read_to_string(folder.join(FILE))
+        let stored = std::fs::read_to_string(folder.join(FILE))
             .ok()
             .and_then(|text| serde_json::from_str::<Stored>(&text).ok())
-            .filter(|s| s.format == FORMAT && s.version == 1)
-            .map(|s| s.folders)
+            .filter(|s| s.format == FORMAT && (1..=VERSION).contains(&s.version))
             .unwrap_or_default();
         Self {
             file: Some(folder.join(FILE)),
-            list,
+            list: stored.folders,
+            databases: stored.databases,
+            services: stored.services,
+            recent: stored.recent,
+            favourites: stored.favourites,
         }
     }
 
     pub fn list(&self) -> &[PathBuf] {
         &self.list
+    }
+
+    pub fn databases(&self) -> &[String] {
+        &self.databases
+    }
+
+    pub fn services(&self) -> &[SavedService] {
+        &self.services
+    }
+
+    pub fn recent(&self) -> &[Kept] {
+        &self.recent
+    }
+
+    pub fn favourites(&self) -> &[Kept] {
+        &self.favourites
     }
 
     /// Adds a folder; false when it is in the list already.
@@ -530,14 +1384,78 @@ impl SourceFolders {
         removed
     }
 
+    /// Adds a database's address; false when it is there already.
+    pub fn add_database(&mut self, address: &str) -> bool {
+        if self.databases.iter().any(|a| a == address) {
+            return false;
+        }
+        self.databases.push(address.to_owned());
+        self.write();
+        true
+    }
+
+    pub fn remove_database(&mut self, address: &str) -> bool {
+        let before = self.databases.len();
+        self.databases.retain(|a| a != address);
+        let removed = self.databases.len() != before;
+        if removed {
+            self.write();
+        }
+        removed
+    }
+
+    /// Adds a service; one of the same kind, address and connection takes the new name.
+    pub fn add_service(&mut self, service: SavedService) {
+        match self.services.iter_mut().find(|s| {
+            s.kind == service.kind && s.url == service.url && s.connection == service.connection
+        }) {
+            Some(s) => s.name = service.name,
+            None => self.services.push(service),
+        }
+        self.write();
+    }
+
+    pub fn remove_service(&mut self, at: usize) -> Option<SavedService> {
+        (at < self.services.len()).then(|| {
+            let gone = self.services.remove(at);
+            self.write();
+            gone
+        })
+    }
+
+    /// `kept` used: it becomes the newest recent source.
+    pub fn used(&mut self, kept: &Kept) {
+        self.recent = recent_with(&self.recent, kept);
+        self.write();
+    }
+
+    /// Sık kullanılanlara ekle or çıkar; false when the list is full.
+    pub fn star(&mut self, kept: &Kept) -> bool {
+        let (favourites, refused) = starred(&self.favourites, kept);
+        if refused {
+            return false;
+        }
+        self.favourites = favourites;
+        self.write();
+        true
+    }
+
+    pub fn is_favourite(&self, kept: &Kept) -> bool {
+        self.favourites.contains(kept)
+    }
+
     /// Writes the list whole, then renames it into place; a failure is not
     /// something the user must act on.
     fn write(&self) {
         let Some(file) = &self.file else { return };
         let stored = Stored {
             format: FORMAT.to_owned(),
-            version: 1,
+            version: VERSION,
             folders: self.list.clone(),
+            databases: self.databases.clone(),
+            services: self.services.clone(),
+            recent: self.recent.clone(),
+            favourites: self.favourites.clone(),
         };
         let Ok(text) = serde_json::to_string_pretty(&stored) else {
             return;

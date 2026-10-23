@@ -1078,6 +1078,35 @@ async fn lineage_in(
     Ok(())
 }
 
+/// A box's corners as a row: min x, min y, max x, max y, each NULL without statistics.
+type Corners = (Option<f64>, Option<f64>, Option<f64>, Option<f64>);
+
+/// The box PostgreSQL's statistics estimate for a table's geometry column (`ST_EstimatedExtent`, docs/adr/0599 §2);
+/// none for a table never analysed, a view, or a box that is not finite.
+async fn estimated_extent(
+    conn: &mut PgConnection,
+    schema: &str,
+    table: &str,
+    column: &str,
+) -> Option<[f64; 4]> {
+    let row: Option<Corners> = sqlx::query_as(
+        "SELECT ST_XMin(e)::float8, ST_YMin(e)::float8, ST_XMax(e)::float8, ST_YMax(e)::float8
+           FROM (SELECT ST_EstimatedExtent($1, $2, $3)::box3d AS e) s",
+    )
+    .bind(schema)
+    .bind(table)
+    .bind(column)
+    .fetch_optional(&mut *conn)
+    .await
+    .ok()
+    .flatten();
+    let (Some(x0), Some(y0), Some(x1), Some(y1)) = row? else {
+        return None;
+    };
+    let b = [x0, y0, x1, y1];
+    (b.iter().all(|v| v.is_finite()) && x0 <= x1 && y0 <= y1).then_some(b)
+}
+
 impl TableProvider for PostGis {
     fn tables(&self, address: &str) -> Result<Vec<ProviderTable>, ProviderError> {
         self.runtime.block_on(async {
@@ -1102,11 +1131,16 @@ impl TableProvider for PostGis {
                     .await
                     .map_err(unreachable)?;
                 let g = s.layer.geometry.as_ref();
+                let extent = match g {
+                    Some(g) => estimated_extent(&mut conn, &schema, &name, &g.name).await,
+                    None => None,
+                };
                 out.push(ProviderTable {
                     data: if g.is_some() { "features" } else { "attributes" }.into(),
                     rows: rows.max(0) as u64,
                     geometry: g.map(|g| g.type_name.clone()),
                     srid: s.srid,
+                    extent,
                     z: g.is_some_and(|g| g.z != 0),
                     m: g.is_some_and(|g| g.m != 0),
                     columns: s.layer.columns.clone(),

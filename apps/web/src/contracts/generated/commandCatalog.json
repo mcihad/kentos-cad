@@ -1013408,6 +1013408,20 @@
                 "description": "`features` or `attributes`.",
                 "type": "string"
               },
+              "extent": {
+                "description": "The box the source declares for the table, in the table's system: min x, min y, max x, max y (docs/adr/0599\n§2). A GeoPackage's `gpkg_contents`, PostGIS's `ST_EstimatedExtent`; declared, not counted, and none when\nthe source declares none.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
               "geometry": {
                 "description": "The geometry column's type, none for an attribute table.",
                 "type": [
@@ -1013962,6 +1013976,20 @@
               "data": {
                 "description": "`features` or `attributes`.",
                 "type": "string"
+              },
+              "extent": {
+                "description": "The box the source declares for the table, in the table's system: min x, min y, max x, max y (docs/adr/0599\n§2). A GeoPackage's `gpkg_contents`, PostGIS's `ST_EstimatedExtent`; declared, not counted, and none when\nthe source declares none.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "system"
               },
               "geometry": {
                 "description": "The geometry column's type, none for an attribute table.",

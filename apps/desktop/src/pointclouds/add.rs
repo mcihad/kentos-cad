@@ -162,6 +162,11 @@ fn msg(e: Event) -> Message {
     Message::PointClouds(Clouds::Add(e))
 }
 
+/// Nokta bulutu ekle with the file (Kaynaklar, docs/adr/0599 §1).
+pub(crate) fn open_file(path: PathBuf) -> Message {
+    msg(Event::Picked(Some(vec![path])))
+}
+
 /// The format a file's name and first bytes say.
 fn format_of(name: &str, head: &[u8]) -> CloudFormat {
     match kentos_pointcloud::vpc::format_of(name) {

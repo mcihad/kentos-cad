@@ -9,7 +9,12 @@
   "ncz": "Netcad NCZ",
   "gnss": "GNSS (GPX, NMEA)",
   "coords": "Koordinat listesi",
-  "kml": "KML/KMZ"
+  "kml": "KML/KMZ",
+  "geopackage": "GeoPackage",
+  "flatgeobuf": "FlatGeobuf",
+  "gml": "GML",
+  "raster": "Raster (GeoTIFF, VRT)",
+  "pointcloud": "Nokta bulutu (LAS, LAZ)"
  },
  "cases": [
   {
@@ -576,6 +581,815 @@
     "folders": [],
     "files": []
    }
+  },
+  {
+   "name": "GeoPackage, FlatGeobuf, GML, raster ve nokta bulutu (ADR 0599); GeoPackage'ın günlük dosyaları gösterilmez",
+   "entries": [
+    {
+     "name": "ortofoto",
+     "dir": true
+    },
+    {
+     "name": "kadastro.gpkg",
+     "dir": false
+    },
+    {
+     "name": "kadastro.gpkg-wal",
+     "dir": false
+    },
+    {
+     "name": "kadastro.gpkg-shm",
+     "dir": false
+    },
+    {
+     "name": "Yapi.GPKG",
+     "dir": false
+    },
+    {
+     "name": "bina.fgb",
+     "dir": false
+    },
+    {
+     "name": "tapu.gml",
+     "dir": false
+    },
+    {
+     "name": "tapu.xsd",
+     "dir": false
+    },
+    {
+     "name": "dem.tif",
+     "dir": false
+    },
+    {
+     "name": "Orto.TIFF",
+     "dir": false
+    },
+    {
+     "name": "mozaik.vrt",
+     "dir": false
+    },
+    {
+     "name": "koy.las",
+     "dir": false
+    },
+    {
+     "name": "koy.laz",
+     "dir": false
+    },
+    {
+     "name": "koy.copc.laz",
+     "dir": false
+    },
+    {
+     "name": "pafta.jpg",
+     "dir": false
+    },
+    {
+     "name": "pafta.jgw",
+     "dir": false
+    }
+   ],
+   "expect": {
+    "folders": [
+     "ortofoto"
+    ],
+    "files": [
+     {
+      "name": "bina.fgb",
+      "kind": "flatgeobuf",
+      "parts": [
+       "bina.fgb"
+      ]
+     },
+     {
+      "name": "dem.tif",
+      "kind": "raster",
+      "parts": [
+       "dem.tif"
+      ]
+     },
+     {
+      "name": "kadastro.gpkg",
+      "kind": "geopackage",
+      "parts": [
+       "kadastro.gpkg"
+      ]
+     },
+     {
+      "name": "koy.copc.laz",
+      "kind": "pointcloud",
+      "parts": [
+       "koy.copc.laz"
+      ]
+     },
+     {
+      "name": "koy.las",
+      "kind": "pointcloud",
+      "parts": [
+       "koy.las"
+      ]
+     },
+     {
+      "name": "koy.laz",
+      "kind": "pointcloud",
+      "parts": [
+       "koy.laz"
+      ]
+     },
+     {
+      "name": "mozaik.vrt",
+      "kind": "raster",
+      "parts": [
+       "mozaik.vrt"
+      ]
+     },
+     {
+      "name": "Orto.TIFF",
+      "kind": "raster",
+      "parts": [
+       "Orto.TIFF"
+      ]
+     },
+     {
+      "name": "tapu.gml",
+      "kind": "gml",
+      "parts": [
+       "tapu.gml"
+      ]
+     },
+     {
+      "name": "Yapi.GPKG",
+      "kind": "geopackage",
+      "parts": [
+       "Yapi.GPKG"
+      ]
+     }
+    ]
+   }
   }
- ]
+ ],
+ "search": {
+  "rows": [
+   {
+    "depth": 0,
+    "fields": [
+     "Klasörler"
+    ]
+   },
+   {
+    "depth": 1,
+    "fields": [
+     "İmar",
+     "/veri/İmar"
+    ]
+   },
+   {
+    "depth": 2,
+    "fields": [
+     "kadastro.gpkg",
+     "GeoPackage",
+     "/veri/İmar/kadastro.gpkg"
+    ]
+   },
+   {
+    "depth": 3,
+    "fields": [
+     "parsel",
+     "MULTIPOLYGON",
+     "EPSG:5254"
+    ]
+   },
+   {
+    "depth": 3,
+    "fields": [
+     "IŞIK_DİREĞİ",
+     "POINT",
+     "EPSG:5254"
+    ]
+   },
+   {
+    "depth": 3,
+    "fields": [
+     "malik",
+     "tablo"
+    ]
+   },
+   {
+    "depth": 2,
+    "fields": [
+     "Orto 2024.tif",
+     "Raster (GeoTIFF, VRT)",
+     "/veri/İmar/Orto 2024.tif"
+    ]
+   },
+   {
+    "depth": 1,
+    "fields": [
+     "Çamlık",
+     "/veri/Çamlık"
+    ]
+   },
+   {
+    "depth": 2,
+    "fields": [
+     "yol.dxf",
+     "DXF",
+     "/veri/Çamlık/yol.dxf"
+    ]
+   },
+   {
+    "depth": 0,
+    "fields": [
+     "Veritabanları"
+    ]
+   },
+   {
+    "depth": 1,
+    "fields": [
+     "postgresql://cbs@sunucu/belediye"
+    ]
+   },
+   {
+    "depth": 2,
+    "fields": [
+     "public.parsel",
+     "MULTIPOLYGON",
+     "EPSG:5256",
+     "public"
+    ]
+   },
+   {
+    "depth": 2,
+    "fields": [
+     "imar.plan",
+     "POLYGON",
+     "EPSG:5256",
+     "imar"
+    ]
+   },
+   {
+    "depth": 0,
+    "fields": [
+     "Servisler"
+    ]
+   },
+   {
+    "depth": 1,
+    "fields": [
+     "Hazır altlıklar"
+    ]
+   },
+   {
+    "depth": 2,
+    "fields": [
+     "OpenStreetMap",
+     "XYZ / TMS"
+    ]
+   },
+   {
+    "depth": 1,
+    "fields": [
+     "Kayıtlı servisler"
+    ]
+   },
+   {
+    "depth": 2,
+    "fields": [
+     "TKGM Parsel",
+     "WMS"
+    ]
+   },
+   {
+    "depth": 3,
+    "fields": [
+     "parseller",
+     "WMS"
+    ]
+   }
+  ],
+  "cases": [
+   {
+    "name": "boş arama her satırı gösterir",
+    "query": "",
+    "shown": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18
+    ]
+   },
+   {
+    "name": "ad: parsel, iki tabloda",
+    "query": "parsel",
+    "shown": [
+     0,
+     1,
+     2,
+     3,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17,
+     18
+    ]
+   },
+   {
+    "name": "Türkçe büyük küçük harf: ışık ve direği",
+    "query": "ışık direği",
+    "shown": [
+     0,
+     1,
+     2,
+     4
+    ]
+   },
+   {
+    "name": "İ'nin küçüğü i: imar",
+    "query": "imar",
+    "shown": [
+     0,
+     1,
+     2,
+     6,
+     9,
+     10,
+     12
+    ]
+   },
+   {
+    "name": "sistem: EPSG kodu",
+    "query": "epsg:5256",
+    "shown": [
+     9,
+     10,
+     11,
+     12
+    ]
+   },
+   {
+    "name": "tür ve sistem birlikte",
+    "query": "multipolygon 5254",
+    "shown": [
+     0,
+     1,
+     2,
+     3
+    ]
+   },
+   {
+    "name": "şema",
+    "query": "public",
+    "shown": [
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "name": "tür: raster",
+    "query": "raster",
+    "shown": [
+     0,
+     1,
+     6
+    ]
+   },
+   {
+    "name": "dosyanın yolu klasörün adını taşır",
+    "query": "çamlık",
+    "shown": [
+     0,
+     7,
+     8
+    ]
+   },
+   {
+    "name": "eşleşmeyen sözcük",
+    "query": "parsel orto",
+    "shown": []
+   },
+   {
+    "name": "servisin katmanı ve ataları",
+    "query": "parseller",
+    "shown": [
+     13,
+     16,
+     17,
+     18
+    ]
+   },
+   {
+    "name": "noktalı ve noktasız i bir: Imar ve isik",
+    "query": "Imar",
+    "shown": [
+     0,
+     1,
+     2,
+     6,
+     9,
+     10,
+     12
+    ]
+   },
+   {
+    "name": "noktasız ı ile yazılan İngilizce tür",
+    "query": "multıpolygon",
+    "shown": [
+     0,
+     1,
+     2,
+     3,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "name": "ş ve ğ yerine s ve g eşleşmez",
+    "query": "isik diregi",
+    "shown": []
+   }
+  ]
+ },
+ "recent": {
+  "most": 12,
+  "cases": [
+   {
+    "name": "ilk kullanım öne",
+    "recent": [],
+    "used": "a",
+    "expect": [
+     "a"
+    ]
+   },
+   {
+    "name": "yeni öne geçer",
+    "recent": [
+     "a",
+     "b"
+    ],
+    "used": "c",
+    "expect": [
+     "c",
+     "a",
+     "b"
+    ]
+   },
+   {
+    "name": "yeniden kullanılan öne geçer, bir kez",
+    "recent": [
+     "a",
+     "b",
+     "c"
+    ],
+    "used": "b",
+    "expect": [
+     "b",
+     "a",
+     "c"
+    ]
+   },
+   {
+    "name": "en çok 12: en eskisi düşer",
+    "recent": [
+     "0",
+     "1",
+     "2",
+     "3",
+     "4",
+     "5",
+     "6",
+     "7",
+     "8",
+     "9",
+     "10",
+     "11"
+    ],
+    "used": "yeni",
+    "expect": [
+     "yeni",
+     "0",
+     "1",
+     "2",
+     "3",
+     "4",
+     "5",
+     "6",
+     "7",
+     "8",
+     "9",
+     "10"
+    ]
+   },
+   {
+    "name": "12 iken var olanı kullanmak düşürmez",
+    "recent": [
+     "0",
+     "1",
+     "2",
+     "3",
+     "4",
+     "5",
+     "6",
+     "7",
+     "8",
+     "9",
+     "10",
+     "11"
+    ],
+    "used": "5",
+    "expect": [
+     "5",
+     "0",
+     "1",
+     "2",
+     "3",
+     "4",
+     "6",
+     "7",
+     "8",
+     "9",
+     "10",
+     "11"
+    ]
+   }
+  ]
+ },
+ "favourites": {
+  "most": 50,
+  "cases": [
+   {
+    "name": "ilk yıldız",
+    "favourites": [],
+    "starred": "a",
+    "expect": [
+     "a"
+    ],
+    "refused": false
+   },
+   {
+    "name": "sona eklenir",
+    "favourites": [
+     "a",
+     "b"
+    ],
+    "starred": "c",
+    "expect": [
+     "a",
+     "b",
+     "c"
+    ],
+    "refused": false
+   },
+   {
+    "name": "yeniden yıldız çıkarır",
+    "favourites": [
+     "a",
+     "b",
+     "c"
+    ],
+    "starred": "b",
+    "expect": [
+     "a",
+     "c"
+    ],
+    "refused": false
+   },
+   {
+    "name": "en çok 50: ellibirinci reddedilir",
+    "favourites": [
+     "0",
+     "1",
+     "2",
+     "3",
+     "4",
+     "5",
+     "6",
+     "7",
+     "8",
+     "9",
+     "10",
+     "11",
+     "12",
+     "13",
+     "14",
+     "15",
+     "16",
+     "17",
+     "18",
+     "19",
+     "20",
+     "21",
+     "22",
+     "23",
+     "24",
+     "25",
+     "26",
+     "27",
+     "28",
+     "29",
+     "30",
+     "31",
+     "32",
+     "33",
+     "34",
+     "35",
+     "36",
+     "37",
+     "38",
+     "39",
+     "40",
+     "41",
+     "42",
+     "43",
+     "44",
+     "45",
+     "46",
+     "47",
+     "48",
+     "49"
+    ],
+    "starred": "yeni",
+    "expect": [
+     "0",
+     "1",
+     "2",
+     "3",
+     "4",
+     "5",
+     "6",
+     "7",
+     "8",
+     "9",
+     "10",
+     "11",
+     "12",
+     "13",
+     "14",
+     "15",
+     "16",
+     "17",
+     "18",
+     "19",
+     "20",
+     "21",
+     "22",
+     "23",
+     "24",
+     "25",
+     "26",
+     "27",
+     "28",
+     "29",
+     "30",
+     "31",
+     "32",
+     "33",
+     "34",
+     "35",
+     "36",
+     "37",
+     "38",
+     "39",
+     "40",
+     "41",
+     "42",
+     "43",
+     "44",
+     "45",
+     "46",
+     "47",
+     "48",
+     "49"
+    ],
+    "refused": true
+   },
+   {
+    "name": "50 iken çıkarmak olur",
+    "favourites": [
+     "0",
+     "1",
+     "2",
+     "3",
+     "4",
+     "5",
+     "6",
+     "7",
+     "8",
+     "9",
+     "10",
+     "11",
+     "12",
+     "13",
+     "14",
+     "15",
+     "16",
+     "17",
+     "18",
+     "19",
+     "20",
+     "21",
+     "22",
+     "23",
+     "24",
+     "25",
+     "26",
+     "27",
+     "28",
+     "29",
+     "30",
+     "31",
+     "32",
+     "33",
+     "34",
+     "35",
+     "36",
+     "37",
+     "38",
+     "39",
+     "40",
+     "41",
+     "42",
+     "43",
+     "44",
+     "45",
+     "46",
+     "47",
+     "48",
+     "49"
+    ],
+    "starred": "7",
+    "expect": [
+     "0",
+     "1",
+     "2",
+     "3",
+     "4",
+     "5",
+     "6",
+     "8",
+     "9",
+     "10",
+     "11",
+     "12",
+     "13",
+     "14",
+     "15",
+     "16",
+     "17",
+     "18",
+     "19",
+     "20",
+     "21",
+     "22",
+     "23",
+     "24",
+     "25",
+     "26",
+     "27",
+     "28",
+     "29",
+     "30",
+     "31",
+     "32",
+     "33",
+     "34",
+     "35",
+     "36",
+     "37",
+     "38",
+     "39",
+     "40",
+     "41",
+     "42",
+     "43",
+     "44",
+     "45",
+     "46",
+     "47",
+     "48",
+     "49"
+    ],
+    "refused": false
+   }
+  ]
+ }
 }

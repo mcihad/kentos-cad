@@ -68,6 +68,7 @@ pub(super) mod package;
 mod package_tests;
 pub(crate) mod photo_import;
 mod postgis;
+pub(crate) use postgis::{list_tables, listing_document};
 #[cfg(test)]
 mod postgis_tests;
 pub(crate) mod server_work;
@@ -263,6 +264,29 @@ pub const COMMANDS: [&str; 41] = [
 
 fn message(event: Event) -> Message {
     Message::Exchange(Box::new(event))
+}
+
+/// Kaynaklar's openers (docs/adr/0599 §1–§3): a file's or a table's window, opened with it.
+pub(crate) fn open_fgb(path: PathBuf) -> Message {
+    message(Event::Fgb(fgb_exchange::Event::Opened(Some(path))))
+}
+
+pub(crate) fn open_gml(path: PathBuf) -> Message {
+    message(Event::Gml(gml_exchange::Event::Opened(Some(path))))
+}
+
+/// GeoPackage içe aktar with the file; with a table, only it chosen; `bind` ticks Bağlı katman olarak aç.
+pub(crate) fn open_gpkg(path: PathBuf, table: Option<String>, bind: bool) -> Message {
+    message(Event::Gpkg(gpkg::Event::Table(path, table, bind)))
+}
+
+/// PostGIS'e bağlan with the database's tables as the panel read them, `table` chosen.
+pub(crate) fn open_postgis(
+    address: String,
+    tables: Vec<kentos_commands::SourceTable>,
+    table: String,
+) -> Message {
+    message(Event::Postgis(postgis::Event::Open(address, tables, table)))
 }
 
 /// Runs `work` on a thread of its own and brings its answer back as a message.

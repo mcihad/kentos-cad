@@ -728,6 +728,7 @@ impl App {
                     hot: self.session.hot_grips(),
                     marked: self.marked_points(),
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
+                    extent: self.extent_mark(),
                     problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
                     broken: self.broken_marks(),
                     missing: self.missing_pictures(),
@@ -894,6 +895,7 @@ impl App {
             hot: self.session.hot_grips(),
             marked: self.marked_points(),
             found: self.address_mark_label().or_else(|| self.data_mark_label()),
+            extent: self.extent_mark(),
             problem: self
                 .topology_problem()
                 .or_else(|| self.networks.mark.clone()),

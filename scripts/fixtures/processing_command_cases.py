@@ -343,7 +343,7 @@ def listed(base: dict, replace: bool = False) -> dict:
     """The table a sink made, as `cad.sources.describe` lists it in the file."""
     return {
         "name": base["layer"]["name"], "data": "features", "rows": base["rows"], "geometry": "$any", "srid": 5254,
-        "columns": "$any", "capabilities": "$any",
+        "extent": "$any", "columns": "$any", "capabilities": "$any",
     }
 
 

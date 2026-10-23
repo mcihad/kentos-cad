@@ -1537,9 +1537,16 @@ impl App {
             } else {
                 Subscription::none()
             },
-            // A file dropped on the window goes to the SVG editor while it is open (style/svgedit/).
+            // A file dropped on the window goes to the SVG editor while it is open (style/svgedit/), else to
+            // Kaynaklar, which adds it by its kind (sources/, docs/adr/0599 §8).
             if self.styles.svg_editor.is_some() {
                 event::listen_with(crate::style::svgedit::dropped)
+            } else {
+                event::listen_with(crate::sources::dropped)
+            },
+            // A Kaynaklar row being dragged: the pointer and the button let go, wherever they are.
+            if self.sources.drag.is_some() {
+                event::listen_with(crate::sources::dragging)
             } else {
                 Subscription::none()
             },
@@ -2747,6 +2754,7 @@ impl App {
             "data.search" => return self.open_data_search(),
             "data.unmark" => {
                 self.address_unmark();
+                self.sources.extent_mark = None;
                 return self.data_event(crate::search::Event::Unmark);
             }
             // Topoloji kuralları (topology/, docs/adr/0202 §5, §6).
@@ -3145,7 +3153,7 @@ impl App {
             "edit.previousSelection" => !self.previous_selection_ids().is_empty(),
             "edit.cycleSelection" => self.selection.cycle().is_some(),
             // Only while a place is marked (search/, docs/adr/0178 §6).
-            "data.unmark" => self.data_mark().is_some(),
+            "data.unmark" => self.data_mark().is_some() || self.extent_mark().is_some(),
             // Only where there is a view to go to (docs/adr/0141).
             "view.previous" => self.view_history.can_back(),
             "view.next" => self.view_history.can_forward(),

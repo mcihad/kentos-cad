@@ -208,7 +208,7 @@ def cases():
              {"canUndo": False, "dirty": False, "revision": "same"}),
         step({"path": "$tmp:kaynak.gpkg"},
              done({"revision": ANY, "tables": [{"name": "Merkezler", "data": "features", "rows": len(bina), "geometry": "POINT",
-                               "srid": 5256, "columns": ANY, "capabilities": ANY}]}),
+                               "srid": 5256, "extent": ANY, "columns": ANY, "capabilities": ANY}]}),
              command="cad.sources.describe")))
     # 3–6. A filter: what passes is what goes.
     for f, keep in [("kat >= 3", lambda r: r["kat"] >= 3),

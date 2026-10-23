@@ -92,6 +92,8 @@ pub struct Marks {
     /// The place the data search's Git marked and its coordinates' words
     /// (docs/adr/0178 §6).
     pub found: Option<(Vec2, String)>,
+    /// Kapsamı göster's frame (docs/adr/0599 §9): a table's declared box in the project's system, and its name.
+    pub extent: Option<([f64; 4], String)>,
     /// The Topoloji tab's finding (docs/adr/0202 §5).
     pub problem: Option<crate::topology::ProblemMark>,
     /// The points of associative dimensions whose reference broke (docs/adr/0249 §3).
@@ -207,6 +209,7 @@ impl Marks {
             && self.params.is_empty()
             && self.marked.is_empty()
             && self.found.is_none()
+            && self.extent.is_none()
             && self.problem.is_none()
             && self.broken.is_empty()
             && self.missing.is_empty()
@@ -255,6 +258,9 @@ impl<Message> canvas::Program<Message> for Marks {
         marked(&mut frame, &self.marked, &self.camera, &self.colors, accent);
         if let Some((p, words)) = &self.found {
             found(&mut frame, *p, words, &self.camera, &self.colors, accent);
+        }
+        if let Some((b, name)) = &self.extent {
+            extent_frame(&mut frame, *b, name, &self.camera, &self.colors, accent);
         }
         missing(&mut frame, &self.missing, &self.camera, &self.colors, Tokens::of(theme).danger);
         clip_frames(&mut frame, &self.clips, &self.camera, &self.colors);
@@ -511,6 +517,65 @@ fn found(
         (-1.0, 1.0),
         (1.0, -1.0),
     ] {
+        frame.fill_text(Text {
+            position: label.position + Vector::new(dx, dy),
+            ..label.clone()
+        });
+    }
+    frame.fill_text(Text {
+        color: accent,
+        ..label
+    });
+}
+
+/// Kapsamı göster's frame (docs/adr/0599 §9): the box dashed in the accent on a halo, the table's name at its top
+/// left corner.
+fn extent_frame(
+    frame: &mut canvas::Frame,
+    b: [f64; 4],
+    name: &str,
+    camera: &Camera,
+    colors: &MarkColors,
+    accent: iced::Color,
+) {
+    let at: Vec<Point> = [(b[0], b[1]), (b[2], b[1]), (b[2], b[3]), (b[0], b[3])]
+        .iter()
+        .map(|&(x, y)| {
+            let [x, y] = camera.world_to_screen(Vec2::new(x, y));
+            Point::new(x as f32, y as f32)
+        })
+        .collect();
+    let path = Path::new(|p| {
+        p.move_to(at[0]);
+        for q in &at[1..] {
+            p.line_to(*q);
+        }
+        p.close();
+    });
+    frame.stroke(&path, Stroke::default().with_color(colors.halo).with_width(3.5));
+    frame.stroke(
+        &path,
+        Stroke {
+            line_dash: canvas::LineDash { segments: &[8.0, 5.0], offset: 0 },
+            ..Stroke::default().with_color(accent).with_width(1.5)
+        },
+    );
+    // The corner on the screen's top left (a rotated view turns the box).
+    let corner = at
+        .iter()
+        .copied()
+        .min_by(|a, b| (a.x + a.y).total_cmp(&(b.x + b.y)))
+        .unwrap_or(at[3]);
+    let label = Text {
+        content: name.to_owned(),
+        position: Point::new(corner.x + 4.0, corner.y - 4.0),
+        color: colors.halo,
+        size: Pixels(typography::scaled(11.0)),
+        font: typography::ui_strong(),
+        align_y: iced::alignment::Vertical::Bottom,
+        ..Text::default()
+    };
+    for (dx, dy) in [(-1.0, 0.0), (1.0, 0.0), (0.0, -1.0), (0.0, 1.0)] {
         frame.fill_text(Text {
             position: label.position + Vector::new(dx, dy),
             ..label.clone()

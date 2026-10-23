@@ -78,8 +78,17 @@ def catalogue(c):
                     "AND table_name = %s ORDER BY ordinal_position", (t,))
         cols = [r[0] for r in cur.fetchall() if r[0] not in ("fid", "geom")]
         g = geoms.get(t)
+        # The box the statistics estimate (docs/adr/0599 §2): analysed first, read as the describe reads it.
+        extent = None
+        if g:
+            cur.execute(f'ANALYZE kadastro."{t}"')
+            cur.execute("SELECT ST_XMin(e), ST_YMin(e), ST_XMax(e), ST_YMax(e) "
+                        "FROM (SELECT ST_EstimatedExtent('kadastro', %s, 'geom')::box3d AS e) s", (t,))
+            row = cur.fetchone()
+            if row and None not in row:
+                extent = [float(v) for v in row]
         out[f"kadastro.{t}"] = {"rows": rows, "geometry": g[0] if g else None, "srid": g[1] if g else None,
-                                "columns": cols}
+                                "columns": cols, "extent": extent}
     return out
 
 
@@ -157,6 +166,10 @@ def check(c, seen, before):
             continue
         if got["rows"] != want["rows"] or got.get("geometry") != want["geometry"] or got.get("srid") != want["srid"]:
             problems.append(f"{name}: {got['rows']}, {got.get('geometry')}, {got.get('srid')} ≠ {want}")
+        if got.get("extent") != want["extent"]:
+            problems.append(f"{name} kutusu {got.get('extent')} ≠ {want['extent']}")
+        if want["geometry"] and want["extent"] is None:
+            problems.append(f"{name}: ANALYZE'dan sonra ST_EstimatedExtent kutu vermedi")
         if [col["name"] for col in got["columns"]] != want["columns"]:
             problems.append(f"{name} sütunları {[col['name'] for col in got['columns']]} ≠ {want['columns']}")
     if len(seen["objects"]) != before["kadastro.parsel"]["rows"]:

@@ -20,6 +20,9 @@ pub struct ProviderTable {
     /// The geometry column's type (`MULTIPOLYGON` …), none for an attribute table.
     pub geometry: Option<String>,
     pub srid: Option<u32>,
+    /// The box the database estimates for the table's geometry, in its system (docs/adr/0599 §2); none without
+    /// statistics or for a view.
+    pub extent: Option<[f64; 4]>,
     pub columns: Vec<gpkg::Column>,
     /// Whether rows can be written: an integer primary key and the right to change the table.
     pub writable: bool,

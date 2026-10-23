@@ -433,7 +433,7 @@ impl App {
     /// layer's objects, or of those of every layer below a group; it goes into
     /// the view history like any navigation (docs/adr/0141). A layer with no
     /// objects has nothing to show: the menu offers it dimmed.
-    fn zoom_to_layer(&mut self, id: &str) {
+    pub(crate) fn zoom_to_layer(&mut self, id: &str) {
         let Some(doc) = &self.document else {
             return;
         };

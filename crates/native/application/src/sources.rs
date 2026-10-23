@@ -82,6 +82,33 @@ pub(crate) fn mover_in(
     }))
 }
 
+/// A table's declared box (`SourceTable::extent`) in the project's system, for Kapsamı göster (docs/adr/0599 §9):
+/// moved across with its sides densified when the table is in another system. Why not, when the table declares no
+/// system in a project that has one, or the systems do not meet.
+pub fn extent_in_project(
+    settings: &kentos_commands::ProjectSettings,
+    srid: Option<u32>,
+    extent: [f64; 4],
+) -> Result<[f64; 4], String> {
+    if srid.is_none() && settings.srid != 0 {
+        return Err(
+            "tablonun koordinat sistemi bilinmiyor; kutusu projenin sisteminde gösterilemez".into(),
+        );
+    }
+    match mover_in(settings, srid)? {
+        None => Ok(extent),
+        Some(m) => kentos_geometry_core::crs::transform_bounds(
+            &m.source, &m.project, extent, 16, &m.choices,
+        )
+        .ok_or_else(|| {
+            format!(
+                "kutu EPSG:{} sisteminden projenin sistemine çevrilemedi",
+                srid.unwrap_or_default()
+            )
+        }),
+    }
+}
+
 /// Why a derivative's table is not bound, read into a layer or written back (docs/adr/0530 §4).
 fn derived_message(table: &str, rec: &kentos_commands::DerivationRecord) -> String {
     format!(
@@ -1653,6 +1680,9 @@ fn table_of(
         rows,
         geometry: g.map(|g| g.type_name.clone()),
         srid,
+        extent: l
+            .bounds
+            .filter(|b| b.iter().all(|v| v.is_finite()) && b[0] <= b[2] && b[1] <= b[3]),
         columns: l
             .columns
             .iter()
@@ -1736,6 +1766,7 @@ fn describe_database(address: &str) -> Result<Vec<SourceTable>, Stop> {
             rows: t.rows,
             geometry: t.geometry,
             srid: t.srid,
+            extent: t.extent,
             relations: Vec::new(),
         })
         .collect())

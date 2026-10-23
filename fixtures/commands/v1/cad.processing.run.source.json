@@ -283,6 +283,7 @@
          "rows": 12,
          "geometry": "POINT",
          "srid": 5256,
+         "extent": "$any",
          "columns": "$any",
          "capabilities": "$any"
         }

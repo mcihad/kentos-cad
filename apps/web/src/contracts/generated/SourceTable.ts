@@ -14,7 +14,13 @@ data: string, rows: bigint,
 /**
  * The geometry column's type, none for an attribute table.
  */
-geometry?: string, srid?: number, columns: Array<SourceColumn>, capabilities: SourceCapabilities, 
+geometry?: string, srid?: number, 
+/**
+ * The box the source declares for the table, in the table's system: min x, min y, max x, max y (docs/adr/0599
+ * §2). A GeoPackage's `gpkg_contents`, PostGIS's `ST_EstimatedExtent`; declared, not counted, and none when
+ * the source declares none.
+ */
+extent?: [number, number, number, number], columns: Array<SourceColumn>, capabilities: SourceCapabilities, 
 /**
  * The relations of the file this table is a side of (GeoPackage related tables, docs/adr/0532 §2), each with
  * whether KentOS reads and writes its representation.

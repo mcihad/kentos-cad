@@ -54,6 +54,8 @@ pub struct State {
 pub enum Event {
     /// The file picked; whether the window opens with Bağlı katman olarak aç ticked.
     Picked(Option<PathBuf>, bool),
+    /// Kaynaklar's table (docs/adr/0599 §2): the file, the table alone chosen (none: as Picked), bound or copied.
+    Table(PathBuf, Option<String>, bool),
     Toggle(usize),
     Reproject,
     Bind,
@@ -158,6 +160,15 @@ impl App {
             Event::Picked(None, _) | Event::Save(None) => {}
             Event::Picked(Some(path), bind) => match describe(&path) {
                 Ok(state) => self.open_window(Window::Gpkg(State { bind, ..state })),
+                Err(why) => self.say(Level::Error, format!("{} açılamadı: {why}", path.display())),
+            },
+            Event::Table(path, table, bind) => match describe(&path) {
+                Ok(mut state) => {
+                    if let Some(table) = &table {
+                        state.chosen = state.tables.iter().map(|t| &t.name == table).collect();
+                    }
+                    self.open_window(Window::Gpkg(State { bind, ..state }));
+                }
                 Err(why) => self.say(Level::Error, format!("{} açılamadı: {why}", path.display())),
             },
             Event::Save(Some(path)) => self.gpkg_write(path),

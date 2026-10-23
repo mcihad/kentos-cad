@@ -103,6 +103,12 @@
          "rows": 3,
          "geometry": "MULTIPOLYGON",
          "srid": 5256,
+         "extent": [
+          487000.0,
+          4420000.0,
+          487110.0,
+          4420020.0
+         ],
          "columns": [
           {
            "name": "ada",
@@ -162,6 +168,12 @@
          "rows": 2,
          "geometry": "LINESTRING",
          "srid": 5256,
+         "extent": [
+          487000.0,
+          4420050.0,
+          487100.0,
+          4420070.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -186,6 +198,12 @@
          "rows": 1,
          "geometry": "POINT",
          "srid": 5256,
+         "extent": [
+          487001.25,
+          4420001.5,
+          487001.25,
+          4420001.5
+         ],
          "columns": [
           {
            "name": "ad",
@@ -215,6 +233,12 @@
          "rows": 1,
          "geometry": "CURVEPOLYGON",
          "srid": 5256,
+         "extent": [
+          487200.0,
+          4420000.0,
+          487220.0,
+          4420010.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -239,6 +263,12 @@
          "rows": 1,
          "geometry": "COMPOUNDCURVE",
          "srid": 5256,
+         "extent": [
+          487300.0,
+          4420000.0,
+          487320.0,
+          4420005.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -318,6 +348,12 @@
          "rows": 3,
          "geometry": "MULTIPOLYGON",
          "srid": 5256,
+         "extent": [
+          487000.0,
+          4420000.0,
+          487110.0,
+          4420020.0
+         ],
          "columns": [
           {
            "name": "ada",
@@ -377,6 +413,12 @@
          "rows": 2,
          "geometry": "LINESTRING",
          "srid": 5256,
+         "extent": [
+          487000.0,
+          4420050.0,
+          487100.0,
+          4420070.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -401,6 +443,12 @@
          "rows": 1,
          "geometry": "POINT",
          "srid": 5256,
+         "extent": [
+          487001.25,
+          4420001.5,
+          487001.25,
+          4420001.5
+         ],
          "columns": [
           {
            "name": "ad",
@@ -430,6 +478,12 @@
          "rows": 1,
          "geometry": "CURVEPOLYGON",
          "srid": 5256,
+         "extent": [
+          487200.0,
+          4420000.0,
+          487220.0,
+          4420010.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -454,6 +508,12 @@
          "rows": 1,
          "geometry": "COMPOUNDCURVE",
          "srid": 5256,
+         "extent": [
+          487300.0,
+          4420000.0,
+          487320.0,
+          4420005.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -533,6 +593,12 @@
          "rows": 3,
          "geometry": "MULTIPOLYGON",
          "srid": 5256,
+         "extent": [
+          487000.0,
+          4420000.0,
+          487110.0,
+          4420020.0
+         ],
          "columns": [
           {
            "name": "ada",
@@ -592,6 +658,12 @@
          "rows": 2,
          "geometry": "LINESTRING",
          "srid": 5256,
+         "extent": [
+          487000.0,
+          4420050.0,
+          487100.0,
+          4420070.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -616,6 +688,12 @@
          "rows": 1,
          "geometry": "POINT",
          "srid": 5256,
+         "extent": [
+          487001.25,
+          4420001.5,
+          487001.25,
+          4420001.5
+         ],
          "columns": [
           {
            "name": "ad",
@@ -645,6 +723,12 @@
          "rows": 1,
          "geometry": "CURVEPOLYGON",
          "srid": 5256,
+         "extent": [
+          487200.0,
+          4420000.0,
+          487220.0,
+          4420010.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -669,6 +753,12 @@
          "rows": 1,
          "geometry": "COMPOUNDCURVE",
          "srid": 5256,
+         "extent": [
+          487300.0,
+          4420000.0,
+          487320.0,
+          4420005.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -748,6 +838,12 @@
          "rows": 3,
          "geometry": "MULTIPOLYGON",
          "srid": 5256,
+         "extent": [
+          487000.0,
+          4420000.0,
+          487110.0,
+          4420020.0
+         ],
          "columns": [
           {
            "name": "ada",
@@ -812,6 +908,12 @@
          "rows": 2,
          "geometry": "LINESTRING",
          "srid": 5256,
+         "extent": [
+          487000.0,
+          4420050.0,
+          487100.0,
+          4420070.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -836,6 +938,12 @@
          "rows": 1,
          "geometry": "POINT",
          "srid": 5256,
+         "extent": [
+          487001.25,
+          4420001.5,
+          487001.25,
+          4420001.5
+         ],
          "columns": [
           {
            "name": "ad",
@@ -865,6 +973,12 @@
          "rows": 1,
          "geometry": "CURVEPOLYGON",
          "srid": 5256,
+         "extent": [
+          487200.0,
+          4420000.0,
+          487220.0,
+          4420010.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -889,6 +1003,12 @@
          "rows": 1,
          "geometry": "COMPOUNDCURVE",
          "srid": 5256,
+         "extent": [
+          487300.0,
+          4420000.0,
+          487320.0,
+          4420005.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -968,6 +1088,12 @@
          "rows": 1,
          "geometry": "POINT",
          "srid": 4326,
+         "extent": [
+          32.8541,
+          39.9208,
+          32.8541,
+          39.9208
+         ],
          "columns": [
           {
            "name": "ad",
@@ -1014,6 +1140,12 @@
          "data": "features",
          "rows": 1,
          "geometry": "POINT",
+         "extent": [
+          12.5,
+          7.25,
+          12.5,
+          7.25
+         ],
          "columns": [
           {
            "name": "ad",
@@ -1195,6 +1327,12 @@
          "rows": 3,
          "geometry": "MULTIPOLYGON",
          "srid": 5256,
+         "extent": [
+          487000.0,
+          4420000.0,
+          487110.0,
+          4420020.0
+         ],
          "columns": [
           {
            "name": "ada",
@@ -1254,6 +1392,12 @@
          "rows": 2,
          "geometry": "LINESTRING",
          "srid": 5256,
+         "extent": [
+          487000.0,
+          4420050.0,
+          487100.0,
+          4420070.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -1278,6 +1422,12 @@
          "rows": 1,
          "geometry": "POINT",
          "srid": 5256,
+         "extent": [
+          487001.25,
+          4420001.5,
+          487001.25,
+          4420001.5
+         ],
          "columns": [
           {
            "name": "ad",
@@ -1307,6 +1457,12 @@
          "rows": 1,
          "geometry": "CURVEPOLYGON",
          "srid": 5256,
+         "extent": [
+          487200.0,
+          4420000.0,
+          487220.0,
+          4420010.0
+         ],
          "columns": [
           {
            "name": "ad",
@@ -1331,6 +1487,12 @@
          "rows": 1,
          "geometry": "COMPOUNDCURVE",
          "srid": 5256,
+         "extent": [
+          487300.0,
+          4420000.0,
+          487320.0,
+          4420005.0
+         ],
          "columns": [
           {
            "name": "ad",

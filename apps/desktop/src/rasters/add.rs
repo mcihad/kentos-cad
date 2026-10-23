@@ -121,6 +121,11 @@ fn msg(e: Event) -> Message {
     Message::Rasters(Rasters::Add(e))
 }
 
+/// Raster ekle with the file (Kaynaklar, docs/adr/0599 §1).
+pub(crate) fn open_file(path: PathBuf) -> Message {
+    msg(Event::Picked(Some(path)))
+}
+
 /// The world file beside `path`, as GDAL looks for it: its name and text.
 fn world_beside(path: &Path) -> Option<(String, String)> {
     let ext = path.extension()?.to_string_lossy().into_owned();
