@@ -311,6 +311,31 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.objects.derive",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_path",
+                "nothing_derived",
+                "too_few_objects",
+                "side_not_joined",
+                "invalid_input",
+                "invalid_distance",
+                "too_many_points",
+                "not_open",
+                "no_route",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.areas.edit",
         refusals: &[
             &[

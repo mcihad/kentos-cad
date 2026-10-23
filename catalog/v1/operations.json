@@ -2465,16 +2465,24 @@
       "note": "Girdiler (noktalar, uzaklıklar, sayılar) komutta, nesneleri komut hesaplar; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "centerline": {
-      "level": "geometry",
-      "operation": "centerline"
+      "level": "semantic",
+      "via": [
+        "cad.objects.derive"
+      ],
+      "was": "cad.entities.create",
+      "note": "Kaynak nesneler kalıcı kimlikleriyle ve seçenekler komutta; yeni nesneleri komut bulur (ADR 0622 §9)."
     },
     "planRoad": {
       "level": "geometry",
       "operation": "planRoad"
     },
     "vertexPoints": {
-      "level": "geometry",
-      "operation": "vertexPoints"
+      "level": "semantic",
+      "via": [
+        "cad.objects.derive"
+      ],
+      "was": "cad.entities.create",
+      "note": "Kaynak nesneler kalıcı kimlikleriyle ve seçenekler komutta; yeni nesneleri komut bulur (ADR 0622 §9)."
     },
     "adjoin": {
       "level": "semantic",
@@ -2493,8 +2501,12 @@
       "note": "Tıklanan nokta, görünüm ve Sınır katmanı komuta verilir; bölgeyi komut bulur (ADR 0254 §6)."
     },
     "polygonize": {
-      "level": "geometry",
-      "operation": "polygonize"
+      "level": "semantic",
+      "via": [
+        "cad.objects.derive"
+      ],
+      "was": "cad.entities.create",
+      "note": "Kaynak nesneler kalıcı kimlikleriyle ve seçenekler komutta; yeni nesneleri komut bulur (ADR 0622 §9)."
     },
     "parcel": {
       "level": "semantic",

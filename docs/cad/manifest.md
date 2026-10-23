@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 104 | 255 | 43 | 45 | 447 |
-| geometry | 2 | 32 | 1 | 3 | 38 |
+| semantic | 104 | 258 | 43 | 45 | 450 |
+| geometry | 2 | 29 | 1 | 3 | 35 |
 | processing | 0 | 130 | 22 | 2 | 154 |
 | none | 0 | 14 | 6 | 2 | 22 |
 | query | 6 | 24 | 2 | 8 | 40 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 814 satırdan 70'i: geometry 35, none 20, processing 3, query 12.
+CBS'ye özgü olmayan 814 satırdan 67'i: geometry 32, none 20, processing 3, query 12.
 
-### Sonucu çağıran hesaplar (geometry) — 35
+### Sonucu çağıran hesaplar (geometry) — 32
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -45,7 +45,6 @@ CBS'ye özgü olmayan 814 satırdan 70'i: geometry 35, none 20, processing 3, qu
 | `calc.traverse` | Poligon hesabı… | shared | cad.entities.create `traverse` |  |
 | `cogo.update` | Kayıtlı ölçüleri çizimden yaz | shared | cad.entities.set |  |
 | `crs.points` | Nokta listesi içe aktar… | shared | cad.entities.create |  |
-| `tool.centerline` | Orta hat | shared | cad.entities.create `centerline` |  |
 | `tool.coordinateLabel` | Koordinat yaz | shared | cad.entities.create `coordinates` |  |
 | `tool.coordinateVertices` | Köşelere koordinat yaz | shared | cad.entities.create `coordinates` |  |
 | `tool.copyToLayer` | Katmana kopyala | shared | cad.entities.create |  |
@@ -54,7 +53,6 @@ CBS'ye özgü olmayan 814 satırdan 70'i: geometry 35, none 20, processing 3, qu
 | `tool.medianClose` | Refüj kapat | shared | cad.entities.edit `medianClose` |  |
 | `tool.placeTextFile` | Metin dosyası yerleştir | cad | cad.entities.create `textFile` |  |
 | `tool.planRoad` | Plan yolu | shared | cad.entities.create `planRoad` |  |
-| `tool.polygonize` | Toplu alan | shared | cad.entities.create `polygonize` |  |
 | `tool.quickDimension` | Hızlı ölçü | cad | cad.entities.create |  |
 | `tool.roadJunctions` | Kavşak temizle | shared | cad.entities.edit `roadJunctions` |  |
 | `tool.split` | Parçala | shared | cad.entities.edit `split` |  |
@@ -69,7 +67,6 @@ CBS'ye özgü olmayan 814 satırdan 70'i: geometry 35, none 20, processing 3, qu
 | `tool.textCurve#Düzleştir` | Yazıyı eğriye oturt: Düzleştir | shared | cad.entities.edit `textPath` |  |
 | `tool.textCurve#Eğriye oturt` | Yazıyı eğriye oturt: Eğriye oturt | shared | cad.entities.edit `textPath` |  |
 | `tool.topology` | Topolojik temizlik | shared | cad.entities.edit `topology` |  |
-| `tool.vertexPoints` | Köşelere nokta | shared | cad.entities.create `vertexPoints` |  |
 | `transform.edgematch` | Kenar eşleme… | shared | cad.entities.edit `edgematch` |  |
 | `transform.fit` | Vektör oturtma… | shared | cad.entities.transform | Dönüşüm araçta kontrol noktalarından çözülür. |
 

@@ -473,13 +473,20 @@ Bu dilimde düzeltilenler:
   `geometry_with`) uygulama katmanına taşındı, Öznitelikler de onu kullanır. Yeni retler `reshape_refused`,
   `edge_shift_refused`, `nothing_to_simplify`, `no_elevation`; `not_a_path` genişledi. Okunur yap'ta ters okunan yazı
   yoksa hiçbir şey yazılmaz, ret de yoktur. `shape_edits_cases.py` KentOS kodu olmadan 42 durum üretir.
+- **Nesneden türet:** `cad.objects.derive` tek komuttur; kaynak nesneler kalıcı kimlikleriyle, seçenekler girdide:
+  Köşelere nokta (`vertexPoints`: ad, kod), Orta hat (`centerline`: iki kenar, her biri bir nesne ya da uç uca zincir;
+  adım, tolerans) ve Toplu alan (`polygonize`: çizgiler, etiketler, adalar, öznitelik). Yeni nesneleri komut çekirdekle
+  bulur, `cad.entities.create`'in yazıcısıyla aracın adındaki tek adımda yazar; cevap yeni nesneleri, atlanan köşe ya
+  da etiketsiz bölgeyi, çok etiketli ve zaten alan olan bölgeleri, sıradaki adı ve Orta hat'ın yöntemini verir. Yeni
+  retler `nothing_derived`, `side_not_joined`, `not_open`, `no_route`. `objects_derive_cases.py` KentOS kodu olmadan
+  31 durum üretir.
 - **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
   de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
   çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu
   varsayılanlar yalnız girdi şemasında aynen tanımlıysa kabul edilir; verilen değerlerin değişmesi gizlenmez. Bu son denetim dosya yazma testi değildir;
   mevcut başsız dosya testlerinin yanında kodun/kataloğun bütünlüğünü sınar.
 
-Bu bölüm `UX-14`'ün bütün tarihsel araç borcunu kapattığı anlamına gelmez. Halka, Daire dilimi, Revizyon bulutu, yapım yardımcıları, alan işlemleri, biçim işlemleri,
+Bu bölüm `UX-14`'ün bütün tarihsel araç borcunu kapattığı anlamına gelmez. Halka, Daire dilimi, Revizyon bulutu, yapım yardımcıları, alan işlemleri, biçim işlemleri, nesneden türetme,
 Çakışma/Topoloji, Bitişik alan ve Parsel oluştur dilimleri kapandı; diğer açık araçlar (P1 ve P2) listedeki sıralarıyla
 kalır.
 

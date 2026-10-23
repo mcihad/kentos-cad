@@ -222,6 +222,16 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.entities.create'in durumlarında; yapımlar onun yolundan yazar (ADR 0199 §2, 0622 §9)",
     ),
     (
+        "cad.objects.derive",
+        "attribute_required",
+        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.entities.create'in durumlarında; türetilen nesneler onun yolundan yazar (ADR 0199 §2, 0622 §9)",
+    ),
+    (
+        "cad.objects.derive",
+        "invalid_attribute",
+        "katmanın alanına uymayan değer: ortak denetim cad.entities.create'in durumlarında; boş öznitelik adı da bu koddur ve durumda (ADR 0622 §9)",
+    ),
+    (
         "cad.shapes.edit",
         "degenerate_shape",
         "çekirdeğin sonucu sözleşmenin geometrisine çevrilemezse verilir; çekirdek yalnız çizgi, çoklu çizgi ve alan döndürür, girdiyle ulaşılmaz (ADR 0622 §9)",

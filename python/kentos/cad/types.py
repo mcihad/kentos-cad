@@ -5791,6 +5791,28 @@ class CurveEdit(_Union):
         return _variant(_CURVE_EDIT, "CurveEdit", "kind", data).from_json(data)
 
 
+class DeriveWork(_Union):
+    """What is derived, from what.
+
+    One of:
+
+    - :class:`VertexPointsDeriveWork` (``kind: vertexPoints``)
+    - :class:`CenterlineDeriveWork` (``kind: centerline``)
+    - :class:`PolygonizeDeriveWork` (``kind: polygonize``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeriveWork:
+        return _variant(_DERIVE_WORK, "DeriveWork", "kind", data).from_json(data)
+
+
 class DimensionEdit(_Union):
     """One edit of `cad.dimensions.edit` (docs/adr/0321 §4).
 
@@ -33447,6 +33469,93 @@ class ObjectEnd(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ObjectsDerive(_Model):
+    """`cad.objects.derive`'s input: the work, the layer and the look of what it writes.
+
+    Refusals, in this order: `not_finite`, `invalid_uid`, `entity_not_found`, then the work's own (`not_a_path`,
+    `invalid_distance`, `no_route`, `not_joined`, `nothing_derived` …), then `cad.entities.create`'s.
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    work: DeriveWork
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["work"] = self.work.to_json()
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ObjectsDerive:
+        return cls(
+            layer_id=data["layerId"],
+            work=DeriveWork.from_json(data["work"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ObjectsDerived(_Model):
+    """What `cad.objects.derive` wrote.
+    Attributes:
+        ids: The new objects' slots and persistent ids, in order. Unit: id.
+        skipped: Köşelere nokta: the vertices passed over (a point already there). Toplu alan: the regions without a label. Unit: count.
+        many: Toplu alan: the regions with more than one label (their attribute left empty) and the regions an area
+            already covers (not written again). Unit: count.
+        existing: Unit: count.
+        method: Orta hat: `matched` (side by side, exact) or `sampled` (every step).
+        next: Köşelere nokta: the name after the last one written, for the next run.
+    """
+    ids: list[int]
+    uids: list[str]
+    skipped: int
+    many: int
+    existing: int
+    revision: str
+    method: str | None | Unset = UNSET
+    next: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["ids"] = list(self.ids)
+        out["uids"] = list(self.uids)
+        out["skipped"] = self.skipped
+        out["many"] = self.many
+        out["existing"] = self.existing
+        out["revision"] = self.revision
+        if self.method is not UNSET:
+            out["method"] = self.method
+        if self.next is not UNSET:
+            out["next"] = self.next
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ObjectsDerived:
+        return cls(
+            ids=list(data["ids"]),
+            uids=list(data["uids"]),
+            skipped=data["skipped"],
+            many=data["many"],
+            existing=data["existing"],
+            revision=data["revision"],
+            method=data.get("method", UNSET),
+            next=data.get("next", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OpeningEntity(Entity):
     """An opening in a wall (docs/adr/0341).
     Attributes:
@@ -58239,6 +58348,97 @@ class ToPolylineCurveEdit(CurveEdit):
 
 
 @dataclass(kw_only=True, slots=True)
+class VertexPointsDeriveWork(DeriveWork):
+    """Köşelere nokta (docs/adr/0152 §5): a point at every vertex of the lines, polylines and areas, past the places
+    two vertices share and those points already hold; named from `name` on (Yazı's Artır), each with the code
+    `code` and the vertex's elevation.
+    """
+    TAG_VALUE: ClassVar[str] = "vertexPoints"
+    ids: list[str]
+    code: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "vertexPoints"}
+        out["ids"] = list(self.ids)
+        if self.code is not UNSET:
+            out["code"] = self.code
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VertexPointsDeriveWork:
+        return cls(
+            ids=list(data["ids"]),
+            code=data.get("code", UNSET),
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CenterlineDeriveWork(DeriveWork):
+    """Orta hat (docs/adr/0190): the axis between two sides, each one object or a chain of lines, arcs and polylines
+    meeting end to end within `tolerance`; exact between matched sides, else sampled every `step`.
+    Attributes:
+        step: Unit: length.
+        tolerance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "centerline"
+    first: list[str]
+    second: list[str]
+    step: float
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "centerline"}
+        out["first"] = list(self.first)
+        out["second"] = list(self.second)
+        out["step"] = float(self.step)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CenterlineDeriveWork:
+        return cls(
+            first=list(data["first"]),
+            second=list(data["second"]),
+            step=float(data["step"]),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PolygonizeDeriveWork(DeriveWork):
+    """Toplu alan (docs/adr/0151): every region the line work `lines` closes, an area with the one label (a text, a
+    named point) of `labels` inside it as the attribute `attribute`; with `islands` the regions inside others too.
+    """
+    TAG_VALUE: ClassVar[str] = "polygonize"
+    lines: list[str]
+    attribute: str
+    islands: bool = False
+    labels: list[str] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "polygonize"}
+        out["lines"] = list(self.lines)
+        out["attribute"] = self.attribute
+        out["islands"] = self.islands
+        out["labels"] = list(self.labels)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PolygonizeDeriveWork:
+        return cls(
+            lines=list(data["lines"]),
+            attribute=data["attribute"],
+            islands=data["islands"] if "islands" in data else False,
+            labels=list(data["labels"]) if "labels" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SpaceDimensionEdit(DimensionEdit):
     """Ölçü aralığı (AutoCAD's DIMSPACE): the dimensions' lines put `spacing` apart from the base's, each side of it
     in its order of distance; 0 lines them up with the base's. Aligned and linear dimensions parallel to the base.
@@ -69779,6 +69979,9 @@ _CURVE_CONSTRUCTION: dict[str, type[CurveConstruction]] = {"circleTwoPoints": Ci
 _CURVE_EDIT: dict[str, type[CurveEdit]] = {"close": CloseCurveEdit, "open": OpenCurveEdit, "decurve": DecurveCurveEdit, "toSpline": ToSplineCurveEdit, "addFit": AddFitCurveEdit, "moveFit": MoveFitCurveEdit, "removeFit": RemoveFitCurveEdit, "tangents": TangentsCurveEdit, "moveControl": MoveControlCurveEdit, "weight": WeightCurveEdit, "removeControl": RemoveControlCurveEdit, "insertKnot": InsertKnotCurveEdit, "toPolyline": ToPolylineCurveEdit}
 
 
+_DERIVE_WORK: dict[str, type[DeriveWork]] = {"vertexPoints": VertexPointsDeriveWork, "centerline": CenterlineDeriveWork, "polygonize": PolygonizeDeriveWork}
+
+
 _DIMENSION_EDIT: dict[str, type[DimensionEdit]] = {"space": SpaceDimensionEdit, "break": BreakDimensionEdit, "unbreak": UnbreakDimensionEdit, "moveText": MoveTextDimensionEdit, "text": TextDimensionEdit, "options": OptionsDimensionEdit}
 
 
@@ -70280,6 +70483,7 @@ __all__ = [
     "CenterLineDimensionMeasure",
     "CenterMarkDimensionMeasure",
     "CenterSubPlace",
+    "CenterlineDeriveWork",
     "ChamferRectangleCorners",
     "ChangeFieldTypeMigrationStep",
     "ChangedObject",
@@ -70455,6 +70659,7 @@ __all__ = [
     "DerivationStatus",
     "DerivationStatusName",
     "DerivationTable",
+    "DeriveWork",
     "DetachArchOperation",
     "DetachMasterPaperOp",
     "DetachViewMarksOperation",
@@ -71261,6 +71466,8 @@ __all__ = [
     "ObjectUcsTo",
     "ObjectValue",
     "ObjectValueName",
+    "ObjectsDerive",
+    "ObjectsDerived",
     "ObjectsHatchRegion",
     "ObjectsPaperCoordSource",
     "ObjectsSelectRegion",
@@ -71583,6 +71790,7 @@ __all__ = [
     "PolygonSelectMode",
     "PolygonSelectModeName",
     "PolygonSelectRegion",
+    "PolygonizeDeriveWork",
     "PolylineCreate",
     "PolylineCreated",
     "PolylineEntity",
@@ -72293,6 +72501,7 @@ __all__ = [
     "VertexAction",
     "VertexActionName",
     "VertexCornerPick",
+    "VertexPointsDeriveWork",
     "VertexSubPlace",
     "VerticalConstraintRule",
     "ViewLinkPaperViewportSource",

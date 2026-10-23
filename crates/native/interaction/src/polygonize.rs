@@ -18,16 +18,13 @@
 //!   (`polygonize`) on the active layer, each with its elevations carried
 //!   from the line work (ADR 0142) and its label as the attribute; Esc leaves.
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::HashSet;
 
-use kentos_commands::{CreateOperation, Entity, EntityGeometry, NewObject};
+use kentos_commands::{DeriveWork, Entity, ObjectsDerive};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::{Entity as CoreEntity, TextPlace, polygon_ring};
-use kentos_geometry_core::ops::areas::polygon_of_area;
-use kentos_geometry_core::ops::elevation::{Carry, Elevated, carry_elevations};
 use kentos_geometry_core::ops::polygonize::{PolyLabel, PolyResult, polygonize};
-use kentos_native_application::elevation::{elevated, paths as elevated_paths};
-use kentos_native_application::geometry::{drawing_font, edit_geometry, shape};
+use kentos_native_application::geometry::{drawing_font, shape};
 
 use crate::Vec2;
 use crate::format::Format;
@@ -60,7 +57,6 @@ enum Look {
 /// An area to be written: its geometry, the label's value when it has one, how it looks.
 #[derive(Clone, Debug)]
 struct ToWrite {
-    geometry: EntityGeometry,
     /// Its rings as drawn (arcs made points).
     rings: Vec<Vec<Vec2>>,
     value: Option<String>,
@@ -222,8 +218,6 @@ impl Polygonize {
         }
         let core: Vec<CoreEntity> = lines.iter().map(|e| CoreEntity::new(shape(e))).collect();
         let result = polygonize(&core, &labels, islands);
-        let sources: Vec<Elevated> = lines.iter().flat_map(|e| elevated_paths(e)).collect();
-        let carry = elevated(&sources);
         let mut areas = Vec::new();
         let (mut unlabelled, mut many, mut existing) = (0, 0, 0);
         for r in &result.regions {
@@ -241,18 +235,11 @@ impl Polygonize {
                 Look::Many => many += 1,
                 Look::One => {}
             }
-            let Some(mut geometry) = edit_geometry(polygon_of_area(&r.area).shape) else {
-                continue;
-            };
-            if carry {
-                with_elevations(&mut geometry, &sources);
-            }
             let rings = std::iter::once(&r.area.outer)
                 .chain(&r.area.holes)
                 .map(|ring| polygon_ring(&ring.pts, ring.bulges.as_deref()))
                 .collect();
             areas.push(ToWrite {
-                geometry,
                 rings,
                 value: (look == Look::One).then(|| labels[r.labels[0]].value.clone()),
                 look,
@@ -377,36 +364,28 @@ impl Polygonize {
             return Flow::Exit;
         }
         let attribute = plan.attribute.clone();
-        let input = kentos_commands::EntitiesCreate {
+        // The command finds the same regions again from the line work and the labels and writes them
+        // (docs/adr/0622 §9).
+        let uids = |slots: &HashSet<Slot>| -> Vec<String> {
+            let mut list: Vec<Slot> = slots.iter().copied().collect();
+            list.sort();
+            list.into_iter()
+                .map(|s| crate::edge::uid(cx.doc, s))
+                .collect()
+        };
+        let input = ObjectsDerive {
             layer_id: cx.doc.layers().active().to_owned(),
-            objects: plan
-                .areas
-                .iter()
-                .map(|a| NewObject {
-                    line_type: None,
-                    line_weight: a
-                        .geometry
-                        .draws_lines()
-                        .then_some(cx.draft.line_weight)
-                        .flatten(),
-                    geometry: a.geometry.clone(),
-                    color: cx.draft.color_text(),
-                    attrs: a
-                        .value
-                        .as_ref()
-                        .map(|v| BTreeMap::from([(attribute.clone(), v.clone())])),
-                    label: None,
-                    label_of: None,
-                    label_scale: None,
-                    symbol: None,
-                    order: None,
-                    transparency: None,
-                })
-                .collect(),
-            operation: Some(CreateOperation::Polygonize),
+            work: DeriveWork::Polygonize {
+                lines: uids(&self.lines),
+                labels: uids(&self.labels),
+                islands: plan.islands,
+                attribute: attribute.clone(),
+            },
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
             expected_revision: None,
         };
-        let result = kentos_native_application::create::execute(
+        let result = kentos_native_application::objects_derive::execute(
             &mut kentos_native_application::ExecutionContext::new(cx.doc),
             input,
         );
@@ -439,27 +418,6 @@ impl Polygonize {
 }
 
 /// The area's rings with the elevations their corners carry from the line
-/// work (docs/adr/0142); none where none does (the web's `withElevations`).
-fn with_elevations(g: &mut EntityGeometry, sources: &[Elevated]) {
-    let zs = |pts: &[kentos_commands::Vec2]| {
-        let pts: Vec<Vec2> = pts.iter().map(|p| Vec2::new(p.x, p.y)).collect();
-        let out = carry_elevations(&pts, true, None, sources, Carry::Along);
-        out.iter().any(Option::is_some).then_some(out)
-    };
-    if let EntityGeometry::Polygon {
-        pts,
-        holes,
-        zs: own,
-        ..
-    } = g
-    {
-        *own = zs(pts);
-        for h in holes.iter_mut().flatten() {
-            h.zs = zs(&h.pts);
-        }
-    }
-}
-
 /// `24 alan; 2 etiketsiz, 3 uç boşta`: the areas to write, then what to look at.
 fn finding(plan: &Plan) -> String {
     let r = &plan.result;

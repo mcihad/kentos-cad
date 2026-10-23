@@ -76,7 +76,7 @@ use kentos_native_application::{
     layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_rules,
     layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
     layers_translate, leaders_edit, line, linearref_define, network_define, nurbs, offset,
-    openings_create, openings_edit, point, points_construct, polygon, polygon_regular, polyline, revcloud_create, sector_create, adjoin_cmd, parcels, constructions, areas, shape_edits,
+    openings_create, openings_edit, point, points_construct, polygon, polygon_regular, polyline, revcloud_create, sector_create, adjoin_cmd, parcels, constructions, areas, shape_edits, objects_derive,
     rectangle_create, scenarios_edit, set, settings_set, sheets_edit, sheets_create, sheets_fit, snap_find, spaces_create,
     spaces_edit, spaces_quantities, styles_edit, tables_edit, texts_check, texts_edit, transform,
     ucs_set, units_change, views_edit, walls_create, walls_edit, walls_from_lines, walls_joins,
@@ -1483,6 +1483,17 @@ impl Input for kentos_commands::ShapesEdit {
                     _ => None,
                 }
             }
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_commands::ObjectsDerive {
+    /// `work.step`, `lineWeight` (the shared cases spoil only these).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match (&mut self.work, path) {
+            (kentos_commands::DeriveWork::Centerline { step, .. }, "work.step") => Some(step),
+            (_, "lineWeight") => self.line_weight.as_mut(),
             _ => None,
         }
     }
@@ -3348,6 +3359,7 @@ fn run_op(
             run!(constructions, kentos_commands::ConstructionsCreate)
         }
         kentos_commands::CAD_AREAS_EDIT => run!(areas, kentos_commands::AreasEdit),
+        kentos_commands::CAD_OBJECTS_DERIVE => run!(objects_derive, kentos_commands::ObjectsDerive),
         kentos_commands::CAD_SHAPES_EDIT => run!(shape_edits, kentos_commands::ShapesEdit),
         kentos_commands::CAD_ENTITIES_VERTEX => {
             run!(entities_vertex, kentos_commands::EntitiesVertex)

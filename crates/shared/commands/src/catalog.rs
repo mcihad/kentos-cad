@@ -8208,6 +8208,46 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_OBJECTS_DERIVE.into(),
+            version: crate::CAD_OBJECTS_DERIVE_VERSION,
+            title: "Nesneden türet".into(),
+            summary: "Kalıcı kimlikleriyle verilen nesnelerden yeni nesneler türetip verilen katmana ekler; hesabı komut \
+                      ortak çekirdekle yapar: Köşelere nokta (vertexPoints: çizgi, çoklu çizgi ve alanların köşelerine \
+                      adlı, kodlu, kotlu nokta; paylaşılan ve noktası olan köşe atlanır), Orta hat (centerline: iki \
+                      kenarın ekseni, kenar bir nesne ya da uç uca birleşen zincir; eşleşen kenarlarda kesin, öbürlerinde \
+                      step aralıkla) ve Toplu alan (polygonize: çizgilerin kapattığı her bölge bir alan, içindeki tek \
+                      etiket attribute özniteliği). Cevap yeni nesneleri, atlananları ve sıradaki adı verir. Tek geri \
+                      alma adımı, aracın adıyla."
+                .into(),
+            aliases: vec!["turet".into(), "derive".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ObjectsDerive>(),
+            output: schema::<crate::ObjectsDerived>(),
+            plan: Some(schema::<crate::EntitiesCreatePlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parselin köşelerine N1'den başlayan noktalar".into(),
+                    input: json!({ "layerId": "nokta", "work": { "kind": "vertexPoints",
+                        "ids": [ "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001" ], "name": "N1", "code": "KS" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İki yol kenarının ekseni, 1 m adımla".into(),
+                    input: json!({ "layerId": "eksen", "work": { "kind": "centerline",
+                        "first": [ "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001" ],
+                        "second": [ "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002" ], "step": 1.0 } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_AREAS_EDIT.into(),
             version: crate::CAD_AREAS_EDIT_VERSION,
             title: "Alan işlemleri".into(),
@@ -10225,6 +10265,9 @@ mod tests {
                     }
                     crate::CAD_SHAPES_EDIT => {
                         serde_json::from_value::<crate::ShapesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_OBJECTS_DERIVE => {
+                        serde_json::from_value::<crate::ObjectsDerive>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_AREAS_EDIT => {
                         serde_json::from_value::<crate::AreasEdit>(e.input.clone()).map(|_| ())

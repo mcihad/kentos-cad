@@ -9,7 +9,7 @@
 //! on the active layer and the tool waits for the next pair. Esc and Ctrl+Z
 //! let the last side go; Esc with none leaves.
 
-use kentos_commands::{CreateOperation, Entity, EntityGeometry};
+use kentos_commands::{DeriveWork, Entity, ObjectsDerive};
 use kentos_domain::Slot;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, entity_outline};
@@ -19,11 +19,12 @@ use kentos_geometry_core::ops::join::{ChainObject, chain, join_entities};
 use kentos_geometry_core::tools::point_calc::route_of;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, objects_derive};
 
 use crate::Vec2;
 use crate::format::{Format, js_number};
 use crate::log::Level;
-use crate::points::{self, wire_all};
+use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Cursor, Flow, Memory, Pointer, Preview, Stroke, Tone, Tool};
 
@@ -193,16 +194,30 @@ impl Centerline {
         let Some(Ok(axis)) = &self.plan else {
             return;
         };
-        let geometry = EntityGeometry::Polyline {
-            ms: None,
-            pts: wire_all(&axis.pts),
-            bulges: axis.bulges.clone().filter(|b| b.iter().any(|&x| x != 0.0)),
-            zs: None,
-            parts: None,
-            closed: false,
-            widths: None,
+        let (Some(first), Some(second)) = (&self.first, &self.second) else {
+            return;
         };
-        if points::write_objects(vec![geometry], Some(CreateOperation::Centerline), cx).is_none() {
+        // The command finds the same axis again from the sides' objects and writes it (docs/adr/0622 §9).
+        let uids = |side: &Side| -> Vec<String> {
+            side.slots
+                .iter()
+                .map(|&s| crate::edge::uid(cx.doc, s))
+                .collect()
+        };
+        let input = ObjectsDerive {
+            layer_id: cx.doc.layers().active().to_owned(),
+            work: DeriveWork::Centerline {
+                first: uids(first),
+                second: uids(second),
+                step: cx.memory.centerline_step,
+                tolerance: Some(cx.memory.join_tolerance),
+            },
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            expected_revision: None,
+        };
+        let result = objects_derive::execute(&mut ExecutionContext::new(cx.doc), input);
+        if points::written(result, cx).is_none() {
             return;
         }
         let how = match axis.method {

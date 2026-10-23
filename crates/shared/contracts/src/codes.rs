@@ -133,6 +133,14 @@ codes! {
     NOTHING_TO_SIMPLIFY = "nothing_to_simplify", Failed, false, "Bu toleransla atılacak köşe yok.";
     /// Artır on objects without an elevation at any vertex (Kot ver).
     NO_ELEVATION = "no_elevation", Failed, false, "Nesnelerin hiçbir köşesinde kot yok; fark eklenecek bir şey yok.";
+    /// A derivation that finds nothing to write: every vertex already has a point, every region is an area already.
+    NOTHING_DERIVED = "nothing_derived", Failed, false, "Yazılacak nesne bulunamadı; hiçbir şey değişmedi.";
+    /// A side of objects that do not join end to end into one path (Orta hat).
+    SIDE_NOT_JOINED = "side_not_joined", Failed, false, "Kenarın nesneleri uç uca tek bir yol olmuyor.";
+    /// A closed path where an open one is needed (Orta hat's sides).
+    NOT_OPEN = "not_open", Failed, false, "Kapalı yol verildi; açık bir yol gerekir.";
+    /// An object without a single path to walk along (a point, a text, a multi-part object).
+    NO_ROUTE = "no_route", Failed, false, "Nesnenin üzerinde yürünecek tek bir yolu yok.";
     NO_INTERSECTION = "no_intersection", Failed, false, "Yapımın aradığı teğet ya da kesişim yok: daireler, uzaklıklar ya da doğrultular buluşmuyor.";
     INVALID_PARCEL_NUMBER = "invalid_parcel_number", Failed, false, "Parsel numarası boş.";
     PARCEL_NUMBER_TAKEN = "parcel_number_taken", Warning, false, "Verilen parsel numarası başka bir parselde de var; yine verildi.";
@@ -635,7 +643,7 @@ codes! {
     /// A step longer than the object: no point (Böl).
     NO_POINTS = "no_points", Failed, false, "Aralık nesnenin boyundan uzun; nokta konmaz.";
     /// More points than a division places (Böl).
-    TOO_MANY_POINTS = "too_many_points", Failed, false, "10 000'den çok nokta olurdu; daha büyük bir aralık verin.";
+    TOO_MANY_POINTS = "too_many_points", Failed, false, "Çok nokta olurdu (Böl ve Ölç'te 10 000, Orta hat'ta 100 000'den çok); daha büyük bir aralık ya da adım verin.";
     /// A first distance given with a number of parts (Böl, docs/adr/0299).
     START_NEEDS_STEP = "start_needs_step", Failed, false, "Başlangıç yalnız aralıkla bölmede verilir.";
     /// An object that is neither a polyline nor a NURBS curve (Eğriyi düzenle, docs/adr/0303).

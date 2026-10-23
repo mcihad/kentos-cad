@@ -9472,14 +9472,14 @@
    "id": "tool.centerline",
    "kind": "tool",
    "title": "Orta hat",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.objects.derive"
    ],
-   "operation": "centerline",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.objects.derive",
+   "mcp": "cad.objects.derive",
+   "note": "Kaynak nesneler kalıcı kimlikleriyle ve seçenekler komutta; yeni nesneleri komut bulur (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -11328,14 +11328,14 @@
    "id": "tool.polygonize",
    "kind": "tool",
    "title": "Toplu alan",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.objects.derive"
    ],
-   "operation": "polygonize",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.objects.derive",
+   "mcp": "cad.objects.derive",
+   "note": "Kaynak nesneler kalıcı kimlikleriyle ve seçenekler komutta; yeni nesneleri komut bulur (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -12569,14 +12569,14 @@
    "id": "tool.vertexPoints",
    "kind": "tool",
    "title": "Köşelere nokta",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.objects.derive"
    ],
-   "operation": "vertexPoints",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.objects.derive",
+   "mcp": "cad.objects.derive",
+   "note": "Kaynak nesneler kalıcı kimlikleriyle ve seçenekler komutta; yeni nesneleri komut bulur (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1

@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, areas, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, constructions, crs, curves, dimensions, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linearref, linetypes, meshes, network, nurbs, openings, parameters, parcels, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, revcloud, scenarios, schedules, schema, sector, settings, shapes, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, areas, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, constructions, crs, curves, dimensions, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linearref, linetypes, meshes, network, nurbs, objects, openings, parameters, parcels, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, revcloud, scenarios, schedules, schema, sector, settings, shapes, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -292,6 +292,7 @@ __all__ = [
     "CenterLineDimensionMeasure",
     "CenterMarkDimensionMeasure",
     "CenterSubPlace",
+    "CenterlineDeriveWork",
     "ChamferRectangleCorners",
     "ChangeFieldTypeMigrationStep",
     "ChangedObject",
@@ -477,6 +478,7 @@ __all__ = [
     "DerivationStatus",
     "DerivationStatusName",
     "DerivationTable",
+    "DeriveWork",
     "DetachArchOperation",
     "DetachMasterPaperOp",
     "DetachViewMarksOperation",
@@ -1305,6 +1307,8 @@ __all__ = [
     "ObjectUcsTo",
     "ObjectValue",
     "ObjectValueName",
+    "ObjectsDerive",
+    "ObjectsDerived",
     "ObjectsHatchRegion",
     "ObjectsPaperCoordSource",
     "ObjectsSelectRegion",
@@ -1629,6 +1633,7 @@ __all__ = [
     "PolygonSelectMode",
     "PolygonSelectModeName",
     "PolygonSelectRegion",
+    "PolygonizeDeriveWork",
     "PolylineCreate",
     "PolylineCreated",
     "PolylineEntity",
@@ -2360,6 +2365,7 @@ __all__ = [
     "VertexAction",
     "VertexActionName",
     "VertexCornerPick",
+    "VertexPointsDeriveWork",
     "VertexSubPlace",
     "VerticalConstraintRule",
     "ViewLinkPaperViewportSource",
@@ -2504,6 +2510,7 @@ __all__ = [
     "meshes",
     "network",
     "nurbs",
+    "objects",
     "openings",
     "parameters",
     "parcels",

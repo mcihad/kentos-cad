@@ -14,22 +14,22 @@
 //! step “Köşelere nokta” through `cad.entities.create` on the active layer,
 //! and Nokta's Ad moves on past the last.
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::HashSet;
 
-use kentos_commands::{CreateOperation, EntitiesCreate, Entity, EntityGeometry, NewObject};
+use kentos_commands::{DeriveWork, Entity, ObjectsDerive};
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::ops::vertex_points::{VertexPoints as Found, vertex_points};
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::elevation::paths as elevated_paths;
-use kentos_native_application::{ExecutionContext, create};
+use kentos_native_application::{ExecutionContext, objects_derive};
 
 use crate::Vec2;
 use crate::format::Format;
 use crate::log::Level;
 use crate::modify::{MAX_GHOSTS, Modify, Stages};
 use crate::point::{Field, ask_field, take_field, with_options};
-use crate::points::{self, wire};
+use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
     Context, Flow, Label, Marker, MarkerShape, Memory, Name, Pointer, Preview, Tag, Tone,
@@ -81,9 +81,7 @@ impl VertexPoints {
             return Flow::Exit;
         };
         let Found {
-            points,
-            skipped,
-            next,
+            points, skipped, ..
         } = found;
         let (count, skipped) = (points.len(), *skipped);
         if points.is_empty() {
@@ -96,44 +94,33 @@ impl VertexPoints {
             return Flow::Exit;
         }
         let code = cx.memory.point_code.as_str().to_owned();
-        let color = cx.draft.color_text();
-        let objects = points
-            .iter()
-            .map(|pt| NewObject {
-                line_type: None,
-                geometry: EntityGeometry::Point {
-                    p: wire(pt.p),
-                    z: pt.z,
-                    parts: None,
-                },
-                color: color.clone(),
-                line_weight: None,
-                attrs: (!code.is_empty())
-                    .then(|| BTreeMap::from([("Kod".to_owned(), code.clone())])),
-                label: pt.name.clone(),
-                label_of: None,
-                label_scale: None,
-                symbol: None,
-                order: None,
-                transparency: None,
-            })
-            .collect();
+        let name = cx.memory.point_name.as_str().to_owned();
         let names = match (&points[0].name, &points[count - 1].name) {
             (Some(first), Some(last)) if first == last => format!(" ({first})"),
             (Some(first), Some(last)) => format!(" ({first} – {last})"),
             _ => String::new(),
         };
-        let next = next.as_deref().and_then(Name::new);
-        let input = EntitiesCreate {
+        // The command finds the same points again and writes them (docs/adr/0622 §9).
+        let input = ObjectsDerive {
             layer_id: cx.doc.layers().active().to_owned(),
-            objects,
-            operation: Some(CreateOperation::VertexPoints),
+            work: DeriveWork::VertexPoints {
+                ids: self
+                    .slots
+                    .iter()
+                    .map(|&s| crate::edge::uid(cx.doc, s))
+                    .collect(),
+                name: (!name.is_empty()).then_some(name),
+                code: (!code.is_empty()).then_some(code),
+            },
+            color: cx.draft.color_text(),
+            line_weight: None,
             expected_revision: None,
         };
-        let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if points::written(result, cx).is_none() {
+        let result = objects_derive::execute(&mut ExecutionContext::new(cx.doc), input);
+        let Some(out) = points::written(result, cx) else {
             return Flow::Stay;
-        }
+        };
+        let next = out.next.as_deref().and_then(Name::new);
         // Nokta goes on past the last name (docs/adr/0152 §5).
         if !cx.memory.point_name.as_str().is_empty()
             && let Some(next) = next
