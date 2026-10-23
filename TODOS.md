@@ -74,6 +74,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - CAD-SHEET-27 (ADR 0617): Kaynaklarıyla pafta yayını; taşınabilir KCAD/xref/veri bağımlılıkları, gerçek TTF/OFL, yakalanmış .kplot/sayfa düzeni ve revision/hash envanteri; iptal ve tekrar istekte tam dosya doğrulaması. Web dönüşünde mevcut file.publish.sheets resources seçeneği kullanılmalı.
 - CAD-SHEET-28 (ADR 0618): Tam baskı denetimi; yerel kaynak/font/açıklama, görünüm kilidi, nihai PPI ve desteklenmeyen görünür içerik raporu. `file.preflight.sheets` komutu ve denetim paneli web dönüşünde bağlanacak.
 - CAD-SHEET-29 (ADR 0619): Sabit kaynak revizyonu, resim sürümleri ve PDF/PNG/SVG provenance; eski denetimi yeniden kullanma engeli web dönüşünde bağlanacak.
+- CAD-SHEET-30 (ADR 0620): Ortak PDF üretimi otomasyonda doğrulandı; web dönüşünde tarayıcı fiziksel print diyalogu ortak çıktı dosyasına bağlanacak.
 
 - CAD-SHEET-06 (ADR 0591): ortak ops şeması ve asset/inversePictures sözleşmesi hazır. Web yeniden açılınca pafta komut işleyicisi baytların birleştirme/tam değiştirme ve ters bayt politikasını izlemeli; harita yazısı ve zengin stil çıktı eşdeğerliği kendi çıktı yolunda sınanmalı. Native CPU/SVG rasterizer web'e taşınmış sayılmaz.
 

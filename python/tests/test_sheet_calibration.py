@@ -12,6 +12,9 @@ class SheetCalibration(unittest.TestCase):
      doc=cad.Document.from_bytes(json.dumps(c['model']).encode());before=[r.entity.to_json() for r in doc.entities()]
      with doc.group('Kalibrasyon'):cad.sheets.edit(doc,ops=[cad.AddSheetPaperOp(sheet=cad.PaperSheet.from_json(c['sheet']))])
      path=Path(folder)/f'{n}.pdf';doc.export_pdf(path)
+     typed=Path(folder)/f'{n}-typed.pdf';before_bytes=path.read_bytes()
+     planned=cad.file.export.pdf.run(doc,cad.ExportPdf(path=str(typed)),op='plan');self.assertEqual(planned.status,'completed');self.assertFalse(typed.exists())
+     written=cad.file.export.pdf.run(doc,cad.ExportPdf(path=str(typed)),request_id=f'physical-{n}');self.assertEqual(written.status,'completed');self.assertEqual(typed.read_bytes(),before_bytes);self.assertEqual(written.output.sha256,planned.output.sha256)
      lengths=[math.hypot(s[2]-s[0],s[3]-s[1]) for s in pdf_pages(path.read_bytes())[0]['segments']]
      self.assertGreaterEqual(sum(abs(x-100)<c['expected']['toleranceMM'] for x in lengths),2)
      self.assertEqual([r.entity.to_json() for r in doc.entities()],before)

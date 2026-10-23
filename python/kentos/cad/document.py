@@ -409,7 +409,7 @@ class Exported:
 @dataclass(frozen=True, slots=True)
 class Printed:
     """Where a sheet PDF went, how many bytes, the sheets it holds (by id, a page each), the
-    sheet core's findings, and what a headless host leaves out (``notes``)."""
+    sheet core's findings, and native rasterization choices and limits (``notes``)."""
 
     path: Path
     bytes: int
@@ -590,8 +590,9 @@ class Document:
     def export_pdf(self, path: str | os.PathLike[str], sheets: Sequence[str] | None = None) -> Printed:
         """The project's sheet book as a PDF: the sheets named (by id) or all, a page each, as the
         desktop's Dışa aktar › PDF writes them (each map at its scale, GeoPDF where the system is a
-        transverse Mercator one). Sheets are made with ``kentos.cad.sheets.edit``. A headless
-        host writes the maps' lines, areas and hatches but not their texts yet (``notes``)."""
+        transverse Mercator one). Sheets are made with ``kentos.cad.sheets.edit``. The native
+        renderer runs without a window or printer and preserves searchable Unicode text.
+        ``notes`` reports rasterization choices and limits; PDF metadata identifies the source snapshot."""
         raw = json.loads(_host(self._session.export_pdf, os.fspath(path), None if sheets is None else list(sheets)))
         return Printed(
             Path(raw["path"]),

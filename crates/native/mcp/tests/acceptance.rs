@@ -1141,3 +1141,22 @@ fn sheet_snapshot_agent_plan_guard_and_pdf_source_are_the_same_revision(){
     call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":[{"op":"renameSheet","id":"ground","name":"Sonraki revizyon"}]}));
     let refused=tool_result(&mut server,"file.publish.sheets",json!({"drawing":drawing,"path":root.join("stale"),"pin":pin}));assert_eq!(refused["isError"],true);assert_eq!(refused["structuredContent"]["error"]["code"],"pin_mismatch");assert!(!root.join("stale").exists());std::fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn sheet_host_pdf_twenty_physical_pages_work_without_a_window_or_printer(){
+    let data:Value=serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/calibration.json")).unwrap();
+    let root=std::env::temp_dir().join(format!("kentos-mcp-pdf-host-{}",std::process::id()));let _=std::fs::remove_dir_all(&root);std::fs::create_dir_all(&root).unwrap();
+    for(n,c)in data["cases"].as_array().unwrap().iter().enumerate(){
+        let source=root.join(format!("source-{n}.kcad"));std::fs::write(&source,serde_json::to_vec(&c["model"]).unwrap()).unwrap();
+        let mut server=Server::new();let opened=call(&mut server,"drawing.open",json!({"path":source}));let drawing=opened["drawing"].as_str().unwrap();
+        call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":[{"op":"addSheet","sheet":c["sheet"]}]}));
+        let target=root.join(format!("page-{n}.pdf"));let plan=call(&mut server,"file.export.pdf",json!({"drawing":drawing,"path":target,"op":"plan"}));assert_eq!(plan["status"],"completed","{plan}");assert!(!target.exists());
+        let issued=call(&mut server,"file.export.pdf",json!({"drawing":drawing,"path":target,"requestId":"host-pdf"}));assert_eq!(issued["status"],"completed","{issued}");assert_eq!(issued["output"]["sha256"],plan["output"]["sha256"]);
+        let bytes=std::fs::read(&target).unwrap();let pages=files::pdf_pages(&bytes);assert_eq!(pages.len(),1);
+        for rgb in [[34./255.,85./255.,170./255.],[204./255.,51./255.,68./255.]]{
+            assert!(pages[0].ink.iter().filter(|l|l.color.iter().zip(rgb).all(|(a,b)|(a-b).abs()<0.002)).any(|l|((l.segment[2]-l.segment[0]).hypot(l.segment[3]-l.segment[1])-100.).abs()<0.002),"{} {rgb:?}",c["name"]);
+        }
+        let replay=call(&mut server,"file.export.pdf",json!({"drawing":drawing,"path":target,"requestId":"host-pdf"}));assert_eq!(replay["replayed"],true);assert_eq!(std::fs::read(&target).unwrap(),bytes);
+    }
+    std::fs::remove_dir_all(root).unwrap();
+}
