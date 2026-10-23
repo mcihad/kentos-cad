@@ -5,8 +5,8 @@
 //! Türkiye's longitudes); its scale, name, typeface and a summary.
 
 use iced::widget::{
-    Column, Id, Row, button, column, container, mouse_area, row, rule, scrollable, space, text,
-    text_input,
+    Column, Id, Row, button, column, container, mouse_area, responsive, row, rule, scrollable,
+    space, text, text_input,
 };
 use iced::{Background, Border, Center, Element, Fill, FillPortion, Padding, Theme};
 use kentos_interaction::fixed;
@@ -351,26 +351,74 @@ pub(super) fn coords(s: &State) -> Element<'_, Message> {
         .spacing(10),
     )];
     if d.coords == Coords::Local {
-        let units = Row::with_children(UNITS.iter().map(|u| {
-            choice_card(
-                text(u.mark)
-                    .font(typography::ui_strong())
-                    .size(typography::from_default(17.0))
-                    .into(),
-                u.name,
-                u.note,
-                d.unit == u.id,
-                event(Event::Unit(u.id)),
-            )
-        }))
-        .spacing(10);
+        let selected = d.unit;
+        // Keep names at a readable width. Compact tiles wrap into rows on
+        // narrow windows or when the user's text size is enlarged.
+        let units = responsive(move |size| {
+            let minimum = typography::scaled(132.0);
+            let columns = if size.width >= minimum * 5.0 + 40.0 {
+                5
+            } else if size.width >= minimum * 3.0 + 20.0 {
+                3
+            } else if size.width >= minimum * 2.0 + 10.0 {
+                2
+            } else {
+                1
+            };
+            Column::with_children(UNITS.chunks(columns).map(|units| {
+                let mut row = Row::new().spacing(10);
+                for u in units {
+                    let on = selected == u.id;
+                    row = row.push(
+                        button(
+                            column![
+                                row![
+                                    container(
+                                        text(u.mark)
+                                            .font(typography::ui_strong())
+                                            .size(typography::from_default(19.0))
+                                    )
+                                    .center_x(typography::scaled(38.0))
+                                    .center_y(typography::scaled(38.0))
+                                    .style(mark_box(on)),
+                                    space::horizontal(),
+                                    check(on),
+                                ]
+                                .align_y(Center),
+                                text(u.name)
+                                    .font(typography::ui_strong())
+                                    .size(typography::heading()),
+                            ]
+                            .spacing(10)
+                            .width(Fill),
+                        )
+                        .padding(12)
+                        .width(Fill)
+                        .on_press(event(Event::Unit(u.id)))
+                        .style(card(on)),
+                    );
+                }
+                for _ in units.len()..columns {
+                    row = row.push(space::horizontal());
+                }
+                row.into()
+            }))
+            .spacing(10)
+            .into()
+        })
+        .height(iced::Shrink);
+        let chosen = UNITS
+            .iter()
+            .find(|u| u.id == selected)
+            .expect("supported drawing unit");
         parts.push(section(
             "Çizim birimi",
             column![
                 units,
-                text("Uzunluklar, koordinatlar ve alanlar bu birimle yazılır ve gösterilir; çizim kendi içinde metrede saklanır.")
-                    .size(typography::caption() - 1.0)
-                    .style(style::text::faint),
+                text(format!("{} · {}", chosen.name, chosen.note))
+                    .size(typography::caption()).style(style::text::muted),
+                text("Uzunluklar ve koordinatlar seçtiğiniz birimle yazılır ve gösterilir. Model her zaman gerçek boyuttadır.")
+                    .size(typography::caption()).style(style::text::muted),
             ]
             .spacing(8),
         ));
@@ -752,11 +800,14 @@ fn heights(d: &kentos_project::wizard::Draft) -> Element<'_, Message> {
         .wrap()
         .vertical_spacing(6),
         label::caption(
-            "Yazılar ve ölçüler kâğıtta bu boyda çıkar; çizimdeki boyları ölçekle çarpılır. Proje ayarları › Ölçek ve yazılar'dan sonra da değişir."
+            "Kâğıttaki yazı ve ölçü yüksekliğini seçin. Çizimdeki karşılığı ölçeğe göre hesaplanır. Bu değerler daha sonra Proje ayarları’ndan değiştirilebilir."
         )
+        .width(Fill)
+        .wrapping(iced::widget::text::Wrapping::Word)
         .style(style::text::muted),
     ]
     .spacing(6)
+    .width(Fill)
     .into()
 }
 

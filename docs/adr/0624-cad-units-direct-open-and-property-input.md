@@ -1,6 +1,6 @@
 # 0624 — CAD birimleri, doğrudan açılış ve özellik girişi
 
-23 Ekim 2026. Dal: `codex/cad-inspector-units-open`. Bu çalışma ayrı worktree'dedir; GIS dalı değiştirilmez.
+23 Ekim 2026. Dal: `codex/cad-inspector-units-open`. Bu çalışma ana proje klasöründe bu dalda sürer; `main` değiştirilmez.
 
 ## İnceleme: model, birim ve ölçek aynı şey değildir
 
@@ -50,6 +50,9 @@ Python/MCP girdileri sessizce mm'ye dönmez.
 - Sihirbaz modelin gerçek boyutta olduğunu söyler. CAD ölçek alanı “Yazı ve ölçü ölçeği” olarak anlatılır; pafta
   ölçeğinin ayrı olduğu belirtilir. Durum çubuğunda yazı ölçeğinin yanında çizim birimi görünür.
 - CAD/CBS proje türünün sonradan değiştirilebildiğini söyleyen bayat sihirbaz metni düzeltildi; tür kilidi korunur.
+- Birim kartlarında simge ve ad ayrıldı; açıklama seçilen kartın altında gösterilir. Kartlar pencere genişliği ve
+  kullanıcının yazı boyutuna göre 5/3/2/1 sütuna geçer. Dar kartta simge, ad, açıklama ve seçim işaretinin birbirine
+  sıkışması giderilir. Depolamanın teknik ayrıntısı yerine modelin gerçek boyutta olduğu anlatılır.
 
 ### 2. Aç / İçe aktar
 
@@ -69,6 +72,8 @@ Python/MCP girdileri sessizce mm'ye dönmez.
   reddeder. Kullanıcı DWG/DXF çıktısı isterse ayrı dışa aktarma komutunu kullanır.
 - Açılışın birim/atlama raporu masaüstü geçmişine, native/MCP özetindeki `openedCad` alanına ve Python
   `DocumentInfo.opened_cad` alanına verilir. Kaynak dosya son açılanlarda görünür.
+- Okuyucunun mm yedek birimi, açılış raporunda “milimetrelik hedef projeye dönüştürüldü” diye sunulmaz;
+  açılışta alıcı proje yoktur. Rapor kaynak birimini ve fiziksel boyutun korunduğunu söyler.
 
 ### 3. Özellik hücresinin gecikmesi
 
@@ -80,7 +85,7 @@ Python/MCP girdileri sessizce mm'ye dönmez.
   artık tek nesnenin geometrik satırları belge oturumu/generation/seçim sürümüne göre önbellektedir.
   Dosya/servis özeti ve eşzamansız ek dosya eylemleri canlı kalır.
 
-## Yanlış birim bildiren gerçek dosya
+## Birimi gerçek ölçüyle doğrulanmamış dosya
 
 Downloads `2-1-ev-kat-plani.dwg` daha önce incelenmişti: dosya mm, yatak tanımı mm, mevcut INSERT çarpanı 0,1.
 Bu, yeni ölçek-1 yatakla eski yatağın on kat farkını açıklıyor. Gerçek duvar uzunluğu bilinmeden dosya “aslında cm”
@@ -99,7 +104,37 @@ bir düzeltme sayılmaz. [ADR 0621](0621-cad-import-physical-scale.md) ölçüle
 - Özellik hücresinde gerçek fare/klavye, hızlı ondalık yazma, Enter/Escape/blur; 120 boş olayın pencere yerleşimini
   geçersizleştirmemesi. Tek nesne panelinin edit/undo/başka belge sonrası yenilenmesi.
 - Masaüstünde gerçek klavye/fareli görsel kontroller ve Downloads örneklerinin açıkça seçilerek çalıştırılan
-  aç/kaydet/yeniden aç denetimi. Çalıştırma sonuçları doğrulama tamamlanınca buraya eklenecek.
+  aç/kaydet/yeniden aç denetimi.
+
+## Bu çalışmada doğrulananlar
+
+23 Ekim 2026, macOS / geliştirme derlemesi:
+
+- Python SDK'nın **258 testi geçti**. Yeni CAD açılış senaryoları DXF mm/inç, gerçek DWG ve NCZ'yi açar;
+  kaynak üzerine kaydı reddeder, KCAD kaydını yeniden açar ve kaynak baytlarını karşılaştırır. Metreyle yazılmış
+  eski kısıt senaryosuna birimi açıkça verildi; çıplak parametre ifadeleri çizim birimindedir, geometrik API
+  koordinatlarının SI metre olması kuralı değişmedi.
+- Ortak native uygulama entegrasyonunda 142, headless'ta 49, MCP'de 27, proje kurallarında 30 ve ayarlarda
+  10 test geçti. Native CAD açılışının iki testinden biri bağımsız **24 fiziksel birim/blok durumunu** yürütür.
+- Masaüstü açılışının 8 ve özellik panelinin 38 testi geçti. Ortak etkileşim izlerinin tamamı üç varyantta
+  (US, Türkçe Q, 2× ekran) geçti. İsteğe bağlı GPU kabulünde gerçek hücreye yazma/Enter/Escape geçti;
+  11 karakterin yazılması açık temada yaklaşık 34 ms sürdü. Bu, geliştirme makinesindeki ölçümdür.
+- Tek nesnede 100.000 köşeli çoklu çizgi: ilk özellik paneli yaklaşık **5,42 ms**, önbellekten 100 tekrarın
+  toplamı **0,96 ms**. Tuş vuruşunda geometriyi yeniden ölçme yükü kaldırıldı.
+- Gerçek `EditCell` olaylarının 5 ve sihirbazın 7 testi geçti. Sihirbazın birim/ayrıntı sayfaları 1440×900
+  ve 1100×650'de, açık/koyu temada, 13/18 yazı boyunda görüntülendi. PNG'ler açılarak kartların, açıklama
+  satırlarının ve sabit alt düğmelerin taşmadığı doğrulandı; uzun içerik dikey kaydırılır.
+- Son açılış raporu düzeltmesinden sonra 24 native durum ve Python açılışının iki testi yeni derlemeyle
+  yeniden geçti. Kaynak biriminin korunması ve olmayan bir mm hedef projeye dönüşüm anlatılmaması sınandı.
+- Downloads'taki yedi dosya ayrıca açıldı, KCAD olarak kaydedilip yeniden açıldı; özgün kaynaklar değişmedi:
+  `deneme_suşehri.dxf` (71.820 nesne), `imarss.dxf` (3.250), `2-1-ev-kat-plani.dwg` (282),
+  `toki-3+1-sc3-plan.dxf` (201, inç), `SIVAS_UIP_2025_06_HAZIRAN.NCZ` (453.534, metre),
+  `Tek-katli-verandali-koy-evi-dwg.dwg` (9.730), `2-1-ev-kat-plani (1).dwg` (282).
+- Üretilen SDK, CAD manifesti (884 satır), şerit ve bağımsız açılış fixture'ları tutarlı; mimari bağımlılık
+  denetimi 47 crate / 61 hedefte geçti. Web uygulaması testleri ADR 0228 gereği çalıştırılmadı.
+- Masaüstü ve MCP çalıştırılabilirleri, Python native paketi derlendi. Son kaynaklarla masaüstü/native/Python
+  `clippy --all-targets -- -D warnings` geçti. Bu derlemeler geliştirme profilindedir; işletim sistemi dağıtım
+  paketi veya lisanslı AutoCAD kabulü yerine geçmez.
 
 Web arayüzü ADR 0228 nedeniyle ertelidir; ortak ayar sözleşmesi/üretilen katalog sürer. Bu çalışma lisanslı AutoCAD
 ile görsel/düzenleme uyumluluk kabulünün veya bütün dosya üreticilerinin sertifikasyonu değildir.

@@ -81,6 +81,14 @@ pub fn read(
         Some(5) => DrawingUnit::Cm,
         _ => DrawingUnit::M,
     };
+    // The reader's `unit` is only our fallback here, not a receiving project.
+    // Its import report must not claim e.g. an inch drawing was converted to
+    // a millimetre project: opening creates a drawing in the source's own unit.
+    if let Some(decision) = result.unit.as_ref().filter(|u| !u.assumed) {
+        for note in result.report.notes.iter_mut().filter(|n| n.what == "Birim") {
+            note.reason = format!("Kaynak {} biriminde; model fiziksel boyutunda açıldı.", decision.name);
+        }
+    }
     let srid = result
         .declared_crs
         .as_ref()
@@ -211,6 +219,10 @@ mod tests {
             )
             .expect("open");
             let mut doc = opened.document;
+            if case["unit"] != "mm" {
+                assert!(!opened.report.notes.iter().any(|n| n.reason.contains("milimetreye çevrildi")),
+                    "{}: opening must not report a conversion to a different project's unit", case["name"]);
+            }
             let close =
                 |a: f64, b: f64| assert!((a - b).abs() < 1e-9, "{}: {a} != {b}", case["name"]);
             assert_eq!(

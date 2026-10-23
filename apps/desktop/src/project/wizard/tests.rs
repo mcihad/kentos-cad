@@ -253,13 +253,12 @@ fn a_scale_typed_after_one_to_is_the_projects() {
         (5000.0, "")
     );
     send(&mut app, Event::Type(Workspace::Cad));
-    // A local CAD drawing in metres is a plan: 1:1000; in millimetres a part: 1:1 (docs/adr/0622 §2).
-    assert_eq!(state(&app).draft.unit, DrawingUnit::M);
-    assert_eq!(state(&app).draft.scale(), 1000.0);
-    send(&mut app, Event::Unit(DrawingUnit::Mm));
+    // The metric CAD template starts in mm / 1:1; an explicit metre plan keeps 1:1000.
+    assert_eq!(state(&app).draft.unit, DrawingUnit::Mm);
     assert_eq!(state(&app).draft.scale(), 1.0);
     // A plan's scale the drawing scales do not list goes back to the unit's own.
     send(&mut app, Event::Unit(DrawingUnit::M));
+    assert_eq!(state(&app).draft.scale(), 1000.0);
     send(&mut app, Event::Scale(5000.0));
     send(&mut app, Event::Unit(DrawingUnit::Cm));
     assert_eq!(state(&app).draft.scale(), 50.0);
@@ -313,6 +312,11 @@ fn screens() {
             send(&mut app, Event::Next);
             send(&mut app, Event::Unit(DrawingUnit::Mm));
             picture(&mut app, "2-cad-yerel");
+            let _ = app.settings.choose(&[("appearance.textSize", serde_json::Value::from(18))]);
+            app.apply_settings();
+            picture(&mut app, "2-cad-yerel-buyuk");
+            let _ = app.settings.choose(&[("appearance.textSize", serde_json::Value::from(13))]);
+            app.apply_settings();
             send(&mut app, Event::Coords(Coords::Real));
             send(&mut app, Event::Search("trab".into()));
             send(&mut app, Event::SearchFirst);
@@ -330,6 +334,11 @@ fn screens() {
             send(&mut app, Event::Next);
             send(&mut app, Event::Name("Mil plakası".into()));
             picture(&mut app, "5-ayrintilar");
+            let _ = app.settings.choose(&[("appearance.textSize", serde_json::Value::from(18))]);
+            app.apply_settings();
+            picture(&mut app, "5-ayrintilar-buyuk");
+            let _ = app.settings.choose(&[("appearance.textSize", serde_json::Value::from(13))]);
+            app.apply_settings();
             send(&mut app, Event::Name(String::new()));
             send(&mut app, Event::Next);
             picture(&mut app, "6-ad-bos");
