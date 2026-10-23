@@ -3404,7 +3404,10 @@ impl App {
             async {
                 let file = rfd::AsyncFileDialog::new()
                     .set_title("Çizim aç")
+                    .add_filter("CAD çizimleri (.kcad, .dwg, .dxf, .ncz)", &["kcad", "dwg", "dxf", "ncz"])
                     .add_filter("KentOS çizimi (.kcad)", &["kcad"])
+                    .add_filter("AutoCAD (.dwg, .dxf)", &["dwg", "dxf"])
+                    .add_filter("Netcad (.ncz)", &["ncz"])
                     .pick_file()
                     .await?;
                 Some(file.path().to_path_buf())
@@ -3440,6 +3443,9 @@ impl App {
                 Picker::Dialog => None,
             });
         if let Some(path) = known {
+            let path = if kentos_native_application::cad_open::Format::of(&path).is_some() {
+                path.with_extension("kcad")
+            } else { path };
             return self.start_saving(path);
         }
         let suggested = doc.name().trim_end_matches(".kcad").to_owned();

@@ -350,6 +350,10 @@ impl App {
     /// so the file holds the drawing of this moment and a later edit stays
     /// unsaved. One save at a time.
     pub(crate) fn start_saving(&mut self, path: PathBuf) -> Task<Message> {
+        if kentos_native_application::cad_open::Format::of(&path).is_some() {
+            self.error("Kaydet yalnız KentOS (.kcad) biçimindedir. Kaynak CAD dosyası üzerine yazılmaz; .kcad uzantılı bir dosya seçin.");
+            return Task::none();
+        }
         self.start_save(Target::File(path))
     }
 

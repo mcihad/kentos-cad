@@ -1,0 +1,221 @@
+{
+  "format": "kentos.cad-open",
+  "cases": [
+    {
+      "name": "mm-10",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n10\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n1\n42\n1\n0\nENDSEC\n0\nEOF\n",
+      "unit": "mm",
+      "length": 0.01,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "mm-3500",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n3500\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n1\n42\n1\n0\nENDSEC\n0\nEOF\n",
+      "unit": "mm",
+      "length": 3.5,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "mm-.125",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n.125\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n1\n42\n1\n0\nENDSEC\n0\nEOF\n",
+      "unit": "mm",
+      "length": 0.000125,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "mm-1000000",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n1000000\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n1\n42\n1\n0\nENDSEC\n0\nEOF\n",
+      "unit": "mm",
+      "length": 1000.0,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "cm-10",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n5\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n10\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.1\n42\n0.1\n0\nENDSEC\n0\nEOF\n",
+      "unit": "cm",
+      "length": 0.1,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "cm-3500",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n5\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n3500\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.1\n42\n0.1\n0\nENDSEC\n0\nEOF\n",
+      "unit": "cm",
+      "length": 35.0,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "cm-.125",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n5\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n.125\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.1\n42\n0.1\n0\nENDSEC\n0\nEOF\n",
+      "unit": "cm",
+      "length": 0.00125,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "cm-1000000",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n5\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n1000000\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.1\n42\n0.1\n0\nENDSEC\n0\nEOF\n",
+      "unit": "cm",
+      "length": 10000.0,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "m-10",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n6\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n10\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.001\n42\n0.001\n0\nENDSEC\n0\nEOF\n",
+      "unit": "m",
+      "length": 10.0,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "m-3500",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n6\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n3500\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.001\n42\n0.001\n0\nENDSEC\n0\nEOF\n",
+      "unit": "m",
+      "length": 3500.0,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "m-.125",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n6\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n.125\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.001\n42\n0.001\n0\nENDSEC\n0\nEOF\n",
+      "unit": "m",
+      "length": 0.125,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "m-1000000",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n6\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n1000000\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.001\n42\n0.001\n0\nENDSEC\n0\nEOF\n",
+      "unit": "m",
+      "length": 1000000.0,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "in-10",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n1\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n10\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.03937007874015748031496062992\n42\n0.03937007874015748031496062992\n0\nENDSEC\n0\nEOF\n",
+      "unit": "in",
+      "length": 0.254,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "in-3500",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n1\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n3500\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.03937007874015748031496062992\n42\n0.03937007874015748031496062992\n0\nENDSEC\n0\nEOF\n",
+      "unit": "in",
+      "length": 88.9,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "in-.125",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n1\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n.125\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.03937007874015748031496062992\n42\n0.03937007874015748031496062992\n0\nENDSEC\n0\nEOF\n",
+      "unit": "in",
+      "length": 0.003175,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "in-1000000",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n1\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n1000000\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.03937007874015748031496062992\n42\n0.03937007874015748031496062992\n0\nENDSEC\n0\nEOF\n",
+      "unit": "in",
+      "length": 25400.0,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "ft-10",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n2\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n10\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.003280839895013123359580052493\n42\n0.003280839895013123359580052493\n0\nENDSEC\n0\nEOF\n",
+      "unit": "ft",
+      "length": 3.048,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "ft-3500",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n2\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n3500\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.003280839895013123359580052493\n42\n0.003280839895013123359580052493\n0\nENDSEC\n0\nEOF\n",
+      "unit": "ft",
+      "length": 1066.8,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "ft-.125",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n2\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n.125\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.003280839895013123359580052493\n42\n0.003280839895013123359580052493\n0\nENDSEC\n0\nEOF\n",
+      "unit": "ft",
+      "length": 0.0381,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "ft-1000000",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n2\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n1000000\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n0.003280839895013123359580052493\n42\n0.003280839895013123359580052493\n0\nENDSEC\n0\nEOF\n",
+      "unit": "ft",
+      "length": 304800.0,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": false
+    },
+    {
+      "name": "undeclared-None",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n1000\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n1\n42\n1\n0\nENDSEC\n0\nEOF\n",
+      "unit": "mm",
+      "length": 1.0,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": true
+    },
+    {
+      "name": "undeclared-0",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n0\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n1000\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n1\n42\n1\n0\nENDSEC\n0\nEOF\n",
+      "unit": "mm",
+      "length": 1.0,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": true
+    },
+    {
+      "name": "undeclared-999",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n999\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n1000\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n1\n42\n1\n0\nENDSEC\n0\nEOF\n",
+      "unit": "mm",
+      "length": 1.0,
+      "blockLength": 2.1,
+      "insertScale": 1.0,
+      "assumed": true
+    },
+    {
+      "name": "misdeclared-original-is-preserved",
+      "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n0\nBLOCK_RECORD\n2\nYatak\n70\n4\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\nYatak\n70\n0\n10\n0\n20\n0\n3\nYatak\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n2100\n21\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n1000\n21\n0\n0\nINSERT\n8\n0\n2\nYatak\n10\n0\n20\n0\n41\n.1\n42\n.1\n0\nENDSEC\n0\nEOF\n",
+      "unit": "mm",
+      "length": 1.0,
+      "blockLength": 2.1,
+      "insertScale": 0.1,
+      "assumed": false
+    }
+  ]
+}

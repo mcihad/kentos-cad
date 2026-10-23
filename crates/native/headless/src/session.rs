@@ -33,6 +33,7 @@ pub struct Session {
     /// Read from a v1 JSON file: saved only to a new path, never over it.
     legacy: bool,
     selection: Vec<kentos_domain::Uuid>,
+    opened_cad: Option<Value>,
     group: Option<Group>,
     jobs: crate::rpc::Jobs,
     /// What opening found of the bound files (docs/adr/0506).
@@ -50,8 +51,24 @@ impl Session {
         Ok(Self::of(doc, None, false))
     }
 
-    /// A `.kcad` file (v2, or v1 JSON).
+    /// A `.kcad` file (v2/v1), or a DWG/DXF/NCZ opened as a new CAD drawing.
     pub fn open(path: &Path) -> Result<Self, HeadlessError> {
+        let native_content = (|| {
+            use std::io::Read;
+            let mut prefix = [0u8; 64];
+            let count = std::fs::File::open(path).ok()?.read(&mut prefix).ok()?;
+            Some(matches!(kentos_kcad::sniff(&prefix[..count]), kentos_kcad::Sniff::Kcad | kentos_kcad::Sniff::KcadDamaged | kentos_kcad::Sniff::Json))
+        })().unwrap_or(false);
+        if let Some(format) = kentos_native_application::cad_open::Format::of(path).filter(|_| !native_content) {
+            let bytes = kentos_native_application::file_import::read_cad_bytes(path)
+                .map_err(|e| HeadlessError::new("file_unreadable", e.message))?;
+            let opened = kentos_native_application::cad_open::read(path, &bytes, format, &mut kentos_formats::watch::Quiet)
+                .map_err(|e| HeadlessError::new("file_unreadable", e))?;
+            let source = json!({"path":path.display().to_string(), "unit":opened.unit, "report":opened.report});
+            let mut session = Self::of(opened.document, None, false);
+            session.opened_cad = Some(source);
+            return Ok(session);
+        }
         let (mut doc, legacy) = files::read(path)?;
         // Bound GeoPackages moved with the project are found again (docs/adr/0506).
         let located = kentos_native_application::source_places::relocate(&mut doc, path);
@@ -79,6 +96,7 @@ impl Session {
             path,
             legacy,
             selection: Vec::new(),
+            opened_cad: None,
             group: None,
             jobs: crate::rpc::Jobs::default(),
             located: Default::default(),
@@ -112,6 +130,9 @@ impl Session {
                 "Açık bir işlem grubu varken kaydedilmez: önce grubu bitirin ya da iptal edin.",
             ));
         }
+        if path.is_some_and(|p| kentos_native_application::cad_open::Format::of(p).is_some()) {
+            return Err(HeadlessError::new("invalid_file_path", "Kaydet yalnız KentOS (.kcad) biçimindedir. DWG/DXF/NCZ kaynağı üzerine yazılmaz; yeni bir .kcad yolu verin."));
+        }
         let target = match (path, &self.path) {
             (Some(p), _) => p.to_path_buf(),
             (None, Some(p)) if !self.legacy => p.clone(),
@@ -127,7 +148,7 @@ impl Session {
             (None, None) => {
                 return Err(HeadlessError::new(
                     "no_path",
-                    "Çizim bir dosyadan açılmadı: kaydetmek için bir yol verin.",
+                    "Kaydedilecek KentOS dosyası henüz seçilmedi; .kcad uzantılı bir yol verin.",
                 ));
             }
         };
@@ -285,6 +306,7 @@ impl Session {
                 fields.insert("path".into(), json!(path.display().to_string()));
             }
             fields.insert("legacy".into(), json!(self.legacy));
+            if let Some(source) = &self.opened_cad { fields.insert("openedCad".into(), source.clone()); }
         }
         summary
     }

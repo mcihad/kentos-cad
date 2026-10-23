@@ -20,7 +20,7 @@ use crate::annotation_scale::typed_plot_scale;
 use crate::app::Message;
 
 /// What Ölçek says under its name (the largest scale is `MAX_PLOT_SCALE`'s).
-const SCALE_HINT: &str = "Projenin türünün ölçeklerinden biri ya da yazılan bir ölçek (1:1 – 1:1.000.000). Semboller, kalemler ve yeni açıklamalar bu ölçeğe göre çizilir.";
+const SCALE_HINT: &str = "Projenin türünün ölçeklerinden biri ya da yazılan bir ölçek (1:1 – 1:1.000.000). Semboller, kalemler ve yeni açıklamalar bu ölçeğe göre çizilir. Model geometrisi gerçek boyutunda kalır; pafta ölçeği ayrıca seçilir.";
 
 /// What each kind writes, under its name (the web's `ANNOTATION_NOTE`).
 fn note(kind: AnnotationKind) -> &'static str {

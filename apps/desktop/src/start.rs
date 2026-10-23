@@ -166,7 +166,7 @@ impl App {
                 "file.open",
                 Icon::Open,
                 "Dosya aç",
-                "Bu bilgisayardaki bir .kcad çizimi".to_owned(),
+                "KCAD, DWG, DXF veya NCZ çizimi".to_owned(),
             ))
             .push(action(
                 "cloud.open",

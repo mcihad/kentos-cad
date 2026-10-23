@@ -450,6 +450,8 @@ class DocumentInfo:
     """The axes and angles the values and the windows speak (docs/adr/0256 §5)."""
     home_view: Bounds | None = None
     """Where the view opens, in the project's plane; None: every object."""
+    opened_cad: Mapping[str, Any] | None = None
+    """External CAD source path, unit decision and read report. Its source is never the save target."""
 
 
 BoundsLike = Bounds | Sequence[float]
@@ -508,7 +510,7 @@ class Document:
           UTM …), 0 for local. A project with a system needs it or a
           ``province`` (plate code), whose TUREF zone is then taken; it is
           never guessed.
-        - ``drawing_unit``: a local project's unit (``mm``, ``cm``, ``m``, ``in``, ``ft``);
+        - ``drawing_unit``: a local project's unit (``mm``, ``cm``, ``m``, ``in``, ``ft``); defaults to ``mm``;
           one with a system is in metres.
         - ``plot_scale``: 1000 for 1:1000; metres default to 1000, centimetres
           to 50, millimetres/inches/feet to 1.
@@ -535,7 +537,8 @@ class Document:
 
     @classmethod
     def open(cls, path: str | os.PathLike[str]) -> Document:
-        """A ``.kcad`` file: KCAD v2, or an old v1 JSON one (saved to a new path only)."""
+        """Open KCAD (v2/v1), DWG, DXF or NCZ. External CAD opens as its own
+        drawing; save to a new ``.kcad`` path to preserve the source file."""
         return cls(_host(_native.Session.open, os.fspath(path)))
 
     @classmethod
@@ -633,6 +636,7 @@ class Document:
             stamps=None if s.get("stamps") is None else Stamps.from_json(s["stamps"]),
             conventions=_conventions(s.get("conventions")),
             home_view=None if s.get("homeView") is None else decode(Bounds, s["homeView"], "Document.info"),
+            opened_cad=s.get("openedCad"),
         )
 
     def sheets(self) -> list[SheetInfo]:

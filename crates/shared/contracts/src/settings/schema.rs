@@ -538,7 +538,7 @@ fn settings() -> Vec<SettingDescriptor> {
         ),
         choice(
             "newProjects.drawingUnit",
-            "m",
+            "mm",
             &[
                 ("mm", "Milimetre"),
                 ("cm", "Santimetre"),

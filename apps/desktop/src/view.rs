@@ -1493,8 +1493,9 @@ impl App {
                 let unit = settings.unit();
                 bar = bar.separator().push(
                     Readout::new(row![
-                        label::muted("Ölçek"),
+                        label::muted("Yazı"),
                         label::strong(kentos_project::wizard::scale_text(scale)),
+                        label::muted(unit.mark()),
                     ]
                     .spacing(4)
                     .align_y(iced::Center))

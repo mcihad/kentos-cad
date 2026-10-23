@@ -12,6 +12,9 @@ use serde_json::{Value, json};
 #[path = "headless/dwg.rs"]
 mod dwg;
 
+#[path = "headless/cad_open.rs"]
+mod cad_open;
+
 #[path = "headless/atlas_cases.rs"]
 mod atlas_cases;
 

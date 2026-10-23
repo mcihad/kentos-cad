@@ -15,6 +15,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **CAD açılışı ve birimler (23 Ekim 2026; [ADR 0624](docs/adr/0624-cad-units-direct-open-and-property-input.md)).**
+  - Yeni yerel CAD'in başlangıcı mm / 1:1 yazı ölçeğidir; kaydedilmiş açık kullanıcı birimi tercihi korunur.
+    Gerçek koordinatlı CAD ve GIS metre/harita ölçeğiyle devam eder. Model gerçek boyuttadır; pafta ve yazı ölçeği ayrıdır.
+  - DWG/DXF/NCZ, Yeni proje olmadan Aç ile ayrı CAD çizimi olur; kaynak birimi dosyadan gelir. Kaydet KCAD ister,
+    özgün CAD kaynağına yazmaz. Native `cad_open`, desktop/Python/MCP'nin ortak yoludur; birim ve okuma raporu verilir.
+  - Bildirilmeyen kaynak birimi mm varsayımıyla ve açık raporla okunur; yanlış başlık gerçek uzunluk bilinmeden
+    tahminle düzeltilmez. İçe aktarın açık kaynak birimi/bilinen ölçü yolu ADR 0621'deki gibi sürer.
+  - Özellik hücresi yalnız yazı/düzenleme durumu değişince yeniden yerleşir; tek karmaşık nesnenin geometrik
+    özellikleri de belge/seçim değişene kadar önbellektedir. Eşzamansız ek dosya eylemleri canlıdır.
 - **Web katmanına ara (sahibin kesin kararı, 12 Ekim 2026; [ADR 0228](docs/adr/0228-web-pause-desktop-and-cloud-first.md)).**
   - Web'in son hâli **`1aad00d0`**'dır. Bundan sonra maddeler yalnız masaüstünde ve gerektiğinde bulutta (`kentosd`), Python'da ve
     MCP'de yapılır.

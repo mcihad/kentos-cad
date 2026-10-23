@@ -1357,8 +1357,8 @@ fn screens() {
 
 /// Where the text's Metin row (Genel closed) and the parcel's Katman row are
 /// in the 1440 × 900 window (read off the pictures).
-const YAZI_Y: f32 = 620.0;
-const KATMAN_Y: f32 = 618.0;
+const YAZI_Y: f32 = 738.0;
+const KATMAN_Y: f32 = 674.0;
 
 /// A multi-part area (docs/adr/0143): its corners, holes, perimeter and area
 /// are every part's, and a row says how many parts it has. Parcel 4
@@ -2382,4 +2382,42 @@ fn a_hundred_thousand_objects_build_the_panel_quickly() {
             .any(|s| s.title == "Ortak öznitelikler")
     );
     assert!(took.as_millis() < 100, "{took:?}");
+}
+
+#[test]
+fn a_single_objects_cached_properties_follow_edits_undo_and_other_drawings() {
+    let mut app = objects();
+    select(&mut app, &[4]);
+    let before = value(&app, "Genel", "Renk");
+    assert!(app.properties_cache.0.borrow().is_some(), "one object is cached too");
+    event(&mut app, Event::Color(vec![Slot(4)], Some("#123456".into())));
+    assert_ne!(value(&app, "Genel", "Renk"), before);
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(value(&app, "Genel", "Renk"), before);
+    let other = crate::files_testing::drawing(0);
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(other)))));
+    select(&mut app, &[4]);
+    let _ = rows(&app);
+    assert_eq!(app.properties_cache.0.borrow().as_ref().expect("cached").0.0,
+        app.document.as_ref().expect("open").session);
+}
+
+#[test]
+#[ignore = "single complex CAD object timing; run explicitly without concurrent benchmarks"]
+fn one_long_polylines_cached_panel_does_not_remeasure_on_every_keystroke() {
+    let mut app = objects();
+    let Entity::Polygon(mut p) = entity(&app, 4) else { panic!("area") };
+    p.base = base("cizim");
+    p.pts = (0..100_000).map(|i| Wire { x: E + f64::from(i)*0.1, y: N }).collect();
+    let slot = add(&mut app, Entity::Polyline(p));
+    select(&mut app, &[slot]);
+    let doc = app.document.as_ref().expect("open");
+    let started = std::time::Instant::now();
+    let _ = app.properties_panel(doc);
+    let cold = started.elapsed();
+    let started = std::time::Instant::now();
+    for _ in 0..100 { std::hint::black_box(app.properties_panel(doc)); }
+    let warm = started.elapsed();
+    println!("100.000 köşeli tek nesne: ilk panel {cold:?}, 100 tekrar {warm:?}");
+    assert!(warm < cold*10 + std::time::Duration::from_millis(20), "panel remeasured: {cold:?} -> {warm:?}");
 }

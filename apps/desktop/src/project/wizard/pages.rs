@@ -170,7 +170,7 @@ pub(super) fn kind<'a>(s: &'a State, theme: &Theme) -> Element<'a, Message> {
     page(
         head(
             "Ne tür bir proje?",
-            "Tür; sahneyi, eksenleri ve şeridi belirler. Proje ayarları’ndan sonra da değiştirilebilir.",
+            "Tür; sahneyi, eksenleri ve şeridi belirler. Proje başladıktan sonra değişmez.",
         ),
         parts,
     )
@@ -666,7 +666,7 @@ pub(super) fn details(s: &State, current: Option<Note>) -> Element<'_, Message> 
         section("Proje adı", name),
         section(
             if d.kind == Kind::Cad {
-                "Çizim ölçeği"
+                "Yazı ve ölçü ölçeği"
             } else {
                 "Harita ölçeği"
             },
@@ -706,7 +706,7 @@ pub(super) fn details(s: &State, current: Option<Note>) -> Element<'_, Message> 
         head(
             "Ölçek ve ayrıntılar",
             if d.kind == Kind::Cad {
-                "Çizim ölçeği yazıları, ölçüleri ve kalemleri kâğıda göre boyutlandırır."
+                "Model gerçek boyutunda (1:1) çizilir. Bu ölçek yalnız yazı ve ölçü boylarını belirler; geometriyi büyütmez veya küçültmez. Pafta ölçeği çıktı sırasında seçilir."
             } else {
                 "Harita ölçeği yazıları, sembolleri ve paftayı boyutlandırır."
             },

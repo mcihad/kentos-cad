@@ -34,6 +34,8 @@ kentos-sheet = { path = "../../shared/sheet", default-features = false }
 # DXF içe aktar (docs/adr/0257 §3): `file.import.dxf` reads the file with the shared reader, as the window does.
 kentos-formats = { path = "../../shared/formats" }
 kentos-dwg = { path = "../dwg" }
+# Direct NCZ opening shares the existing decoder with the desktop import.
+kentos-ncz = { path = "../../shared/ncz" }
 # Blocks from a drawing file (file.import.block, docs/adr/0316 §3): the .kcad codec reads it.
 kentos-kcad = { path = "../../shared/kcad" }
 # A linked table's file digest (docs/adr/0327 §5): SHA-256, the workspace's locked `sha2`.

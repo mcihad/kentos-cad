@@ -1175,6 +1175,21 @@ fn a_millimetre_cad_project_takes_metres_and_says_its_unit() {
     );
 }
 
+#[test]
+fn external_cad_opens_through_mcp_without_creating_a_project_first() {
+    let mut server = Server::new();
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/formats/v1/dxf-units/mm.dxf");
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    assert_eq!(opened["isError"], false, "{opened}");
+    let content = &opened["structuredContent"];
+    assert_eq!(content["summary"]["settings"]["workspace"], "cad");
+    assert_eq!(content["summary"]["settings"]["drawingUnit"], "mm");
+    assert!(content["summary"]["openedCad"]["report"].is_object());
+    let made = call(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    assert_eq!(made["structuredContent"]["summary"]["settings"]["drawingUnit"], "mm");
+    assert_eq!(made["structuredContent"]["summary"]["settings"]["plotScale"], 1.0);
+}
+
 /// The protocol through MCP (docs/adr/0253): a command's summary and its
 /// stamps, a request sent again, what a call expects, a job, the journal.
 #[test]

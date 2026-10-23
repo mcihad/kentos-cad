@@ -81,6 +81,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `tabs`'ı yeni sekmeleri tutar. Görünüm'deki tema, yazı tipi ve zemin kartları web'de de şeritten Uygulama ayarları'na
   gider. Özellikler panelinin çizim ölçeği durum çubuğuna geçer.
 - Halka (ADR 0622 §9): `tool.donut` web dönüşünde `cad.donut.create` ile yazacak; merkez, iç/dış çap, görünüş ve katman açık girdidir. Hazır tarama geometrisi arayüzde hesaplanmayacak.
+- CAD açılışı/birimler (ADR 0624): Aç, DWG/DXF/NCZ'yi Yeni proje olmadan kendi CAD çizimi olarak açar; kaynak korunur,
+  KCAD kaydedilir. Yeni yerel CAD varsayılanı mm / 1:1 yazı ölçeğidir. Kaynak birimi, model boyu ve pafta ölçeği ayrı
+  sunulmalı; web dönüşünde aynı native açılış ve kaynak raporu uygulanmalı. Masaüstü özellik hücresinin boş olaylarda
+  yeniden yerleşmeme ve tek karmaşık nesnenin özelliklerini önbelleğe alma kabulü web'e kendi girdi mimarisiyle taşınmalı.
 - İşlemlerin Python kodu konsolda (ADR 0622 §7): masaüstünde `drafting.pythonEcho`. Web'in Python konsolu yoktur;
   web dönerse aynı tercih web'in komut geçmişinin kodunu bir panele yazabilir.
 - Veritabanı bağlantıları (ADR 0623): masaüstünde PostgreSQL bağlantıları pencereyle tanımlanır, cihazda saklanır

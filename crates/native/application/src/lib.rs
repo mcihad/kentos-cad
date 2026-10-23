@@ -1259,3 +1259,6 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_CHANGESET_APPLY_VERSION,
     ),
 ];
+
+/// Opening external CAD files into a new native drawing.
+pub mod cad_open;

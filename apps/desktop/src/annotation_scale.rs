@@ -53,7 +53,7 @@ pub(crate) fn plot_scale_menu(current: f64, unit: kentos_commands::DrawingUnit) 
     kentos_project::wizard::project_scales(true, unit, current)
         .into_iter()
         .fold(
-            kentos_ui::widget::Menu::new().header("Çizim ölçeği: yazılar ve ölçüler"),
+            kentos_ui::widget::Menu::new().header("Yazı ve ölçü ölçeği — model gerçek boyutunda"),
             |menu, scale| {
                 menu.radio(
                     scale_text(scale),
@@ -204,6 +204,8 @@ impl App {
             Frame::new(TITLE)
                 .push(
                     column![
+                        label::caption("Model gerçek boyutunda kalır. Bu ayar yazıları ve ölçüleri boyutlandırır; pafta ölçeği ayrıdır.")
+                            .style(style::text::muted),
                         row![label::mono("1:"), kentos_ui::widget::focus_ring(field)]
                             .spacing(8)
                             .align_y(Center),

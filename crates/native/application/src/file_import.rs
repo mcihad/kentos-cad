@@ -194,7 +194,7 @@ fn read_file(doc: &Document, input: &ImportDxf, format: CadFormat) -> Result<Rea
 }
 
 /// The same resolved paths and sheet validation for a window's already-read bytes and a command's read.
-fn prepare_cad(doc: &Document, path: &Path, result: &mut ImportResult) -> Result<(), Stop> {
+pub(crate) fn prepare_cad(doc: &Document, path: &Path, result: &mut ImportResult) -> Result<(), Stop> {
     crate::cad_layouts::merge(doc, &result.layouts).map_err(|message| refuse(codes::IMPORT_UNREADABLE, message, "path"))?;
     for note in crate::cad_layouts::diagnostics(&result.layouts) {
         if !result.report.notes.iter().any(|n| n.what == note.what && n.reason == note.reason) { result.report.notes.push(note); }
