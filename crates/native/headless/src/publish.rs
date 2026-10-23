@@ -285,27 +285,50 @@ fn work(
     if matches!(op, CallOp::Validate) {
         return Ok((
             SheetsPublished {
+                resources: None,
                 path: input.path.clone(),
                 sheets: chosen,
                 files: Vec::new(),
                 issues: Vec::new(),
                 source,
-                ready: true,
+                ready: false,
                 manifest: target.join(MANIFEST).display().to_string(),
                 sha256: String::new(),
             },
             None,
         ));
     }
+    let mut issues = Vec::new();
+    let resource_plan = if input.resources {
+        match crate::sheet_resources::Prepared::plan(doc, input, &book, &chosen) {
+            Ok(p) => {
+                issues.extend(p.issues.clone());
+                Some(p)
+            }
+            Err(e) => {
+                issues.push(issue(
+                    "",
+                    &e.code,
+                    e.message,
+                    true,
+                    "Kaynak paketi sorununu düzeltip yeniden denetleyin.".into(),
+                ));
+                None
+            }
+        }
+    } else {
+        None
+    };
+    let resources = resource_plan.as_ref().map(|p| p.output.clone());
+    let total_work = chosen.len() as u64 + resources.as_ref().map_or(0, |r| r.files.len() as u64);
     let mut staging = if matches!(op, CallOp::Execute) {
         Some(stage(&target)?)
     } else {
         None
     };
     let mut files = Vec::new();
-    let mut issues = Vec::new();
     if let Some(p) = progress {
-        p.set(0, chosen.len() as u64);
+        p.set(0, total_work);
     }
     let date = kentos_plot::book::today();
     let user = kentos_plot::book::current_user();
@@ -316,11 +339,21 @@ fn work(
             geo: input.geo,
             layers: input.layers,
         };
-        let page_progress = if input.mode == SheetPublishMode::Single {
-            progress
-        } else {
-            None
-        };
+        let page_progress = progress.map(|p| {
+            p.span(
+                if input.mode == SheetPublishMode::Single {
+                    0
+                } else {
+                    n as u64
+                },
+                if input.mode == SheetPublishMode::Single {
+                    chosen.len() as u64
+                } else {
+                    1
+                },
+                total_work,
+            )
+        });
         match kentos_plot::book::book_pdf_controlled(
             &snapshot,
             sheets,
@@ -328,7 +361,7 @@ fn work(
             &date,
             input.drawing.as_deref(),
             Some(opts),
-            page_progress,
+            page_progress.as_ref(),
         ) {
             Ok(pdf) => {
                 for (owner, f) in pdf.sheet_findings {
@@ -420,14 +453,15 @@ fn work(
                 } else {
                     (n + 1) as u64
                 },
-                chosen.len() as u64,
+                total_work,
             );
         }
     }
     stopped(progress)?;
     let ready = !issues.iter().any(|i| i.error);
-    let bytes=serde_json::to_vec_pretty(&serde_json::json!({"format":"kentos.publish/1","drawingSet":chosen.iter().filter_map(|id| book.sheet(id).map(|s|serde_json::json!({"id":s.id,"name":s.name,"info":s.drawing_info}))).collect::<Vec<_>>(),"source":source,"date":date,"options":{"mode":input.mode,"naming":input.naming,"dpi":input.dpi,"geo":input.geo,"layers":input.layers},"sheets":chosen,"files":files,"issues":issues})).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
+    let bytes=serde_json::to_vec_pretty(&serde_json::json!({"format":"kentos.publish/1","drawingSet":chosen.iter().filter_map(|id| book.sheet(id).map(|s|serde_json::json!({"id":s.id,"name":s.name,"info":s.drawing_info}))).collect::<Vec<_>>(),"source":source,"date":date,"options":{"mode":input.mode,"naming":input.naming,"dpi":input.dpi,"geo":input.geo,"layers":input.layers},"sheets":chosen,"files":files,"resources":resources,"issues":issues})).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
     let report = SheetsPublished {
+        resources,
         path: input.path.clone(),
         sheets: chosen,
         files,
@@ -451,6 +485,17 @@ fn work(
                 "sheets",
             ));
         }
+        if let Some(resources) = &resource_plan {
+            let phase = progress.map(|p| {
+                p.span(
+                    report.sheets.len() as u64,
+                    resources.output.files.len() as u64,
+                    total_work,
+                )
+            });
+            resources.write(&stage.path, phase.as_ref())?;
+        }
+        stopped(progress)?;
         crate::files::write_bytes(&bytes, &stage.path.join(MANIFEST))
             .map_err(|e| refuse("file_unwritable", e.message, "path"))?;
         stopped(progress)?;
@@ -462,6 +507,9 @@ fn work(
         fs::rename(&stage.path, &target)
             .map_err(|e| refuse("file_unwritable", e.to_string(), "path"))?;
         stage.committed = true;
+        if let Some(p) = progress {
+            p.set(total_work, total_work);
+        }
         return Ok((
             report.clone(),
             Some(FileEffect {

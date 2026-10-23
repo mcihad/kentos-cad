@@ -12,11 +12,15 @@ path: string, drawing?: string,
  */
 sheets?: Array<string>, mode: SheetPublishMode,
 /**
+ * Also deliver the source drawing, local dependencies, bundled fonts and captured plot resources.
+ */
+resources: boolean,
+/**
  * One PDF's leaf name; .pdf is appended when missing.
  */
 name?: string,
 /**
- * Separate PDF leaf names: {index} (001...), {sheet}, {id}. Collisions get a stable numeric suffix.
+ * Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
  */
 naming: string,
 /**

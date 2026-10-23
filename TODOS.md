@@ -71,6 +71,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - CAD-SHEET-24 (ADR 0614): Baskı kalibrasyonu sistem şablonu, fiziksel 100 mm işaretler ve 1:50 bağ/kilit; PNG dpi metadatası. Web dönüşünde galeri ve mevcut create/edit sözleşmesiyle aynı şablon kullanılmalı; cihaz yazdırmasında %100/sığdırma tercihi açık gösterilmeli.
 - CAD-SHEET-25 (ADR 0615): Sıralı seçili/tüm pafta yayını, tek/ayrı PDF, taşınabilir adlar, arka plan plan/yayın işi, ilerleme/iptal, pafta bazlı eksik kaynak raporu ve atomik teslim klasörü. Web dönüşünde `file.publish.sheets` sözleşmesini kullanmalı; hesap/yayın mantığı arayüzde tekrarlanmamalı.
 - CAD-SHEET-26 (ADR 0616): Standart pafta kimliği, atomik metadata batch, alt küme ve canlı pafta/görünüm dizini; antet alanları ve yayın adları aynı kaydı okur. Web dönüşünde Pafta seti editörü ve drawingSet tablo kaynağı aynı sözleşmelerden kurulmalı.
+- CAD-SHEET-27 (ADR 0617): Kaynaklarıyla pafta yayını; taşınabilir KCAD/xref/veri bağımlılıkları, gerçek TTF/OFL, yakalanmış .kplot/sayfa düzeni ve revision/hash envanteri; iptal ve tekrar istekte tam dosya doğrulaması. Web dönüşünde mevcut file.publish.sheets resources seçeneği kullanılmalı.
 
 - CAD-SHEET-06 (ADR 0591): ortak ops şeması ve asset/inversePictures sözleşmesi hazır. Web yeniden açılınca pafta komut işleyicisi baytların birleştirme/tam değiştirme ve ters bayt politikasını izlemeli; harita yazısı ve zengin stil çıktı eşdeğerliği kendi çıktı yolunda sınanmalı. Native CPU/SVG rasterizer web'e taşınmış sayılmaz.
 

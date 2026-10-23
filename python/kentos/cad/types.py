@@ -4233,6 +4233,20 @@ SheetPublishModeName = Literal["single", "separate"]
 """The names of :class:`SheetPublishMode`, for a plain string."""
 
 
+class SheetResourceKind(_StrEnum):
+    DRAWING = "drawing"
+    DEPENDENCY = "dependency"
+    FONT = "font"
+    LICENSE = "license"
+    PLOT_PROFILE = "plotProfile"
+    PAGE_SETUPS = "pageSetups"
+    MANIFEST = "manifest"
+
+
+SheetResourceKindName = Literal["drawing", "dependency", "font", "license", "plotProfile", "pageSetups", "manifest"]
+"""The names of :class:`SheetResourceKind`, for a plain string."""
+
+
 class ShpEncoding(_StrEnum):
     """The .dbf's text code page.
 
@@ -40137,6 +40151,7 @@ class PublishSheets(_Model):
         name: One PDF's leaf name; .pdf is appended when missing.
         naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
         pin: A plan's immutable document pin; changed source refuses publication before any file is exposed.
+        resources: Also deliver the source drawing, local dependencies, bundled fonts and captured plot resources.
         sheets: None means every sheet; an explicit list is used in exactly its supplied order.
     """
     path: str
@@ -40148,6 +40163,7 @@ class PublishSheets(_Model):
     name: str | None | Unset = UNSET
     naming: str = "{index}-{sheet}"
     pin: SheetPublishPin | None | Unset = UNSET
+    resources: bool = False
     sheets: list[str] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -40165,6 +40181,7 @@ class PublishSheets(_Model):
         out["naming"] = self.naming
         if self.pin is not UNSET:
             out["pin"] = None if self.pin is None else self.pin.to_json()
+        out["resources"] = self.resources
         if self.sheets is not UNSET:
             out["sheets"] = None if self.sheets is None else list(self.sheets)
         return out
@@ -40181,6 +40198,7 @@ class PublishSheets(_Model):
             name=data.get("name", UNSET),
             naming=data["naming"] if "naming" in data else "{index}-{sheet}",
             pin=UNSET if "pin" not in data else None if data["pin"] is None else SheetPublishPin.from_json(data["pin"]),
+            resources=data["resources"] if "resources" in data else False,
             sheets=UNSET if "sheets" not in data else None if data["sheets"] is None else list(data["sheets"]),
         )
 
@@ -43973,6 +43991,63 @@ class SettingsSet(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetDeliveryResource(_Model):
+    """
+    Attributes:
+        path: Normal relative path inside the delivery folder.
+        bytes: Unit: bytes.
+    """
+    path: str
+    kind: SheetResourceKind | SheetResourceKindName
+    bytes: int
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["kind"] = _enum_out(self.kind)
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetDeliveryResource:
+        return cls(
+            path=data["path"],
+            kind=_enum_in(SheetResourceKind, data["kind"]),
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetDeliveryResources(_Model):
+    """
+    Attributes:
+        project: The portable source drawing, relative to the root publication manifest.
+        bytes: Unit: bytes.
+    """
+    project: str
+    files: list[SheetDeliveryResource]
+    bytes: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["project"] = self.project
+        out["files"] = [e0.to_json() for e0 in self.files]
+        out["bytes"] = self.bytes
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetDeliveryResources:
+        return cls(
+            project=data["project"],
+            files=[SheetDeliveryResource.from_json(e0) for e0 in data["files"]],
+            bytes=data["bytes"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetInfo(_Model):
     """A sheet of the book as the answer lists it.
     Attributes:
@@ -44362,6 +44437,10 @@ class SheetsFit(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SheetsPublished(_Model):
+    """
+    Attributes:
+        ready: True after full output/source checks; validate-only deliberately leaves this false.
+    """
     path: str
     sheets: list[str]
     files: list[SheetPublishedFile]
@@ -44370,6 +44449,7 @@ class SheetsPublished(_Model):
     ready: bool
     manifest: str
     sha256: str
+    resources: SheetDeliveryResources | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -44381,6 +44461,8 @@ class SheetsPublished(_Model):
         out["ready"] = self.ready
         out["manifest"] = self.manifest
         out["sha256"] = self.sha256
+        if self.resources is not UNSET:
+            out["resources"] = None if self.resources is None else self.resources.to_json()
         return out
 
     @classmethod
@@ -44394,6 +44476,7 @@ class SheetsPublished(_Model):
             ready=data["ready"],
             manifest=data["manifest"],
             sha256=data["sha256"],
+            resources=UNSET if "resources" not in data else None if data["resources"] is None else SheetDeliveryResources.from_json(data["resources"]),
         )
 
 
@@ -68841,6 +68924,8 @@ __all__ = [
     "SettingsSet",
     "ShapePaperItemKind",
     "SharpRectangleCorners",
+    "SheetDeliveryResource",
+    "SheetDeliveryResources",
     "SheetInfo",
     "SheetMapInfo",
     "SheetModelScope",
@@ -68850,6 +68935,8 @@ __all__ = [
     "SheetPublishModeName",
     "SheetPublishPin",
     "SheetPublishedFile",
+    "SheetResourceKind",
+    "SheetResourceKindName",
     "SheetSeries",
     "SheetTemplateSource",
     "SheetsCreate",

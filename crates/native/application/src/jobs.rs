@@ -26,8 +26,9 @@ use kentos_domain::Document;
 #[derive(Debug, Default)]
 pub struct Progress {
     stop: Arc<AtomicBool>,
-    done: AtomicU64,
-    total: AtomicU64,
+    done: Arc<AtomicU64>,
+    total: Arc<AtomicU64>,
+    range: Option<(u64, u64, u64)>,
 }
 
 impl Progress {
@@ -48,8 +49,44 @@ impl Progress {
 
     /// `done` of `total`.
     pub fn set(&self, done: u64, total: u64) {
+        let (done, total) = if let Some((offset, units, whole)) = self.range {
+            (
+                offset.saturating_add(if total == 0 {
+                    0
+                } else {
+                    ((u128::from(done.min(total)) * u128::from(units)) / u128::from(total)) as u64
+                }),
+                whole,
+            )
+        } else {
+            (done.min(total), total)
+        };
         self.total.store(total, Ordering::Relaxed);
         self.done.store(done.min(total), Ordering::Relaxed);
+    }
+
+    /// A phase of the same job; cancellation and the public counter stay shared.
+    pub fn span(&self, offset: u64, units: u64, total: u64) -> Self {
+        let offset = offset.min(total);
+        let units = units.min(total - offset);
+        let range = if let Some((base, size, whole)) = self.range {
+            let part = |v: u64| {
+                if total == 0 {
+                    0
+                } else {
+                    ((u128::from(v) * u128::from(size)) / u128::from(total)) as u64
+                }
+            };
+            (base.saturating_add(part(offset)), part(units), whole)
+        } else {
+            (offset, units, total)
+        };
+        Self {
+            stop: Arc::clone(&self.stop),
+            done: Arc::clone(&self.done),
+            total: Arc::clone(&self.total),
+            range: Some(range),
+        }
     }
 
     /// How far, 0 to 1; none before the command said.
@@ -309,4 +346,31 @@ impl Job {
             )
         })
     }
+}
+
+#[cfg(test)]
+#[test]
+fn sheet_package_progress_phases_share_cancellation_and_count_without_jumping_back() {
+    let progress = Progress::default();
+    let pdf = progress.span(0, 3, 35);
+    let resources = progress.span(3, 32, 35);
+    for (done, want) in [(0, 0.), (1, 1. / 35.), (2, 2. / 35.), (3, 3. / 35.)] {
+        pdf.set(done, 3);
+        assert!((progress.fraction().unwrap() - want).abs() < 1e-14);
+    }
+    for (done, want) in [(0, 3. / 35.), (1, 4. / 35.), (16, 19. / 35.), (32, 1.)] {
+        resources.set(done, 32);
+        assert!((progress.fraction().unwrap() - want).abs() < 1e-14);
+    }
+    let nested = resources.span(0, 16, 32);
+    nested.set(8, 16);
+    assert!((progress.fraction().unwrap() - 11. / 35.).abs() < 1e-14);
+    nested.stop();
+    assert!(pdf.stopped());
+    assert!(progress.stopped());
+    let largest = Progress::default();
+    largest
+        .span(u64::MAX - 5, 5, u64::MAX)
+        .set(u64::MAX, u64::MAX);
+    assert_eq!(largest.fraction(), Some(1.));
 }

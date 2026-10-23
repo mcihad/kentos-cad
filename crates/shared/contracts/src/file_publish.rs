@@ -46,6 +46,9 @@ pub struct PublishSheets {
     pub sheets: Option<Vec<String>>,
     #[serde(default)]
     pub mode: SheetPublishMode,
+    /// Also deliver the source drawing, local dependencies, bundled fonts and captured plot resources.
+    #[serde(default)]
+    pub resources: bool,
     /// One PDF's leaf name; .pdf is appended when missing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -97,12 +100,56 @@ pub struct SheetPublishIssue {
 #[cfg_attr(feature = "ts", ts(export))]
 #[serde(rename_all = "camelCase")]
 pub struct SheetsPublished {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub resources: Option<SheetDeliveryResources>,
     pub path: String,
     pub sheets: Vec<String>,
     pub files: Vec<SheetPublishedFile>,
     pub issues: Vec<SheetPublishIssue>,
     pub source: SheetPublishPin,
+    /// True after full output/source checks; validate-only deliberately leaves this false.
     pub ready: bool,
     pub manifest: String,
     pub sha256: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub enum SheetResourceKind {
+    Drawing,
+    Dependency,
+    Font,
+    License,
+    PlotProfile,
+    PageSetups,
+    Manifest,
+}
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SheetDeliveryResource {
+    /// Normal relative path inside the delivery folder.
+    pub path: String,
+    pub kind: SheetResourceKind,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit"="bytes")))]
+    pub bytes: u64,
+    pub sha256: String,
+}
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SheetDeliveryResources {
+    /// The portable source drawing, relative to the root publication manifest.
+    pub project: String,
+    pub files: Vec<SheetDeliveryResource>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit"="bytes")))]
+    pub bytes: u64,
 }

@@ -1597,7 +1597,7 @@ pub fn call(doc: &mut Document, envelope: CallEnvelope) -> CallAnswer {
     };
     let state = match call::preflight(doc, &envelope, version, &input) {
         Ok(state) => state,
-        Err(answer) => return *answer,
+        Err(answer) => return crate::delivery_integrity::checked_replay(&command,*answer),
     };
     let mut answer = run_answer(doc, &command, version, envelope.op, &input, &state);
     call::complete(&mut answer, &input);
@@ -1673,7 +1673,7 @@ pub fn job_work(
             Ok(state) => state,
             Err(answer) => {
                 return JobOutcome {
-                    answer: *answer,
+                    answer: crate::delivery_integrity::checked_replay(&command,*answer),
                     copy: None,
                     effect: None,
                 };
@@ -1729,6 +1729,9 @@ pub fn run(doc: &mut Document, command: &str, op: CallOp, input: Value) -> Resul
 pub fn replay_row(doc: &mut Document, row: &CallRecord) -> Option<ReplayStep> {
     let command = row.command.as_deref()?;
     let mut input = row.input.clone()?;
+    if command==kentos_commands::FILE_PUBLISH_SHEETS {
+        return Some(crate::delivery_integrity::replay_row(row));
+    }
     // A plan writes nothing: the file written then may be there.
     input["overwrite"] = Value::Bool(true);
     let (answer, _) = run_typed(doc, command, CallOp::Plan, input).ok()?;

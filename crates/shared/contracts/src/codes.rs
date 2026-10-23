@@ -1414,6 +1414,7 @@ codes! {
     /// Objects a file format has no place for, or written approximately (docs/adr/0502).
     EXPORT_LOSSES = "export_losses", Warning, false, "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir.";
     /// The PDF could not be made.
+    PACKAGE_INCOMPLETE = "package_incomplete", Failed, false, "Teslimin kaynakları eksik veya taşınamıyor; kaynak raporunu düzeltin.";
     PUBLISH_BLOCKED = "publish_blocked", Failed, false, "Pafta seti eksik kaynak veya ön denetim hatası nedeniyle yayınlanmadı; pafta bazlı plan raporunu düzeltip yeniden deneyin.";
     PDF_UNWRITABLE = "pdf_unwritable", Failed, false, "PDF yapılamadı.";
 

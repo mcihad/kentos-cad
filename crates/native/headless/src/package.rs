@@ -62,6 +62,8 @@ pub struct Planned {
     copies: Vec<(PathBuf, String)>,
 }
 
+impl Planned { pub(crate) fn manifest_bytes(&self)->&[u8]{&self.manifest} }
+
 /// The copies named so far.
 #[derive(Default)]
 struct Copies {
@@ -239,6 +241,14 @@ fn place(kept: &str, from: Option<&Path>) -> Option<PathBuf> {
 /// The plan: the copies named, the links rewritten, the project file encoded.
 pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> {
     let target = target(&input.path)?;
+    plan_at(doc,input,target)
+}
+/// A child delivery is planned before its parent is exposed; encoded absolute links name the final child.
+pub(crate) fn plan_nested(doc:&Document,input:&PackageProject)->Result<Planned,Refused>{
+    let outer=target(&input.path)?;
+    plan_at(doc,input,outer.join("kaynaklar"))
+}
+fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf)->Result<Planned,Refused>{
     let name = file_name(input, doc)?;
     let from = match input.from.as_deref() {
         Some(f) if !(Path::new(f).is_absolute() && Path::new(f).is_dir()) => {
@@ -632,7 +642,15 @@ fn walk_entity(
 /// Writes the package planned: the copies and the project file into a temporary folder beside the target, each copy
 /// read back against its SHA-256, then the folder renamed into place. Nothing is left on a failure.
 pub fn write(planned: &Planned) -> Result<(), Refused> {
-    let target = &planned.target;
+    write_at(planned,&planned.target,None)
+}
+pub(crate) fn write_into(planned:&Planned,to:&Path,progress:Option<&kentos_native_application::jobs::Progress>)->Result<(),Refused>{
+    target(&to.display().to_string())?;
+    write_at(planned,to,progress)
+}
+fn write_at(planned:&Planned,target:&Path,progress:Option<&kentos_native_application::jobs::Progress>)->Result<(),Refused>{
+    let stop=|| if progress.is_some_and(kentos_native_application::jobs::Progress::stopped){Err(refuse("cancelled","Kaynak paketi iptal edildi; teslim oluşturulmadı.","path"))}else{Ok(())};
+    let total=planned.copies.len() as u64+2;
     let parent = target.parent().unwrap_or(Path::new("."));
     let leaf = target
         .file_name()
@@ -643,7 +661,10 @@ pub fn write(planned: &Planned) -> Result<(), Refused> {
     let result = (|| {
         fs::create_dir_all(&temp)
             .map_err(|e| fail(format!("{} açılamadı: {e}", temp.display())))?;
-        for ((from, rel), meant) in planned.copies.iter().zip(&planned.output.files) {
+        stop()?;
+        if let Some(p)=progress{p.set(0,total);}
+        for (n,((from, rel), meant)) in planned.copies.iter().zip(&planned.output.files).enumerate() {
+            stop()?;
             let to = rel.split('/').fold(temp.clone(), |p, part| p.join(part));
             // `veri/` and `profiller/`: each folder is made by its first copy.
             if let Some(folder) = to.parent() {
@@ -661,9 +682,13 @@ pub fn write(planned: &Planned) -> Result<(), Refused> {
                     from.display()
                 )));
             }
+            if let Some(p)=progress{p.set(n as u64+1,total);}
         }
+        stop()?;
         files::write_bytes(&planned.project, &temp.join(&planned.name))
             .map_err(|e| fail(e.message))?;
+        if let Some(p)=progress{p.set(total-1,total);}
+        stop()?;
         let manifest = temp.join(MANIFEST);
         fs::write(&manifest, &planned.manifest)
             .map_err(|e| fail(format!("{} yazılamadı: {e}", manifest.display())))?;
@@ -675,6 +700,8 @@ pub fn write(planned: &Planned) -> Result<(), Refused> {
                 manifest.display()
             )));
         }
+        stop()?;
+        if let Some(p)=progress{p.set(total,total);}
         if target.is_dir() {
             fs::remove_dir(target)
                 .map_err(|e| fail(format!("{} kaldırılamadı: {e}", target.display())))?;

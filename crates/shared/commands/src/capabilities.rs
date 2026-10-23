@@ -4279,7 +4279,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id:"file.publish.sheets",
-        refusals:&[&["invalid_file_path","file_exists","no_sheets","unknown_sheet","book_unreadable","file_unwritable","pin_mismatch","publish_blocked"]],
+        refusals:&[&["invalid_file_path","file_exists","no_sheets","unknown_sheet","book_unreadable","file_unwritable","pin_mismatch","publish_blocked","package_incomplete","integrity_failed"]],
         warnings:&[],targets:none,
     },
     Entry {

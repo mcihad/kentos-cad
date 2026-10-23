@@ -56,6 +56,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         name: str | None | Unset = UNSET,
         naming: str = "{index}-{sheet}",
         pin: SheetPublishPin | None | Unset = UNSET,
+        resources: bool = False,
         sheets: Sequence[str] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -80,6 +81,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
             name: One PDF's leaf name; .pdf is appended when missing.
             naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
             pin: A plan's immutable document pin; changed source refuses publication before any file is exposed.
+            resources: Also deliver the source drawing, local dependencies, bundled fonts and captured plot resources.
             sheets: None means every sheet; an explicit list is used in exactly its supplied order.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -103,6 +105,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
             name=name,
             naming=naming,
             pin=pin,
+            resources=resources,
             sheets=_opt(sheets, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
@@ -120,6 +123,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         name: str | None | Unset = UNSET,
         naming: str = "{index}-{sheet}",
         pin: SheetPublishPin | None | Unset = UNSET,
+        resources: bool = False,
         sheets: Sequence[str] | None | Unset = UNSET,
     ) -> SheetsPublished:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -135,6 +139,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
             name=name,
             naming=naming,
             pin=pin,
+            resources=resources,
             sheets=_opt(sheets, lambda x: list(x)),
         ))
 
@@ -152,6 +157,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         name: str | None | Unset = UNSET,
         naming: str = "{index}-{sheet}",
         pin: SheetPublishPin | None | Unset = UNSET,
+        resources: bool = False,
         sheets: Sequence[str] | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -167,6 +173,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
             name=name,
             naming=naming,
             pin=pin,
+            resources=resources,
             sheets=_opt(sheets, lambda x: list(x)),
         ))
 
@@ -184,6 +191,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         name: str | None | Unset = UNSET,
         naming: str = "{index}-{sheet}",
         pin: SheetPublishPin | None | Unset = UNSET,
+        resources: bool = False,
         sheets: Sequence[str] | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -204,6 +212,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
             name=name,
             naming=naming,
             pin=pin,
+            resources=resources,
             sheets=_opt(sheets, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 

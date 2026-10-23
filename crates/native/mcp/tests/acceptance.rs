@@ -1102,3 +1102,17 @@ fn an_agent_edits_drawing_set_fields_and_queries_the_persisted_standard_identity
     let after=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));assert_eq!(kept,after);
     std::fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn sheet_package_agent_delivers_real_fonts_and_refuses_a_changed_recorded_delivery(){
+    let fx:Value=serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/delivery.json")).unwrap();
+    let root=std::env::temp_dir().join(format!("kentos-mcp-sheet-package-{}",std::process::id()));let _=std::fs::remove_dir_all(&root);std::fs::create_dir_all(&root).unwrap();let source=root.join("source.kcad");std::fs::write(&source,serde_json::to_vec(&fx["model"]).unwrap()).unwrap();
+    let mut server=Server::new();let opened=call(&mut server,"drawing.open",json!({"path":source}));let drawing=opened["drawing"].as_str().unwrap();
+    let ops=fx["book"]["sheets"].as_array().unwrap().iter().map(|s|json!({"op":"addSheet","sheet":s})).collect::<Vec<_>>();call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":ops}));
+    let input=json!({"drawing":drawing,"path":root.join("delivery"),"resources":true,"requestId":"complete-delivery"});
+    let output=call(&mut server,"file.publish.sheets",input.clone());assert_eq!(output["status"],"completed","{output}");
+    let files=output["output"]["resources"]["files"].as_array().unwrap();assert_eq!(files.iter().filter(|f|f["kind"]=="font").count(),22);assert_eq!(files.iter().filter(|f|f["kind"]=="license").count(),7);
+    let replay=call(&mut server,"file.publish.sheets",input.clone());assert_eq!(replay["replayed"],true);
+    let font=files.iter().find(|f|f["kind"]=="font").unwrap()["path"].as_str().unwrap();std::fs::write(root.join("delivery").join(font),b"changed").unwrap();
+    let refused=tool_result(&mut server,"file.publish.sheets",input);assert_eq!(refused["isError"],true);assert_eq!(refused["structuredContent"]["error"]["code"],"integrity_failed");std::fs::remove_dir_all(root).unwrap();
+}

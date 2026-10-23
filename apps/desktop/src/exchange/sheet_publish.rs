@@ -56,6 +56,7 @@ pub enum Event {
     All(bool),
     Move(usize, i32),
     Separate(bool),
+    Resources(bool),
     Naming(String),
     Name(String),
     Path(String),
@@ -143,6 +144,7 @@ impl App {
             drawing: doc.path.as_ref().map(|p| p.display().to_string()),
             sheets: None,
             mode: SheetPublishMode::Single,
+            resources: false,
             name: Some("paftalar".into()),
             naming: "{index}-{sheet}".into(),
             dpi: None,
@@ -198,6 +200,10 @@ impl App {
                 if i < s.rows.len() && j >= 0 && (j as usize) < s.rows.len() {
                     s.rows.swap(i, j as usize);
                 }
+                s.changed();
+            }
+            Event::Resources(on) => {
+                s.input.resources = on;
                 s.changed();
             }
             Event::Separate(on) => {
@@ -428,8 +434,20 @@ impl App {
             .label("Her pafta ayrı PDF")
             .into()
         });
+        body = body.push(if busy {
+            Element::from(
+                Switch::<Message>::disabled(s.input.resources).label("Çizimi ve kaynaklarını ekle"),
+            )
+        } else {
+            Element::from(
+                Switch::new(s.input.resources, |v| event(Event::Resources(v)))
+                    .label("Çizimi ve kaynaklarını ekle"),
+            )
+        });
         if s.input.mode == SheetPublishMode::Separate {
-            body = body.push(label::caption("Dosya adı · {index}, {sheet}, {number}, {revision}"));
+            body = body.push(label::caption(
+                "Dosya adı · {index}, {sheet}, {number}, {revision}",
+            ));
             let mut field =
                 text_input("{index}-{sheet}", &s.input.naming).style(style::field::input);
             if !busy {
@@ -471,6 +489,13 @@ impl App {
         }
         if let Some(report) = &s.report {
             let mut results = column![].spacing(4);
+            if let Some(resources) = &report.resources {
+                results = results.push(label::caption(format!(
+                    "Kaynak paketi: {} · {} dosya",
+                    resources.project,
+                    resources.files.len()
+                )));
+            }
             for f in &report.files {
                 results = results.push(label::caption(&f.name));
             }

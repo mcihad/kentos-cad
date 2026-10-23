@@ -1093433,6 +1093433,11 @@
             ],
             "description": "A plan's immutable document pin; changed source refuses publication before any file is exposed."
           },
+          "resources": {
+            "default": false,
+            "description": "Also deliver the source drawing, local dependencies, bundled fonts and captured plot resources.",
+            "type": "boolean"
+          },
           "sheets": {
             "description": "None means every sheet; an explicit list is used in exactly its supplied order.",
             "items": {
@@ -1093452,6 +1093457,61 @@
       },
       "output": {
         "$defs": {
+          "SheetDeliveryResource": {
+            "additionalProperties": false,
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "kind": {
+                "$ref": "#/$defs/SheetResourceKind"
+              },
+              "path": {
+                "description": "Normal relative path inside the delivery folder.",
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "kind",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "SheetDeliveryResources": {
+            "additionalProperties": false,
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "files": {
+                "items": {
+                  "$ref": "#/$defs/SheetDeliveryResource"
+                },
+                "type": "array"
+              },
+              "project": {
+                "description": "The portable source drawing, relative to the root publication manifest.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "project",
+              "files",
+              "bytes"
+            ],
+            "type": "object"
+          },
           "SheetPublishIssue": {
             "properties": {
               "code": {
@@ -1093523,6 +1093583,18 @@
               "sha256"
             ],
             "type": "object"
+          },
+          "SheetResourceKind": {
+            "enum": [
+              "drawing",
+              "dependency",
+              "font",
+              "license",
+              "plotProfile",
+              "pageSetups",
+              "manifest"
+            ],
+            "type": "string"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1093546,7 +1093618,18 @@
             "type": "string"
           },
           "ready": {
+            "description": "True after full output/source checks; validate-only deliberately leaves this false.",
             "type": "boolean"
+          },
+          "resources": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetDeliveryResources"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "sha256": {
             "type": "string"
@@ -1093576,6 +1093659,61 @@
       },
       "plan": {
         "$defs": {
+          "SheetDeliveryResource": {
+            "additionalProperties": false,
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "kind": {
+                "$ref": "#/$defs/SheetResourceKind"
+              },
+              "path": {
+                "description": "Normal relative path inside the delivery folder.",
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "kind",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "SheetDeliveryResources": {
+            "additionalProperties": false,
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "files": {
+                "items": {
+                  "$ref": "#/$defs/SheetDeliveryResource"
+                },
+                "type": "array"
+              },
+              "project": {
+                "description": "The portable source drawing, relative to the root publication manifest.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "project",
+              "files",
+              "bytes"
+            ],
+            "type": "object"
+          },
           "SheetPublishIssue": {
             "properties": {
               "code": {
@@ -1093647,6 +1093785,18 @@
               "sha256"
             ],
             "type": "object"
+          },
+          "SheetResourceKind": {
+            "enum": [
+              "drawing",
+              "dependency",
+              "font",
+              "license",
+              "plotProfile",
+              "pageSetups",
+              "manifest"
+            ],
+            "type": "string"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1093670,7 +1093820,18 @@
             "type": "string"
           },
           "ready": {
+            "description": "True after full output/source checks; validate-only deliberately leaves this false.",
             "type": "boolean"
+          },
+          "resources": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetDeliveryResources"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "sha256": {
             "type": "string"
@@ -1093707,7 +1093868,9 @@
           "book_unreadable",
           "file_unwritable",
           "pin_mismatch",
-          "publish_blocked"
+          "publish_blocked",
+          "package_incomplete",
+          "integrity_failed"
         ]
       },
       "examples": [
@@ -1097502,6 +1097665,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir."
+    },
+    {
+      "code": "package_incomplete",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Teslimin kaynakları eksik veya taşınamıyor; kaynak raporunu düzeltin."
     },
     {
       "code": "publish_blocked",

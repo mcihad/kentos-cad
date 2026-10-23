@@ -36,6 +36,8 @@ pub mod files;
 pub mod gis_export;
 pub mod package;
 pub mod publish;
+mod sheet_resources;
+mod delivery_integrity;
 mod query;
 pub mod rpc;
 mod session;

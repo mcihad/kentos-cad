@@ -2485,7 +2485,7 @@ fn sheet25_publish_screens() {
         snap.settle(&mut app, App::view, &mut update);
         snap.render(app.view(), &app.theme()).save(out.join(format!("sheet25-options-{theme}-{text}.png"))).unwrap();
         snap.input(&mut app, App::view, &mut update,
-            kentos_ui::snapshot::Input::Click(iced::Point::new(if text == 18 { 862. } else { 758. }, if text == 18 { 595. } else { 574. })));
+            kentos_ui::snapshot::Input::Click(iced::Point::new(if text == 18 { 862. } else { 758. }, if text == 18 { 612. } else { 589. })));
         assert!(app.sheet_publish_running(), "Denetle button must start the job");
         wait_sheet_publication(&mut app);
         let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("publisher closed") };
@@ -2543,4 +2543,29 @@ fn sheet26_drawing_set_command_opens_from_model_without_a_hidden_dialog() {
     sheet(&mut app,Sheet::DrawingSet(kentos_sheet_ui::drawing_set::SetMessage::Edit(kentos_sheet_ui::drawing_set::Field::Number,"A-001".into())));
     sheet(&mut app,Sheet::DrawingSet(kentos_sheet_ui::drawing_set::SetMessage::Save));
     assert_eq!(kept(&app).unwrap().sheets[0].drawing_info.as_ref().unwrap().number,"A-001");
+}
+
+#[test]
+fn sheet_package_desktop_publishes_the_complete_source_without_editing_model_or_paper(){
+    use crate::exchange::{Window,sheet_publish::Event as E};
+    let mut app=multipage_set_app("light",13);let before=app.document.as_ref().unwrap().model.to_snapshot_v2();let path=scratch("sheet-package").join("delivery");let _=app.sheet_publish_open();
+    for event in [E::Path(path.display().to_string()),E::All(true),E::Resources(true),E::Plan]{let _=app.sheet_publish_event(event);}
+    wait_sheet_publication(&mut app);let Some(Window::SheetPublish(s))=&app.exchange else{panic!("window")};let plan=s.report.as_ref().unwrap();assert!(plan.ready,"{:?}",plan.issues);assert_eq!(plan.resources.as_ref().unwrap().files.iter().filter(|f|matches!(f.kind,kentos_commands::SheetResourceKind::Font)).count(),22);assert!(!path.exists());
+    let _=app.sheet_publish_event(E::Publish);wait_sheet_publication(&mut app);assert!(path.join("kaynaklar/cizim.kcad").is_file());let after=app.document.as_ref().unwrap().model.to_snapshot_v2();assert_eq!(after.entities,before.entities);assert_eq!(after.layers,before.layers);assert_eq!(after.settings,before.settings);assert_eq!(after.sheets,before.sheets);
+}
+#[test]
+#[ignore="GPU complete delivery publication controls, run alone"]
+fn sheet_package_publish_screens(){
+    use crate::exchange::{Window,sheet_publish::Event as E};
+    crate::drawing_fonts::load();kentos_ui::theme::motion::set_reduced(true);let out=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme,text) in [("light",13),("dark",13),("dark",18)]{
+        let mut app=multipage_set_app(theme,text);let path=scratch(&format!("sheet-package-{theme}-{text}")).join("delivery");let _=app.sheet_publish_open();
+        for event in [E::Path(path.display().to_string()),E::All(true),E::Separate(true)]{let _=app.sheet_publish_event(event);}
+        let mut snap=kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100.,720.)).unwrap();let mut update=|app:&mut App,m:Message|{let _=app.update(m);};snap.settle(&mut app,App::view,&mut update);
+        snap.render(app.view(),&app.theme()).save(out.join(format!("sheet27-before-{theme}-{text}.png"))).unwrap();
+        snap.input(&mut app,App::view,&mut update,kentos_ui::snapshot::Input::Click(iced::Point::new(if text==18{104.}else{238.},421.)));
+        assert!(matches!(&app.exchange,Some(Window::SheetPublish(s)) if s.input.resources),"real resource switch must enable the source package");
+        snap.render(app.view(),&app.theme()).save(out.join(format!("sheet27-package-options-{theme}-{text}.png"))).unwrap();
+        snap.input(&mut app,App::view,&mut update,kentos_ui::snapshot::Input::Click(iced::Point::new(if text==18{862.}else{758.},if text==18{612.}else{589.})));assert!(app.sheet_publish_running(),"real Denetle button must start the job");wait_sheet_publication(&mut app);let Some(Window::SheetPublish(s))=&app.exchange else{panic!("window")};assert!(s.report.as_ref().unwrap().ready,"{}",s.status);assert!(s.report.as_ref().unwrap().resources.is_some());snap.settle(&mut app,App::view,&mut update);snap.render(app.view(),&app.theme()).save(out.join(format!("sheet27-package-ready-{theme}-{text}.png"))).unwrap();
+    }
 }
