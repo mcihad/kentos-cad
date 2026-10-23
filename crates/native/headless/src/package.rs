@@ -10,6 +10,11 @@
 //! substitute face is said as left out; KentOS's own faces come with it. The project's data profiles and mappings
 //! (`profiller/` beside the project file) are copied byte for byte under the same name (docs/adr/0558). `paket.json`
 //! lists all of it.
+//!
+//! How the bound sources go is asked (docs/adr/0596): GeoPackages and database tables each copied, kept as linked or
+//! embedded (the link removed in the package's project); a database table is copied as a GeoPackage of the rows its link
+//! reads (`package_sources`). `leaveOut` keeps a link (its layer emptied in the package), an object's files or an
+//! external reference's source out.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -18,8 +23,8 @@ use std::path::{Path, PathBuf};
 use kentos_commands::encoding::{sha256_hex, sha256_reader_hex};
 use kentos_commands::{
     CommandWarning, DocumentSnapshotV2, FontMatch, FontsReport, LeftWhy, MAPPING_SUFFIX,
-    MAX_PACKAGE_NAME, PROFILE_FOLDER, PROFILE_SUFFIX, PackageLeft, PackageProject, PackagedFile,
-    PackagedKind, ProjectPackaged, SourceKind, codes,
+    MAX_PACKAGE_NAME, PROFILE_FOLDER, PROFILE_SUFFIX, PackageEmbedded, PackageLeft, PackageProject,
+    PackageWay, PackagedFile, PackagedKind, ProjectPackaged, SourceKind, SourceLink, codes,
 };
 use kentos_domain::Document;
 use kentos_native_application::links::find_in;
@@ -27,6 +32,7 @@ use serde_json::Value;
 
 use crate::file_commands::Refused;
 use crate::files;
+use crate::package_sources::{Leave, Scratch, copy_database};
 
 /// The folder the copies go into, in the package.
 const DATA: &str = "veri";
@@ -60,6 +66,8 @@ pub struct Planned {
     manifest: Vec<u8>,
     /// Each copy: the file it is copied from and its path in the package.
     copies: Vec<(PathBuf, String)>,
+    /// The database tables' copies, written for the plan; removed with it (docs/adr/0596 §2).
+    _scratch: Option<Scratch>,
 }
 
 /// The copies named so far.
@@ -70,6 +78,8 @@ struct Copies {
     /// Names taken in `veri/`, folded to lower case (a case-insensitive disk keeps them apart too).
     names: BTreeSet<String>,
     list: Vec<(PathBuf, String, PackagedKind, u32)>,
+    /// A database table's copy (its path in the package) → the database's address, the table and its rows.
+    databases: BTreeMap<String, (String, String, u64)>,
 }
 
 impl Copies {
@@ -238,6 +248,15 @@ fn place(kept: &str, from: Option<&Path>) -> Option<PathBuf> {
 
 /// The plan: the copies named, the links rewritten, the project file encoded.
 pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> {
+    plan_reading(doc, input, true)
+}
+
+/// [`plan`]; `read`: whether database tables are read for their copies (a validate does not, docs/adr/0596 §2).
+pub fn plan_reading(
+    doc: &Document,
+    input: &PackageProject,
+    read: bool,
+) -> Result<Planned, Refused> {
     let target = target(&input.path)?;
     let name = file_name(input, doc)?;
     let from = match input.from.as_deref() {
@@ -253,6 +272,10 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
         Some(f) => Some(PathBuf::from(f)),
         None => None,
     };
+    // What is left out (docs/adr/0596 §3): the links' layers emptied in a copy of the drawing.
+    let leave = Leave::read(doc, &input.leave_out)?;
+    let emptied = leave.emptied(doc);
+    let doc = emptied.as_ref().unwrap_or(doc);
     let snapshot = doc.to_snapshot_v2();
     let mut value = serde_json::to_value(&snapshot)
         .map_err(|e| refuse(codes::FILE_UNWRITABLE, e.to_string(), "path"))?;
@@ -265,7 +288,8 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
     if let Some(Value::Array(list)) = value.get_mut("entities") {
         for (k, e) in list.iter_mut().enumerate() {
             let at = uids.get(k).cloned().unwrap_or_default();
-            walk_entity(e, &at, from_ref, &search, &mut copies, &mut left);
+            let out = leave.objects.contains(&at);
+            walk_entity(e, &at, out, from_ref, &search, &mut copies, &mut left);
         }
     }
     if let Some(Value::Array(blocks)) = value.get_mut("blocks") {
@@ -278,7 +302,21 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
                     .unwrap_or_default()
                     .to_owned();
                 if let Some(x) = b.get_mut("xref") {
-                    xref(x, &name, from_ref, &search, &target, &mut copies, &mut left);
+                    if leave.xrefs.contains(&name) {
+                        left.push(PackageLeft {
+                            kind: PackagedKind::Xref,
+                            path: x
+                                .get("path")
+                                .and_then(Value::as_str)
+                                .unwrap_or_default()
+                                .to_owned(),
+                            why: LeftWhy::Excluded,
+                            at: format!("xref:{name}"),
+                            objects: None,
+                        });
+                    } else {
+                        xref(x, &name, from_ref, &search, &target, &mut copies, &mut left);
+                    }
                 }
                 continue;
             }
@@ -288,53 +326,126 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
             );
             if let Some(Value::Array(list)) = b.get_mut("entities") {
                 for e in list.iter_mut() {
-                    walk_entity(e, &at, from_ref, &search, &mut copies, &mut left);
+                    walk_entity(e, &at, false, from_ref, &search, &mut copies, &mut left);
                 }
             }
         }
     }
-    // Bound layers' sources.
+    // Bound layers' sources (docs/adr/0596 §1): copied, kept or embedded; the links left out go with their layers.
+    let links: Vec<SourceLink> = doc.settings().sources.clone();
+    let geopackages = input.geopackages.unwrap_or(PackageWay::Copy);
+    let databases = input.databases.unwrap_or(PackageWay::Keep);
+    // Links removed from the package's project, and links whose bases go (a database's copy has other row ids).
+    let mut gone: BTreeSet<String> = BTreeSet::new();
+    let mut rebased: BTreeSet<String> = BTreeSet::new();
+    let mut embedded: Vec<PackageEmbedded> = Vec::new();
+    let mut scratch: Option<Scratch> = None;
     if let Some(Value::Array(sources)) = value.pointer_mut("/settings/sources") {
-        for s in sources.iter_mut() {
-            let id = s
-                .get("id")
-                .and_then(Value::as_str)
-                .unwrap_or_default()
-                .to_owned();
-            let kind: Option<SourceKind> = s
-                .get("kind")
-                .cloned()
-                .and_then(|k| serde_json::from_value(k).ok());
-            let path = s
-                .get("path")
-                .and_then(Value::as_str)
-                .unwrap_or_default()
-                .to_owned();
-            if kind == Some(SourceKind::Postgis) {
+        for (s, link) in sources.iter_mut().zip(&links) {
+            let id = link.id.clone();
+            if let Some(&objects) = leave.links.get(&id) {
                 left.push(PackageLeft {
                     kind: PackagedKind::Source,
-                    path,
-                    why: LeftWhy::Database,
-                    at: id,
+                    path: link.path.clone(),
+                    why: LeftWhy::Excluded,
+                    at: id.clone(),
+                    objects: Some(objects),
                 });
+                gone.insert(id);
                 continue;
             }
-            let relative = s.get("relative").and_then(Value::as_str).map(str::to_owned);
-            let found = find_in(&path, relative.as_deref(), from_ref, &[]).at;
-            let Some(at) = found else {
-                left.push(PackageLeft {
-                    kind: PackagedKind::Source,
-                    path,
-                    why: LeftWhy::Missing,
-                    at: id,
-                });
-                continue;
+            let database = link.kind == SourceKind::Postgis;
+            let embed = PackageEmbedded {
+                at: id.clone(),
+                layer: link.layer.clone(),
+                path: link.path.clone(),
+                table: link.table.clone(),
+                objects: u32::try_from(doc.by_layer_with_uids(&link.layer).count())
+                    .unwrap_or(u32::MAX),
             };
-            let rel = copies.take(&at, PackagedKind::Source);
-            let abs = rel.split('/').fold(target.clone(), |p, part| p.join(part));
-            s["path"] = Value::String(abs.display().to_string());
-            s["relative"] = Value::String(rel);
+            match (if database { databases } else { geopackages }, database) {
+                (PackageWay::Embed, _) => {
+                    embedded.push(embed);
+                    gone.insert(id);
+                }
+                (PackageWay::Keep, _) => left.push(PackageLeft {
+                    kind: PackagedKind::Source,
+                    path: link.path.clone(),
+                    why: if database {
+                        LeftWhy::Database
+                    } else {
+                        LeftWhy::Kept
+                    },
+                    at: id,
+                    objects: None,
+                }),
+                (PackageWay::Copy, true) => {
+                    if !read {
+                        continue;
+                    }
+                    if scratch.is_none() {
+                        scratch = Some(Scratch::new()?);
+                    }
+                    let dir = scratch.as_ref().map(|d| d.0.clone()).unwrap_or_default();
+                    let Some(copy) = copy_database(doc, link, &dir)? else {
+                        // No row to copy: the layer, empty, is the offline state.
+                        embedded.push(embed);
+                        gone.insert(id);
+                        continue;
+                    };
+                    let rel = copies.take(&copy.file, PackagedKind::Source);
+                    copies.databases.insert(
+                        rel.clone(),
+                        (link.path.clone(), link.table.clone(), copy.rows),
+                    );
+                    let abs = rel.split('/').fold(target.clone(), |p, part| p.join(part));
+                    s["kind"] = Value::String("geopackage".into());
+                    s["path"] = Value::String(abs.display().to_string());
+                    s["relative"] = Value::String(rel);
+                    s["table"] = Value::String(copy.table);
+                    s["revision"] = Value::String(copy.sha256);
+                    match doc.settings().srid {
+                        0 => {
+                            if let Some(m) = s.as_object_mut() {
+                                m.remove("srid");
+                            }
+                        }
+                        srid => s["srid"] = Value::from(srid),
+                    }
+                    rebased.insert(id);
+                }
+                (PackageWay::Copy, false) => {
+                    let relative = s.get("relative").and_then(Value::as_str).map(str::to_owned);
+                    let found = find_in(&link.path, relative.as_deref(), from_ref, &[]).at;
+                    let Some(at) = found else {
+                        left.push(PackageLeft {
+                            kind: PackagedKind::Source,
+                            path: link.path.clone(),
+                            why: LeftWhy::Missing,
+                            at: id,
+                            objects: None,
+                        });
+                        continue;
+                    };
+                    let rel = copies.take(&at, PackagedKind::Source);
+                    let abs = rel.split('/').fold(target.clone(), |p, part| p.join(part));
+                    s["path"] = Value::String(abs.display().to_string());
+                    s["relative"] = Value::String(rel);
+                }
+            }
         }
+        sources.retain(|s| {
+            !s.get("id")
+                .and_then(Value::as_str)
+                .is_some_and(|id| gone.contains(id))
+        });
+    }
+    if let Some(Value::Array(bases)) = value.pointer_mut("/settings/sourceBases") {
+        bases.retain(|b| {
+            !b.get("source")
+                .and_then(Value::as_str)
+                .is_some_and(|id| gone.contains(id) || rebased.contains(id))
+        });
     }
     profile_files(from_ref, &mut copies, &mut left);
     // The typefaces: KentOS's own faces come with it; a style naming another is drawn in a substitute.
@@ -346,6 +457,7 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
                 path: f.file.clone().unwrap_or_default(),
                 why: LeftWhy::Substituted,
                 at: format!("stil:{}", f.name),
+                objects: None,
             });
         }
     }
@@ -376,13 +488,16 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
             )
         })?;
         bytes += size;
+        let database = copies.databases.get(rel);
         files_out.push(PackagedFile {
             path: rel.clone(),
-            from: from.display().to_string(),
+            from: database.map_or_else(|| from.display().to_string(), |d| d.0.clone()),
             kind: *kind,
             bytes: size,
             sha256: sha,
             links: *links,
+            table: database.map(|d| d.1.clone()),
+            rows: database.map(|d| d.2),
         });
         planned.push((from.clone(), rel.clone()));
     }
@@ -397,6 +512,8 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
                     LeftWhy::Address => "adres",
                     LeftWhy::Substituted => "yerine başka yüzle çizilir",
                     LeftWhy::Unreadable => "okunamadı",
+                    LeftWhy::Kept => "bağlı bırakıldı",
+                    LeftWhy::Excluded => "dışarıda bırakıldı",
                 };
                 format!("{} ({why})", l.path)
             })
@@ -419,6 +536,7 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
         &project_sha256,
         &files_out,
         &left,
+        &embedded,
         &fonts.faces,
     );
     bytes += manifest.len() as u64;
@@ -430,6 +548,7 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
             project_sha256,
             files: files_out,
             left,
+            embedded,
             manifest: target.join(MANIFEST).display().to_string(),
             manifest_sha256: sha256_hex(&manifest),
             faces: fonts.faces,
@@ -441,6 +560,7 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
         project,
         manifest,
         copies: planned,
+        _scratch: scratch,
     })
 }
 
@@ -478,6 +598,7 @@ fn profile_files(from: Option<&Path>, copies: &mut Copies, left: &mut Vec<Packag
                 path: path.display().to_string(),
                 why: LeftWhy::Unreadable,
                 at: format!("{PROFILE_FOLDER}:{name}"),
+                objects: None,
             });
             continue;
         }
@@ -495,15 +616,20 @@ fn manifest_of(
     sha256: &str,
     files: &[PackagedFile],
     left: &[PackageLeft],
+    embedded: &[PackageEmbedded],
     faces: &[kentos_commands::DrawingFont],
 ) -> Vec<u8> {
-    let manifest = serde_json::json!({
+    let mut manifest = serde_json::json!({
         "format": MANIFEST_FORMAT,
         "project": { "path": name, "bytes": bytes, "sha256": sha256 },
         "files": files,
         "left": left,
         "faces": faces,
     });
+    // The links embedded (docs/adr/0596 §1), only when there are any: a package of none keeps its manifest.
+    if !embedded.is_empty() {
+        manifest["embedded"] = serde_json::json!(embedded);
+    }
     let mut out = serde_json::to_vec_pretty(&manifest).unwrap_or_default();
     out.push(b'\n');
     out
@@ -540,15 +666,18 @@ fn xref(
             path,
             why: LeftWhy::Missing,
             at: format!("xref:{name}"),
+            objects: None,
         }),
     }
 }
 
 /// One object's links: its file (an image or a raster, looked for with the search paths too), a point cloud's files,
 /// a linked table, its attachments.
+#[allow(clippy::too_many_arguments)]
 fn walk_entity(
     e: &mut Value,
     at: &str,
+    out: bool,
     from: Option<&Path>,
     search: &[String],
     copies: &mut Copies,
@@ -569,6 +698,17 @@ fn walk_entity(
         let Some(kept) = slot.as_str().map(str::to_owned) else {
             return;
         };
+        // Left out as asked (docs/adr/0596 §3): not copied, the link as it is.
+        if out {
+            left.push(PackageLeft {
+                kind,
+                path: kept,
+                why: LeftWhy::Excluded,
+                at: at.clone(),
+                objects: None,
+            });
+            return;
+        }
         let found = if looks.is_empty() {
             place(&kept, from)
         } else {
@@ -587,6 +727,7 @@ fn walk_entity(
                 path: kept,
                 why: LeftWhy::Missing,
                 at: at.clone(),
+                objects: None,
             }),
         }
     };
@@ -600,6 +741,7 @@ fn walk_entity(
             path: url.to_owned(),
             why: LeftWhy::Address,
             at: at.clone(),
+            objects: None,
         });
     }
     if let Some(Value::Array(parts)) = e.get_mut("sources") {
@@ -613,6 +755,7 @@ fn walk_entity(
                     path: url.to_owned(),
                     why: LeftWhy::Address,
                     at: at.clone(),
+                    objects: None,
                 });
             }
         }

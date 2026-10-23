@@ -293,6 +293,7 @@ fn screens() {
                 path: out.display().to_string(),
                 name: Some("kadastro".into()),
                 from: None,
+                ..Default::default()
             };
             let planned = kentos_headless::package::plan(&doc.model, &input).expect("planned");
             kentos_headless::package::write(&planned).expect("packed");
@@ -416,7 +417,9 @@ fn a_moved_file_is_bound_again_and_a_package_is_said() {
             path: "/yok/kayip.jpg".into(),
             why: kentos_commands::LeftWhy::Missing,
             at: String::new(),
+            objects: None,
         }],
+        embedded: Vec::new(),
         manifest: "/teslim/paket/paket.json".into(),
         manifest_sha256: "0".repeat(64),
         faces: Vec::new(),

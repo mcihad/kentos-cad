@@ -2269,15 +2269,19 @@ class LeftWhy(_StrEnum):
     - ``address``: An address (http, https): read where the package opens, not copied.
     - ``substituted``: A typeface KentOS does not have (an SHX line font, another family): its texts are drawn in a substitute face.
     - ``unreadable``: The file is there and cannot be read (a profile or a mapping the disk does not give): not copied.
+    - ``kept``: A bound GeoPackage whose link was kept as asked (`geopackages: keep`, docs/adr/0596 §1).
+    - ``excluded``: Left out as asked (`leaveOut`, docs/adr/0596 §3).
     """
     MISSING = "missing"
     DATABASE = "database"
     ADDRESS = "address"
     SUBSTITUTED = "substituted"
     UNREADABLE = "unreadable"
+    KEPT = "kept"
+    EXCLUDED = "excluded"
 
 
-LeftWhyName = Literal["missing", "database", "address", "substituted", "unreadable"]
+LeftWhyName = Literal["missing", "database", "address", "substituted", "unreadable", "kept", "excluded"]
 """The names of :class:`LeftWhy`, for a plain string."""
 
 
@@ -2852,6 +2856,22 @@ class OrderTo(_StrEnum):
 
 OrderToName = Literal["front", "back", "above", "under"]
 """The names of :class:`OrderTo`, for a plain string."""
+
+
+class PackageWay(_StrEnum):
+    """How a bound layer's source goes into a package (docs/adr/0596 §1).
+
+    - ``copy``: Copied into `veri/`, the link the copy's: a GeoPackage byte for byte, a database table as a GeoPackage.
+    - ``keep``: The link as it is, nothing copied.
+    - ``embed``: The link removed in the package's project, the layer holding its objects as its own.
+    """
+    COPY = "copy"
+    KEEP = "keep"
+    EMBED = "embed"
+
+
+PackageWayName = Literal["copy", "keep", "embed"]
+"""The names of :class:`PackageWay`, for a plain string."""
 
 
 class PackagedKind(_StrEnum):
@@ -32097,17 +32117,53 @@ class OperationStep(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PackageEmbedded(_Model):
+    """A bound layer's link embedded in the package (docs/adr/0596 §1): removed, the layer holding its objects.
+    Attributes:
+        at: The link's id (`kaynak-N`).
+        path: The file's path or the database's address, and the table, as the link kept them.
+        objects: Unit: count.
+    """
+    at: str
+    layer: str
+    path: str
+    table: str
+    objects: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = self.at
+        out["layer"] = self.layer
+        out["path"] = self.path
+        out["table"] = self.table
+        out["objects"] = self.objects
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PackageEmbedded:
+        return cls(
+            at=data["at"],
+            layer=data["layer"],
+            path=data["path"],
+            table=data["table"],
+            objects=data["objects"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PackageLeft(_Model):
     """A link left as it was.
     Attributes:
         path: The path or address as the project keeps it.
         at: The object (its lasting id), bound layer (its id), external reference (`xref:` and its name), text style
             (`stil:` and its name) or profile file (`profiller:` and its file name) that keeps it.
+        objects: The objects taken out of the package with it: an excluded link's layer's (docs/adr/0596 §3). Unit: count.
     """
     kind: PackagedKind | PackagedKindName
     path: str
     why: LeftWhy | LeftWhyName
     at: str
+    objects: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -32115,6 +32171,8 @@ class PackageLeft(_Model):
         out["path"] = self.path
         out["why"] = _enum_out(self.why)
         out["at"] = self.at
+        if self.objects is not UNSET:
+            out["objects"] = self.objects
         return out
 
     @classmethod
@@ -32124,6 +32182,7 @@ class PackageLeft(_Model):
             path=data["path"],
             why=_enum_in(LeftWhy, data["why"]),
             at=data["at"],
+            objects=data.get("objects", UNSET),
         )
 
 
@@ -32131,22 +32190,41 @@ class PackageLeft(_Model):
 class PackageProject(_Model):
     """Input of `file.package` v1. Refusals, in order: `invalid_file_path` (`path` not absolute, its folder not there,
     `name` not a file name, `from` not an absolute folder), `file_exists` (`path` is there and not an empty folder),
-    `file_unwritable`. Warning: `package_left` (what was not copied, each said).
+    `invalid_input` (a `leaveOut` entry that names nothing), `source_unreachable`, `source_changed` and
+    `input_too_large` (a database table copied, docs/adr/0596 §2), `file_unwritable`. Warning: `package_left` (what
+    was not copied, each said).
     Attributes:
         path: The folder to make, an absolute path; it must not be there, or be an empty folder.
+        databases: How the bound database tables go (docs/adr/0596 §1): their links kept (none: the default), each table copied
+            into a GeoPackage in `veri/` (only the rows the link reads), or embedded.
         from_: The project file's folder, an absolute path: linked files written relative to it are read from there. None:
             a relative link is not found (the drawing was never saved).
+        geopackages: How the bound GeoPackages go (docs/adr/0596 §1): copied into `veri/` (none: the default), their links kept as
+            they are, or embedded (the link removed, the layer keeps its objects as the project's own).
+        leave_out: What is not to go into the package (docs/adr/0596 §3), each a bound layer's link (`kaynak-N`: the link and the
+            layer's objects are taken out), an object's lasting id (its files are not copied, its links stay) or an
+            external reference (`xref:` and its name: its source is not copied). It comes before `geopackages` and
+            `databases`.
         name: The project file's name in it (`.kcad` added when missing); none: the drawing's name.
     """
     path: str
+    databases: PackageWay | PackageWayName | None | Unset = UNSET
     from_: str | None | Unset = UNSET
+    geopackages: PackageWay | PackageWayName | None | Unset = UNSET
+    leave_out: list[str] | Unset = UNSET
     name: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
+        if self.databases is not UNSET:
+            out["databases"] = None if self.databases is None else _enum_out(self.databases)
         if self.from_ is not UNSET:
             out["from"] = self.from_
+        if self.geopackages is not UNSET:
+            out["geopackages"] = None if self.geopackages is None else _enum_out(self.geopackages)
+        if self.leave_out is not UNSET:
+            out["leaveOut"] = list(self.leave_out)
         if self.name is not UNSET:
             out["name"] = self.name
         return out
@@ -32155,7 +32233,10 @@ class PackageProject(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> PackageProject:
         return cls(
             path=data["path"],
+            databases=UNSET if "databases" not in data else None if data["databases"] is None else _enum_in(PackageWay, data["databases"]),
             from_=data.get("from", UNSET),
+            geopackages=UNSET if "geopackages" not in data else None if data["geopackages"] is None else _enum_in(PackageWay, data["geopackages"]),
+            leave_out=list(data["leaveOut"]) if "leaveOut" in data else UNSET,
             name=data.get("name", UNSET),
         )
 
@@ -32168,6 +32249,9 @@ class PackagedFile(_Model):
         from_: The file it was copied from.
         bytes: Unit: bytes.
         links: How many links point to it (a profile or a mapping is found by its place, not linked: 0). Unit: count.
+        rows: The rows a database table's copy holds. Unit: count.
+        table: The database table a copy was read from (`path` a GeoPackage made of its rows, `from` the database's address,
+            docs/adr/0596 §2); none for a file copied byte for byte.
     """
     path: str
     from_: str
@@ -32175,6 +32259,8 @@ class PackagedFile(_Model):
     bytes: int
     sha256: str
     links: int
+    rows: int | None | Unset = UNSET
+    table: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -32184,6 +32270,10 @@ class PackagedFile(_Model):
         out["bytes"] = self.bytes
         out["sha256"] = self.sha256
         out["links"] = self.links
+        if self.rows is not UNSET:
+            out["rows"] = self.rows
+        if self.table is not UNSET:
+            out["table"] = self.table
         return out
 
     @classmethod
@@ -32195,6 +32285,8 @@ class PackagedFile(_Model):
             bytes=data["bytes"],
             sha256=data["sha256"],
             links=data["links"],
+            rows=data.get("rows", UNSET),
+            table=data.get("table", UNSET),
         )
 
 
@@ -36459,6 +36551,7 @@ class ProjectPackaged(_Model):
         project_bytes: Unit: bytes.
         manifest: The manifest, `paket.json` in the folder, and its SHA-256.
         bytes: Every byte written: the project file, the manifest and the copies. Unit: bytes.
+        embedded: The links embedded (docs/adr/0596 §1).
         faces: The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).
     """
     path: str
@@ -36469,6 +36562,7 @@ class ProjectPackaged(_Model):
     manifest: str
     manifest_sha256: str
     bytes: int
+    embedded: list[PackageEmbedded] | Unset = UNSET
     faces: list[DrawingFont | DrawingFontName] | Unset = UNSET
     left: list[PackageLeft] | Unset = UNSET
 
@@ -36482,6 +36576,8 @@ class ProjectPackaged(_Model):
         out["manifest"] = self.manifest
         out["manifestSha256"] = self.manifest_sha256
         out["bytes"] = self.bytes
+        if self.embedded is not UNSET:
+            out["embedded"] = [e0.to_json() for e0 in self.embedded]
         if self.faces is not UNSET:
             out["faces"] = [_enum_out(e0) for e0 in self.faces]
         if self.left is not UNSET:
@@ -36499,6 +36595,7 @@ class ProjectPackaged(_Model):
             manifest=data["manifest"],
             manifest_sha256=data["manifestSha256"],
             bytes=data["bytes"],
+            embedded=[PackageEmbedded.from_json(e0) for e0 in data["embedded"]] if "embedded" in data else UNSET,
             faces=[_enum_in(DrawingFont, e0) for e0 in data["faces"]] if "faces" in data else UNSET,
             left=[PackageLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
         )
@@ -62286,8 +62383,11 @@ __all__ = [
     "OrderToName",
     "OrdinateDimensionMeasure",
     "OriginUcsTo",
+    "PackageEmbedded",
     "PackageLeft",
     "PackageProject",
+    "PackageWay",
+    "PackageWayName",
     "PackagedFile",
     "PackagedKind",
     "PackagedKindName",

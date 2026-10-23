@@ -82,6 +82,40 @@ def catalogue(c):
     return out
 
 
+def package_problems(c, package):
+    """Paketle's database copies (docs/adr/0596 §2) read with OGR against the database: the part's points are the
+    database's points in the link's area, the parcels are the database's (one changed after the package was made, so
+    compared without its note), each copy keeps its rows' lasting ids, the project file and paket.json are there."""
+    from osgeo import ogr
+
+    problems = []
+    if not (package / "saha.kcad").is_file() or not (package / "paket.json").is_file():
+        return [f"paket {package} yok ya da eksik"]
+    cur = c.cursor()
+    cur.execute("SELECT ad, ST_X(geom), ST_Y(geom) FROM paket.olay "
+                "WHERE geom && ST_MakeEnvelope(486995, 4419995, 487595, 4420015, 5256)")
+    want = sorted((ad, round(x, 6), round(y, 6)) for ad, x, y in cur.fetchall())
+    src = ogr.Open(str(package / "veri/paket-olay.gpkg"))
+    got = sorted((f.GetField("ad"), round(f.GetGeometryRef().GetX(), 6), round(f.GetGeometryRef().GetY(), 6))
+                 for f in src.GetLayerByName("olay"))
+    if got != want or not got:
+        problems.append(f"paketteki olay kopyası {len(got)} nokta, veritabanının alanında {len(want)}")
+    points = len(want)
+    cur.execute("SELECT kimlik, ST_Area(geom) FROM paket.parsel")
+    want = sorted((k, round(a, 6)) for k, a in cur.fetchall())
+    src = ogr.Open(str(package / "veri/paket-parsel.gpkg"))
+    got = sorted((f.GetField("kimlik"), round(f.GetGeometryRef().GetLinearGeometry().GetArea(), 6))
+                 for f in src.GetLayerByName("parsel"))
+    if [k for k, _ in got] != [k for k, _ in want] or any(abs(a - b) > 1e-3 for (_, a), (_, b) in zip(got, want)):
+        problems.append(f"paketteki parsel kopyası {got}, veritabanı {want}")
+    for name, rows in (("paket-olay", points), ("paket-parsel", len(want))):
+        copy = ogr.Open(str(package / f"veri/{name}.gpkg"))
+        n = copy.ExecuteSQL("SELECT count(*) FROM kentos_uids").GetNextFeature().GetField(0)
+        if n != rows:
+            problems.append(f"{name} kopyasının kalıcı kimlikleri {n}")
+    return problems
+
+
 def check(c, seen, before):
     problems = []
     described = {t["name"]: t for t in seen["tables"] if t["name"].startswith("kadastro.")}
@@ -262,6 +296,15 @@ def main():
                         "ST_SetSRID(ST_MakePoint(%s, %s), 5256))",
                         (fid, ad, as_date(bas), as_date(bit), kayit, silindi, 487000.0 + fid * 20, 4420000.0))
         # A view keyed by fid and one without a key (docs/adr/0582 §3).
+        # Paketle's copies (docs/adr/0596 §2): the order cases' points and QGIS's parcels in the schema paket, written by
+        # the package test only once read (a parcel changed after the package is made).
+        c.cursor().execute("CREATE SCHEMA paket")
+        for source, table in ((ROOT / "fixtures/sources/v1/sira.gpkg", "olay"), (ROOT / "fixtures/geopackage/v1/qgis.gpkg", "parsel")):
+            gdal.VectorTranslate(pg, str(source),
+                                 options=gdal.VectorTranslateOptions(
+                                     layers=[table],
+                                     layerCreationOptions=["SCHEMA=paket", "FID=fid", "GEOMETRY_NAME=geom"],
+                                     preserveFID=True))
         c.cursor().execute("CREATE VIEW sorgu.nokta_v AS SELECT fid, ad, tur, geom FROM sorgu.nokta WHERE fid <= 50")
         c.cursor().execute("CREATE VIEW sorgu.anahtarsiz AS SELECT ad, geom FROM sorgu.nokta")
         # The tables written together and the Z and M columns (docs/adr/0584).
@@ -312,8 +355,9 @@ def main():
         cur.execute("INSERT INTO iliski2.sahiplik VALUES (1, 1), (1, 2)")
         before = catalogue(c)
         out = Path(tempfile.mkstemp(suffix=".json")[1])
+        package = Path(tempfile.mkdtemp()) / "paket"
         env = dict(os.environ, KENTOS_PG_URL=f"postgresql://postgres@127.0.0.1:{port}/postgres",
-                   PGPASSWORD=PASSWORD, KENTOS_PG_OUT=str(out), CARGO_BUILD_JOBS="2")
+                   PGPASSWORD=PASSWORD, KENTOS_PG_OUT=str(out), KENTOS_PG_PACKAGE=str(package), CARGO_BUILD_JOBS="2")
         test = subprocess.run(["cargo", "test", "-q", "-p", "kentos-postgis", "--test", "all", "--", "--ignored",
                                "--nocapture"], cwd=ROOT, env=env)
         if test.returncode != 0:
@@ -353,7 +397,7 @@ def main():
             subprocess.run(["cargo", "test", "-q", "-p", "kentos-desktop", "exchange::postgis_tests::screens", "--",
                             "--ignored", "--nocapture"], cwd=ROOT, env=env, check=True)
         seen = json.loads(out.read_text("utf-8"))
-        problems = check(c, seen, before)
+        problems = check(c, seen, before) + package_problems(c, package)
         if problems:
             print("; ".join(problems), file=sys.stderr)
             return 1

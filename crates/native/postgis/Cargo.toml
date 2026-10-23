@@ -19,5 +19,6 @@ tokio = { workspace = true }
 [dev-dependencies]
 kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-domain = { path = "../domain" }
+kentos-headless = { path = "../headless" }
 kentos-processing = { path = "../processing" }
 serde_json = { workspace = true }

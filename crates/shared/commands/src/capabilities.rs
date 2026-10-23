@@ -3954,7 +3954,15 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "file.package",
-        refusals: &[&["invalid_file_path", "file_exists", "file_unwritable"]],
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "invalid_input",
+            "source_unreachable",
+            "source_changed",
+            "input_too_large",
+            "file_unwritable",
+        ]],
         warnings: &["package_left"],
         targets: none,
     },

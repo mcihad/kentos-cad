@@ -550,9 +550,11 @@ birer birer çalıştırın.
 
 ## H — Kalıcılık, birlikte çalışma ve işletim
 
-- [ ] **CBS-36 — Mevcut .kcad projesine provider kaynak manifesti ve taşınabilir paket ekle — P0**
+- [x] **CBS-36 — Mevcut .kcad projesine provider kaynak manifesti ve taşınabilir paket ekle — P0**
 
   *Kısmen (17 Ekim 2026; [ADR 0503](../docs/adr/0503-bound-layers.md), [ADR 0506](../docs/adr/0506-relative-sources-and-package.md)): `.kcad` şema 74'ün `sources`'ı: kaynak kimliği, dosya ve tablo, katman eşlemesi, içerik özeti (SHA-256), EPSG, göreli yol (kaydetmede yazılır, açılışta aynı içerikteki dosya bulunur); Kaynak ▸ Yeniden bağla; Paketle (`file.package`): proje ve veri/ altında bağlı GeoPackage, resim, raster (dünya dosyalarıyla), bulut, tablo ve ek kopyaları, bütün ya da hiç, SHA-256 denetimiyle; veritabanı, adres ve eksik dosya söylenir. Kalan: PostGIS tablosunun çevrimdışı kopyası, lisans ve erişim süzgeci, bağı gömülü kopyaya çevirme.*
+
+  *Tamam (23 Ekim 2026; [ADR 0596](../docs/adr/0596-package-sources-offline.md)): Paketle'de bağlı kaynakların yolu kullanıcının seçimi: GeoPackage'lar ve veritabanı tabloları ayrı ayrı kopyalanır, bağlı bırakılır ya da gömülür. Veritabanı tablosu bağın okuduğu satırlarla (alanla bağlıda yalnız alanınkiler) GeoPackage olarak pakete girer, paket veritabanına ulaşmadan açılır ve katman kopyayla eşleşir; son eşleşmeden beri değişen tablo reddedilir. `leaveOut` lisans ve erişim sınırı için bağı (katmanın nesneleri de çıkar), nesnenin dosyalarını ve dış başvuruyu dışarıda bırakır. Masaüstünde Paketle penceresi. Sonraya: formun `redact` alanlarının paketten kesilmesi, uzlaştırma tabanının veritabanı kopyasına taşınması, stillerin ve modellerin dış bağımlılıkları.*
 
   **Mevcut:** `.kcad`, bağlı/gömülü raster ve kitaplık, sunucu snapshot/revision ve kurtarma temeli mevcut [K01/K04/K11]. Genel sağlayıcı eklenince proje açmanın veri kopyalamaktan ayrılması gerekir.
 

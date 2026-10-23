@@ -16,4 +16,13 @@ from: string, kind: PackagedKind, bytes: bigint, sha256: string,
 /**
  * How many links point to it (a profile or a mapping is found by its place, not linked: 0).
  */
-links: number, };
+links: number, 
+/**
+ * The database table a copy was read from (`path` a GeoPackage made of its rows, `from` the database's address,
+ * docs/adr/0596 §2); none for a file copied byte for byte.
+ */
+table?: string, 
+/**
+ * The rows a database table's copy holds.
+ */
+rows?: bigint, };

@@ -1014,7 +1014,8 @@ fn run_typed(
         let typed: PackageProject = serde_json::from_value(input).map_err(|e| {
             format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
         })?;
-        let planned = match crate::package::plan(doc, &typed) {
+        // A validate reads no database: a table's copy is made for a plan and an execute (docs/adr/0596 §2).
+        let planned = match crate::package::plan_reading(doc, &typed, op != CallOp::Validate) {
             Err(refused) => return Ok((CommandResult::Failed { error: *refused }, None)),
             Ok(p) => p,
         };

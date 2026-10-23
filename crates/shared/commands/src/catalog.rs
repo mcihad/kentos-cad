@@ -8275,7 +8275,9 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             title: "Paketle".into(),
             summary: "Projeyi kullandığı dosyalarla path klasörüne toplar, başka bilgisayarda açılsın diye: klasörde proje dosyası (name, yoksa çizimin adı) ve veri/ altında bağlı katmanların GeoPackage'larının, bağlı resim ve rasterlerin (dünya dosyalarıyla), nokta bulutu dosyalarının, bağlı tabloların ve eklerin kopyaları; her dosya bir kez, aynı adlılar numaralanarak. \
                       Projedeki bağlar kopyalara yazılır: bağlı dosyalar klasöre göre göreli (veri/…), bağlı katmanın kaynağı kopyası (göreli yolu veri/…, klasör nereye giderse açılışta bulunur). Göreli bağlar from klasöründen okunur. Projenin kendi veri profilleri ve eşlemeleri de (from klasöründeki profiller/<ad>.profil.json ve <ad>.eslem.json) paketteki profiller/ altına bayt bayt kopyalanır, proje dosyasının yanında durduğundan komutlar onları orada bulur; okunamayan dosya kopyalanmaz ve package_left söyler (docs/adr/0558). \
-                      Veritabanı tablosu, adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. \
+                      Adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. \
+                      Bağlı kaynakların yolu seçilir (docs/adr/0596): geopackages (varsayılan copy) ve databases (varsayılan keep) her biri copy, keep ya da embed. copy kaynağı pakete kopyalar: GeoPackage bayt bayt, veritabanı tablosu bağın okuduğu satırlarla (alanla bağlıda yalnız alanınkiler) projenin sisteminde, kalıcı kimlikleriyle bir GeoPackage olarak (veri/<şema>-<tablo>.gpkg; tablo katmanın son eşleşmesinden beri değiştiyse source_changed, ulaşılamazsa source_unreachable); bağ kopyayı gösterir, uzlaştırma tabanı düşer. keep bağı olduğu gibi bırakır (package_left: kept ya da database). embed paketin projesinde bağı kaldırır, katman nesneleriyle projenin kendi katmanı olur (cevabın embedded'ı). \
+                      leaveOut pakete girmeyecekleri söyler: bir bağ (kaynak-N; katmanın nesneleri paketten çıkar), bir nesnenin kalıcı kimliği (dosyaları kopyalanmaz) ya da xref:<ad> (dış başvurunun kaynağı kopyalanmaz); package_left excluded der, var olmayanı gösteren öğe invalid_input. validate veritabanını okumaz. \
                       Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur; path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir."
                 .into(),
             aliases: vec!["paketle".into(), "package".into()],
@@ -8293,6 +8295,10 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             examples: vec![CommandExample {
                 title: "Teslim klasörü".into(),
                 input: json!({ "path": "/teslim/kadastro-paket", "name": "kadastro", "from": "/is/kadastro" }),
+                output: None,
+            }, CommandExample {
+                title: "Veritabanı tabloları kopyalanır, bir katman dışarıda kalır".into(),
+                input: json!({ "path": "/teslim/saha-paket", "from": "/is/kadastro", "databases": "copy", "leaveOut": ["kaynak-3"] }),
                 output: None,
             }],
         },

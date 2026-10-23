@@ -1437,3 +1437,138 @@ fn processing_results_go_to_postgis() {
     assert!(!d.can_undo(), "the drawing does not change");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// docs/adr/0596 §2: Paketle copies the database's tables into the package, each a GeoPackage of the rows its link reads
+/// (a part's area only), and the package opens with the database out of reach; a table changed since its layer last
+/// matched it is refused. The package goes to KENTOS_PG_PACKAGE for `postgis_cases.py`, which reads the copies with OGR
+/// against the database.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_database_table_goes_into_the_package() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    let mut d = doc();
+    let part = ok(&run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": "paket.olay",
+                          "extent": [486995.0, 4419995.0, 487595.0, 4420015.0] } }),
+    ))
+    .clone();
+    let olay = part["link"]["layer"].as_str().expect("layer").to_owned();
+    let held = d.by_layer_with_uids(&olay).count();
+    assert!(held > 0 && held < 2400, "{held}");
+    let (parsel, _) = bind(&mut d, &url, "paket.parsel");
+    let parcels = d.by_layer_with_uids(&parsel).count();
+    let dir = std::env::var("KENTOS_PG_PACKAGE").map_or_else(
+        |_| std::env::temp_dir().join(format!("kentos-pg-paket-{}", std::process::id())),
+        std::path::PathBuf::from,
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+    let input = kentos_contracts::PackageProject {
+        path: dir.display().to_string(),
+        name: Some("saha".into()),
+        databases: Some(kentos_contracts::PackageWay::Copy),
+        ..Default::default()
+    };
+    let planned = kentos_headless::package::plan(&d, &input).expect("planned");
+    let copies: Vec<(String, Option<String>, Option<u64>, String)> = planned
+        .output
+        .files
+        .iter()
+        .map(|f| (f.path.clone(), f.table.clone(), f.rows, f.from.clone()))
+        .collect();
+    assert_eq!(
+        copies,
+        vec![
+            (
+                "veri/paket-olay.gpkg".to_owned(),
+                Some("paket.olay".to_owned()),
+                Some(held as u64),
+                url.clone()
+            ),
+            (
+                "veri/paket-parsel.gpkg".to_owned(),
+                Some("paket.parsel".to_owned()),
+                Some(parcels as u64),
+                url.clone()
+            ),
+        ]
+    );
+    assert!(planned.output.left.is_empty(), "{:?}", planned.output.left);
+    kentos_headless::package::write(&planned).expect("packed");
+    // The package opens with no database: its layers hold the same objects, bound to the copies, which match them.
+    let mut s = kentos_headless::Session::open(&dir.join("saha.kcad")).expect("opens");
+    let links: Vec<(String, String, Option<String>)> = s
+        .document()
+        .settings()
+        .sources
+        .iter()
+        .map(|l| {
+            (
+                serde_json::to_value(l.kind)
+                    .expect("kind")
+                    .as_str()
+                    .unwrap_or_default()
+                    .to_owned(),
+                l.table.clone(),
+                l.relative.clone(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        links,
+        vec![
+            (
+                "geopackage".to_owned(),
+                "olay".to_owned(),
+                Some("veri/paket-olay.gpkg".to_owned())
+            ),
+            (
+                "geopackage".to_owned(),
+                "parsel".to_owned(),
+                Some("veri/paket-parsel.gpkg".to_owned())
+            ),
+        ]
+    );
+    assert_eq!(s.document().by_layer_with_uids(&olay).count(), held);
+    assert_eq!(s.document().by_layer_with_uids(&parsel).count(), parcels);
+    let described = s
+        .call(json!({ "command": "cad.sources.describe", "input": {} }))
+        .expect("answers");
+    for state in described["output"]["links"].as_array().expect("links") {
+        assert_eq!(
+            (
+                state["found"].clone(),
+                state["changed"].clone(),
+                state["edited"].clone()
+            ),
+            (json!(true), json!(false), json!(false)),
+            "{state}"
+        );
+    }
+    // A table changed since its layer last matched it is not packed.
+    let mut other = doc();
+    let (theirs, uid) = bind(&mut other, &url, "paket.parsel");
+    ok(&run(
+        &mut other,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [uid], "attrs": { "not": "değişti" }, "operation": "attributes" }),
+    ));
+    ok(&write_layer(&mut other, &theirs));
+    let again = kentos_contracts::PackageProject {
+        path: dir.with_extension("ikinci").display().to_string(),
+        ..input
+    };
+    let refused = kentos_headless::package::plan(&d, &again)
+        .err()
+        .expect("refused");
+    assert_eq!(
+        (refused.code.as_str(), refused.path.as_deref()),
+        ("source_changed", Some("databases"))
+    );
+}

@@ -274,7 +274,7 @@
       "via": [
         "file.package"
       ],
-      "note": "Paketle file.package ile yazar (ADR 0506)."
+      "note": "Paketle file.package ile yazar (ADR 0506); kaynakların yolu ve dışarıda bırakılanlar penceresiyle (ADR 0596)."
     },
     "file.export.gpkg": {
       "level": "semantic",
