@@ -17,6 +17,8 @@
 
 mod agents;
 mod assist;
+pub(crate) mod echo;
+mod selection;
 mod host;
 pub(crate) mod link;
 pub(crate) mod script;
@@ -121,6 +123,8 @@ pub struct Console {
     /// The commands the agents run as jobs (docs/adr/0253 §9): computed on
     /// a copy of the drawing, written when an agent asks how they are.
     pub(crate) jobs: kentos_headless::rpc::Jobs,
+    /// What the operations' echo has passed (echo.rs, docs/adr/0622 §7).
+    pub(crate) echo: echo::Echo,
 }
 
 impl Default for Console {
@@ -140,6 +144,7 @@ impl Default for Console {
             link: None,
             agents: std::collections::BTreeMap::new(),
             jobs: kentos_headless::rpc::Jobs::default(),
+            echo: echo::Echo::default(),
         }
     }
 }
@@ -500,6 +505,9 @@ impl App {
         };
         if run.session != doc.session {
             return Err(no_document());
+        }
+        if matches!(method, "select" | "selection") {
+            return selection::answer(&doc.model, &mut self.selection, method, params);
         }
         // A command's execute (by `run`, or by the protocol's `call`, whose form is execute when not
         // given) and a replay write: the run's step opens with the first.

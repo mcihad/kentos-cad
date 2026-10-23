@@ -1,0 +1,5515 @@
+{
+ "format": "kentos.ribbon",
+ "version": 1,
+ "note": "Masaüstünün şeridi (ADR 0622 §3–§4): her proje türünün sekmeleri ve seçimin türüne göre açılan bağlamsal sekmeler. Bölünmüş düğme {\"split\": \"anahtar\"} envanterdeki aynı anahtarlı düğmeyi yöntemleriyle alır.",
+ "tabs": {
+  "cad": [
+   {
+    "id": "file",
+    "label": "Dosya",
+    "panels": [
+     {
+      "label": "Proje",
+      "icon": "fileNew",
+      "items": [
+       {
+        "command": "file.new",
+        "size": "large"
+       },
+       {
+        "command": "file.open",
+        "size": "large"
+       },
+       {
+        "command": "file.start",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Kaydet",
+      "icon": "save",
+      "items": [
+       {
+        "command": "file.save",
+        "size": "large"
+       },
+       {
+        "command": "file.saveAs",
+        "size": "small"
+       },
+       {
+        "command": "file.package",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Çizimler",
+      "icon": "docTabOpen",
+      "items": [
+       {
+        "command": "file.openTab",
+        "size": "small"
+       },
+       {
+        "command": "file.nextTab",
+        "size": "small"
+       },
+       {
+        "command": "file.closeTab",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Bulut",
+      "icon": "cloud",
+      "items": [
+       {
+        "command": "cloud.open",
+        "size": "large"
+       },
+       {
+        "command": "cloud.upload",
+        "size": "large"
+       },
+       {
+        "command": "cloud.share",
+        "size": "small"
+       },
+       {
+        "command": "cloud.history",
+        "size": "small"
+       },
+       {
+        "command": "cloud.conflicts",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "cloud.uploadFile",
+       "cloud.openNewest",
+       "cloud.rename",
+       "cloud.delete",
+       "server.check"
+      ]
+     },
+     {
+      "label": "Alışveriş",
+      "icon": "import",
+      "items": [
+       {
+        "menu": "İçe aktar",
+        "size": "large",
+        "blocks": [
+         {
+          "label": "Çizim",
+          "items": [
+           "file.import.dwg",
+           "file.import.dxf",
+           "file.import.ncz",
+           "file.import.pdf"
+          ]
+         },
+         {
+          "label": "Coğrafi veri",
+          "items": [
+           "file.import.shp",
+           "file.import.geojson",
+           "file.import.kml",
+           "file.import.gpkg",
+           "file.import.csv"
+          ]
+         },
+         {
+          "label": "Noktalar",
+          "items": [
+           "file.import.ncn",
+           "file.import.gnss",
+           "file.import.photos"
+          ]
+         }
+        ]
+       },
+       {
+        "menu": "Dışa aktar",
+        "size": "large",
+        "blocks": [
+         {
+          "label": "Çizim",
+          "items": [
+           "file.export.dwg",
+           "file.export.dxf"
+          ]
+         },
+         {
+          "label": "Coğrafi veri",
+          "items": [
+           "file.export.shp",
+           "file.export.geojson",
+           "file.export.kml",
+           "file.export.gpx",
+           "file.export.gpkg",
+           "file.export.fgb",
+           "file.export.gml",
+           "file.export.csv"
+          ]
+         },
+         {
+          "label": "Noktalar",
+          "items": [
+           "file.export.ncn",
+           "file.export.xyz"
+          ]
+         }
+        ]
+       },
+       {
+        "command": "file.takeFrom",
+        "size": "small"
+       },
+       {
+        "command": "file.saveSelection",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Ayarlar",
+      "icon": "folder",
+      "items": [
+       {
+        "command": "file.settings",
+        "size": "large"
+       },
+       {
+        "command": "tools.options",
+        "size": "large"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "home",
+    "label": "Giriş",
+    "panels": [
+     {
+      "label": "Çizim",
+      "icon": "line",
+      "items": [
+       {
+        "command": "tool.line",
+        "size": "large"
+       },
+       {
+        "command": "tool.polyline",
+        "size": "large"
+       },
+       {
+        "split": "circle",
+        "size": "large"
+       },
+       {
+        "split": "arc",
+        "size": "large"
+       },
+       {
+        "split": "rectangle",
+        "size": "small"
+       },
+       {
+        "command": "tool.polygon",
+        "size": "small"
+       },
+       {
+        "command": "tool.point",
+        "size": "small"
+       },
+       {
+        "command": "tool.ellipse",
+        "size": "small"
+       },
+       {
+        "command": "tool.spline",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.nurbs",
+       "tool.xline",
+       "tool.ray",
+       "tool.parallel",
+       "tool.perpIn",
+       "tool.perpOut",
+       "tool.donut",
+       "tool.revcloud",
+       "tool.wipeout",
+       "tool.sector",
+       "tool.rangeRings",
+       "tool.tangentLine",
+       "tool.fourthCorner",
+       "tool.divide",
+       "tool.pointsBetween",
+       "tool.intersectPoint",
+       "tool.vertexPoints",
+       "tool.adjoin"
+      ],
+      "keep": true
+     },
+     {
+      "label": "Değiştir",
+      "icon": "move",
+      "items": [
+       {
+        "command": "tool.move",
+        "size": "small"
+       },
+       {
+        "command": "tool.rotate",
+        "size": "small"
+       },
+       {
+        "split": "trim",
+        "size": "small"
+       },
+       {
+        "command": "tool.copy",
+        "size": "small"
+       },
+       {
+        "command": "tool.mirror",
+        "size": "small"
+       },
+       {
+        "split": "corner",
+        "size": "small"
+       },
+       {
+        "command": "tool.offset",
+        "size": "small"
+       },
+       {
+        "command": "tool.scale",
+        "size": "small"
+       },
+       {
+        "command": "tool.erase",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.extend",
+       "tool.stretch",
+       "tool.array",
+       "tool.explode",
+       "tool.break",
+       "tool.join",
+       "tool.lengthen",
+       "tool.align",
+       "tool.alignDistribute",
+       "tool.reverse",
+       "tool.matchProperties",
+       "tool.vertex",
+       "tool.reshape"
+      ],
+      "launcher": {
+       "tab": "modify",
+       "title": "Tüm araçlar: Değiştir sekmesi"
+      },
+      "keep": true
+     },
+     {
+      "label": "Açıklama",
+      "icon": "text",
+      "items": [
+       {
+        "command": "tool.text",
+        "size": "large"
+       },
+       {
+        "split": "dimension",
+        "size": "lead"
+       },
+       {
+        "command": "tool.leader",
+        "size": "small"
+       },
+       {
+        "command": "tool.hatch",
+        "size": "small"
+       },
+       {
+        "command": "table.insert",
+        "size": "small"
+       }
+      ],
+      "launcher": {
+       "tab": "annotate",
+       "title": "Tüm araçlar: Açıklama sekmesi"
+      }
+     },
+     {
+      "label": "Katmanlar",
+      "icon": "layers",
+      "items": [
+       {
+        "builtin": "layers"
+       }
+      ],
+      "overflow": [
+       "tool.layerOff",
+       "tool.layerIsolate",
+       "layer.unisolate",
+       "tool.layerLock",
+       "tool.layerFreeze",
+       "layer.thawAll",
+       "tool.layerMakeActive",
+       "tool.layerMatch",
+       "tool.copyToLayer",
+       "layer.merge",
+       "layer.states",
+       "layer.stateSave",
+       "layer.translate",
+       "layer.purge",
+       "layer.list"
+      ],
+      "launcher": {
+       "command": "style.layerStyle",
+       "title": "Katman stili…"
+      }
+     },
+     {
+      "label": "Özellikler",
+      "icon": "styles",
+      "items": [
+       {
+        "builtin": "properties"
+       }
+      ],
+      "launcher": {
+       "command": "file.settings",
+       "title": "Proje ayarları: birimler, hassasiyet ve çizim ölçeği"
+      }
+     }
+    ]
+   },
+   {
+    "id": "plan",
+    "label": "Plan",
+    "panels": [
+     {
+      "label": "Yol",
+      "icon": "planRoad",
+      "items": [
+       {
+        "command": "tool.planRoad",
+        "size": "large"
+       },
+       {
+        "command": "tool.roadJunctions",
+        "size": "small"
+       },
+       {
+        "command": "tool.medianClose",
+        "size": "small"
+       },
+       {
+        "command": "tool.centerline",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Ada ve parsel",
+      "icon": "parcel",
+      "items": [
+       {
+        "command": "tool.parcel",
+        "size": "large"
+       },
+       {
+        "command": "tool.boundary",
+        "size": "large"
+       },
+       {
+        "command": "tool.polygonize",
+        "size": "small"
+       },
+       {
+        "command": "tool.adjoin",
+        "size": "small"
+       },
+       {
+        "command": "tool.topology",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Alan işlemleri",
+      "icon": "areaUnion",
+      "items": [
+       {
+        "command": "tool.areaUnion",
+        "size": "small"
+       },
+       {
+        "command": "tool.areaSubtract",
+        "size": "small"
+       },
+       {
+        "command": "tool.areaIntersect",
+        "size": "small"
+       },
+       {
+        "command": "tool.areaSplit",
+        "size": "small"
+       },
+       {
+        "command": "tool.partsJoin",
+        "size": "small"
+       },
+       {
+        "command": "tool.partsSplit",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.holeAdd",
+       "tool.holeRemove",
+       "tool.holeFill",
+       "tool.toArea",
+       "tool.toPolyline",
+       "tool.edgeShift"
+      ]
+     },
+     {
+      "label": "Plan yazıları",
+      "icon": "coordinateLabel",
+      "items": [
+       {
+        "command": "tool.coordinateLabel",
+        "size": "small"
+       },
+       {
+        "command": "tool.coordinateVertices",
+        "size": "small"
+       },
+       {
+        "command": "tool.stationLabels",
+        "size": "small"
+       },
+       {
+        "command": "map.edgeLengths",
+        "size": "small"
+       },
+       {
+        "command": "tool.spot",
+        "size": "small"
+       },
+       {
+        "command": "tool.vertexPoints",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Topoloji",
+      "icon": "topologyCheck",
+      "items": [
+       {
+        "command": "topology.check",
+        "size": "small"
+       },
+       {
+        "command": "topology.rules",
+        "size": "small"
+       },
+       {
+        "command": "draft.topology",
+        "size": "small"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "survey",
+    "label": "Ölçme",
+    "panels": [
+     {
+      "label": "Sorgu",
+      "icon": "measure",
+      "items": [
+       {
+        "command": "tool.measure",
+        "size": "small"
+       },
+       {
+        "command": "tool.area",
+        "size": "small"
+       },
+       {
+        "command": "crs.query",
+        "size": "small"
+       },
+       {
+        "command": "tool.measureAngle",
+        "size": "small"
+       },
+       {
+        "command": "tool.identify",
+        "size": "small"
+       },
+       {
+        "command": "tool.stationOffset",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Saha",
+      "icon": "fieldBook",
+      "items": [
+       {
+        "command": "calc.fieldbook",
+        "size": "large"
+       },
+       {
+        "command": "file.import.gnss",
+        "size": "small"
+       },
+       {
+        "command": "field.send",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Poligon ve alım",
+      "icon": "surveyTraverse",
+      "items": [
+       {
+        "command": "calc.traverse",
+        "size": "large"
+       },
+       {
+        "command": "calc.polar",
+        "size": "large"
+       },
+       {
+        "command": "calc.stakeout",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Kestirme ve dengeleme",
+      "icon": "surveyNetwork",
+      "items": [
+       {
+        "command": "calc.forward",
+        "size": "small"
+       },
+       {
+        "command": "calc.resection",
+        "size": "small"
+       },
+       {
+        "command": "calc.network",
+        "size": "small"
+       },
+       {
+        "command": "calc.levelNetwork",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Noktalar",
+      "icon": "point",
+      "items": [
+       {
+        "command": "point.editor",
+        "size": "large"
+       },
+       {
+        "command": "crs.points",
+        "size": "small"
+       },
+       {
+        "command": "cogo.check",
+        "size": "small"
+       },
+       {
+        "command": "cogo.update",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Oturtma",
+      "icon": "vectorFit",
+      "items": [
+       {
+        "command": "transform.fit",
+        "size": "small"
+       },
+       {
+        "command": "transform.edgematch",
+        "size": "small"
+       },
+       {
+        "command": "crs.transform",
+        "size": "small"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "insert",
+    "label": "Ekle",
+    "panels": [
+     {
+      "label": "Blok",
+      "icon": "blockInsert",
+      "items": [
+       {
+        "command": "tool.blockInsert",
+        "size": "large"
+       },
+       {
+        "command": "tool.blockDefine",
+        "size": "small"
+       },
+       {
+        "command": "block.panel",
+        "size": "small"
+       },
+       {
+        "command": "block.library",
+        "size": "small"
+       },
+       {
+        "command": "block.edit",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "block.insertFile",
+       "block.attributes",
+       "block.sync",
+       "block.freeze",
+       "block.card",
+       "block.schedule",
+       "block.writeFile",
+       "block.redefineFromFile",
+       "block.import",
+       "block.export",
+       "block.purge"
+      ]
+     },
+     {
+      "label": "Şablonlar",
+      "icon": "templates",
+      "items": [
+       {
+        "builtin": "templates"
+       }
+      ],
+      "launcher": {
+       "command": "template.panel",
+       "title": "Şablonlar paneli"
+      }
+     },
+     {
+      "label": "Dış başvuru",
+      "icon": "xrefAttach",
+      "items": [
+       {
+        "command": "xref.attach",
+        "size": "large"
+       },
+       {
+        "command": "xref.manager",
+        "size": "small"
+       },
+       {
+        "command": "tool.xclip",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Resim ve raster",
+      "icon": "imageInsert",
+      "items": [
+       {
+        "command": "tool.imageInsert",
+        "size": "small"
+       },
+       {
+        "command": "raster.add",
+        "size": "small"
+       },
+       {
+        "command": "pointcloud.add",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.imageClip",
+       "raster.georef",
+       "raster.mosaic",
+       "raster.gpkgRead",
+       "raster.stac"
+      ]
+     },
+     {
+      "label": "Harita",
+      "icon": "basemap",
+      "items": [
+       {
+        "menu": "Altlık",
+        "size": "large",
+        "blocks": [
+         {
+          "label": "OpenStreetMap",
+          "items": [
+           "basemap.osmStandard",
+           "basemap.osmTopo",
+           "basemap.osmHot",
+           "basemap.cyclosm"
+          ]
+         },
+         {
+          "label": "Vektör altlıklar",
+          "items": [
+           "basemap.ofmLiberty",
+           "basemap.ofmBright",
+           "basemap.ofmPositron"
+          ]
+         },
+         {
+          "label": "Uydu ve hava fotoğrafı",
+          "items": [
+           "basemap.esriImagery"
+          ]
+         },
+         {
+          "label": "Türkiye",
+          "items": [
+           "basemap.hgmHarita",
+           "basemap.hgmOrtofoto"
+          ]
+         },
+         {
+          "label": "Google Haritalar",
+          "items": [
+           "basemap.googleRoadmap",
+           "basemap.googleSatellite",
+           "basemap.googleTerrain",
+           "basemap.googleHybrid"
+          ]
+         },
+         {
+          "label": "Anahtarlı servisler",
+          "items": [
+           "basemap.maptilerStreets",
+           "basemap.maptilerSatellite"
+          ]
+         },
+         {
+          "label": "",
+          "items": [
+           "basemap.remove"
+          ]
+         }
+        ]
+       },
+       {
+        "command": "service.add",
+        "size": "small"
+       },
+       {
+        "command": "service.feed",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "service.info",
+       "service.connections"
+      ]
+     },
+     {
+      "label": "Ekler",
+      "icon": "attachment",
+      "items": [
+       {
+        "command": "attachment.add",
+        "size": "small"
+       },
+       {
+        "command": "attachment.addLink",
+        "size": "small"
+       },
+       {
+        "command": "file.import.photos",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "layer.info"
+      ]
+     },
+     {
+      "label": "Adres",
+      "icon": "addressSearch",
+      "items": [
+       {
+        "command": "address.search",
+        "size": "small"
+       },
+       {
+        "command": "address.reverse",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "address.data",
+       "address.providers"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "annotate",
+    "label": "Açıklama",
+    "panels": [
+     {
+      "label": "Yazı",
+      "icon": "text",
+      "items": [
+       {
+        "command": "tool.text",
+        "size": "large"
+       },
+       {
+        "command": "tool.mtext",
+        "size": "small"
+       },
+       {
+        "split": "textAlong",
+        "size": "small"
+       },
+       {
+        "command": "tool.placeTextFile",
+        "size": "small"
+       },
+       {
+        "command": "text.findReplace",
+        "size": "small"
+       },
+       {
+        "command": "style.textStyles",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "text.fieldInsert",
+       "text.fieldsUpdate",
+       "text.number",
+       "text.combine",
+       "text.split",
+       "text.check",
+       "text.fonts",
+       "tool.labelsToText",
+       "tool.readable"
+      ]
+     },
+     {
+      "label": "Ölçü",
+      "icon": "dimension",
+      "items": [
+       {
+        "split": "dimension",
+        "size": "lead"
+       },
+       {
+        "command": "tool.dimContinue",
+        "size": "small"
+       },
+       {
+        "command": "tool.dimBaseline",
+        "size": "small"
+       },
+       {
+        "command": "tool.quickDimension",
+        "size": "small"
+       },
+       {
+        "command": "style.dimensionStyles",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.centerMark",
+       "tool.dimCenterLine",
+       "tool.dimElevation",
+       "tool.dimensionReassociate",
+       "dimension.space",
+       "dimension.break",
+       "dimension.unbreak"
+      ]
+     },
+     {
+      "label": "Kılavuz",
+      "icon": "leader",
+      "items": [
+       {
+        "command": "tool.leader",
+        "size": "large"
+       },
+       {
+        "command": "leader.styles",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "leader.addArm",
+       "leader.removeArm",
+       "leader.align",
+       "leader.collect",
+       "leader.blocks"
+      ]
+     },
+     {
+      "label": "Tablo",
+      "icon": "table",
+      "items": [
+       {
+        "command": "table.insert",
+        "size": "large"
+       },
+       {
+        "command": "table.edit",
+        "size": "small"
+       },
+       {
+        "command": "table.update",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "table.link",
+       "table.blockSchedule"
+      ]
+     },
+     {
+      "label": "Tarama",
+      "icon": "hatch",
+      "items": [
+       {
+        "command": "tool.hatch",
+        "size": "large"
+       },
+       {
+        "command": "tool.hatchSelected",
+        "size": "small"
+       },
+       {
+        "command": "tool.hatchEdit",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "İşaretleme",
+      "icon": "revcloud",
+      "items": [
+       {
+        "command": "tool.revcloud",
+        "size": "small"
+       },
+       {
+        "command": "tool.wipeout",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Ölçek",
+      "icon": "annotationMake",
+      "items": [
+       {
+        "command": "annotation.make",
+        "size": "small"
+       },
+       {
+        "command": "tool.annotativePlace",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "annotation.reset",
+       "annotation.unmake"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "modify",
+    "label": "Değiştir",
+    "panels": [
+     {
+      "label": "Pano",
+      "icon": "paste",
+      "items": [
+       {
+        "command": "edit.paste",
+        "size": "large"
+       },
+       {
+        "command": "edit.cut",
+        "size": "small"
+       },
+       {
+        "command": "edit.copy",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "edit.pasteOriginal",
+       "tool.copyBase",
+       "edit.pasteBlock"
+      ]
+     },
+     {
+      "label": "Seçim",
+      "icon": "select",
+      "items": [
+       {
+        "split": "select",
+        "size": "small"
+       },
+       {
+        "command": "edit.selectAll",
+        "size": "small"
+       },
+       {
+        "menu": "Seçim süzgeci",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "edit.selectFilter"
+          ]
+         },
+         {
+          "label": "Seçilebilir türler",
+          "items": [
+           "edit.selectFilter.point",
+           "edit.selectFilter.line",
+           "edit.selectFilter.polyline",
+           "edit.selectFilter.polygon",
+           "edit.selectFilter.circle",
+           "edit.selectFilter.arc",
+           "edit.selectFilter.ellipse",
+           "edit.selectFilter.spline",
+           "edit.selectFilter.xline",
+           "edit.selectFilter.ray",
+           "edit.selectFilter.text",
+           "edit.selectFilter.dimension",
+           "edit.selectFilter.hatch",
+           "edit.selectFilter.insert",
+           "edit.selectFilter.leader",
+           "edit.selectFilter.table",
+           "edit.selectFilter.image",
+           "edit.selectFilter.wall",
+           "edit.selectFilter.opening",
+           "edit.selectFilter.space",
+           "edit.selectFilter.grid",
+           "edit.selectFilter.column",
+           "edit.selectFilter.stair",
+           "edit.selectFilter.ramp",
+           "edit.selectFilter.tag",
+           "edit.selectFilter.viewmark"
+          ]
+         },
+         {
+          "label": "",
+          "items": [
+           "edit.selectFilterAll",
+           "edit.selectFilterNone"
+          ]
+         }
+        ],
+        "checklist": true
+       }
+      ],
+      "overflow": [
+       "edit.deselect",
+       "edit.invertSelection",
+       "edit.previousSelection",
+       "edit.cycleSelection",
+       "edit.autoSelect"
+      ]
+     },
+     {
+      "label": "Dönüştür",
+      "icon": "move",
+      "items": [
+       {
+        "command": "tool.move",
+        "size": "large"
+       },
+       {
+        "command": "tool.copy",
+        "size": "large"
+       },
+       {
+        "command": "tool.rotate",
+        "size": "large"
+       },
+       {
+        "command": "tool.scale",
+        "size": "small"
+       },
+       {
+        "command": "tool.mirror",
+        "size": "small"
+       },
+       {
+        "command": "tool.stretch",
+        "size": "small"
+       },
+       {
+        "command": "tool.align",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.alignDistribute",
+       "tool.copyBase"
+      ]
+     },
+     {
+      "label": "Dizi",
+      "icon": "array",
+      "items": [
+       {
+        "split": "array",
+        "size": "large"
+       },
+       {
+        "command": "tool.arrayEdit",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Kenar",
+      "icon": "offset",
+      "items": [
+       {
+        "command": "tool.offset",
+        "size": "large"
+       },
+       {
+        "split": "trim",
+        "size": "large"
+       },
+       {
+        "split": "extend",
+        "size": "small"
+       },
+       {
+        "command": "tool.break",
+        "size": "small"
+       },
+       {
+        "split": "split",
+        "size": "small"
+       },
+       {
+        "command": "tool.lengthen",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.edgeShift",
+       "tool.continue",
+       "tool.reshape"
+      ]
+     },
+     {
+      "label": "Köşe",
+      "icon": "fillet",
+      "items": [
+       {
+        "split": "corner",
+        "size": "large"
+       },
+       {
+        "command": "tool.vertex",
+        "size": "small"
+       },
+       {
+        "command": "tool.curveEdit",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Nesne",
+      "icon": "join",
+      "items": [
+       {
+        "command": "tool.join",
+        "size": "small"
+       },
+       {
+        "command": "tool.explode",
+        "size": "small"
+       },
+       {
+        "command": "tool.reverse",
+        "size": "small"
+       },
+       {
+        "command": "tool.readable",
+        "size": "small"
+       },
+       {
+        "command": "tool.matchProperties",
+        "size": "small"
+       },
+       {
+        "command": "tool.simplify",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Kot ve sıra",
+      "icon": "setElevation",
+      "items": [
+       {
+        "split": "setElevation",
+        "size": "small"
+       },
+       {
+        "command": "edit.bringToFront",
+        "size": "small"
+       },
+       {
+        "command": "edit.sendToBack",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.drawOrderAbove",
+       "tool.drawOrderUnder",
+       "edit.textsToFront",
+       "edit.hatchesToBack"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "arch",
+    "label": "Mimari",
+    "panels": [
+     {
+      "label": "Duvar",
+      "icon": "wall",
+      "items": [
+       {
+        "command": "tool.wall",
+        "size": "large"
+       },
+       {
+        "command": "tool.wallFromLines",
+        "size": "small"
+       },
+       {
+        "command": "tool.wallJoins",
+        "size": "small"
+       },
+       {
+        "command": "arch.wallStyles",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.wallSplit",
+       "tool.wallJoin",
+       "tool.wallExtend",
+       "tool.wallTrim",
+       "tool.wallFlip",
+       "tool.wallRestyle",
+       "arch.wallJoinCheck"
+      ]
+     },
+     {
+      "label": "Açıklık",
+      "icon": "door",
+      "items": [
+       {
+        "command": "tool.door",
+        "size": "large"
+       },
+       {
+        "command": "tool.window",
+        "size": "large"
+       },
+       {
+        "command": "tool.opening",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.openingFlip",
+       "tool.openingMove",
+       "tool.openingNumber"
+      ]
+     },
+     {
+      "label": "Mahal",
+      "icon": "space",
+      "items": [
+       {
+        "command": "tool.space",
+        "size": "large"
+       },
+       {
+        "command": "arch.quantities",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.spaceSplit",
+       "arch.spaceMerge",
+       "tool.spaceFloor",
+       "tool.spaceCeiling"
+      ]
+     },
+     {
+      "label": "Taşıyıcı",
+      "icon": "archGrid",
+      "items": [
+       {
+        "command": "tool.grid",
+        "size": "small"
+       },
+       {
+        "command": "tool.column",
+        "size": "small"
+       },
+       {
+        "command": "tool.gridNumber",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Merdiven",
+      "icon": "stair",
+      "items": [
+       {
+        "command": "tool.stair",
+        "size": "small"
+       },
+       {
+        "command": "tool.ramp",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Görünüm",
+      "icon": "viewSection",
+      "items": [
+       {
+        "command": "tool.viewSection",
+        "size": "small"
+       },
+       {
+        "command": "tool.viewElevation",
+        "size": "small"
+       },
+       {
+        "command": "tool.viewDetail",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "arch.viewRefs",
+       "arch.sheetSet"
+      ]
+     },
+     {
+      "label": "Etiket ve çizelge",
+      "icon": "tag",
+      "items": [
+       {
+        "command": "tool.tag",
+        "size": "small"
+       },
+       {
+        "command": "tool.tagAll",
+        "size": "small"
+       },
+       {
+        "command": "tool.scheduleOpenings",
+        "size": "small"
+       },
+       {
+        "command": "tool.scheduleSpaces",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "arch.tagsCheck"
+      ]
+     },
+     {
+      "label": "Proje",
+      "icon": "archSettings",
+      "items": [
+       {
+        "command": "arch.settings",
+        "size": "small"
+       },
+       {
+        "command": "arch.template",
+        "size": "small"
+       },
+       {
+        "menu": "Evre",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "arch.phase.all",
+           "arch.phase.existing",
+           "arch.phase.demolition",
+           "arch.phase.proposed"
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "view",
+    "label": "Görünüm",
+    "panels": [
+     {
+      "label": "Gezinme",
+      "icon": "zoomExtents",
+      "items": [
+       {
+        "command": "view.zoomExtents",
+        "size": "large"
+       },
+       {
+        "command": "tool.zoomWindow",
+        "size": "small"
+       },
+       {
+        "command": "view.zoomSelection",
+        "size": "small"
+       },
+       {
+        "command": "tool.pan",
+        "size": "small"
+       },
+       {
+        "command": "view.previous",
+        "size": "small"
+       },
+       {
+        "command": "view.next",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "view.zoomIn",
+       "view.zoomOut",
+       "view.extentCheck"
+      ]
+     },
+     {
+      "label": "Görünümler",
+      "icon": "namedViews",
+      "items": [
+       {
+        "command": "view.namedViews",
+        "size": "large"
+       },
+       {
+        "command": "view.split",
+        "size": "small"
+       },
+       {
+        "command": "view.splitLink",
+        "size": "small"
+       },
+       {
+        "command": "view.swipe",
+        "size": "small"
+       },
+       {
+        "command": "tool.viewTwist",
+        "size": "small"
+       },
+       {
+        "command": "view.northUp",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Koordinatlar",
+      "icon": "ucsWorld",
+      "items": [
+       {
+        "command": "ucs.world",
+        "size": "small"
+       },
+       {
+        "command": "ucs.previous",
+        "size": "small"
+       },
+       {
+        "command": "tool.ucsObject",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.ucsTwoPoints",
+       "tool.ucsOrigin",
+       "tool.ucsRotate",
+       "tool.ucsNamed",
+       "view.twistUcs"
+      ]
+     },
+     {
+      "label": "Görünüş",
+      "icon": "colorModeColor",
+      "items": [
+       {
+        "menu": "Tema",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "view.theme.dark",
+           "view.theme.light"
+          ]
+         }
+        ]
+       },
+       {
+        "menu": "Renk kipi",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "view.colorMode.color",
+           "view.colorMode.mono",
+           "view.colorMode.gray"
+          ]
+         }
+        ]
+       },
+       {
+        "menu": "Yazıların boyu",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "view.annotationSize.legible",
+           "view.annotationSize.true",
+           "view.annotationSize.screen"
+          ]
+         }
+        ]
+       },
+       {
+        "menu": "Sembol boyutu",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "view.symbols.plot",
+           "view.symbols.screen"
+          ]
+         }
+        ]
+       },
+       {
+        "command": "view.fills",
+        "size": "small"
+       },
+       {
+        "command": "view.areaEdges",
+        "size": "small"
+       },
+       {
+        "command": "view.transparency",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "view.lineWeights"
+      ],
+      "launcher": {
+       "command": "tools.options",
+       "title": "Uygulama ayarları: görünüm"
+      }
+     },
+     {
+      "label": "Paneller",
+      "icon": "panelRight",
+      "items": [
+       {
+        "command": "view.rightPanel",
+        "size": "small"
+       },
+       {
+        "command": "view.bottomPanel",
+        "size": "small"
+       },
+       {
+        "command": "view.coords",
+        "size": "small"
+       },
+       {
+        "command": "view.overview",
+        "size": "small"
+       },
+       {
+        "command": "view.magnifier",
+        "size": "small"
+       },
+       {
+        "command": "view.fullscreen",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "view.keyTips"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "manage",
+    "label": "Yönet",
+    "panels": [
+     {
+      "label": "Stiller",
+      "icon": "styles",
+      "items": [
+       {
+        "command": "style.manager",
+        "size": "large"
+       },
+       {
+        "command": "style.layerStyle",
+        "size": "small"
+       },
+       {
+        "command": "lineTypes.manage",
+        "size": "small"
+       },
+       {
+        "command": "hatchPatterns.manage",
+        "size": "small"
+       },
+       {
+        "command": "style.legend",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "style.svgEditor",
+       "style.assign",
+       "style.clearSymbol"
+      ]
+     },
+     {
+      "label": "Standart",
+      "icon": "standardsCheck",
+      "items": [
+       {
+        "command": "standards.check",
+        "size": "small"
+       },
+       {
+        "command": "standards.apply",
+        "size": "small"
+       },
+       {
+        "command": "layer.impact",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Temizlik",
+      "icon": "cleanup",
+      "items": [
+       {
+        "command": "tool.cleanup",
+        "size": "small"
+       },
+       {
+        "command": "tool.audit",
+        "size": "small"
+       },
+       {
+        "command": "layer.purge",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Veri",
+      "icon": "featureTable",
+      "items": [
+       {
+        "command": "data.featureTable",
+        "size": "small"
+       },
+       {
+        "command": "layer.fields",
+        "size": "small"
+       },
+       {
+        "command": "data.statistics",
+        "size": "small"
+       },
+       {
+        "command": "data.compare",
+        "size": "small"
+       },
+       {
+        "command": "data.search",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "data.chart",
+       "data.forms",
+       "data.formEdit",
+       "data.relations",
+       "data.joinViews",
+       "data.formAudit",
+       "data.unmark",
+       "data.sources"
+      ]
+     },
+     {
+      "label": "Otomasyon",
+      "icon": "terminal",
+      "items": [
+       {
+        "command": "python.console",
+        "size": "large"
+       },
+       {
+        "command": "commandline.focus",
+        "size": "small"
+       },
+       {
+        "command": "processing.toolbox",
+        "size": "small"
+       },
+       {
+        "command": "processing.newModel",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Kısıtlar",
+      "icon": "constraint",
+      "items": [
+       {
+        "command": "tool.constraint",
+        "size": "large"
+       },
+       {
+        "command": "constraint.show",
+        "size": "small"
+       },
+       {
+        "command": "constraint.parameters",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "constraint.relaxNext"
+      ]
+     },
+     {
+      "label": "GIS",
+      "icon": "exportGis",
+      "items": [
+       {
+        "command": "file.export.gis",
+        "size": "small"
+       },
+       {
+        "command": "gis.derivation",
+        "size": "small"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "output",
+    "label": "Çıktı",
+    "panels": [
+     {
+      "label": "Pafta",
+      "icon": "sheet",
+      "items": [
+       {
+        "command": "sheet.new",
+        "size": "large"
+       },
+       {
+        "command": "sheet.fromTemplate",
+        "size": "small"
+       },
+       {
+        "command": "sheet.drawingSet",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Yayınla",
+      "icon": "print",
+      "items": [
+       {
+        "command": "file.publish.sheets",
+        "size": "large"
+       },
+       {
+        "command": "file.preflight.sheets",
+        "size": "small"
+       },
+       {
+        "command": "file.export.atlas",
+        "size": "small"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "gis": [
+   {
+    "id": "file",
+    "label": "Dosya",
+    "panels": [
+     {
+      "label": "Proje",
+      "icon": "fileNew",
+      "items": [
+       {
+        "command": "file.new",
+        "size": "large"
+       },
+       {
+        "command": "file.open",
+        "size": "large"
+       },
+       {
+        "command": "file.start",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Kaydet",
+      "icon": "save",
+      "items": [
+       {
+        "command": "file.save",
+        "size": "large"
+       },
+       {
+        "command": "file.saveAs",
+        "size": "small"
+       },
+       {
+        "command": "file.package",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Çizimler",
+      "icon": "docTabOpen",
+      "items": [
+       {
+        "command": "file.openTab",
+        "size": "small"
+       },
+       {
+        "command": "file.nextTab",
+        "size": "small"
+       },
+       {
+        "command": "file.closeTab",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Bulut",
+      "icon": "cloud",
+      "items": [
+       {
+        "command": "cloud.open",
+        "size": "large"
+       },
+       {
+        "command": "cloud.upload",
+        "size": "large"
+       },
+       {
+        "command": "cloud.share",
+        "size": "small"
+       },
+       {
+        "command": "cloud.history",
+        "size": "small"
+       },
+       {
+        "command": "cloud.conflicts",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "cloud.uploadFile",
+       "cloud.openNewest",
+       "cloud.rename",
+       "cloud.delete",
+       "server.check"
+      ]
+     },
+     {
+      "label": "Alışveriş",
+      "icon": "import",
+      "items": [
+       {
+        "menu": "Dışa aktar",
+        "size": "large",
+        "blocks": [
+         {
+          "label": "Çizim",
+          "items": [
+           "file.export.dwg",
+           "file.export.dxf"
+          ]
+         },
+         {
+          "label": "Coğrafi veri",
+          "items": [
+           "file.export.shp",
+           "file.export.geojson",
+           "file.export.kml",
+           "file.export.gpx",
+           "file.export.gpkg",
+           "file.export.fgb",
+           "file.export.gml",
+           "file.export.csv"
+          ]
+         },
+         {
+          "label": "Noktalar",
+          "items": [
+           "file.export.ncn",
+           "file.export.xyz"
+          ]
+         }
+        ]
+       },
+       {
+        "command": "file.takeFrom",
+        "size": "small"
+       },
+       {
+        "command": "file.saveSelection",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Ayarlar",
+      "icon": "folder",
+      "items": [
+       {
+        "command": "file.settings",
+        "size": "large"
+       },
+       {
+        "command": "tools.options",
+        "size": "large"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "map",
+    "label": "Harita",
+    "panels": [
+     {
+      "label": "Gezinme",
+      "icon": "zoomExtents",
+      "items": [
+       {
+        "command": "view.zoomExtents",
+        "size": "large"
+       },
+       {
+        "command": "tool.pan",
+        "size": "small"
+       },
+       {
+        "command": "tool.zoomWindow",
+        "size": "small"
+       },
+       {
+        "command": "view.zoomSelection",
+        "size": "small"
+       },
+       {
+        "command": "view.previous",
+        "size": "small"
+       },
+       {
+        "command": "view.next",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "view.zoomIn",
+       "view.zoomOut",
+       "view.extentCheck"
+      ]
+     },
+     {
+      "label": "Katman ekle",
+      "icon": "layerAdd",
+      "items": [
+       {
+        "menu": "Veri ekle",
+        "size": "large",
+        "blocks": [
+         {
+          "label": "Vektör",
+          "items": [
+           "file.import.gpkg",
+           "file.import.shp",
+           "file.import.geojson",
+           "file.import.kml",
+           "file.import.csv",
+           "file.import.fgb",
+           "file.import.gml"
+          ]
+         },
+         {
+          "label": "Raster ve bulut",
+          "items": [
+           "raster.add",
+           "mesh.add",
+           "pointcloud.add"
+          ]
+         },
+         {
+          "label": "Çizim",
+          "items": [
+           "file.import.dwg",
+           "file.import.dxf",
+           "file.import.ncz",
+           "file.import.pdf"
+          ]
+         },
+         {
+          "label": "Noktalar",
+          "items": [
+           "file.import.ncn",
+           "file.import.gnss",
+           "file.import.photos"
+          ]
+         }
+        ]
+       },
+       {
+        "menu": "Altlık",
+        "size": "large",
+        "blocks": [
+         {
+          "label": "OpenStreetMap",
+          "items": [
+           "basemap.osmStandard",
+           "basemap.osmTopo",
+           "basemap.osmHot",
+           "basemap.cyclosm"
+          ]
+         },
+         {
+          "label": "Vektör altlıklar",
+          "items": [
+           "basemap.ofmLiberty",
+           "basemap.ofmBright",
+           "basemap.ofmPositron"
+          ]
+         },
+         {
+          "label": "Uydu ve hava fotoğrafı",
+          "items": [
+           "basemap.esriImagery"
+          ]
+         },
+         {
+          "label": "Türkiye",
+          "items": [
+           "basemap.hgmHarita",
+           "basemap.hgmOrtofoto"
+          ]
+         },
+         {
+          "label": "Google Haritalar",
+          "items": [
+           "basemap.googleRoadmap",
+           "basemap.googleSatellite",
+           "basemap.googleTerrain",
+           "basemap.googleHybrid"
+          ]
+         },
+         {
+          "label": "Anahtarlı servisler",
+          "items": [
+           "basemap.maptilerStreets",
+           "basemap.maptilerSatellite"
+          ]
+         },
+         {
+          "label": "",
+          "items": [
+           "basemap.remove"
+          ]
+         }
+        ]
+       },
+       {
+        "command": "service.add",
+        "size": "small"
+       },
+       {
+        "command": "service.feed",
+        "size": "small"
+       },
+       {
+        "command": "source.postgis",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "service.info",
+       "service.connections",
+       "raster.stac",
+       "raster.mosaic",
+       "raster.gpkgRead"
+      ]
+     },
+     {
+      "label": "Seçim",
+      "icon": "select",
+      "items": [
+       {
+        "split": "select",
+        "size": "large"
+       },
+       {
+        "command": "processing.run.selection.byExpression",
+        "size": "small"
+       },
+       {
+        "command": "processing.run.selection.byLocation",
+        "size": "small"
+       },
+       {
+        "command": "edit.selectAll",
+        "size": "small"
+       },
+       {
+        "command": "edit.deselect",
+        "size": "small"
+       },
+       {
+        "command": "edit.autoSelect",
+        "size": "small"
+       },
+       {
+        "menu": "Seçim süzgeci",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "edit.selectFilter"
+          ]
+         },
+         {
+          "label": "Seçilebilir türler",
+          "items": [
+           "edit.selectFilter.point",
+           "edit.selectFilter.line",
+           "edit.selectFilter.polyline",
+           "edit.selectFilter.polygon",
+           "edit.selectFilter.circle",
+           "edit.selectFilter.arc",
+           "edit.selectFilter.ellipse",
+           "edit.selectFilter.spline",
+           "edit.selectFilter.xline",
+           "edit.selectFilter.ray",
+           "edit.selectFilter.text",
+           "edit.selectFilter.dimension",
+           "edit.selectFilter.hatch",
+           "edit.selectFilter.insert",
+           "edit.selectFilter.leader",
+           "edit.selectFilter.table",
+           "edit.selectFilter.image",
+           "edit.selectFilter.wall",
+           "edit.selectFilter.opening",
+           "edit.selectFilter.space",
+           "edit.selectFilter.grid",
+           "edit.selectFilter.column",
+           "edit.selectFilter.stair",
+           "edit.selectFilter.ramp",
+           "edit.selectFilter.tag",
+           "edit.selectFilter.viewmark"
+          ]
+         },
+         {
+          "label": "",
+          "items": [
+           "edit.selectFilterAll",
+           "edit.selectFilterNone"
+          ]
+         }
+        ],
+        "checklist": true
+       }
+      ],
+      "overflow": [
+       "edit.invertSelection",
+       "edit.previousSelection",
+       "edit.cycleSelection"
+      ]
+     },
+     {
+      "label": "Sorgu",
+      "icon": "identify",
+      "items": [
+       {
+        "command": "tool.identify",
+        "size": "large"
+       },
+       {
+        "command": "tool.measure",
+        "size": "small"
+       },
+       {
+        "command": "tool.area",
+        "size": "small"
+       },
+       {
+        "command": "crs.query",
+        "size": "small"
+       },
+       {
+        "command": "tool.measureAngle",
+        "size": "small"
+       },
+       {
+        "command": "address.search",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.stationOffset"
+      ]
+     },
+     {
+      "label": "Etiket",
+      "icon": "layerLabels",
+      "items": [
+       {
+        "command": "layer.labels",
+        "size": "large"
+       },
+       {
+        "command": "tool.labelMove",
+        "size": "small"
+       },
+       {
+        "command": "tool.labelPin",
+        "size": "small"
+       },
+       {
+        "command": "tool.labelHide",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.labelRotate",
+       "view.pinnedLabels",
+       "view.unplacedLabels",
+       "tool.labelsToText"
+      ]
+     },
+     {
+      "label": "Koordinat sistemi",
+      "icon": "crs",
+      "items": [
+       {
+        "command": "crs.set",
+        "size": "small"
+       },
+       {
+        "command": "crs.transform",
+        "size": "small"
+       },
+       {
+        "command": "view.mapCrs",
+        "size": "small"
+       }
+      ],
+      "launcher": {
+       "command": "crs.set",
+       "title": "Proje ayarları: koordinat sistemi"
+      }
+     }
+    ]
+   },
+   {
+    "id": "edit",
+    "label": "Düzenle",
+    "panels": [
+     {
+      "label": "Oluştur",
+      "icon": "line",
+      "items": [
+       {
+        "command": "tool.point",
+        "size": "large"
+       },
+       {
+        "command": "tool.polyline",
+        "size": "large"
+       },
+       {
+        "command": "tool.polygon",
+        "size": "large"
+       },
+       {
+        "command": "tool.line",
+        "size": "small"
+       },
+       {
+        "split": "circle",
+        "size": "small"
+       },
+       {
+        "split": "rectangle",
+        "size": "small"
+       },
+       {
+        "command": "tool.adjoin",
+        "size": "small"
+       },
+       {
+        "command": "tool.parcel",
+        "size": "small"
+       },
+       {
+        "command": "tool.text",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.arc",
+       "tool.ellipse",
+       "tool.spline",
+       "tool.vertexPoints",
+       "tool.divide",
+       "tool.pointsBetween",
+       "tool.intersectPoint",
+       "tool.centerline",
+       "tool.planRoad",
+       "tool.roadJunctions",
+       "tool.medianClose",
+       "tool.sector",
+       "tool.rangeRings",
+       "tool.fourthCorner"
+      ],
+      "keep": true
+     },
+     {
+      "label": "Şablonlar",
+      "icon": "templates",
+      "items": [
+       {
+        "builtin": "templates"
+       }
+      ],
+      "launcher": {
+       "command": "template.panel",
+       "title": "Şablonlar paneli"
+      }
+     },
+     {
+      "label": "Katmanlar",
+      "icon": "layers",
+      "items": [
+       {
+        "builtin": "layers"
+       }
+      ],
+      "overflow": [
+       "tool.layerOff",
+       "tool.layerIsolate",
+       "layer.unisolate",
+       "tool.layerLock",
+       "tool.layerFreeze",
+       "layer.thawAll",
+       "tool.layerMakeActive",
+       "tool.layerMatch",
+       "tool.copyToLayer",
+       "layer.merge",
+       "layer.states",
+       "layer.stateSave",
+       "layer.translate",
+       "layer.purge",
+       "layer.list"
+      ],
+      "launcher": {
+       "command": "style.layerStyle",
+       "title": "Katman stili…"
+      }
+     },
+     {
+      "label": "Değiştir",
+      "icon": "move",
+      "items": [
+       {
+        "command": "tool.move",
+        "size": "small"
+       },
+       {
+        "command": "tool.rotate",
+        "size": "small"
+       },
+       {
+        "split": "trim",
+        "size": "small"
+       },
+       {
+        "command": "tool.vertex",
+        "size": "small"
+       },
+       {
+        "command": "tool.reshape",
+        "size": "small"
+       },
+       {
+        "command": "tool.break",
+        "size": "small"
+       },
+       {
+        "command": "tool.offset",
+        "size": "small"
+       },
+       {
+        "command": "tool.join",
+        "size": "small"
+       },
+       {
+        "command": "tool.erase",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.copy",
+       "tool.scale",
+       "tool.mirror",
+       "tool.stretch",
+       "tool.extend",
+       "tool.explode",
+       "tool.reverse",
+       "tool.lengthen",
+       "tool.continue",
+       "tool.edgeShift",
+       "tool.align",
+       "tool.alignDistribute",
+       "tool.simplify",
+       "tool.matchProperties",
+       "tool.setElevation",
+       "tool.curveEdit",
+       "tool.constraint",
+       "edit.bringToFront",
+       "edit.sendToBack",
+       "edit.paste",
+       "edit.cut",
+       "edit.copy",
+       "edit.pasteOriginal"
+      ],
+      "keep": true
+     },
+     {
+      "label": "Alan işlemleri",
+      "icon": "areaUnion",
+      "items": [
+       {
+        "command": "tool.areaUnion",
+        "size": "small"
+       },
+       {
+        "command": "tool.areaSplit",
+        "size": "small"
+       },
+       {
+        "command": "tool.areaSubtract",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.areaIntersect",
+       "tool.boundary",
+       "tool.polygonize",
+       "tool.partsJoin",
+       "tool.partsSplit",
+       "tool.holeAdd",
+       "tool.holeRemove",
+       "tool.holeFill",
+       "tool.toArea",
+       "tool.toPolyline"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "data",
+    "label": "Veri",
+    "panels": [
+     {
+      "label": "Katman",
+      "icon": "layerAdd",
+      "items": [
+       {
+        "menu": "Yeni katman",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "layer.new"
+          ]
+         },
+         {
+          "label": "Türüyle",
+          "items": [
+           "layer.newPoint",
+           "layer.newLine",
+           "layer.newArea",
+           "layer.newAnnotation"
+          ]
+         }
+        ]
+       },
+       {
+        "command": "layer.newGroup",
+        "size": "small"
+       },
+       {
+        "command": "layer.fields",
+        "size": "small"
+       },
+       {
+        "command": "style.layerStyle",
+        "size": "small"
+       },
+       {
+        "command": "layer.filter",
+        "size": "small"
+       },
+       {
+        "command": "layer.crs",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "layer.filterFromSelection",
+       "layer.filterClear",
+       "layer.reproject",
+       "layer.showAll",
+       "layer.info",
+       "file.import.maplibre",
+       "file.export.maplibre"
+      ]
+     },
+     {
+      "label": "Tablo",
+      "icon": "featureTable",
+      "items": [
+       {
+        "command": "data.featureTable",
+        "size": "large"
+       },
+       {
+        "command": "data.statistics",
+        "size": "small"
+       },
+       {
+        "command": "data.chart",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "chart.bar",
+       "chart.pie",
+       "chart.histogram",
+       "chart.box",
+       "chart.scatter",
+       "chart.line"
+      ]
+     },
+     {
+      "label": "Form",
+      "icon": "forms",
+      "items": [
+       {
+        "command": "data.forms",
+        "size": "small"
+       },
+       {
+        "command": "data.formEdit",
+        "size": "small"
+       },
+       {
+        "command": "data.relations",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "data.joinViews",
+       "data.formAudit",
+       "data.tableStyles",
+       "data.subtypes",
+       "data.contingents",
+       "data.layerRules",
+       "data.domains",
+       "data.duplicate"
+      ]
+     },
+     {
+      "label": "Kaynak",
+      "icon": "sourceLinked",
+      "items": [
+       {
+        "command": "data.sources",
+        "size": "small"
+       },
+       {
+        "command": "source.link",
+        "size": "small"
+       },
+       {
+        "command": "source.write",
+        "size": "small"
+       },
+       {
+        "command": "source.read",
+        "size": "small"
+       },
+       {
+        "command": "source.status",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "source.reconcile",
+       "source.relink",
+       "source.unlink",
+       "source.writeTogether",
+       "raster.gpkgWrite"
+      ]
+     },
+     {
+      "label": "Topoloji",
+      "icon": "topologyCheck",
+      "items": [
+       {
+        "command": "draft.topology",
+        "size": "small"
+       },
+       {
+        "command": "topology.check",
+        "size": "small"
+       },
+       {
+        "command": "topology.rules",
+        "size": "small"
+       },
+       {
+        "menu": "Çakışma",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "draft.overlap.allow",
+           "draft.overlap.layer",
+           "draft.overlap.layers"
+          ]
+         }
+        ]
+       }
+      ],
+      "overflow": [
+       "draft.topologyPoints",
+       "tool.topology"
+      ]
+     },
+     {
+      "label": "Ekler",
+      "icon": "attachment",
+      "items": [
+       {
+        "command": "attachment.add",
+        "size": "small"
+       },
+       {
+        "command": "attachment.addLink",
+        "size": "small"
+       },
+       {
+        "command": "layer.info",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Standart",
+      "icon": "standardsCheck",
+      "items": [
+       {
+        "command": "profile.window",
+        "size": "small"
+       },
+       {
+        "command": "standards.check",
+        "size": "small"
+       },
+       {
+        "command": "standards.apply",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "lineTypes.manage",
+       "hatchPatterns.manage",
+       "layer.impact"
+      ]
+     },
+     {
+      "label": "Stil",
+      "icon": "styles",
+      "items": [
+       {
+        "command": "style.manager",
+        "size": "large"
+       },
+       {
+        "command": "data.search",
+        "size": "small"
+       },
+       {
+        "command": "data.unmark",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "style.svgEditor",
+       "style.assign",
+       "style.clearSymbol"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "analysis",
+    "label": "Analiz",
+    "panels": [
+     {
+      "label": "İşlemler",
+      "icon": "processing",
+      "items": [
+       {
+        "command": "processing.toolbox",
+        "size": "large"
+       },
+       {
+        "command": "processing.newModel",
+        "size": "small"
+       },
+       {
+        "command": "processing.history",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Ağ analizi",
+      "icon": "networks",
+      "items": [
+       {
+        "command": "network.manage",
+        "size": "small"
+       },
+       {
+        "command": "tool.netRoute",
+        "size": "small"
+       },
+       {
+        "command": "tool.netServiceArea",
+        "size": "small"
+       },
+       {
+        "command": "tool.netTrace",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "network.subnetworks",
+       "linearRef.eventLinks"
+      ]
+     },
+     {
+      "label": "Arazi",
+      "icon": "contours",
+      "items": [
+       {
+        "command": "tool.spot",
+        "size": "small"
+       },
+       {
+        "command": "pointcloud.region",
+        "size": "small"
+       },
+       {
+        "command": "pointcloud.profile",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "mesh.query"
+      ]
+     },
+     {
+      "label": "Zaman ve senaryo",
+      "icon": "timeSlider",
+      "items": [
+       {
+        "command": "time.slider",
+        "size": "small"
+       },
+       {
+        "command": "time.layer",
+        "size": "small"
+       },
+       {
+        "command": "scenario.create",
+        "size": "small"
+       },
+       {
+        "command": "scenario.compare",
+        "size": "small"
+       },
+       {
+        "command": "data.compare",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.timeVersion",
+       "tool.timeEnd",
+       "time.compare",
+       "scenario.show",
+       "scenario.base",
+       "scenario.apply"
+      ]
+     },
+     {
+      "label": "Adres",
+      "icon": "addressSearch",
+      "items": [
+       {
+        "command": "address.reverse",
+        "size": "small"
+       },
+       {
+        "command": "address.data",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "address.providers"
+      ]
+     },
+     {
+      "label": "Otomasyon",
+      "icon": "terminal",
+      "items": [
+       {
+        "command": "python.console",
+        "size": "large"
+       },
+       {
+        "command": "commandline.focus",
+        "size": "small"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "survey",
+    "label": "Ölçme",
+    "panels": [
+     {
+      "label": "Saha",
+      "icon": "fieldBook",
+      "items": [
+       {
+        "command": "calc.fieldbook",
+        "size": "large"
+       },
+       {
+        "command": "file.import.gnss",
+        "size": "small"
+       },
+       {
+        "command": "field.send",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Poligon ve alım",
+      "icon": "surveyTraverse",
+      "items": [
+       {
+        "command": "calc.traverse",
+        "size": "large"
+       },
+       {
+        "command": "calc.polar",
+        "size": "large"
+       },
+       {
+        "command": "calc.stakeout",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Kestirme ve dengeleme",
+      "icon": "surveyNetwork",
+      "items": [
+       {
+        "command": "calc.forward",
+        "size": "small"
+       },
+       {
+        "command": "calc.resection",
+        "size": "small"
+       },
+       {
+        "command": "calc.network",
+        "size": "small"
+       },
+       {
+        "command": "calc.levelNetwork",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Noktalar",
+      "icon": "point",
+      "items": [
+       {
+        "command": "point.editor",
+        "size": "large"
+       },
+       {
+        "command": "crs.points",
+        "size": "small"
+       },
+       {
+        "command": "cogo.check",
+        "size": "small"
+       },
+       {
+        "command": "cogo.update",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Oturtma",
+      "icon": "vectorFit",
+      "items": [
+       {
+        "command": "transform.fit",
+        "size": "small"
+       },
+       {
+        "command": "transform.edgematch",
+        "size": "small"
+       },
+       {
+        "command": "crs.transform",
+        "size": "small"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "view",
+    "label": "Görünüm",
+    "panels": [
+     {
+      "label": "Görünümler",
+      "icon": "namedViews",
+      "items": [
+       {
+        "command": "view.namedViews",
+        "size": "large"
+       },
+       {
+        "command": "view.split",
+        "size": "small"
+       },
+       {
+        "command": "view.splitLink",
+        "size": "small"
+       },
+       {
+        "command": "view.swipe",
+        "size": "small"
+       },
+       {
+        "command": "tool.viewTwist",
+        "size": "small"
+       },
+       {
+        "command": "view.northUp",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Koordinatlar",
+      "icon": "ucsWorld",
+      "items": [
+       {
+        "command": "ucs.world",
+        "size": "small"
+       },
+       {
+        "command": "ucs.previous",
+        "size": "small"
+       },
+       {
+        "command": "tool.ucsObject",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "tool.ucsTwoPoints",
+       "tool.ucsOrigin",
+       "tool.ucsRotate",
+       "tool.ucsNamed",
+       "view.twistUcs"
+      ]
+     },
+     {
+      "label": "Görünüş",
+      "icon": "colorModeColor",
+      "items": [
+       {
+        "menu": "Tema",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "view.theme.dark",
+           "view.theme.light"
+          ]
+         }
+        ]
+       },
+       {
+        "menu": "Renk kipi",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "view.colorMode.color",
+           "view.colorMode.mono",
+           "view.colorMode.gray"
+          ]
+         }
+        ]
+       },
+       {
+        "menu": "Yazıların boyu",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "view.annotationSize.legible",
+           "view.annotationSize.true",
+           "view.annotationSize.screen"
+          ]
+         }
+        ]
+       },
+       {
+        "menu": "Sembol boyutu",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "view.symbols.plot",
+           "view.symbols.screen"
+          ]
+         }
+        ]
+       },
+       {
+        "command": "view.fills",
+        "size": "small"
+       },
+       {
+        "command": "view.areaEdges",
+        "size": "small"
+       },
+       {
+        "command": "view.transparency",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "view.lineWeights"
+      ],
+      "launcher": {
+       "command": "tools.options",
+       "title": "Uygulama ayarları: görünüm"
+      }
+     },
+     {
+      "label": "Paneller",
+      "icon": "panelRight",
+      "items": [
+       {
+        "command": "view.rightPanel",
+        "size": "small"
+       },
+       {
+        "command": "view.bottomPanel",
+        "size": "small"
+       },
+       {
+        "command": "view.coords",
+        "size": "small"
+       },
+       {
+        "command": "view.overview",
+        "size": "small"
+       },
+       {
+        "command": "view.magnifier",
+        "size": "small"
+       },
+       {
+        "command": "view.fullscreen",
+        "size": "small"
+       }
+      ],
+      "overflow": [
+       "view.keyTips"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "output",
+    "label": "Çıktı",
+    "panels": [
+     {
+      "label": "Pafta",
+      "icon": "sheet",
+      "items": [
+       {
+        "command": "sheet.new",
+        "size": "large"
+       },
+       {
+        "command": "sheet.fromTemplate",
+        "size": "small"
+       },
+       {
+        "command": "sheet.drawingSet",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Yayınla",
+      "icon": "print",
+      "items": [
+       {
+        "command": "file.publish.sheets",
+        "size": "large"
+       },
+       {
+        "command": "file.preflight.sheets",
+        "size": "small"
+       },
+       {
+        "command": "file.export.atlas",
+        "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Lejant",
+      "icon": "legend",
+      "items": [
+       {
+        "command": "style.legend",
+        "size": "large"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "contextual": [
+  {
+   "id": "selection",
+   "label": "Seçim",
+   "kinds": [
+    "*"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "builtin": "selection"
+      }
+     ]
+    },
+    {
+     "label": "Dönüştür",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "large"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "large"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.stretch",
+       "size": "small"
+      },
+      {
+       "command": "tool.align",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.alignDistribute"
+     ]
+    },
+    {
+     "label": "Nesne",
+     "icon": "join",
+     "items": [
+      {
+       "command": "tool.erase",
+       "size": "small"
+      },
+      {
+       "command": "tool.explode",
+       "size": "small"
+      },
+      {
+       "command": "tool.join",
+       "size": "small"
+      },
+      {
+       "command": "tool.matchProperties",
+       "size": "small"
+      },
+      {
+       "command": "tool.copyToLayer",
+       "size": "small"
+      },
+      {
+       "command": "tool.setElevation",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Çizim sırası",
+     "icon": "bringToFront",
+     "items": [
+      {
+       "command": "edit.bringToFront",
+       "size": "small"
+      },
+      {
+       "command": "edit.sendToBack",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Sembol",
+     "icon": "symbolAssign",
+     "items": [
+      {
+       "command": "style.assign",
+       "size": "small"
+      },
+      {
+       "command": "style.clearSymbol",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Seçilenler",
+     "icon": "select",
+     "items": [
+      {
+       "command": "tool.selectSimilar",
+       "size": "small"
+      },
+      {
+       "command": "file.saveSelection",
+       "size": "small"
+      },
+      {
+       "command": "layer.filterFromSelection",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.point",
+   "label": "Nokta",
+   "kinds": [
+    "point"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "small"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      },
+      {
+       "command": "tool.setElevation",
+       "size": "small"
+      },
+      {
+       "command": "tool.matchProperties",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Nokta",
+     "icon": "point",
+     "items": [
+      {
+       "command": "point.editor",
+       "size": "large"
+      },
+      {
+       "command": "tool.coordinateLabel",
+       "size": "small"
+      },
+      {
+       "command": "field.send",
+       "size": "small"
+      },
+      {
+       "command": "tool.copyToLayer",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "İşlemler",
+     "icon": "processing",
+     "items": [
+      {
+       "menu": "Üret",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.generate.delaunay",
+          "processing.run.generate.voronoi",
+          "processing.run.generate.bounding",
+          "processing.run.generate.concaveHull",
+          "processing.run.convert.pointsToPath"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "İnterpolasyon",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.interpolation.idw",
+          "processing.run.interpolation.naturalNeighbor",
+          "processing.run.interpolation.spline",
+          "processing.run.interpolation.kriging",
+          "processing.run.interpolation.tin",
+          "processing.run.density.kernel"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "İstatistik",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "Merkez ve dağılım",
+         "items": [
+          "processing.run.stats.meanCenter",
+          "processing.run.stats.medianCenter",
+          "processing.run.stats.standardDistance",
+          "processing.run.stats.directionalDistribution"
+         ]
+        },
+        {
+         "label": "Desen ve küme",
+         "items": [
+          "processing.run.stats.nearestNeighbor",
+          "processing.run.stats.moransI",
+          "processing.run.stats.hotSpot",
+          "processing.run.stats.localMoran",
+          "processing.run.stats.dbscan",
+          "processing.run.stats.dbscanSweep",
+          "processing.run.stats.kMeans"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "Yakınlık",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.proximity.nearest",
+          "processing.run.proximity.matrix",
+          "processing.run.proximity.hub",
+          "processing.run.proximity.shortestLine",
+          "processing.run.attributes.fromEnclosing"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.line",
+   "label": "Çizgi",
+   "kinds": [
+    "line",
+    "polyline",
+    "arc",
+    "spline",
+    "nurbs",
+    "xline",
+    "ray"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "small"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      },
+      {
+       "command": "tool.stretch",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Kenar",
+     "icon": "offset",
+     "items": [
+      {
+       "command": "tool.offset",
+       "size": "large"
+      },
+      {
+       "split": "trim",
+       "size": "small"
+      },
+      {
+       "split": "extend",
+       "size": "small"
+      },
+      {
+       "command": "tool.break",
+       "size": "small"
+      },
+      {
+       "split": "split",
+       "size": "small"
+      },
+      {
+       "command": "tool.lengthen",
+       "size": "small"
+      },
+      {
+       "command": "tool.join",
+       "size": "small"
+      },
+      {
+       "command": "tool.reverse",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.continue",
+      "tool.reshape",
+      "tool.edgeShift"
+     ]
+    },
+    {
+     "label": "Köşe",
+     "icon": "fillet",
+     "items": [
+      {
+       "split": "corner",
+       "size": "small"
+      },
+      {
+       "command": "tool.vertex",
+       "size": "small"
+      },
+      {
+       "command": "tool.curveEdit",
+       "size": "small"
+      },
+      {
+       "command": "tool.simplify",
+       "size": "small"
+      },
+      {
+       "command": "tool.setElevation",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Dönüştür",
+     "icon": "conversion",
+     "items": [
+      {
+       "command": "tool.toArea",
+       "size": "small"
+      },
+      {
+       "command": "tool.vertexPoints",
+       "size": "small"
+      },
+      {
+       "command": "tool.divide",
+       "size": "small"
+      },
+      {
+       "command": "tool.stationLabels",
+       "size": "small"
+      },
+      {
+       "split": "textAlong",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "İşlemler",
+     "icon": "processing",
+     "items": [
+      {
+       "menu": "Geometri",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.geometry.buffer",
+          "processing.run.geometry.simplify",
+          "processing.run.geometry.clip",
+          "processing.run.geometry.intersection",
+          "processing.run.geometry.difference",
+          "processing.run.geometry.union",
+          "processing.run.geometry.validity",
+          "processing.run.geometry.repair"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "Dönüştür",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.convert.linesToPolygons",
+          "processing.run.convert.substring",
+          "processing.run.convert.densify",
+          "processing.run.convert.vertices",
+          "processing.run.convert.toPoints",
+          "processing.run.sample.alongLines",
+          "processing.run.generalize.smooth",
+          "processing.run.density.line"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "Doğrusal referans",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.linearRef.createRoutes",
+          "processing.run.linearRef.calibrateRoutes",
+          "processing.run.linearRef.routeEvents",
+          "processing.run.linearRef.locateAlong",
+          "processing.run.linearRef.overlayEvents",
+          "processing.run.linearRef.extractMeasures",
+          "processing.run.linearRef.eventDrift"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.area",
+   "label": "Alan",
+   "kinds": [
+    "polygon",
+    "circle",
+    "ellipse"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "small"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      },
+      {
+       "command": "tool.stretch",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Kenar ve köşe",
+     "icon": "offset",
+     "items": [
+      {
+       "command": "tool.offset",
+       "size": "small"
+      },
+      {
+       "command": "tool.edgeShift",
+       "size": "small"
+      },
+      {
+       "command": "tool.reshape",
+       "size": "small"
+      },
+      {
+       "command": "tool.vertex",
+       "size": "small"
+      },
+      {
+       "split": "corner",
+       "size": "small"
+      },
+      {
+       "command": "tool.setElevation",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Alan",
+     "icon": "areaUnion",
+     "items": [
+      {
+       "command": "tool.areaUnion",
+       "size": "large"
+      },
+      {
+       "command": "tool.areaSubtract",
+       "size": "small"
+      },
+      {
+       "command": "tool.areaIntersect",
+       "size": "small"
+      },
+      {
+       "command": "tool.areaSplit",
+       "size": "small"
+      },
+      {
+       "command": "tool.partsJoin",
+       "size": "small"
+      },
+      {
+       "command": "tool.partsSplit",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.holeAdd",
+      "tool.holeRemove",
+      "tool.holeFill",
+      "tool.toPolyline"
+     ]
+    },
+    {
+     "label": "Yaz ve tara",
+     "icon": "coordinateLabel",
+     "items": [
+      {
+       "command": "tool.coordinateVertices",
+       "size": "small"
+      },
+      {
+       "command": "map.edgeLengths",
+       "size": "small"
+      },
+      {
+       "command": "tool.hatchSelected",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "processing.model.builtin.parcelSheet"
+     ]
+    },
+    {
+     "label": "İşlemler",
+     "icon": "processing",
+     "items": [
+      {
+       "menu": "Geometri",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.geometry.buffer",
+          "processing.run.geometry.clip",
+          "processing.run.geometry.intersection",
+          "processing.run.geometry.difference",
+          "processing.run.geometry.union",
+          "processing.run.geometry.symDifference",
+          "processing.run.geometry.dissolve",
+          "processing.run.geometry.simplify",
+          "processing.run.geometry.validity",
+          "processing.run.geometry.repair"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "Üret",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.generate.bounding",
+          "processing.run.generate.pole",
+          "processing.run.sample.grid",
+          "processing.run.sample.regular",
+          "processing.run.sample.random",
+          "processing.run.sample.subdivide",
+          "processing.run.convert.toPoints",
+          "processing.run.convert.vertices",
+          "processing.run.convert.polygonsToLines"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "Genelleştir",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.generalize.smooth",
+          "processing.run.generalize.orthogonalize",
+          "processing.run.generalize.building",
+          "processing.run.generalize.aggregate",
+          "processing.run.generalize.dropParts",
+          "processing.run.generalize.eliminate",
+          "processing.run.generalize.coverageSimplify"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "Sorgu",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.attributes.fromInside",
+          "processing.run.attributes.fromEnclosing",
+          "processing.run.proximity.neighbors",
+          "processing.run.proximity.nearest",
+          "processing.run.statistics.summary",
+          "processing.run.raster.zonalStatistics",
+          "processing.run.raster.clipByMask",
+          "processing.run.raster.rasterize"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.text",
+   "label": "Yazı",
+   "kinds": [
+    "text"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "small"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Yazı",
+     "icon": "text",
+     "items": [
+      {
+       "command": "text.findReplace",
+       "size": "small"
+      },
+      {
+       "command": "tool.readable",
+       "size": "small"
+      },
+      {
+       "command": "text.combine",
+       "size": "small"
+      },
+      {
+       "command": "text.split",
+       "size": "small"
+      },
+      {
+       "command": "text.number",
+       "size": "small"
+      },
+      {
+       "command": "style.textStyles",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "text.fieldInsert",
+      "text.fieldsUpdate",
+      "text.check",
+      "text.fonts"
+     ]
+    },
+    {
+     "label": "Eğri boyunca",
+     "icon": "textAlong",
+     "items": [
+      {
+       "split": "textAlong",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Ölçek",
+     "icon": "annotationMake",
+     "items": [
+      {
+       "command": "annotation.make",
+       "size": "small"
+      },
+      {
+       "command": "annotation.unmake",
+       "size": "small"
+      },
+      {
+       "command": "tool.annotativePlace",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.dimension",
+   "label": "Ölçü",
+   "kinds": [
+    "dimension"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "small"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Ölçü",
+     "icon": "dimension",
+     "items": [
+      {
+       "command": "dimension.space",
+       "size": "small"
+      },
+      {
+       "command": "dimension.break",
+       "size": "small"
+      },
+      {
+       "command": "dimension.unbreak",
+       "size": "small"
+      },
+      {
+       "command": "tool.dimensionReassociate",
+       "size": "small"
+      },
+      {
+       "command": "style.dimensionStyles",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Ölçek",
+     "icon": "annotationMake",
+     "items": [
+      {
+       "command": "annotation.make",
+       "size": "small"
+      },
+      {
+       "command": "annotation.unmake",
+       "size": "small"
+      },
+      {
+       "command": "tool.annotativePlace",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.leader",
+   "label": "Kılavuz",
+   "kinds": [
+    "leader"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "small"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Kılavuz",
+     "icon": "leader",
+     "items": [
+      {
+       "command": "leader.addArm",
+       "size": "small"
+      },
+      {
+       "command": "leader.removeArm",
+       "size": "small"
+      },
+      {
+       "command": "leader.align",
+       "size": "small"
+      },
+      {
+       "command": "leader.collect",
+       "size": "small"
+      },
+      {
+       "command": "leader.blocks",
+       "size": "small"
+      },
+      {
+       "command": "leader.styles",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Ölçek",
+     "icon": "annotationMake",
+     "items": [
+      {
+       "command": "annotation.make",
+       "size": "small"
+      },
+      {
+       "command": "annotation.unmake",
+       "size": "small"
+      },
+      {
+       "command": "tool.annotativePlace",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.hatch",
+   "label": "Tarama",
+   "kinds": [
+    "hatch"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "small"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Tarama",
+     "icon": "hatch",
+     "items": [
+      {
+       "command": "tool.hatchEdit",
+       "size": "large"
+      },
+      {
+       "command": "edit.hatchesToBack",
+       "size": "small"
+      },
+      {
+       "command": "hatchPatterns.manage",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.block",
+   "label": "Blok",
+   "kinds": [
+    "insert"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "small"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Blok",
+     "icon": "blockInsert",
+     "items": [
+      {
+       "command": "block.edit",
+       "size": "large"
+      },
+      {
+       "command": "tool.explode",
+       "size": "small"
+      },
+      {
+       "command": "block.attributes",
+       "size": "small"
+      },
+      {
+       "command": "block.sync",
+       "size": "small"
+      },
+      {
+       "command": "block.freeze",
+       "size": "small"
+      },
+      {
+       "command": "block.card",
+       "size": "small"
+      },
+      {
+       "command": "tool.xclip",
+       "size": "small"
+      },
+      {
+       "command": "block.panel",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Çizim sırası",
+     "icon": "bringToFront",
+     "items": [
+      {
+       "command": "edit.bringToFront",
+       "size": "small"
+      },
+      {
+       "command": "edit.sendToBack",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.table",
+   "label": "Tablo",
+   "kinds": [
+    "table"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "small"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Tablo",
+     "icon": "table",
+     "items": [
+      {
+       "command": "table.edit",
+       "size": "large"
+      },
+      {
+       "command": "table.update",
+       "size": "small"
+      },
+      {
+       "command": "table.link",
+       "size": "small"
+      },
+      {
+       "command": "table.blockSchedule",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.image",
+   "label": "Resim",
+   "kinds": [
+    "image"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "small"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Resim",
+     "icon": "imageInsert",
+     "items": [
+      {
+       "command": "tool.imageClip",
+       "size": "large"
+      },
+      {
+       "command": "edit.sendToBack",
+       "size": "small"
+      },
+      {
+       "command": "edit.bringToFront",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.raster",
+   "label": "Raster",
+   "kinds": [
+    "raster"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Raster",
+     "icon": "rasterAdd",
+     "items": [
+      {
+       "command": "raster.style",
+       "size": "large"
+      },
+      {
+       "command": "raster.georef",
+       "size": "small"
+      },
+      {
+       "command": "processing.run.raster.cog",
+       "size": "small"
+      },
+      {
+       "command": "raster.gpkgWrite",
+       "size": "small"
+      },
+      {
+       "command": "raster.mosaic",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Yüzey",
+     "icon": "aspect",
+     "items": [
+      {
+       "menu": "Yüzey analizi",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.surface.slope",
+          "processing.run.surface.aspect",
+          "processing.run.surface.hillshade",
+          "processing.run.surface.colorRelief",
+          "processing.run.surface.contours",
+          "processing.run.surface.curvature",
+          "processing.run.surface.ruggedness",
+          "processing.run.surface.insolation"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "Hidroloji",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.hydrology.fill",
+          "processing.run.hydrology.flowDirection",
+          "processing.run.hydrology.flowAccumulation",
+          "processing.run.hydrology.wetness",
+          "processing.run.hydrology.pourPoint",
+          "processing.run.hydrology.watershed",
+          "processing.run.hydrology.basins",
+          "processing.run.hydrology.streams"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "Uzaklık ve maliyet",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.distance.euclidean",
+          "processing.run.distance.cost",
+          "processing.run.distance.path",
+          "processing.run.distance.corridor"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Raster işlemleri",
+     "icon": "clipRaster",
+     "items": [
+      {
+       "menu": "Hesap",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.raster.calculator",
+          "processing.run.raster.reclassify",
+          "processing.run.raster.clipByMask",
+          "processing.run.raster.mosaic",
+          "processing.run.raster.resample"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "İstatistik",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.raster.zonalStatistics",
+          "processing.run.raster.histogram",
+          "processing.run.raster.cellStatistics",
+          "processing.run.raster.focalStatistics"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "Vektöre",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.raster.toPolygons",
+          "processing.run.raster.toLines",
+          "processing.run.raster.toPoints",
+          "processing.run.scan.captureLine",
+          "processing.run.scan.closeArea",
+          "processing.run.scan.contourElevations"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Uygulamalar",
+     "icon": "weightedOverlay",
+     "items": [
+      {
+       "menu": "Uygunluk",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.suitability.weightedOverlay",
+          "processing.run.suitability.weightedSum",
+          "processing.run.suitability.fuzzyMembership",
+          "processing.run.suitability.fuzzyOverlay",
+          "processing.run.suitability.pairwise",
+          "processing.run.suitability.roc"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "Uzaktan algılama",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.remote.index",
+          "processing.run.remote.supervised",
+          "processing.run.remote.unsupervised",
+          "processing.run.remote.accuracy",
+          "processing.run.remote.change",
+          "processing.run.remote.pansharpen",
+          "processing.run.remote.composite",
+          "processing.run.remote.split"
+         ]
+        }
+       ]
+      },
+      {
+       "menu": "Çok boyutlu",
+       "size": "large",
+       "blocks": [
+        {
+         "label": "",
+         "items": [
+          "processing.run.multidim.profile",
+          "processing.run.multidim.series",
+          "processing.run.multidim.meshCalculator",
+          "mesh.query"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.pointcloud",
+   "label": "Nokta bulutu",
+   "kinds": [
+    "pointcloud"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Nokta bulutu",
+     "icon": "pointCloudAdd",
+     "items": [
+      {
+       "command": "pointcloud.style",
+       "size": "large"
+      },
+      {
+       "command": "pointcloud.query",
+       "size": "small"
+      },
+      {
+       "command": "pointcloud.profile",
+       "size": "small"
+      },
+      {
+       "command": "pointcloud.region",
+       "size": "small"
+      },
+      {
+       "command": "pointcloud.vpcSave",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "İşlemler",
+     "icon": "processing",
+     "items": [
+      {
+       "command": "processing.run.pointcloud.ground",
+       "size": "large"
+      },
+      {
+       "command": "processing.run.pointcloud.thin",
+       "size": "small"
+      },
+      {
+       "command": "processing.run.pointcloud.classify",
+       "size": "small"
+      },
+      {
+       "command": "processing.run.pointcloud.clip",
+       "size": "small"
+      },
+      {
+       "command": "processing.run.pointcloud.merge",
+       "size": "small"
+      },
+      {
+       "command": "processing.run.pointcloud.tile",
+       "size": "small"
+      },
+      {
+       "command": "processing.run.pointcloud.rasterize",
+       "size": "small"
+      },
+      {
+       "command": "processing.run.pointcloud.boundary",
+       "size": "small"
+      },
+      {
+       "command": "processing.run.pointcloud.areaStats",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.wall",
+   "label": "Duvar",
+   "kinds": [
+    "wall"
+   ],
+   "modes": [
+    "cad"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "small"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Duvar",
+     "icon": "wall",
+     "items": [
+      {
+       "command": "tool.wallJoins",
+       "size": "large"
+      },
+      {
+       "command": "tool.wallSplit",
+       "size": "small"
+      },
+      {
+       "command": "tool.wallJoin",
+       "size": "small"
+      },
+      {
+       "command": "tool.wallExtend",
+       "size": "small"
+      },
+      {
+       "command": "tool.wallTrim",
+       "size": "small"
+      },
+      {
+       "command": "tool.wallFlip",
+       "size": "small"
+      },
+      {
+       "command": "tool.wallRestyle",
+       "size": "small"
+      },
+      {
+       "command": "arch.wallJoinCheck",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Açıklık",
+     "icon": "door",
+     "items": [
+      {
+       "command": "tool.door",
+       "size": "small"
+      },
+      {
+       "command": "tool.window",
+       "size": "small"
+      },
+      {
+       "command": "tool.opening",
+       "size": "small"
+      },
+      {
+       "command": "tool.tag",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.opening",
+   "label": "Açıklık",
+   "kinds": [
+    "opening"
+   ],
+   "modes": [
+    "cad"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Açıklık",
+     "icon": "door",
+     "items": [
+      {
+       "command": "tool.openingMove",
+       "size": "large"
+      },
+      {
+       "command": "tool.openingFlip",
+       "size": "small"
+      },
+      {
+       "command": "tool.openingNumber",
+       "size": "small"
+      },
+      {
+       "command": "tool.tag",
+       "size": "small"
+      },
+      {
+       "command": "tool.scheduleOpenings",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.space",
+   "label": "Mahal",
+   "kinds": [
+    "space"
+   ],
+   "modes": [
+    "cad"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Mahal",
+     "icon": "space",
+     "items": [
+      {
+       "command": "arch.quantities",
+       "size": "large"
+      },
+      {
+       "command": "tool.spaceSplit",
+       "size": "small"
+      },
+      {
+       "command": "arch.spaceMerge",
+       "size": "small"
+      },
+      {
+       "command": "tool.spaceFloor",
+       "size": "small"
+      },
+      {
+       "command": "tool.spaceCeiling",
+       "size": "small"
+      },
+      {
+       "command": "tool.tag",
+       "size": "small"
+      },
+      {
+       "command": "tool.scheduleSpaces",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.arch",
+   "label": "Mimari nesne",
+   "kinds": [
+    "grid",
+    "column",
+    "stair",
+    "ramp",
+    "tag",
+    "viewmark"
+   ],
+   "modes": [
+    "cad"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "small"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Mimari",
+     "icon": "archGrid",
+     "items": [
+      {
+       "command": "tool.gridNumber",
+       "size": "small"
+      },
+      {
+       "command": "arch.tagsCheck",
+       "size": "small"
+      },
+      {
+       "command": "arch.viewRefs",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -163,6 +163,7 @@ pub mod crs_transform;
 pub mod entities_select;
 pub mod entities_vertex;
 pub mod shapes;
+pub mod donut_create;
 /// `cad.rectangle.create` as the registry runs it ([`shapes`]).
 pub mod rectangle_create {
     pub use crate::shapes::{
@@ -718,6 +719,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_WALLS_JOINS,
         kentos_commands::CAD_WALLS_JOINS_VERSION,
     ),
+    (kentos_commands::CAD_DONUT_CREATE, kentos_commands::CAD_DONUT_CREATE_VERSION),
     // Rectangles and regular polygons ([`shapes`], docs/adr/0290).
     (
         kentos_commands::CAD_RECTANGLE_CREATE,

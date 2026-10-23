@@ -789,6 +789,51 @@ impl Document {
         Ok(true)
     }
 
+    /// A layer's type (docs/adr/0622 §5) as one undo step `label`; none: any kind. Refused on a group and when an
+    /// object on the layer is of a kind the type does not hold (the command says which, by its own code). False when
+    /// it is as given (nothing written).
+    pub fn set_layer_geometry(
+        &mut self,
+        id: &str,
+        next: Option<kentos_contracts::LayerGeometry>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let Some(node) = self.layers.get(id) else {
+            return Ok(false);
+        };
+        if let Some(g) = next {
+            if node.kind == LayerNodeType::Group {
+                return Err(Refusal(format!(
+                    "“{}” bir grup; tür yalnız katmanın olur.",
+                    node.name
+                )));
+            }
+            if let Some(e) = self
+                .store
+                .iter()
+                .map(|s| &*s.entity)
+                .find(|e| e.base().layer_id == id && !g.admits(e.kind()))
+            {
+                return Err(Refusal(format!(
+                    "“{}” katmanında {} var; {} olamaz.",
+                    node.name,
+                    kentos_contracts::kind_words(e.kind()),
+                    g.layer_words()
+                )));
+            }
+        }
+        if node.geometry == next {
+            return Ok(false);
+        }
+        let op = Op::LayerGeometry {
+            layer: id.to_owned(),
+            before: node.geometry,
+            after: next,
+        };
+        self.record(vec![op], label);
+        Ok(true)
+    }
+
     /// A layer's time setting (docs/adr/0210 §2) as one undo step `label`,
     /// its scenario fields as they are: [`Document::set_layer_temporal`].
     pub fn set_layer_time(

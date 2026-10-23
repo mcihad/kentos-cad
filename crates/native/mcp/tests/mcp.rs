@@ -46,6 +46,42 @@ fn square() -> Value {
     ])
 }
 
+/// A command the catalog says only reads (`effect: query`) is read-only to a client, a file command that writes a file
+/// is not, and no command that changes the drawing is (docs/adr/0622 §8).
+#[test]
+fn the_read_only_hint_follows_the_catalogs_effect() {
+    let mut server = Server::new();
+    let listed = ask(&mut server, 1, "tools/list", json!({}));
+    let tools = listed["result"]["tools"].as_array().expect("tools");
+    let catalog = serde_json::to_value(kentos_commands::catalog()).expect("the catalog");
+    let mut reads = 0;
+    for c in catalog["commands"].as_array().expect("commands") {
+        let id = c["id"].as_str().expect("an id");
+        let Some(tool) = tools.iter().find(|t| t["name"] == id) else {
+            continue;
+        };
+        // A file command writes its file, but the print check; a query that writes a file of its own is destructive.
+        let writes_file = (id.starts_with("file.") && id != "file.preflight.sheets")
+            || tool["annotations"]["destructiveHint"] == true;
+        let read_only = c["effect"] == "query" && !writes_file;
+        assert_eq!(tool["annotations"]["readOnlyHint"], read_only, "{id}");
+        if read_only {
+            reads += 1;
+            assert_eq!(tool["annotations"]["destructiveHint"], false, "{id}");
+        }
+    }
+    // The audit's 41 commands without the hint are among them (cad.topology.check, cad.texts.check …).
+    assert!(reads >= 50, "{reads}");
+    for id in ["cad.topology.check", "cad.texts.check", "cad.sources.query", "cad.time.query"] {
+        let tool = tools.iter().find(|t| t["name"] == id).expect("the command");
+        assert_eq!(tool["annotations"]["readOnlyHint"], true, "{id}");
+    }
+    for id in ["file.export.dxf", "file.package", "cad.layers.edit", "cad.profiles.import", "cad.rasters.gpkgwrite"] {
+        let tool = tools.iter().find(|t| t["name"] == id).expect("the command");
+        assert_eq!(tool["annotations"]["readOnlyHint"], false, "{id}");
+    }
+}
+
 #[test]
 fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_reads_back() {
     let mut server = Server::new();
@@ -335,11 +371,11 @@ fn layers_styles_and_settings_go_through_their_tools() {
     let scaled = call(
         &mut server,
         "cad.settings.set",
-        json!({ "drawing": drawing, "plotScale": 100, "projectType": "cad" }),
+        json!({ "drawing": drawing, "plotScale": 100 }),
     );
     assert_eq!(
         scaled["structuredContent"]["output"]["changed"],
-        json!(["projectType", "plotScale"])
+        json!(["plotScale"])
     );
     let summary = call(
         &mut server,
@@ -835,6 +871,7 @@ fn stand_in_desktop(path: &std::path::Path) -> std::thread::JoinHandle<()> {
             drawing_font: kentos_commands::DrawingFont::Barlow,
             province: None,
             drawing_unit: None,
+            annotation: None,
         })
         .expect("a drawing");
         let (stream, _) = listener.accept().expect("a connection");
@@ -1067,7 +1104,7 @@ fn a_millimetre_cad_project_takes_metres_and_says_its_unit() {
     assert_eq!(new["inputSchema"]["required"], json!([]));
     assert_eq!(
         new["inputSchema"]["properties"]["drawingUnit"]["enum"],
-        json!(["mm", "cm", "m"])
+        json!(["mm", "cm", "m", "in", "ft"])
     );
 
     let made = call(
@@ -1682,4 +1719,49 @@ fn an_agent_must_explicitly_accept_a_reported_polyline_loss() {
     let accepted = call(&mut server,"file.import.dxf",json!({"drawing":drawing,"path":source,"op":"plan","allowPolylineLoss":true}));
     assert_eq!(accepted["isError"],false,"{accepted}");
     assert!(accepted["structuredContent"]["warnings"].as_array().unwrap().iter().any(|w| w["code"] == "import_losses"));
+}
+
+#[test]
+fn new_cad_defaults_follow_the_wizard_for_every_unit() {
+    let mut server = Server::new();
+    for (unit, scale) in [("m", 1000.0), ("cm", 50.0), ("mm", 1.0), ("in", 1.0), ("ft", 1.0)] {
+        let made = call(&mut server, "drawing.new", json!({"workspace":"cad","drawingUnit":unit}));
+        assert_eq!(made["isError"], false, "{made}");
+        assert_eq!(made["structuredContent"]["summary"]["settings"]["plotScale"], scale, "{unit}");
+    }
+    let listed = ask(&mut server, 1, "tools/list", json!({}));
+    let new = listed["result"]["tools"].as_array().expect("tools").iter().find(|t| t["name"] == "drawing.new").expect("new");
+    assert_eq!(new["inputSchema"]["properties"]["drawingUnit"]["enum"], json!(["mm","cm","m","in","ft"]));
+}
+
+#[test]
+fn selection_and_donut_use_the_same_native_commands_as_python() {
+    let mut server = Server::new();
+    let made = call(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = made["structuredContent"]["drawing"].clone();
+    let summary = made["structuredContent"]["summary"].clone();
+    let layer = summary["activeLayer"].clone();
+    let locked = call(&mut server, "cad.settings.set", json!({"drawing":drawing,"projectType":"gis","plotScale":500}));
+    assert_eq!(locked["structuredContent"]["error"]["code"], "project_type_locked", "{locked}");
+    let after = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(after["structuredContent"]["settings"], summary["settings"], "whole input refused");
+    let ring = call(&mut server, "cad.donut.create", json!({"drawing":drawing,"layerId":layer,
+        "center":{"x":0.0,"y":0.0},"inner":2.0,"outer":6.0}));
+    assert_eq!(ring["structuredContent"]["status"], "completed", "{ring}");
+    let uid = ring["structuredContent"]["output"]["created"][0].clone();
+    let selected = call(&mut server, "drawing.select", json!({"drawing":drawing,"uids":[uid,uid]}));
+    assert_eq!(selected["structuredContent"]["selected"], 1, "{selected}");
+    let selection = call(&mut server, "drawing.selection", json!({"drawing":drawing}));
+    assert_eq!(selection["structuredContent"]["uids"], json!([uid]));
+    for bad in [json!(null), json!("not-a-list"), json!([uid,17]), json!([uid,"missing"])] {
+        let failed = call(&mut server, "drawing.select", json!({"drawing":drawing,"uids":bad}));
+        assert_eq!(failed["isError"], true, "{failed}");
+        let selection = call(&mut server, "drawing.selection", json!({"drawing":drawing}));
+        assert_eq!(selection["structuredContent"]["uids"], json!([uid]));
+    }
+    let after = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(after["structuredContent"]["revision"], ring["structuredContent"]["output"]["revision"]);
+    let _ = call(&mut server, "cad.entities.delete", json!({"drawing":drawing,"uids":[uid]}));
+    let selection = call(&mut server, "drawing.selection", json!({"drawing":drawing}));
+    assert_eq!(selection["structuredContent"]["uids"], json!([]));
 }

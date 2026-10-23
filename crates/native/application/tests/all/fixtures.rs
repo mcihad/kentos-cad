@@ -41,6 +41,7 @@ use kentos_commands::{
 use kentos_commands::{JoinsEdit, JoinsQuery};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::drawing_compare;
+use kentos_native_application::donut_create;
 use kentos_native_application::fields_write;
 use kentos_native_application::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
 use kentos_native_application::layers_crs::{
@@ -1364,6 +1365,16 @@ fn axis<'a>(p: &'a mut kentos_commands::Vec2, a: &str) -> Option<&'a mut f64> {
         "x" => Some(&mut p.x),
         "y" => Some(&mut p.y),
         _ => None,
+    }
+}
+
+impl Input for kentos_commands::DonutCreate {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "inner" => Some(&mut self.inner), "outer" => Some(&mut self.outer),
+            "lineWeight" => self.line_weight.as_mut(),
+            _ => coordinate(&mut self.center, "center", path),
+        }
     }
 }
 
@@ -3500,6 +3511,7 @@ fn run_op(
         kentos_commands::CAD_LIBRARY_EDIT => run!(library_edit, LibraryEdit),
         kentos_commands::CAD_STYLES_IMPACT => run!(styles_impact, StylesImpact),
         kentos_commands::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
+        kentos_commands::CAD_DONUT_CREATE => run!(donut_create, kentos_commands::DonutCreate),
         kentos_commands::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
         kentos_commands::CAD_UCS_SET => run!(ucs_set, UcsSet),
         kentos_commands::CAD_VIEWS_EDIT => run!(views_edit, ViewsEdit),

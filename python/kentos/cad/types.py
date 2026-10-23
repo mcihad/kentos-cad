@@ -2105,6 +2105,7 @@ class LayerEditOperation(_StrEnum):
     - ``merge``: Layers' objects moved to a target layer and the layers removed
     - ``fields``: A layer's fields (“Alanlar”, docs/adr/0199 §3).
     - ``purge``: The empty layers, the groups left empty and the definitions nothing
+    - ``geometry``: A layer's type (“Katman türü”, docs/adr/0622 §5): what it holds, or `mixed`.
     """
     ADD = "add"
     STYLE = "style"
@@ -2114,9 +2115,10 @@ class LayerEditOperation(_StrEnum):
     MERGE = "merge"
     FIELDS = "fields"
     PURGE = "purge"
+    GEOMETRY = "geometry"
 
 
-LayerEditOperationName = Literal["add", "style", "move", "remove", "duplicate", "merge", "fields", "purge"]
+LayerEditOperationName = Literal["add", "style", "move", "remove", "duplicate", "merge", "fields", "purge", "geometry"]
 """The names of :class:`LayerEditOperation`, for a plain string."""
 
 
@@ -2142,6 +2144,34 @@ class LayerFieldKind(_StrEnum):
 
 LayerFieldKindName = Literal["text", "integer", "decimal", "date", "boolean", "datetime", "time"]
 """The names of :class:`LayerFieldKind`, for a plain string."""
+
+
+class LayerGeometry(_StrEnum):
+    """What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,
+    any kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another
+    kind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.
+    """
+    POINT = "point"
+    LINE = "line"
+    AREA = "area"
+    ANNOTATION = "annotation"
+
+
+LayerGeometryName = Literal["point", "line", "area", "annotation"]
+"""The names of :class:`LayerGeometry`, for a plain string."""
+
+
+class LayerGeometryChoice(_StrEnum):
+    """A layer's type as `cad.layers.edit` gives it (docs/adr/0622 §5): one of the four, or `mixed`, any kind (no type)."""
+    POINT = "point"
+    LINE = "line"
+    AREA = "area"
+    ANNOTATION = "annotation"
+    MIXED = "mixed"
+
+
+LayerGeometryChoiceName = Literal["point", "line", "area", "annotation", "mixed"]
+"""The names of :class:`LayerGeometryChoice`, for a plain string."""
 
 
 class LayerNodeType(_StrEnum):
@@ -15245,6 +15275,67 @@ class DomainsPackage(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DonutCreate(_Model):
+    """One solid annular hatch. Zero inner diameter makes a disc; outer must exceed inner.
+    No active-layer, display-unit or remembered tool options are read by the command.
+    Attributes:
+        center: Unit: length.
+        inner: Unit: length.
+        outer: Unit: length.
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    center: Vec2
+    inner: float
+    outer: float
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["center"] = _vec2_out(self.center)
+        out["inner"] = float(self.inner)
+        out["outer"] = float(self.outer)
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DonutCreate:
+        return cls(
+            layer_id=data["layerId"],
+            center=Vec2.from_json(data["center"]),
+            inner=float(data["inner"]),
+            outer=float(data["outer"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DoorSource(_Model):
     """The doors' layer and which of its attributes say what.
     Attributes:
@@ -26941,6 +27032,8 @@ class LayerNode(_Model):
             in the drawing's extent, and Hepsini göster leaves it frozen; the
             active layer is never frozen. A group's covers what it holds. Only
             `true` is written.
+        geometry: What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer
+            has it, never a group.
         plot: Yazdır: absent, it is printed; `false`, it is drawn on screen but not
             on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;
             docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.
@@ -26976,6 +27069,7 @@ class LayerNode(_Model):
     fields: list[LayerField] | Unset = UNSET
     filter: LayerFilter | None | Unset = UNSET
     frozen: bool | None | Unset = UNSET
+    geometry: LayerGeometry | LayerGeometryName | None | Unset = UNSET
     plot: bool | None | Unset = UNSET
     replaces: str | None | Unset = UNSET
     rules: list[LayerRule] | Unset = UNSET
@@ -27013,6 +27107,8 @@ class LayerNode(_Model):
             out["filter"] = None if self.filter is None else self.filter.to_json()
         if self.frozen is not UNSET:
             out["frozen"] = self.frozen
+        if self.geometry is not UNSET:
+            out["geometry"] = None if self.geometry is None else _enum_out(self.geometry)
         if self.plot is not UNSET:
             out["plot"] = self.plot
         if self.replaces is not UNSET:
@@ -27054,6 +27150,7 @@ class LayerNode(_Model):
             fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
             filter=UNSET if "filter" not in data else None if data["filter"] is None else LayerFilter.from_json(data["filter"]),
             frozen=data.get("frozen", UNSET),
+            geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else _enum_in(LayerGeometry, data["geometry"]),
             plot=data.get("plot", UNSET),
             replaces=data.get("replaces", UNSET),
             rules=[LayerRule.from_json(e0) for e0 in data["rules"]] if "rules" in data else UNSET,
@@ -27797,7 +27894,11 @@ class LayersEdit(_Model):
       its objects, all at once);
     - `purge`: `layers` (the layers and groups to take, by id; absent: every
       one found), `blocks` (the definitions, by id; absent: every one
-      found); what something staying uses stays and is counted in `kept`.
+      found); what something staying uses stays and is counted in `kept`;
+    - `geometry`: `layer`, `geometry` (`point`, `line`, `area`, `annotation`, or
+      `mixed`: no type); refused with `layer_geometry_mismatch` when an object on
+      the layer is of a kind the type does not hold. Add's `geometry` gives the new
+      layer its type (a group takes none); a copy keeps its layer's.
 
     Refusals (`CommandError.code`), checked in this order: `no_layer`
     (style, move, remove, duplicate, merge and fields without `layer`),
@@ -27823,6 +27924,7 @@ class LayersEdit(_Model):
         blocks: Purge's block definitions, by their ids.
         expected_revision: The document revision the input was prepared against, as decimal text.
         fields: The layer's fields (docs/adr/0199 §1).
+        geometry: add, geometry: what the layer holds (docs/adr/0622 §5); `mixed`: any kind.
         index: Unit: index.
         kind: Add's kind of node; absent: a layer.
         layer: The node it acts on; merge's target.
@@ -27838,6 +27940,7 @@ class LayersEdit(_Model):
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     fields: list[LayerField] | None | Unset = UNSET
+    geometry: LayerGeometryChoice | LayerGeometryChoiceName | None | Unset = UNSET
     index: int | None | Unset = UNSET
     kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET
     layer: str | None | Unset = UNSET
@@ -27864,6 +27967,8 @@ class LayersEdit(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.fields is not UNSET:
             out["fields"] = None if self.fields is None else [e0.to_json() for e0 in self.fields]
+        if self.geometry is not UNSET:
+            out["geometry"] = None if self.geometry is None else _enum_out(self.geometry)
         if self.index is not UNSET:
             out["index"] = self.index
         if self.kind is not UNSET:
@@ -27899,6 +28004,7 @@ class LayersEdit(_Model):
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             fields=UNSET if "fields" not in data else None if data["fields"] is None else [LayerField.from_json(e0) for e0 in data["fields"]],
+            geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else _enum_in(LayerGeometryChoice, data["geometry"]),
             index=data.get("index", UNSET),
             kind=UNSET if "kind" not in data else None if data["kind"] is None else _enum_in(LayerNodeType, data["kind"]),
             layer=data.get("layer", UNSET),
@@ -39939,6 +40045,9 @@ class ProjectSettings(_Model):
         annotation: The project's annotation heights on paper (docs/adr/0205 §1); absent:
             every kind's default.
         arch: The project's levels and the detail its walls are drawn at (docs/adr/0339 §3); absent: no level, by the scale.
+        auto_select: Otomatik seçim (docs/adr/0622 §5): on, a click and a box select any shown layer's objects (with the list of
+            the ones under the click); off, only the active layer's, as a GIS edits one layer at a time. Absent: off in a
+            CBS project, on otherwise ([`ProjectSettings::auto_select`]).
         connections: The project's service connections without their secrets (docs/adr/0208 §2).
         coordinate_epoch: The coordinates' epoch (decimal year, docs/adr/0519 §1): when a dynamic system's coordinates hold; absent: not
             said. Only a project with a coordinate system has one. Unit: year.
@@ -40002,6 +40111,7 @@ class ProjectSettings(_Model):
     address_locators: list[AddressLocator] | Unset = UNSET
     annotation: AnnotationHeights | None | Unset = UNSET
     arch: ArchSettings | None | Unset = UNSET
+    auto_select: bool | None | Unset = UNSET
     connections: list[ServiceConnection] | Unset = UNSET
     coordinate_epoch: float | None | Unset = UNSET
     custom_crs: CrsDefinition | None | Unset = UNSET
@@ -40053,6 +40163,8 @@ class ProjectSettings(_Model):
             out["annotation"] = None if self.annotation is None else self.annotation.to_json()
         if self.arch is not UNSET:
             out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.auto_select is not UNSET:
+            out["autoSelect"] = self.auto_select
         if self.connections is not UNSET:
             out["connections"] = [e0.to_json() for e0 in self.connections]
         if self.coordinate_epoch is not UNSET:
@@ -40139,6 +40251,7 @@ class ProjectSettings(_Model):
             address_locators=[AddressLocator.from_json(e0) for e0 in data["addressLocators"]] if "addressLocators" in data else UNSET,
             annotation=UNSET if "annotation" not in data else None if data["annotation"] is None else AnnotationHeights.from_json(data["annotation"]),
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchSettings.from_json(data["arch"]),
+            auto_select=data.get("autoSelect", UNSET),
             connections=[ServiceConnection.from_json(e0) for e0 in data["connections"]] if "connections" in data else UNSET,
             coordinate_epoch=UNSET if "coordinateEpoch" not in data else None if data["coordinateEpoch"] is None else float(data["coordinateEpoch"]),
             custom_crs=UNSET if "customCrs" not in data else None if data["customCrs"] is None else CrsDefinition.from_json(data["customCrs"]),
@@ -44286,7 +44399,7 @@ class SettingsSet(_Model):
 
     - `name`: the drawing's name, trimmed;
     - `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen
-      yet);
+      yet); a project without a type chooses once; an existing type cannot change (ADR 0622);
     - `srid`: the project's coordinate system, an EPSG code of the registry,
       or 0 for a local project without one; it is assigned, the coordinates
       stay as they are (CLAUDE.md §5). It takes the place of a defined system
@@ -44321,6 +44434,7 @@ class SettingsSet(_Model):
     (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
     (two levels of one id or name, a level's elevation or height), `invalid_heights`, `invalid_epoch`; then
     `invalid_revision`, `revision_conflict` (status `conflict`);
+    `project_type_locked` (an existing project type changed),
     `second_needs_system` (a second system for a project without one),
     `second_is_own` (the second system the project's own), `unit_needs_local`
     (a unit other than metres for a project with a system),
@@ -44329,6 +44443,8 @@ class SettingsSet(_Model):
     project without a system).
     Attributes:
         area_decimals: Unit: count.
+        auto_select: Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only
+            the active layer's. No object changes.
         coordinate_epoch: Unit: year.
         expected_revision: The document revision the input was prepared against, as decimal text.
         length_decimals: Unit: count.
@@ -44343,6 +44459,7 @@ class SettingsSet(_Model):
     arch: ArchSettings | None | Unset = UNSET
     area_decimals: int | None | Unset = UNSET
     area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET
+    auto_select: bool | None | Unset = UNSET
     coordinate_epoch: float | None | Unset = UNSET
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
@@ -44367,6 +44484,8 @@ class SettingsSet(_Model):
             out["areaDecimals"] = self.area_decimals
         if self.area_unit is not UNSET:
             out["areaUnit"] = None if self.area_unit is None else _enum_out(self.area_unit)
+        if self.auto_select is not UNSET:
+            out["autoSelect"] = self.auto_select
         if self.coordinate_epoch is not UNSET:
             out["coordinateEpoch"] = None if self.coordinate_epoch is None else float(self.coordinate_epoch)
         if self.drawing_font is not UNSET:
@@ -44402,6 +44521,7 @@ class SettingsSet(_Model):
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchSettings.from_json(data["arch"]),
             area_decimals=data.get("areaDecimals", UNSET),
             area_unit=UNSET if "areaUnit" not in data else None if data["areaUnit"] is None else _enum_in(AreaUnit, data["areaUnit"]),
+            auto_select=data.get("autoSelect", UNSET),
             coordinate_epoch=UNSET if "coordinateEpoch" not in data else None if data["coordinateEpoch"] is None else float(data["coordinateEpoch"]),
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
@@ -68484,6 +68604,7 @@ __all__ = [
     "DomainsExport",
     "DomainsOp",
     "DomainsPackage",
+    "DonutCreate",
     "DoorSource",
     "DrawingAudit",
     "DrawingAudited",
@@ -68948,6 +69069,10 @@ __all__ = [
     "LayerFieldKindName",
     "LayerFilter",
     "LayerFound",
+    "LayerGeometry",
+    "LayerGeometryChoice",
+    "LayerGeometryChoiceName",
+    "LayerGeometryName",
     "LayerLabelReport",
     "LayerLabels",
     "LayerMask",

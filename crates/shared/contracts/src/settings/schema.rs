@@ -165,6 +165,31 @@ fn settings() -> Vec<SettingDescriptor> {
                 "AutoCAD takma adları",
                 "Komut satırına AutoCAD'in İngilizce komut adları ve kısaltmaları da yazılabilir (RECTANG, LA, JOG, DT…). KentOS'un kendi adları ve tek harf kısayolları her zaman önce gelir: KentOS'ta başka bir işi olan ad (T, S, P, CP, POLYGON…) eklenmez.",
             ),
+        // Off by default (docs/adr/0622 §6): the right button opens the menu of what is going on, as
+        // AutoCAD's does by default; on, a quick click is Enter (AutoCAD's time-sensitive right click).
+        boolean("drafting.rightClickEnter", false)
+            .hosts(&[Desktop])
+            .text(
+                "Hızlı sağ tık Enter",
+                "Açıkken sağ tuşa kısaca basmak çalışan komutu onaylar (Enter), basılı tutmak menüyü açar. Kapalıyken sağ tık her zaman o anki işin menüsünü açar. Tutamaçla taşırken sağ tık hiçbir zaman noktayı imlecin yerine bırakmaz.",
+            ),
+        // Off by default (docs/adr/0622 §7): on, every product command the drawing runs, and every selection
+        // made, is written to the Python console as the SDK's code (FreeCAD's “Show script commands in Python
+        // console”); the console's own runs are not.
+        boolean("drafting.pythonEcho", false)
+            .hosts(&[Desktop])
+            .text(
+                "İşlemlerin Python kodunu konsola yaz",
+                "Açıkken çizilen, düzenlenen, taşınan ve seçilen her şeyin Python karşılığı alttaki Python konsoluna yazılır; kod kopyalanıp betikte yeniden çalıştırılabilir. Konsolun kendi çalıştırmaları yazılmaz.",
+            ),
+        // On by default (docs/adr/0622 §4): a selection brings its kind's ribbon tab to the front,
+        // as AutoCAD's contextual tabs do; the desktop only while the web waits (ADR 0228).
+        boolean("drafting.contextualTabs", true)
+            .hosts(&[Desktop])
+            .text(
+                "Seçimde bağlamsal sekme",
+                "Bir nesne seçilince şeritte türünün sekmesi (Çizgi, Alan, Raster, Nokta bulutu…) öne gelir; seçim kalkınca önceki sekmeye dönülür. Kapalıyken sekme yalnız gösterilir.",
+            ),
         // On by default (docs/adr/0403 §4): a drawing tool's new object on a layer with a
         // published form opens its form; the desktop only while the web waits (ADR 0228).
         boolean("drafting.formOnCreate", true)

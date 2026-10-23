@@ -23,7 +23,7 @@ use kentos_commands::{
     CallKind, CallRecord, CallStatus, REPLAY_FORMAT, REPLAY_VERSION, ReplayJournal,
 };
 use kentos_domain::RefusedCall;
-use kentos_native_application::python_call::python_call;
+use kentos_native_application::python_call::python_call_in;
 
 use crate::app::{App, Message, Picker};
 
@@ -162,14 +162,15 @@ impl App {
 
     /// The Python that runs the call again; none for an edit made without a command.
     pub(crate) fn python_of(&self, entry: &Entry) -> Option<String> {
-        let (command, version, input) = match &entry.call {
+        let (command, version, input, relaxed) = match &entry.call {
             Call::Row(row) if row.kind == CallKind::Command => (
                 row.command.as_deref()?,
                 row.version.unwrap_or(1),
                 row.input.as_ref()?,
+                row.relax_constraints,
             ),
             Call::Row(_) => return None,
-            Call::Refused(r) => (r.command.as_str(), r.version, &r.input),
+            Call::Refused(r) => (r.command.as_str(), r.version, &r.input, false),
         };
         // A form's hidden fields are written hidden (docs/adr/0443 §2).
         let names = self
@@ -177,11 +178,12 @@ impl App {
             .as_ref()
             .map(|d| kentos_native_application::python_call::redacted_names(&d.model))
             .unwrap_or_default();
-        Some(python_call(
+        Some(python_call_in(
             command,
             version,
             Some(text::title_of(command)),
             &kentos_native_application::python_call::redacted(input, &names),
+            relaxed,
         ))
     }
 
@@ -189,7 +191,7 @@ impl App {
     /// form's hidden fields written hidden (docs/adr/0443 §2). None without a call.
     pub(crate) fn python_script_of_history(&self) -> Option<String> {
         let doc = self.document.as_ref()?;
-        let calls: Vec<(String, u32, Option<String>, serde_json::Value)> = self
+        let calls: Vec<(String, u32, Option<String>, serde_json::Value, bool)> = self
             .history
             .entries
             .iter()
@@ -200,6 +202,7 @@ impl App {
                     row.version.unwrap_or(1),
                     row.command.as_deref().map(|c| text::title_of(c).to_owned()),
                     row.input.clone()?,
+                    row.relax_constraints,
                 )),
                 _ => None,
             })

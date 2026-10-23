@@ -76,6 +76,29 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - CAD-SHEET-29 (ADR 0619): Sabit kaynak revizyonu, resim sürümleri ve PDF/PNG/SVG provenance; eski denetimi yeniden kullanma engeli web dönüşünde bağlanacak.
 - CAD-SHEET-30 (ADR 0620): Ortak PDF üretimi otomasyonda doğrulandı; web dönüşünde tarayıcı fiziksel print diyalogu ortak çıktı dosyasına bağlanacak.
 - CAD içe aktarma fiziksel ölçeği (ADR 0621): Kaynak birimini bütün projelerde uygulama, bilinen uzunluk referansı ve gerçek model kapsamı ortak çekirdekte; web dönüşünde birim/kalibrasyon penceresi ve yakınlaşma bu sözleşmeye bağlanacak. DWG CAD Ekle/İçe aktar grubunda doğrudan, Dosya ve CBS Veri/Dosya alışverişi gruplarının İçe aktar menülerinde; web dönüşünde aynı giriş eklenecek.
+- Arayüz düzeni şeridi (ADR 0622 §3–§4): masaüstünün şeridi `catalog/v1/ribbon.json`'dadır (CAD ve CBS'nin sekmeleri,
+  seçimin türüne göre bağlamsal sekmeler). Web'in şeridi dönüşte bu dosyadan kurulmalı; `fixtures/shell/v1/ribbon.json`'un
+  `tabs`'ı yeni sekmeleri tutar. Görünüm'deki tema, yazı tipi ve zemin kartları web'de de şeritten Uygulama ayarları'na
+  gider. Özellikler panelinin çizim ölçeği durum çubuğuna geçer.
+- Halka (ADR 0622 §9): `tool.donut` web dönüşünde `cad.donut.create` ile yazacak; merkez, iç/dış çap, görünüş ve katman açık girdidir. Hazır tarama geometrisi arayüzde hesaplanmayacak.
+- İşlemlerin Python kodu konsolda (ADR 0622 §7): masaüstünde `drafting.pythonEcho`. Web'in Python konsolu yoktur;
+  web dönerse aynı tercih web'in komut geçmişinin kodunu bir panele yazabilir.
+- Veritabanı bağlantıları (ADR 0623): masaüstünde PostgreSQL bağlantıları pencereyle tanımlanır, cihazda saklanır
+  (`veritabani-baglantilari.json`), Kaynaklar › Veritabanları'nda ağaç olarak gezilir; PostGIS'e bağlan adres
+  istemez. Web PostgreSQL'e doğrudan bağlanamaz: web dönerse bağlı PostGIS katmanı `kentosd` üzerinden ve sunucuda
+  saklanan bağlantılarla düşünülmeli.
+- Katman türü ve otomatik seçim (ADR 0622 §5): katmanın `geometry`'si ve projenin `autoSelect`'i `.kcad` şema 102'de.
+  Web dönünce şunlar gerekir:
+  - web'in belgesi kuralı (`layer_geometry_mismatch`) yazmalarda denetlemeli;
+  - `tools/selectable.ts`, `autoSelect` kapalıyken seçim sorgusunu etkin katmanla sınırlamalı;
+  - katman ağacı türün işaretini göstermeli, Katman türü ▸ ve Yeni katman ▾ eklenmeli;
+  - uymayan çizim araçları kapanmalı;
+  - içe aktarılan CBS katmanlarının türü dosyadan gelmeli (GeoPackage'ın, Shapefile'ın ve GeoJSON'un geometri türü). Bu,
+    masaüstünde de sonraki iştir.
+- Arayüz düzeni sağ tık (ADR 0622 §6): masaüstünde sağ tık her zaman o anki işin menüsünü açar. Kısa tıkın Enter olması
+  `drafting.rightClickEnter` tercihine bağlıdır ve kapalı başlar; tutamaçla taşırken nokta imlecin yerine bırakılmaz. Web'in
+  `ViewportController.onRightUp`'ı aynı kurala getirilmeli; ortak izler `rightClick`'i Enter olarak oynatır.
+- Arayüz düzeni (ADR 0622, dal `ux/arayuz-duzeni`): proje türü projeyle başlar ve değişmez. Web'in durum çubuğundaki tür hücresi ve Görünüm › Proje türü menüsü yalnız türü sorulmamış projede seçim yapmalı. Yeni proje sihirbazında metrelik CAD çizimi plan ölçekleriyle (`PLAN_SCALES`, varsayılan 1:1000), santimetre 1:50 ile başlar. Özet "Yazılar" satırını söyler ve sayfa yazı ile ölçü yüksekliklerini alır (`model/newProjectWizard.ts`, ortak `fixtures/project/v1/wizard.json`). Şeridin ölçek listesi birimle gelir (`fixtures/shell/v1/ribbon.json`'un `unit`'i). CAD'in durum çubuğu çizim ölçeğini gösterir.
 
 - CAD-SHEET-06 (ADR 0591): ortak ops şeması ve asset/inversePictures sözleşmesi hazır. Web yeniden açılınca pafta komut işleyicisi baytların birleştirme/tam değiştirme ve ters bayt politikasını izlemeli; harita yazısı ve zengin stil çıktı eşdeğerliği kendi çıktı yolunda sınanmalı. Native CPU/SVG rasterizer web'e taşınmış sayılmaz.
 
@@ -1244,6 +1267,25 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
   - **İşlemler:** 28 Eylül'de bitti: kullanıcının modelleri web'deki gibi komut sayılır: İşlemler sekmesinin Modeller panelinde düğme, komut satırında adıyla, Komut ara'da yeriyle (araç kutusunda zaten vardı, ADR 0116).
   - **Görünüş:** 28 Eylül: arayüz yazı tiplerinin yedisi de masaüstünde (Source Sans 3 Adobe'nin değiştirilmemiş dosyaları; Noto Sans, Roboto web'in dosyalarından, `scripts/fonts/ui_fonts.py`; Sistem yazı tipi), web'in kimlikleriyle. 28 Eylül: iki platformun görünüş anahtarları birleşti (sahibin kararı: seçeneklerin birleşimi, varsayılan yazı tipi Plus Jakarta Sans; [ADR 0126](docs/adr/0126-shared-appearance-settings.md)): `appearance.theme` (dört tema), `accent` (on hazır renk ya da `#rrggbb`), `uiFont`, `monoFont`, `textSize` (piksel); eski anahtarlar okunurken çevrilir, ayar dosyası görünüşü taşır (parity-audit A1, A6). 28 Eylül: masaüstünün Uygulama ayarları → Görünüm'ü web'inki gibi: dört tema kartı, vurgu örnekleri ve özel renk, yazı tipi kartları, yazı boyutunun beş adımı ve piksel alanı ([ADR 0128](docs/adr/0128-desktop-appearance-pickers.md)). Kalan (web): gece ve yüksek karşıtlık temaları, masaüstünün altı vurgusu ve özel renk, eş aralıklı yazı seçimi, dört tema kartı ve piksel adımlayıcısı.
   - İki platformda da bekleyenler (`pending`) bu listeye girmez. Web'in klasik arayüzü 2 Ekim'de kaldırıldı; iki platformda yalnız şerit var (sahibin kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)).
+- [ ] `UX-14` Şeritteki her aracın kendi anlamsal komutu olsun; Python ve MCP aynı işi geometriyi kendileri hesaplamadan
+  yapsın ([ADR 0622 §8](docs/adr/0622-interface-arrangement.md), canlı liste `docs/cad/manifest.md`'nin “CAD tarafı”).
+  23 Ekim'deki denetimde (şeridin 742 tekil öğesi) ölü düğme ya da Python'a çevrilemeyen girdi yok; boşluklar şunlar:
+  - [x] Halka: `cad.donut.create`, ortak 25 durum, Python/MCP ve gerçek klavye/fareyle üç görünüşte kabul
+    (ADR 0622 §9).
+  - [ ] P0 çizim temelleri: Daire dilimi, Revizyon bulutu (`cad.sector.create`, `cad.revcloud.create`).
+  - [ ] P0 Çakışma ve Topoloji açıkken kapalı alan ailesi ve Bitişik alan: şekil komutlarına `overlap` ve `topology`
+    seçenekleri, `cad.entities.adjoin`.
+  - [ ] P0 yapım yardımcıları: Dik in ve çık, Paralel çizgi, İki daireye teğet, Dördüncü köşe, Menzil halkaları, Ara nokta,
+    Kesişim noktası, Yardımcı çizginin Açıortay ve Paralel'i.
+  - [ ] P0 Parsel oluştur (numara komutta).
+  - [ ] P1 alan işlemleri, delikler, Biçim değiştir, Sürdür, Paralel kaydır; Parçala ve Sadeleştir; Kot ver, Okunur yap, eğri
+    boyunca yazı, Koordinat yaz, Km yaz, Etiketleri yazıya çevir, Köşelere nokta; plan yolu, Orta hat, Toplu alan, Hızlı
+    ölçü, Katmana kopyala; ölçme hesap pencereleri; Resmi kırp, Yeni sürüm, ağ sonuçlarını yazma.
+  - [ ] P2 ürün komutu olmayanlar: dosya alışverişinin kalanı (GeoJSON, GPX, KML, NCN dışa; GNSS, NCN, NCZ, fotoğraf içe),
+    Seçilenleri kaydet, Başka çizimden al, Veri karşılaştır, Topoloji kuralları.
+  - [x] Komut geçmişinin Python denetimi (`scripts/python/history_calls.py`) dosya yazan 18 masaüstü komutunu da kapsasın.
+    ADR 0622 §9: gerçek adım komutları ve katalog örnekleriyle 7.819 çağrı SDK'dan geri okundu; şemanın dolu
+    varsayılanlarını denetleyen üç regresyon testi de eklendi.
 
 Kabul izi: `polygon başlat → tıkla → 12 yaz → alan açıldı ve "12" göründü → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç`. Buna focus başka metin kutusundayken, yüksek DPI'da, Türkçe klavyede ve IME açıkken varyantlar eklenir. Bu iz Web e2e ile native interaction fixture'ının ortak referansıdır. — **25 Eylül:** iz `fixtures/interaction/v1/polygon-accept.json` (biçim `fixtures/interaction/README.md`). Web gerçek tarayıcıda US klavye, Türkçe Q ve 2× ekran varyantlarında geçiyor (`pnpm e2e:interaction`). Odak başka alandayken yazma `polygon-keys`'te. IME varyantı açık. Masaüstü aynı dosyayı değiştirmeden, pencere açmadan üç varyantta geçiyor (`cargo test -p kentos-desktop traces`, ADR 0021).
 
@@ -2208,7 +2250,7 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   kutu 0,6 ms; `docs/perf/provider-2026-10-18.md`); katmanın özeti ve dosyanın SHA-256'sı akışla, yeni katmana bağlamada satırlar
   bir kez (100 000 parselde 1,3 GB'tan 323 MB'a). Kalan: görünür küme ve sayfalar, çizim alanının süreleri, soğuk önbellek, ağ,
   stres. — **18 Ekim, [ADR 0509](docs/adr/0509-provider-baseline-and-link-memory.md).**
-- [x] `CBS-01` kaynak gezgini: Kaynaklar'da GeoPackage, FlatGeobuf, GML, raster ve nokta bulutu dosyaları; GeoPackage tablolarına, tablo kapsamına (`SourceTable.extent`: `gpkg_contents`, `ST_EstimatedExtent`) ve ilk beş kaydına açılır; Bağlı katman olarak aç, Kopya olarak al, Katmana git (bir kez bağlanır); Veritabanları (PostGIS, şemalarıyla, parolalı adres reddedilir); Servisler (hazır altlıklar, kayıtlı servisler ve katmanları); ad, tür, EPSG, şema ve yol araması; Son ve Sık kullanılanlar (`kaynak-klasorleri.json` sürüm 2); sürükleyip bırakma ve sistemden dosya bırakma; Kapsamı göster. — **23 Ekim, [ADR 0599](docs/adr/0599-source-browser.md).**
+- [x] `CBS-01` kaynak gezgini: Kaynaklar'da GeoPackage, FlatGeobuf, GML, raster ve nokta bulutu dosyaları; GeoPackage tablolarına, tablo kapsamına (`SourceTable.extent`: `gpkg_contents`, `ST_EstimatedExtent`) ve ilk beş kaydına açılır; Bağlı katman olarak aç, Kopya olarak al, Katmana git (bir kez bağlanır); Veritabanları'nda (ADR 0623'ün bağlantıları) arama ile sık ve son kullanılanlar; Servisler (hazır altlıklar, kayıtlı servisler ve katmanları); ad, tür, EPSG, şema ve yol araması; Son ve Sık kullanılanlar (`kaynak-klasorleri.json` sürüm 2); sürükleyip bırakma ve sistemden dosya bırakma; Kapsamı göster. — **23 Ekim, [ADR 0599](docs/adr/0599-source-browser.md).**
 - [x] `CBS-11` bölmede soy bağı ve kaynağa yazılmış adımın geri alınması: projenin `lineage`'i (`.kcad` şema 101), `Op::Lineage` ile aynı geri alma adımında; bağlı katmanın yazması `kentos_lineage` tablosunu aynı işlemde yazar (GeoPackage ve PostGIS); geri almanın yazması satır satır denetlenir; masaüstü geri almada söyler; Python `Document.lineage`, `ancestors`, `descendants`; 115 ortak durum. — **23 Ekim, [ADR 0598](docs/adr/0598-lineage-and-undoing-a-written-step.md).**
 - [ ] `CBS-42` büyük veride bütçeler (dilim): 1 milyon parselde kenet ve seçme p95 ≤0,17 ms; 500 binde kaydırma p95 51 → 0,65 ms, tekerlek 49 → 4,8 ms (görünüm hareket ederken etiketler yeniden yerleşmez, durulunca yerleşir); bağlı dosyanın SHA-256'sı damgasıyla tutulur; alanla bağlı katman yalnız kendi satırlarının kimliklerini okur, dışarıdakiler tek akışla; 10 milyon satırda alanla bağlama 8,3 → 2,3 s, yazma planı 9,2 → 3,8 s. Kalan: dışarıdaki satırların dizinini gerektiğinde kurmak, 1 milyon parselin masaüstünde açılması (10 GB'ı aştı), görünür kümeyi izleyen bağ, büyük çizimde tek düzenlemenin görünüm süresi, soğuk önbellek ve yavaş ağ, PostGIS'in bütün kimlikleri okuyan `describe`'ı, 20 GB raster ve bulut stresi. — **23 Ekim, [ADR 0597](docs/adr/0597-budgets-on-large-data.md), [ölçüm](docs/perf/budgets-2026-10-23.md).**
 - [x] `CBS-36` Paketle'de kaynakların yolu: GeoPackage ve veritabanı kaynakları kopyalanır, bağlı bırakılır ya da gömülür; veritabanı tablosu bağın okuduğu satırlarla GeoPackage olarak `veri/`'ye, bağ kopyaya döner, değişmiş tablo `source_changed`; `leaveOut` bağı (katman boşalır), nesnenin dosyalarını ve dış başvuruyu dışarıda bırakır; masaüstünde Paketle penceresi; 28 ortak durum `package_options_cases.py`'den, PostGIS'te kopya OGR'la denetlenir. Kalan: formun `redact` alanlarının paketten kesilmesi, uzlaştırma tabanının kopyaya taşınması, kaynak başına ayrı yol. — **23 Ekim, [ADR 0596](docs/adr/0596-package-sources-offline.md).**

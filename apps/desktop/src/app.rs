@@ -452,6 +452,9 @@ pub enum Message {
     BottomReset,
     /// Geçmişi temizle (the bottom panel's tab row).
     HistoryCleared,
+    /// The status bar's type of a project not asked its type yet, pressed:
+    /// the question (docs/adr/0622 §1).
+    AskProjectType,
     /// A frame of the status bar's message fading, or the moment it goes (message_log.rs).
     LogFrame,
     /// The bottom panel's log list scrolled: whether new lines follow to its end.
@@ -484,6 +487,8 @@ pub enum Message {
     TemplatesPanel(crate::templates_panel::Event),
     /// Kaynaklar panel (sources/, docs/adr/0199 §7).
     Sources(crate::sources::Event),
+    /// Veritabanı bağlantıları: the connection window, the password question, QGIS's file (db_connections.rs).
+    Db(crate::db_connections::Event),
     /// Şablon düzenleyici (template_editor.rs).
     TemplateEditor(crate::template_editor::Event),
     /// Blok öznitelikleri's window (block_attributes.rs).
@@ -682,7 +687,6 @@ pub enum Message {
     /// Başlangıç (start.rs).
     Start(crate::start::Event),
     /// The interface's look from the Görünüm tab (appearance.rs).
-    Appearance(crate::appearance::Event),
     /// The server's answer to `server.check` (view_commands.rs).
     ServerChecked(Result<kentos_commands::Health, String>),
     /// A layer ticked or unticked on the Çakışma cell's menu (docs/adr/0162 §1).
@@ -720,6 +724,12 @@ pub struct App {
     /// The contextual Seçim tab is the one shown, while something is
     /// selected; an empty selection gives the ribbon back to `tab` (the web's).
     pub ribbon_context: bool,
+    /// The contextual tab the selection opens, kept by the selection's and
+    /// the drawing's change counts (docs/adr/0622 §4): the view asks it often.
+    pub(crate) selection_tab_cache: std::cell::Cell<Option<crate::modes::SelectionTab>>,
+    /// The selection's change count the ribbon last followed: a new
+    /// selection brings its tab to the front, none takes it away.
+    pub(crate) ribbon_follows: Option<(u64, u64)>,
     pub ribbon_collapsed: bool,
     pub mode: Mode,
     pub accent: Accent,
@@ -772,6 +782,17 @@ pub struct App {
     pub(crate) templates_panel: crate::templates_panel::PanelState,
     /// Kaynaklar (sources/, docs/adr/0199 §7): its folders, what is open and read.
     pub(crate) sources: crate::sources::SourcesPanel,
+    /// The connection window while it is open (db_connections.rs, docs/adr/0623).
+    pub(crate) db_editor: Option<crate::db_connections::Editor>,
+    /// The password question while a server waits for one.
+    pub(crate) db_password: Option<crate::db_connections::PasswordAsk>,
+    /// Sil's question for a connection, by its name.
+    pub(crate) db_removing: Option<String>,
+    /// The database connections this window lists: the device's (`kentos_postgis::connections::store`), whose saved
+    /// passwords the bound layers' commands find; a test's app keeps its own in memory.
+    pub(crate) db_store: &'static kentos_postgis::connections::ConnectionStore,
+    /// The connection PostGIS'e bağlan listed last, chosen when it opens again.
+    pub(crate) postgis_last: Option<String>,
     pub(crate) recent_templates: Vec<String>,
     /// Şablon düzenleyici while it is open (template_editor.rs).
     pub(crate) template_editor: Option<crate::template_editor::Editor>,
@@ -1190,7 +1211,11 @@ impl App {
     /// what tests, snapshots and the trace player start from, never touching
     /// the user's files. `main` opens the real settings ([`App::start`]).
     pub fn boot(path: Option<PathBuf>) -> (Self, Task<Message>) {
-        Self::start(path, Settings::memory())
+        // The database connections too stay in memory (docs/adr/0623), each app its own.
+        kentos_postgis::connections::keep_in_memory();
+        let (mut app, task) = Self::start(path, Settings::memory());
+        app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
+        (app, task)
     }
 
     /// The shell with these settings, opening `path` at once when given (`kentos-cad cizim.kcad`).
@@ -1214,6 +1239,8 @@ impl App {
                 .or(catalog().tabs().next())
                 .map_or("home", |tab| tab.id),
             ribbon_context: false,
+            selection_tab_cache: std::cell::Cell::new(None),
+            ribbon_follows: None,
             ribbon_collapsed: false,
             mode: Mode::Dark,
             accent: Accent::default(),
@@ -1241,6 +1268,11 @@ impl App {
             blocks_panel: crate::blocks_panel::PanelState::default(),
             templates_panel: crate::templates_panel::PanelState::default(),
             sources: crate::sources::SourcesPanel::default(),
+            db_editor: None,
+            db_password: None,
+            db_removing: None,
+            db_store: kentos_postgis::connections::store(),
+            postgis_last: None,
             recent_templates: Vec::new(),
             template_editor: None,
             block_attributes: None,
@@ -1652,10 +1684,8 @@ impl App {
         // The sheets follow the project and the drawing (sheets.rs).
         self.follow_sheets();
         self.follow_selection_layers();
-        // The contextual Seçim tab goes with the selection (the web's `updateContextual`).
-        if self.selection.is_empty() {
-            self.ribbon_context = false;
-        }
+        // Follow selection before rebuilding keyboard targets for the visible tab.
+        self.follow_selection_tab();
         // The key tips follow what the ribbon shows now (ribbon_keys.rs).
         self.refresh_key_tips();
         self.dialog_back();
@@ -1691,6 +1721,8 @@ impl App {
                 self.follow_history();
                 self.follow_log(Instant::now())
             },
+            // The operations and selections as code in the Python console when asked (python/echo.rs).
+            self.follow_python_echo(),
             // The sheet templates' library follows the sign-in and the connection (sheet_library.rs).
             self.follow_sheet_library(Instant::now()),
         ]);
@@ -1895,6 +1927,7 @@ impl App {
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),
             Message::HistoryCleared => self.clear_history(),
+            Message::AskProjectType => self.ask_project_type(),
             Message::LogFrame => self.log_frame(Instant::now()),
             Message::LogScrolled(viewport) => self.log_scrolled(viewport),
             Message::LayoutSave => self.layout.write(Instant::now(), false),
@@ -1968,6 +2001,7 @@ impl App {
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::TemplatesPanel(event) => return self.templates_panel_event(event),
             Message::Sources(event) => return self.sources_event(event),
+            Message::Db(event) => return self.db_event(event),
             Message::TemplateEditor(event) => return self.template_editor_event(event),
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::AttributeValues(event) => self.attribute_values_event(event),
@@ -2195,7 +2229,6 @@ impl App {
             Message::Project(event) => return self.project_event(*event),
             Message::AppMenu(event) => return self.app_menu_event(event),
             Message::Start(event) => return self.start_event(event),
-            Message::Appearance(event) => return self.appearance_event(event),
             Message::Viewport(event) => return self.pointer(event),
             Message::OtherViewport(event) => return self.other_viewport(event),
             Message::Split(event) => return self.split_event(event),
@@ -2421,7 +2454,7 @@ impl App {
 
     /// The theme chosen from a command: a preference, kept.
     fn choose_theme(&mut self, mode: Mode) {
-        let _ = self.appearance_event(crate::appearance::Event::Theme(mode));
+        self.set_theme(mode);
     }
 
     /// Puts a drawing on screen: the one there before is left (its cloud
@@ -2591,6 +2624,13 @@ impl App {
             "view.theme.toggle" => self.choose_theme(self.mode.toggled()),
             id if id.starts_with("workspace.") => self.choose_mode(id),
             "tools.options" => self.open_settings(),
+            // Yeni pafta and Şablondan pafta (docs/adr/0622 §3): the sheet mode's own, from the ribbon.
+            "sheet.new" => return self.sheet_message(kentos_sheet_ui::Message::NewSheet),
+            "sheet.fromTemplate" => {
+                return self.sheet_message(kentos_sheet_ui::Message::Gallery(
+                    kentos_sheet_ui::gallery::GalleryMessage::Open,
+                ));
+            }
             // Koordinat oku: a tool that reads the clicked point into the log (docs/adr/0140).
             "crs.query" => return self.start_tool(kentos_interaction::coordinate::ID),
             "draft.ortho" => self.toggle_session("drafting.ortho", "Orto"),
@@ -2730,6 +2770,8 @@ impl App {
             "edit.previousSelection" => self.previous_selection(),
             "edit.cycleSelection" => self.cycle_selection(),
             "edit.selectFilter" => self.toggle_select_filter(),
+            // Otomatik seçim (layer_types.rs, docs/adr/0622 §5).
+            "edit.autoSelect" => self.toggle_auto_select(),
             "edit.selectFilterAll" => self.select_all_kinds(true),
             "edit.selectFilterNone" => self.select_all_kinds(false),
             id if id.starts_with("edit.selectFilter.") => {
@@ -2940,6 +2982,12 @@ impl App {
             "hatchPatterns.manage" => self.open_hatch_patterns(),
             // Edits, not undo steps (layering.rs).
             "layer.new" => self.new_layer(),
+            // A typed layer (layer_types.rs, docs/adr/0622 §5).
+            id if crate::layer_types::NEW_TYPED.iter().any(|(c, _)| *c == id) => {
+                if let Some((_, g)) = crate::layer_types::NEW_TYPED.iter().find(|(c, _)| *c == id) {
+                    self.new_typed_layer(*g);
+                }
+            }
             "layer.newGroup" => self.new_group(),
             // The blocks (blocks_panel.rs, docs/adr/0144).
             "block.panel" => self.show_blocks_panel(),
@@ -3056,6 +3104,9 @@ impl App {
         } else {
             doc.model.redo()
         };
+        if step.is_some() {
+            self.echo_history(undo);
+        }
         self.output(match (step, undo) {
             (Some(label), true) if !written.is_empty() => format!(
                 "Geri alındı: {label}. Bu adım {} kaynağına yazılmıştı; kaynakta hâlâ duruyor. Kaynağa yaz geri almayı \
@@ -3094,6 +3145,7 @@ impl App {
             "draft.topologyPoints" => self.draft.topology_points,
             "draft.overlap" => self.draft.overlap != kentos_interaction::Overlap::Allow,
             "edit.selectFilter" => self.draft.select_kinds.is_some(),
+            "edit.autoSelect" => self.auto_select_on(),
             id if id.starts_with("edit.selectFilter.") => {
                 self.select_kind_checked(&id["edit.selectFilter.".len()..])
             }
@@ -3199,6 +3251,12 @@ impl App {
             "server.check" => !self.server_checking,
             id if id.starts_with("cloud.") => self.cloud_available(id),
             "layer.new" | "layer.newGroup" => self.tree_locked().is_none(),
+            id if crate::layer_types::NEW_TYPED.iter().any(|(c, _)| *c == id) => {
+                self.tree_locked().is_none()
+            }
+            "edit.autoSelect" => doc.is_some(),
+            // A drawing tool that writes another kind than the typed active layer holds (docs/adr/0622 §5).
+            id if self.layer_misfit(id).is_some() => false,
             "block.purge" | "block.export" => doc.is_some_and(|d| !d.blocks().is_empty()),
             "block.import" | "layer.impact" => doc.is_some(),
             "block.attributes" => doc.is_some_and(|d| {
@@ -3220,21 +3278,33 @@ impl App {
                     .iter()
                     .any(|&s| d.get(s).is_some_and(|e| e.base().symbol.is_some()))
             }),
+            // A project keeps its type (docs/adr/0622 §1): only one not asked its type yet takes one.
+            id if id.starts_with("workspace.") => {
+                doc.is_some_and(|d| d.settings().project_type().is_none())
+            }
             _ => true,
         }
     }
 
     /// Why a command is off, when it says (the web's `whyDisabled`): its tip
     /// shows it.
-    pub fn why_disabled(&self, id: &str) -> Option<&'static str> {
+    pub fn why_disabled(&self, id: &str) -> Option<String> {
         match id {
-            "layer.new" | "layer.newGroup" => self.tree_locked(),
+            "layer.new" | "layer.newGroup" => self.tree_locked().map(str::to_owned),
+            id if crate::layer_types::NEW_TYPED.iter().any(|(c, _)| *c == id) => {
+                self.tree_locked().map(str::to_owned)
+            }
+            id if id.starts_with("workspace.") && !self.available(id) => Some(
+                "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride dönüştürmeyle olacak."
+                    .to_owned(),
+            ),
             "scenario.show" | "scenario.base" | "scenario.compare" | "scenario.apply"
                 if !self.has_scenarios() =>
             {
-                Some("Projede senaryo yok; önce Senaryo oluştur ile bir senaryo yapın.")
+                Some("Projede senaryo yok; önce Senaryo oluştur ile bir senaryo yapın.".to_owned())
             }
-            _ => None,
+            // The typed active layer does not hold what the tool draws (docs/adr/0622 §5).
+            id => self.layer_misfit(id),
         }
     }
 

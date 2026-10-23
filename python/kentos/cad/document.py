@@ -143,6 +143,12 @@ class SessionBase:
     def replay(self, journal: str) -> str:
         raise NotImplementedError
 
+    def selection(self) -> str:
+        raise NotImplementedError
+
+    def select(self, uids: str) -> int:
+        raise NotImplementedError
+
 
 _CURRENT: Document | None = None
 
@@ -502,10 +508,10 @@ class Document:
           UTM …), 0 for local. A project with a system needs it or a
           ``province`` (plate code), whose TUREF zone is then taken; it is
           never guessed.
-        - ``drawing_unit``: a local project's unit (``mm``, ``cm``, ``m``);
+        - ``drawing_unit``: a local project's unit (``mm``, ``cm``, ``m``, ``in``, ``ft``);
           one with a system is in metres.
-        - ``plot_scale``: 1000 for 1:1000; by default 1 for a local project,
-          1000 for any other.
+        - ``plot_scale``: 1000 for 1:1000; metres default to 1000, centimetres
+          to 50, millimetres/inches/feet to 1.
 
         Units: geometry is always metres in the project's plane, whatever
         the drawing unit. A 4000 × 3000 mm room in a ``mm`` project is
@@ -919,6 +925,22 @@ class Document:
             units=_units(raw.get("units")),
             basis=_basis(raw.get("basis")),
         )
+
+    # ------------------------------------------------------------ selection
+
+    def select(self, uids: Iterable[str]) -> int:
+        """Selects these objects by their persistent ids (docs/adr/0622 §7).
+
+        In the desktop's Python console it is the window's selection, what its
+        tools act on next (the console writes the selections made by hand as
+        this call too); elsewhere the drawing's own, which :meth:`selection`
+        gives back. An unknown id raises :class:`UnknownObject` and changes
+        nothing. ``select([])`` clears it. Returns how many are selected."""
+        return int(_host(self._session.select, json.dumps(list(uids))))
+
+    def selection(self) -> list[str]:
+        """Selected persistent ids, omitting objects deleted since; shared session state with MCP."""
+        return [str(u) for u in json.loads(_host(self._session.selection))]
 
     # ------------------------------------------------------------ history
 

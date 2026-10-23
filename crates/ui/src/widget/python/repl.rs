@@ -142,12 +142,13 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
             );
         }
         for entry in state.entries() {
-            let input = entry.kind == EntryKind::Input;
+            let input = matches!(entry.kind, EntryKind::Input | EntryKind::Echo);
             let marker = match entry.kind {
                 EntryKind::Input => format!("In [{}]", entry.execution),
                 EntryKind::Output => "Out".into(),
                 EntryKind::Error => "Hata".into(),
                 EntryKind::Note => "•".into(),
+                EntryKind::Echo => "Komut".into(),
             };
             let kind = entry.kind;
             let label = text(marker)
@@ -161,7 +162,7 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
                             EntryKind::Input => t.accent_hover,
                             EntryKind::Output => t.success,
                             EntryKind::Error => t.danger,
-                            EntryKind::Note => t.muted,
+                            EntryKind::Note | EntryKind::Echo => t.muted,
                         }),
                     }
                 });

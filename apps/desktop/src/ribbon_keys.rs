@@ -123,15 +123,11 @@ impl App {
         &self,
         tab: &'static Tab,
     ) -> Vec<(Option<&'static RibbonPanel>, Group<'static, Message>)> {
-        let mut groups: Vec<(Option<&'static RibbonPanel>, Group<'static, Message>)> = tab
-            .panels
+        // Görünüm's look (theme, typefaces, size, ground) is Uygulama ayarları' (docs/adr/0622 §3).
+        tab.panels
             .iter()
             .filter_map(|panel| self.ribbon_group(tab.id, panel).map(|g| (Some(panel), g)))
-            .collect();
-        if tab.id == "view" {
-            groups.extend(self.appearance_groups().into_iter().map(|g| (None, g)));
-        }
-        groups
+            .collect()
     }
 
     /// The tip on something the ribbon draws, dimmed when it does not
@@ -156,8 +152,8 @@ impl App {
                     .filter(|id| usable(self, id))
                     .collect();
                 let mut tabs: Vec<&'static Tab> = self.ribbon_tabs().collect();
-                if !self.selection.is_empty() {
-                    tabs.extend(self.contextual_tabs());
+                if let Some(tab) = self.selection_tab() {
+                    tabs.push(tab);
                 }
                 let labels: Vec<&str> = tabs.iter().map(|t| t.label).collect();
                 let (digits, letters) = first_level_tips(bar.len(), &labels);
@@ -496,25 +492,13 @@ mod tests {
     /// The tabs each work mode shows are the web's, in its order (ribbon.json `tabs`); the additions' own tabs
     /// (catalog/v1/additions.json, docs/adr/0339 §6) the desktop's alone while the web waits (docs/adr/0228).
     #[test]
-    fn the_tabs_are_the_web_s_in_every_mode() {
+    /// Each type's tabs and the selection's are the shared fixture's (docs/adr/0622 §3: the desktop's
+    /// ribbon leads; the web takes it when it comes back, TODOS.md §0.2).
+    fn the_tabs_are_the_shared_fixture_s_in_every_mode() {
         let fixture: Value = serde_json::from_str(FIXTURE).expect("ribbon.json reads");
-        let added: Value = serde_json::from_str(include_str!("../../../catalog/v1/additions.json"))
-            .expect("additions read");
         for (mode, workspace) in [("cad", Workspace::Cad), ("gis", Workspace::Gis)] {
-            let own: Vec<&str> = added["tabs"]
-                .as_array()
-                .into_iter()
-                .flatten()
-                .filter(|t| {
-                    t["modes"]
-                        .as_array()
-                        .is_some_and(|m| m.iter().any(|m| m == mode))
-                })
-                .filter_map(|t| t["id"].as_str())
-                .collect();
             let ours: Vec<(String, String, bool)> = catalog()
                 .tabs_in(workspace)
-                .filter(|t| !own.contains(&t.id))
                 .map(|t| (t.id.to_owned(), t.label.to_owned(), false))
                 .chain(
                     catalog()
@@ -539,6 +523,22 @@ mod tests {
     }
 
     #[test]
+    fn key_tips_only_offer_the_visible_contextual_tab() {
+        let mut app = app_with_drawing();
+        app.selection.set([kentos_domain::Slot(4)]);
+        let _ = app.update(Message::DialogClosed);
+        let visible = app.selection_tab().expect("the selected area has a tab").id;
+        let _ = app.update(Message::Run("view.keyTips"));
+        for tab in app.contextual_tabs() {
+            assert_eq!(tip(&app, TipKey::Tab(tab.id)).is_some(), tab.id == visible, "{}", tab.id);
+        }
+        let _ = app.update(Message::Run("edit.deselect"));
+        for tab in app.contextual_tabs() {
+            assert!(tip(&app, TipKey::Tab(tab.id)).is_none(), "{}", tab.id);
+        }
+    }
+
+    #[test]
     fn f6_shows_digits_on_the_bar_and_letters_on_the_tabs() {
         let mut app = app_with_drawing();
         let _ = app.update(Message::Run("view.keyTips"));
@@ -546,11 +546,13 @@ mod tests {
         // Kaydet is the only usable one of the fixed three (nothing to undo yet).
         assert_eq!(tip(&app, TipKey::Quick("file.save")), Some("1".into()));
         assert_eq!(tip(&app, TipKey::Quick("edit.undo")), None);
-        // A drawing not asked its type shows the CBS type's ribbon.
-        assert_eq!(tip(&app, TipKey::Tab("home")), Some("GI".into()));
+        // A drawing not asked its type shows the CBS type's ribbon (docs/adr/0622 §3): Dosya and
+        // Düzenle share D, the others have a letter of their own.
+        assert_eq!(tip(&app, TipKey::Tab("file")), Some("DO".into()));
         assert_eq!(tip(&app, TipKey::Tab("edit")), Some("DU".into()));
+        assert_eq!(tip(&app, TipKey::Tab("map")), Some("H".into()));
         assert_eq!(tip(&app, TipKey::Tab("output")), Some("C".into()));
-        assert_eq!(tip(&app, TipKey::Tab("view")), Some("GO".into()));
+        assert_eq!(tip(&app, TipKey::Tab("view")), Some("G".into()));
         // F6 again: away.
         let _ = app.update(Message::Run("view.keyTips"));
         assert!(app.key_tips.is_none());
@@ -581,10 +583,11 @@ mod tests {
     fn esc_backspace_and_a_click_go_back_or_away() {
         let mut app = app_with_drawing();
         let _ = app.update(Message::Run("view.keyTips"));
-        letter(&mut app, "g");
-        assert_eq!(app.key_tips.as_ref().map(|t| t.typed.as_str()), Some("G"));
-        let dim = app.key_tip(&TipKey::Tab("edit")).expect("Düzenle's tip");
-        assert!(dim.dim, "what does not start with G dims");
+        // D: Dosya and Düzenle both start with it.
+        letter(&mut app, "d");
+        assert_eq!(app.key_tips.as_ref().map(|t| t.typed.as_str()), Some("D"));
+        let dim = app.key_tip(&TipKey::Tab("map")).expect("Harita's tip");
+        assert!(dim.dim, "what does not start with D dims");
         named(&mut app, Named::Backspace);
         assert_eq!(app.key_tips.as_ref().map(|t| t.typed.as_str()), Some(""));
         letter(&mut app, "c");

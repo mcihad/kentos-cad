@@ -44,17 +44,61 @@ pub fn python_path(command: &str) -> String {
 /// The Python that runs `command` with `input` on `doc` (the open drawing in
 /// the desktop's Python console), under a comment that says what it is.
 pub fn python_call(command: &str, version: u32, title: Option<&str>, input: &Value) -> String {
+    python_call_in(command, version, title, input, false)
+}
+
+/// [`python_call`]; `relaxed`: the call ran with the constraints relaxed
+/// (`relaxConstraints`, docs/adr/0337 §2), so it goes under `with doc.relaxed():`.
+pub fn python_call_in(
+    command: &str,
+    version: u32,
+    title: Option<&str>,
+    input: &Value,
+    relaxed: bool,
+) -> String {
+    let input = without_revision(input);
+    let path = python_path(command);
+    let what = title.map_or_else(String::new, |t| format!("{t} — "));
+    let body = relaxing(relaxed, |pad| {
+        let call = "command.execute_input(doc, command.input_type.from_json(";
+        let literal = render(&input, pad, pad + call.len() + 2);
+        format!("{call}{literal}))")
+    });
+    format!("# {what}{command} v{version}\nfrom kentos import cad\n\ncommand = {path}\n{body}")
+}
+
+/// The command's call as the Python console's echo writes it (docs/adr/0622 §7): its title as a comment, then one
+/// call on `doc` with `cad` as the console has them (no import), the same input as [`python_call_in`].
+pub fn python_echo(command: &str, title: Option<&str>, input: &Value, relaxed: bool) -> String {
+    let input = without_revision(input);
+    let path = python_path(command);
+    let body = relaxing(relaxed, |pad| {
+        let call = format!("{path}.execute_input(doc, {path}.input_type.from_json(");
+        let literal = render(&input, pad, pad + call.chars().count() + 2);
+        format!("{call}{literal}))")
+    });
+    match title {
+        Some(t) => format!("# {t}\n{body}"),
+        None => body,
+    }
+}
+
+/// The input without the revision it was planned on: the code writes to the drawing it is run on.
+fn without_revision(input: &Value) -> Value {
     let mut input = input.clone();
     if let Value::Object(map) = &mut input {
         map.remove("expectedRevision");
     }
-    let path = python_path(command);
-    let what = title.map_or_else(String::new, |t| format!("{t} — "));
-    let call = "command.execute_input(doc, command.input_type.from_json(";
-    let literal = render(&input, 0, call.len() + 2);
-    format!(
-        "# {what}{command} v{version}\nfrom kentos import cad\n\ncommand = {path}\n{call}{literal}))\n"
-    )
+    input
+}
+
+/// A call's line, given how deep it starts, under `with doc.relaxed():` when `relaxed`; ends with a newline.
+fn relaxing(relaxed: bool, line: impl FnOnce(usize) -> String) -> String {
+    if relaxed {
+        format!("with doc.relaxed():\n    {}\n", line(4))
+    } else {
+        format!("{}\n", line(0))
+    }
 }
 
 /// `value` as a Python literal on a line `indent` spaces deep: objects are
@@ -189,6 +233,30 @@ mod tests {
             "{short}"
         );
     }
+
+    #[test]
+    fn a_relaxed_call_goes_under_relaxed_and_the_echo_is_one_call() {
+        let input = json!({"c": {"x": 1.0, "y": 2.0}, "layerId": "cizim", "r": 5.0});
+        let relaxed = python_call_in("cad.circle.create", 1, None, &input, true);
+        assert!(
+            relaxed.ends_with("command = cad.circle.create\nwith doc.relaxed():\n    command.execute_input(doc, command.input_type.from_json({\n        \"c\": {\"x\": 1.0, \"y\": 2.0},\n        \"layerId\": \"cizim\",\n        \"r\": 5.0,\n    }))\n"),
+            "{relaxed}"
+        );
+        assert_eq!(
+            python_echo("cad.circle.create", Some("Daire"), &input, false),
+            "# Daire\ncad.circle.create.execute_input(doc, cad.circle.create.input_type.from_json({\n    \"c\": {\"x\": 1.0, \"y\": 2.0},\n    \"layerId\": \"cizim\",\n    \"r\": 5.0,\n}))\n"
+        );
+        assert_eq!(
+            python_echo("cad.entities.delete", None, &json!({"uids": ["a"]}), false),
+            "cad.entities.delete.execute_input(doc, cad.entities.delete.input_type.from_json({\n    \"uids\": [\"a\"],\n}))\n"
+        );
+        // A wide input breaks inside the relaxed block, its lines four deeper.
+        let wide = json!({"points": [{"x": 500000.125, "y": 4400000.25}, {"x": 500010.5, "y": 4400000.25}, {"x": 500010.5, "y": 4400010.0}]});
+        let echo = python_echo("cad.polyline.create", None, &wide, true);
+        assert!(echo.starts_with("with doc.relaxed():\n    cad.polyline.create.execute_input("), "{echo}");
+        assert!(echo.contains("\n        \"points\": ["), "{echo}");
+        assert!(echo.ends_with("    }))\n"), "{echo}");
+    }
 }
 
 /// The text a hidden value is written as (docs/adr/0443 §2).
@@ -230,7 +298,7 @@ pub fn redacted(input: &Value, names: &[String]) -> Value {
 
 /// The calls as one Python script, in their order, each as [`python_call`] writes it, the hidden values
 /// written as [`HIDDEN`] (docs/adr/0443 §2).
-pub fn python_script(calls: &[(String, u32, Option<String>, Value)], names: &[String]) -> String {
+pub fn python_script(calls: &[(String, u32, Option<String>, Value, bool)], names: &[String]) -> String {
     let mut out = String::from(
         "# KentOS komut geçmişi: çağrılar sırasıyla. Python konsolunda doc açık çizimdir.\n",
     );
@@ -239,13 +307,14 @@ pub fn python_script(calls: &[(String, u32, Option<String>, Value)], names: &[St
             "# Formda gizlenen alanların değerleri {HIDDEN} olarak yazıldı: çalıştırmadan önce yerlerine değer yazın.\n"
         ));
     }
-    for (command, version, title, input) in calls {
+    for (command, version, title, input, relaxed) in calls {
         out.push('\n');
-        out.push_str(&python_call(
+        out.push_str(&python_call_in(
             command,
             *version,
             title.as_deref(),
             &redacted(input, names),
+            *relaxed,
         ));
     }
     out
@@ -272,6 +341,7 @@ mod redaction_tests {
                 1,
                 Some("Formla kaydet".into()),
                 input,
+                false,
             )],
             &names,
         );

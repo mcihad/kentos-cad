@@ -237,6 +237,12 @@ class DesktopSession(_document.SessionBase):
     def replay(self, journal: str) -> str:
         return self._ask("replay", journal=json.loads(journal))
 
+    def selection(self) -> str:
+        return self._ask("selection")
+
+    def select(self, uids: str) -> int:
+        return int(self._channel.call("select", {"uids": json.loads(uids)}))
+
     def _no_jobs(self) -> str:
         raise _native.HostError(
             "not_in_console",

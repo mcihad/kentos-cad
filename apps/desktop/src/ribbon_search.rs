@@ -99,7 +99,7 @@ impl App {
     /// The tab and panel a command lives in: the tabs other than Giriş
     /// first, then Giriş (the web's `where` and `reveal`).
     fn home_of(&self, id: &str) -> Option<(&'static str, &'static str, &Panel)> {
-        let tabs: Vec<_> = self.ribbon_tabs().collect();
+        let tabs: Vec<_> = self.ribbon_tabs().chain(self.selection_tab()).collect();
         let order = tabs
             .iter()
             .filter(|tab| tab.id != "home")
@@ -176,7 +176,9 @@ impl App {
                 };
                 let home = self.home_of(command.id);
                 let runs = command.standing == Standing::Ported && self.available(command.id);
-                let detail = match (command.standing, &home) {
+                let detail = if let Some(why) = self.why_disabled(command.id).filter(|_| !runs) {
+                    why
+                } else { match (command.standing, &home) {
                     (Standing::Pending, _) => command
                         .pending_note
                         .unwrap_or("Geliştirme aşamasında")
@@ -184,7 +186,7 @@ impl App {
                     (Standing::OnTheWeb, _) => "Web'de var; masaüstüne henüz taşınmadı".to_owned(),
                     (Standing::Ported, Some((_, tab, panel))) => format!("{tab} › {}", panel.label),
                     (Standing::Ported, None) => command.category.to_owned(),
-                };
+                }};
                 Found {
                     icon: command.icon,
                     title: command.title.into(),
@@ -356,7 +358,7 @@ mod tests {
             .iter()
             .position(|r| r.title == "Ölçülerim…")
             .expect("found");
-        assert!(rows[at].detail.contains("Modeller"), "{}", rows[at].detail);
+        assert!(rows[at].detail.contains("İşlemler"), "{}", rows[at].detail);
         let _ = app.update(Message::RibbonSearchReveal(at));
         assert_eq!(app.ribbon_flash_model.as_deref(), Some("user.olculer"));
         let _ = app.update(Message::RibbonSearch("ölçülerim".into()));
@@ -416,6 +418,18 @@ mod tests {
                 println!("{}", file.display());
             }
         }
+    }
+
+    #[test]
+    fn selected_objects_processing_commands_can_be_revealed() {
+        let mut app = app_with_drawing();
+        assert!(app.home_of("processing.run.geometry.buffer").is_none());
+        app.selection.set([kentos_domain::Slot(4)]);
+        let _ = app.update(Message::DialogClosed);
+        let home = app.home_of("processing.run.geometry.buffer").expect("the area contextual tab");
+        assert_eq!(home.0, app.selection_tab().expect("selected area").id);
+        let _ = app.update(Message::Run("edit.deselect"));
+        assert!(app.home_of("processing.run.geometry.buffer").is_none());
     }
 
     /// A row says where its command lives; Alt+Enter opens its tab and

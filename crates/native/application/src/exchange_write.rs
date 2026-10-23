@@ -50,6 +50,8 @@ pub fn put_nodes(
                     filter: None,
                     // Where its objects came from stays with them (docs/adr/0583 §1).
                     source_crs: n.source_crs.clone(),
+                    // What it holds comes with it (docs/adr/0622 §5).
+                    geometry: n.geometry,
                 };
                 model.add_layer(new, parent, false).map_err(|r| r.0)?;
                 counts.layers += 1;

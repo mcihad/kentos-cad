@@ -32,6 +32,7 @@ pub struct Session {
     path: Option<PathBuf>,
     /// Read from a v1 JSON file: saved only to a new path, never over it.
     legacy: bool,
+    selection: Vec<kentos_domain::Uuid>,
     group: Option<Group>,
     jobs: crate::rpc::Jobs,
     /// What opening found of the bound files (docs/adr/0506).
@@ -77,10 +78,23 @@ impl Session {
             doc,
             path,
             legacy,
+            selection: Vec::new(),
             group: None,
             jobs: crate::rpc::Jobs::default(),
             located: Default::default(),
         }
+    }
+
+    /// Explicit session selection; unknown or malformed ids leave the previous selection intact.
+    pub fn select(&mut self, given: &Value) -> Result<usize, HeadlessError> {
+        let slots = crate::selection::resolve(&self.doc, given)?;
+        self.selection = slots.iter().filter_map(|s| self.doc.uid(*s)).collect();
+        Ok(self.selection.len())
+    }
+
+    /// The session's persistent ids, omitting objects removed since they were selected.
+    pub fn selection(&self) -> Vec<String> {
+        self.selection.iter().filter(|u| self.doc.slot_of(**u).is_some()).map(|u| u.to_string()).collect()
     }
 
     /// The document itself, for Rust hosts.

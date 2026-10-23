@@ -421,6 +421,7 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
             let new = NewLayer {
                 frozen: None,
                 source_crs: None,
+                geometry: None,
                 plot: None,
                 id: layer.get("id").and_then(Value::as_str).map(str::to_owned),
                 name: text(layer, "name", at)?.to_owned(),

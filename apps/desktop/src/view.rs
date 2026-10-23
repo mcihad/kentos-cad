@@ -157,6 +157,10 @@ impl App {
         }
         // İfade oluşturucu over the window whose field opened it (expression/).
         layers.extend(self.builder_view());
+        // The connection window, the password question and Sil's question over the window that asked for them
+        // (db_connections.rs), and Kaynaklar's question of a table in another system.
+        layers.extend(self.sources_reproject_view());
+        layers.extend(self.db_view());
         // A save's panel and an open's window (saving.rs, opening.rs), over everything else.
         layers.extend(self.saving_view());
         // A large import's panel: the objects as they go in, and Durdur (exchange/drawing_import.rs).
@@ -228,17 +232,15 @@ impl App {
             tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
             ribbon = ribbon.tab(tab.label, tab.id == shown, Message::RibbonTab(tab.id));
         }
-        // Seçim, with the count, while something is selected (the web's contextual tab).
-        if !self.selection.is_empty() {
-            for tab in self.contextual_tabs() {
-                tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
-                ribbon = ribbon.contextual_tab(
-                    tab.label,
-                    self.selection.len().to_string(),
-                    tab.id == shown,
-                    Message::RibbonTab(tab.id),
-                );
-            }
+        // The selection's tab, by its objects' kind, with the count (docs/adr/0622 §4).
+        if let Some(tab) = self.selection_tab() {
+            tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
+            ribbon = ribbon.contextual_tab(
+                tab.label,
+                self.selection.len().to_string(),
+                tab.id == shown,
+                Message::RibbonTab(tab.id),
+            );
         }
         if self.sheets.is_active() {
             tab_tips.push(None);
@@ -1211,9 +1213,16 @@ impl App {
                 let color = palette
                     .resolve(&node.style.color)
                     .map_or_else(|| hex_color(&node.style.color), rgba_color);
-                row.icon(MenuButton::new(swatch(color), move || {
-                    self.layer_colors(node)
-                }))
+                // A typed layer's glyph in its colour, as QGIS draws its symbol (docs/adr/0622 §5); a layer of
+                // any kind its colour's square.
+                let face: Element<'_, Message> = match node.geometry {
+                    Some(g) => kentos_ui::icon::icon(crate::layer_types::glyph(Some(g)))
+                        .size(14.0)
+                        .color(color)
+                        .into(),
+                    None => swatch(color),
+                };
+                row.icon(MenuButton::new(face, move || self.layer_colors(node)))
             }
         }
     }
@@ -1477,6 +1486,21 @@ impl App {
         }
         if let Some(doc) = &self.document {
             let settings = doc.settings();
+            // A CAD project's drawing scale (AutoCAD's annotation scale; docs/adr/0622 §2): the
+            // scale its texts and dimensions are drawn at, chosen from its unit's scales or typed.
+            if self.work_mode() == kentos_commands::Workspace::Cad {
+                let scale = settings.plot_scale;
+                let unit = settings.unit();
+                bar = bar.separator().push(
+                    Readout::new(row![
+                        label::muted("Ölçek"),
+                        label::strong(kentos_project::wizard::scale_text(scale)),
+                    ]
+                    .spacing(4)
+                    .align_y(iced::Center))
+                    .menu(move || crate::annotation_scale::plot_scale_menu(scale, unit)),
+                );
+            }
             if fit < 3 {
                 // The scale selector (screen_scale.rs, docs/adr/0165 §5): chosen from its menu or typed.
                 let cell: Element<'_, Message> = match self.scale_field_view() {
@@ -2013,7 +2037,7 @@ pub(crate) fn checklist_of(
 }
 
 /// The status bar's drafting aids, as the web's (`StatusBar.ts`).
-const STATUS_AIDS: [(&str, &str); 10] = [
+pub(crate) const STATUS_AIDS: [(&str, &str); 11] = [
     ("draft.snap", "Kenet"),
     ("draft.grid", "Izgara"),
     ("draft.ortho", "Orto"),
@@ -2023,6 +2047,8 @@ const STATUS_AIDS: [(&str, &str); 10] = [
     ("draft.topology", "Topoloji"),
     ("draft.overlap", "Çakışma"),
     ("edit.selectFilter", "Süzgeç"),
+    // Otomatik seçim (docs/adr/0622 §5): off, a click selects the active layer's objects alone.
+    ("edit.autoSelect", "Oto. seçim"),
     ("view.lineWeights", "Kalınlık"),
 ];
 

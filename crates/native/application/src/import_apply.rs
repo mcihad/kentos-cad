@@ -499,6 +499,7 @@ fn make_layers(
             filter: None,
             plot: *plot,
             source_crs: plan.source_srid.and_then(kentos_project::wkt2::source_crs),
+            geometry: None,
         };
         let id = doc
             .add_layer(new, parent.as_deref(), false)

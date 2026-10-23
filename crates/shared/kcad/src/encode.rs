@@ -402,7 +402,8 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.source_bases.is_empty())
             + usize::from(!s.line_types.is_empty())
             + usize::from(!s.hatch_patterns.is_empty())
-            + usize::from(s.line_type_scale.is_some());
+            + usize::from(s.line_type_scale.is_some())
+            + usize::from(s.auto_select.is_some());
         self.open(n, true)?;
         if let Some(u) = &s.ucs {
             self.key("ucs");
@@ -574,6 +575,11 @@ impl<'d> Encoder<'d> {
         if let Some(a) = s.annotation.as_ref().filter(|_| has_heights(s)) {
             self.key("annotation");
             self.at(Seg::Name("annotation"), |e| e.annotation(a))?;
+        }
+        // Schema 102 (docs/adr/0622 §5): Otomatik seçim, only when the project chose it.
+        if let Some(on) = s.auto_select {
+            self.key("autoSelect");
+            self.w.bool(on);
         }
         if !s.named_views.is_empty() {
             self.key("namedViews");
@@ -1203,7 +1209,8 @@ impl<'d> Encoder<'d> {
                 + usize::from(n.subtypes.is_some())
                 + usize::from(!n.contingents.is_empty())
                 + usize::from(!n.rules.is_empty())
-                + usize::from(n.source_crs.is_some()),
+                + usize::from(n.source_crs.is_some())
+                + usize::from(n.geometry.is_some()),
             true,
         )?;
         // id (2), card feed name plot snap time type (4), style (5), fields filter locked (6),
@@ -1320,6 +1327,24 @@ impl<'d> Encoder<'d> {
         self.at(Seg::Name("children"), |e| e.layers(&n.children))?;
         self.key("expanded");
         self.w.bool(n.expanded);
+        // Schema 102 (docs/adr/0622 §5): what the layer holds; a group holds no type.
+        if let Some(g) = n.geometry {
+            if n.kind == LayerNodeType::Group {
+                return Err(self.fail(
+                    Code::BadValue,
+                    "grubun türü olmaz; nokta, çizgi, alan ya da açıklama yalnız katmanın türüdür",
+                ));
+            }
+            self.key("geometry");
+            self.at(Seg::Name("geometry"), |e| {
+                e.text(match g {
+                    kentos_contracts::LayerGeometry::Point => "point",
+                    kentos_contracts::LayerGeometry::Line => "line",
+                    kentos_contracts::LayerGeometry::Area => "area",
+                    kentos_contracts::LayerGeometry::Annotation => "annotation",
+                })
+            })?;
+        }
         if let Some(base) = &n.replaces {
             self.key("replaces");
             self.at(Seg::Name("replaces"), |e| e.replaces(n.kind, base))?;
@@ -1891,6 +1916,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 .is_some_and(kentos_contracts::LayerTime::recorded)
                 || recorded(&n.children)
         })
+    }
+    // Schema 102 (docs/adr/0622 §5): a layer's type, the project's Otomatik seçim.
+    fn typed(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| n.geometry.is_some() || typed(&n.children))
+    }
+    if doc.settings.auto_select.is_some() || typed(&doc.layers) {
+        return crate::SCHEMA_WITH_LAYER_GEOMETRY;
     }
     // Schema 101 (docs/adr/0598 §1): what the split and merged objects came from.
     if !doc.settings.lineage.is_empty() {

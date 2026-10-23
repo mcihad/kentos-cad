@@ -50,12 +50,16 @@ pub struct NewProject {
     pub province: Option<u32>,
     /// A local project's drawing unit (docs/adr/0165 §2); none: metres.
     pub drawing_unit: Option<DrawingUnit>,
+    /// The annotation heights on paper the wizard was given (docs/adr/0205 §1,
+    /// 0622 §2); none: every kind's own.
+    pub annotation: Option<kentos_contracts::AnnotationHeights>,
 }
 
 /// The default units of a project (the web's `PROJECT_SETTINGS_DEFAULTS`).
 pub fn default_settings(srid: u32) -> ProjectSettings {
     ProjectSettings {
         map_srid: None,
+        auto_select: None,
         leader_styles: Vec::new(),
         wall_styles: Vec::new(),
         arch: None,
@@ -132,6 +136,7 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
             drawing_unit: o
                 .drawing_unit
                 .filter(|u| crs.is_local() && *u != DrawingUnit::M),
+            annotation: o.annotation.clone(),
             ..default_settings(crs.srid)
         },
         origin: work_area_centre(crs),
@@ -269,6 +274,7 @@ fn label(placement: LabelPlacement, size: f64) -> LabelStyle {
 fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
     LayerNode {
         source_crs: None,
+        geometry: None,
         table_styles: Vec::new(),
         subtypes: None,
         contingents: Vec::new(),
@@ -517,6 +523,7 @@ mod tests {
                 drawing_unit: o
                     .get("drawingUnit")
                     .map(|u| serde_json::from_value(u.clone()).expect("a unit")),
+                annotation: None,
             };
             let want: DocumentSnapshotV1 =
                 serde_json::from_value(case["snapshot"].clone()).expect("the web's drawing reads");
@@ -535,6 +542,7 @@ mod tests {
             drawing_font: DrawingFont::Barlow,
             province: None,
             drawing_unit: None,
+            annotation: None,
         });
         assert!(refused.expect_err("unknown").contains("EPSG:1234"));
         let b = sheet_around(Vec2 { x: 0.0, y: 0.0 }, 1000.0, false);

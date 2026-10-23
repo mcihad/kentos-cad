@@ -47,6 +47,25 @@ pub fn typed_plot_scale(text: &str) -> Option<f64> {
     typed_scale(text).filter(|n| *n <= MAX_PLOT_SCALE)
 }
 
+/// The status bar's drawing scale of a CAD project (docs/adr/0622 §2): its unit's scales
+/// with the current one, then Ölçek yaz…; the annotations at the general height follow.
+pub(crate) fn plot_scale_menu(current: f64, unit: kentos_commands::DrawingUnit) -> kentos_ui::widget::Menu<Message> {
+    kentos_project::wizard::project_scales(true, unit, current)
+        .into_iter()
+        .fold(
+            kentos_ui::widget::Menu::new().header("Çizim ölçeği: yazılar ve ölçüler"),
+            |menu, scale| {
+                menu.radio(
+                    scale_text(scale),
+                    current == scale,
+                    Message::RibbonPanel(crate::ribbon_panels::Event::Scale(scale)),
+                )
+            },
+        )
+        .separator()
+        .item("Ölçek yaz…", event(Event::Open))
+}
+
 impl App {
     /// The annotations at the old general height given the new one, in one
     /// step; how many followed and how many a locked layer kept are said.

@@ -112,6 +112,8 @@ pub enum Event {
     Move(usize, usize, kentos_ui::widget::tree_view::Place),
     /// Sıra ▸ (layer_order.rs).
     Order(String, crate::layer_order::Step),
+    /// Katman türü ▸ (layer_types.rs, docs/adr/0622 §5): what the layer holds.
+    Geometry(String, kentos_commands::LayerGeometryChoice),
 }
 
 impl App {
@@ -208,6 +210,10 @@ impl App {
         }
         if let Event::Move(from, to, place) = event {
             self.layer_dropped(from, to, place);
+            return Task::none();
+        }
+        if let Event::Geometry(id, choice) = event {
+            self.set_layer_geometry(id, choice);
             return Task::none();
         }
         if let Event::Order(id, step) = event {
@@ -379,6 +385,7 @@ impl App {
             | Event::AddBeside(_) => {}
             // Handled above, before the drawing is borrowed.
             Event::Duplicate(_)
+            | Event::Geometry(..)
             | Event::Move(..)
             | Event::Order(..)
             | Event::MergeInto(_)
@@ -694,6 +701,9 @@ impl App {
                 .icon(icon("layerStyle"))
                 .submenu("Veri", self.layer_data_menu(node))
                 .icon(icon("layerFields"))
+                // What it holds (layer_types.rs, docs/adr/0622 §5).
+                .submenu("Katman türü", self.layer_type_menu(node))
+                .icon(crate::layer_types::glyph(node.geometry))
                 // Where its objects came from, and moving them (docs/adr/0583 §1–§2).
                 .submenu("Koordinat sistemi", self.layer_crs_menu(node))
                 .icon(icon("crs"));
@@ -1172,14 +1182,44 @@ impl App {
                 tooltip::Position::Bottom,
             )
         };
-        // The count is the ⋯ menu's heading: the header keeps its room for the tab's title (the web's meta gives way the same).
-        row![
-            // The commands' own icons, as the web's panel draws them.
+        // A CBS layer holds one kind of object (layer_types.rs, docs/adr/0622 §5): Yeni katman asks which.
+        let gis = self.document.as_ref().is_some_and(|d| {
+            d.model.settings().project_type() == Some(kentos_commands::Workspace::Gis)
+        });
+        let new_layer: Element<'_, Message> = if gis && locked.is_none() {
+            let menu = MenuButton::new(
+                container(icon(crate::icons::from_web(Some("layerAdd"))).size(14.0)).padding([2, 4]),
+                || {
+                    crate::layer_types::NEW_TYPED.iter().fold(
+                        Menu::new().header("Yeni katman"),
+                        |m, (id, g)| {
+                            m.item(format!("{} katmanı", g.label()), Message::Run(id))
+                                .icon(crate::layer_types::glyph(Some(*g)))
+                        },
+                    )
+                    .separator()
+                    .item("Karışık katman", Message::Run("layer.new"))
+                    .icon(crate::layer_types::glyph(None))
+                },
+            );
+            tip(
+                menu,
+                Tip::new("Yeni katman").body(
+                    "Nokta, çizgi, alan ya da açıklama katmanı: türlü katman yalnız kendi türünden nesne alır. Karışık katman her türü alır.",
+                ),
+                tooltip::Position::Bottom,
+            )
+        } else {
             add(
                 crate::icons::from_web(Some("layerAdd")),
                 "Yeni katman",
-                "layer.new"
-            ),
+                "layer.new",
+            )
+        };
+        // The count is the ⋯ menu's heading: the header keeps its room for the tab's title (the web's meta gives way the same).
+        row![
+            // The commands' own icons, as the web's panel draws them.
+            new_layer,
             add(
                 crate::icons::from_web(Some("folderAdd")),
                 "Yeni grup",

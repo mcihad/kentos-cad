@@ -566,9 +566,9 @@ mod tests {
         assert_eq!(app.bottom_tab, BottomTab::Coords);
     }
 
-    /// The Komut panel's Python konsolu (a CAD project's Yönet, a CBS
-    /// project's Analiz) opens the panel on the Python tab, from any other
-    /// tab, and closes it from there.
+    /// The Otomasyon panel's Python konsolu (a CAD project's Yönet, a CBS
+    /// project's Analiz; docs/adr/0622 §3) opens the panel on the Python tab,
+    /// from any other tab, and closes it from there.
     #[test]
     fn python_konsolu_is_in_the_ribbon_and_opens_the_python_tab() {
         use crate::catalog::{Item, PYTHON_CONSOLE, catalog};
@@ -579,8 +579,8 @@ mod tests {
             let komut = catalog()
                 .tabs_in(mode)
                 .find(|t| t.id == tab)
-                .and_then(|t| t.panels.iter().find(|p| p.label == "Komut"))
-                .unwrap_or_else(|| panic!("{mode:?}: {tab} › Komut"));
+                .and_then(|t| t.panels.iter().find(|p| p.label == "Otomasyon"))
+                .unwrap_or_else(|| panic!("{mode:?}: {tab} › Otomasyon"));
             assert!(
                 komut
                     .items

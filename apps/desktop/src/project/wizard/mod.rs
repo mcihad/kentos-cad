@@ -113,6 +113,8 @@ pub enum Event {
     Scale(f64),
     /// The “1:” field as typed.
     OwnScale(String),
+    /// A kind's height on paper, mm (docs/adr/0622 §2).
+    Height(kentos_commands::AnnotationKind, f64),
     Name(String),
     Font(DrawingFont),
     /// A step on the rail.
@@ -267,7 +269,13 @@ impl App {
                 s.status = None;
                 return focus(s);
             }
-            Event::Unit(u) => d.unit = u,
+            Event::Unit(u) => {
+                d.unit = u;
+                // Another unit offers other scales: a chosen one it does not list goes back to the unit's own.
+                if d.plot_scale.is_some_and(|n| !d.scales().contains(&n)) && s.own.is_empty() {
+                    d.plot_scale = None;
+                }
+            }
             Event::Province(code) => {
                 d.province = (d.province != Some(code)).then_some(code);
                 // Another province suggests its own zone: a system chosen before follows it again.
@@ -290,6 +298,14 @@ impl App {
                     d.plot_scale = Some(n);
                 }
                 s.own = text;
+            }
+            Event::Height(kind, mm) => {
+                d.annotation = d
+                    .annotation
+                    .clone()
+                    .unwrap_or_default()
+                    .with(kind, Some(mm))
+                    .sanitized();
             }
             Event::Name(name) => d.name = name,
             Event::Font(font) => d.font = font,

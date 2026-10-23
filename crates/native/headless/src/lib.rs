@@ -43,6 +43,7 @@ mod package_sources;
 mod query;
 pub mod rpc;
 mod session;
+pub mod selection;
 pub mod maplibre_export;
 pub mod shp_export;
 

@@ -231,6 +231,7 @@ fn a_derivation_is_never_bound_back_and_is_told_what_it_is_when_taken_in() {
         drawing_font: kentos_commands::DrawingFont::Barlow,
         province: None,
         drawing_unit: None,
+        annotation: None,
     })
     .expect("a new project");
     let taken = other

@@ -505,6 +505,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut linear_events = Vec::new();
     let mut lineage = Vec::new();
     let mut map_srid: Option<u32> = None;
+    let mut auto_select: Option<bool> = None;
     let mut source_bases: Vec<kentos_contracts::SourceBase> = Vec::new();
     let mut sources = Vec::new();
     let mut length_style = None;
@@ -733,6 +734,8 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 join_views = list;
             }
+            // Schema 102 (docs/adr/0622 §5): Otomatik seçim.
+            "autoSelect" if has.layer_geometry => auto_select = Some(r.bool()?),
             // Schema 98 (docs/adr/0583 §3): the map's system.
             "mapSrid" if has.source_crs => {
                 let at = r.position();
@@ -1164,6 +1167,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         linear_events,
         lineage,
         map_srid,
+        auto_select,
         sources,
         length_style,
         domains,
@@ -1521,6 +1525,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let mut table_styles = Vec::new();
     let mut subtypes: Option<(usize, kentos_contracts::LayerSubtypes)> = None;
     let mut source_crs: Option<kentos_contracts::LayerSourceCrs> = None;
+    let mut geometry: Option<kentos_contracts::LayerGeometry> = None;
     let mut contingents: Option<(usize, Vec<kentos_contracts::FieldGroup>)> = None;
     let mut rules: Option<(usize, Vec<kentos_contracts::LayerRule>)> = None;
     map(r, |r, key| {
@@ -1655,6 +1660,23 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 }
                 rules = Some((at, read));
             }
+            // Schema 102 (docs/adr/0622 §5): what the layer holds.
+            "geometry" if has.layer_geometry => {
+                let at = r.position();
+                geometry = Some(match text(r)?.as_str() {
+                    "point" => kentos_contracts::LayerGeometry::Point,
+                    "line" => kentos_contracts::LayerGeometry::Line,
+                    "area" => kentos_contracts::LayerGeometry::Area,
+                    "annotation" => kentos_contracts::LayerGeometry::Annotation,
+                    other => {
+                        return Err(r.fail_at(
+                            Code::BadValue,
+                            at,
+                            &format!("katmanın türü “{other}” değil: point, line, area ya da annotation"),
+                        ));
+                    }
+                });
+            }
             // Schema 98 (docs/adr/0583 §1): the system its objects came from, read whole and checked.
             "sourceCrs" if has.source_crs => {
                 let at = r.position();
@@ -1774,8 +1796,15 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             "grubun kaynak sistemi olmaz; yalnız katmanın olur",
         ));
     }
+    if geometry.is_some() && kind == Some(LayerNodeType::Group) {
+        return Err(r.fail(
+            Code::BadValue,
+            "grubun türü olmaz; nokta, çizgi, alan ya da açıklama yalnız katmanın türüdür",
+        ));
+    }
     Ok(LayerNode {
         source_crs,
+        geometry,
         rules: rules.map(|(_, c)| c).unwrap_or_default(),
         contingents: contingents.map(|(_, c)| c).unwrap_or_default(),
         subtypes: subtypes.map(|(_, s)| s),

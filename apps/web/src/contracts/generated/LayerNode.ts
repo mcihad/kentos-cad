@@ -6,6 +6,7 @@ import type { LayerAction } from "./LayerAction";
 import type { LayerCompose } from "./LayerCompose";
 import type { LayerField } from "./LayerField";
 import type { LayerFilter } from "./LayerFilter";
+import type { LayerGeometry } from "./LayerGeometry";
 import type { LayerNodeType } from "./LayerNodeType";
 import type { LayerRule } from "./LayerRule";
 import type { LayerSnap } from "./LayerSnap";
@@ -82,6 +83,11 @@ compose?: LayerCompose,
  * The system its objects came from (docs/adr/0583 §1); absent: not known. Only a layer has it, never a group.
  */
 sourceCrs?: LayerSourceCrs, 
+/**
+ * What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer
+ * has it, never a group.
+ */
+geometry?: LayerGeometry, 
 /**
  * Yazdır: absent, it is printed; `false`, it is drawn on screen but not
  * on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;

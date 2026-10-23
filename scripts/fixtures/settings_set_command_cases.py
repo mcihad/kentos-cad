@@ -126,9 +126,32 @@ def followers(scale):
 
 def cases():
     out = []
-    out.append({"name": "Ad ve tür: proje ayarıdır, geri alma adımı değildir",
+    out.append({"name": "Ad ve ilk tür: proje ayarıdır, geri alma adımı değildir",
+                "setup": setup(workspace=None),
                 "steps": [step("execute", {"name": "  Mimari proje ", "projectType": "cad"}, done(["name", "projectType"]),
                                {**FLAGS, "name": "Mimari proje", "settings": {"workspace": "cad"}})]})
+    # The type is immutable at the product command boundary too (UI, Python and MCP).
+    for before, after in (("gis", "cad"), ("cad", "gis")):
+        for op in ("validate", "plan", "execute"):
+            out.append({"name": f"Tür kilidi: {before} → {after}, {op}; ad ve ölçek de değişmez",
+                        "setup": setup(workspace=before),
+                        "steps": [step(op, {"projectType": after, "name": "Değişmesin", "plotScale": 500},
+                                       failed("project_type_locked", "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride projeyi dönüştürerek olacak.", "projectType"),
+                                       {**UNCHANGED, "name": "Ayarlar", "settings": {"workspace": before, "plotScale": SCALE}})]})
+        out.append({"name": f"Tür kilidi: aynı tür {before} tekrar verilebilir",
+                    "setup": setup(workspace=before),
+                    "steps": [step("execute", {"projectType": before}, done([]), UNCHANGED)]})
+    for before in (None, "hybrid"):
+        for after in ("gis", "cad"):
+            out.append({"name": f"Eski projenin ilk türü: {before} → {after}",
+                        "setup": setup(workspace=before),
+                        "steps": [step("execute", {"projectType": after}, done(["projectType"]),
+                                       {**FLAGS, "settings": {"workspace": after}})]})
+    # Otomatik seçim (docs/adr/0622 §5): the project's choice, written even when it is the type's own; no object changes.
+    out.append({"name": "Otomatik seçim: kapatılır ve açılır; proje ayarıdır",
+                "steps": [step("execute", {"autoSelect": False}, done(["autoSelect"]), {**FLAGS, "settings": {"autoSelect": False}}),
+                          step("execute", {"autoSelect": False}, done([]), {"settings": {"autoSelect": False}}),
+                          step("execute", {"autoSelect": True}, done(["autoSelect"]), {"settings": {"autoSelect": True}})]})
     out.append({"name": "Basamaklar ve birimler",
                 "steps": [step("execute", {"lengthDecimals": 2, "areaDecimals": 4, "areaUnit": "donum", "angleUnit": "deg", "drawingFont": "arimo"},
                                done(["lengthDecimals", "areaDecimals", "areaUnit", "angleUnit", "drawingFont"]),

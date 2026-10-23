@@ -86,8 +86,8 @@ pub fn list(catalog: &Value) -> Vec<Value> {
                     "coords": { "type": "string", "enum": ["local", "real"], "description": "CAD projesinin koordinatları: local (sistem yok, SRID 0) ya da real. Verilmezse srid'den: srid yok ya da 0 ise local; CBS projesi her zaman real." },
                     "srid": { "type": "integer", "minimum": 0, "description": "Koordinat sistemi (5254…5259 TUREF/TM, 32635…32638 UTM …; 0 yerel). Koordinat sistemli projede srid ya da province gerekir." },
                     "province": { "type": "integer", "minimum": 1, "maximum": 81, "description": "İlin plaka kodu: proje onun merkezinde açılır; srid yoksa ilin TUREF dilimi alınır. Yerel projede verilmez." },
-                    "drawingUnit": { "type": "string", "enum": ["mm", "cm", "m"], "description": "Yerel CAD projesinin çizim birimi; verilmezse m. Koordinat sistemli proje metrededir. Yalnız okuma ve yazma birimidir: araçların girdisi ve ölçüler yine metrededir." },
-                    "plotScale": { "type": "number", "exclusiveMinimum": 0, "description": "Çizim ölçeği paydası (1000: 1:1000); verilmezse yerel projede 1, ötekinde 1000." },
+                    "drawingUnit": { "type": "string", "enum": ["mm", "cm", "m", "in", "ft"], "description": "Yerel CAD projesinin çizim birimi; verilmezse m. Koordinat sistemli proje metrededir. Yalnız okuma ve yazma birimidir: araçların girdisi ve ölçüler yine metrededir." },
+                    "plotScale": { "type": "number", "exclusiveMinimum": 0, "description": "Çizim ölçeği paydası (1000: 1:1000); verilmezse metrede 1000, santimetrede 50, mm/in/ft biriminde 1." },
                     "drawingFont": { "type": "string", "description": "Çizimin yazı tipi (barlow, arimo …); verilmezse barlow." }
                 }),
                 &[],
@@ -177,6 +177,10 @@ pub fn list(catalog: &Value) -> Vec<Value> {
             object(json!({ "drawing": drawing_arg() }), &["drawing"]),
             annotations(true, false),
         ),
+        tool("drawing.selection", "Seçili nesneler", "Çizimin seçili nesnelerinin kalıcı kimlikleri. Masaüstüne bağlıysa ekrandaki seçimdir; silinmiş nesneler dönmez.",
+            object(json!({"drawing":drawing_arg()}), &["drawing"]), annotations(true, false)),
+        tool("drawing.select", "Nesneleri seç", "uids kimliklerini seçer; [] seçimi kaldırır. Bilinmeyen kimlikte hiçbir seçim değişmez. Masaüstüne bağlıysa şeridin bağlamsal sekmesi de bu seçimi izler. Belgeyi değiştirmez, geri alma adımı değildir.",
+            object(json!({"drawing":drawing_arg(), "uids":{"type":"array", "items":{"type":"string"}}}), &["drawing", "uids"]), annotations(false, false)),
         tool(
             "drawing.layers",
             "Katman ağacı",
@@ -792,7 +796,15 @@ fn command_tool(c: &Value) -> Value {
             // A processing tool writes what it computes (docs/adr/0508).
             | "cad.processing.run"
             | "cad.processing.batch"
+            // The drawing order of what is there shifts, as a set changes it (docs/adr/0260 §3, 0310). A layer's
+            // filter is its view and takes nothing away (docs/adr/0211): not here.
+            | "cad.entities.order"
     );
+    // It writes nothing: the catalog says it only reads the drawing (`effect: query`), it writes no file of its own
+    // (the destructive ones above, the file commands but the print check) (docs/adr/0622 §8).
+    let read_only = c["effect"] == "query"
+        && !destructive
+        && (!id.starts_with("file.") || id == "file.preflight.sheets");
     let description = format!(
         "{}\n\nSonuç protokolün cevabıdır (docs/adr/0253): status completed (output, warnings) ya da failed, \
          needs_input, conflict (error: code, message, path, uids, retryable); yanında summary (eklenen, değişen, \
@@ -809,9 +821,7 @@ fn command_tool(c: &Value) -> Value {
         "title": c["title"],
         "description": description,
         "inputSchema": schema,
-        // They write nothing: the points, the curves, the snaps and the selections are their answers (docs/adr/0270,
-        // 0289, 0272, 0275).
-        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate" | "cad.sources.describe" | "cad.records.page" | "cad.crs.transform" | "cad.stac.search" | "cad.labels.report" | "cad.profiles.check" | "cad.profiles.list" | "cad.subnetworks.find"), destructive),
+        "annotations": annotations(read_only, destructive),
     })
 }
 
@@ -982,6 +992,8 @@ fn opened(server: &mut Server, session: Session) -> Result<Value, Value> {
 fn on_desktop(server: &mut Server, handle: &str, name: &str, args: &Value) -> Result<Value, Value> {
     let (method, params) = match name {
         "drawing.summary" => ("summary", json!({})),
+        "drawing.selection" => ("selection", json!({})),
+        "drawing.select" => ("select", json!({"uids": args.get("uids")})),
         "drawing.layers" => ("layers", json!({})),
         "drawing.entities" => (
             "entities",
@@ -1054,6 +1066,8 @@ fn on_desktop(server: &mut Server, handle: &str, name: &str, args: &Value) -> Re
     };
     match link.ask(method, params) {
         Ok(value) if method == "layers" => Ok(answer(json!({ "layers": value }), false)),
+        Ok(value) if method == "selection" => Ok(answer(json!({"uids":value}), false)),
+        Ok(value) if method == "select" => Ok(answer(json!({"selected":value}), false)),
         Ok(value) => {
             let failed = method == "call" && value["status"] != "completed";
             Ok(answer(value, failed))
@@ -1172,6 +1186,15 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
                 .unwrap_or_default();
             let written = s.export_pdf(Path::new(path), &sheets).map_err(host)?;
             Ok(answer(written, false))
+        }
+        "drawing.selection" => {
+            let (s, _) = session(server, args)?;
+            Ok(answer(json!({"uids":s.selection()}), false))
+        }
+        "drawing.select" => {
+            let (s, _) = session(server, args)?;
+            let count = s.select(&args["uids"]).map_err(host)?;
+            Ok(answer(json!({"selected":count}), false))
         }
         "drawing.summary" => {
             let (s, _) = session(server, args)?;

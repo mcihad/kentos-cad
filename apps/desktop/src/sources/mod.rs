@@ -9,7 +9,15 @@
 //! project's snapshot, a file project's newest revision) and lists its
 //! layers, and a layer's Katman olarak ekle takes it with its objects into
 //! the open drawing as one undo step (drawing_exchange.rs
-//! `take_layer_into`). What is opened is read again when it is opened again.
+//! `take_layer_into`). Veritabanları lists the device's PostgreSQL
+//! connections (docs/adr/0623, as QGIS's Browser lists its own): a
+//! connection opens into its schemas and their tables, views and
+//! materialized views, read from the database's catalogue off the UI thread
+//! (`kentos_postgis::probe::browse`); a table's Katman olarak ekle binds it
+//! as a bound layer through `cad.sources.edit`, after asking to carry it into
+//! the project's system when it is in another. A server asking for a password
+//! KentOS does not know opens the password question (db_connections.rs).
+//! What is opened is read again when it is opened again.
 //! Folders are read and drawings decoded off the UI thread; an answer for a
 //! row closed since is dropped.
 //!
@@ -43,6 +51,7 @@ use kentos_interaction::sources::{
     Listing, SourceEntry, SourceFile, SourceKind, listing, recent_with, source_kind, starred,
 };
 use kentos_native_application::ExecutionContext;
+use kentos_postgis::probe::{self, Catalog, Diagnosis, Problem};
 use kentos_services::connect::Connecting;
 use serde::{Deserialize, Serialize};
 
@@ -56,7 +65,7 @@ pub(crate) const LISTS: [(CatalogView, &str, &str); 2] = [
 ];
 /// Projects a list shows at most.
 pub(crate) const LIMIT: u32 = 200;
-/// The two sections' keys; they start open.
+/// The sections' keys; they start open.
 pub(crate) const FOLDERS: &str = "klasorler";
 pub(crate) const KENTOS: &str = "kentos";
 /// The browser's sections and groups (docs/adr/0599); they start open but Hazır altlıklar.
@@ -70,19 +79,18 @@ pub(crate) const SAVED: &str = "kayitli";
 pub(crate) const SAMPLE_ROWS: u32 = 5;
 pub(crate) const SAMPLE_COLUMNS: usize = 4;
 
-/// Where a table is (docs/adr/0599 §2, §3).
+/// Where a previewed table is (docs/adr/0599 §2): a GeoPackage of a folder. A database's tables are Veritabanları's,
+/// by their connection (docs/adr/0623).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) enum Origin {
     File(PathBuf),
-    Database(String),
 }
 
 impl Origin {
-    /// Its path as the commands take it: the file's path, or the database's address.
+    /// Its path as the commands take it.
     pub(crate) fn path(&self) -> String {
         match self {
             Origin::File(p) => p.display().to_string(),
-            Origin::Database(a) => a.clone(),
         }
     }
 
@@ -91,10 +99,6 @@ impl Origin {
         match self {
             Origin::File(path) => Kept::Table {
                 path: path.clone(),
-                table: table.to_owned(),
-            },
-            Origin::Database(address) => Kept::Database {
-                address: address.clone(),
                 table: table.to_owned(),
             },
         }
@@ -124,8 +128,9 @@ pub enum Kept {
         path: PathBuf,
         table: String,
     },
+    /// A table of a saved database connection (docs/adr/0623), by the connection's name.
     Database {
-        address: String,
+        connection: String,
         table: String,
     },
     Service {
@@ -160,7 +165,7 @@ impl Kept {
             Kept::File { path } => source_kind(&folder_name(path))
                 .map_or_else(|| "Dosya".to_owned(), |k| k.label().to_owned()),
             Kept::Table { path, .. } => folder_name(path),
-            Kept::Database { address, .. } => database_name(address),
+            Kept::Database { connection, .. } => connection.clone(),
             Kept::Service { service } => service.kind.label().to_owned(),
             Kept::ServiceLayer { service, .. } => service.name.clone(),
             Kept::Basemap { .. } => "Hazır altlık".to_owned(),
@@ -210,6 +215,23 @@ pub(crate) struct Drag {
     at: Option<iced::Point>,
 }
 
+/// A connection's catalogue as the panel knows it.
+#[derive(Debug, Clone)]
+pub(crate) enum Browse {
+    Reading,
+    Ready(Arc<Catalog>),
+    Failed(Diagnosis),
+}
+
+/// Katman olarak ekle on a table in another system, waiting for its answer.
+#[derive(Debug, Clone)]
+pub(crate) struct ReprojectAsk {
+    pub(crate) connection: String,
+    pub(crate) table: String,
+    pub(crate) area: bool,
+    pub(crate) srid: u32,
+}
+
 /// What is known of something read when it is opened.
 #[derive(Debug, Clone)]
 pub(crate) enum Read<T> {
@@ -238,6 +260,10 @@ pub struct SourcesPanel {
     pub(crate) lists: HashMap<&'static str, Read<Projects>>,
     /// Downloaded drawings by project id.
     pub(crate) drawings: HashMap<String, Read<Arc<ProjectDrawing>>>,
+    /// The connections' catalogues by connection name.
+    pub(crate) catalogs: HashMap<String, Browse>,
+    /// The question of a table in another system.
+    pub(crate) reproject: Option<ReprojectAsk>,
     /// Requests under way by row key, stopped when dropped (the row closed).
     requests: HashMap<String, iced::task::Handle>,
     /// The row chosen last (a click), by key.
@@ -250,8 +276,6 @@ pub struct SourcesPanel {
     pub(crate) services: HashMap<String, Read<Box<Connecting>>>,
     /// The search box's words (docs/adr/0599 §5).
     pub(crate) search: String,
-    /// Veritabanı ekle's address while it is typed.
-    pub(crate) database_draft: Option<String>,
     pub(crate) drag: Option<Drag>,
     /// Kapsamı göster's frame over the drawing (docs/adr/0599 §9): the drawing's session, the box in the project's
     /// system and the table's name.
@@ -271,13 +295,14 @@ impl Default for SourcesPanel {
             listings: HashMap::new(),
             lists: HashMap::new(),
             drawings: HashMap::new(),
+            catalogs: HashMap::new(),
+            reproject: None,
             requests: HashMap::new(),
             focused: None,
             tables: HashMap::new(),
             samples: HashMap::new(),
             services: HashMap::new(),
             search: String::new(),
-            database_draft: None,
             drag: None,
             extent_mark: None,
         }
@@ -309,19 +334,13 @@ pub enum Event {
     AddLayer(String, String),
     /// The search box (docs/adr/0599 §5).
     Search(String),
-    /// A GeoPackage's or a database's tables, or why not.
+    /// A GeoPackage's tables, or why not.
     Tables(Origin, Result<Vec<SourceTable>, String>),
     /// A table's sample rows by its row's key, or why not.
     Sample(String, Result<Vec<String>, String>),
     /// A saved service read, by its row's key.
     ServiceRead(String, Result<Box<Connecting>, String>),
-    /// Veritabanı ekle: the address's box, its words, Ekle and Vazgeç.
-    DatabaseAdd,
-    DatabaseDraft(String),
-    DatabaseKeep,
-    DatabaseCancel,
-    /// Listeden kaldır on a database or a saved service.
-    DatabaseRemove(String),
+    /// Listeden kaldır on a saved service.
     ServiceRemove(usize),
     /// Add a source by what it is (a recent or favourite row, a drop); it becomes the newest recent one.
     Use(Kept),
@@ -341,6 +360,16 @@ pub enum Event {
     DragEnd,
     /// A file dropped on the window from the system's file manager (docs/adr/0599 §8).
     Dropped(PathBuf),
+    /// A connection's catalogue read, or why not; `ask`: a password the server wants is asked for.
+    Browsed(String, Result<Arc<Catalog>, Diagnosis>, bool),
+    /// Yenile on a connection: its catalogue read again.
+    Refresh(String),
+    /// The password question for a connection's row.
+    AskPassword(String),
+    /// Katman olarak ekle on a connection's table: the connection, `schema.name`, only the view's area.
+    AddTable(String, String, bool),
+    /// The question of a table in another system answered: carried into the project's system, or not bound.
+    Reproject(bool),
 }
 
 pub(crate) fn msg(event: Event) -> Message {
@@ -537,6 +566,44 @@ impl App {
                 let first = parts.drain(..).next();
                 return self.exchange_event(ExchangeEvent::Picked(kind, first.map(Ok)));
             }
+            Event::Browsed(name, result, ask) => {
+                if !self.sources.open.contains(&connection_key(&name)) {
+                    return Task::none();
+                }
+                let browse = match result {
+                    Ok(catalog) => Browse::Ready(catalog),
+                    Err(d) => {
+                        if ask && matches!(d.problem, Problem::PasswordNeeded | Problem::Password) {
+                            self.ask_db_password(
+                                &name,
+                                d.message.clone(),
+                                crate::db_connections::Retry::Browse(name.clone()),
+                            );
+                        }
+                        Browse::Failed(d)
+                    }
+                };
+                self.sources.catalogs.insert(name, browse);
+            }
+            Event::Refresh(name) => {
+                self.sources.open.insert(connection_key(&name));
+                return self.browse_connection(&name);
+            }
+            Event::AskPassword(name) => {
+                let reason = match self.sources.catalogs.get(&name) {
+                    Some(Browse::Failed(d)) => d.message.clone(),
+                    _ => "Sunucu parola istiyor.".to_owned(),
+                };
+                self.ask_db_password(&name, reason, crate::db_connections::Retry::Browse(name.clone()));
+            }
+            Event::AddTable(name, table, area) => return self.add_database_table(name, table, area),
+            Event::Reproject(yes) => {
+                if let Some(ask) = self.sources.reproject.take()
+                    && yes
+                {
+                    return self.bind_from_sources(&ask.connection, &ask.table, true, ask.area);
+                }
+            }
             Event::AddLayer(id, path) => {
                 let Some(Read::Ready(drawing)) = self.sources.drawings.get(&id).cloned() else {
                     return Task::none();
@@ -587,40 +654,6 @@ impl App {
                         Err(why) => Read::Failed(format!("Servis okunamadı: {why}")),
                     },
                 );
-            }
-            Event::DatabaseAdd => {
-                self.sources.open.insert(DATABASES.to_owned());
-                self.sources.database_draft = Some(String::new());
-            }
-            Event::DatabaseDraft(words) => self.sources.database_draft = Some(words),
-            Event::DatabaseCancel => self.sources.database_draft = None,
-            Event::DatabaseKeep => {
-                let address = self
-                    .sources
-                    .database_draft
-                    .as_deref()
-                    .unwrap_or_default()
-                    .trim()
-                    .to_owned();
-                if let Some(why) = address_problem(&address) {
-                    self.warn(why);
-                    return Task::none();
-                }
-                self.sources.database_draft = None;
-                if self.sources.folders.add_database(&address) {
-                    self.output(format!("Kaynaklar: “{address}” veritabanı eklendi."));
-                }
-                let origin = Origin::Database(address);
-                self.sources.open.insert(tables_key(&origin));
-                return self.read_tables(origin);
-            }
-            Event::DatabaseRemove(address) => {
-                let origin = Origin::Database(address.clone());
-                self.sources.open.remove(&tables_key(&origin));
-                self.sources.tables.remove(&origin);
-                if self.sources.folders.remove_database(&address) {
-                    self.output(format!("Kaynaklar: “{address}” listeden kaldırıldı."));
-                }
             }
             Event::ServiceRemove(at) => {
                 if let Some(gone) = self.sources.folders.remove_service(at) {
@@ -753,9 +786,23 @@ impl App {
                     true,
                 ))
             }
-            Kept::Database { address, table } => {
+            Kept::Database { connection, table } => {
                 self.sources.folders.used(&kept);
-                self.open_table(Origin::Database(address.clone()), table.clone(), true)
+                let (connection, table) = (connection.clone(), table.clone());
+                if self.db_store.get(&connection).is_none() {
+                    self.warn(format!(
+                        "“{connection}” bağlantısı artık yok; Veritabanları'nda yeniden tanımlayın."
+                    ));
+                    return Task::none();
+                }
+                // The connection's catalogue is read first when it was not; the table is then added from its row.
+                if matches!(self.sources.catalogs.get(&connection), Some(Browse::Ready(_))) {
+                    return self.add_database_table(connection, table, false);
+                }
+                self.output(format!(
+                    "“{connection}” bağlantısı okunuyor; “{table}” tablosunu Veritabanları'ndaki satırından ekleyin."
+                ));
+                self.browse_connection_in_sources(&connection)
             }
             Kept::Service { service } => {
                 self.sources.folders.used(&kept);
@@ -785,29 +832,10 @@ impl App {
         }
     }
 
-    /// Bağlı katman olarak aç or Kopya olarak al on a table: the file's window with the table alone chosen; a
-    /// database's PostGIS'e bağlan with its tables as read (read now when they are not).
+    /// Bağlı katman olarak aç or Kopya olarak al on a GeoPackage's table: the file's window with the table alone chosen.
     fn open_table(&mut self, origin: Origin, table: String, bind: bool) -> Task<Message> {
         match origin {
             Origin::File(path) => self.update(crate::exchange::open_gpkg(path, Some(table), bind)),
-            Origin::Database(address) => {
-                let read = match self.sources.tables.get(&Origin::Database(address.clone())) {
-                    Some(Read::Ready(tables)) => Some(tables.clone()),
-                    _ => None,
-                };
-                if let Some(tables) = read {
-                    return self.update(crate::exchange::open_postgis(address, tables, table));
-                }
-                iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
-                    let answer = match crate::exchange::list_tables(address.clone()) {
-                        Ok(tables) => crate::exchange::open_postgis(address, tables, table),
-                        Err(why) => msg(Event::Tables(Origin::Database(address), Err(why))),
-                    };
-                    let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(
-                        &mut out, answer,
-                    ));
-                })
-            }
         }
     }
 
@@ -959,14 +987,19 @@ impl App {
                 s.drawings.remove(id);
             } else if let Some(origin) = origin_of_key(&key) {
                 s.tables.remove(&origin);
-            } else if key.starts_with("t:") {
+            } else if key.starts_with("gt:") {
                 s.samples.remove(&key);
             } else if key.starts_with("s:") {
                 s.services.remove(&key);
+            } else if let Some(name) = key.strip_prefix("c:") {
+                s.catalogs.remove(name);
             }
             return Task::none();
         }
         s.open.insert(key.clone());
+        if let Some(name) = key.strip_prefix("c:") {
+            return self.browse_connection(name);
+        }
         if let Some(path) = key.strip_prefix("d:") {
             return self.list_folder(PathBuf::from(path));
         }
@@ -979,11 +1012,102 @@ impl App {
         if let Some(origin) = origin_of_key(&key) {
             return self.read_tables(origin);
         }
-        if key.starts_with("t:") {
+        if key.starts_with("gt:") {
             return self.read_sample(key);
         }
         if key.starts_with("s:") {
             return self.read_saved_service(key);
+        }
+        Task::none()
+    }
+
+    /// A connection's catalogue read off the UI thread; an answer for a row closed since is dropped.
+    pub(crate) fn browse_connection(&mut self, name: &str) -> Task<Message> {
+        let Some(c) = self.db_store.get(name) else {
+            return Task::none();
+        };
+        self.sources.catalogs.insert(name.to_owned(), Browse::Reading);
+        let back = name.to_owned();
+        off_thread(
+            move || probe::browse(&c, None).map(Arc::new),
+            move |r| Event::Browsed(back, r, true),
+        )
+    }
+
+    /// Kaynaklar shown with the connection named `name` open (a connection just saved).
+    pub(crate) fn browse_connection_in_sources(&mut self, name: &str) -> Task<Message> {
+        self.show_sources();
+        self.sources.open_databases();
+        self.sources.open.insert(connection_key(name));
+        self.sources.focused = Some(connection_key(name));
+        self.browse_connection(name)
+    }
+
+    /// Katman olarak ekle on a connection's table: refused with why when it cannot be bound, the system's question
+    /// when it is in another one, bound otherwise.
+    fn add_database_table(&mut self, name: String, table: String, area: bool) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O) ya da yeni proje oluşturun.");
+            return Task::none();
+        };
+        let project = doc.settings().srid;
+        let Some(Browse::Ready(catalog)) = self.sources.catalogs.get(&name) else {
+            return Task::none();
+        };
+        let Some(r) = catalog.relations.iter().find(|r| r.table() == table) else {
+            return Task::none();
+        };
+        if let Some(why) = r.why_not() {
+            self.warn(format!("“{table}” bağlı katman olarak eklenemez: {why}"));
+            return Task::none();
+        }
+        if let Some(srid) = r.srid.filter(|&s| s != project) {
+            self.sources.reproject = Some(ReprojectAsk {
+                connection: name,
+                table,
+                area,
+                srid,
+            });
+            return Task::none();
+        }
+        self.bind_from_sources(&name, &table, false, area)
+    }
+
+    fn bind_from_sources(&mut self, name: &str, table: &str, reproject: bool, area: bool) -> Task<Message> {
+        let Some(c) = self.db_store.get(name) else {
+            return Task::none();
+        };
+        let geometry = match self.sources.catalogs.get(name) {
+            Some(Browse::Ready(catalog)) => catalog
+                .relations
+                .iter()
+                .find(|r| r.table() == table)
+                .is_some_and(|r| r.geometry.is_some()),
+            _ => true,
+        };
+        let area = area.then(|| {
+            let b = self.viewport.camera.visible_bounds();
+            [b.min_x, b.min_y, b.max_x, b.max_y]
+        });
+        match self.bind_database(&c.address(), &[(table.to_owned(), geometry)], reproject, area) {
+            Ok(done) => {
+                self.zoom_to(&done.slots);
+                self.announce(
+                    if done.warnings.is_empty() {
+                        kentos_interaction::Level::Success
+                    } else {
+                        kentos_interaction::Level::Warn
+                    },
+                    format!(
+                        "“{table}” ({}) bağlı katman oldu, {} nesne. Değişiklikleri Kaynağa yaz ile veritabanına yazın.",
+                        c.name, done.objects
+                    ),
+                );
+                for w in done.warnings {
+                    self.say(kentos_interaction::Level::Warn, w);
+                }
+            }
+            Err(why) => self.error(why),
         }
         Task::none()
     }
@@ -1084,6 +1208,20 @@ impl App {
 }
 
 impl SourcesPanel {
+    /// Veritabanları open (connections were added).
+    pub(crate) fn open_databases(&mut self) {
+        self.open.insert(DATABASES.to_owned());
+    }
+
+    /// What was read of a connection gone or renamed.
+    pub(crate) fn forget_connection(&mut self, name: &str) {
+        self.catalogs.remove(name);
+        self.open.remove(&connection_key(name));
+        if self.reproject.as_ref().is_some_and(|r| r.connection == name) {
+            self.reproject = None;
+        }
+    }
+
     /// A project a list holds, by id.
     pub(crate) fn project(&self, id: &str) -> Option<&ProjectSummary> {
         self.lists.values().find_map(|r| match r {
@@ -1106,45 +1244,24 @@ pub(crate) fn project_key(id: &str) -> String {
     format!("p:{id}")
 }
 
-/// A database's short name for a row's meta: the database in its address (`…/belediye` → `belediye`).
-pub(crate) fn database_name(address: &str) -> String {
-    let rest = address.split_once("://").map_or(address, |(_, r)| r);
-    let rest = rest.split('?').next().unwrap_or(rest);
-    match rest.split_once('/') {
-        Some((_, db)) if !db.is_empty() => db.to_owned(),
-        _ => address.to_owned(),
-    }
-}
-
-/// A database's server for a row's meta: `kullanıcı@sunucu:port` of its address.
-pub(crate) fn database_host(address: &str) -> String {
-    let rest = address.split_once("://").map_or(address, |(_, r)| r);
-    rest.split(['/', '?']).next().unwrap_or(rest).to_owned()
-}
-
-/// A GeoPackage's row (`g:`) or a database's (`b:`), opened into its tables.
+/// A GeoPackage's row (`g:`), opened into its tables.
 pub(crate) fn tables_key(origin: &Origin) -> String {
     match origin {
         Origin::File(p) => format!("g:{}", p.display()),
-        Origin::Database(a) => format!("b:{a}"),
     }
 }
 
 fn origin_of_key(key: &str) -> Option<Origin> {
-    if let Some(p) = key.strip_prefix("g:") {
-        return Some(Origin::File(PathBuf::from(p)));
-    }
-    key.strip_prefix("b:")
-        .map(|a| Origin::Database(a.to_owned()))
+    key.strip_prefix("g:").map(|p| Origin::File(PathBuf::from(p)))
 }
 
 /// A table's row, opened into its preview.
 pub(crate) fn table_key(origin: &Origin, table: &str) -> String {
-    format!("t:{}\0{table}", tables_key(origin))
+    format!("gt:{}\0{table}", tables_key(origin))
 }
 
 fn table_of_key(key: &str) -> Option<(Origin, String)> {
-    let (origin, table) = key.strip_prefix("t:")?.rsplit_once('\0')?;
+    let (origin, table) = key.strip_prefix("gt:")?.rsplit_once('\0')?;
     Some((origin_of_key(origin)?, table.to_owned()))
 }
 
@@ -1169,32 +1286,6 @@ fn opener(kind: SourceKind, path: &Path) -> Option<Message> {
         SourceKind::PointCloud => crate::pointclouds::add::open_file(path),
         _ => return None,
     })
-}
-
-/// Why a database's address cannot be added (docs/adr/0599 §3): not a PostgreSQL address, or one with a password
-/// in it (the password comes from PGPASSWORD or ~/.pgpass, docs/adr/0505).
-pub(crate) fn address_problem(address: &str) -> Option<String> {
-    let rest = address
-        .strip_prefix("postgresql://")
-        .or_else(|| address.strip_prefix("postgres://"));
-    let Some(rest) = rest.filter(|r| !r.is_empty()) else {
-        return Some(
-            "Adres postgresql:// ile başlamalı: postgresql://kullanıcı@sunucu:5432/veritabanı."
-                .to_owned(),
-        );
-    };
-    let authority = rest.split(['/', '?']).next().unwrap_or_default();
-    if authority
-        .rsplit_once('@')
-        .is_some_and(|(user, _)| user.contains(':'))
-        || address.contains("password=")
-    {
-        return Some(
-            "Adreste parola olmamalı; parola PGPASSWORD ortam değişkeninden ya da ~/.pgpass dosyasından gelir."
-                .to_owned(),
-        );
-    }
-    None
 }
 
 /// A table's first rows through `cad.sources.query` (docs/adr/0599 §2), each as “sütun: değer” words, in a drawing of
@@ -1278,6 +1369,11 @@ pub(crate) fn dropped(
     }
 }
 
+/// A connection's row by its name.
+pub(crate) fn connection_key(name: &str) -> String {
+    format!("c:{name}")
+}
+
 /// A folder's name as the panel shows it (the path's last part).
 pub(crate) fn folder_name(path: &Path) -> String {
     path.file_name().map_or_else(
@@ -1290,7 +1386,7 @@ pub(crate) fn folder_name(path: &Path) -> String {
 
 const FORMAT: &str = "kentos.source-folders";
 const FILE: &str = "kaynak-klasorleri.json";
-/// The list's version: 2 adds the databases, the services and the recent and favourite sources (docs/adr/0599);
+/// The list's version: 2 adds the services and the recent and favourite sources (docs/adr/0599);
 /// version 1 (the folders alone) is read.
 const VERSION: u32 = 2;
 
@@ -1300,8 +1396,6 @@ struct Stored {
     version: u32,
     folders: Vec<PathBuf>,
     #[serde(default)]
-    databases: Vec<String>,
-    #[serde(default)]
     services: Vec<SavedService>,
     #[serde(default)]
     recent: Vec<Kept>,
@@ -1309,13 +1403,12 @@ struct Stored {
     favourites: Vec<Kept>,
 }
 
-/// The folders added, oldest first, the databases and services added, the recent and favourite sources, and where
+/// The folders added, oldest first, the services added, the recent and favourite sources, and where
 /// the list is kept (the device's: beside the recent files); in memory only without a folder.
 #[derive(Debug, Default)]
 pub struct SourceFolders {
     file: Option<PathBuf>,
     list: Vec<PathBuf>,
-    databases: Vec<String>,
     services: Vec<SavedService>,
     recent: Vec<Kept>,
     favourites: Vec<Kept>,
@@ -1336,7 +1429,6 @@ impl SourceFolders {
         Self {
             file: Some(folder.join(FILE)),
             list: stored.folders,
-            databases: stored.databases,
             services: stored.services,
             recent: stored.recent,
             favourites: stored.favourites,
@@ -1345,10 +1437,6 @@ impl SourceFolders {
 
     pub fn list(&self) -> &[PathBuf] {
         &self.list
-    }
-
-    pub fn databases(&self) -> &[String] {
-        &self.databases
     }
 
     pub fn services(&self) -> &[SavedService] {
@@ -1378,26 +1466,6 @@ impl SourceFolders {
         let before = self.list.len();
         self.list.retain(|p| p != path);
         let removed = self.list.len() != before;
-        if removed {
-            self.write();
-        }
-        removed
-    }
-
-    /// Adds a database's address; false when it is there already.
-    pub fn add_database(&mut self, address: &str) -> bool {
-        if self.databases.iter().any(|a| a == address) {
-            return false;
-        }
-        self.databases.push(address.to_owned());
-        self.write();
-        true
-    }
-
-    pub fn remove_database(&mut self, address: &str) -> bool {
-        let before = self.databases.len();
-        self.databases.retain(|a| a != address);
-        let removed = self.databases.len() != before;
         if removed {
             self.write();
         }
@@ -1452,7 +1520,6 @@ impl SourceFolders {
             format: FORMAT.to_owned(),
             version: VERSION,
             folders: self.list.clone(),
-            databases: self.databases.clone(),
             services: self.services.clone(),
             recent: self.recent.clone(),
             favourites: self.favourites.clone(),

@@ -1,7 +1,10 @@
 """Live named-view cameras, callout references, PDF scale and independent capture behavior."""
 import json,copy,unittest,tempfile,subprocess,re,warnings
 from pathlib import Path
+import shutil
 import kentos.cad as cad
+# Poppler's pdftotext wherever PATH has it (Homebrew's on macOS, /usr/bin on Linux).
+PDFTOTEXT=shutil.which('pdftotext') or '/opt/homebrew/bin/pdftotext'
 DATA=json.loads((Path(__file__).resolve().parents[2]/'fixtures/sheet/v1/viewport-links.json').read_text())['cases']
 def save(doc,v):
     return cad.views.edit(doc,edit=cad.SaveViewsOp(name=v['name'],center=(v['center']['x'],v['center']['y']),width=v['width'],height=v['height'],twist=v['twist']))
@@ -52,7 +55,7 @@ class SheetViewLinks(unittest.TestCase):
         cad.annotations.scales(doc,operation='make',uids=[text],scales=[100.])
         with tempfile.TemporaryDirectory() as folder:
             path=Path(folder)/'marks.pdf';doc.export_pdf(path)
-            text=subprocess.check_output(['/opt/homebrew/bin/pdftotext','-bbox',str(path),'-'],text=True)
+            text=subprocess.check_output([PDFTOTEXT,'-bbox',str(path),'-'],text=True)
             words=[(float(y1)-float(y0))*25.4/72 for y0,y1 in re.findall(r'<word [^>]*yMin="([^"]+)"[^>]*yMax="([^"]+)"[^>]*>42</word>',text)]
             self.assertEqual(len(words),2,text);self.assertLess(abs(words[0]-words[1]),.02);self.assertGreater(min(words),1.)
             annotations=[(float(y1)-float(y0))*25.4/72 for y0,y1 in re.findall(r'<word [^>]*yMin="([^"]+)"[^>]*yMax="([^"]+)"[^>]*>ANNOT</word>',text)]

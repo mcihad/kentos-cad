@@ -583,6 +583,10 @@ impl<'a> Player<'a> {
                 "drafting.cursorInput",
                 trace.prefs.cursor_input.unwrap_or(true).into(),
             ),
+            // A trace's right click is the web's quick right click: Enter for a command that takes a
+            // confirm, AutoCAD's time-sensitive right click, which the desktop has on this choice; its
+            // own default opens the menu of what is going on (docs/adr/0622 §6, drawing_menus.rs).
+            (crate::drawing_menus::RIGHT_CLICK_ENTER, true.into()),
             (
                 "graphics.highlightColor",
                 trace

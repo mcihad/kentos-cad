@@ -6,12 +6,18 @@
 //! its shortcut. The type is a project setting: choosing one is an edit of
 //! the drawing, never an undo step. A project not asked its type yet (an old
 //! Hibrit one) shows as CBS; announced types say “Yakında”.
+//!
+//! A project keeps the type it started with (the owner's decision, 23 October
+//! 2026; docs/adr/0622 §1): a CAD project stays CAD and a CBS project CBS, and
+//! nothing in the interface switches between them. Only a project not asked
+//! its type yet takes one, once; going from one type to the other will be a
+//! conversion of the project, not a switch.
 
 use iced::Element;
 use iced::widget::row;
 use kentos_commands::Workspace;
 use kentos_ui::icon::{Icon, icon};
-use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
+use kentos_ui::widget::{Tip, tip};
 
 use crate::app::{App, Message};
 use crate::catalog::{Tab, catalog, effective_mode, mode_command};
@@ -25,6 +31,10 @@ pub(crate) fn mode_icon(mode: Workspace) -> Icon {
         Workspace::Disaster => "modeDisaster",
     }))
 }
+
+/// The contextual tab a selection opened, by what it was worked out from: the
+/// selection's change count, the drawing's and the project type (docs/adr/0622 §4).
+pub(crate) type SelectionTab = (u64, u64, u64, u64, Option<&'static str>);
 
 impl App {
     /// The type the interface shows: the drawing's, CBS without one.
@@ -43,12 +53,66 @@ impl App {
         catalog().contextual_in(self.work_mode())
     }
 
-    /// The tab shown: the contextual Seçim while it is open and something is
-    /// selected, else the chosen tab ([`App::regular_tab`]).
+    /// The contextual tab the selection opens (docs/adr/0622 §4): its
+    /// objects' kind's (Çizgi, Alan, Raster …), Seçim for a mixed selection;
+    /// none without a selection. Kept until the selection or the drawing changes.
+    pub(crate) fn selection_tab(&self) -> Option<&'static Tab> {
+        let doc = self.document.as_ref()?;
+        if self.selection.is_empty() {
+            return None;
+        }
+        let key = (
+            doc.session,
+            self.selection.version(),
+            doc.model.generation(),
+            self.work_mode() as u64,
+        );
+        let id = match self.selection_tab_cache.get() {
+            Some((s, v, g, m, id)) if (s, v, g, m) == key => id,
+            _ => {
+                let mut kinds: Vec<&'static str> = Vec::new();
+                for slot in self.selection.ids() {
+                    if let Some(e) = doc.model.get(*slot) {
+                        let kind = e.kind();
+                        if !kinds.contains(&kind) {
+                            kinds.push(kind);
+                        }
+                    }
+                }
+                let id = catalog()
+                    .contextual_for(self.work_mode(), &kinds)
+                    .map(|t| t.id);
+                self.selection_tab_cache
+                    .set(Some((key.0, key.1, key.2, key.3, id)));
+                id
+            }
+        };
+        let id = id?;
+        self.contextual_tabs().find(|t| t.id == id)
+    }
+
+    /// After a message: a selection made or changed brings its tab to the
+    /// front (AutoCAD's contextual tabs; docs/adr/0622 §4), one cleared
+    /// takes it away and the chosen tab shows again.
+    pub(crate) fn follow_selection_tab(&mut self) {
+        let stamp = self.document.as_ref().map(|d| (d.session, self.selection.version()));
+        if stamp == self.ribbon_follows {
+            return;
+        }
+        self.ribbon_follows = stamp;
+        let follow = self.settings.effective("drafting.contextualTabs") != serde_json::Value::Bool(false);
+        if self.selection.is_empty() {
+            self.ribbon_context = false;
+        } else if follow {
+            self.ribbon_context = true;
+        }
+    }
+
+    /// The tab shown: the selection's contextual tab while it is open and
+    /// something is selected, else the chosen tab ([`App::regular_tab`]).
     pub(crate) fn shown_tab(&self) -> &'static str {
         if self.ribbon_context
-            && !self.selection.is_empty()
-            && let Some(tab) = self.contextual_tabs().next()
+            && let Some(tab) = self.selection_tab()
         {
             return tab.id;
         }
@@ -95,13 +159,27 @@ impl App {
             );
             return;
         };
-        let mut settings = doc.settings().clone();
+        let settings = doc.settings().clone();
         // Choosing the type shown is an answer too when it was not asked yet (shown as CBS).
         if settings.workspace == Some(mode.id) {
             return;
         }
-        settings.workspace = Some(mode.id);
-        doc.model.set_settings(settings);
+        // A project keeps the type it has (docs/adr/0622 §1).
+        if let Some(kept) = settings.project_type() {
+            let kept = catalog().modes().iter().find(|m| m.id == kept);
+            self.output(format!(
+                "Bu proje {} projesi; proje türü değiştirilmez. CAD ile CBS arasında geçiş ileride projeyi dönüştürerek olacak.",
+                kept.map_or("?", |m| m.label)
+            ));
+            return;
+        }
+        let result = kentos_native_application::settings_set::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_commands::SettingsSet { project_type: Some(mode.id), ..Default::default() },
+        );
+        if self.answered(result).is_none() {
+            return;
+        }
         // The tab stays open while the mode keeps it (DESIGN.md §7.3.2).
         self.tab = self.regular_tab();
         self.output(format!(
@@ -110,15 +188,19 @@ impl App {
         ));
     }
 
-    /// The status bar's mode: its mark and name; a click lists the modes.
+    /// The status bar's type: its mark and name. A project keeps its type
+    /// (docs/adr/0622 §1), so the cell only says it; a project not asked its
+    /// type yet opens the question when pressed.
     /// The mode's cell; in a narrow window (`named` false) its icon only.
     pub(crate) fn mode_cell(&self, named: bool) -> Element<'static, Message> {
         let current = self.work_mode();
         let mode = effective_mode(Some(current));
         let set = self.document.as_ref().and_then(|d| d.settings().workspace);
+        let unasked = matches!(set, None | Some(Workspace::LegacyHybrid));
         let note = match set {
             None | Some(Workspace::LegacyHybrid) => {
-                " Projenin türü henüz seçilmedi; CBS gösteriliyor.".to_owned()
+                " Projenin türü henüz seçilmedi; CBS gösteriliyor. Seçmek için tıklayın: tür bir kez seçilir."
+                    .to_owned()
             }
             Some(saved) if saved != current => {
                 let saved = catalog().modes().iter().find(|m| m.id == saved);
@@ -127,7 +209,8 @@ impl App {
                     saved.map_or("?", |m| m.label)
                 )
             }
-            _ => String::new(),
+            _ => " Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride dönüştürmeyle olacak."
+                .to_owned(),
         };
         let mut face = row![
             icon(mode_icon(current))
@@ -139,36 +222,20 @@ impl App {
         if named {
             face = face.push(kentos_ui::label::strong(mode.label));
         }
-        let menu = move || {
-            let modes = catalog().modes();
-            let ready = modes.iter().filter(|m| m.ready).fold(
-                Menu::new().header("Proje türü"),
-                |menu, m| {
-                    // A choice among several: its dot beside its icon (the web's `menuRowLook`).
-                    menu.radio(
-                        m.label.to_owned(),
-                        m.id == current,
-                        Message::Run(mode_command(m.id)),
-                    )
-                    .icon(mode_icon(m.id))
-                },
-            );
-            modes
-                .iter()
-                .filter(|m| !m.ready)
-                .fold(ready.separator(), |menu, m| {
-                    menu.item(m.label, None)
-                        .icon(mode_icon(m.id))
-                        .shortcut("Yakında")
-                })
+        let cell = iced::widget::container(face).padding([0, 6]);
+        let body: Element<'static, Message> = if unasked && self.document.is_some() {
+            iced::widget::button(cell)
+                .padding(0)
+                .style(kentos_ui::style::button::ghost)
+                .on_press(Message::AskProjectType)
+                .into()
+        } else {
+            cell.into()
         };
         tip(
-            MenuButton::new(
-                iced::widget::container(face).padding([0, 6]),
-                menu,
-            ),
+            body,
             Tip::new(format!("Proje türü: {}", mode.label)).body(format!(
-                "{}{note} Proje ayarıdır; değiştirmek için tıklayın. Şeritte olmayan komutlar komut satırından yine çalışır.",
+                "{}{note}",
                 mode.description
             )),
             iced::widget::tooltip::Position::Top,
@@ -211,6 +278,23 @@ mod tests {
     }
 
     #[test]
+    fn contextual_cache_is_scoped_to_the_open_document() {
+        let mut app = app_with_drawing();
+        app.selection.set([kentos_domain::Slot(4)]);
+        let tab = app.selection_tab().expect("selected area").id;
+        let cached = app.selection_tab_cache.get().expect("cached");
+        app.follow_selection_tab();
+        app.choose_tab("file");
+        assert_eq!(app.shown_tab(), "file");
+        // A parked drawing may have the same selection/change counters. Its session must invalidate the cache.
+        app.document.as_mut().expect("open").session += 1;
+        assert_eq!(app.selection_tab().expect("selected area").id, tab);
+        assert_ne!(app.selection_tab_cache.get().expect("refreshed").0, cached.0);
+        app.follow_selection_tab();
+        assert_eq!(app.shown_tab(), tab, "another drawing brings its selection's tab forward");
+    }
+
+    #[test]
     fn announced_modes_say_soon_and_change_nothing() {
         let mut app = app_with_drawing();
         run(&mut app, "workspace.plan3d");
@@ -223,76 +307,23 @@ mod tests {
     }
 
     #[test]
-    fn the_ribbon_follows_the_type_and_a_tab_it_lacks_gives_way_to_giris() {
+    fn a_project_keeps_its_type_once_it_has_one() {
         let mut app = app_with_drawing();
-        // Each type its own ribbon, the web's (the inventory carries them; docs/adr/0165 §6).
-        let gis: Vec<&str> = app.ribbon_tabs().map(|t| t.label).collect();
-        assert_eq!(
-            gis,
-            [
-                "Dosya",
-                "Giriş",
-                "Harita",
-                "Veri",
-                "Düzenle",
-                "Analiz",
-                "Raster",
-                "Ölçme",
-                "Görünüm",
-                "Çıktı"
-            ]
-        );
+        // Not asked its type yet: shown as CBS, and it takes a type, once (docs/adr/0622 §1).
+        assert_eq!(app.work_mode(), Workspace::Gis);
+        assert!(app.available("workspace.cad"));
         run(&mut app, "workspace.cad");
-        let cad: Vec<&str> = app.ribbon_tabs().map(|t| t.label).collect();
-        assert_eq!(
-            cad,
-            [
-                "Dosya",
-                "Giriş",
-                "Ekle",
-                "Açıklama",
-                "Değiştir",
-                // The additions' own tab (catalog/v1/additions.json, docs/adr/0339 §6).
-                "Mimari",
-                "Görünüm",
-                "Yönet",
-                "Çıktı"
-            ]
-        );
-        // CBS hides the advanced drawing tools and shows Giriş's Harita panel.
+        assert_eq!(app.work_mode(), Workspace::Cad);
+        // Then it keeps it: the commands are off, say why, and change nothing.
+        assert!(!app.available("workspace.gis"));
+        assert!(app.why_disabled("workspace.gis").is_some());
         run(&mut app, "workspace.gis");
-        let edit = app.ribbon_tabs().find(|t| t.id == "edit").expect("Düzenle");
-        let ids: Vec<&str> = edit
-            .panels
-            .iter()
-            .flat_map(|p| p.items.iter())
-            .filter_map(|i| match i {
-                crate::catalog::Item::Command { id, .. } => Some(*id),
-                _ => None,
-            })
-            .collect();
-        assert!(!ids.contains(&"tool.ellipse"), "{ids:?}");
-        // CAD's annotation stays in CAD's interface (docs/adr/0146, 0147, 0182); Yazı stays.
-        for id in [
-            "tool.mtext",
-            "tool.leader",
-            "tool.placeTextFile",
-            "tool.quickDimension",
-            "tool.dimContinue",
-            "tool.dimBaseline",
-        ] {
-            assert!(!ids.contains(&id), "{id}: {ids:?}");
-        }
-        assert!(ids.contains(&"tool.text"), "{ids:?}");
-        let home = app.ribbon_tabs().find(|t| t.id == "home").expect("Giriş");
-        assert!(home.panels.iter().any(|p| p.label == "Harita"));
-        // A tab the other type lacks gives way to Giriş.
+        assert_eq!(app.work_mode(), Workspace::Cad);
+        assert!(last_said(&app).contains("proje türü değiştirilmez"), "{}", last_said(&app));
+        // A tab the type lacks gives way to Giriş; one it has stays open.
         app.tab = "analysis";
-        run(&mut app, "workspace.cad");
         assert_eq!(app.shown_tab(), "home");
-        // A tab both have stays open.
         app.tab = "output";
-        run(&mut app, "workspace.gis");
         assert_eq!(app.shown_tab(), "output");
     }
 }

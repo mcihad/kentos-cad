@@ -197,6 +197,9 @@ mod layer_snap;
 mod layer_states;
 mod layer_translate;
 mod layer_tree;
+mod layer_types;
+#[cfg(test)]
+mod layer_type_scenes;
 mod layering;
 mod layout;
 mod layout_plan;
@@ -355,6 +358,7 @@ mod snap_menu;
 #[cfg(test)]
 mod snap_tests;
 mod snapshot;
+mod db_connections;
 mod sources;
 mod split_revision;
 #[cfg(test)]
@@ -410,6 +414,8 @@ mod transparent_tests;
 mod map_crs_tests;
 #[cfg(test)]
 mod ui_screens;
+#[cfg(test)]
+mod ux_screens;
 mod usage;
 mod vertices;
 mod view;

@@ -59,6 +59,8 @@ pub const PROTOCOL_CODES: &[&str] = &[
     "plan_changed",
     "request_reused",
     "integrity_failed",
+    // Every write is held to its layers' types (docs/adr/0622 §5).
+    "layer_geometry_mismatch",
     "document_changed",
     "already_committed",
     "unknown_job",
@@ -370,6 +372,11 @@ const ENTRIES: &[Entry] = &[
         refusals: &[&["not_finite"], LAYER, REVISION, ATTRS],
         warnings: &["layer_hidden"],
         targets: none,
+    },
+    Entry {
+        id: "cad.donut.create",
+        refusals: &[&["not_finite", "invalid_distance", "invalid_line_weight"], LAYER, REVISION, ATTRS],
+        warnings: &["layer_hidden"], targets: none,
     },
     Entry {
         id: "cad.circle.create",
@@ -3038,6 +3045,7 @@ const ENTRIES: &[Entry] = &[
                 "nothing_to_set",
                 "empty_name",
                 "invalid_project_type",
+                "project_type_locked",
                 "invalid_decimals",
                 "invalid_scale",
                 "unknown_srid",

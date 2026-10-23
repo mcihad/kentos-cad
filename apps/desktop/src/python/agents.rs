@@ -124,6 +124,17 @@ impl App {
                 })
             })
             .collect();
+        if matches!(method, "select" | "selection") {
+            let (doc, selected) = if named.is_none() || named == front {
+                (self.document.as_ref().map(|d| &d.model), &mut self.selection)
+            } else if let Some(parked) = self.doc_tabs.parked.iter_mut().find(|p| Some(p.document.session) == named) {
+                (Some(&parked.document.model), &mut parked.selection)
+            } else {
+                return Err(refused("document_closed", "İstenen çizim kapatıldı ya da hiç açılmadı."));
+            };
+            let doc = doc.ok_or_else(|| refused("no_document", "Masaüstünde açık çizim yok."))?;
+            return super::selection::answer(doc, selected, method, &params).map_err(|e| (e.code.to_owned(), e.message));
+        }
         let doc = match named {
             None => self.document.as_mut(),
             Some(s) if Some(s) == front => self.document.as_mut(),
@@ -202,7 +213,7 @@ impl App {
             other => Err(refused(
                 "unknown_method",
                 &format!(
-                    "“{other}” masaüstünde yanıtlanmaz: hello, run, call, summary, layers, entities, entity, measure, journal, replay, start, job, wait ya da cancel."
+                    "“{other}” masaüstünde yanıtlanmaz: hello, run, call, summary, layers, entities, entity, measure, select, selection, journal, replay, start, job, wait ya da cancel."
                 ),
             )),
         }

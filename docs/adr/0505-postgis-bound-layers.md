@@ -76,7 +76,8 @@ ADR 0503 bağlı katmanı GeoPackage dosyasıyla kurdu. Kurumların asıl verisi
   `invalid_address`, hiçbir şeye ulaşmadan.
 - Aynı kural `.kcad`'in okuyucularında: sözleşmenin `sources_problem`'i ve bağımsız Python okuyucusu. Parolalı adresli
   dosya bozuk sayılır (`broken/sources-password.kcad`).
-- Parola `PGPASSWORD`'dan ya da `~/.pgpass`'tan okunur.
+- Parola `PGPASSWORD`'dan ya da `~/.pgpass`'tan okunur. (ADR 0623'ten beri önce bu oturumda yazılan, sonra cihaza
+  kaydedilen bağlantının parolası; pencerede adres yazılmaz, kayıtlı bağlantı seçilir.)
 - Ulaşılamayan veritabanı `source_unreachable` (bağlantı 15 saniyede kurulmazsa da). Bağlı katmanın durumunda `found`
   false.
 

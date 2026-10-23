@@ -69,7 +69,7 @@ def document():
         "version": 1,
         "name": "Etkileşim izi: Zaman ve senaryolar",
         "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                     "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow"},
+                     "plotScale": 1000, "workspace": "gis", "autoSelect": True, "drawingFont": "barlow"},
         "origin": {"x": X0, "y": Y0},
         "layers": [
             {"id": "alt-a", "name": "Yol genişletme A", "type": "group", "visible": False, "locked": False,

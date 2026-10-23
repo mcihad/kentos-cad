@@ -2,6 +2,7 @@
 import type { FieldRename } from "./FieldRename";
 import type { LayerEditOperation } from "./LayerEditOperation";
 import type { LayerField } from "./LayerField";
+import type { LayerGeometryChoice } from "./LayerGeometryChoice";
 import type { LayerNodeType } from "./LayerNodeType";
 import type { LineType } from "./LineType";
 
@@ -34,7 +35,11 @@ import type { LineType } from "./LineType";
  *   its objects, all at once);
  * - `purge`: `layers` (the layers and groups to take, by id; absent: every
  *   one found), `blocks` (the definitions, by id; absent: every one
- *   found); what something staying uses stays and is counted in `kept`.
+ *   found); what something staying uses stays and is counted in `kept`;
+ * - `geometry`: `layer`, `geometry` (`point`, `line`, `area`, `annotation`, or
+ *   `mixed`: no type); refused with `layer_geometry_mismatch` when an object on
+ *   the layer is of a kind the type does not hold. Add's `geometry` gives the new
+ *   layer its type (a group takes none); a copy keeps its layer's.
  *
  * Refusals (`CommandError.code`), checked in this order: `no_layer`
  * (style, move, remove, duplicate, merge and fields without `layer`),
@@ -90,7 +95,11 @@ lineWeight?: number, visible?: boolean, locked?: boolean, activate?: boolean,
 /**
  * The layer's fields (docs/adr/0199 §1).
  */
-fields?: Array<LayerField>, renames?: Array<FieldRename>, 
+fields?: Array<LayerField>, 
+/**
+ * add, geometry: what the layer holds (docs/adr/0622 §5); `mixed`: any kind.
+ */
+geometry?: LayerGeometryChoice, renames?: Array<FieldRename>, 
 /**
  * The document revision the input was prepared against, as decimal text.
  */

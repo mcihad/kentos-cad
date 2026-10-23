@@ -1,0 +1,194 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "auto-select",
+  "title": "Otomatik seçim: kapatılınca tıklama, kutu ve Tümünü seç yalnız etkin katmanın (Parsel) nesnelerini seçer, başka katmana tıklamak hiçbir şey seçmez ve nedenini söyler, kutunun dışarıda bıraktıkları sayılır; Katmanı etkin yap bütün katmanların nesnelerine tıklanır, Yol etkin olunca yol seçilir, parsel eklenmez; açılınca her katmandan seçilir; projenin ayarıdır, geri alma adımı değildir",
+  "source": "docs/adr/0622 §5",
+  "covers": [
+    "UX-09"
+  ],
+  "document": "layer-by-object.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.125
+  },
+  "clickTolerance": 0.2,
+  "steps": [
+    {
+      "run": "edit.autoSelect",
+      "note": "Sahne açık başlar; kapatmak projenin ayarıdır",
+      "expect": {
+        "logged": [
+          "Otomatik seçim kapalı: yalnız etkin katmanın (“Parsel”) nesneleri seçilir. Başka katmanın nesnesi için o katmanı etkin yapın."
+        ],
+        "dirty": true,
+        "canUndo": false
+      }
+    },
+    {
+      "click": [
+        -20,
+        -20
+      ],
+      "note": "Yolun çizgisi başka katmanda: seçilmez, nedeni söylenir",
+      "expect": {
+        "selected": [],
+        "log": "info",
+        "logged": [
+          "Tıklanan nesne başka katmanda. Otomatik seçim kapalıyken yalnız etkin katmanın (“Parsel”) nesneleri seçilir: katmanı etkin yapın ya da Otomatik seçim'i açın."
+        ]
+      }
+    },
+    {
+      "click": [
+        0,
+        5
+      ],
+      "note": "Parselin kenarı: etkin katmanın nesnesi seçilir",
+      "expect": {
+        "selected": [
+          4
+        ]
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "selected": []
+      }
+    },
+    {
+      "drag": [
+        [
+          -40,
+          30
+        ],
+        [
+          40,
+          -30
+        ]
+      ],
+      "note": "Pencere her şeyi içine alır; yalnız parsel seçilir, öbür üçü söylenir",
+      "expect": {
+        "selected": [
+          4
+        ],
+        "logged": [
+          "Otomatik seçim kapalı: yalnız etkin katmanın (“Parsel”) nesneleri seçilir; başka katmandaki 3 nesne dışarıda kaldı."
+        ]
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "selected": []
+      }
+    },
+    {
+      "run": "edit.selectAll",
+      "expect": {
+        "selected": [
+          4
+        ],
+        "logged": [
+          "Otomatik seçim kapalı: yalnız etkin katmanın (“Parsel”) nesneleri seçilir; başka katmandaki 3 nesne dışarıda kaldı.",
+          "1 nesne seçildi."
+        ]
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "selected": []
+      }
+    },
+    {
+      "run": "tool.layerMakeActive",
+      "note": "Katmanı etkin yap seçmez, katman okur: her katmanın nesnesine tıklanır",
+      "expect": {
+        "tool": "layerMakeActive"
+      }
+    },
+    {
+      "click": [
+        -20,
+        -20
+      ],
+      "expect": {
+        "tool": "select",
+        "activeLayer": [
+          "Yol"
+        ],
+        "logged": [
+          "“Yol” katmanı etkin yapıldı."
+        ]
+      }
+    },
+    {
+      "click": [
+        -20,
+        -20
+      ],
+      "note": "Yol etkin: yolun çizgisi seçilir",
+      "expect": {
+        "selected": [
+          3
+        ]
+      }
+    },
+    {
+      "click": [
+        0,
+        5
+      ],
+      "shift": true,
+      "note": "Parsel artık başka katmanda: seçime eklenmez",
+      "expect": {
+        "selected": [
+          3
+        ],
+        "logged": [
+          "Tıklanan nesne başka katmanda. Otomatik seçim kapalıyken yalnız etkin katmanın (“Yol”) nesneleri seçilir: katmanı etkin yapın ya da Otomatik seçim'i açın."
+        ]
+      }
+    },
+    {
+      "run": "edit.autoSelect",
+      "expect": {
+        "logged": [
+          "Otomatik seçim açık: tıklama ve kutu bütün görünen katmanların nesnelerini seçer."
+        ],
+        "canUndo": false
+      }
+    },
+    {
+      "click": [
+        -30,
+        0
+      ],
+      "note": "Açık: Bina'nın alanı seçilir",
+      "expect": {
+        "selected": [
+          1
+        ]
+      }
+    },
+    {
+      "click": [
+        0,
+        5
+      ],
+      "shift": true,
+      "note": "ve Parsel'inki eklenir",
+      "expect": {
+        "selected": [
+          1,
+          4
+        ]
+      }
+    }
+  ]
+}

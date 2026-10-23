@@ -4,6 +4,7 @@
  "sources": {
   "inventory": "docs/inventory/web.json",
   "additions": "catalog/v1/additions.json",
+  "ribbon": "catalog/v1/ribbon.json",
   "operations": "catalog/v1/operations.json",
   "catalog": "apps/web/src/contracts/generated/commandCatalog.json",
   "equivalents": "apps/desktop/equivalents.json"
@@ -11,7 +12,7 @@
  "levels": {
   "semantic": "Ürün komutu kullanıcının verdiğini alır, sonucu kendisi hesaplar: Python ve MCP aynı işi yeniden hesaplamadan yapar.",
   "geometry": "Ürün komutu var ama sonucun geometrisini çağıran hesaplar: arayüz hesaplayıp yazdırır.",
-  "processing": "İşlemler aracı: yalnız uygulamanın çalıştırıcısından.",
+  "processing": "İşlemler aracı: uygulamanın çalıştırıcısıyla; Python ve MCP'den cad.processing.run ile (ADR 0508), kendi anlamsal komutu yok.",
   "none": "Belgeyi ya da projeyi değiştirir ama ürün komutu yok: arayüz doğrudan yazar.",
   "query": "Yalnız okur ya da ölçer.",
   "session": "Görünüm, seçim, çizim yardımcısı ya da aracın adımı: oturumun durumu.",
@@ -100,7 +101,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "gis",
+   "scope": "none",
    "desktop": "pending",
    "tests": 0
   },
@@ -116,7 +117,7 @@
    "python": "kentos.cad.annotations.scales",
    "mcp": "cad.annotations.scales",
    "note": "Seçimin kimlikleri komutun make işlemine verilir; nesne projenin çizim ölçeğinde ölçekli olur (ADR 0323).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -148,7 +149,7 @@
    "python": "kentos.cad.annotations.scales",
    "mcp": "cad.annotations.scales",
    "note": "Seçimin kimlikleri komutun unmake işlemine verilir (ADR 0323).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -225,8 +226,8 @@
     "cad.spaces.quantities"
    ],
    "operation": null,
-   "python": null,
-   "mcp": null,
+   "python": "kentos.cad.spaces.quantities",
+   "mcp": "cad.spaces.quantities",
    "note": "Satırlar ve toplamlar cad.spaces.quantities'ten; dosya ve pano onları yazar (ADR 0342 §4).",
    "scope": "cad",
    "desktop": "implemented",
@@ -257,8 +258,8 @@
     "cad.sheets.set"
    ],
    "operation": null,
-   "python": null,
-   "mcp": null,
+   "python": "kentos.cad.sheets.set",
+   "mcp": "cad.sheets.set",
    "note": "Pencere cad.sheets.set'in cevabını gösterir; etkilenen paftalar seçili nesnelerin kimlikleriyle (ADR 0347 §1).",
    "scope": "cad",
    "desktop": "implemented",
@@ -289,8 +290,8 @@
     "cad.tags.check"
    ],
    "operation": null,
-   "python": null,
-   "mcp": null,
+   "python": "kentos.cad.tags.check",
+   "mcp": "cad.tags.check",
    "note": "Bulgular cad.tags.check'ten; Göster nesnelerine gider (ADR 0344 §2).",
    "scope": "cad",
    "desktop": "implemented",
@@ -339,8 +340,8 @@
     "cad.walls.joins"
    ],
    "operation": null,
-   "python": null,
-   "mcp": null,
+   "python": "kentos.cad.walls.joins",
+   "mcp": "cad.walls.joins",
    "note": "Birleşmeyenler cad.walls.joins'ten; Öneriyi uygula cevabın fix'ini cad.walls.edit'e verir (ADR 0340 §2, §6).",
    "scope": "cad",
    "desktop": "implemented",
@@ -406,7 +407,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -422,7 +423,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -438,7 +439,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -454,7 +455,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -470,7 +471,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -486,7 +487,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -502,7 +503,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -518,7 +519,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -534,7 +535,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -550,7 +551,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -566,7 +567,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -582,7 +583,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -598,7 +599,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -614,7 +615,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -630,7 +631,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -646,7 +647,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -662,7 +663,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -694,7 +695,7 @@
    "python": "kentos.cad.blocks.edit",
    "mcp": "cad.blocks.edit",
    "note": "card işlemi: kategori, etiketler, açıklama (ADR 0317 §4).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -710,7 +711,7 @@
    "python": "kentos.cad.blocks.edit",
    "mcp": "cad.blocks.edit",
    "note": "Blok düzenleyicinin Kaydet'i: update işlemi, nesneler yerel kimlikleriyle (ADR 0316 §1).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -742,7 +743,7 @@
    "python": "kentos.cad.blocks.freeze",
    "mcp": "cad.blocks.freeze",
    "note": "Dinamik bloğun yerleştirmeleri düz bloklara (ADR 0319 §4); vekil görünüş cad.blocks.proxy.",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -771,10 +772,10 @@
     "file.import.block"
    ],
    "operation": null,
-   "python": "Connection: file.import.block",
+   "python": "kentos.cad.file.import_.block",
    "mcp": "file.import.block",
    "note": null,
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 1
   },
@@ -820,7 +821,7 @@
    "python": "kentos.cad.blocks.edit",
    "mcp": "cad.blocks.edit",
    "note": null,
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 2
   },
@@ -833,7 +834,7 @@
     "file.import.block"
    ],
    "operation": null,
-   "python": "Connection: file.import.block",
+   "python": "kentos.cad.file.import_.block",
    "mcp": "file.import.block",
    "note": "blocks kipi, replace (ADR 0316 §3).",
    "scope": "cad",
@@ -849,8 +850,8 @@
     "cad.blocks.query"
    ],
    "operation": null,
-   "python": null,
-   "mcp": null,
+   "python": "kentos.cad.blocks.query",
+   "mcp": "cad.blocks.query",
    "note": "count, instances ve schedule raporları (ADR 0317 §3).",
    "scope": "cad",
    "desktop": "implemented",
@@ -868,7 +869,7 @@
    "python": "kentos.cad.blocks.edit",
    "mcp": "cad.blocks.edit",
    "note": "sync işlemi; tanım değişince attributes ve update de eşitler (ADR 0317 §2).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -881,7 +882,7 @@
     "file.export.block"
    ],
    "operation": null,
-   "python": "Connection: file.export.block",
+   "python": "kentos.cad.file.export.block",
    "mcp": "file.export.block",
    "note": "WBLOCK: bloğun nesneleri taban noktası başlangıçta ayrı bir çizim (ADR 0316 §3).",
    "scope": "cad",
@@ -1022,7 +1023,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "shared",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 1
   },
@@ -1036,7 +1037,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "shared",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1050,7 +1051,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "shared",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1064,7 +1065,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "shared",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1078,7 +1079,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "shared",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 1
   },
@@ -1092,7 +1093,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "shared",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1136,7 +1137,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1164,7 +1165,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -1256,7 +1257,7 @@
    "python": "Connection: project.file.commit",
    "mcp": "project.file.commit",
    "note": null,
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -1317,7 +1318,7 @@
    "python": "kentos.cad.parameters.edit, kentos.cad.constraints.edit",
    "mcp": "cad.parameters.edit, cad.constraints.edit",
    "note": "Pencere parametreleri cad.parameters.edit ile, kısıtları cad.constraints.edit ile yazar (ADR 0338 §1).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1331,7 +1332,7 @@
    "python": null,
    "mcp": null,
    "note": "Belgenin oturum durumu (Relax::Next): bir sonraki yazan çağrı kısıtları gevşetir; Python'da with doc.relaxed(), MCP'de ve protokolde relaxConstraints (ADR 0337 §1).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1345,7 +1346,7 @@
    "python": null,
    "mcp": null,
    "note": "Kısıt işaretlerinin görünürlüğü: oturumun durumu (ADR 0338 §1).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1361,7 +1362,7 @@
    "python": "kentos.cad.entities.create",
    "mcp": "cad.entities.create",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1404,10 +1405,10 @@
     "cad.crs.transform"
    ],
    "operation": null,
-   "python": null,
-   "mcp": null,
+   "python": "kentos.cad.crs.transform",
+   "mcp": "cad.crs.transform",
    "note": "Pencere aynı çekirdekten okur (crs::transform_in); Python ve ajan kotlarıyla, epokuyla ve işlemin kaydıyla cad.crs.transform ile (ADR 0519).",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -1709,7 +1710,7 @@
    "python": "kentos.cad.dimensions.edit",
    "mcp": "cad.dimensions.edit",
    "note": "Seçili ölçüler görünen nesnelerin kestiği yerlerde kırılır (ADR 0321 §4).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1725,7 +1726,7 @@
    "python": "kentos.cad.dimensions.edit",
    "mcp": "cad.dimensions.edit",
    "note": "Seçimin ilk ölçüsü temeldir; öbürleri aralıkla dizilir (ADR 0321 §4).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1741,7 +1742,7 @@
    "python": "kentos.cad.dimensions.edit",
    "mcp": "cad.dimensions.edit",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1755,7 +1756,7 @@
    "python": null,
    "mcp": null,
    "note": "Çizim yardımcıları oturumun durumu.",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1923,7 +1924,7 @@
    "python": null,
    "mcp": null,
    "note": "Çizim yardımcıları oturumun durumu.",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1937,7 +1938,7 @@
    "python": null,
    "mcp": null,
    "note": "Çizim yardımcıları oturumun durumu.",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 1
   },
@@ -1951,7 +1952,7 @@
    "python": null,
    "mcp": null,
    "note": "Çizim yardımcıları oturumun durumu.",
-   "scope": "shared",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 2
   },
@@ -1965,7 +1966,7 @@
    "python": null,
    "mcp": null,
    "note": "Çizim yardımcıları oturumun durumu.",
-   "scope": "shared",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 2
   },
@@ -1979,7 +1980,7 @@
    "python": null,
    "mcp": null,
    "note": "Çizim yardımcıları oturumun durumu.",
-   "scope": "shared",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 5
   },
@@ -1993,7 +1994,7 @@
    "python": null,
    "mcp": null,
    "note": "Çizim yardımcıları oturumun durumu.",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -2007,7 +2008,7 @@
    "python": null,
    "mcp": null,
    "note": "Çizim yardımcıları oturumun durumu.",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 2
   },
@@ -2021,7 +2022,7 @@
    "python": null,
    "mcp": null,
    "note": "Çizim yardımcıları oturumun durumu.",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 2
   },
@@ -2245,7 +2246,7 @@
    "python": null,
    "mcp": null,
    "note": "Çizim yardımcıları oturumun durumu.",
-   "scope": "shared",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 1
   },
@@ -2273,6 +2274,22 @@
    "python": null,
    "mcp": null,
    "note": "Çizim yardımcıları oturumun durumu.",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "edit.autoSelect",
+   "kind": "command",
+   "title": "Otomatik seçim",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "autoSelect; projenin ayarı (ADR 0622 §5), seçim sorgusunda katmanlar etkin katmandır.",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -2415,7 +2432,7 @@
    "python": "kentos.cad.entities.paste",
    "mcp": "cad.entities.paste",
    "note": "Komutun asBlock'u; blok ve yerleştirme tek adımda (ADR 0309).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -2533,7 +2550,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -2575,7 +2592,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -2659,7 +2676,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -2715,7 +2732,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -2743,7 +2760,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -2771,7 +2788,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -2799,7 +2816,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -2827,7 +2844,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -2841,7 +2858,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -2916,7 +2933,7 @@
    "python": "kentos.cad.entities.select, kentos.cad.entities.order",
    "mcp": "cad.entities.select, cad.entities.order",
    "note": "Türlere göre seçim, sonra öne (ADR 0310).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -2971,7 +2988,7 @@
     "file.export.atlas"
    ],
    "operation": null,
-   "python": "Connection: file.export.atlas",
+   "python": "kentos.cad.file.export.atlas",
    "mcp": "file.export.atlas",
    "note": "Pencerede sayfalar adları, ölçekleri ve nesneleriyle ile sabitlenen durum önizlenir, Dışa aktar… komutla PDF'i bütün yazar; çizim ya da kaynak değişmişse pin_mismatch ya da source_changed ile yenilenmesi istenir (ADR 0534).",
    "scope": "shared",
@@ -2987,10 +3004,10 @@
     "file.export.csv"
    ],
    "operation": null,
-   "python": "Connection: file.export.csv",
+   "python": "kentos.cad.file.export.csv",
    "mcp": "file.export.csv",
    "note": "Pencerede satırlar, sütunlar ve türleri ile yazılmayanlar önizlenir, Dışa aktar… komutla CSV'yi, .csvt'yi ve .prj'yi bütün yazar (ADR 0522).",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3003,10 +3020,10 @@
     "file.export.dwg"
    ],
    "operation": null,
-   "python": "Connection: file.export.dwg",
+   "python": "kentos.cad.file.export.dwg",
    "mcp": "file.export.dwg",
    "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0586).",
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3014,12 +3031,14 @@
    "id": "file.export.dxf",
    "kind": "command",
    "title": "DXF…",
-   "level": "none",
-   "via": [],
+   "level": "semantic",
+   "via": [
+    "file.export.dxf"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "Dışa aktarma komutu yok (cad.files.*).",
+   "python": "kentos.cad.file.export.dxf",
+   "mcp": "file.export.dxf",
+   "note": "Dışa aktar › DXF penceresi aynı yazıcıyı doğrudan kullanır, komut kaydına düşmez; komuttan geçmesi ayrı iş (ADR 0622 §8).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -3033,10 +3052,10 @@
     "file.export.fgb"
    ],
    "operation": null,
-   "python": "Connection: file.export.fgb",
+   "python": "kentos.cad.file.export.fgb",
    "mcp": "file.export.fgb",
    "note": "Pencerede nesneler, sütunlar ve türleri, geometri türü, dizin ve yazılmayanlar önizlenir; Dışa aktar… komutla dosyayı bütün yazar (ADR 0544).",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3063,10 +3082,10 @@
     "file.export.gis"
    ],
    "operation": null,
-   "python": "Connection: file.export.gis",
+   "python": "kentos.cad.file.export.gis",
    "mcp": "file.export.gis",
    "note": "Pencerede tolerans, yazı ve blokların akıbeti seçilir; tablolar, sapmalar ve yazılmayanlar önizlenir, Dışa aktar… komutla türevi bütün yazar (ADR 0530).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3079,10 +3098,10 @@
     "file.export.gml"
    ],
    "operation": null,
-   "python": "Connection: file.export.gml",
+   "python": "kentos.cad.file.export.gml",
    "mcp": "file.export.gml",
    "note": "Pencerede nesne türleri (her katman bir tür), geometri ve özellikleri, şema ve yazılmayanlar önizlenir; Dışa aktar… komutla dosyaları bütün yazar (ADR 0545).",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3095,10 +3114,10 @@
     "file.export.gpkg"
    ],
    "operation": null,
-   "python": "Connection: file.export.gpkg",
+   "python": "kentos.cad.file.export.gpkg",
    "mcp": "file.export.gpkg",
    "note": "Kaydet penceresinden sonra komut dosyayı bütün yazar; yazılamayanlar export_losses ile sayılır (ADR 0502).",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3139,7 +3158,7 @@
     "file.export.maplibre"
    ],
    "operation": null,
-   "python": "Connection: file.export.maplibre",
+   "python": "kentos.cad.file.export.maplibre",
    "mcp": "file.export.maplibre",
    "note": "Dosya yolu sorulur, komut görünen bütün katmanları tek stil olarak ve her katmanın GeoJSON'unu yanına yazar; sourceUrl ve glyphs komutta (ADR 0560).",
    "scope": "gis",
@@ -3170,7 +3189,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "shared",
+   "scope": "none",
    "desktop": "pending",
    "tests": 0
   },
@@ -3183,10 +3202,10 @@
     "file.export.shp"
    ],
    "operation": null,
-   "python": "Connection: file.export.shp",
+   "python": "kentos.cad.file.export.shp",
    "mcp": "file.export.shp",
    "note": "Pencerede yazılacak Shapefile'lar ve kayıplar önizlenir, Dışa aktar… komutla bütün yazar (ADR 0514).",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3199,10 +3218,10 @@
     "file.export.xyz"
    ],
    "operation": null,
-   "python": "Connection: file.export.xyz",
+   "python": "kentos.cad.file.export.xyz",
    "mcp": "file.export.xyz",
    "note": "Pencerede seçimler komutun girdisidir, satır sayısı ve yazılmayanlar komutun planından; Dışa aktar… komutla dosyayı bütün yazar (ADR 0545).",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3215,10 +3234,10 @@
     "file.import.csv"
    ],
    "operation": null,
-   "python": "Connection: file.import.csv",
+   "python": "kentos.cad.file.import_.csv",
    "mcp": "file.import.csv",
    "note": "Pencere sütunları ve komutun planını gösterir, İçe aktar komutla tek adımda alır (ADR 0522).",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3231,10 +3250,10 @@
     "file.import.dwg"
    ],
    "operation": null,
-   "python": "Connection: file.import.dwg",
+   "python": "kentos.cad.file.import_.dwg",
    "mcp": "file.import.dwg",
    "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0586).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3247,7 +3266,7 @@
     "file.import.dxf"
    ],
    "operation": null,
-   "python": "Connection: file.import.dxf",
+   "python": "kentos.cad.file.import_.dxf",
    "mcp": "file.import.dxf",
    "note": "Pencere dosyayı okuyup gösterir, komutla yazar (file_import::execute_read); 20 000'den çok nesne kare kare, komutun planıyla ve kaydıyla (ADR 0257).",
    "scope": "shared",
@@ -3263,7 +3282,7 @@
     "file.import.fgb"
    ],
    "operation": null,
-   "python": "Connection: file.import.fgb",
+   "python": "kentos.cad.file.import_.fgb",
    "mcp": "file.import.fgb",
    "note": "Pencere komutun planını gösterir, İçe aktar komutla tek adımda alır (ADR 0544).",
    "scope": "gis",
@@ -3279,7 +3298,7 @@
     "file.import.geojson"
    ],
    "operation": null,
-   "python": "Connection: file.import.geojson",
+   "python": "kentos.cad.file.import_.geojson",
    "mcp": "file.import.geojson",
    "note": "GeoJSON penceresi dosyayı bir kez okur, sistemin sorusunu ve katmanların yerini gösterir; İçe aktar komutla (execute_read) tek adımda alır, günlükte komutun adıyla (ADR 0563).",
    "scope": "shared",
@@ -3295,7 +3314,7 @@
     "file.import.gml"
    ],
    "operation": null,
-   "python": "Connection: file.import.gml",
+   "python": "kentos.cad.file.import_.gml",
    "mcp": "file.import.gml",
    "note": "Pencere komutun planını gösterir, İçe aktar komutla tek adımda alır (ADR 0545).",
    "scope": "gis",
@@ -3325,10 +3344,10 @@
     "file.import.gpkg"
    ],
    "operation": null,
-   "python": "Connection: file.import.gpkg",
+   "python": "kentos.cad.file.import_.gpkg",
    "mcp": "file.import.gpkg",
    "note": "Pencere dosyanın tablolarını ve sistemini gösterir, komutla yazar; başka sistemdeki dosya reproject onayıyla (ADR 0502).",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3341,7 +3360,7 @@
     "file.import.kml"
    ],
    "operation": null,
-   "python": "Connection: file.import.kml",
+   "python": "kentos.cad.file.import_.kml",
    "mcp": "file.import.kml",
    "note": "KML/KMZ penceresi dosyayı bir kez okur, sistemin sorusunu ve katmanların yerini gösterir; İçe aktar komutla (execute_read) tek adımda alır, günlükte komutun adıyla (ADR 0563).",
    "scope": "shared",
@@ -3357,7 +3376,7 @@
     "file.import.maplibre"
    ],
    "operation": null,
-   "python": "Connection: file.import.maplibre",
+   "python": "kentos.cad.file.import_.maplibre",
    "mcp": "file.import.maplibre",
    "note": "Dosya yolu sorulur, komut stilin hazırlandığı her katmanın görünüşünü tek adımda alır (ADR 0560).",
    "scope": "gis",
@@ -3401,7 +3420,7 @@
     "file.import.pdf"
    ],
    "operation": null,
-   "python": "Connection: file.import.pdf",
+   "python": "kentos.cad.file.import_.pdf",
    "mcp": "file.import.pdf",
    "note": "Pencere sayfayı, ölçeği, yeri, eğrilerin çıktısını, bölgeyi ve katmanları sorar, komutun planını gösterir ve komutla yazar (ADR 0352).",
    "scope": "shared",
@@ -3431,7 +3450,7 @@
     "file.import.shp"
    ],
    "operation": null,
-   "python": "Connection: file.import.shp",
+   "python": "kentos.cad.file.import_.shp",
    "mcp": "file.import.shp",
    "note": "Shapefile penceresi dosyayı bir kez okur, sistemin sorusunu ve katmanların yerini gösterir; İçe aktar komutla (execute_read) tek adımda alır, günlükte komutun adıyla (ADR 0563).",
    "scope": "shared",
@@ -3503,10 +3522,10 @@
     "file.package"
    ],
    "operation": null,
-   "python": "Connection: file.package",
+   "python": "kentos.cad.file.package",
    "mcp": "file.package",
    "note": "Paketle file.package ile yazar (ADR 0506); kaynakların yolu ve dışarıda bırakılanlar penceresiyle (ADR 0596).",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3519,10 +3538,10 @@
     "file.preflight.sheets"
    ],
    "operation": null,
-   "python": "Connection: file.preflight.sheets",
+   "python": "kentos.cad.file.preflight.sheets",
    "mcp": "file.preflight.sheets",
    "note": "Masaüstü tam baskı denetimi, Python ve MCP dosya yazmayan aynı kaynak/yerleşim denetimini kullanır.",
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3536,7 +3555,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "shared",
+   "scope": "none",
    "desktop": "pending",
    "tests": 1
   },
@@ -3549,10 +3568,10 @@
     "file.publish.sheets"
    ],
    "operation": null,
-   "python": "Connection: file.publish.sheets",
+   "python": "kentos.cad.file.publish.sheets",
    "mcp": "file.publish.sheets",
    "note": "Seçim, sıra, adlandırma, kaynak raporu ve atomik teslim aynı dosya komutundadır; masaüstü aynı iptal edilebilir protokol işini kullanır.",
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3652,10 +3671,10 @@
     "cad.gis.derivation"
    ],
    "operation": null,
-   "python": null,
-   "mcp": null,
+   "python": "kentos.cad.gis.derivation",
+   "mcp": "cad.gis.derivation",
    "note": "Pencere dosyayı seçtirir ve komutun cevabını gösterir: eski, GIS'te değişen, kaynağı silinen ve türevde satırı olmayan; çizimi değiştirmez (ADR 0530).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3685,7 +3704,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 1
   },
@@ -3699,7 +3718,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 2
   },
@@ -3715,7 +3734,7 @@
    "python": "kentos.cad.layers.crs",
    "mcp": "cad.layers.crs",
    "note": null,
-   "scope": "none",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3796,7 +3815,7 @@
    "python": "kentos.cad.layers.filter",
    "mcp": "cad.layers.filter",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -3809,8 +3828,8 @@
     "cad.styles.impact"
    ],
    "operation": null,
-   "python": null,
-   "mcp": null,
+   "python": "kentos.cad.styles.impact",
+   "mcp": "cad.styles.impact",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -3895,6 +3914,38 @@
    "tests": 2
   },
   {
+   "id": "layer.newAnnotation",
+   "kind": "command",
+   "title": "Yeni açıklama katmanı",
+   "level": "semantic",
+   "via": [
+    "cad.layers.edit"
+   ],
+   "operation": "add",
+   "python": "kentos.cad.layers.edit",
+   "mcp": "cad.layers.edit",
+   "note": "geometry: annotation (ADR 0622 §5).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "layer.newArea",
+   "kind": "command",
+   "title": "Yeni alan katmanı",
+   "level": "semantic",
+   "via": [
+    "cad.layers.edit"
+   ],
+   "operation": "add",
+   "python": "kentos.cad.layers.edit",
+   "mcp": "cad.layers.edit",
+   "note": "geometry: area (ADR 0622 §5).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "layer.newGroup",
    "kind": "command",
    "title": "Yeni grup",
@@ -3909,6 +3960,38 @@
    "scope": "gis",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "layer.newLine",
+   "kind": "command",
+   "title": "Yeni çizgi katmanı",
+   "level": "semantic",
+   "via": [
+    "cad.layers.edit"
+   ],
+   "operation": "add",
+   "python": "kentos.cad.layers.edit",
+   "mcp": "cad.layers.edit",
+   "note": "geometry: line (ADR 0622 §5).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "layer.newPoint",
+   "kind": "command",
+   "title": "Yeni nokta katmanı",
+   "level": "semantic",
+   "via": [
+    "cad.layers.edit"
+   ],
+   "operation": "add",
+   "python": "kentos.cad.layers.edit",
+   "mcp": "cad.layers.edit",
+   "note": "geometry: point (ADR 0622 §5).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "layer.purge",
@@ -3938,7 +4021,7 @@
    "python": "kentos.cad.layers.reproject",
    "mcp": "cad.layers.reproject",
    "note": null,
-   "scope": "none",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4050,7 +4133,7 @@
    "python": "kentos.cad.leaders.edit",
    "mcp": "cad.leaders.edit",
    "note": "Seçili kılavuzun kimliği, çizimden seçilen uç ve orada kenetin verdiği yer addArm işlemine verilir (ADR 0326).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4066,7 +4149,7 @@
    "python": "kentos.cad.leaders.edit",
    "mcp": "cad.leaders.edit",
    "note": "Seçili kılavuzların kimlikleri seçim sırasıyla, pencerenin doğrultusu ve aralığı align işlemine verilir (ADR 0326).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4082,7 +4165,7 @@
    "python": "kentos.cad.leaders.edit",
    "mcp": "cad.leaders.edit",
    "note": "Seçili kılavuzun ve yerleştirmelerin kimlikleri blocks işlemine verilir (ADR 0326).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4098,7 +4181,7 @@
    "python": "kentos.cad.leaders.edit",
    "mcp": "cad.leaders.edit",
    "note": "Seçili kılavuzların kimlikleri seçim sırasıyla collect işlemine verilir (ADR 0326).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4114,7 +4197,7 @@
    "python": "kentos.cad.leaders.edit",
    "mcp": "cad.leaders.edit",
    "note": "Ucu seçilen noktaya en yakın kolun sırası removeArm işlemine verilir (ADR 0326).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4130,7 +4213,7 @@
    "python": "kentos.cad.styles.edit",
    "mcp": "cad.styles.edit",
    "note": "Pencerenin tablosu cad.styles.edit'in leader türüyle (oluştur, güncelle, sil) yazılır (ADR 0326).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4190,7 +4273,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
@@ -4204,7 +4287,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "gis",
+   "scope": "none",
    "desktop": "pending",
    "tests": 1
   },
@@ -4218,7 +4301,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "gis",
+   "scope": "none",
    "desktop": "pending",
    "tests": 0
   },
@@ -4232,7 +4315,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "gis",
+   "scope": "none",
    "desktop": "pending",
    "tests": 0
   },
@@ -4309,7 +4392,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4420,12 +4503,14 @@
    "kind": "command",
    "title": "Parsel ölçü yazıları…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -4433,13 +4518,13 @@
    "id": "processing.newModel",
    "kind": "command",
    "title": "Yeni model…",
-   "level": "processing",
+   "level": "host",
    "via": [],
    "operation": null,
    "python": null,
    "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "note": "Model tasarımcısı penceresi; modeller cihazda (islemler.json), çalıştırması cad.processing.run'ın model: kimliğiyle.",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 4
   },
@@ -4453,7 +4538,7 @@
    "python": "kentos.address",
    "mcp": null,
    "note": "kentos.address adayları verir, noktaları yazmaz.",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4467,7 +4552,7 @@
    "python": "kentos.address",
    "mcp": null,
    "note": null,
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4476,12 +4561,14 @@
    "kind": "command",
    "title": "Kenar uzunluklarını yaz…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4490,12 +4577,14 @@
    "kind": "command",
    "title": "Öznitelik hesapla…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4504,12 +4593,14 @@
    "kind": "command",
    "title": "Çevreleyenden bilgi al…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4518,12 +4609,14 @@
    "kind": "command",
    "title": "İçindekinden bilgi al…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4532,12 +4625,14 @@
    "kind": "command",
    "title": "Anahtarla birleştir…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4546,12 +4641,14 @@
    "kind": "command",
    "title": "Veri aktar…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 1
   },
@@ -4560,12 +4657,14 @@
    "kind": "command",
    "title": "Semt ve uzunluktan çizgi…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 1
   },
@@ -4574,12 +4673,14 @@
    "kind": "command",
    "title": "Köşe ekle…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -4588,12 +4689,14 @@
    "kind": "command",
    "title": "Çizgileri alana çevir…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4602,12 +4705,14 @@
    "kind": "command",
    "title": "Noktalardan çizgi…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4616,12 +4721,14 @@
    "kind": "command",
    "title": "Alanları çizgiye çevir…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4630,12 +4737,14 @@
    "kind": "command",
    "title": "Çizginin parçası…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4644,12 +4753,14 @@
    "kind": "command",
    "title": "Tablodan elips…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4658,12 +4769,14 @@
    "kind": "command",
    "title": "Tablodan nokta…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 1
   },
@@ -4672,12 +4785,14 @@
    "kind": "command",
    "title": "Nesneden nokta…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4686,12 +4801,14 @@
    "kind": "command",
    "title": "Köşeleri noktaya çevir…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4700,12 +4817,14 @@
    "kind": "command",
    "title": "XY'den çizgi…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4714,12 +4833,14 @@
    "kind": "command",
    "title": "Çekirdek yoğunluğu…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4728,12 +4849,14 @@
    "kind": "command",
    "title": "Çizgi yoğunluğu…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4742,12 +4865,14 @@
    "kind": "command",
    "title": "Maliyet koridoru…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4756,12 +4881,14 @@
    "kind": "command",
    "title": "Birikimli maliyet…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4770,12 +4897,14 @@
    "kind": "command",
    "title": "Uzaklık yüzeyi…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4784,12 +4913,14 @@
    "kind": "command",
    "title": "En düşük maliyetli yol…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4798,12 +4929,14 @@
    "kind": "command",
    "title": "Alanları kümele…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4812,12 +4945,14 @@
    "kind": "command",
    "title": "Bina sadeleştir…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -4826,12 +4961,14 @@
    "kind": "command",
    "title": "Ortak kenarları koruyarak sadeleştir…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -4840,12 +4977,14 @@
    "kind": "command",
    "title": "Küçük parçaları ayıkla…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4854,12 +4993,14 @@
    "kind": "command",
    "title": "Küçükleri komşuya kat…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4868,12 +5009,14 @@
    "kind": "command",
    "title": "Dik açılandır…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4882,12 +5025,14 @@
    "kind": "command",
    "title": "Yumuşat…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -4896,12 +5041,14 @@
    "kind": "command",
    "title": "Sınırlayıcı geometri…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4910,12 +5057,14 @@
    "kind": "command",
    "title": "İçbükey zarf…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -4924,12 +5073,14 @@
    "kind": "command",
    "title": "Delaunay üçgenleri…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4938,12 +5089,14 @@
    "kind": "command",
    "title": "Ulaşılmazlık kutbu…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4952,12 +5105,14 @@
    "kind": "command",
    "title": "Voronoi alanları…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -4966,12 +5121,14 @@
    "kind": "command",
    "title": "Tampon…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4980,12 +5137,14 @@
    "kind": "command",
    "title": "Kırp…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4994,12 +5153,14 @@
    "kind": "command",
    "title": "Fark…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5008,12 +5169,14 @@
    "kind": "command",
    "title": "Gruplayarak birleştir…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5022,12 +5185,14 @@
    "kind": "command",
    "title": "Kesişim…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5036,12 +5201,14 @@
    "kind": "command",
    "title": "Onar…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5050,12 +5217,14 @@
    "kind": "command",
    "title": "Koordinat sistemine dönüştür…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5064,12 +5233,14 @@
    "kind": "command",
    "title": "Sadeleştir…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5078,12 +5249,14 @@
    "kind": "command",
    "title": "Simetrik fark…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5092,12 +5265,14 @@
    "kind": "command",
    "title": "Birleşim…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5106,12 +5281,14 @@
    "kind": "command",
    "title": "Geçerliliği denetle…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5120,12 +5297,14 @@
    "kind": "command",
    "title": "Havzalar…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5134,12 +5313,14 @@
    "kind": "command",
    "title": "Çukur doldur…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5148,12 +5329,14 @@
    "kind": "command",
    "title": "Akış birikimi…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5162,12 +5345,14 @@
    "kind": "command",
    "title": "Akış yönü…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5176,12 +5361,14 @@
    "kind": "command",
    "title": "Döküm noktası…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5190,12 +5377,14 @@
    "kind": "command",
    "title": "Dere ağı…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5204,12 +5393,14 @@
    "kind": "command",
    "title": "Noktadan havza…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5218,12 +5409,14 @@
    "kind": "command",
    "title": "Topografik nemlilik indisi…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5232,12 +5425,14 @@
    "kind": "command",
    "title": "Ters uzaklık (IDW)…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5246,12 +5441,14 @@
    "kind": "command",
    "title": "Kriging…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5260,12 +5457,14 @@
    "kind": "command",
    "title": "Doğal komşu…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5274,12 +5473,14 @@
    "kind": "command",
    "title": "Spline…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5288,12 +5489,14 @@
    "kind": "command",
    "title": "TIN'den raster…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5302,12 +5505,14 @@
    "kind": "command",
    "title": "Yinelenenleri sil…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5316,12 +5521,14 @@
    "kind": "command",
    "title": "Seçilenleri çıkar…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5330,12 +5537,14 @@
    "kind": "command",
    "title": "Vektör katmanlarını birleştir…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 1
   },
@@ -5344,12 +5553,14 @@
    "kind": "command",
    "title": "İfadeye göre sırala…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5358,12 +5569,14 @@
    "kind": "command",
    "title": "Özniteliğe göre böl…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 1
   },
@@ -5372,12 +5585,14 @@
    "kind": "command",
    "title": "Rotayı kalibre et…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5386,12 +5601,14 @@
    "kind": "command",
    "title": "Rota oluştur…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5407,7 +5624,7 @@
    "python": "kentos.cad.processing.run",
    "mcp": "cad.processing.run",
    "note": "linearRef.eventDrift aracı; Python ve MCP'den cad.processing.run ile (ADR 0526).",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5416,12 +5633,14 @@
    "kind": "command",
    "title": "M değerlerini çıkar…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5430,12 +5649,14 @@
    "kind": "command",
    "title": "Rota boyunca konumla…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5444,12 +5665,14 @@
    "kind": "command",
    "title": "Olayları çakıştır…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5458,12 +5681,14 @@
    "kind": "command",
    "title": "Olayları rotada göster…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5472,12 +5697,14 @@
    "kind": "command",
    "title": "Mesh hesaplayıcı…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5486,12 +5713,14 @@
    "kind": "command",
    "title": "Kesit…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5500,12 +5729,14 @@
    "kind": "command",
    "title": "Zaman serisi…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5514,12 +5745,14 @@
    "kind": "command",
    "title": "En yakın tesis…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 1
   },
@@ -5528,12 +5761,14 @@
    "kind": "command",
    "title": "Maliyet matrisi…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5542,12 +5777,14 @@
    "kind": "command",
    "title": "Hizmet alanları…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5556,11 +5793,13 @@
    "kind": "command",
    "title": "Nokta bulutu alan sorgusu…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -5570,11 +5809,13 @@
    "kind": "command",
    "title": "Sınır çıkar…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -5584,11 +5825,13 @@
    "kind": "command",
    "title": "Yüksekliğe göre sınıfla…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -5598,11 +5841,13 @@
    "kind": "command",
    "title": "Bulutu kırp…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -5612,11 +5857,13 @@
    "kind": "command",
    "title": "Zemin süzgeci…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -5626,11 +5873,13 @@
    "kind": "command",
    "title": "Bulutları birleştir…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -5640,11 +5889,13 @@
    "kind": "command",
    "title": "Rasterleştir…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -5654,11 +5905,13 @@
    "kind": "command",
    "title": "Seyrelt…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -5668,11 +5921,13 @@
    "kind": "command",
    "title": "Karola…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -5682,12 +5937,14 @@
    "kind": "command",
    "title": "Köşe noktalarını numarala…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5696,12 +5953,14 @@
    "kind": "command",
    "title": "En yakın merkeze bağla…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5710,12 +5969,14 @@
    "kind": "command",
    "title": "Uzaklık matrisi…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -5724,12 +5985,14 @@
    "kind": "command",
    "title": "En yakını bul…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5738,12 +6001,14 @@
    "kind": "command",
    "title": "Komşu alanlar…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -5752,12 +6017,14 @@
    "kind": "command",
    "title": "En kısa çizgi…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5766,12 +6033,14 @@
    "kind": "command",
    "title": "Raster hesaplayıcı…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5780,12 +6049,14 @@
    "kind": "command",
    "title": "Hücre istatistiği…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5794,12 +6065,14 @@
    "kind": "command",
    "title": "Maskeyle kırp…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5815,7 +6088,7 @@
    "python": "kentos.cad.processing.run",
    "mcp": "cad.processing.run",
    "note": "raster.cog aracı; başsız sunucunun dosyalarıyla Python ve MCP'den de (ADR 0515).",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5824,12 +6097,14 @@
    "kind": "command",
    "title": "Komşuluk istatistiği…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5838,12 +6113,14 @@
    "kind": "command",
    "title": "Histogram…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5852,12 +6129,14 @@
    "kind": "command",
    "title": "Mozaik…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5866,12 +6145,14 @@
    "kind": "command",
    "title": "Rasterleştir…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5880,12 +6161,14 @@
    "kind": "command",
    "title": "Yeniden sınıflandır…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5894,12 +6177,14 @@
    "kind": "command",
    "title": "Yeniden örnekle…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5908,12 +6193,14 @@
    "kind": "command",
    "title": "Rasterden çizgi…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5922,12 +6209,14 @@
    "kind": "command",
    "title": "Rasterden nokta…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5936,12 +6225,14 @@
    "kind": "command",
    "title": "Rasterden alan…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5950,12 +6241,14 @@
    "kind": "command",
    "title": "Bölgesel istatistik…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5964,12 +6257,14 @@
    "kind": "command",
    "title": "Doğruluk analizi…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5978,12 +6273,14 @@
    "kind": "command",
    "title": "Değişim tespiti…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -5992,12 +6289,14 @@
    "kind": "command",
    "title": "Bant birleştir…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6006,12 +6305,14 @@
    "kind": "command",
    "title": "Spektral indis…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6020,12 +6321,14 @@
    "kind": "command",
    "title": "Görüntü birleştirme…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6034,12 +6337,14 @@
    "kind": "command",
    "title": "Bantlara ayır…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6048,12 +6353,14 @@
    "kind": "command",
    "title": "Denetimli sınıflandırma…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6062,12 +6369,14 @@
    "kind": "command",
    "title": "Denetimsiz sınıflandırma…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6076,12 +6385,14 @@
    "kind": "command",
    "title": "Hat boyunca nokta…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -6090,12 +6401,14 @@
    "kind": "command",
    "title": "Ağ oluştur…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6104,12 +6417,14 @@
    "kind": "command",
    "title": "Rastgele noktalar…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6118,12 +6433,14 @@
    "kind": "command",
    "title": "Düzenli noktalar…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6132,12 +6449,14 @@
    "kind": "command",
    "title": "Alt bölümlere ayır…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6146,12 +6465,14 @@
    "kind": "command",
    "title": "Çizgi yakala…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6160,12 +6481,14 @@
    "kind": "command",
    "title": "Alan kapat…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6174,12 +6497,14 @@
    "kind": "command",
    "title": "Eğrilere kot ver…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6188,11 +6513,13 @@
    "kind": "command",
    "title": "İfadeyle seç…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
    "scope": "gis",
    "desktop": "implemented",
    "tests": 4
@@ -6202,11 +6529,13 @@
    "kind": "command",
    "title": "Konuma göre seç…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
    "scope": "gis",
    "desktop": "implemented",
    "tests": 0
@@ -6216,12 +6545,14 @@
    "kind": "command",
    "title": "Özet istatistik…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6230,12 +6561,14 @@
    "kind": "command",
    "title": "DBSCAN kümeleme…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6244,12 +6577,14 @@
    "kind": "command",
    "title": "DBSCAN parametre taraması…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6258,12 +6593,14 @@
    "kind": "command",
    "title": "Yön dağılımı…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6272,12 +6609,14 @@
    "kind": "command",
    "title": "Sıcak nokta (Gi*)…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6286,12 +6625,14 @@
    "kind": "command",
    "title": "k-ortalamalar kümeleme…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6300,12 +6641,14 @@
    "kind": "command",
    "title": "Yerel Moran (LISA)…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6314,12 +6657,14 @@
    "kind": "command",
    "title": "Ortalama merkez…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6328,12 +6673,14 @@
    "kind": "command",
    "title": "Ortanca merkez…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6342,12 +6689,14 @@
    "kind": "command",
    "title": "Moran I…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6356,12 +6705,14 @@
    "kind": "command",
    "title": "En yakın komşu…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6370,12 +6721,14 @@
    "kind": "command",
    "title": "Standart uzaklık…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6384,12 +6737,14 @@
    "kind": "command",
    "title": "Bulanık üyelik…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6398,12 +6753,14 @@
    "kind": "command",
    "title": "Bulanık çakıştırma…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6412,12 +6769,14 @@
    "kind": "command",
    "title": "İkili karşılaştırma (AHP)…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6426,12 +6785,14 @@
    "kind": "command",
    "title": "ROC ile doğrulama…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6440,12 +6801,14 @@
    "kind": "command",
    "title": "Ağırlıklı çakıştırma…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6454,12 +6817,14 @@
    "kind": "command",
    "title": "Ağırlıklı toplam…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6468,12 +6833,14 @@
    "kind": "command",
    "title": "Bakı…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6482,12 +6849,14 @@
    "kind": "command",
    "title": "Renkli kabartma…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6496,12 +6865,14 @@
    "kind": "command",
    "title": "Eş yükselti eğrileri…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6510,12 +6881,14 @@
    "kind": "command",
    "title": "Eğrilik…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6524,12 +6897,14 @@
    "kind": "command",
    "title": "Gölgeli kabartma…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6538,12 +6913,14 @@
    "kind": "command",
    "title": "Güneşlenme…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6552,12 +6929,14 @@
    "kind": "command",
    "title": "Pürüzlülük…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6566,12 +6945,14 @@
    "kind": "command",
    "title": "Eğim…",
    "level": "processing",
-   "via": [],
+   "via": [
+    "cad.processing.run"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
-   "scope": "gis",
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6585,7 +6966,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -6822,7 +7203,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6836,7 +7217,7 @@
    "python": null,
    "mcp": null,
    "note": "Bağlantıların gizli değerleri cihazda.",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6852,7 +7233,7 @@
    "python": "kentos.cad.layers.service",
    "mcp": "cad.layers.service",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -6866,7 +7247,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -7132,7 +7513,7 @@
    "python": "kentos.cad.sheets.edit",
    "mcp": "cad.sheets.edit",
    "note": "setDrawingInfo/setDrawingSet işlemleri, metadata antet alanları ve canlı drawingSet tablo kaynağı; Python/MCP aynı tipli işlemleri kullanır.",
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -7891,7 +8272,7 @@
    "python": "kentos.cad.sources.edit",
    "mcp": "cad.sources.edit",
    "note": "cad.sources.edit relink; açılışta taşınan dosyayı göreli yoluyla bulma source_places::relocate (ADR 0506).",
-   "scope": "none",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 0
   },
@@ -7904,10 +8285,10 @@
     "cad.sources.describe"
    ],
    "operation": null,
-   "python": null,
-   "mcp": null,
+   "python": "kentos.cad.sources.describe",
+   "mcp": "cad.sources.describe",
    "note": "Kaynak durumu penceresi cad.sources.describe'ın bağ durumlarıyla; satırın düğmesi durumun next'ini çalıştırır (ADR 0503, 0543).",
-   "scope": "none",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 0
   },
@@ -7923,7 +8304,7 @@
    "python": "kentos.cad.sources.edit",
    "mcp": "cad.sources.edit",
    "note": "cad.sources.edit unlink (ADR 0503).",
-   "scope": "none",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 0
   },
@@ -7955,7 +8336,7 @@
    "python": "kentos.cad.sources.sync",
    "mcp": "cad.sources.sync",
    "note": "Katmanı ve ilişkiyle bağlı katmanları cad.sources.sync write'ın with'iyle tek işlemde yazar (ADR 0532).",
-   "scope": "none",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 0
   },
@@ -7984,8 +8365,8 @@
     "cad.standards.check"
    ],
    "operation": null,
-   "python": null,
-   "mcp": null,
+   "python": "kentos.cad.standards.check",
+   "mcp": "cad.standards.check",
    "note": "Bulgular komutun cevabıdır; pencere onları gösterir (ADR 0312 §2).",
    "scope": "shared",
    "desktop": "implemented",
@@ -8035,7 +8416,7 @@
    "python": "kentos.cad.styles.edit",
    "mcp": "cad.styles.edit",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8109,7 +8490,7 @@
    "python": "kentos.cad.styles.edit",
    "mcp": "cad.styles.edit",
    "note": "Tablo proje ayarıdır, geri alma adımı değildir; izleyen yazılar tek adımda (ADR 0248 §4).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8125,7 +8506,7 @@
    "python": "kentos.cad.entities.create",
    "mcp": "cad.entities.create",
    "note": "Tablo blocks kaynağıyla yazılır; çizelgenin satırlarını belge her adımda kendisi yazar (ADR 0327).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8141,7 +8522,7 @@
    "python": "kentos.cad.tables.edit",
    "mcp": "cad.tables.edit",
    "note": "Pencerenin her değişikliği cad.tables.edit'in bir düzenlemesidir (hücre, formül, satır ve sütun, biçim, alan, boylar); önizleme komutun planı, Kaydet aynı düzenlemeleri tek adımda yazar (ADR 0327).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -8173,7 +8554,7 @@
    "python": "kentos.cad.tables.edit",
    "mcp": "cad.tables.edit",
    "note": "Seçili tablonun kimliği, seçilen dosyanın yolu (çizimin klasöründeyse göreli) ve klasör link işlemine verilir (ADR 0327).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8189,7 +8570,7 @@
    "python": "kentos.cad.tables.edit",
    "mcp": "cad.tables.edit",
    "note": "Seçili ya da kaynağı olan bütün tabloların kimlikleri ve çizimin klasörü refresh işlemine verilir; bağlı olmayan ya da yolunda olmayan dosya sorulup link işlemiyle bağlanır (ADR 0327).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -8274,10 +8655,10 @@
     "cad.texts.check"
    ],
    "operation": null,
-   "python": null,
-   "mcp": null,
+   "python": "kentos.cad.texts.check",
+   "mcp": "cad.texts.check",
    "note": "Pencere komutun bulgularını gösterir (ADR 0325).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8293,7 +8674,7 @@
    "python": "kentos.cad.texts.edit",
    "mcp": "cad.texts.edit",
    "note": "Seçili yazıların kimlikleri combine işlemine verilir (ADR 0325).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8309,7 +8690,7 @@
    "python": "kentos.cad.fields.edit",
    "mcp": "cad.fields.edit",
    "note": "Pencere yazının, kaynağın (çizimden seçilen nesne ya da proje) ve biçimin kimliklerini ve değerlerini komutun insert işlemine verir; önizleme komutun planıdır (ADR 0325).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8325,7 +8706,7 @@
    "python": "kentos.cad.fields.edit",
    "mcp": "cad.fields.edit",
    "note": "Seçili yazıların kimlikleri update işlemine verilir (ADR 0325).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8354,10 +8735,10 @@
     "cad.fonts.report"
    ],
    "operation": null,
-   "python": null,
-   "mcp": null,
+   "python": "kentos.cad.fonts.report",
+   "mcp": "cad.fonts.report",
    "note": "Pencere komutun cevabını gösterir: stillerin yazı tipleri, nasıl çözüldükleri ve PDF'in gömdükleri (ADR 0324).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8373,7 +8754,7 @@
    "python": "kentos.cad.texts.edit",
    "mcp": "cad.texts.edit",
    "note": "Seçili yazıların kimlikleri seçim sırasıyla ve pencerenin değerleri number işlemine verilir; önizleme komutun planıdır (ADR 0325).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8389,7 +8770,7 @@
    "python": "kentos.cad.texts.edit",
    "mcp": "cad.texts.edit",
    "note": "Seçili yazının kimliği split işlemine verilir (ADR 0325).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8625,7 +9006,7 @@
    "python": "kentos.cad.annotations.scales",
    "mcp": "cad.annotations.scales",
    "note": "Tıklanan nesnenin kimliği, seçilen ölçek ve tıklanan yer (ölçüde çizginin uzaklığı) komutun set işlemine verilir; önizleme o ölçeğin temsilidir (ADR 0323).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8941,7 +9322,7 @@
    "python": "kentos.cad.arrays.edit",
    "mcp": "cad.arrays.edit",
    "note": "Dizinin kimliği, yerleşimi, ilk yeri ya da öğe numaraları komuta verilir; yerleri komut hesaplar (ADR 0301).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8989,7 +9370,7 @@
    "python": "kentos.cad.drawing.audit",
    "mcp": "cad.drawing.audit",
    "note": "Onarım ve temizlenecek stil türleri komuta verilir; bozuk ilişkileri, kayıp stilleri ve kullanılmayan kaynakları komut bulur, önizleme komutun planıdır (ADR 0306).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -9005,7 +9386,7 @@
    "python": "kentos.cad.blocks.define",
    "mcp": "cad.blocks.define",
    "note": null,
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 2
   },
@@ -9021,7 +9402,7 @@
    "python": "kentos.cad.blocks.insert",
    "mcp": "cad.blocks.insert",
    "note": null,
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 5
   },
@@ -9115,7 +9496,7 @@
    "python": "kentos.cad.entities.chamfer",
    "mcp": "cad.entities.chamfer",
    "note": "Köşe, iki mesafe ve Kırp komuta verilir (ADR 0250).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -9131,7 +9512,7 @@
    "python": "kentos.cad.entities.chamfer",
    "mcp": "cad.entities.chamfer",
    "note": "Nesneler `all` köşesiyle ve iki mesafe komuta verilir (ADR 0250).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -9266,7 +9647,7 @@
    "python": "kentos.cad.entities.cleanup",
    "mcp": "cad.entities.cleanup",
    "note": "Kapsam, tolerans ve seçenekler komuta verilir; yinelenenleri, eş doğrultulu çizgileri ve köşeleri komut bulur, raporu kaybıyla verir (ADR 0305).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 1
   },
@@ -9344,7 +9725,7 @@
    "python": "kentos.cad.entities.create",
    "mcp": "cad.entities.create",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -9360,7 +9741,7 @@
    "python": "kentos.cad.entities.create",
    "mcp": "cad.entities.create",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -9393,7 +9774,7 @@
    "python": "kentos.cad.entities.copy",
    "mcp": "cad.entities.copy",
    "note": "Taban noktası komutun girdisidir (ADR 0309).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -9681,7 +10062,7 @@
    "python": "kentos.cad.dimensions.reassociate",
    "mcp": "cad.dimensions.reassociate",
    "note": "Ölçü, nokta ve nesnenin yeri komuta verilir; nokta yerinden hesaplanır (ADR 0249).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -9705,14 +10086,14 @@
    "id": "tool.donut",
    "kind": "tool",
    "title": "Halka",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.donut.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "python": "kentos.cad.donut.create",
+   "mcp": "cad.donut.create",
+   "note": "Merkez ve iç/dış çap komutta hesaplanır; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 3
@@ -9745,7 +10126,7 @@
    "python": "kentos.cad.entities.order",
    "mcp": "cad.entities.order",
    "note": "Başvuru tıklanan nesne, girdinin reference'ı (ADR 0310).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -9761,7 +10142,7 @@
    "python": "kentos.cad.entities.order",
    "mcp": "cad.entities.order",
    "note": "Başvuru tıklanan nesne, girdinin reference'ı (ADR 0310).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -9794,7 +10175,7 @@
    "python": "kentos.cad.curves.construct, kentos.cad.entities.create",
    "mcp": "cad.curves.construct, cad.entities.create",
    "note": "Eksen uçları ya da merkez, diğer yarı eksen ya da döndürme ve yayın açıları cad.curves.construct'a verilir; elipsi o hesaplar, cad.entities.create yazar (ADR 0289).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
@@ -9811,7 +10192,7 @@
    "python": "kentos.cad.curves.construct, kentos.cad.entities.create",
    "mcp": "cad.curves.construct, cad.entities.create",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
@@ -9828,7 +10209,7 @@
    "python": "kentos.cad.curves.construct, kentos.cad.entities.create",
    "mcp": "cad.curves.construct, cad.entities.create",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
@@ -9845,7 +10226,7 @@
    "python": "kentos.cad.curves.construct, kentos.cad.entities.create",
    "mcp": "cad.curves.construct, cad.entities.create",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
@@ -9941,7 +10322,7 @@
    "python": "kentos.cad.entities.fillet",
    "mcp": "cad.entities.fillet",
    "note": "Köşe (yolun köşesi ya da iki çizgi), yarıçap ve Kırp komuta verilir (ADR 0250).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 3
   },
@@ -9957,7 +10338,7 @@
    "python": "kentos.cad.entities.fillet",
    "mcp": "cad.entities.fillet",
    "note": "Nesneler `all` köşesiyle ve yarıçap komuta verilir (ADR 0250).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -10053,7 +10434,7 @@
    "python": "kentos.cad.entities.hatch",
    "mcp": "cad.entities.hatch",
    "note": "Seçilen kapalı nesneler komuta verilir (Çoklu tara, ADR 0254 §7).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -10147,7 +10528,7 @@
    "python": "kentos.cad.entities.create",
    "mcp": "cad.entities.create",
    "note": null,
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 1
   },
@@ -10435,7 +10816,7 @@
    "python": "kentos.cad.entities.lengthen",
    "mcp": "cad.entities.lengthen",
    "note": "Nesnenin kimliği, ucu ve Fark, Yüzde, Toplam (yayda açıyla) ya da Dinamik'in noktası komuta verilir; elips yayı da, kotlar ve ölçüler (M) uç kenar boyunca sürer (ADR 0298).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -10747,7 +11128,7 @@
    "python": "kentos.cad.entities.create",
    "mcp": "cad.entities.create",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 7
   },
@@ -11067,7 +11448,7 @@
    "python": "kentos.cad.rectangle.create",
    "mcp": "cad.rectangle.create",
    "note": "Girdi kullanıcının verdiğidir (köşeler, boyut, alan, dönüş, köşe biçimi); halkayı komut hesaplar, önizleme komutun hesabından (ADR 0290).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 5
   },
@@ -11083,7 +11464,7 @@
    "python": "kentos.cad.rectangle.create",
    "mcp": "cad.rectangle.create",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 5
   },
@@ -11099,7 +11480,7 @@
    "python": "kentos.cad.rectangle.create",
    "mcp": "cad.rectangle.create",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 5
   },
@@ -11115,7 +11496,7 @@
    "python": "kentos.cad.rectangle.create",
    "mcp": "cad.rectangle.create",
    "note": "Kenar ve en cad.rectangle.create'in edge çerçevesiyle verilir (ADR 0290).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
@@ -11131,7 +11512,7 @@
    "python": "kentos.cad.polygon.regular",
    "mcp": "cad.polygon.regular",
    "note": "Kenar sayısı ve merkezle köşe ya da kenar ortası, ya da kenar verilir; halkayı komut hesaplar (ADR 0290).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
@@ -11147,7 +11528,7 @@
    "python": "kentos.cad.polygon.regular",
    "mcp": "cad.polygon.regular",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
@@ -11163,7 +11544,7 @@
    "python": "kentos.cad.polygon.regular",
    "mcp": "cad.polygon.regular",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
@@ -11179,7 +11560,7 @@
    "python": "kentos.cad.polygon.regular",
    "mcp": "cad.polygon.regular",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
@@ -11642,7 +12023,7 @@
    "python": "kentos.cad.entities.create",
    "mcp": "cad.entities.create",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
@@ -11722,7 +12103,7 @@
    "python": "kentos.cad.point.create",
    "mcp": "cad.point.create",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
@@ -11752,7 +12133,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "gis",
+   "scope": "none",
    "desktop": "pending",
    "tests": 0
   },
@@ -11768,7 +12149,7 @@
    "python": "kentos.cad.entities.create",
    "mcp": "cad.entities.create",
    "note": null,
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
@@ -11798,7 +12179,7 @@
    "python": "kentos.cad.entities.stretch",
    "mcp": "cad.entities.stretch",
    "note": "Pencere, yer değiştirme, seçim ve Topoloji'nin durumu komuta verilir; komşular komutta izler (ADR 0254 §2).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 3
   },
@@ -11812,7 +12193,7 @@
    "python": null,
    "mcp": null,
    "note": null,
-   "scope": "gis",
+   "scope": "none",
    "desktop": "pending",
    "tests": 1
   },
@@ -12180,7 +12561,7 @@
    "python": "kentos.cad.entities.vertex",
    "mcp": "cad.entities.vertex",
    "note": "Tıklanan köşe ya da kenarın üzerindeki yer komuta verilir; tutamaç menüsünün köşe ve kenar işleri de aynı komutla (ADR 0279).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -12435,7 +12816,7 @@
    "python": "kentos.cad.polygon.create, kentos.cad.entities.set",
    "mcp": "cad.polygon.create, cad.entities.set",
    "note": "Yeni maske cad.polygon.create'in wipeout'uyla, Nesne'nin alanı cad.entities.set'in wipeout'uyla (ADR 0310).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -12451,7 +12832,7 @@
    "python": "kentos.cad.inserts.clip",
    "mcp": "cad.inserts.clip",
    "note": "Kırp: yerleştirme ve sınır çizimden, yazma cad.inserts.clip ile tek adımda (ADR 0351 §1).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -12588,8 +12969,8 @@
     "cad.topology.check"
    ],
    "operation": null,
-   "python": null,
-   "mcp": null,
+   "python": "kentos.cad.topology.check",
+   "mcp": "cad.topology.check",
    "note": "Sekme cad.topology.check'in çekirdeğinden okur (topology_check::gather, run); bağlı parçanın bandındaki satırlar komşudur, okunamayan band denetimi eksik bırakır; Düzelt ▾ düzeltmenin önizlemesini söyler. İstisna yap ve İstisnayı kaldır cad.topology.exceptions ile yazar, istisna nesnelerinin geometrisine bağlıdır (ADR 0589).",
    "scope": "shared",
    "desktop": "implemented",
@@ -12621,7 +13002,7 @@
    "python": "kentos.cad.entities.edit",
    "mcp": "cad.entities.edit",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -12637,7 +13018,7 @@
    "python": "kentos.cad.entities.transform",
    "mcp": "cad.entities.transform",
    "note": "Dönüşüm araçta kontrol noktalarından çözülür.",
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 1
   },
@@ -12795,7 +13176,7 @@
    "python": null,
    "mcp": null,
    "note": "Görünüm; cad.session.* yok (plan §5.1).",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 1
   },
@@ -12909,7 +13290,7 @@
    "python": "kentos.cad.settings.set",
    "mcp": "cad.settings.set",
    "note": "Harita sistemi projenin ayarıdır (mapSrid); nesneler değişmez, çizim görünümde dönüştürülür (ADR 0583).",
-   "scope": "none",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 0
   },
@@ -13009,7 +13390,7 @@
    "python": null,
    "mcp": null,
    "note": "Görünüm; cad.session.* yok (plan §5.1).",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "n/a",
    "tests": 1
   },
@@ -13023,7 +13404,7 @@
    "python": null,
    "mcp": null,
    "note": "Görünüm; cad.session.* yok (plan §5.1).",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "n/a",
    "tests": 0
   },
@@ -13191,7 +13572,7 @@
    "python": null,
    "mcp": null,
    "note": "Görünüm; cad.session.* yok (plan §5.1).",
-   "scope": "none",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -13277,7 +13658,7 @@
    "python": "kentos.cad.settings.set",
    "mcp": "cad.settings.set",
    "note": "projectType; plan3d ve disaster henüz seçilemez.",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -13293,7 +13674,7 @@
    "python": "kentos.cad.settings.set",
    "mcp": "cad.settings.set",
    "note": "projectType; plan3d ve disaster henüz seçilemez.",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "pending",
    "tests": 0
   },
@@ -13309,7 +13690,7 @@
    "python": "kentos.cad.settings.set",
    "mcp": "cad.settings.set",
    "note": "projectType; plan3d ve disaster henüz seçilemez.",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 1
   },
@@ -13325,7 +13706,7 @@
    "python": "kentos.cad.settings.set",
    "mcp": "cad.settings.set",
    "note": "projectType; plan3d ve disaster henüz seçilemez.",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "pending",
    "tests": 0
   },

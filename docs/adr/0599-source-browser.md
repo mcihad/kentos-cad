@@ -69,16 +69,16 @@ Kopyalamak ayrı bir üründür; çift tık ve sürükleme bağlar. Tablo satır
 
 ### 3. Veritabanları
 
-Yeni “Veritabanları” bölümü:
+Veritabanları bölümü ADR 0623'ündür: cihazın adlı PostgreSQL bağlantıları (sunucu, veritabanı, kullanıcı, kayıtlı parola,
+SSL; Bağlantıyı dene), açılınca katalogdan okunan şemaları ve tabloları; çift tık bağlı katman yapar. Bu ADR'nin ilk
+taslağındaki ham `postgresql://` adres kutusu, aynı gün birleştirilen ADR 0623'ün bağlantılarına bırakıldı (23 Ekim).
+Gezgin oraya şunları katar:
 
-- **Veritabanı ekle…:** PostGIS adresi yazılır (`postgresql://kullanıcı@sunucu:port/veritabanı`). Parolalı adres
-  reddedilir; parola `PGPASSWORD` ya da `~/.pgpass`'ten gelir (ADR 0505).
-- Adres açılınca tabloları ve view'ları `cad.sources.describe` ile, iş parçacığında listelenir. Şemaya göre gruplanır.
-- Satırda veritabanının adı, yanında sunucusu (`kullanıcı@sunucu:port`) yazar. Şema grubunun altında tablo şemasız adıyla
-  görünür.
-- Tablonun satırı, önizlemesi ve eylemleri §2'dekilerdir. Bağlı katman olarak aç PostGIS'e bağlan penceresini, okunmuş
-  tablolarla ve o tablo seçili açar. Kopya olarak al bu kez yoktur: veritabanı tablosunun kopyası Paketle'nin işidir
-  (ADR 0596).
+- arama bağlantının adında, sunucusunda, şemada, tablonun adında, geometri türünde, EPSG'sinde ve yorumunda bakar (§5);
+- sık ve son kullanılan veritabanı tablosu bağlantının adıyla tutulur. Kullanılınca bağlantının kataloğu okunmuşsa tablo
+  eklenir, okunmamışsa bağlantı açılır ve tablonun satırdan eklenmesi söylenir. Silinen bağlantı nedeniyle söylenir.
+
+Kopya olarak al yoktur: veritabanı tablosunun kopyası Paketle'nin işidir (ADR 0596).
 
 ### 4. Servisler
 
@@ -180,12 +180,12 @@ Tablonun önizlemesindeki Kapsamı göster:
   `kentos-interaction`'ın `sources` testi oynatır.
 - **`cad.sources.describe`'ın `extent`'i:**
   - GeoPackage: `bound_sources_cases.py` `gpkg_contents`'ten sqlite3'le.
-  - PostGIS: `postgis_cases.py` ANALYZE'dan sonra `ST_EstimatedExtent`'le.
-- **Masaüstü:** `sources::tests` (12 test):
+  - PostGIS: `postgis_cases.py` ANALYZE'dan sonra `ST_EstimatedExtent`'le (`cad.sources.describe`'ın ve Python'un
+    cevabında; Veritabanları'nın satırları ADR 0623'ün kataloğundandır).
+- **Masaüstü:** `sources::tests` (11 test):
   - GeoPackage'ın tabloları, önizlemesi;
   - bağlama ve Katmana git;
   - Kopya olarak al'ın penceresi;
-  - veritabanı satırının reddi;
   - servis listesi;
   - arama;
   - son ve sık kullanılanlar;

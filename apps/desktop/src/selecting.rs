@@ -31,7 +31,19 @@ impl App {
         let n = found.slots.len();
         self.selection.set(found.slots);
         self.say_filtered(found.left_out.kinds as usize);
+        self.say_layers_left(found.left_out.layers as usize);
         self.output(format!("{n} nesne seçildi."));
+    }
+
+    /// What Otomatik seçim, off, left out of a selection: the other layers' objects (docs/adr/0622 §5).
+    fn say_layers_left(&mut self, n: usize) {
+        let words = self
+            .document
+            .as_ref()
+            .and_then(|d| selectable::layer_left_words(&d.model, n));
+        if let Some(words) = words {
+            self.output(words);
+        }
     }
 
     /// What the selection filter left out of a selection, said (the web's `sayFiltered`).
@@ -61,6 +73,7 @@ impl App {
         };
         self.selection.set(found.slots);
         self.say_filtered(found.left_out.kinds as usize);
+        self.say_layers_left(found.left_out.layers as usize);
     }
 
     /// `view.zoomSelection` (Ctrl+Shift+F): the selection's box as large as

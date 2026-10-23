@@ -304,6 +304,8 @@ def settings(s):
                 "secondSrid": (uint, False),
                 # Schema 98 (docs/adr/0583 §3): the map's system.
                 "mapSrid": (uint, False),
+                # Schema 102 (docs/adr/0622 §5): Otomatik seçim, written only when the project chose.
+                "autoSelect": (boolean, False),
                 "customCrs": (crs_definition, False),
                 "secondCustomCrs": (crs_definition, False),
                 "datumTransforms": (datum_transforms, False),
@@ -1319,6 +1321,8 @@ def layer_entries(n):
                 "rules": (opaque, False),
                 # Schema 98 (docs/adr/0583 §1): the system its objects came from, as its JSON.
                 "sourceCrs": (opaque, False),
+                # Schema 102 (docs/adr/0622 §5): what the layer holds.
+                "geometry": (enum(("point", "line", "area", "annotation")), False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -2207,6 +2211,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 102 (docs/adr/0622 §5): a layer's type, the project's Otomatik seçim.
+    def typed(nodes):
+        return any("geometry" in n or typed(n.get("children", [])) for n in nodes)
+    if "autoSelect" in (settings or {}) or typed(layers):
+        return 102
     # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from.
     if "lineage" in (settings or {}):
         return 101
@@ -2792,7 +2801,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-102.kcad"] = container(root(cmap(parts), version=uint(102)))
+    files["schema-version-103.kcad"] = container(root(cmap(parts), version=uint(103)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4726,6 +4735,29 @@ def build():
     out["broken/lineage-twice.kcad"] = lineage_broken(lambda d: records(d).append(dict(records(d)[0])))
     out["broken/lineage-operation.kcad"] = lineage_broken(lambda d: records(d)[0].update(operation="copy"))
     out["broken/lineage-step-space.kcad"] = lineage_broken(lambda d: records(d)[0].update(step="Kır "))
+    # Layer types and Otomatik seçim (docs/adr/0622 §5): schema 102's; in schema 101 unknown fields; a group's type, a
+    # type not known, Otomatik seçim not a boolean.
+    out["layer-geometry.kcad"] = container(document(load("layer-geometry.json")))
+    typed_payload = document(load("layer-geometry.json"))
+    assert typed_payload.count(b"\x67version\x18\x66") == 1, "the layer types are schema 102"
+    out["broken/layer-geometry-in-schema-101.kcad"] = container(typed_payload.replace(b"\x67version\x18\x66", b"\x67version\x18\x65"))
+
+    def typed_broken(change):
+        d = copy.deepcopy(load("layer-geometry.json"))
+        change(d)
+        return container(document(d))
+
+    def group(d):
+        return next(n for n in d["layers"] if n["type"] == "group")
+
+    out["broken/layer-geometry-on-group.kcad"] = typed_broken(lambda d: group(d).update(geometry="area"))
+    # The writer writes only the four types: a fifth one, of the same length, put in its bytes.
+    assert typed_payload.count(text("geometry") + text("line")) == 1
+    out["broken/layer-geometry-unknown.kcad"] = container(
+        typed_payload.replace(text("geometry") + text("line"), text("geometry") + text("road"), 1))
+    assert typed_payload.count(text("autoSelect") + b"\xf4") == 1
+    out["broken/auto-select-not-boolean.kcad"] = container(
+        typed_payload.replace(text("autoSelect") + b"\xf4", text("autoSelect") + b"\x00", 1))
     crs_payload = document(load("source-crs.json"))
     assert crs_payload.count(b"\x67version\x18\x62") == 1, "the source systems are schema 98"
     out["broken/source-crs-in-schema-97.kcad"] = container(crs_payload.replace(b"\x67version\x18\x62", b"\x67version\x18\x61"))

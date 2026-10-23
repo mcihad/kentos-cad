@@ -240,6 +240,8 @@ pub(super) struct Features {
     pub(super) lineage: bool,
     /// Schema 98: a layer's source system and the map's system (docs/adr/0583).
     pub(super) source_crs: bool,
+    /// Schema 102: a layer's type and the project's Otomatik seçim (docs/adr/0622 §5).
+    pub(super) layer_geometry: bool,
     /// Schema 99: a topology exception's geometry digest (docs/adr/0589).
     pub(super) exception_digests: bool,
     /// Schema 100: a georeference record's `crs` (docs/adr/0594 §1).
@@ -414,6 +416,7 @@ impl Features {
             linear_events: schema >= crate::SCHEMA_WITH_LINEAR_EVENTS,
             lineage: schema >= crate::SCHEMA_WITH_LINEAGE,
             source_crs: schema >= crate::SCHEMA_WITH_SOURCE_CRS,
+            layer_geometry: schema >= crate::SCHEMA_WITH_LAYER_GEOMETRY,
             exception_digests: schema >= crate::SCHEMA_WITH_EXCEPTION_DIGESTS,
             georef_crs: schema >= crate::SCHEMA_WITH_GEOREF_CRS,
             recorded_time: schema >= crate::SCHEMA_WITH_RECORDED_TIME,

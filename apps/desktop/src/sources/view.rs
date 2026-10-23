@@ -1,10 +1,11 @@
-//! Kaynaklar's view (the web's `SourcesPanel`): Klasör ekle over one list of
-//! rows: the two sections, the folders and their files, the KentOS lists,
-//! projects and their layers; a row opens and closes with its caret, a file
-//! or a layer carries what it is and its Katman olarak ekle button, a double
-//! click adds it too, and its menu. The source browser (docs/adr/0599): Son kullanılanlar and Sık kullanılanlar
-//! first, a GeoPackage's tables and a table's preview, Veritabanları and Servisler, the search box over the rows; a
-//! file, table, layer or basemap row pressed and let go over the drawing adds it there.
+//! Kaynaklar's view (the web's `SourcesPanel`): Klasör ekle and Bağlantı ekle
+//! over one list of rows: the sections, the folders and their files, the
+//! database connections, their schemas and tables (docs/adr/0623), the KentOS
+//! lists, projects and their layers; a row opens and closes with its caret, a
+//! file, a table or a layer carries what it is and its Katman olarak ekle
+//! button, a double click adds it too, and its menu. The source browser (docs/adr/0599): Son kullanılanlar and Sık
+//! kullanılanlar first, a GeoPackage's tables and a table's preview, Servisler, the search box over the rows; a file,
+//! table, layer or basemap row pressed and let go over the drawing adds it there.
 
 use std::path::{Path, PathBuf};
 
@@ -19,11 +20,15 @@ use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{ContextMenu, Menu, Tip, VirtualList, tip};
 use kentos_ui::{label, style};
 
+use kentos_postgis::connections::DbConnection;
+use kentos_postgis::probe::{Problem, Relation};
+
 use super::{
-    DATABASES, Event, FAVOURITES, FOLDERS, KENTOS, Kept, LIMIT, LISTS, Origin, PRESETS,
-    ProjectDrawing, RECENT, Read, SAVED, SERVICES, SavedService, folder_key, folder_name, list_key,
-    msg, project_key, service_key, table_key, tables_key,
+    Browse, DATABASES, Event, FAVOURITES, FOLDERS, KENTOS, Kept, LIMIT, LISTS, Origin, PRESETS,
+    ProjectDrawing, RECENT, Read, SAVED, SERVICES, SavedService, connection_key, folder_key,
+    folder_name, list_key, msg, project_key, service_key, table_key, tables_key,
 };
+use crate::db_connections::{Event as Db, Then, msg as db};
 use crate::app::{App, Message};
 use crate::icons::from_web;
 
@@ -56,8 +61,8 @@ pub(crate) enum Line {
         /// A GeoPackage opens into its tables (docs/adr/0599 §2); none for a file that does not open.
         open: Option<bool>,
     },
-    /// A table of a GeoPackage or of a database, and the layer it is bound to (its id and name).
-    Table {
+    /// A table of a GeoPackage, and the layer it is bound to (its id and name).
+    FileTable {
         key: String,
         origin: Origin,
         table: Box<SourceTable>,
@@ -73,14 +78,6 @@ pub(crate) enum Line {
         name: String,
         depth: usize,
     },
-    Database {
-        key: String,
-        address: String,
-        depth: usize,
-        open: bool,
-    },
-    /// Veritabanı ekle's address being typed.
-    DatabaseInput { key: String, draft: String },
     /// A group that starts closed (Hazır altlıklar) or open (Kayıtlı servisler), by the open set.
     Branch {
         key: String,
@@ -154,6 +151,28 @@ pub(crate) enum Line {
         depth: usize,
         act: Option<Message>,
     },
+    /// A database connection (docs/adr/0623).
+    Database {
+        key: String,
+        connection: Box<DbConnection>,
+        facts: Option<String>,
+        open: bool,
+    },
+    /// A connection's schema.
+    Schema {
+        key: String,
+        label: String,
+        count: usize,
+        depth: usize,
+        open: bool,
+    },
+    /// A schema's table, view or materialized view.
+    Table {
+        key: String,
+        connection: String,
+        relation: Box<Relation>,
+        depth: usize,
+    },
 }
 
 impl Line {
@@ -162,10 +181,11 @@ impl Line {
             Line::Section { key, .. } => key,
             Line::Folder { key, .. }
             | Line::File { key, .. }
-            | Line::Table { key, .. }
+            | Line::FileTable { key, .. }
             | Line::Extent { key, .. }
             | Line::Database { key, .. }
-            | Line::DatabaseInput { key, .. }
+            | Line::Schema { key, .. }
+            | Line::Table { key, .. }
             | Line::Branch { key, .. }
             | Line::Preset { key, .. }
             | Line::Service { key, .. }
@@ -183,12 +203,13 @@ impl Line {
     pub(crate) fn depth(&self) -> usize {
         match self {
             Line::Section { .. } => 0,
-            Line::DatabaseInput { .. } => 1,
+            Line::Database { .. } => 1,
             Line::Folder { depth, .. }
             | Line::File { depth, .. }
+            | Line::FileTable { depth, .. }
+            | Line::Schema { depth, .. }
             | Line::Table { depth, .. }
             | Line::Extent { depth, .. }
-            | Line::Database { depth, .. }
             | Line::Branch { depth, .. }
             | Line::Preset { depth, .. }
             | Line::Service { depth, .. }
@@ -214,7 +235,7 @@ impl Line {
                 file.kind.label().to_owned(),
                 folder.join(&file.name).display().to_string(),
             ],
-            Line::Table {
+            Line::FileTable {
                 origin,
                 table,
                 bound,
@@ -225,15 +246,21 @@ impl Line {
                 out.push(geometry_word(table.geometry.as_deref()).to_owned());
                 out.extend(table.srid.map(|c| format!("EPSG:{c}")));
                 out.extend(bound.as_ref().map(|(_, name)| format!("Bağlı: {name}")));
-                if let Origin::Database(_) = origin
-                    && let Some((schema, _)) = table.name.split_once('.')
-                {
-                    out.push(schema.to_owned());
-                }
                 out.push(origin.path());
                 out
             }
-            Line::Database { address, .. } => vec![address.clone()],
+            Line::Database { connection, .. } => {
+                vec![connection.name.clone(), connection.host.clone()]
+            }
+            Line::Schema { label, .. } => vec![label.clone()],
+            Line::Table { relation, .. } => {
+                let mut out = vec![relation.table(), relation.schema.clone()];
+                out.extend(relation.geometry.clone());
+                out.push(geometry_word(relation.geometry.as_deref()).to_owned());
+                out.extend(relation.srid.map(|c| format!("EPSG:{c}")));
+                out.extend(relation.comment.clone());
+                out
+            }
             Line::Preset { name, group, .. } => {
                 vec![name.clone(), group.clone(), "Hazır altlık".to_owned()]
             }
@@ -257,7 +284,7 @@ impl Line {
                 project_name,
                 ..
             } => vec![label.clone(), path.clone(), project_name.clone()],
-            Line::Extent { .. } | Line::DatabaseInput { .. } | Line::Note { .. } => Vec::new(),
+            Line::Extent { .. } | Line::Note { .. } => Vec::new(),
         }
     }
 }
@@ -487,7 +514,7 @@ impl App {
         }
     }
 
-    /// A GeoPackage's or a database's tables under it, a table's preview under the table (docs/adr/0599 §2, §3).
+    /// A GeoPackage's tables under it, a table's preview under the table (docs/adr/0599 §2).
     fn table_lines(&self, origin: &Origin, depth: usize, lines: &mut Vec<Line>) {
         let key = tables_key(origin);
         match self.sources.tables.get(origin) {
@@ -507,31 +534,11 @@ impl App {
                     ));
                 }
                 let bound = self.bound_tables(origin);
-                let mut schema: Option<&str> = None;
-                let mut shown = true;
                 for t in tables {
-                    let mut at = depth;
-                    if let Origin::Database(address) = origin {
-                        let here = t.name.split_once('.').map_or("public", |(s, _)| s);
-                        let group = format!("c:{address}\0{here}");
-                        if schema != Some(here) {
-                            schema = Some(here);
-                            shown = !self.sources.open.contains(&format!("{group}\0kapalı"));
-                            lines.push(Line::Group {
-                                key: group,
-                                label: here.to_owned(),
-                                depth,
-                                open: shown,
-                            });
-                        }
-                        if !shown {
-                            continue;
-                        }
-                        at = depth + 1;
-                    }
+                    let at = depth;
                     let tkey = table_key(origin, &t.name);
                     let open = self.sources.open.contains(&tkey);
-                    lines.push(Line::Table {
+                    lines.push(Line::FileTable {
                         key: tkey.clone(),
                         origin: origin.clone(),
                         table: Box::new(t.clone()),
@@ -612,10 +619,9 @@ impl App {
         }
     }
 
-    /// Veritabanları (docs/adr/0599 §3).
+    /// Veritabanları: the device's connections, each open into its schemas and tables.
     fn database_lines(&self, lines: &mut Vec<Line>) {
-        let s = &self.sources;
-        let open = s.open.contains(DATABASES);
+        let open = self.sources.open.contains(DATABASES);
         lines.push(Line::Section {
             key: DATABASES,
             label: "Veritabanları",
@@ -625,33 +631,120 @@ impl App {
         if !open {
             return;
         }
-        if let Some(draft) = &s.database_draft {
-            lines.push(Line::DatabaseInput {
-                key: format!("{DATABASES}:yeni"),
-                draft: draft.clone(),
-            });
-        } else if s.folders.databases().is_empty() {
+        let list = self.db_store.list();
+        if list.is_empty() {
             lines.push(Line::Note {
                 key: format!("{DATABASES}:yok"),
-                label: "Veritabanı yok. Veritabanı ekle ile bir PostGIS adresi ekleyin.".to_owned(),
+                label: "Bağlantı yok. Bir PostgreSQL veritabanı ekleyin.".to_owned(),
                 warn: false,
                 glyph: Some("sourceDatabase"),
                 depth: 1,
-                act: Some(msg(Event::DatabaseAdd)),
+                act: Some(db(Db::New(Then::Browse))),
             });
-        }
-        for address in s.folders.databases() {
-            let origin = Origin::Database(address.clone());
-            let key = tables_key(&origin);
-            let open = s.open.contains(&key);
-            lines.push(Line::Database {
-                key,
-                address: address.clone(),
+            lines.push(Line::Note {
+                key: format!("{DATABASES}:dosya"),
+                label: "Size verilen bir bağlantı dosyasını içe aktarın…".to_owned(),
+                warn: false,
+                glyph: Some("import"),
                 depth: 1,
+                act: Some(db(Db::Import)),
+            });
+            return;
+        }
+        for c in list {
+            let key = connection_key(&c.name);
+            let open = self.sources.open.contains(&key);
+            let browse = self.sources.catalogs.get(&c.name);
+            let facts = match browse {
+                Some(Browse::Ready(catalog)) => Some(catalog.facts.line()),
+                _ => None,
+            };
+            let name = c.name.clone();
+            lines.push(Line::Database {
+                key: key.clone(),
+                connection: Box::new(c.clone()),
+                facts,
                 open,
             });
-            if open {
-                self.table_lines(&origin, 2, lines);
+            if !open {
+                continue;
+            }
+            match browse {
+                None | Some(Browse::Reading) => {
+                    lines.push(note(format!("{key}\0okunuyor"), "Bağlanılıyor…", false, 2));
+                }
+                Some(Browse::Failed(d)) => {
+                    let password = matches!(d.problem, Problem::PasswordNeeded | Problem::Password);
+                    lines.push(Line::Note {
+                        key: format!("{key}\0hata"),
+                        label: d.message.clone(),
+                        warn: true,
+                        glyph: None,
+                        depth: 2,
+                        act: None,
+                    });
+                    lines.push(Line::Note {
+                        key: format!("{key}\0çare"),
+                        label: if password {
+                            "Parolayı yaz…".to_owned()
+                        } else {
+                            "Bağlantıyı düzenle…".to_owned()
+                        },
+                        warn: false,
+                        glyph: Some(if password { "lock" } else { "edit" }),
+                        depth: 2,
+                        act: Some(if password {
+                            msg(Event::AskPassword(name.clone()))
+                        } else {
+                            db(Db::Edit(name.clone(), Then::Browse))
+                        }),
+                    });
+                }
+                Some(Browse::Ready(catalog)) => {
+                    let schemas = catalog.schemas(&c);
+                    if schemas.is_empty() {
+                        lines.push(note(
+                            format!("{key}\0boş"),
+                            "Listelenecek tablo yok.",
+                            false,
+                            2,
+                        ));
+                    }
+                    for (schema, relations) in schemas {
+                        let skey = format!("sc:{}\0{schema}", c.name);
+                        // A schema stays open unless closed by hand.
+                        let open = !self.sources.open.contains(&format!("{skey}\0kapalı"));
+                        lines.push(Line::Schema {
+                            key: skey.clone(),
+                            label: schema.to_owned(),
+                            count: relations.len(),
+                            depth: 2,
+                            open,
+                        });
+                        if !open {
+                            continue;
+                        }
+                        for r in relations {
+                            lines.push(Line::Table {
+                                key: format!("t:{}\0{}", c.name, r.table()),
+                                connection: c.name.clone(),
+                                relation: Box::new(r.clone()),
+                                depth: 3,
+                            });
+                        }
+                    }
+                    let hidden = catalog.hidden(&c);
+                    if hidden > 0 {
+                        lines.push(Line::Note {
+                            key: format!("{key}\0gizli"),
+                            label: format!("{hidden} geometrisiz tablo gizli; göstermek için bağlantıyı düzenleyin."),
+                            warn: false,
+                            glyph: Some("table"),
+                            depth: 2,
+                            act: Some(db(Db::Edit(name.clone(), Then::Browse))),
+                        });
+                    }
+                }
             }
         }
     }
@@ -900,11 +993,11 @@ impl App {
         );
         let database = tip(
             button(icon(from_web(Some("sourceDatabase"))).size(16.0))
-                .on_press(msg(Event::DatabaseAdd))
+                .on_press(db(Db::New(Then::Browse)))
                 .padding([4, 6])
                 .style(style::button::ghost),
-            Tip::new("Veritabanı ekle").body(
-                "Bir PostGIS veritabanının adresini Veritabanları'na ekler; tabloları ve view'ları açılınca listelenir.",
+            Tip::new("Bağlantı ekle").body(
+                "Bir PostgreSQL/PostGIS veritabanı bağlantısı tanımlar: sunucu, veritabanı, kullanıcı ve parola. Tabloları Veritabanları altında listelenir, çift tıkla bağlı katman olur.",
             ),
             tooltip::Position::Bottom,
         );
@@ -979,11 +1072,69 @@ impl App {
                 label,
                 glyph: g,
                 open,
+            } => {
+                let face = self.row_button(
+                    row![caret(*open), glyph(g), name((*label).to_owned(), true)],
+                    toggle(key),
+                    chosen,
+                );
+                if *key == DATABASES {
+                    ContextMenu::new(face, |_| databases_menu()).into()
+                } else {
+                    face
+                }
+            }
+            Line::Database {
+                key,
+                connection,
+                facts,
+                open,
+            } => {
+                let c = connection.as_ref();
+                let face = self.row_button(
+                    row![
+                        indent(1),
+                        caret(*open),
+                        glyph("sourceDatabase"),
+                        name(c.name.clone(), false),
+                        meta(c.host.clone()),
+                    ],
+                    toggle(key),
+                    chosen,
+                );
+                let mut body = c.summary();
+                if let Some(f) = facts {
+                    body.push('\n');
+                    body.push_str(f);
+                }
+                body.push_str("\nAçınca şemaları ve tabloları listelenir; sağ tıkla düzenleyin.");
+                let face = tip(face, Tip::new(c.name.clone()).body(body), tooltip::Position::Left);
+                let name = c.name.clone();
+                ContextMenu::new(face, move |_| connection_menu(&name)).into()
+            }
+            Line::Schema {
+                key,
+                label,
+                count,
+                depth,
+                open,
             } => self.row_button(
-                row![caret(*open), glyph(g), name((*label).to_owned(), true)],
-                toggle(key),
+                row![
+                    indent(*depth),
+                    caret(*open),
+                    glyph("folder"),
+                    name(label.clone(), false),
+                    meta(format!("{count}")),
+                ],
+                msg(Event::Toggle(format!("{key}\0kapalı"))),
                 chosen,
             ),
+            Line::Table {
+                key,
+                connection,
+                relation,
+                depth,
+            } => self.table_row(key, connection, relation, *depth, chosen),
             Line::Folder {
                 key,
                 path,
@@ -1082,14 +1233,14 @@ impl App {
                 })
                 .into()
             }
-            Line::Table {
+            Line::FileTable {
                 key,
                 origin,
                 table,
                 bound,
                 depth,
                 open,
-            } => self.table_row(key, origin, table, bound.as_ref(), *depth, *open, chosen),
+            } => self.file_table_row(key, origin, table, bound.as_ref(), *depth, *open, chosen),
             Line::Extent {
                 key,
                 srid,
@@ -1119,71 +1270,6 @@ impl App {
                     )),
                     tooltip::Position::Left,
                 )
-            }
-            Line::Database {
-                key,
-                address,
-                depth,
-                open,
-            } => {
-                let face = self.row_button(
-                    row![
-                        indent(*depth),
-                        caret(*open),
-                        glyph("sourceDatabase"),
-                        name(super::database_name(address), false),
-                        meta(super::database_host(address)),
-                    ],
-                    toggle(key),
-                    chosen,
-                );
-                let face = tip(
-                    face,
-                    Tip::new(address.clone()).body(
-                        "PostGIS veritabanı. Açılınca tabloları ve view'ları şemalarıyla listelenir; parola PGPASSWORD ya da ~/.pgpass'ten gelir.",
-                    ),
-                    tooltip::Position::Left,
-                );
-                let address = address.clone();
-                ContextMenu::new(face, move |_| {
-                    Menu::new()
-                        .item(
-                            "Listeden kaldır",
-                            msg(Event::DatabaseRemove(address.clone())),
-                        )
-                        .icon(from_web(Some("trash")))
-                        .detail("Veritabanına dokunulmaz; yalnız bu listeden çıkar.")
-                })
-                .into()
-            }
-            Line::DatabaseInput { draft, .. } => {
-                let input = text_input("postgresql://kullanıcı@sunucu:5432/veritabanı", draft)
-                    .on_input(|t| msg(Event::DatabaseDraft(t)))
-                    .on_submit(msg(Event::DatabaseKeep))
-                    .size(typography::body())
-                    .padding([3, 6])
-                    .width(Fill);
-                container(
-                    row![
-                        indent(1),
-                        input,
-                        button(label::body("Ekle"))
-                            .on_press(msg(Event::DatabaseKeep))
-                            .padding([2, 8])
-                            .style(style::button::primary),
-                        button(label::body("Vazgeç"))
-                            .on_press(msg(Event::DatabaseCancel))
-                            .padding([2, 8])
-                            .style(style::button::ghost),
-                    ]
-                    .spacing(4)
-                    .padding([0, 8])
-                    .align_y(Center)
-                    .height(Fill),
-                )
-                .width(Fill)
-                .height(Fill)
-                .into()
             }
             Line::Branch {
                 key,
@@ -1516,10 +1602,10 @@ impl App {
         }
     }
 
-    /// A table's row (docs/adr/0599 §2, §3): its name, kind, rows and system, or the layer it is bound to; a click
+    /// A GeoPackage table's row (docs/adr/0599 §2): its name, kind, rows and system, or the layer it is bound to; a click
     /// opens its preview, the button and a drop bind it (or go to its layer when bound).
     #[allow(clippy::too_many_arguments)]
-    fn table_row<'a>(
+    fn file_table_row<'a>(
         &'a self,
         key: &str,
         origin: &Origin,
@@ -1591,14 +1677,7 @@ impl App {
                     "table"
                 })))
                 .size(15.0),
-                // Under its schema's group a database's table is named without the schema.
-                text(match origin {
-                    Origin::Database(_) => t
-                        .name
-                        .split_once('.')
-                        .map_or_else(|| t.name.clone(), |(_, n)| n.to_owned()),
-                    Origin::File(_) => t.name.clone(),
-                })
+text(t.name.clone())
                 .font(typography::ui())
                 .size(typography::body())
                 .width(Fill)
@@ -1630,8 +1709,7 @@ impl App {
         );
         let kept = origin.kept(&t.name);
         let favourite = self.sources.folders.is_favourite(&kept);
-        let copy = matches!(origin, Origin::File(_))
-            .then(|| msg(Event::OpenTable(origin.clone(), t.name.clone(), false)));
+        let copy = Some(msg(Event::OpenTable(origin.clone(), t.name.clone(), false)));
         let extent = t
             .extent
             .map(|e| msg(Event::ShowExtent(t.srid, e, t.name.clone())));
@@ -1710,6 +1788,159 @@ impl App {
             .height(Fill)
             .style(style::button::row(chosen))
             .into()
+    }
+}
+
+impl App {
+    /// The question of a table in another system (Katman olarak ekle).
+    pub(crate) fn sources_reproject_view(&self) -> Option<Element<'_, Message>> {
+        let ask = self.sources.reproject.as_ref()?;
+        let project = self.document.as_ref().map_or(0, |d| d.settings().srid);
+        let detail = if project == 0 {
+            "Proje yerel (koordinat sistemi yok): tablonun koordinatları çevrilemez. Tabloyu bağlamak için projeyi bir koordinat sisteminde açın.".to_owned()
+        } else {
+            format!(
+                "Tablo kendi sisteminde (EPSG:{}) kalır; katmanın nesneleri projenin sistemine (EPSG:{project}) çevrilerek gösterilir, Kaynağa yaz onları tablonun sistemine geri çevirerek yazar.",
+                ask.srid
+            )
+        };
+        Some(kentos_ui::widget::overlay::modal(
+            kentos_ui::widget::Confirm::new(
+                "Koordinat sistemi farklı",
+                msg(Event::Reproject(true)),
+                msg(Event::Reproject(false)),
+            )
+            .message(format!(
+                "“{}” EPSG:{} sisteminde, proje EPSG:{project} sisteminde.",
+                ask.table, ask.srid
+            ))
+            .detail(detail)
+            .confirm("Projenin sistemine çevirerek bağla"),
+            msg(Event::Reproject(false)),
+        ))
+    }
+
+    /// A connection's table: its geometry's glyph, its name, what it is and roughly how many rows, and Katman
+    /// olarak ekle; one a bound layer cannot read is faint and says why.
+    fn table_row<'a>(
+        &'a self,
+        key: &str,
+        connection: &str,
+        r: &Relation,
+        depth: usize,
+        chosen: bool,
+    ) -> Element<'a, Message> {
+        let why = r.why_not();
+        let glyph = icon(from_web(Some(geometry_glyph(r.geometry.as_deref())))).size(15.0);
+        let faint = why.is_some();
+        let words = text(r.name.clone())
+            .font(typography::ui())
+            .size(typography::body())
+            .width(Fill)
+            .wrapping(text::Wrapping::None)
+            .style(move |t: &Theme| text::Style {
+                color: faint.then(|| Tokens::of(t).faint),
+            });
+        let what = crate::exchange::postgis::describe(r);
+        // Short beside the name, as QGIS's Browser keeps its rows: the whole of it in the tip.
+        let short = if faint {
+            "bağlanamaz".to_owned()
+        } else if matches!(r.kind, kentos_postgis::probe::RelationKind::View | kentos_postgis::probe::RelationKind::MaterializedView) {
+            "view".to_owned()
+        } else {
+            r.estimate
+                .map(|n| format!("≈{}", crate::exchange::postgis::grouped(n)))
+                .unwrap_or_default()
+        };
+        let meta = label::caption(short)
+            .wrapping(text::Wrapping::None)
+            .style(|t: &Theme| text::Style {
+                color: Some(Tokens::of(t).faint),
+            });
+        let add = msg(Event::AddTable(connection.to_owned(), r.table(), false));
+        let mut face = row![
+            space().width(Length::Fixed(depth as f32 * INDENT)),
+            space().width(Length::Fixed(12.0)),
+            glyph,
+            words,
+            meta,
+        ];
+        if !faint {
+            face = face.push(add_button(add.clone()));
+        }
+        let mut body = format!("{} · {what}", r.table());
+        if let Some(c) = &r.comment {
+            body.push_str(&format!("\n{c}"));
+        }
+        match &why {
+            Some(w) => body.push_str(&format!("\n{w}")),
+            None => body.push_str("\nÇift tık ya da Katman olarak ekle: bağlı katman olarak açılır; değişiklikler Kaynağa yaz ile veritabanına yazılır."),
+        }
+        let row = mouse_area(self.row_button(face, msg(Event::Focus(key.to_owned())), chosen));
+        let row = if faint { row } else { row.on_double_click(add.clone()) };
+        let face = tip(row, Tip::new(r.name.clone()).body(body), tooltip::Position::Left);
+        if faint {
+            return face;
+        }
+        let area = msg(Event::AddTable(connection.to_owned(), r.table(), true));
+        ContextMenu::new(face, move |_| {
+            Menu::new()
+                .item("Katman olarak ekle", add.clone())
+                .icon(from_web(Some("layerAdd")))
+                .shortcut("Enter")
+                .item("Yalnız görünen alanla ekle", area.clone())
+                .icon(from_web(Some("zoomWindow")))
+                .detail("Yalnız kutusu görünen alana değen satırlar alınır; milyon satırlı tabloda ilk harita hemen gelir.")
+        })
+        .into()
+    }
+}
+
+/// Veritabanları's menu.
+fn databases_menu() -> Menu<Message> {
+    Menu::new()
+        .item("Yeni bağlantı…", db(Db::New(Then::Browse)))
+        .icon(from_web(Some("sourceDatabase")))
+        .separator()
+        .item("Bağlantıları içe aktar…", db(Db::Import))
+        .icon(from_web(Some("import")))
+        .detail("Başka bir KentOS'ta Bağlantıları dışa aktar ile yazılan dosya.")
+        .item("Bağlantıları dışa aktar…", db(Db::Export(false)))
+        .icon(from_web(Some("export")))
+        .detail("Ekip arkadaşlarınıza aynı bağlantıları vermek için; parolalar yazılmaz.")
+        .item("Parolalarıyla dışa aktar…", db(Db::Export(true)))
+        .icon(from_web(Some("export")))
+        .detail("Kaydedilmiş parolalar dosyaya düz metin yazılır; dosyayı paylaşırken dikkat edin.")
+}
+
+/// A connection's menu.
+fn connection_menu(name: &str) -> Menu<Message> {
+    let n = name.to_owned();
+    Menu::new()
+        .item("Yenile", msg(Event::Refresh(n.clone())))
+        .icon(from_web(Some("sourceRead")))
+        .detail("Şemalar ve tablolar yeniden okunur.")
+        .item("Düzenle…", db(Db::Edit(n.clone(), Then::Browse)))
+        .icon(from_web(Some("edit")))
+        .item("Kopyasını oluştur…", db(Db::Duplicate(n.clone())))
+        .icon(from_web(Some("copy")))
+        .separator()
+        .item("Sil", db(Db::AskRemove(n)))
+        .icon(from_web(Some("trash")))
+}
+
+/// A geometry type's glyph: point, line, area, mixed; a table without one.
+fn geometry_glyph(geometry: Option<&str>) -> &'static str {
+    let Some(g) = geometry else { return "table" };
+    let g = g.to_ascii_uppercase();
+    if g.contains("POINT") {
+        "point"
+    } else if g.contains("LINE") || g.contains("CURVE") && !g.contains("POLYGON") {
+        "polyline"
+    } else if g.contains("POLYGON") || g.contains("SURFACE") {
+        "polygon"
+    } else {
+        "layers"
     }
 }
 

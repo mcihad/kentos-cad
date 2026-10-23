@@ -543,7 +543,9 @@
     "layer.info",
     "attachment.add",
     "attachment.addLink",
-    "file.import.photos"
+    "file.import.photos",
+    "sheet.new",
+    "sheet.fromTemplate"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

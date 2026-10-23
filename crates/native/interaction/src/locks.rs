@@ -312,6 +312,7 @@ mod tests {
     fn cbs() -> Format {
         Format::of(&kentos_commands::ProjectSettings {
             map_srid: None,
+            auto_select: None,
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,

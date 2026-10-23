@@ -135,6 +135,12 @@ pub(crate) enum Op {
         before: Option<Box<kentos_contracts::LayerSourceCrs>>,
         after: Option<Box<kentos_contracts::LayerSourceCrs>>,
     },
+    /// A layer's type (docs/adr/0622 §5), before and after.
+    LayerGeometry {
+        layer: String,
+        before: Option<kentos_contracts::LayerGeometry>,
+        after: Option<kentos_contracts::LayerGeometry>,
+    },
     /// A layer's composition (docs/adr/0226 §3, §4), before and after.
     LayerCompose {
         layer: String,
@@ -352,6 +358,15 @@ impl Op {
                 layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
+            },
+            Op::LayerGeometry {
+                layer,
+                before,
+                after,
+            } => Op::LayerGeometry {
+                layer: layer.clone(),
+                before: *after,
+                after: *before,
             },
             Op::LayerCompose {
                 layer,
@@ -1011,6 +1026,7 @@ impl Document {
                 | Op::LayerInfo { .. }
                 | Op::LayerCompose { .. }
                 | Op::LayerSourceCrs { .. }
+                | Op::LayerGeometry { .. }
                 | Op::LayerTableStyles { .. }
                 | Op::LayerSubtypes { .. }
                 | Op::LayerContingents { .. }
@@ -1173,6 +1189,10 @@ impl Document {
             }
             Op::LayerSourceCrs { layer, after, .. } => {
                 self.layers.replace_source_crs(layer, after.as_deref());
+                return;
+            }
+            Op::LayerGeometry { layer, after, .. } => {
+                self.layers.replace_geometry(layer, *after);
                 return;
             }
             Op::LayerCompose { layer, after, .. } => {

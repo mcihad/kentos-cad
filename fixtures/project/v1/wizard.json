@@ -47,6 +47,10 @@
           "1:1.000"
         ],
         [
+          "Yazılar",
+          "yazı ve ölçü kâğıtta 2,5 mm, çizimde 2,5 m"
+        ],
+        [
           "Katmanlar",
           "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
         ],
@@ -110,6 +114,10 @@
         [
           "Ölçek",
           "1:1.000"
+        ],
+        [
+          "Yazılar",
+          "yazı ve ölçü kâğıtta 2,5 mm, çizimde 2,5 m"
         ],
         [
           "Katmanlar",
@@ -178,6 +186,10 @@
           "1:5.000"
         ],
         [
+          "Yazılar",
+          "yazı ve ölçü kâğıtta 2,5 mm, çizimde 12,5 m"
+        ],
+        [
           "Katmanlar",
           "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
         ],
@@ -240,6 +252,10 @@
           "1:1"
         ],
         [
+          "Yazılar",
+          "yazı ve ölçü kâğıtta 2,5 mm, çizimde 2,5 mm"
+        ],
+        [
           "Katmanlar",
           "Teknik çizim: Çizim, Ölçü, Yazı, Tarama, Yardımcı, Eksen"
         ],
@@ -300,6 +316,10 @@
         [
           "Ölçek",
           "1:20"
+        ],
+        [
+          "Yazılar",
+          "yazı ve ölçü kâğıtta 2,5 mm, çizimde 5 cm"
         ],
         [
           "Katmanlar",
@@ -368,6 +388,10 @@
           "1:1.000"
         ],
         [
+          "Yazılar",
+          "yazı ve ölçü kâğıtta 2,5 mm, çizimde 2,5 m"
+        ],
+        [
           "Katmanlar",
           "Teknik çizim: Çizim, Ölçü, Yazı, Tarama, Yardımcı, Eksen"
         ],
@@ -430,6 +454,10 @@
           "1:1.000"
         ],
         [
+          "Yazılar",
+          "yazı ve ölçü kâğıtta 2,5 mm, çizimde 2,5 m"
+        ],
+        [
           "Katmanlar",
           "Teknik çizim: Çizim, Ölçü, Yazı, Tarama, Yardımcı, Eksen"
         ],
@@ -445,6 +473,72 @@
         "plotScale": 1000,
         "workspace": "cad",
         "drawingFont": "plex-mono"
+      }
+    },
+    {
+      "name": "CAD, yerel, m",
+      "draft": {
+        "type": "cad",
+        "coords": "local",
+        "unit": "m",
+        "province": null,
+        "srid": null,
+        "plotScale": null,
+        "name": "Vaziyet",
+        "font": "barlow",
+        "fallbackSrid": 5256
+      },
+      "srid": 0,
+      "suggested": null,
+      "scale": 1000,
+      "unit": "m",
+      "notes": [
+        "CAD · teknik çizim",
+        "Yerel · m",
+        "1:1.000 · Vaziyet"
+      ],
+      "summary": [
+        [
+          "Tür",
+          "CAD, teknik çizim"
+        ],
+        [
+          "Koordinatlar",
+          "Yerel: koordinat sistemi yok, çizim 0,0’dan başlar"
+        ],
+        [
+          "Birim",
+          "metre"
+        ],
+        [
+          "Eksenler",
+          "X sağa, Y yukarı; açı derece, doğudan saat yönünün tersine"
+        ],
+        [
+          "Ölçek",
+          "1:1.000"
+        ],
+        [
+          "Yazılar",
+          "yazı ve ölçü kâğıtta 2,5 mm, çizimde 2,5 m"
+        ],
+        [
+          "Katmanlar",
+          "Teknik çizim: Çizim, Ölçü, Yazı, Tarama, Yardımcı, Eksen"
+        ],
+        [
+          "Açılış",
+          "A3 kâğıt, yatay; 0,0 sol altta"
+        ]
+      ],
+      "firstSystem": 5253,
+      "options": {
+        "name": "Vaziyet",
+        "srid": 0,
+        "plotScale": 1000,
+        "workspace": "cad",
+        "drawingFont": "barlow",
+        "drawingUnit": "m"
       }
     }
   ]

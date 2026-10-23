@@ -10,8 +10,8 @@ use kentos_commands::{DocumentSnapshotV2, ProjectStorage};
 
 use super::view::Line;
 use super::{
-    Event, Kept, Origin, PRESETS, ProjectDrawing, Read, SavedService, SourceFolders,
-    address_problem, folder_key, project_key, read_folder, table_key, tables_key,
+    Event, Kept, Origin, PRESETS, ProjectDrawing, Read, SavedService, SourceFolders, folder_key,
+    project_key, read_folder, table_key, tables_key,
 };
 use crate::app::{App, Message};
 use crate::files_testing::{app_with_drawing, last_said};
@@ -75,7 +75,10 @@ fn rows(app: &App) -> Vec<String> {
                 ..
             } => format!("{}{label} · {count} nesne", "  ".repeat(depth)),
             Line::Note { label, depth, .. } => format!("{}({label})", "  ".repeat(depth)),
-            Line::Table {
+            Line::Database {
+                connection, open, ..
+            } => format!("  {} {}", if open { "▾" } else { "▸" }, connection.name),
+            Line::FileTable {
                 table,
                 bound,
                 depth,
@@ -87,16 +90,6 @@ fn rows(app: &App) -> Vec<String> {
                 if open { "▾" } else { "▸" },
                 table.name,
                 bound.map_or_else(String::new, |(_, l)| format!(" · Bağlı: {l}"))
-            ),
-            Line::Database {
-                address,
-                open,
-                depth,
-                ..
-            } => format!(
-                "{}{} {address}",
-                "  ".repeat(depth),
-                if open { "▾" } else { "▸" }
             ),
             Line::Branch {
                 label, open, depth, ..
@@ -129,7 +122,16 @@ fn rows(app: &App) -> Vec<String> {
             } => {
                 format!("{}{name}", "  ".repeat(depth))
             }
-            Line::DatabaseInput { draft, .. } => format!("  [adres: {draft}]"),
+            Line::Schema {
+                label, open, depth, ..
+            } => format!(
+                "{}{} {label}",
+                "  ".repeat(depth),
+                if open { "▾" } else { "▸" }
+            ),
+            Line::Table {
+                relation, depth, ..
+            } => format!("{}{}", "  ".repeat(depth), relation.name),
         })
         .collect()
 }
@@ -167,7 +169,7 @@ fn a_folder_shows_its_folders_and_the_files_it_adds_and_reads_again_when_opened_
     add(&mut app, &dir);
     let name = super::folder_name(&dir);
     assert_eq!(
-        rows(&app)[..7],
+        rows(&app)[..10],
         [
             "▾ Klasörler".to_owned(),
             format!("  ▾ {name}"),
@@ -175,7 +177,11 @@ fn a_folder_shows_its_folders_and_the_files_it_adds_and_reads_again_when_opened_
             "    noktalar.ncn · Koordinat listesi".to_owned(),
             "    parsel.shp · Shapefile".to_owned(),
             "    yol.dxf · DXF".to_owned(),
+            // No connection yet: the database section offers one (docs/adr/0623).
             "▾ Veritabanları".to_owned(),
+            "  (Bağlantı yok. Bir PostgreSQL veritabanı ekleyin.)".to_owned(),
+            "  (Size verilen bir bağlantı dosyasını içe aktarın…)".to_owned(),
+            "▾ Servisler".to_owned(),
         ]
     );
     // Closing forgets what was read; opening reads again.
@@ -450,61 +456,6 @@ fn a_table_is_bound_from_the_browser_then_gone_to_and_never_bound_twice() {
 }
 
 #[test]
-fn a_database_address_with_a_password_or_of_another_kind_is_refused() {
-    assert!(address_problem("postgresql://cbs@sunucu:5432/belediye").is_none());
-    assert!(address_problem("postgres://sunucu/belediye?sslmode=require").is_none());
-    assert!(
-        address_problem("postgresql://cbs:gizli@sunucu/belediye")
-            .expect("refused")
-            .contains("parola")
-    );
-    assert!(
-        address_problem("postgresql://sunucu/belediye?password=gizli")
-            .expect("refused")
-            .contains("parola")
-    );
-    assert!(
-        address_problem("mysql://sunucu/belediye")
-            .expect("refused")
-            .contains("postgresql://")
-    );
-    assert!(address_problem("").is_some());
-    let mut app = app_with_drawing();
-    send(&mut app, Event::DatabaseAdd);
-    send(
-        &mut app,
-        Event::DatabaseDraft("postgresql://cbs:gizli@sunucu/belediye".into()),
-    );
-    send(&mut app, Event::DatabaseKeep);
-    assert!(app.sources.folders.databases().is_empty());
-    assert!(last_said(&app).contains("parola"), "{}", last_said(&app));
-    assert!(rows(&app).contains(&"  [adres: postgresql://cbs:gizli@sunucu/belediye]".to_owned()));
-    send(
-        &mut app,
-        Event::DatabaseDraft("postgresql://cbs@sunucu/belediye".into()),
-    );
-    send(&mut app, Event::DatabaseKeep);
-    assert_eq!(
-        app.sources.folders.databases(),
-        ["postgresql://cbs@sunucu/belediye"]
-    );
-    assert!(rows(&app).contains(&"  ▾ postgresql://cbs@sunucu/belediye".to_owned()));
-    assert_eq!(
-        super::database_name("postgresql://cbs@sunucu:5432/belediye?sslmode=require"),
-        "belediye"
-    );
-    assert_eq!(
-        super::database_host("postgresql://cbs@sunucu:5432/belediye"),
-        "cbs@sunucu:5432"
-    );
-    send(
-        &mut app,
-        Event::DatabaseRemove("postgresql://cbs@sunucu/belediye".into()),
-    );
-    assert!(app.sources.folders.databases().is_empty());
-}
-
-#[test]
 fn the_services_list_the_basemaps_and_the_services_added_before() {
     let mut app = app_with_drawing();
     send(&mut app, Event::Toggle(PRESETS.to_owned()));
@@ -588,18 +539,16 @@ fn the_recent_and_favourite_sources_are_kept_with_the_folders() {
         path: "/veri/a.dxf".into(),
     };
     let b = Kept::Database {
-        address: "postgresql://cbs@sunucu/belediye".into(),
+        connection: "Belediye".into(),
         table: "public.parsel".into(),
     };
     list.used(&a);
     list.used(&b);
     list.used(&a);
     assert!(list.star(&b));
-    assert!(list.add_database("postgresql://cbs@sunucu/belediye"));
     let again = SourceFolders::open(&keep);
     assert_eq!(again.recent(), [a.clone(), b.clone()]);
     assert_eq!(again.favourites(), std::slice::from_ref(&b));
-    assert_eq!(again.databases(), ["postgresql://cbs@sunucu/belediye"]);
     let text = std::fs::read_to_string(keep.join("kaynak-klasorleri.json")).expect("the list");
     assert!(text.contains("\"version\": 2"), "{text}");
     // The rows: favourites under their section, a file no longer there said.
@@ -727,26 +676,6 @@ fn browser_scene(app: &mut App, data: &Path, scene: &str) {
     } else {
         open_preview(app, &origin, "parsel");
     }
-    let address = "postgresql://cbs@sunucu:5432/belediye".to_owned();
-    app.sources.folders.add_database(&address);
-    let db = Origin::Database(address.clone());
-    let mut db_tables = Vec::new();
-    for (schema, t) in [
-        ("imar", &tables[0]),
-        ("kadastro", &tables[0]),
-        ("kadastro", tables.last().unwrap_or(&tables[0])),
-    ] {
-        let mut t = t.clone();
-        t.name = format!("{schema}.{}", t.name);
-        if !db_tables
-            .iter()
-            .any(|d: &kentos_commands::SourceTable| d.name == t.name)
-        {
-            db_tables.push(t);
-        }
-    }
-    send(app, Event::Toggle(tables_key(&db)));
-    send(app, Event::Tables(db, Ok(db_tables)));
     app.sources.folders.add_service(SavedService {
         kind: kentos_commands::ServiceKind::Wms,
         url: "https://cbs.ornek.gov.tr/geoserver/wms".into(),
@@ -754,7 +683,7 @@ fn browser_scene(app: &mut App, data: &Path, scene: &str) {
         connection: None,
     });
     app.sources.folders.star(&Kept::Database {
-        address,
+        connection: "Belediye".into(),
         table: "kadastro.parsel".into(),
     });
     app.sources.folders.star(&Kept::Basemap {

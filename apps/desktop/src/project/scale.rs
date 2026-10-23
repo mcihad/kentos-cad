@@ -44,6 +44,7 @@ pub(super) fn view<'a>(
     scale: f64,
     heights: Option<&'a AnnotationHeights>,
     cad: bool,
+    unit: kentos_commands::DrawingUnit,
     typed: &'a str,
     format: Format,
     on_scale: impl Fn(f64) -> Message + Copy + 'a,
@@ -51,12 +52,12 @@ pub(super) fn view<'a>(
     on_height: impl Fn(AnnotationKind, f64) -> Message + Copy + 'a,
     on_reset: Message,
 ) -> Element<'a, Message> {
-    let offered = project_scales(cad, scale);
+    let offered = project_scales(cad, unit, scale);
     let chosen = offered.iter().position(|s| *s == scale);
     let list = Select::new(
         offered.iter().map(|s| Choice::new(scale_text(*s))),
         chosen,
-        move |i| on_scale(project_scales(cad, scale).get(i).copied().unwrap_or(scale)),
+        move |i| on_scale(project_scales(cad, unit, scale).get(i).copied().unwrap_or(scale)),
     )
     .searchable(false);
     let field = text_input("N", typed)

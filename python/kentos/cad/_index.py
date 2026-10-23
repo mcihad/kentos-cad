@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linearref, linetypes, meshes, network, nurbs, openings, parameters, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs
+from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linearref, linetypes, meshes, network, nurbs, openings, parameters, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.check": addresses.check,
@@ -40,6 +40,7 @@ COMMANDS: dict[str, Any] = {
     "cad.dimensions.reassociate": dimensions.reassociate,
     "cad.domains.edit": domains.edit,
     "cad.domains.export": domains.export,
+    "cad.donut.create": donut.create,
     "cad.drawing.audit": drawing.audit,
     "cad.drawing.compare": drawing.compare,
     "cad.entities.array": entities.array,
@@ -261,4 +262,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "assets", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "crs", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "gis", "grids", "hatches", "hatchpatterns", "images", "inserts", "joins", "labels", "layers", "leaders", "library", "line", "linearref", "linetypes", "meshes", "network", "nurbs", "openings", "parameters", "point", "pointclouds", "points", "polygon", "polyline", "processing", "profiles", "project", "ramps", "rasters", "records", "rectangle", "relations", "scenarios", "schedules", "schema", "settings", "sheets", "snap", "sources", "spaces", "stac", "stairs", "standards", "styles", "subnetworks", "tables", "tags", "templates", "texts", "time", "topology", "ucs", "units", "viewmarks", "views", "walls", "xrefs",)
+NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "assets", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "crs", "curves", "dimensions", "domains", "donut", "drawing", "entities", "fields", "file", "fonts", "forms", "gis", "grids", "hatches", "hatchpatterns", "images", "inserts", "joins", "labels", "layers", "leaders", "library", "line", "linearref", "linetypes", "meshes", "network", "nurbs", "openings", "parameters", "point", "pointclouds", "points", "polygon", "polyline", "processing", "profiles", "project", "ramps", "rasters", "records", "rectangle", "relations", "scenarios", "schedules", "schema", "settings", "sheets", "snap", "sources", "spaces", "stac", "stairs", "standards", "styles", "subnetworks", "tables", "tags", "templates", "texts", "time", "topology", "ucs", "units", "viewmarks", "views", "walls", "xrefs",)
