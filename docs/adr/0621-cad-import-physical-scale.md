@@ -109,3 +109,11 @@ bu oturumun kapsamı dışındadır).
 Optimize formats/dxf/sheet WASM derlemeleri ve mevcut pafta WASM smoke takımı
 da geçti. Web arayüzü/test/build çalışmaları ADR 0228 uyarınca ertelenmiştir;
 yalnız ortak TS sözleşmeleri ve katalog yenilendi.
+
+Şerit erişimi de eklendi: CAD Ekle / İçe aktar grubunda DWG düğmesi, her iki
+proje türünün Dosya / İçe aktar ve CBS Veri / Dosya alışverişi / İçe aktar
+menülerinde DXF'in önünde DWG. Hepsi mevcut `file.import.dwg` komutunu kullanır.
+Katalog ve 1100 px uyarlanır yerleşim için 9 mevcut test, masaüstü derlemesi
+ve clippy geçti. Açık/koyu tema, 18 punto ve açılmış menülerin son ekran
+görüntüleri incelendi. Donmuş web envanteri değiştirilmedi; masaüstü ported
+listesindeki mevcut `sheet.drawingSet` üretim eksikliği de yenilendi.

@@ -372,6 +372,7 @@
     "tool.continue",
     "tool.reshape",
     "sheet.model",
+    "sheet.drawingSet",
     "template.draw",
     "template.panel",
     "template.new",

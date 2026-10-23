@@ -830,6 +830,18 @@ fn place_desktop_commands(tabs: &mut [Tab]) {
         .flat_map(|tab| tab.panels.iter_mut())
         .flat_map(|panel| panel.items.iter_mut())
     {
+        // CAD exchange commands added after the frozen inventory remain reachable from ribbon menus.
+        if let Item::Menu { label: "İçe aktar", blocks, ids, .. } = item
+            && !ids.contains(&"file.import.dwg")
+        {
+            for (_, commands) in blocks.iter_mut() {
+                if let Some(at) = commands.iter().position(|id| *id == "file.import.dxf") {
+                    commands.insert(at, "file.import.dwg");
+                    break;
+                }
+            }
+            *ids = blocks.iter().flat_map(|(_, commands)| commands.iter().copied()).collect();
+        }
         if let Item::Menu {
             label: "Seçim süzgeci",
             blocks,
