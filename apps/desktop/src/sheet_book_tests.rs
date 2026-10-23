@@ -2352,3 +2352,77 @@ fn sheet23_print_preview_screens() {
         assert!(app.sheets.error().is_none());
     }
 }
+
+#[test]
+#[ignore = "GPU calibration sheet and common native output, run alone"]
+fn sheet24_calibration_screens() {
+    use kentos_sheet::template::*;
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let data: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/sheet/v1/calibration.json")).unwrap();
+    let t = system_template("sys:baski-kalibrasyonu").unwrap();
+    let ids = InstanceIds {
+        sheet: "cal".into(),
+        master: None,
+        items: t.sheet.items.iter().map(|i| i.id.clone()).collect(),
+        master_items: Vec::new(),
+    };
+    let inst = instantiate(
+        t,
+        &ids,
+        &InstanceOptions {
+            center: Some(kentos_sheet::GroundPoint { x: 0., y: 0. }),
+            scale: Some(200),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let mut book = kentos_sheet::SheetBook::default();
+    book.sheets.push(inst.sheet);
+    let mut model = kentos_domain::Document::from_snapshot(
+        serde_json::from_value(data["cases"][6]["model"].clone()).unwrap(),
+    )
+    .unwrap();
+    model
+        .set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
+        .unwrap();
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme, text, w, h) in [("light", 13, 1440., 900.), ("dark", 18, 1100., 720.)] {
+        let (mut app, _) = app_with_store("sheet24-calibration");
+        app.settings.choose(&[
+            ("appearance.theme", serde_json::json!(theme)),
+            ("appearance.textSize", serde_json::json!(text)),
+        ]);
+        app.apply_settings();
+        let task = app.update(Message::Opened(Some(Ok(Box::new(
+            Document::from_v2(model.to_snapshot_v2(), None).unwrap(),
+        )))));
+        drive(&mut app, task);
+        sheet(&mut app, Sheet::Tab(1));
+        sheet(&mut app, Sheet::ZoomPage);
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(w, h)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet24-calibration-{theme}-{text}.png")))
+            .unwrap();
+        sheet(&mut app, Sheet::Print);
+        sheet(
+            &mut app,
+            Sheet::Pdf(kentos_sheet_ui::message::PdfMessage::Preview),
+        );
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet24-preview-{theme}-{text}.png")))
+            .unwrap();
+        if theme == "light" {
+            app.sheet_export_to(
+                kentos_sheet_ui::ExportKind::Pdf,
+                Some(out.join("sheet24-calibration.pdf")),
+            );
+        }
+    }
+}

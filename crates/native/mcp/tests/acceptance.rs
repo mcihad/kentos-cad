@@ -1007,3 +1007,46 @@ fn an_agent_exports_searchable_unicode_and_analytic_paper_curves() {
     assert!((pages[0].width - 420.).abs() < 0.002);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn an_agent_creates_the_calibration_template_and_measures_real_pdf_marks() {
+    let data: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/calibration.json"
+    ))
+    .unwrap();
+    let folder = std::env::temp_dir().join(format!("kentos-mcp-sheet24-{}", std::process::id()));
+    std::fs::create_dir_all(&folder).unwrap();
+    let source = folder.join("source.kcad");
+    std::fs::write(
+        &source,
+        serde_json::to_vec(&data["cases"][6]["model"]).unwrap(),
+    )
+    .unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    call(
+        &mut server,
+        "cad.sheets.create",
+        json!({"drawing":drawing,"id":"cal","source":{"type":"system","id":"sys:baski-kalibrasyonu"},"options":{"scale":200,"center":{"x":0.,"y":0.}}}),
+    );
+    let path = folder.join("calibration.pdf");
+    call(
+        &mut server,
+        "drawing.exportPdf",
+        json!({"drawing":drawing,"path":path}),
+    );
+    let bytes = std::fs::read(path).unwrap();
+    let pages = files::pdf_pages(&bytes);
+    for rgb in [
+        [34. / 255., 85. / 255., 170. / 255.],
+        [204. / 255., 51. / 255., 68. / 255.],
+    ] {
+        assert!(pages[0].ink.iter().any(|p| {
+            p.color.iter().zip(rgb).all(|(a, b)| (a - b).abs() < 0.002)
+                && ((p.segment[2] - p.segment[0]).hypot(p.segment[3] - p.segment[1]) - 100.).abs()
+                    < 0.002
+        }));
+    }
+    std::fs::remove_dir_all(folder).unwrap();
+}

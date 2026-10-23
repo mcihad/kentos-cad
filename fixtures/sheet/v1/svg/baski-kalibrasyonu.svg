@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="420mm" height="297mm" viewBox="0 0 420000 297000">
+<title>Baskı kalibrasyonu</title>
+<rect width="420000" height="297000" fill="#ffffff"/>
+<text x="30000" y="24500" font-family="Barlow, sans-serif" font-size="4500" font-weight="400" fill="#000000" xml:space="preserve">BASKI KALİBRASYONU</text>
+<text x="30000" y="38000" font-family="Barlow, sans-serif" font-size="3000" font-weight="400" fill="#000000" xml:space="preserve">100 mm · yatay ve düşey kontrol</text>
+<path d="M30000 50000L130000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M180000 60000L180000 160000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M30000 45000L30000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M175000 60000L180000 60000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M35000 48500L35000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M178500 65000L180000 65000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M40000 47000L40000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M177000 70000L180000 70000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M45000 48500L45000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M178500 75000L180000 75000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M50000 47000L50000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M177000 80000L180000 80000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M55000 48500L55000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M178500 85000L180000 85000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M60000 47000L60000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M177000 90000L180000 90000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M65000 48500L65000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M178500 95000L180000 95000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M70000 47000L70000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M177000 100000L180000 100000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M75000 48500L75000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M178500 105000L180000 105000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M80000 45000L80000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M175000 110000L180000 110000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M85000 48500L85000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M178500 115000L180000 115000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M90000 47000L90000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M177000 120000L180000 120000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M95000 48500L95000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M178500 125000L180000 125000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M100000 47000L100000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M177000 130000L180000 130000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M105000 48500L105000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M178500 135000L180000 135000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M110000 47000L110000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M177000 140000L180000 140000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M115000 48500L115000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M178500 145000L180000 145000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M120000 47000L120000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M177000 150000L180000 150000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M125000 48500L125000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M178500 155000L180000 155000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M130000 45000L130000 50000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<path d="M175000 160000L180000 160000" fill="none" stroke="#cc3344" stroke-width="200"/>
+<text x="28000" y="56400" font-family="Barlow, sans-serif" font-size="2400" font-weight="400" fill="#000000" xml:space="preserve">0</text>
+<text x="78000" y="56400" font-family="Barlow, sans-serif" font-size="2400" font-weight="400" fill="#000000" xml:space="preserve">50</text>
+<text x="128000" y="56400" font-family="Barlow, sans-serif" font-size="2400" font-weight="400" fill="#000000" xml:space="preserve">100</text>
+<rect x="30000" y="75000" width="140000" height="80000" fill="#ececec"/>
+<text x="100000" y="117222" font-family="Barlow, sans-serif" font-size="6666" fill="#a0a0a0" text-anchor="middle">harita</text>
+<clipPath id="k1"><rect x="30000" y="75000" width="140000" height="80000"/></clipPath><g clip-path="url(#k1)">
+</g>
+<text x="30000" y="165700" font-family="Barlow, sans-serif" font-size="2700" font-weight="400" fill="#000000" xml:space="preserve">5000 mm kaynak çizgi, 1:50&#39;de 100 mm</text>
+<text x="30000" y="175400" font-family="Barlow, sans-serif" font-size="2400" font-weight="400" fill="#000000" xml:space="preserve">PDF ölçüm toleransı ±0,002 mm. Ekran görünümü ölçü değildir.</text>
+<text x="30000" y="182300" font-family="Barlow, sans-serif" font-size="2300" font-weight="400" fill="#000000" xml:space="preserve">Yazıcı: Gerçek boyut / %100. Sığdır kapalı; fiziksel sapmayı cetvelle ölçün.</text>
+</svg>

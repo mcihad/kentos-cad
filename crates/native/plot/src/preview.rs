@@ -130,7 +130,7 @@ pub fn page(
             [p.red(), p.green(), p.blue(), p.alpha()]
         })
         .collect::<Vec<_>>();
-    let png = crate::raster::png(&rgba, width, height)
+    let png = crate::raster::png_at(&rgba, width, height, Some(dpi))
         .map_err(|e| PlotError::new("preview_unwritable", e))?;
     Ok(PageImage {
         svg,

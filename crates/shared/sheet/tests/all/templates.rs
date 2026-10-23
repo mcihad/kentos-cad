@@ -15,7 +15,7 @@ use kentos_sheet::template::*;
 use kentos_sheet::*;
 use std::collections::BTreeSet;
 
-pub const SYSTEM_IDS: [&str; 10] = [
+pub const SYSTEM_IDS: [&str; 11] = [
     "sys:genel-a4-dikey",
     "sys:genel-a3-yatay",
     "sys:rapor-sayfasi",
@@ -26,11 +26,12 @@ pub const SYSTEM_IDS: [&str; 10] = [
     "sys:imar-plani",
     "sys:gis-tematik",
     "sys:gis-atlas",
+    "sys:baski-kalibrasyonu",
 ];
 
 /// CAD templates for projects that may have no coordinate system.
 fn georeferenced(id: &str) -> bool {
-    !matches!(id, "sys:cad-teknik" | "sys:cad-mimari")
+    !matches!(id, "sys:cad-teknik" | "sys:cad-mimari" | "sys:baski-kalibrasyonu")
 }
 
 /// A sheet from a template, as a host makes it: ids from the template's, the sample answers, the sample place.

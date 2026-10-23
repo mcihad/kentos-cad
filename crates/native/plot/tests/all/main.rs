@@ -22,3 +22,5 @@ mod plot_ink;
 mod document_quality;
 
 mod preview;
+
+mod calibration;

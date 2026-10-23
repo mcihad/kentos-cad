@@ -204,6 +204,11 @@
           "matches": true
         },
         {
+          "id": "sys:baski-kalibrasyonu",
+          "fit": "workspace",
+          "matches": true
+        },
+        {
           "id": "sys:genel-a3-yatay",
           "fit": "common",
           "matches": true
@@ -295,6 +300,12 @@
           "fit": "other",
           "matches": false,
           "badge": "CAD şablonu"
+        },
+        {
+          "id": "sys:baski-kalibrasyonu",
+          "fit": "other",
+          "matches": false,
+          "badge": "CAD şablonu"
         }
       ]
     },
@@ -350,6 +361,11 @@
         },
         {
           "id": "sys:gis-atlas",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:baski-kalibrasyonu",
           "fit": "common",
           "matches": true
         }

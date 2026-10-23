@@ -68,6 +68,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - CAD-SHEET-21 (ADR 0611): karşılaştırmalı renkli/tek renk/gri baskı paftaları; PDF altlığı dolgu/beyaz boya ve özyinelemeli görünüş düzeltmesi. Web dönüşünde blok parçalarının PDF dolgu boyası style bağında da taşınmalı; aynı karşılaştırmalar oynatılmalı.
 - CAD-SHEET-22 (ADR 0612): açık fiziksel baskı ayrıntısı, hata/destek ayrımı ve pafta dpi çözümü. Web dönüşünde baskıda plot_precision seçilmeli; ekran birim tercihi ile karıştırılmamalı. Aynı font/eğri/dpi ve hata durumları bağlanmalı.
 - CAD-SHEET-23 (ADR 0613): ortak native baskı hazırlığı, çıktı dönüşümü, resimli SVG/PNG ve baskı önizlemesi. Web dönüşünde aynı Export display list/plot planı ve kaynak hata davranışı bağlanmalı; ilk kare resim yüklemesi denetlenmeli.
+- CAD-SHEET-24 (ADR 0614): Baskı kalibrasyonu sistem şablonu, fiziksel 100 mm işaretler ve 1:50 bağ/kilit; PNG dpi metadatası. Web dönüşünde galeri ve mevcut create/edit sözleşmesiyle aynı şablon kullanılmalı; cihaz yazdırmasında %100/sığdırma tercihi açık gösterilmeli.
 
 - CAD-SHEET-06 (ADR 0591): ortak ops şeması ve asset/inversePictures sözleşmesi hazır. Web yeniden açılınca pafta komut işleyicisi baytların birleştirme/tam değiştirme ve ters bayt politikasını izlemeli; harita yazısı ve zengin stil çıktı eşdeğerliği kendi çıktı yolunda sınanmalı. Native CPU/SVG rasterizer web'e taşınmış sayılmaz.
 

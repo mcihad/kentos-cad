@@ -31,6 +31,7 @@ Beklenenlerin iki kaynağı vardır; her ailenin satırı hangisi olduğunu söy
 | `pdf/` | İfraz sistem şablonunun PDF'inin özeti (`ifraz.json`: SHA-256 ve boy) ve WASM'a verilen girdileri (`ifraz-book.json`, `ifraz-inputs.json`; yazı tiplerinin baytları boş, ev sahibi doldurur) | kayıt (§9a) | `pdf::the_ifraz_pdf_is_the_golden_one`; `smoke.mjs` aynı baytı ister |
 | `glyphs/` | Eksik karakter kuralı: `runs.json` (9 satırın yüz parçaları), `sheet.json` (yüzde olmayan karakterli dört yazı: ön denetimin bulguları, çizim planının “?”'si, PDF'in gömdüğü yüzler, SVG'nin `<tspan>`'ları) | elle (§6 “Eksik karakter”, ölçü tablosunun −1 hücrelerinden) | `fixtures::glyphs`; `smoke.mjs` |
 | `wmm/` | NOAA/NCEI'nin resmî WMM2025 dosyaları olduğu gibi: `WMM.COF` (katsayılar, `WMM2025COF.zip`'ten), `WMM2025_TestValues.txt` (aynı paketten 100 sınama noktası), `WMM2025_TEST_VALUES.txt` (modelin sayfasından 12 nokta). Kamu malı | NOAA'nın kendi değerleri (§8a) | `wmm::*` (açılar 0,01°, bileşenler 0,1 nT ve 0,01 nT içinde); `smoke.mjs` |
+| `calibration.json` | 20 fiziksel model/kâğıt cetveli; mm/cm/m tercihleri, 90° kamera ve büyük koordinatlar; 100 mm referansı | `scripts/fixtures/calibration_cases.py` (kesirler; KentOS kullanmaz) | native `calibration`, tipli Python; şablon ayrıca A4/A3/A0 PDF koordinatları ve PNG pHYs ile denetlenir (ADR 0614) |
 
 ## Elle hesapların özeti
 

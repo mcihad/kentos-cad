@@ -161,9 +161,21 @@ pub fn render_image_profile(
 }
 
 pub(crate) fn png(rgba: &[u8], w: u32, h: u32) -> Result<Vec<u8>, String> {
+    png_at(rgba,w,h,None)
+}
+
+pub(crate) fn png_at(rgba: &[u8], w: u32, h: u32, dpi: Option<u16>) -> Result<Vec<u8>, String> {
     let mut bytes = Vec::new();
     {
         let mut encoder = png::Encoder::new(&mut bytes, w, h);
+        if let Some(dpi) = dpi {
+            let ppm = (f64::from(dpi) / 0.0254).round() as u32;
+            encoder.set_pixel_dims(Some(png::PixelDimensions {
+                xppu: ppm,
+                yppu: ppm,
+                unit: png::Unit::Meter,
+            }));
+        }
         encoder.set_color(png::ColorType::Rgba);
         encoder.set_depth(png::BitDepth::Eight);
         let mut writer = encoder.write_header().map_err(|e| e.to_string())?;
