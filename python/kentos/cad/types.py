@@ -11008,6 +11008,30 @@ class Bounds(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CadImportScale(_Model):
+    """An explicit physical calibration; source_length is the raw CAD number, real_length is metres.
+    Attributes:
+        source_length: Unit: 1.
+        real_length: Unit: m.
+    """
+    source_length: float
+    real_length: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sourceLength"] = float(self.source_length)
+        out["realLength"] = float(self.real_length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CadImportScale:
+        return cls(
+            source_length=float(data["sourceLength"]),
+            real_length=float(data["realLength"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CadParameter(_Model):
     """A named parameter: a dimensional constraint's own, or the user's (AutoCAD's user parameter).
     Attributes:
@@ -24286,12 +24310,13 @@ class ImportCsv(_Model):
 @dataclass(kw_only=True, slots=True)
 class ImportDxf(_Model):
     """Input of `file.import.dxf` v1. Refusals (`CommandError.code`), in order:
-    `invalid_file_path` (empty, relative, a directory), `invalid_revision`,
+    `invalid_scale` (invalid or conflicting reference), `invalid_file_path`
+    (empty, relative, a directory), `invalid_revision`,
     `revision_conflict`, `file_not_found`, `import_unreadable` (not a DXF, or
     broken), `layer_not_found` and `not_a_layer` (a target of `layers`, at
     `layers.<name>`), `layer_locked` (a target the objects cannot go onto),
     `nothing_to_import` (no object left to take). Warnings: `unit_assumed`,
-    `unit_ignored`, `block_units_differ`, `import_losses`.
+    `block_units_differ`, `import_losses`.
     Attributes:
         path: The file to read, an absolute path.
         allow_polyline_loss: Permit explicitly reported polyline approximation or loss. False rejects
@@ -24303,15 +24328,15 @@ class ImportDxf(_Model):
         explode_blocks: Blokları patlat: every insert opened into its objects, no block
             definitions taken (docs/adr/0144 §5).
         file_unit: The unit the file's values are in, whatever it declares (docs/adr/0257
-            §1). Absent: a local project takes the unit the file declares, a
-            project with a coordinate system metres; a file that declares none is
-            in the project's unit, its numbers kept.
+            §1). Absent: honour the source unit in every project; an undeclared source
+            uses the project unit (metres with a coordinate system).
         group: The group at the top of the tree the new layers go into, found by its
             name or made. Absent: one named after the file; empty: the top of the tree.
         layers: A file's layer (its name in the file) → the drawing's layer (its id)
             its objects go onto. A layer not named here goes onto the drawing's
             layer of the same name (case and Turkish marks aside), else onto a new
             layer with the file's look.
+        scale_reference: Calibrate a raw source distance to a real length in metres. Mutually exclusive with fileUnit.
         skip_layers: The file's layers (by their names in the file) whose objects are left out.
     """
     path: str
@@ -24322,6 +24347,7 @@ class ImportDxf(_Model):
     file_unit: FileUnit | FileUnitName | None | Unset = UNSET
     group: str | None | Unset = UNSET
     layers: dict[str, str] | Unset = UNSET
+    scale_reference: CadImportScale | None | Unset = UNSET
     skip_layers: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -24341,6 +24367,8 @@ class ImportDxf(_Model):
             out["group"] = self.group
         if self.layers is not UNSET:
             out["layers"] = dict(self.layers)
+        if self.scale_reference is not UNSET:
+            out["scaleReference"] = None if self.scale_reference is None else self.scale_reference.to_json()
         if self.skip_layers is not UNSET:
             out["skipLayers"] = list(self.skip_layers)
         return out
@@ -24356,6 +24384,7 @@ class ImportDxf(_Model):
             file_unit=UNSET if "fileUnit" not in data else None if data["fileUnit"] is None else _enum_in(FileUnit, data["fileUnit"]),
             group=data.get("group", UNSET),
             layers=dict(data["layers"]) if "layers" in data else UNSET,
+            scale_reference=UNSET if "scaleReference" not in data else None if data["scaleReference"] is None else CadImportScale.from_json(data["scaleReference"]),
             skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
         )
 
@@ -51254,6 +51283,7 @@ class UnitDecision(_Model):
     assumed: bool
     blocks: list[BlockUnit] | Unset = UNSET
     declared: int | None | Unset = UNSET
+    scale_reference: CadImportScale | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -51266,6 +51296,8 @@ class UnitDecision(_Model):
             out["blocks"] = [e0.to_json() for e0 in self.blocks]
         if self.declared is not UNSET:
             out["declared"] = self.declared
+        if self.scale_reference is not UNSET:
+            out["scaleReference"] = None if self.scale_reference is None else self.scale_reference.to_json()
         return out
 
     @classmethod
@@ -51278,6 +51310,7 @@ class UnitDecision(_Model):
             assumed=data["assumed"],
             blocks=[BlockUnit.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
             declared=data.get("declared", UNSET),
+            scale_reference=UNSET if "scaleReference" not in data else None if data["scaleReference"] is None else CadImportScale.from_json(data["scaleReference"]),
         )
 
 
@@ -67385,6 +67418,7 @@ __all__ = [
     "BreakLine",
     "BreakLineName",
     "CadElement",
+    "CadImportScale",
     "CadPaperShapeKind",
     "CadParameter",
     "CalculateFieldsWriteOp",

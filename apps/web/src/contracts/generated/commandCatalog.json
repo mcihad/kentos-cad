@@ -1031995,7 +1031995,7 @@
       "id": "file.import.dxf",
       "version": 1,
       "title": "DXF içe aktar",
-      "summary": "path'teki DXF dosyasını açık çizime alır, masaüstünün DXF içe aktar penceresi gibi: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DXF: ad.dxf”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder.",
+      "summary": "path'teki DXF dosyasını açık çizime alır, masaüstünün DXF içe aktar penceresi gibi: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse koordinat sistemli projede de dosyanın $INSUNITS birimi korunur. scaleReference ile ham bir uzunluk gerçek metre uzunluğuna kalibre edilebilir; fileUnit ile birlikte verilemez. Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DXF: ad.dxf”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder.",
       "aliases": [
         "dxfin"
       ],
@@ -1032012,6 +1032012,27 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "CadImportScale": {
+            "additionalProperties": false,
+            "description": "An explicit physical calibration; source_length is the raw CAD number, real_length is metres.",
+            "properties": {
+              "realLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "sourceLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "sourceLength",
+              "realLength"
+            ],
+            "type": "object"
+          },
           "ClosedPolylines": {
             "description": "What a file's closed polyline becomes (docs/adr/0258 §1).",
             "oneOf": [
@@ -1032061,7 +1032082,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.import.dxf` v1. Refusals (`CommandError.code`), in order:\n`invalid_file_path` (empty, relative, a directory), `invalid_revision`,\n`revision_conflict`, `file_not_found`, `import_unreadable` (not a DXF, or\nbroken), `layer_not_found` and `not_a_layer` (a target of `layers`, at\n`layers.<name>`), `layer_locked` (a target the objects cannot go onto),\n`nothing_to_import` (no object left to take). Warnings: `unit_assumed`,\n`unit_ignored`, `block_units_differ`, `import_losses`.",
+        "description": "Input of `file.import.dxf` v1. Refusals (`CommandError.code`), in order:\n`invalid_scale` (invalid or conflicting reference), `invalid_file_path`\n(empty, relative, a directory), `invalid_revision`,\n`revision_conflict`, `file_not_found`, `import_unreadable` (not a DXF, or\nbroken), `layer_not_found` and `not_a_layer` (a target of `layers`, at\n`layers.<name>`), `layer_locked` (a target the objects cannot go onto),\n`nothing_to_import` (no object left to take). Warnings: `unit_assumed`,\n`block_units_differ`, `import_losses`.",
         "properties": {
           "allowPolylineLoss": {
             "description": "Permit explicitly reported polyline approximation or loss. False rejects\na conversion that cannot preserve bulges, widths or vertex elevations.",
@@ -1032098,7 +1032119,7 @@
                 "type": "null"
               }
             ],
-            "description": "The unit the file's values are in, whatever it declares (docs/adr/0257\n§1). Absent: a local project takes the unit the file declares, a\nproject with a coordinate system metres; a file that declares none is\nin the project's unit, its numbers kept."
+            "description": "The unit the file's values are in, whatever it declares (docs/adr/0257\n§1). Absent: honour the source unit in every project; an undeclared source\nuses the project unit (metres with a coordinate system)."
           },
           "group": {
             "description": "The group at the top of the tree the new layers go into, found by its\nname or made. Absent: one named after the file; empty: the top of the tree.",
@@ -1032117,6 +1032138,17 @@
           "path": {
             "description": "The file to read, an absolute path.",
             "type": "string"
+          },
+          "scaleReference": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CadImportScale"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Calibrate a raw source distance to a real length in metres. Mutually exclusive with fileUnit."
           },
           "skipLayers": {
             "description": "The file's layers (by their names in the file) whose objects are left out.",
@@ -1032150,6 +1032182,27 @@
             "required": [
               "name",
               "code"
+            ],
+            "type": "object"
+          },
+          "CadImportScale": {
+            "additionalProperties": false,
+            "description": "An explicit physical calibration; source_length is the raw CAD number, real_length is metres.",
+            "properties": {
+              "realLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "sourceLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "sourceLength",
+              "realLength"
             ],
             "type": "object"
           },
@@ -1032232,6 +1032285,16 @@
               "name": {
                 "description": "Its name: “milimetre”, “inç”.",
                 "type": "string"
+              },
+              "scaleReference": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CadImportScale"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "source": {
                 "$ref": "#/$defs/UnitSource"
@@ -1032402,6 +1032465,27 @@
             ],
             "type": "object"
           },
+          "CadImportScale": {
+            "additionalProperties": false,
+            "description": "An explicit physical calibration; source_length is the raw CAD number, real_length is metres.",
+            "properties": {
+              "realLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "sourceLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "sourceLength",
+              "realLength"
+            ],
+            "type": "object"
+          },
           "ClosedPolylines": {
             "description": "What a file's closed polyline becomes (docs/adr/0258 §1).",
             "oneOf": [
@@ -1032481,6 +1032565,16 @@
               "name": {
                 "description": "Its name: “milimetre”, “inç”.",
                 "type": "string"
+              },
+              "scaleReference": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CadImportScale"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "source": {
                 "$ref": "#/$defs/UnitSource"
@@ -1032714,6 +1032808,7 @@
           ]
         },
         "refusals": [
+          "invalid_scale",
           "invalid_file_path",
           "invalid_revision",
           "revision_conflict",
@@ -1032731,7 +1032826,6 @@
         ],
         "warnings": [
           "unit_assumed",
-          "unit_ignored",
           "block_units_differ",
           "import_losses"
         ]
@@ -1032791,7 +1032885,7 @@
       "id": "file.import.dwg",
       "version": 1,
       "title": "DWG içe aktar",
-      "summary": "path'teki DWG dosyasını açık çizime alır, masaüstünün DWG içe aktar penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile (ADR 0586), ağ veya uzak dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. Kaynak DWG sürümü ve bellek içi DXF aktarma biçimi report.source içinde ayrı söylenir. R14–2018 biçim imzaları desteklenir; korunmayan içerik report.skipped/notes içindedir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DWG: ad.dwg”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder.",
+      "summary": "path'teki DWG dosyasını açık çizime alır, masaüstünün DWG içe aktar penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile (ADR 0586), ağ veya uzak dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse koordinat sistemli projede de dosyanın $INSUNITS birimi korunur. scaleReference ile ham bir uzunluk gerçek metre uzunluğuna kalibre edilebilir; fileUnit ile birlikte verilemez. Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. Kaynak DWG sürümü ve bellek içi DXF aktarma biçimi report.source içinde ayrı söylenir. R14–2018 biçim imzaları desteklenir; korunmayan içerik report.skipped/notes içindedir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DWG: ad.dwg”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder.",
       "aliases": [
         "dwgin"
       ],
@@ -1032808,6 +1032902,27 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "CadImportScale": {
+            "additionalProperties": false,
+            "description": "An explicit physical calibration; source_length is the raw CAD number, real_length is metres.",
+            "properties": {
+              "realLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "sourceLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "sourceLength",
+              "realLength"
+            ],
+            "type": "object"
+          },
           "ClosedPolylines": {
             "description": "What a file's closed polyline becomes (docs/adr/0258 §1).",
             "oneOf": [
@@ -1032857,7 +1032972,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.import.dxf` v1. Refusals (`CommandError.code`), in order:\n`invalid_file_path` (empty, relative, a directory), `invalid_revision`,\n`revision_conflict`, `file_not_found`, `import_unreadable` (not a DXF, or\nbroken), `layer_not_found` and `not_a_layer` (a target of `layers`, at\n`layers.<name>`), `layer_locked` (a target the objects cannot go onto),\n`nothing_to_import` (no object left to take). Warnings: `unit_assumed`,\n`unit_ignored`, `block_units_differ`, `import_losses`.",
+        "description": "Input of `file.import.dxf` v1. Refusals (`CommandError.code`), in order:\n`invalid_scale` (invalid or conflicting reference), `invalid_file_path`\n(empty, relative, a directory), `invalid_revision`,\n`revision_conflict`, `file_not_found`, `import_unreadable` (not a DXF, or\nbroken), `layer_not_found` and `not_a_layer` (a target of `layers`, at\n`layers.<name>`), `layer_locked` (a target the objects cannot go onto),\n`nothing_to_import` (no object left to take). Warnings: `unit_assumed`,\n`block_units_differ`, `import_losses`.",
         "properties": {
           "allowPolylineLoss": {
             "description": "Permit explicitly reported polyline approximation or loss. False rejects\na conversion that cannot preserve bulges, widths or vertex elevations.",
@@ -1032894,7 +1033009,7 @@
                 "type": "null"
               }
             ],
-            "description": "The unit the file's values are in, whatever it declares (docs/adr/0257\n§1). Absent: a local project takes the unit the file declares, a\nproject with a coordinate system metres; a file that declares none is\nin the project's unit, its numbers kept."
+            "description": "The unit the file's values are in, whatever it declares (docs/adr/0257\n§1). Absent: honour the source unit in every project; an undeclared source\nuses the project unit (metres with a coordinate system)."
           },
           "group": {
             "description": "The group at the top of the tree the new layers go into, found by its\nname or made. Absent: one named after the file; empty: the top of the tree.",
@@ -1032913,6 +1033028,17 @@
           "path": {
             "description": "The file to read, an absolute path.",
             "type": "string"
+          },
+          "scaleReference": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CadImportScale"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Calibrate a raw source distance to a real length in metres. Mutually exclusive with fileUnit."
           },
           "skipLayers": {
             "description": "The file's layers (by their names in the file) whose objects are left out.",
@@ -1032946,6 +1033072,27 @@
             "required": [
               "name",
               "code"
+            ],
+            "type": "object"
+          },
+          "CadImportScale": {
+            "additionalProperties": false,
+            "description": "An explicit physical calibration; source_length is the raw CAD number, real_length is metres.",
+            "properties": {
+              "realLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "sourceLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "sourceLength",
+              "realLength"
             ],
             "type": "object"
           },
@@ -1033028,6 +1033175,16 @@
               "name": {
                 "description": "Its name: “milimetre”, “inç”.",
                 "type": "string"
+              },
+              "scaleReference": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CadImportScale"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "source": {
                 "$ref": "#/$defs/UnitSource"
@@ -1033198,6 +1033355,27 @@
             ],
             "type": "object"
           },
+          "CadImportScale": {
+            "additionalProperties": false,
+            "description": "An explicit physical calibration; source_length is the raw CAD number, real_length is metres.",
+            "properties": {
+              "realLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "sourceLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "sourceLength",
+              "realLength"
+            ],
+            "type": "object"
+          },
           "ClosedPolylines": {
             "description": "What a file's closed polyline becomes (docs/adr/0258 §1).",
             "oneOf": [
@@ -1033277,6 +1033455,16 @@
               "name": {
                 "description": "Its name: “milimetre”, “inç”.",
                 "type": "string"
+              },
+              "scaleReference": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CadImportScale"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "source": {
                 "$ref": "#/$defs/UnitSource"
@@ -1033512,6 +1033700,7 @@
           ]
         },
         "refusals": [
+          "invalid_scale",
           "invalid_file_path",
           "invalid_revision",
           "revision_conflict",
@@ -1033527,7 +1033716,6 @@
         ],
         "warnings": [
           "unit_assumed",
-          "unit_ignored",
           "block_units_differ",
           "import_losses"
         ]

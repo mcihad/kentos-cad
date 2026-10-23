@@ -1160,3 +1160,16 @@ fn sheet_host_pdf_twenty_physical_pages_work_without_a_window_or_printer(){
     }
     std::fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn import_scale_agent_uses_the_same_physical_reference_and_undo_in_a_project_with_crs(){
+    let fixture:Value=serde_json::from_str(include_str!("../../../../fixtures/commands/v1/file.import.dxf.json")).unwrap();let mut model=fixture["setup"].clone();model["settings"]["srid"]=json!(5256);model["settings"]["workspace"]=json!("gis");
+    let root=std::env::temp_dir().join(format!("kentos-mcp-import-scale-{}",std::process::id()));std::fs::create_dir_all(&root).unwrap();let source=root.join("source.kcad");std::fs::write(&source,serde_json::to_vec(&model).unwrap()).unwrap();
+    let mut server=Server::new();let opened=call(&mut server,"drawing.open",json!({"path":source}));let drawing=opened["drawing"].as_str().unwrap();let before=call(&mut server,"drawing.summary",json!({"drawing":drawing}));
+    let path=concat!(env!("CARGO_MANIFEST_DIR"),"/../../../fixtures/formats/v1/dxf-units/mm.dxf");let reference=json!({"sourceLength":1250,"realLength":12.5});
+    let planned=call(&mut server,"file.import.dxf",json!({"drawing":drawing,"path":path,"scaleReference":reference,"op":"plan"}));assert_eq!(planned["status"],"completed","{planned}");assert_eq!(planned["output"]["unit"]["factor"],0.01);
+    assert_eq!(call(&mut server,"drawing.summary",json!({"drawing":drawing}))["objects"],before["objects"]);
+    let issued=call(&mut server,"file.import.dxf",json!({"drawing":drawing,"path":path,"scaleReference":reference}));assert_eq!(issued["status"],"completed","{issued}");assert_eq!(issued["output"]["unit"],planned["output"]["unit"]);
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));assert_eq!(call(&mut server,"drawing.summary",json!({"drawing":drawing}))["objects"],before["objects"]);
+    let refused=tool_result(&mut server,"file.import.dxf",json!({"drawing":drawing,"path":path,"fileUnit":"mm","scaleReference":reference}));assert_eq!(refused["isError"],true);assert_eq!(refused["structuredContent"]["error"]["code"],"invalid_scale");std::fs::remove_dir_all(root).unwrap();
+}

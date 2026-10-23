@@ -567,6 +567,8 @@ AutoCAD xref, kaynak dosya değişimini reload ile yansıtabilen bağlı bir çi
 - [x] **CAD-IO-19:** ASCII/binary ve hedeflenen DXF sürümlerini açık listele; destek olmayan sürüm/encoding için structured refusal veya loss report ver. — *22 Ekim; On ASCII DXF imzası açık liste; binary/UTF-16/bilinmeyen sürüm-codepage ve yanlış biçim için yapılandırılmış ret; UTF-8 geçersiz bayt reddi. ADR 0587.*
 - [ ] **CAD-IO-20:** Kendi yazıcını kendi okuyucunla sınamanın yanına bağımsız reader ve AutoCAD'de gerçek görsel/düzenleme kontrolü ekle. — *22 Ekim: kullanıcı kararıyla bu çalışma kapsamından çıkarıldı; AutoCAD testi yapılmış sayılmaz.*
 
+*23 Ekim ölçek regresyonu: [ADR 0621](../docs/adr/0621-cad-import-physical-scale.md). DWG/DXF kaynak birimi koordinat sistemli projede de uygulanır; bilinen kaynak/gerçek uzunlukla açık kalibrasyon UI, Python ve MCP'de aynıdır. Önizleme yaklaşık fiziksel model boyunu gösterir, yay/blok kapsamı ve içe aktarılanlara yakınlaşma düzeltilir. Yanlış kaynak birimi veya mevcut 0,1 INSERT ölçeği tahminle değiştirilmez; gerçek ölçüsü bilinmeyen dosya kesin doğrulanmış sayılmaz.*
+
 ### 16.3 PDF içe alma ve çıktı ilişkisi
 
 - [x] **CAD-IO-21:** PDF import; page/region, layer, text/vector/fill/raster seçenekleri ve target unit/scale ile çalışsın.

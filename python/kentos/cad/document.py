@@ -27,6 +27,7 @@ from .protocol import Expected, Job, ReplayReport, Stamps
 from .types import (
     BlockDefinition,
     Bounds,
+    CadImportScale,
     DrawingFont,
     DrawingFontName,
     DrawingUnit,
@@ -562,6 +563,7 @@ class Document:
         path: str | os.PathLike[str],
         *,
         file_unit: str | None = None,
+        scale_reference: CadImportScale | None = None,
         explode_blocks: bool = False,
         skip_layers: Sequence[str] = (),
         layers: Mapping[str, str] | None = None,
@@ -572,8 +574,9 @@ class Document:
         same name, else a new one in a group named after the file (``group``; ``""`` for the top of
         the tree), ``layers`` routing a file's layer to a layer id, ``skip_layers`` leaving some out.
         Its unit: ``file_unit`` (``"mm"``, ``"in"``, ``"usFt"`` …) when given, else what the file
-        declares in a local project and metres with a coordinate system; a file declaring none is
-        read in the project's unit (``unit.assumed`` and the ``unit_assumed`` warning say so).
+        declares in every project; a file declaring none uses the project's unit (metres with a
+        coordinate system). ``scale_reference`` instead calibrates a raw source distance to metres;
+        it cannot be combined with ``file_unit``. Neither changes project display units.
         The answer is ``DxfImported``: the unit decided, the layers made, the objects taken."""
         from .file import import_
 
@@ -581,6 +584,7 @@ class Document:
             self,
             path=os.fspath(path),
             file_unit=file_unit,
+            scale_reference=scale_reference,
             explode_blocks=explode_blocks,
             skip_layers=list(skip_layers),
             layers=dict(layers or {}),

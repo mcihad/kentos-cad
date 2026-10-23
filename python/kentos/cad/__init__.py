@@ -270,6 +270,7 @@ __all__ = [
     "Busy",
     "COMMANDS",
     "CadElement",
+    "CadImportScale",
     "CadPaperShapeKind",
     "CadParameter",
     "CalculateFieldsWriteOp",

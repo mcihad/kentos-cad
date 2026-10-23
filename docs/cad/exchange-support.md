@@ -65,3 +65,20 @@ DXF yazma: ASCII AC1021, UTF-8; hedef DWG bunun üzerinden açıkça seçilen ye
 ## Kâğıt çizgileri ve blok birimleri (22 Ekim 2026)
 
 Yatay/düşey ve 1 mm altı çizgi/poligonun pafta seçme çerçevesi geometri büyütülmeden tamamlanır. Blok tanımları kendi açık birimleriyle metreye çevrilir; mevcut ve iç içe INSERT X/Y faktörleri telafi edilerek dünya geometrisi korunur. Dosyanın birimini seçmek, birimli blok tanımını ikinci kez büyütmez. Kaynağın yanlış `$INSUNITS` bildirimi tahminle düzeltilmez; açık dosya birimi seçilir. [ADR 0589](../adr/0589-cad-paper-frames-and-block-units.md) sınırları ve 20 kâğıt / 28 birim örneğini belgeler.
+
+## İçe aktarma fiziksel ölçeği (23 Ekim 2026)
+
+DWG/DXF'nin kaynak birimi native CAD ve CBS projelerinde aynı biçimde uygulanır;
+koordinat sistemi olması, bildirilen milimetrenin ham metre sayılması anlamına
+gelmez. `fileUnit` açık kaynak birimi seçimidir. Alternatif `scaleReference`
+(`sourceLength`: dosyadaki ham uzunluk, `realLength`: metre) bilinen bir ölçüyle
+kalibrasyon sağlar; ikisi birlikte verilmez. Projenin gösterim birimi değişmez.
+Masaüstü, Python ve MCP aynı hesabı/komutu kullanır. Pencere yaklaşık model boyunu
+metre olarak ve mevcut blokların yeniden eklemeyle farklılaşan çarpanlarını
+gösterir. Geçersiz veya henüz uygulanmamış referansla aktarım yapılmaz.
+
+Dosyanın gerçek birimi bilinmiyorsa fiziksel boy tahmin edilmez. Birimli blok
+kendi fiziksel boyunu korur; kaynakta ölçek 0,1 ile yerleştirilmiş bir örnek,
+yeni ölçek 1 örnekten farklı olabilir. Model kapsamı artık gerçek yay aralığı
+ve yerleştirilmiş bloklardan hesaplanır; kağıt ve kullanılmayan tanım kapsamı
+büyütmez. Ayrıntılar ve gerçek kullanıcı dosyasının belirsizliği [ADR 0621](../adr/0621-cad-import-physical-scale.md)'dedir.

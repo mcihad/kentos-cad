@@ -3692,6 +3692,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "file.import.dxf",
         refusals: &[
+            &["invalid_scale"],
             &["invalid_file_path"],
             REVISION,
             &["file_not_found", "import_unreadable", "polyline_geometry_loss", "unsupported_cad_format", "unsupported_cad_version", "unsupported_cad_encoding", "cad_file_too_large"],
@@ -3700,7 +3701,6 @@ const ENTRIES: &[Entry] = &[
         ],
         warnings: &[
             "unit_assumed",
-            "unit_ignored",
             "block_units_differ",
             "import_losses",
         ],
@@ -3709,6 +3709,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "file.import.dwg",
         refusals: &[
+            &["invalid_scale"],
             &["invalid_file_path"],
             REVISION,
             &["file_not_found", "import_unreadable", "polyline_geometry_loss", "unsupported_cad_version", "cad_file_too_large"],
@@ -3717,7 +3718,6 @@ const ENTRIES: &[Entry] = &[
         ],
         warnings: &[
             "unit_assumed",
-            "unit_ignored",
             "block_units_differ",
             "import_losses",
         ],

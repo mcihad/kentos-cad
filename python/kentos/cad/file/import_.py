@@ -14,6 +14,7 @@ from ..types import (  # noqa: F401
     BlockFileImported,
     BlockFileMode,
     BlockFileModeName,
+    CadImportScale,
     ClosedPolylines,
     ClosedPolylinesName,
     CsvGeometryIn,
@@ -373,19 +374,20 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
     olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar
     tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks
     ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim
-    (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede
-    dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır
-    (başka bildirilen birim unit_ignored ile söylenir). Birim bildirmeyen ya da
-    tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli
-    projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar
-    block_units_differ ile söylenir. Kaynak DWG sürümü ve bellek içi DXF aktarma biçimi
-    report.source içinde ayrı söylenir. R14–2018 biçim imzaları desteklenir; korunmayan
-    içerik report.skipped/notes içindedir. Telde geometri metredir. Bütün alınanlar tek
-    geri alma adımıdır (“DWG: ad.dwg”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını
-    söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision verilmişse ve çizim o
-    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin
-    genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir;
-    yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder.
+    (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse koordinat sistemli
+    projede de dosyanın $INSUNITS birimi korunur. scaleReference ile ham bir uzunluk
+    gerçek metre uzunluğuna kalibre edilebilir; fileUnit ile birlikte verilemez. Birim
+    bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin
+    biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka
+    bloklar block_units_differ ile söylenir. Kaynak DWG sürümü ve bellek içi DXF aktarma
+    biçimi report.source içinde ayrı söylenir. R14–2018 biçim imzaları desteklenir;
+    korunmayan içerik report.skipped/notes içindedir. Telde geometri metredir. Bütün
+    alınanlar tek geri alma adımıdır (“DWG: ad.dwg”); plan dosyayı okur, hiçbir şey
+    yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision
+    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile
+    reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul
+    eder.
     """
     __slots__ = ()
     id = "file.import.dwg"
@@ -409,6 +411,7 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -422,19 +425,19 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı
         adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir;
         dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse
-        değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği
-        birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim
-        unit_ignored ile söylenir). Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın
-        sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve
-        unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. Kaynak
-        DWG sürümü ve bellek içi DXF aktarma biçimi report.source içinde ayrı söylenir.
-        R14–2018 biçim imzaları desteklenir; korunmayan içerik report.skipped/notes
-        içindedir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DWG:
-        ad.dwg”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256
-        okunan dosyanındır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir
-        şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan
-        olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp
-        raporuyla yaklaşık dönüşümü kabul eder.
+        değerler o birimdedir; verilmemişse koordinat sistemli projede de dosyanın $INSUNITS
+        birimi korunur. scaleReference ile ham bir uzunluk gerçek metre uzunluğuna kalibre
+        edilebilir; fileUnit ile birlikte verilemez. Birim bildirmeyen ya da tanınmayan kod
+        bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre)
+        sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile
+        söylenir. Kaynak DWG sürümü ve bellek içi DXF aktarma biçimi report.source içinde
+        ayrı söylenir. R14–2018 biçim imzaları desteklenir; korunmayan içerik
+        report.skipped/notes içindedir. Telde geometri metredir. Bütün alınanlar tek geri
+        alma adımıdır (“DWG: ad.dwg”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını
+        söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision verilmişse ve çizim o
+        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin
+        genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir;
+        yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder.
 
         Args:
             doc: The drawing it works on.
@@ -448,15 +451,15 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             explode_blocks: Blokları patlat: every insert opened into its objects, no block
                 definitions taken (docs/adr/0144 §5).
             file_unit: The unit the file's values are in, whatever it declares (docs/adr/0257
-                §1). Absent: a local project takes the unit the file declares, a
-                project with a coordinate system metres; a file that declares none is
-                in the project's unit, its numbers kept.
+                §1). Absent: honour the source unit in every project; an undeclared source
+                uses the project unit (metres with a coordinate system).
             group: The group at the top of the tree the new layers go into, found by its
                 name or made. Absent: one named after the file; empty: the top of the tree.
             layers: A file's layer (its name in the file) → the drawing's layer (its id)
                 its objects go onto. A layer not named here goes onto the drawing's
                 layer of the same name (case and Turkish marks aside), else onto a new
                 layer with the file's look.
+            scale_reference: Calibrate a raw source distance to a real length in metres. Mutually exclusive with fileUnit.
             skip_layers: The file's layers (by their names in the file) whose objects are left out.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -479,6 +482,7 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
@@ -495,6 +499,7 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
     ) -> DxfImported:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -509,6 +514,7 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
         ))
 
@@ -525,6 +531,7 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -539,6 +546,7 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
         ))
 
@@ -555,6 +563,7 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -574,6 +583,7 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
@@ -591,17 +601,17 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
     katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım
     olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile
     patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit):
-    fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın
-    $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka
-    bildirilen birim unit_ignored ile söylenir). Birim bildirmeyen ya da tanınmayan kod
-    bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre)
-    sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile
-    söylenir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DXF:
-    ad.dxf”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256
-    okunan dosyanındır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir
-    şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan
-    olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp
-    raporuyla yaklaşık dönüşümü kabul eder.
+    fileUnit verilmişse değerler o birimdedir; verilmemişse koordinat sistemli projede
+    de dosyanın $INSUNITS birimi korunur. scaleReference ile ham bir uzunluk gerçek
+    metre uzunluğuna kalibre edilebilir; fileUnit ile birlikte verilemez. Birim
+    bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin
+    biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka
+    bloklar block_units_differ ile söylenir. Telde geometri metredir. Bütün alınanlar
+    tek geri alma adımıdır (“DXF: ad.dxf”); plan dosyayı okur, hiçbir şey yazmaz ve
+    aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision verilmişse ve
+    çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin
+    genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir;
+    yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder.
     """
     __slots__ = ()
     id = "file.import.dxf"
@@ -625,6 +635,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -637,17 +648,17 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı adlı blok
         varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın
         yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse değerler o
-        birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim,
-        koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile
-        söylenir). Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları
-        ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed
-        söyler; birimi başka bloklar block_units_differ ile söylenir. Telde geometri
-        metredir. Bütün alınanlar tek geri alma adımıdır (“DXF: ad.dxf”); plan dosyayı okur,
-        hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak
-        polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla
-        yaklaşık dönüşümü kabul eder.
+        birimdedir; verilmemişse koordinat sistemli projede de dosyanın $INSUNITS birimi
+        korunur. scaleReference ile ham bir uzunluk gerçek metre uzunluğuna kalibre
+        edilebilir; fileUnit ile birlikte verilemez. Birim bildirmeyen ya da tanınmayan kod
+        bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre)
+        sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile
+        söylenir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DXF:
+        ad.dxf”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256
+        okunan dosyanındır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir
+        şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan
+        olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp
+        raporuyla yaklaşık dönüşümü kabul eder.
 
         Args:
             doc: The drawing it works on.
@@ -661,15 +672,15 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             explode_blocks: Blokları patlat: every insert opened into its objects, no block
                 definitions taken (docs/adr/0144 §5).
             file_unit: The unit the file's values are in, whatever it declares (docs/adr/0257
-                §1). Absent: a local project takes the unit the file declares, a
-                project with a coordinate system metres; a file that declares none is
-                in the project's unit, its numbers kept.
+                §1). Absent: honour the source unit in every project; an undeclared source
+                uses the project unit (metres with a coordinate system).
             group: The group at the top of the tree the new layers go into, found by its
                 name or made. Absent: one named after the file; empty: the top of the tree.
             layers: A file's layer (its name in the file) → the drawing's layer (its id)
                 its objects go onto. A layer not named here goes onto the drawing's
                 layer of the same name (case and Turkish marks aside), else onto a new
                 layer with the file's look.
+            scale_reference: Calibrate a raw source distance to a real length in metres. Mutually exclusive with fileUnit.
             skip_layers: The file's layers (by their names in the file) whose objects are left out.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -692,6 +703,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
@@ -708,6 +720,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
     ) -> DxfImported:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -722,6 +735,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
         ))
 
@@ -738,6 +752,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -752,6 +767,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
         ))
 
@@ -768,6 +784,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -787,6 +804,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 

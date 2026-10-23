@@ -89,7 +89,6 @@ use iced::{Element, Task};
 use kentos_domain::Slot;
 use kentos_interaction::Format;
 use kentos_render_wgpu::Bounds;
-use kentos_render_wgpu::scene;
 
 use crate::app::{App, Dialog, Message, Picker};
 
@@ -590,32 +589,23 @@ impl App {
     }
 
     /// Shows what an import added: its extent without far strays
-    /// (`kentos_formats::import::view_bounds`), never smaller than a few
-    /// metres, so one point alone is shown in context (web `zoomToImported`).
+    /// (`kentos_formats::import::view_bounds`), a lone point shown
+    /// in project-unit context without shrinking small but measurable CAD drawings (web `zoomToImported`).
     pub(crate) fn zoom_to(&mut self, slots: &[Slot]) {
         let Some(doc) = &self.document else { return };
-        let boxes: Vec<kentos_commands::Bounds> = slots
-            .iter()
-            .filter_map(|s| doc.model.get(*s))
-            .filter_map(|e| scene::extents_of(doc, std::iter::once(e)))
-            .map(|b| kentos_commands::Bounds {
-                min_x: b.min_x,
-                min_y: b.min_y,
-                max_x: b.max_x,
-                max_y: b.max_y,
-            })
-            .collect();
+        let boxes=kentos_formats::import::placed_boxes(slots.iter().filter_map(|s|doc.model.get(*s)),doc.model.blocks().iter().map(|b|b.as_ref()));
         if let Some(b) = kentos_formats::import::view_bounds(&boxes) {
             self.zoom_to_bounds(&b);
         }
     }
 
-    /// Shows `b`, never smaller than a few metres across.
+    /// Fit measurable geometry at its own size; only a lone point needs surrounding context.
     pub(crate) fn zoom_to_bounds(&mut self, b: &kentos_commands::Bounds) {
-        /// At least this much around what was imported.
-        const MIN_SPAN: f64 = 20.0;
+        // A real extent determines its own zoom; a single point uses the project unit for context.
+        let span=(b.max_x-b.min_x).max(b.max_y-b.min_y);
+        let minimum=if span>0. {span*1e-6}else{self.document.as_ref().map_or(20.,|d|20.*kentos_commands::units::Scale::from_unit(d.model.settings().unit()).factor())};
         let grow = |lo: f64, hi: f64| {
-            let pad = ((MIN_SPAN - (hi - lo)) / 2.0).max(0.0);
+            let pad = ((minimum - (hi - lo)) / 2.0).max(0.0);
             (lo - pad, hi + pad)
         };
         let (min_x, max_x) = grow(b.min_x, b.max_x);

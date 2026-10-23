@@ -115,8 +115,8 @@ if __name__ == "__main__":
 
 
 class DxfUnit(unittest.TestCase):
-    """A DXF's unit decided by one rule (docs/adr/0257 §1): what the file declares in a local project, metres with a
-    coordinate system, the project's unit for a file that declares none; or the one chosen."""
+    """A DXF's unit decided by one rule (docs/adr/0257 §1): what the file declares in every project,
+    the project's unit for a file that declares none; or an explicit physical reference."""
 
     FILES = Path(__file__).resolve().parents[2] / "fixtures/formats/v1/dxf-units"
 

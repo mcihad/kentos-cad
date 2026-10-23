@@ -219,15 +219,25 @@ pub fn view_of<'a>(
     )
 }
 
+/// Conservative physical boxes of placed model objects, sharing CAD preview and desktop framing rules.
+pub fn placed_boxes<'a>(objects:impl IntoIterator<Item=&'a Entity>,blocks:impl IntoIterator<Item=&'a kentos_contracts::BlockDefinition>)->Vec<Bounds>{
+    let mut measured=crate::import_bounds::ModelBounds::new(blocks);
+    objects.into_iter().filter_map(|e|measured.entity(e)).collect()
+}
+
 /// Fills in each layer's objects by kind and their box, and where the view
 /// shows the objects (`ImportLayer.kinds`, `ImportLayer.bounds`,
 /// `ImportResult.view`).
-pub fn summarise(result: &mut ImportResult) {
+pub fn summarise(result: &mut ImportResult) { summarise_with(result,false); }
+/// CAD has no authoritative model extent: derive it from placed model content, never paper or unplaced definitions.
+pub(crate) fn summarise_cad(result:&mut ImportResult){summarise_with(result,true);}
+fn summarise_with(result:&mut ImportResult,replace_bounds:bool){
     #[derive(Default)]
     struct Layer {
         kinds: HashMap<&'static str, u32>,
         bounds: Option<Bounds>,
     }
+    let mut measured=crate::import_bounds::ModelBounds::new(&result.blocks);
     let mut per: HashMap<&str, Layer> = HashMap::new();
     let mut boxes = Vec::with_capacity(result.entities.len());
     let mut on = Vec::with_capacity(result.entities.len());
@@ -235,7 +245,7 @@ pub fn summarise(result: &mut ImportResult) {
         let name = e.base().layer_id.as_str();
         let layer = per.entry(name).or_default();
         *layer.kinds.entry(e.kind()).or_default() += 1;
-        if let Some(b) = defining_bounds(e) {
+        if let Some(b) = measured.entity(e) {
             layer.bounds = union([layer.bounds.as_ref(), Some(&b)].into_iter().flatten());
             boxes.push(b);
             on.push(name);
@@ -254,6 +264,7 @@ pub fn summarise(result: &mut ImportResult) {
             layer.bounds = l.bounds;
         }
     }
+    if replace_bounds{result.bounds=union(boxes.iter());}
     result.view = union_but(&boxes, &far);
     result.report.notes.extend(note);
     let elevated = result.entities.iter().filter(|e| has_elevation(e)).count();

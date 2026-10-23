@@ -71,7 +71,7 @@ impl ReadDxf {
 }
 
 /// How the drawing reads a DXF, the window's and the command's alike: a local
-/// project's unit, none with a coordinate system (docs/adr/0165 §2); the unit
+/// project's unit (metres with a coordinate system); the source unit
 /// chosen for the file (docs/adr/0257 §1); the plot scale its styles are
 /// paper mm at and the typeface a missing one takes (docs/adr/0183 §7); what
 /// its closed polylines become, the project's type's choice when none is given
@@ -84,10 +84,11 @@ pub fn read_options(
 ) -> DxfReadOptions {
     let settings = doc.settings();
     DxfReadOptions {
+        scale_reference:None,
         allow_polyline_loss: false,
         max_entities: 0,
         explode_blocks: explode,
-        unit: (!settings.has_system()).then(|| settings.unit()),
+        unit: Some(settings.unit()),
         file_unit,
         scale: Some(settings.plot_scale),
         drawing_font: settings.drawing_font,
@@ -110,6 +111,9 @@ fn refuse(code: &str, message: String, path: &str) -> Stop {
 
 /// The path: absolute and not a folder.
 fn check_path(input: &ImportDxf) -> Result<(), Stop> {
+    if input.scale_reference.is_some_and(|r|r.factor().is_none()) || (input.scale_reference.is_some() && input.file_unit.is_some()) {
+        return Err(refuse(codes::INVALID_SCALE,"Ölçek doğrulamasında kaynak ve gerçek uzunluk pozitif/sonlu olmalı. Dosya birimi ile ölçü doğrulamasından yalnız birini seçin.".into(),"scaleReference"));
+    }
     let path = Path::new(&input.path);
     if input.path.trim().is_empty() || !path.is_absolute() {
         return Err(refuse(
@@ -169,6 +173,7 @@ fn read_file(doc: &Document, input: &ImportDxf, format: CadFormat) -> Result<Rea
         input.closed_polylines,
     );
     options.allow_polyline_loss = input.allow_polyline_loss;
+    options.scale_reference = input.scale_reference;
     let mut result = match format {
         CadFormat::Dxf => kentos_formats::dxf::read_checked(&bytes, &options).map_err(|e| {
             refuse(e.code, format!("{name} DXF olarak okunamadı: {e}"), if e.code == codes::POLYLINE_GEOMETRY_LOSS { "allowPolylineLoss" } else { "path" })
@@ -452,6 +457,7 @@ fn warnings_of(result: &ImportResult) -> Vec<CommandWarning> {
 /// none): metres as they are.
 fn metres() -> UnitDecision {
     UnitDecision {
+        scale_reference:None,
         declared: None,
         used: 6,
         name: "metre".into(),

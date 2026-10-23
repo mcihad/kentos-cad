@@ -36,6 +36,7 @@ pub mod geom;
 pub mod gis;
 pub mod gnss;
 pub mod import;
+mod import_bounds;
 pub mod json;
 pub mod kml;
 pub mod lin;

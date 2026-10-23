@@ -18,18 +18,23 @@ pub const FILE_IMPORT_DXF: &str = "file.import.dxf";
 pub const FILE_IMPORT_DXF_VERSION: u32 = 1;
 
 /// Input of `file.import.dxf` v1. Refusals (`CommandError.code`), in order:
-/// `invalid_file_path` (empty, relative, a directory), `invalid_revision`,
+/// `invalid_scale` (invalid or conflicting reference), `invalid_file_path`
+/// (empty, relative, a directory), `invalid_revision`,
 /// `revision_conflict`, `file_not_found`, `import_unreadable` (not a DXF, or
 /// broken), `layer_not_found` and `not_a_layer` (a target of `layers`, at
 /// `layers.<name>`), `layer_locked` (a target the objects cannot go onto),
 /// `nothing_to_import` (no object left to take). Warnings: `unit_assumed`,
-/// `unit_ignored`, `block_units_differ`, `import_losses`.
+/// `block_units_differ`, `import_losses`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportDxf {
+    /// Calibrate a raw source distance to a real length in metres. Mutually exclusive with fileUnit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub scale_reference: Option<crate::CadImportScale>,
     /// Permit explicitly reported polyline approximation or loss. False rejects
     /// a conversion that cannot preserve bulges, widths or vertex elevations.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -38,9 +43,8 @@ pub struct ImportDxf {
     /// The file to read, an absolute path.
     pub path: String,
     /// The unit the file's values are in, whatever it declares (docs/adr/0257
-    /// §1). Absent: a local project takes the unit the file declares, a
-    /// project with a coordinate system metres; a file that declares none is
-    /// in the project's unit, its numbers kept.
+    /// §1). Absent: honour the source unit in every project; an undeclared source
+    /// uses the project unit (metres with a coordinate system).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub file_unit: Option<FileUnit>,
