@@ -27,17 +27,17 @@
 //! Artır is kept for the run, not in [`crate::tool::Memory`]: the ribbon's
 //! methods (Sabit, Artır, Sıfırla) each start the tool the way they say.
 
-use kentos_commands::{EditOperation, EntityEdit};
+use kentos_commands::{ShapeElevation, ShapeWork};
 use kentos_domain::Slot;
 use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
 use crate::edge;
-use crate::elevation::{self, Change};
+use crate::elevation;
 use crate::format::Format;
 use crate::log::Level;
 use crate::modify::{Modify, Stages};
-use crate::points::plain_length;
+use crate::points::{self, plain_length};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Flow};
 
@@ -63,16 +63,6 @@ enum Give {
     Raise(f64),
     /// Sıfırla.
     Clear,
-}
-
-impl Give {
-    fn change(self) -> Change {
-        match self {
-            Give::Set(z) => Change::Set(Some(z)),
-            Give::Raise(by) => Change::Raise(by),
-            Give::Clear => Change::Set(None),
-        }
-    }
 }
 
 /// A difference as the messages say it: with its sign, the minus a real one (U+2212).
@@ -157,17 +147,16 @@ impl SetElevation {
             cx.say(Level::Warn, NOTHING_TO_RAISE);
             return;
         }
-        let changes: Vec<EntityEdit> = chosen
-            .iter()
-            .filter_map(|slot| {
-                let geometry = elevation::geometry_with(doc.get(*slot)?, give.change())?;
-                Some(EntityEdit::Update {
-                    uid: edge::uid(doc, *slot),
-                    geometry,
-                })
-            })
-            .collect();
-        if edge::write(EditOperation::Elevation, changes, cx).is_none() {
+        let elevation = match give {
+            Give::Set(z) => ShapeElevation::Set { z },
+            Give::Raise(by) => ShapeElevation::Raise { by },
+            Give::Clear => ShapeElevation::Clear,
+        };
+        let work = ShapeWork::Elevation {
+            ids: chosen.iter().map(|&slot| edge::uid(doc, slot)).collect(),
+            elevation,
+        };
+        if points::write_shape(work, cx).is_none() {
             return;
         }
         let n = chosen.len();

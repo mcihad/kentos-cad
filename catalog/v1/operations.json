@@ -2809,8 +2809,12 @@
       "note": "Nesnelerin kimlikleri komuta verilir; kotlar, ölçüler (M) ve genişlikler tersine, ilişkili ölçüler izler (ADR 0296)."
     },
     "simplify": {
-      "level": "geometry",
-      "operation": "simplify"
+      "level": "semantic",
+      "via": [
+        "cad.shapes.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9)."
     },
     "cleanup": {
       "level": "semantic",
@@ -2821,33 +2825,53 @@
       "note": "Kapsam, tolerans ve seçenekler komuta verilir; yinelenenleri, eş doğrultulu çizgileri ve köşeleri komut bulur, raporu kaybıyla verir (ADR 0305)."
     },
     "setElevation": {
-      "level": "geometry",
-      "operation": "elevation",
+      "level": "semantic",
+      "via": [
+        "cad.shapes.edit"
+      ],
+      "was": "cad.entities.edit",
       "methods": {
-        "Sabit": "geometry",
-        "Artır": "geometry",
-        "Sıfırla": "geometry"
-      }
+        "Sabit": "semantic",
+        "Artır": "semantic",
+        "Sıfırla": "semantic"
+      },
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9)."
     },
     "readable": {
-      "level": "geometry",
-      "operation": "readable"
+      "level": "semantic",
+      "via": [
+        "cad.shapes.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9)."
     },
     "topology": {
       "level": "geometry",
       "operation": "topology"
     },
     "reshape": {
-      "level": "geometry",
-      "operation": "reshape"
+      "level": "semantic",
+      "via": [
+        "cad.shapes.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9)."
     },
     "continue": {
-      "level": "geometry",
-      "operation": "continue"
+      "level": "semantic",
+      "via": [
+        "cad.shapes.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9)."
     },
     "edgeShift": {
-      "level": "geometry",
-      "operation": "edgeShift"
+      "level": "semantic",
+      "via": [
+        "cad.shapes.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9)."
     },
     "imageClip": {
       "level": "geometry",

@@ -8168,6 +8168,46 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_SHAPES_EDIT.into(),
+            version: crate::CAD_SHAPES_EDIT_VERSION,
+            title: "Biçim işlemleri".into(),
+            summary: "Nesnelerin biçimini kalıcı kimlikleriyle değiştirir; geometriyi komut ortak çekirdekle hesaplar: Biçim \
+                      değiştir (reshape: alanı ya da çizgiyi çizilen hatla keser ya da büyütür; çizgi çoklu çizgi olur), \
+                      Sürdür (continue: çizgiyi ya da çoklu çizgiyi ucundan ya da başından noktalarla ve bükümlerle uzatır, \
+                      köşeler kotlarını korur), Paralel kaydır (edgeShift: at'a en yakın düz kenarı distance kadar ya da \
+                      area m²'lik alana ulaşana dek kaydırır; alanda dışarı, çoklu çizgide yürüme yönünün sağı artı), \
+                      Sadeleştir (simplify: toleranstaki köşeleri atar), Kot ver (elevation: Sabit, Artır, Sıfırla) ve \
+                      Okunur yap (readable: baş aşağı okunan yazıları yarım tur döndürür). Cevap ölçüleri (önce ve sonra \
+                      alan ya da uzunluk, eklenen ya da atılan köşe, kaydırma) verir. Tek geri alma adımı, aracın adıyla."
+                .into(),
+            aliases: vec!["bicim-islemleri".into(), "shapes".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ShapesEdit>(),
+            output: schema::<crate::ShapesEdited>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parselin kenarını 1250 m²'ye ulaşana dek kaydır".into(),
+                    input: json!({ "work": { "kind": "edgeShift", "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001",
+                        "at": { "x": 423540.0, "y": 4512315.0 }, "area": 1250.0 } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Seçilen nesnelerin köşelerine 125,40 m kot ver".into(),
+                    input: json!({ "work": { "kind": "elevation", "ids": [ "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001" ],
+                        "elevation": { "mode": "set", "z": 125.4 } } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_AREAS_EDIT.into(),
             version: crate::CAD_AREAS_EDIT_VERSION,
             title: "Alan işlemleri".into(),
@@ -10182,6 +10222,9 @@ mod tests {
                     }
                     crate::CAD_SECTOR_CREATE => {
                         serde_json::from_value::<crate::SectorCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SHAPES_EDIT => {
+                        serde_json::from_value::<crate::ShapesEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_AREAS_EDIT => {
                         serde_json::from_value::<crate::AreasEdit>(e.input.clone()).map(|_| ())

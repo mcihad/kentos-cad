@@ -125,6 +125,14 @@ codes! {
     INVALID_HOLE = "invalid_hole", Failed, false, "Delik alanın içinde kalmalı ve alanı parçalara ayırmamalı.";
     /// No multi-part object where one is split into its parts (Parçalara ayır).
     NOT_MULTI_PART = "not_multi_part", Failed, false, "Çok parçalı nesne yok: alan, çoklu çizgi ya da çok noktalı nesne verin.";
+    /// A Biçim değiştir sketch the object does not take: it meets nothing, more than one part, a hole (docs/adr/0173).
+    RESHAPE_REFUSED = "reshape_refused", Failed, false, "Hat nesneyi bu biçimde değiştiremez: sınırı kesmeli ya da ona değmeli, tek parçada kalmalı, deliğe değmemeli.";
+    /// An edge Paralel kaydır cannot move: curved, parallel to its neighbour, past it, or no such edge (docs/adr/0191).
+    EDGE_SHIFT_REFUSED = "edge_shift_refused", Failed, false, "Kenar bu biçimde kaydırılamaz: düz olmalı, komşusuna paralel olmamalı ve onu aşmamalı.";
+    /// A tolerance that drops no vertex of any object (Sadeleştir).
+    NOTHING_TO_SIMPLIFY = "nothing_to_simplify", Failed, false, "Bu toleransla atılacak köşe yok.";
+    /// Artır on objects without an elevation at any vertex (Kot ver).
+    NO_ELEVATION = "no_elevation", Failed, false, "Nesnelerin hiçbir köşesinde kot yok; fark eklenecek bir şey yok.";
     NO_INTERSECTION = "no_intersection", Failed, false, "Yapımın aradığı teğet ya da kesişim yok: daireler, uzaklıklar ya da doğrultular buluşmuyor.";
     INVALID_PARCEL_NUMBER = "invalid_parcel_number", Failed, false, "Parsel numarası boş.";
     PARCEL_NUMBER_TAKEN = "parcel_number_taken", Warning, false, "Verilen parsel numarası başka bir parselde de var; yine verildi.";
@@ -723,7 +731,7 @@ codes! {
 
     // ── A path's vertices and edges (docs/adr/0279) ─────────────────────
     /// An object that is not a polyline or an area where a path's vertex or edge is edited.
-    NOT_A_PATH = "not_a_path", Failed, false, "Köşe ve kenar işlemleri çoklu çizgide ve kapalı alanda yapılır.";
+    NOT_A_PATH = "not_a_path", Failed, false, "Nesne bu işlemin türünden değil: köşe ve kenar işlemleri, Biçim değiştir, Sürdür, Sadeleştir ve Kot ver çizgide, çoklu çizgide, kapalı alanda (Kot ver noktada da) yapılır.";
     /// A place of the wrong kind for the action (a vertex for Köşeyi sil, an edge's middle for the others).
     WRONG_PLACE = "wrong_place", Failed, false, "Yer işlemin istediği türden değil: köşe ya da kenarın ortası.";
     /// Yaya dönüştür's point or radius that gives no arc (docs/adr/0288).

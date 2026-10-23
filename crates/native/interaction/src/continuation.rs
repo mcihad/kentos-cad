@@ -16,15 +16,15 @@
 //! The splice and the end directions are the shared core's
 //! (`ops::continuation`); none is computed here.
 
-use kentos_commands::{EditOperation, Entity, EntityEdit, EntityGeometry};
+use kentos_commands::{Entity, ShapeWork};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::ops::continuation::{Ends, continue_path, path_ends};
+use kentos_geometry_core::ops::continuation::{Ends, path_ends};
 
 use crate::Vec2;
 use crate::edge;
 use crate::log::Level;
-use crate::spatial::measures;
+use crate::points;
 use crate::tool::Context;
 
 /// Sürdür: `tool.continue`.
@@ -102,84 +102,25 @@ pub fn pick_at(p: Vec2, cx: &Context<'_>) -> Option<Slot> {
     })
 }
 
-/// The object's vertex elevations in the order of its vertices, none when
-/// it has none.
-fn elevations(e: &Entity) -> Option<Vec<Option<f64>>> {
-    let zs = match e {
-        Entity::Line(l) => vec![l.za, l.zb],
-        Entity::Polyline(p) => p.zs.clone()?,
-        _ => return None,
-    };
-    zs.iter().any(Option::is_some).then_some(zs)
-}
-
-/// Writes the object continued by the drawn path `drawn` (its first point
-/// the end) with one bulge per drawn segment, one undo step “Sürdür”.
-/// Whether it was written; the command's refusal is said otherwise.
+/// Writes the object continued by the drawn path `drawn` (its first point the end) with one bulge per drawn
+/// segment through `cad.shapes.edit` (docs/adr/0622 §9), one undo step “Sürdür”. Whether it was written; the
+/// command's refusal is said otherwise.
 pub fn write(target: &Target, drawn: &[Vec2], bulges: &[f64], cx: &mut Context<'_>) -> bool {
-    let Some(e) = cx.doc.get(target.slot) else {
+    let work = ShapeWork::Continue {
+        id: edge::uid(cx.doc, target.slot),
+        from_start: target.from_first,
+        pts: drawn.iter().skip(1).map(|&p| points::wire(p)).collect(),
+        bulges: Some(bulges.to_vec()),
+    };
+    let Some(out) = points::write_shape(work, cx) else {
         return false;
     };
-    let before = edge::core(e).shape;
-    let (old_length, old_count) = (
-        measures(e).1.unwrap_or(0.0),
-        match e {
-            Entity::Polyline(p) => p.pts.len(),
-            _ => 2,
-        },
-    );
-    let Some(after) = continue_path(&before, target.from_first, drawn, bulges) else {
-        cx.say(Level::Warn, NOTHING_DRAWN);
-        return false;
-    };
-    let Some(mut geometry) = edge::geometry(&after) else {
-        return false;
-    };
-    // Its own vertices keep their elevations; the new ones have none.
-    if let (
-        Some(zs),
-        EntityGeometry::Polyline {
-            pts, zs: written, ..
-        },
-    ) = (elevations(e), &mut geometry)
-        && pts.len() >= zs.len()
-    {
-        let added = vec![None; pts.len().saturating_sub(zs.len())];
-        *written = Some(if target.from_first {
-            added.into_iter().chain(zs).collect()
-        } else {
-            zs.into_iter().chain(added).collect()
-        });
-    }
-    let uid = edge::uid(cx.doc, target.slot);
-    // A line becomes a polyline: in its place, with its attributes and label.
-    let change = if matches!(e, Entity::Line(_)) {
-        EntityEdit::Replace {
-            uid,
-            geometry,
-            keep_data: Some(true),
-        }
-    } else {
-        EntityEdit::Update { uid, geometry }
-    };
-    if edge::write(EditOperation::Continue, vec![change], cx).is_none() {
-        return false;
-    }
-    let (length, count) = cx.doc.get(target.slot).map_or((0.0, 0), |e| {
-        (
-            measures(e).1.unwrap_or(0.0),
-            match e {
-                Entity::Polyline(p) => p.pts.len(),
-                _ => 2,
-            },
-        )
-    });
     let f = cx.format();
     let text = format!(
         "Sürdürüldü: {} köşe eklendi; uzunluk {} oldu (+{}).",
-        count.saturating_sub(old_count),
-        f.length(length),
-        f.length(length - old_length)
+        out.count,
+        f.length(out.after),
+        f.length(out.after - out.before)
     );
     cx.say(Level::Success, text);
     true

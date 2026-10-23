@@ -285,6 +285,32 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.shapes.edit",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_path",
+                "not_a_text",
+                "too_few_points",
+                "reshape_refused",
+                "multi_part",
+                "bulge_count",
+                "edge_shift_refused",
+                "invalid_input",
+                "invalid_tolerance",
+                "nothing_to_simplify",
+                "no_elevation",
+                "degenerate_shape",
+                "layer_locked",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.areas.edit",
         refusals: &[
             &[

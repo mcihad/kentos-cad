@@ -7379,6 +7379,53 @@ class SelectRegion(_Union):
         return _variant(_SELECT_REGION, "SelectRegion", "kind", data).from_json(data)
 
 
+class ShapeElevation(_Union):
+    """Kot ver's elevation: one value for every vertex, a change to the ones there, or none.
+
+    One of:
+
+    - :class:`SetShapeElevation` (``mode: set``)
+    - :class:`RaiseShapeElevation` (``mode: raise``)
+    - :class:`ClearShapeElevation` (``mode: clear``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "mode"
+
+    @property
+    def mode(self) -> str:
+        """The name of the variant (``mode`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShapeElevation:
+        return _variant(_SHAPE_ELEVATION, "ShapeElevation", "mode", data).from_json(data)
+
+
+class ShapeWork(_Union):
+    """The edit, with what it works on.
+
+    One of:
+
+    - :class:`ReshapeShapeWork` (``kind: reshape``)
+    - :class:`ContinueShapeWork` (``kind: continue``)
+    - :class:`EdgeShiftShapeWork` (``kind: edgeShift``)
+    - :class:`SimplifyShapeWork` (``kind: simplify``)
+    - :class:`ElevationShapeWork` (``kind: elevation``)
+    - :class:`ReadableShapeWork` (``kind: readable``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShapeWork:
+        return _variant(_SHAPE_WORK, "ShapeWork", "kind", data).from_json(data)
+
+
 class SheetTemplateSource(_Union):
     """One of:
 
@@ -45290,6 +45337,80 @@ class SettingsSet(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ShapesEdit(_Model):
+    """`cad.shapes.edit`'s input.
+
+    Refusals, in this order: `not_finite`, `invalid_uid`, `entity_not_found`, then the edit's own (`wrong_kind`,
+    `no_crossing`, `invalid_distance`, `nothing_to_do` …), then `cad.entities.edit`'s (`layer_locked` …).
+    """
+    work: ShapeWork
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["work"] = self.work.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShapesEdit:
+        return cls(
+            work=ShapeWork.from_json(data["work"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ShapesEdited(_Model):
+    """What `cad.shapes.edit` wrote.
+    Attributes:
+        changed: The objects updated or replaced in place.
+        before: The size before and after, for one object: an area's net area in square metres, a path's length in metres
+            (Biçim değiştir, Sürdür, Paralel kaydır); zero otherwise. Unit: 1.
+        after: Unit: 1.
+        objects: How many objects were edited, and how many the edit left as they were (a kind it does not take, nothing to
+            change). Unit: count.
+        skipped: Unit: count.
+        count: Sürdür: the vertices added. Sadeleştir: the vertices dropped. Okunur yap: the texts turned. Unit: count.
+        distance: Paralel kaydır: the distance the edge moved. Sadeleştir: the largest deviation. Both in the drawing's unit. Unit: length.
+    """
+    changed: list[str]
+    before: float
+    after: float
+    objects: int
+    skipped: int
+    count: int
+    distance: float
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["before"] = float(self.before)
+        out["after"] = float(self.after)
+        out["objects"] = self.objects
+        out["skipped"] = self.skipped
+        out["count"] = self.count
+        out["distance"] = float(self.distance)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShapesEdited:
+        return cls(
+            changed=list(data["changed"]),
+            before=float(data["before"]),
+            after=float(data["after"]),
+            objects=data["objects"],
+            skipped=data["skipped"],
+            count=data["count"],
+            distance=float(data["distance"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetDeliveryResource(_Model):
     """
     Attributes:
@@ -66839,6 +66960,219 @@ class SimilarSelectRegion(SelectRegion):
 
 
 @dataclass(kw_only=True, slots=True)
+class SetShapeElevation(ShapeElevation):
+    """Sabit: every vertex at `z`.
+    Attributes:
+        z: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "set"
+    z: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"mode": "set"}
+        out["z"] = float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetShapeElevation:
+        return cls(
+            z=float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RaiseShapeElevation(ShapeElevation):
+    """Artır: every elevation there raised by `by` (lowered when negative); vertices without one stay without.
+    Attributes:
+        by: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "raise"
+    by: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"mode": "raise"}
+        out["by"] = float(self.by)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RaiseShapeElevation:
+        return cls(
+            by=float(data["by"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ClearShapeElevation(ShapeElevation):
+    """Sıfırla: the elevations gone."""
+    TAG_VALUE: ClassVar[str] = "clear"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"mode": "clear"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ClearShapeElevation:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ReshapeShapeWork(ShapeWork):
+    """Biçim değiştir: an area cut or grown, or a path's stretch redrawn, by the straight line through `line`'s
+    points; a line becomes a polyline in its place.
+    Attributes:
+        line: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "reshape"
+    id: str
+    line: list[Vec2]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "reshape"}
+        out["id"] = self.id
+        out["line"] = [_vec2_out(e0) for e0 in self.line]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReshapeShapeWork:
+        return cls(
+            id=data["id"],
+            line=[Vec2.from_json(e0) for e0 in data["line"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ContinueShapeWork(ShapeWork):
+    """Sürdür: a line or a polyline continued from its start (`fromStart`) or its end through `pts`, each drawn segment
+    with its bulge (`bulges`, 0 straight); its own vertices keep their elevations.
+    Attributes:
+        pts: Unit: length.
+        bulges: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "continue"
+    id: str
+    pts: list[Vec2]
+    bulges: list[float] | None | Unset = UNSET
+    from_start: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "continue"}
+        out["id"] = self.id
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        out["fromStart"] = self.from_start
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ContinueShapeWork:
+        return cls(
+            id=data["id"],
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            from_start=data["fromStart"] if "fromStart" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EdgeShiftShapeWork(ShapeWork):
+    """Paralel kaydır: the straight edge nearest `at` moved parallel to itself by `distance` (along its outward
+    normal; an area's outward is away from the area), or until the area is `area` square metres; its neighbours
+    lengthen or shorten to meet it.
+    Attributes:
+        at: Unit: length.
+        area: Unit: 1.
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "edgeShift"
+    id: str
+    at: Vec2
+    area: float | None | Unset = UNSET
+    distance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "edgeShift"}
+        out["id"] = self.id
+        out["at"] = _vec2_out(self.at)
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else float(self.area)
+        if self.distance is not UNSET:
+            out["distance"] = None if self.distance is None else float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EdgeShiftShapeWork:
+        return cls(
+            id=data["id"],
+            at=Vec2.from_json(data["at"]),
+            area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
+            distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SimplifyShapeWork(ShapeWork):
+    """Sadeleştir: the paths' vertices within `tolerance` of their outline dropped.
+    Attributes:
+        tolerance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "simplify"
+    ids: list[str]
+    tolerance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "simplify"}
+        out["ids"] = list(self.ids)
+        out["tolerance"] = float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SimplifyShapeWork:
+        return cls(
+            ids=list(data["ids"]),
+            tolerance=float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElevationShapeWork(ShapeWork):
+    """Kot ver: the objects' vertices given elevations (lines, polylines, areas and points take them)."""
+    TAG_VALUE: ClassVar[str] = "elevation"
+    ids: list[str]
+    elevation: ShapeElevation
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "elevation"}
+        out["ids"] = list(self.ids)
+        out["elevation"] = self.elevation.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElevationShapeWork:
+        return cls(
+            ids=list(data["ids"]),
+            elevation=ShapeElevation.from_json(data["elevation"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReadableShapeWork(ShapeWork):
+    """Okunur yap: the texts that read upside down turned half round about their box's middle."""
+    TAG_VALUE: ClassVar[str] = "readable"
+    ids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "readable"}
+        out["ids"] = list(self.ids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReadableShapeWork:
+        return cls(
+            ids=list(data["ids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SystemSheetTemplateSource(SheetTemplateSource):
     TAG_VALUE: ClassVar[str] = "system"
     id: str
@@ -69637,6 +69971,12 @@ _SCHEDULE_OPERATION: dict[str, type[ScheduleOperation]] = {"cell": CellScheduleO
 _SELECT_REGION: dict[str, type[SelectRegion]] = {"window": WindowSelectRegion, "crossing": CrossingSelectRegion, "fence": FenceSelectRegion, "polygon": PolygonSelectRegion, "circle": CircleSelectRegion, "containing": ContainingSelectRegion, "point": PointSelectRegion, "all": AllSelectRegion, "objects": ObjectsSelectRegion, "invert": InvertSelectRegion, "similar": SimilarSelectRegion}
 
 
+_SHAPE_ELEVATION: dict[str, type[ShapeElevation]] = {"set": SetShapeElevation, "raise": RaiseShapeElevation, "clear": ClearShapeElevation}
+
+
+_SHAPE_WORK: dict[str, type[ShapeWork]] = {"reshape": ReshapeShapeWork, "continue": ContinueShapeWork, "edgeShift": EdgeShiftShapeWork, "simplify": SimplifyShapeWork, "elevation": ElevationShapeWork, "readable": ReadableShapeWork}
+
+
 _SHEET_TEMPLATE_SOURCE: dict[str, type[SheetTemplateSource]] = {"system": SystemSheetTemplateSource, "custom": CustomSheetTemplateSource}
 
 
@@ -69976,6 +70316,7 @@ __all__ = [
     "CleanupIgnoreName",
     "CleanupReport",
     "ClearBoundChange",
+    "ClearShapeElevation",
     "ClearStyleTableEdit",
     "Clip",
     "ClipBoundary",
@@ -70047,6 +70388,7 @@ __all__ = [
     "ContentLeaderEdit",
     "ContinueDimensionMeasure",
     "ContinueInPaperOverflow",
+    "ContinueShapeWork",
     "ContinuedPaperTableSource",
     "ControlNurbsBy",
     "Convention",
@@ -70201,11 +70543,13 @@ __all__ = [
     "EdgeNear",
     "EdgeRectangleFrame",
     "EdgeRegularFrame",
+    "EdgeShiftShapeWork",
     "EditOperation",
     "EditOperationName",
     "EditTablesOperation",
     "ElementRef",
     "ElevationDimensionMeasure",
+    "ElevationShapeWork",
     "EllipseAxisCurveConstruction",
     "EllipseCentreCurveConstruction",
     "EllipseConstructedCurve",
@@ -71349,6 +71693,7 @@ __all__ = [
     "QueryTime",
     "RadiusConstraintRule",
     "RadiusDimensionMeasure",
+    "RaiseShapeElevation",
     "RampEntity",
     "RampsCreate",
     "RampsCreated",
@@ -71379,6 +71724,7 @@ __all__ = [
     "RatioPaperPlotScale",
     "RayEntity",
     "RayEntityGeometry",
+    "ReadableShapeWork",
     "ReboundSpacesOperation",
     "ReconcileConflict",
     "ReconcileCounts",
@@ -71488,6 +71834,7 @@ __all__ = [
     "ReselectHatchEdit",
     "ResetArrayEdit",
     "ResetJoinsWallsOperation",
+    "ReshapeShapeWork",
     "ResizeItemPaperOp",
     "ResolveFormsOp",
     "ResourceKind",
@@ -71574,6 +71921,7 @@ __all__ = [
     "SetPagePaperOp",
     "SetParameterEdit",
     "SetScheduleOperation",
+    "SetShapeElevation",
     "SetSheet",
     "SetSheetMasterPaperOp",
     "SetSheetPlotPaperOp",
@@ -71585,7 +71933,11 @@ __all__ = [
     "SetWallsOperation",
     "SettingsChanged",
     "SettingsSet",
+    "ShapeElevation",
     "ShapePaperItemKind",
+    "ShapeWork",
+    "ShapesEdit",
+    "ShapesEdited",
     "SharpRectangleCorners",
     "SheetDeliveryResource",
     "SheetDeliveryResources",
@@ -71622,6 +71974,7 @@ __all__ = [
     "SimilarSelectRegion",
     "SimilarityCrsPlane",
     "SimilarityTransform",
+    "SimplifyShapeWork",
     "SinkColumn",
     "SinkDimension",
     "SinkDimensionName",

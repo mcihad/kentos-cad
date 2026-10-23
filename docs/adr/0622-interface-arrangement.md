@@ -464,13 +464,22 @@ Bu dilimde düzeltilenler:
   hesabı ve yazmayı komuta bırakır (`line_parts.rs` kalktı). `areas_edit_cases.py` birim hücrelerle, KentOS kodu
   olmadan 51 durum üretir; bindirmenin girdi köşelerini sınırda tuttuğu ve Böl'ün ilk parçasının batıdaki olduğu
   başvurunun kuralıdır.
+- **Biçim işlemleri:** `cad.shapes.edit` tek komuttur; girdisi işin türü ve nesnelerin kalıcı kimlikleriyle
+  kullanıcının verdikleridir: Biçim değiştir (`reshape`: hattın noktaları), Sürdür (`continue`: baştan ya da sondan,
+  noktalar ve bükümler), Paralel kaydır (`edgeShift`: kenarın yanındaki nokta, uzaklık ya da hedef alan), Sadeleştir
+  (`simplify`: tolerans), Kot ver (`elevation`: Sabit, Artır, Sıfırla) ve Okunur yap (`readable`). Şekli komut
+  çekirdekle hesaplar, `cad.entities.edit`'in yazıcısıyla aracın adındaki tek adımda yazar; cevap önce ve sonraki alanı
+  ya da uzunluğu, eklenen ya da atılan köşeyi, kaydırmayı ve sapmayı verir. Kot ver'in kuralı (`Change`,
+  `geometry_with`) uygulama katmanına taşındı, Öznitelikler de onu kullanır. Yeni retler `reshape_refused`,
+  `edge_shift_refused`, `nothing_to_simplify`, `no_elevation`; `not_a_path` genişledi. Okunur yap'ta ters okunan yazı
+  yoksa hiçbir şey yazılmaz, ret de yoktur. `shape_edits_cases.py` KentOS kodu olmadan 42 durum üretir.
 - **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
   de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
   çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu
   varsayılanlar yalnız girdi şemasında aynen tanımlıysa kabul edilir; verilen değerlerin değişmesi gizlenmez. Bu son denetim dosya yazma testi değildir;
   mevcut başsız dosya testlerinin yanında kodun/kataloğun bütünlüğünü sınar.
 
-Bu bölüm `UX-14`'ün bütün tarihsel araç borcunu kapattığı anlamına gelmez. Halka, Daire dilimi, Revizyon bulutu, yapım yardımcıları, alan işlemleri,
+Bu bölüm `UX-14`'ün bütün tarihsel araç borcunu kapattığı anlamına gelmez. Halka, Daire dilimi, Revizyon bulutu, yapım yardımcıları, alan işlemleri, biçim işlemleri,
 Çakışma/Topoloji, Bitişik alan ve Parsel oluştur dilimleri kapandı; diğer açık araçlar (P1 ve P2) listedeki sıralarıyla
 kalır.
 

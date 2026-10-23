@@ -222,6 +222,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.entities.create'in durumlarında; yapımlar onun yolundan yazar (ADR 0199 §2, 0622 §9)",
     ),
     (
+        "cad.shapes.edit",
+        "degenerate_shape",
+        "çekirdeğin sonucu sözleşmenin geometrisine çevrilemezse verilir; çekirdek yalnız çizgi, çoklu çizgi ve alan döndürür, girdiyle ulaşılmaz (ADR 0622 §9)",
+    ),
+    (
         "cad.parcels.create",
         "not_a_layer",
         "parselin katmanı sabittir (parsel): yeni projede ve aynı adımda açılan hep katmandır; parsel adında bir grup ancak elle kurulur, denetimi cad.polygon.create'in ortak yolundadır (checks::layer, ADR 0622 §9)",

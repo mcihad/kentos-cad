@@ -41,14 +41,14 @@
 //! (`TextPlace::readable`).
 
 use kentos_commands::{
-    CommandResult, EditOperation, EntitiesEditPlan, EntitiesExplode, EntitiesJoin, Entity,
-    EntityEdit, ExplodeDensity, TextEntity, TrimBoundaries,
+    CommandResult, EntitiesEditPlan, EntitiesExplode, EntitiesJoin, Entity, ExplodeDensity,
+    TextEntity, TrimBoundaries,
 };
 use kentos_domain::Slot;
-use kentos_geometry_core::entity::{Shape, TextPlace};
+use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::geometry::{drawing_font, edit_geometry, shape};
+use kentos_native_application::geometry::shape;
 use kentos_native_application::{ExecutionContext, entities_explode, entities_join};
 
 use crate::Vec2;
@@ -219,45 +219,18 @@ impl ObjectAction {
             );
             return;
         }
-        let font = drawing_font(cx.doc.settings().drawing_font);
-        let changes: Vec<EntityEdit> = texts
-            .iter()
-            .filter_map(|(slot, t)| {
-                // A multi-line text turns about its box's middle too (docs/adr/0182); one along a
-                // curve turns its curve the other way, its alignment's shares swapped (docs/adr/0196 §3).
-                let s = shape(&Entity::Text(t.clone()));
-                let place = TextPlace::of(&s)?;
-                let turned = if t.path.is_some() {
-                    let placed = place.along(font)?.readable()?;
-                    TextEntity {
-                        p: kentos_commands::Vec2 {
-                            x: placed.p.x,
-                            y: placed.p.y,
-                        },
-                        rotation: placed.rotation,
-                        align: placed
-                            .align
-                            .and_then(|a| kentos_commands::TextAlign::from_name(a.name())),
-                        path: Some(kentos_native_application::geometry::contract_curve(
-                            placed.curve,
-                        )),
-                        ..t.clone()
-                    }
-                } else {
-                    let (p, rotation) = place.readable(font)?;
-                    TextEntity {
-                        p: kentos_commands::Vec2 { x: p.x, y: p.y },
-                        rotation,
-                        ..t.clone()
-                    }
-                };
-                Some(EntityEdit::Update {
-                    uid: edge::uid(cx.doc, *slot),
-                    geometry: edit_geometry(shape(&Entity::Text(turned)))?,
-                })
-            })
-            .collect();
-        if changes.is_empty() {
+        // Okunur yap by its meaning (docs/adr/0622 §9): the command turns those that read upside down.
+        let work = kentos_commands::ShapeWork::Readable {
+            ids: texts
+                .iter()
+                .map(|(slot, _)| edge::uid(cx.doc, *slot))
+                .collect(),
+        };
+        let Some(out) = points::write_shape(work, cx) else {
+            return;
+        };
+        let turned = out.count;
+        if turned == 0 {
             cx.say(
                 Level::Info,
                 format!(
@@ -265,10 +238,6 @@ impl ObjectAction {
                     texts.len()
                 ),
             );
-            return;
-        }
-        let turned = changes.len();
-        if edge::write(EditOperation::Readable, changes, cx).is_none() {
             return;
         }
         cx.say(Level::Success, format!("{turned} yazı okunur yapıldı."));

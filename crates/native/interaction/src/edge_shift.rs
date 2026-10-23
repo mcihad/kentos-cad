@@ -9,7 +9,7 @@
 //! `cad.entities.edit` (step “Paralel kaydır”) and the tool waits for the
 //! next edge. Esc and Ctrl+Z let the edge go; Esc with none leaves.
 
-use kentos_commands::{EditOperation, Entity, EntityEdit};
+use kentos_commands::{Entity, ShapeWork};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::edge_shift::{self as rules, Picked};
@@ -20,6 +20,7 @@ use crate::Vec2;
 use crate::edge::{self, Outline};
 use crate::format::Format;
 use crate::log::Level;
+use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Stroke, Tag, Tone, Tool};
 
@@ -111,23 +112,19 @@ impl EdgeShift {
             return false;
         };
         let k = &picking.picked;
-        let moved = match rules::shifted(&picking.shape, k.ring, k.edge, d) {
-            Ok(moved) => moved,
-            Err(why) => {
-                cx.say(Level::Warn, why);
-                return false;
-            }
+        // The picked edge's middle names it; the command picks the same nearest straight edge (docs/adr/0622 §9).
+        let work = ShapeWork::EdgeShift {
+            id: edge::uid(cx.doc, picking.slot),
+            at: points::wire(Vec2::new((k.a.x + k.b.x) / 2.0, (k.a.y + k.b.y) / 2.0)),
+            distance: Some(d),
+            area: None,
         };
-        let Some(geometry) = edge::geometry(&moved) else {
+        let Some(out) = points::write_shape(work, cx) else {
             return false;
         };
-        let uid = edge::uid(cx.doc, picking.slot);
-        let change = EntityEdit::Update { uid, geometry };
-        if edge::write(EditOperation::EdgeShift, vec![change], cx).is_none() {
-            return false;
-        }
+        let moved_area = picking.area.map(|_| out.after);
         let format = cx.format();
-        let said = match rules::area_of(&moved) {
+        let said = match moved_area {
             Some(area) => format!(
                 "{LABEL}: kenar {} kaydırıldı, alan {}.",
                 format.length(d),

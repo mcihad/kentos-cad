@@ -352,6 +352,20 @@ pub(crate) fn write_construction(
     written(result, cx)
 }
 
+/// A shape edit through `cad.shapes.edit` (docs/adr/0622 §9), one undo step named after the tool; a refusal is said.
+pub(crate) fn write_shape(
+    work: kentos_commands::ShapeWork,
+    cx: &mut Context<'_>,
+) -> Option<kentos_commands::ShapesEdited> {
+    use kentos_native_application::{ExecutionContext, shape_edits};
+    let input = kentos_commands::ShapesEdit {
+        work,
+        expected_revision: None,
+    };
+    let result = shape_edits::execute(&mut ExecutionContext::new(cx.doc), input);
+    written(result, cx)
+}
+
 /// The command's input for a construction, as [`write_construction`] sends it (a tool's preview asks with it too).
 pub(crate) fn construction_input(
     construction: kentos_commands::Construction,

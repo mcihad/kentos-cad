@@ -15,7 +15,7 @@
 //!
 //! The reshape is the shared core's (`ops::reshape_by`); none is computed here.
 
-use kentos_commands::{EditOperation, Entity, EntityEdit};
+use kentos_commands::{Entity, ShapeWork};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::{Shape, area_parts, entity_area, entity_length, polygon_ring};
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
@@ -26,6 +26,7 @@ use crate::Vec2;
 use crate::edge;
 use crate::format::Format;
 use crate::log::Level;
+use crate::points;
 use crate::spatial::measures;
 use crate::tool::{Area, Context, Stroke, Tone};
 
@@ -186,39 +187,17 @@ pub fn preview(t: &Target, sketch: &[Vec2], cx: &Context<'_>) -> Option<Reshaped
     Some(Reshaped { area, stroke, line })
 }
 
-/// Writes the object reshaped by the line `sketch`, one undo step “Biçim
-/// değiştir”. Whether it was written; the refusal is said otherwise.
+/// Writes the object reshaped by the line `sketch` through `cad.shapes.edit` (docs/adr/0622 §9), one undo step
+/// “Biçim değiştir”. Whether it was written; the refusal is said otherwise.
 pub fn write(t: &Target, sketch: &[Vec2], cx: &mut Context<'_>) -> bool {
-    let Some(e) = cx.doc.get(t.slot) else {
+    let work = ShapeWork::Reshape {
+        id: edge::uid(cx.doc, t.slot),
+        line: sketch.iter().map(|&p| points::wire(p)).collect(),
+    };
+    let Some(out) = points::write_shape(work, cx) else {
         return false;
     };
-    let before = size(e, t.area);
-    let after = match reshape(&edge::core(e).shape, sketch) {
-        Ok(shape) => shape,
-        Err(why) => {
-            cx.say(Level::Warn, refusal_text(&why, t.area));
-            return false;
-        }
-    };
-    let Some(geometry) = edge::geometry(&after) else {
-        return false;
-    };
-    let uid = edge::uid(cx.doc, t.slot);
-    // A line becomes a polyline: in its place, with its attributes and label.
-    let change = if matches!(e, Entity::Line(_)) {
-        EntityEdit::Replace {
-            uid,
-            geometry,
-            keep_data: Some(true),
-        }
-    } else {
-        EntityEdit::Update { uid, geometry }
-    };
-    if edge::write(EditOperation::Reshape, vec![change], cx).is_none() {
-        return false;
-    }
-    let now = cx.doc.get(t.slot).map_or(0.0, |e| size(e, t.area));
-    let (now, change) = sizes(&cx.format(), t.area, now, before);
+    let (now, change) = sizes(&cx.format(), t.area, out.after, out.before);
     cx.say(
         Level::Success,
         format!("{} {now} oldu ({change}).", noun(t.area)),

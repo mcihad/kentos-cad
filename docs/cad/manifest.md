@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 104 | 246 | 43 | 45 | 438 |
-| geometry | 2 | 41 | 1 | 3 | 47 |
+| semantic | 104 | 255 | 43 | 45 | 447 |
+| geometry | 2 | 32 | 1 | 3 | 38 |
 | processing | 0 | 130 | 22 | 2 | 154 |
 | none | 0 | 14 | 6 | 2 | 22 |
 | query | 6 | 24 | 2 | 8 | 40 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 814 satırdan 79'i: geometry 44, none 20, processing 3, query 12.
+CBS'ye özgü olmayan 814 satırdan 70'i: geometry 35, none 20, processing 3, query 12.
 
-### Sonucu çağıran hesaplar (geometry) — 44
+### Sonucu çağıran hesaplar (geometry) — 35
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -46,11 +46,9 @@ CBS'ye özgü olmayan 814 satırdan 79'i: geometry 44, none 20, processing 3, qu
 | `cogo.update` | Kayıtlı ölçüleri çizimden yaz | shared | cad.entities.set |  |
 | `crs.points` | Nokta listesi içe aktar… | shared | cad.entities.create |  |
 | `tool.centerline` | Orta hat | shared | cad.entities.create `centerline` |  |
-| `tool.continue` | Sürdür | shared | cad.entities.edit `continue` |  |
 | `tool.coordinateLabel` | Koordinat yaz | shared | cad.entities.create `coordinates` |  |
 | `tool.coordinateVertices` | Köşelere koordinat yaz | shared | cad.entities.create `coordinates` |  |
 | `tool.copyToLayer` | Katmana kopyala | shared | cad.entities.create |  |
-| `tool.edgeShift` | Paralel kaydır | shared | cad.entities.edit `edgeShift` |  |
 | `tool.imageClip` | Resmi kırp | shared | cad.entities.edit `imageClip` |  |
 | `tool.labelsToText` | Etiketleri yazıya çevir | shared | cad.entities.create `labels` |  |
 | `tool.medianClose` | Refüj kapat | shared | cad.entities.edit `medianClose` |  |
@@ -58,14 +56,7 @@ CBS'ye özgü olmayan 814 satırdan 79'i: geometry 44, none 20, processing 3, qu
 | `tool.planRoad` | Plan yolu | shared | cad.entities.create `planRoad` |  |
 | `tool.polygonize` | Toplu alan | shared | cad.entities.create `polygonize` |  |
 | `tool.quickDimension` | Hızlı ölçü | cad | cad.entities.create |  |
-| `tool.readable` | Okunur yap | shared | cad.entities.edit `readable` |  |
-| `tool.reshape` | Biçim değiştir | shared | cad.entities.edit `reshape` |  |
 | `tool.roadJunctions` | Kavşak temizle | shared | cad.entities.edit `roadJunctions` |  |
-| `tool.setElevation` | Kot ver | shared | cad.entities.edit `elevation` |  |
-| `tool.setElevation#Artır` | Kot ver: Artır | shared | cad.entities.edit `elevation` |  |
-| `tool.setElevation#Sabit` | Kot ver: Sabit | shared | cad.entities.edit `elevation` |  |
-| `tool.setElevation#Sıfırla` | Kot ver: Sıfırla | shared | cad.entities.edit `elevation` |  |
-| `tool.simplify` | Sadeleştir | shared | cad.entities.edit `simplify` |  |
 | `tool.split` | Parçala | shared | cad.entities.edit `split` |  |
 | `tool.split#Eşit parçalara` | Parçala: Eşit parçalara | shared | cad.entities.edit `split` |  |
 | `tool.split#Kesişimlerden` | Parçala: Kesişimlerden | shared | cad.entities.edit `split` |  |

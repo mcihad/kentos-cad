@@ -630,6 +630,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.vertex"
             // The area operations delete and replace their sources (docs/adr/0622 §9).
             | "cad.areas.edit"
+            // The shape edits change the objects in place (docs/adr/0622 §9).
+            | "cad.shapes.edit"
             | "cad.entities.break"
             | "cad.entities.join"
             // Yönü çevir turns the objects in place (docs/adr/0296).

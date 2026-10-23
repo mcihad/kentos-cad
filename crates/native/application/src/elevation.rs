@@ -5,9 +5,11 @@
 //! are carried by the same rules (docs/adr/0224 §2). The web's is
 //! `apps/web/src/product/elevation.ts`; both pass the shared cases.
 
-use kentos_commands::{Entity, Vec2 as Point};
+use kentos_commands::{Entity, EntityGeometry, Vec2 as Point};
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::ops::elevation::{Carry, Elevated, carry_elevations};
+
+use crate::geometry::{edit_geometry, shape};
 
 fn v(p: &Point) -> Vec2 {
     Vec2::new(p.x, p.y)
@@ -242,4 +244,131 @@ pub fn carry(entity: &mut Entity, sources: &[Elevated], same: &[Elevated], how: 
         }
         _ => false,
     }
+}
+
+// ── Kot ver (docs/adr/0142, 0622 §9): what a write does to the vertices' elevations ──
+
+/// Whether an object's kind takes elevations: a point (its `z`), a line, a
+/// polyline and an area. The others are left out of Kot ver.
+pub fn takes(e: &Entity) -> bool {
+    matches!(
+        e,
+        Entity::Point(_) | Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)
+    )
+}
+
+fn any(zs: &Option<Vec<Option<f64>>>) -> bool {
+    zs.iter().flatten().any(Option::is_some)
+}
+
+/// Whether any vertex has an elevation (nothing is allocated).
+pub fn has_any(e: &Entity) -> bool {
+    match e {
+        // Every point and every part too (docs/adr/0174).
+        Entity::Point(p) => p.z.is_some() || p.parts.iter().flatten().any(|q| q.z.is_some()),
+        Entity::Line(l) => l.za.is_some() || l.zb.is_some(),
+        Entity::Polyline(p) => any(&p.zs) || p.parts.iter().flatten().any(|q| any(&q.zs)),
+        Entity::Polygon(p) => {
+            let holes = |hs: &Option<Vec<kentos_commands::RingGeometry>>| {
+                hs.iter().flatten().any(|h| any(&h.zs))
+            };
+            // Every part's too (docs/adr/0143).
+            any(&p.zs)
+                || holes(&p.holes)
+                || p.parts
+                    .iter()
+                    .flatten()
+                    .any(|q| any(&q.zs) || holes(&q.holes))
+        }
+        _ => false,
+    }
+}
+
+/// What a write does to each vertex's elevation.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Change {
+    /// Every vertex gets this elevation, or none: Sabit and Sıfırla, and an
+    /// Öznitelikler cell that takes them all.
+    Set(Option<f64>),
+    /// Every vertex that has an elevation gets it plus the difference; one
+    /// without stays without (Artır).
+    Raise(f64),
+    /// One end of a line, by its place (0 the start, 1 the end): its
+    /// elevation, or none; the other end stays as it is.
+    End(usize, Option<f64>),
+}
+
+impl Change {
+    /// The vertex at `index` of the object's order, with `z` now, after the change.
+    pub fn apply(self, z: Option<f64>, index: usize) -> Option<f64> {
+        match self {
+            Change::Set(z) => z,
+            Change::Raise(by) => z.map(|z| z + by),
+            Change::End(end, to) if end == index => to,
+            Change::End(..) => z,
+        }
+    }
+}
+
+/// The object's own geometry with each vertex's elevation as `change` says,
+/// as `cad.entities.edit` takes it in the operation `elevation`: `zs` for a
+/// line (its two ends), a polyline and an area (each hole's in its own `zs`),
+/// `z` for a point. Every elevation is explicit, so the command writes them
+/// as they are. `None` for a kind without elevations.
+pub fn geometry_with(e: &Entity, change: Change) -> Option<EntityGeometry> {
+    let mut geometry = edit_geometry(shape(e))?;
+    let mut next = 0;
+    let mut run = |zs: Vec<Option<f64>>| -> Vec<Option<f64>> {
+        zs.into_iter()
+            .map(|z| {
+                let out = change.apply(z, next);
+                next += 1;
+                out
+            })
+            .collect()
+    };
+    match (&mut geometry, e) {
+        (EntityGeometry::Point { z, parts, .. }, Entity::Point(p)) => {
+            *z = change.apply(p.z, 0);
+            // Every point of a multi-point object, in turn (docs/adr/0174).
+            for (k, (part, was)) in parts
+                .iter_mut()
+                .flatten()
+                .zip(p.parts.iter().flatten())
+                .enumerate()
+            {
+                part.z = change.apply(was.z, k + 1);
+            }
+        }
+        (EntityGeometry::Line { zs, .. }, Entity::Line(l)) => *zs = Some(run(vec![l.za, l.zb])),
+        (EntityGeometry::Polyline { zs, parts, .. }, Entity::Polyline(_)) => {
+            // `paths`' order: the polyline, then each other part (docs/adr/0174).
+            let mut lines = paths(e).into_iter();
+            *zs = lines.next().map(|p| run(p.zs));
+            for part in parts.iter_mut().flatten() {
+                part.zs = lines.next().map(|p| run(p.zs));
+            }
+        }
+        (
+            EntityGeometry::Polygon {
+                zs, holes, parts, ..
+            },
+            Entity::Polygon(_),
+        ) => {
+            // `paths`' order: the ring, its holes, then each other part's ring and holes.
+            let mut rings = paths(e).into_iter();
+            *zs = rings.next().map(|p| run(p.zs));
+            for hole in holes.iter_mut().flatten() {
+                hole.zs = rings.next().map(|p| run(p.zs));
+            }
+            for part in parts.iter_mut().flatten() {
+                part.zs = rings.next().map(|p| run(p.zs));
+                for hole in part.holes.iter_mut().flatten() {
+                    hole.zs = rings.next().map(|p| run(p.zs));
+                }
+            }
+        }
+        _ => return None,
+    }
+    Some(geometry)
 }

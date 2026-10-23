@@ -21,9 +21,7 @@
 
 use std::collections::HashSet;
 
-use kentos_commands::{
-    CornerPick, EditOperation, EntitiesChamfer, EntitiesFillet, EntitiesReverse, EntityEdit,
-};
+use kentos_commands::{CornerPick, EntitiesChamfer, EntitiesFillet, EntitiesReverse};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::fillet::CornerOp;
@@ -132,15 +130,6 @@ impl Reshape {
 
     pub fn simplify() -> Modify<Self> {
         Self::new(Kind::Simplify)
-    }
-
-    fn operation(&self) -> EditOperation {
-        match self.kind {
-            Kind::FilletAll => EditOperation::Fillet,
-            Kind::ChamferAll => EditOperation::Chamfer,
-            Kind::Reverse => EditOperation::Reverse,
-            Kind::Simplify => EditOperation::Simplify,
-        }
     }
 
     /// The value the tool works with: the radius, the two distances, the tolerance.
@@ -704,17 +693,17 @@ impl Stages for Reshape {
             cx.say(Level::Success, text);
             return Flow::Exit;
         }
-        let changes: Vec<EntityEdit> = plan
-            .edits
-            .iter()
-            .filter_map(|(slot, shape)| {
-                Some(EntityEdit::Update {
-                    uid: edge::uid(cx.doc, *slot),
-                    geometry: edge::geometry(shape)?,
-                })
-            })
-            .collect();
-        if edge::write(self.operation(), changes, cx).is_none() {
+        // Sadeleştir by its meaning (docs/adr/0622 §9): the objects and the tolerance, the command drops the vertices.
+        let [tolerance, _] = self.value(cx.memory);
+        let work = kentos_commands::ShapeWork::Simplify {
+            ids: plan
+                .edits
+                .iter()
+                .map(|(slot, _)| edge::uid(cx.doc, *slot))
+                .collect(),
+            tolerance,
+        };
+        if points::write_shape(work, cx).is_none() {
             return Flow::Stay;
         }
         let text = self.done_message(&plan, &cx.format());

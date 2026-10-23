@@ -9701,14 +9701,14 @@
    "id": "tool.continue",
    "kind": "tool",
    "title": "Sürdür",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.shapes.edit"
    ],
-   "operation": "continue",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.shapes.edit",
+   "mcp": "cad.shapes.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -10150,14 +10150,14 @@
    "id": "tool.edgeShift",
    "kind": "tool",
    "title": "Paralel kaydır",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.shapes.edit"
    ],
-   "operation": "edgeShift",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.shapes.edit",
+   "mcp": "cad.shapes.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -11424,14 +11424,14 @@
    "id": "tool.readable",
    "kind": "tool",
    "title": "Okunur yap",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.shapes.edit"
    ],
-   "operation": "readable",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.shapes.edit",
+   "mcp": "cad.shapes.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -11582,14 +11582,14 @@
    "id": "tool.reshape",
    "kind": "tool",
    "title": "Biçim değiştir",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.shapes.edit"
    ],
-   "operation": "reshape",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.shapes.edit",
+   "mcp": "cad.shapes.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -11871,14 +11871,14 @@
    "id": "tool.setElevation",
    "kind": "tool",
    "title": "Kot ver",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.shapes.edit"
    ],
-   "operation": "elevation",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.shapes.edit",
+   "mcp": "cad.shapes.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -11887,13 +11887,13 @@
    "id": "tool.setElevation#Artır",
    "kind": "method",
    "title": "Kot ver: Artır",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.shapes.edit"
    ],
-   "operation": "elevation",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.shapes.edit",
+   "mcp": "cad.shapes.edit",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -11903,13 +11903,13 @@
    "id": "tool.setElevation#Sabit",
    "kind": "method",
    "title": "Kot ver: Sabit",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.shapes.edit"
    ],
-   "operation": "elevation",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.shapes.edit",
+   "mcp": "cad.shapes.edit",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -11919,13 +11919,13 @@
    "id": "tool.setElevation#Sıfırla",
    "kind": "method",
    "title": "Kot ver: Sıfırla",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.shapes.edit"
    ],
-   "operation": "elevation",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.shapes.edit",
+   "mcp": "cad.shapes.edit",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -11935,14 +11935,14 @@
    "id": "tool.simplify",
    "kind": "tool",
    "title": "Sadeleştir",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.shapes.edit"
    ],
-   "operation": "simplify",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.shapes.edit",
+   "mcp": "cad.shapes.edit",
+   "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
