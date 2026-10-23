@@ -220,9 +220,30 @@ Ortak etkileşim izlerinde (`fixtures/interaction/v1`) `rightClick` adımı web'
 oynatıcısı bu yüzden izleri tercih açıkmış gibi oynatır (`traces/player.rs`). Varsayılan davranışı birim testleri sınar:
 `a_right_click_opens_the_menu_of_what_is_going_on` ve `a_right_click_never_drops_a_moved_grip_at_the_pointer`.
 
-## 7. Python çıktısı (sırada)
+## 7. Python çıktısı
 
-Uygulama ayarı "İşlemlerin Python kodunu konsola yaz" (FreeCAD'in "Show script commands in
-Python console"u gibi). Açıkken çizilen, seçilen, taşınan her işin Python kodu Python
-konsoluna yazılır; kapalıyken yazılmaz. Her aracın kodu tek tek denetlenir: anlamsal komutla mı
-yazıyor, Python'da ve MCP'de karşılığı var mı (ADR 0244'ün manifesti).
+Tercih `drafting.pythonEcho` ("İşlemlerin Python kodunu konsola yaz", Uygulama ayarları › Görünüm › Python konsolu) kapalı
+başlar; FreeCAD'in "Show script commands in Python console"u gibidir. Açıkken iki şey Python konsoluna "Komut" etiketli
+satırlarla, kod olarak yazılır (`python/echo.rs`):
+
+- **Komutlar:** açık çizimin çalıştırdığı her ürün komutu. Kaynak çizimin çağrı kaydıdır (`kentos.calls/1`, Komut
+  geçmişinin okuduğu satırlar). Kod tek çağrıdır (`python_call::python_echo`):
+  `cad.entities.transform.execute_input(doc, cad.entities.transform.input_type.from_json({...}))`. Başında komutun
+  Türkçe başlığı yorum olarak durur. Kısıtları gevşeterek yapılan çağrı `with doc.relaxed():` altına yazılır. Formun
+  gizli alanları gizli yazılır (ADR 0443 §2).
+- **Seçim:** elle yapılan her seçim `doc.select([...])` olarak, kalıcı kimliklerle yazılır; seçim kalkınca
+  `doc.select([])`. 200'den çok nesnede kimlikler yazılmaz, bir yorum seçimin `doc.selection()` ile alınacağını söyler.
+
+Konsolun kendi çalıştırmalarının yaptıkları yazılmaz; kodları zaten oradadır. Çizim açılınca ya da tercih açılınca o ana
+kadar yapılanlar yazılmaz.
+
+Seçimin bugüne kadar Python karşılığı yoktu. SDK'ya `Document.select(uids)` ve `Document.selection()` eklendi:
+
+- Masaüstünün konsolunda bunlar pencerenin seçimidir; araçlar sonra onunla çalışır. Konsol bağlantısında `select` ve
+  `selection` istekleriyle karşılanır. Bilinmeyen kimlik `unknown_object` ile reddedilir ve seçim değişmez.
+- Penceresiz çizimde çizimin kendi seçimidir; silinen nesne seçimden düşer.
+
+Komut geçmişinin Python kodu da (`python_call_in`, `python_script`) gevşetilmiş çağrıyı artık `with doc.relaxed():`
+altında yazar. Daha önce gevşetme kayboluyordu.
+
+Her aracın Python ve MCP karşılığının denetimi ayrı bir iştir (§8).

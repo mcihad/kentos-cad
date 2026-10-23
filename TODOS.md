@@ -80,6 +80,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   seçimin türüne göre bağlamsal sekmeler). Web'in şeridi dönüşte bu dosyadan kurulmalı; `fixtures/shell/v1/ribbon.json`'un
   `tabs`'ı yeni sekmeleri tutar. Görünüm'deki tema, yazı tipi ve zemin kartları web'de de şeritten Uygulama ayarları'na
   gider. Özellikler panelinin çizim ölçeği durum çubuğuna geçer.
+- İşlemlerin Python kodu konsolda (ADR 0622 §7): masaüstünde `drafting.pythonEcho`. Web'in Python konsolu yoktur;
+  web dönerse aynı tercih web'in komut geçmişinin kodunu bir panele yazabilir.
 - Veritabanı bağlantıları (ADR 0623): masaüstünde PostgreSQL bağlantıları pencereyle tanımlanır, cihazda saklanır
   (`veritabani-baglantilari.json`), Kaynaklar › Veritabanları'nda ağaç olarak gezilir; PostGIS'e bağlan adres
   istemez. Web PostgreSQL'e doğrudan bağlanamaz: web dönerse bağlı PostGIS katmanı `kentosd` üzerinden ve sunucuda

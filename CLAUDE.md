@@ -49,6 +49,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   - Sağ tık AutoCAD'deki gibi o anki işin menüsünü açar ve hiç nokta koymaz; tutamaçla taşırken tutamaç menüsü açılır.
     Kısa sağ tıkın Enter olması `drafting.rightClickEnter` tercihidir, kapalı başlar. Ortak izler sağ tıkı Enter olarak
     oynatır.
+  - `drafting.pythonEcho` açıkken her ürün komutu ve elle yapılan her seçim Python konsoluna "Komut" satırı olarak,
+    çalıştırılabilir kodla yazılır (`python/echo.rs`, `python_call::python_echo`). Seçimin SDK karşılığı
+    `Document.select` ve `Document.selection`'dır.
 - **Veritabanı bağlantıları (sahibin isteği, 23 Ekim 2026; [ADR 0623](docs/adr/0623-database-connections.md)).**
   - PostgreSQL bağlantısı QGIS'teki gibi bir pencereyle tanımlanır: ad, sunucu, bağlantı noktası, veritabanı,
     kullanıcı, isteğe bağlı kayıtlı parola, SSL, Bağlantıyı dene. Adres yazılmaz.
@@ -1655,6 +1658,7 @@ cargo test -p kentos-postgis --lib   # veritabanı bağlantılarının kurallar�
 KENTOS_PG_URL=postgresql://postgres@127.0.0.1:PORT/postgres PGPASSWORD=… cargo test -p kentos-postgis --test all -- --ignored a_connection_is_tried a_password_typed   # gerçek veritabanında deneme, katalog ve oturum parolası (postgis_cases.py'nin geçici sunucusu ya da kendi docker'ınız; ADR 0623)
 KENTOS_SHOTS_ONLY=baglanti,postgis KENTOS_PG_URL=… PGPASSWORD=… cargo test -p kentos-desktop exchange::postgis_tests::screens -- --ignored --nocapture   # bağlantı penceresi, PostGIS'e bağlan ve Kaynaklar › Veritabanları, .run/shots/baglanti-*, postgis-* (ADR 0623)
 python3 scripts/ui/ribbon.py --check   # masaüstünün şeridi (catalog/v1/ribbon.json) üretecinden güncel mi; --check'siz yazar (ADR 0622 §3)
+KENTOS_SHOTS_ONLY=duzen-python cargo test -p kentos-desktop ux_screens::python_echo -- --ignored --nocapture   # işlemlerin Python kodu konsolda: seçim ve Taşı, .run/shots/duzen-python* (ADR 0622 §7)
 KENTOS_SHOTS_ONLY=serit,baglam,olcek cargo test -p kentos-desktop ux_screens -- --ignored --nocapture   # arayüz düzeninin resimleri: her sekme, seçime göre sekmeler, ölçek ve tür, .run/shots/duzen-* (ADR 0622); ux_screens::ribbon_widths panellerin genişliklerini yazar
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}
 pnpm inventory:check     # envanter güncel değilse düşer

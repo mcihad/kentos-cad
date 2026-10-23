@@ -285,6 +285,9 @@ pub enum EntryKind {
     Output,
     Error,
     Note,
+    /// Code the host wrote for what was done elsewhere (a drawing's command, a selection): shown as code, run by
+    /// nobody, kept out of the history of what was typed.
+    Echo,
 }
 
 #[derive(Debug, Clone)]
@@ -381,6 +384,13 @@ impl ReplState {
     /// file that could not be read.
     pub fn message(&mut self, kind: EntryKind, text: impl Into<String>) {
         self.push(kind, text.into(), 0);
+    }
+
+    /// Code for what was done outside the console (an operation of the
+    /// application, as the code that does it), shown as code and not run.
+    pub fn echo(&mut self, code: impl Into<String>) {
+        let code = code.into();
+        self.push(EntryKind::Echo, code.trim_end_matches('\n').to_owned(), 0);
     }
 
     fn push(&mut self, kind: EntryKind, mut text: String, execution: u64) {

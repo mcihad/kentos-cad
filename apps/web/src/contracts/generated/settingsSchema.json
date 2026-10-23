@@ -244,6 +244,21 @@
       "apply": "live"
     },
     {
+      "key": "drafting.pythonEcho",
+      "type": "boolean",
+      "default": false,
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "İşlemlerin Python kodunu konsola yaz",
+      "description": "Açıkken çizilen, düzenlenen, taşınan ve seçilen her şeyin Python karşılığı alttaki Python konsoluna yazılır; kod kopyalanıp betikte yeniden çalıştırılabilir. Konsolun kendi çalıştırmaları yazılmaz.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "drafting.contextualTabs",
       "type": "boolean",
       "default": true,

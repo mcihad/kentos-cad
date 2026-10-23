@@ -486,3 +486,49 @@ fn right_click_menus() {
         }
     }
 }
+
+/// The operations' Python in the console (docs/adr/0622 §7): with the setting on, a selection made by hand and a
+/// move with the tool are written to the Python tab as the code that does the same: `duzen-python-*`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn python_echo() {
+    use kentos_domain::Slot;
+
+    let out = out();
+    for (size, theme, suffix) in frames() {
+        let name = format!("duzen-python{suffix}");
+        if !wanted(&name) {
+            continue;
+        }
+        let mut app = booted(theme, true);
+        let _ = app
+            .settings
+            .choose(&[(crate::python::echo::SETTING, Value::Bool(true))]);
+        app.show_bottom(crate::bottom::BottomTab::Python);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        // A selection by hand, then Taşı from a corner of the parcel 6 m east.
+        app.selection.set([Slot(4)]);
+        update(&mut app, Message::DialogClosed);
+        let doc = app.document.as_ref().expect("open");
+        app.spatial.sync(&doc.model);
+        let corner = app.spatial.grips(&[Slot(4)])[0].points[0];
+        let area = app.viewport.bounds;
+        let screen = |w: kentos_geometry_core::Vec2, app: &App| {
+            let [x, y] = app.viewport.camera.world_to_screen(w);
+            Point::new(area.x + x as f32, area.y + y as f32)
+        };
+        let from = screen(corner, &app);
+        let to = screen(kentos_geometry_core::Vec2::new(corner.x + 6.0, corner.y), &app);
+        update(&mut app, Message::Run("tool.move"));
+        snapshot.input(&mut app, App::view, &mut update, Input::Move(from));
+        snapshot.input(&mut app, App::view, &mut update, Input::Click(from));
+        snapshot.input(&mut app, App::view, &mut update, Input::Move(to));
+        snapshot.input(&mut app, App::view, &mut update, Input::Click(to));
+        snapshot.settle(&mut app, App::view, &mut update);
+        // A taller panel shows the code whole.
+        app.bottom_dragged(Some(330.0), std::time::Instant::now());
+        snapshot.settle(&mut app, App::view, &mut update);
+        save(&mut snapshot, &app, &out, &name);
+    }
+}

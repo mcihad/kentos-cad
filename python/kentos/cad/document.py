@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import weakref
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -143,8 +144,17 @@ class SessionBase:
     def replay(self, journal: str) -> str:
         raise NotImplementedError
 
+    def selection(self) -> str:
+        raise NotImplementedError
+
+    def select(self, uids: str) -> int:
+        raise NotImplementedError
+
 
 _CURRENT: Document | None = None
+
+# A drawing's own selection when no window holds one (docs/adr/0622 §7): its ids, by the document.
+_SELECTIONS: weakref.WeakKeyDictionary[Document, list[str]] = weakref.WeakKeyDictionary()
 
 
 def current() -> Document:
@@ -919,6 +929,40 @@ class Document:
             units=_units(raw.get("units")),
             basis=_basis(raw.get("basis")),
         )
+
+    # ------------------------------------------------------------ selection
+
+    def select(self, uids: Iterable[str]) -> int:
+        """Selects these objects by their persistent ids (docs/adr/0622 §7).
+
+        In the desktop's Python console it is the window's selection, what its
+        tools act on next (the console writes the selections made by hand as
+        this call too); elsewhere the drawing's own, which :meth:`selection`
+        gives back. An unknown id raises :class:`UnknownObject` and changes
+        nothing. ``select([])`` clears it. Returns how many are selected."""
+        ids = [str(u) for u in uids]
+        session = self._session
+        if isinstance(session, SessionBase):
+            return int(_host(session.select, json.dumps(ids)))
+        for uid in ids:
+            self.entity(uid)
+        _SELECTIONS[self] = ids
+        return len(ids)
+
+    def selection(self) -> list[str]:
+        """The selected objects' persistent ids: the window's in the desktop's
+        console, the drawing's own elsewhere (without those deleted since)."""
+        session = self._session
+        if isinstance(session, SessionBase):
+            return [str(u) for u in json.loads(_host(session.selection))]
+        kept = []
+        for uid in _SELECTIONS.get(self, []):
+            try:
+                self.entity(uid)
+            except UnknownObject:
+                continue
+            kept.append(uid)
+        return kept
 
     # ------------------------------------------------------------ history
 

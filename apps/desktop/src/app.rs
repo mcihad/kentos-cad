@@ -1716,6 +1716,8 @@ impl App {
                 self.follow_history();
                 self.follow_log(Instant::now())
             },
+            // The operations and selections as code in the Python console when asked (python/echo.rs).
+            self.follow_python_echo(),
             // The sheet templates' library follows the sign-in and the connection (sheet_library.rs).
             self.follow_sheet_library(Instant::now()),
         ]);

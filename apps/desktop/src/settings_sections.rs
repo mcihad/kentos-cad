@@ -77,7 +77,7 @@ impl Section {
     pub fn lead(self) -> &'static str {
         match self {
             Self::Appearance => {
-                "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç, coğrafi koordinatlar, fare yardımcıları, komut satırının AutoCAD adları ve çizilen nesnenin formu."
+                "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç, coğrafi koordinatlar, fare yardımcıları, şeridin bağlamsal sekmeleri, sağ tık, komut satırının AutoCAD adları, çizilen nesnenin formu ve işlemlerin Python kodu."
             }
             Self::Snap => {
                 "İmlecin hangi noktalara yapışacağı ve nesneleri ne kadar yakından yakalayacağı; bu oturumun çizim yardımcıları."
@@ -114,6 +114,7 @@ impl Section {
                 "drafting.autocadAliases",
                 "drafting.contextualTabs",
                 "drafting.rightClickEnter",
+                "drafting.pythonEcho",
                 "drafting.formOnCreate",
                 "appearance.startScreen",
             ],
@@ -437,12 +438,24 @@ impl App {
         ]
         .into_iter()
         .fold(rest, |form, key| f.switch_field(form, key, None));
+        // The ribbon's contextual tabs, the right button and the drawn object's form (docs/adr/0622 §4, §6).
+        let rest = [
+            "drafting.contextualTabs",
+            "drafting.rightClickEnter",
+            "drafting.formOnCreate",
+        ]
+        .into_iter()
+        .fold(rest.section("Şerit ve fare"), |form, key| {
+            f.switch_field(form, key, None)
+        });
         // AutoCAD's names in the command line (alias_profile.rs, docs/adr/0282).
         let rest = f.switch_field(
             rest.section("Komut satırı"),
             crate::alias_profile::SETTING,
             None,
         );
+        // The operations' Python in the console (docs/adr/0622 §7).
+        let rest = f.switch_field(rest.section("Python konsolu"), "drafting.pythonEcho", None);
         let rest = f.switch_field(rest.section("Açılış"), "appearance.startScreen", None);
         column![theme, accent, typeface, rest].spacing(18).into()
     }

@@ -17,6 +17,7 @@
 
 mod agents;
 mod assist;
+pub(crate) mod echo;
 mod host;
 pub(crate) mod link;
 pub(crate) mod script;
@@ -121,6 +122,8 @@ pub struct Console {
     /// The commands the agents run as jobs (docs/adr/0253 §9): computed on
     /// a copy of the drawing, written when an agent asks how they are.
     pub(crate) jobs: kentos_headless::rpc::Jobs,
+    /// What the operations' echo has passed (echo.rs, docs/adr/0622 §7).
+    pub(crate) echo: echo::Echo,
 }
 
 impl Default for Console {
@@ -140,6 +143,7 @@ impl Default for Console {
             link: None,
             agents: std::collections::BTreeMap::new(),
             jobs: kentos_headless::rpc::Jobs::default(),
+            echo: echo::Echo::default(),
         }
     }
 }
@@ -500,6 +504,39 @@ impl App {
         };
         if run.session != doc.session {
             return Err(no_document());
+        }
+        // The window's selection (docs/adr/0622 §7): what its tools act on, read and set by the code.
+        match method {
+            "selection" => {
+                let uids: Vec<String> = self
+                    .selection
+                    .ids()
+                    .iter()
+                    .filter_map(|slot| doc.model.uid(*slot))
+                    .map(|u| u.to_string())
+                    .collect();
+                return Ok(json!(uids));
+            }
+            "select" => {
+                let given = params.get("uids").and_then(Value::as_array).cloned().unwrap_or_default();
+                let mut slots = Vec::with_capacity(given.len());
+                for u in &given {
+                    let text = u.as_str().unwrap_or_default();
+                    let slot = kentos_domain::Uuid::parse_str(text)
+                        .ok()
+                        .and_then(|uid| doc.model.slot_of(uid))
+                        .ok_or_else(|| {
+                            HeadlessError::new(
+                                "unknown_object",
+                                format!("“{text}” kimlikli nesne çizimde yok; seçim değişmedi."),
+                            )
+                        })?;
+                    slots.push(slot);
+                }
+                self.selection.set(slots);
+                return Ok(json!(given.len()));
+            }
+            _ => {}
         }
         // A command's execute (by `run`, or by the protocol's `call`, whose form is execute when not
         // given) and a replay write: the run's step opens with the first.
